@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda IPPenha 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#181b1e;--card:#2b2f33;--surface:#212529;--input:#2b2f33;--hover:#30353a;
+  --bd1:rgba(255,255,255,0.07);--bd2:rgba(255,255,255,0.12);--bd3:rgba(255,255,255,0.18);
+  --tx1:#d8dce1;--tx2:#8a9099;--tx3:#5a6068;--tx4:#3e4349;
+  --gr:#3aaa5c;--grl:#4dc470;--grd:#2a7d42;
+  --teal:#2ab5c0;--tealbg:rgba(42,181,192,0.10);
+  --gold:#d4a843;--goldbg:rgba(212,168,67,0.10);
+  --rose:#e05555;--rosebg:rgba(224,85,85,0.10);
+  --blue:#4a9cf5;--bluebg:rgba(74,156,245,0.10);
+  --sans:'Source Sans 3',system-ui,sans-serif;
+  --mono:'Source Code Pro',monospace;
+  --r:6px;--rl:8px;
+}
+html{font-size:13px}
+body{font-family:var(--sans);background:var(--bg);color:var(--tx1);min-height:100vh}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:#3a3f45;border-radius:4px}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;align-items:center;justify-content:center}
+.login-box{width:min(380px,92vw);background:var(--card);border:1px solid var(--bd2);border-radius:12px;padding:32px 28px}
+.login-logo{text-align:center;margin-bottom:24px}
+.login-logo .li{font-size:32px;margin-bottom:10px}
+.login-logo .ls{font-size:20px;font-weight:800;color:var(--tx1);letter-spacing:.06em}
+.login-logo .lc{font-size:10px;color:var(--tx3);margin-top:3px}
+.lf{margin-bottom:14px}
+.lf label{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);margin-bottom:5px;font-weight:600}
+.lf input{width:100%;background:var(--input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12.5px;padding:10px 12px;outline:none;transition:border-color .15s;font-family:var(--sans)}
+.lf input:focus{border-color:var(--teal)}
+.lbtn{width:100%;background:var(--teal);border:none;border-radius:7px;color:#fff;font-size:13px;font-weight:700;padding:11px;cursor:pointer;font-family:var(--sans);margin-top:6px;transition:background .15s}
+.lbtn:hover{background:#36c4d0}
+.lerr{color:var(--rose);font-size:11px;text-align:center;margin-top:8px;min-height:16px}
+.lver{font-size:9px;color:var(--tx4);text-align:center;margin-top:18px}
+.lcred{font-size:10px;color:var(--tx3);text-align:center;margin-top:10px;background:var(--surface);border-radius:6px;padding:8px;border:1px solid var(--bd1)}
+.lcred strong{color:var(--teal)}
+
+/* TOPBAR */
+.topbar{height:52px;background:var(--card);border-bottom:1px solid var(--bd1);display:flex;align-items:center;padding:0 20px;gap:12px;position:sticky;top:0;z-index:50}
+.tls{font-size:13px;font-weight:700;color:var(--tx1);letter-spacing:.05em}
+.tlc{font-size:9.5px;color:var(--tx3)}
+.tsep{height:20px;width:1px;background:var(--bd2)}
+.tr{margin-left:auto;display:flex;align-items:center;gap:8px}
+.tbt{background:var(--surface);border:1px solid var(--bd2);border-radius:var(--r);color:var(--tx2);padding:6px 12px;font-size:11.5px;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:5px;font-weight:500;transition:all .13s}
+.tbt:hover{border-color:var(--bd3);color:var(--tx1)}
+.tbt.pri{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
+.tbt.pri:hover{background:#36c4d0}
+
+/* TABS */
+.tabs{display:flex;padding:0 20px;border-bottom:1px solid var(--bd1);background:var(--card);overflow-x:auto;position:sticky;top:52px;z-index:40}
+.tabs::-webkit-scrollbar{height:0}
+.tab{padding:10px 14px;font-size:11.5px;color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .12s;white-space:nowrap;font-weight:500}
+.tab:hover{color:var(--tx2)}
+.tab.on{color:var(--teal);border-bottom-color:var(--teal)}
+
+/* PAGE */
+.page{padding:20px;max-width:1080px;margin:0 auto}
+
+/* KPIS */
+.kpis{display:grid;gap:10px;margin-bottom:18px;grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:700px){.kpis{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:380px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{background:var(--card);border:1px solid var(--bd1);border-radius:var(--rl);padding:14px;display:flex;align-items:center;gap:12px}
+.kpi-ico{width:40px;height:40px;border-radius:var(--rl);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.kpi-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--tx3);margin-bottom:3px;font-weight:500}
+.kpi-val{font-size:20px;font-weight:700;color:var(--tx1);line-height:1;font-family:var(--mono)}
+
+/* CARD */
+.card{background:var(--card);border:1px solid var(--bd1);border-radius:var(--rl);padding:16px 18px;margin-bottom:14px}
+.ctit{font-size:12.5px;font-weight:700;color:var(--tx1);margin-bottom:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cact{margin-left:auto;font-size:10.5px;color:var(--teal);cursor:pointer;font-weight:600}
+
+/* EVENTS */
+.ev{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--bd1);align-items:flex-start}
+.ev:last-child{border-bottom:none}
+.ev-dt{background:var(--surface);border:1px solid var(--bd1);border-radius:6px;padding:6px 8px;text-align:center;min-width:46px;flex-shrink:0}
+.ev-dt .m{font-size:9px;color:var(--teal);text-transform:uppercase;font-weight:600;letter-spacing:.08em}
+.ev-dt .d{font-size:17px;font-weight:700;color:var(--tx1);font-family:var(--mono);line-height:1.1}
+.ev-dt .w{font-size:8.5px;color:var(--tx3);margin-top:1px}
+.ev-body{flex:1;min-width:0}
+.ev-title{font-size:12px;font-weight:600;color:var(--tx1);margin-bottom:3px}
+.ev-meta{font-size:10px;color:var(--tx3);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.badge{font-size:9.5px;padding:2px 7px;border-radius:10px;font-weight:500}
+.bg{background:rgba(58,170,92,0.12);color:var(--gr);border:1px solid rgba(58,170,92,0.2)}
+.bt{background:var(--tealbg);color:var(--teal);border:1px solid rgba(42,181,192,0.2)}
+.bgo{background:var(--goldbg);color:var(--gold);border:1px solid rgba(212,168,67,0.2)}
+.br{background:var(--rosebg);color:var(--rose);border:1px solid rgba(224,85,85,0.2)}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.tbl th{text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);border-bottom:1px solid var(--bd2);font-weight:600;white-space:nowrap}
+.tbl td{padding:7px 10px;border-bottom:1px solid var(--bd1);color:var(--tx2);vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--hover)}
+
+/* BARS */
+.bar{margin-bottom:10px;cursor:pointer;padding:8px 10px;border-radius:var(--r);transition:background .12s}
+.bar:hover{background:var(--surface)}
+.bar-h{display:flex;justify-content:space-between;margin-bottom:4px}
+.bar-n{font-size:11px;color:var(--tx2)}
+.bar-v{font-size:10.5px;color:var(--tx3);font-family:var(--mono)}
+.bar-t{background:var(--surface);border-radius:4px;overflow:hidden;height:10px}
+.bar-f{height:100%;border-radius:4px;background:var(--teal);opacity:.75;transition:width .5s}
+
+/* MODAL */
+.mb{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:200}
+.mb.on{display:flex}
+.md{width:min(560px,94vw);max-height:90vh;overflow:hidden;background:var(--card);border:1px solid var(--bd2);border-radius:10px;display:flex;flex-direction:column}
+.md-h{padding:14px 16px;border-bottom:1px solid var(--bd1);display:flex;justify-content:space-between;align-items:center}
+.md-h h3{font-size:14px;font-weight:700;color:var(--tx1)}
+.md-b{padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.md-f{padding:14px 16px;border-top:1px solid var(--bd1);display:flex;justify-content:flex-end;gap:8px}
+.fi label{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px;font-weight:600}
+.fi input,.fi select,.fi textarea{width:100%;background:var(--input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans);transition:border-color .15s}
+.fi input:focus,.fi select:focus,.fi textarea:focus{border-color:var(--teal)}
+.fi textarea{min-height:80px;resize:vertical}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.frow{grid-template-columns:1fr}}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;z-index:300;background:var(--card);border:1px solid var(--bd2);border-radius:8px;padding:12px 16px;min-width:220px;max-width:320px;box-shadow:0 4px 20px rgba(0,0,0,.4);transform:translateY(80px);opacity:0;transition:all .25s;pointer-events:none}
+.toast.on{transform:translateY(0);opacity:1}
+.toast-t{font-size:12px;font-weight:700;color:var(--tx1);margin-bottom:2px}
+.toast-s{font-size:10.5px;color:var(--tx3)}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="li">🗓</div>
+      <div class="ls">Agenda IPPenha</div>
+      <div class="lc">Igreja Presbiteriana da Penha · 2026</div>
+    </div>
+    <div class="lf">
+      <label>Usuário</label>
+      <input type="text" id="l-user" placeholder="agenda" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="lf">
+      <label>Senha</label>
+      <input type="password" id="l-pass" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="lbtn" onclick="doLogin()">Acessar Agenda</button>
+    <div class="lerr" id="l-err"></div>
+    <div class="lcred">Usuário: <strong>agenda</strong> · Senha: <strong>ippenha2026</strong></div>
+    <div class="lver">Acesso público · IPPenha · Penha · SP</div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app" style="display:none">
+
+  <div class="topbar">
+    <span style="font-size:20px">🗓</span>
+    <div class="tsep"></div>
+    <div>
+      <div class="tls">Agenda IPPenha 2026</div>
+      <div class="tlc">Igreja Presbiteriana da Penha</div>
+    </div>
+    <div class="tr">
+      <button class="tbt pri" onclick="abrirModal()">+ Solicitar Agendamento</button>
+      <button class="tbt" onclick="sair()">⏻ Sair</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab on" onclick="aba('proximos',this)">📅 Próximos</div>
+    <div class="tab" onclick="aba('mes',this)">🗂 Por Mês</div>
+    <div class="tab" onclick="aba('espacos',this)">🏛 Por Espaço</div>
+    <div class="tab" onclick="aba('todos',this)">📋 Todos</div>
+    <div class="tab" onclick="aba('minhas',this)">📝 Minhas Solicitações</div>
+  </div>
+
+  <div class="page">
+
+    <!-- PRÓXIMOS -->
+    <div id="pg-proximos">
+      <div class="kpis">
+        <div class="kpi"><div class="kpi-ico" style="background:var(--tealbg)">📅</div><div><div class="kpi-lbl">Total 2026</div><div class="kpi-val" id="k-total">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--bluebg)">📍</div><div><div class="kpi-lbl">Espaços</div><div class="kpi-val" id="k-esp">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--goldbg)">🗓</div><div><div class="kpi-lbl">Este mês</div><div class="kpi-val" id="k-mes">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.12)">✅</div><div><div class="kpi-lbl">Confirmados</div><div class="kpi-val" id="k-conf">—</div></div></div>
+      </div>
+      <div class="card">
+        <div class="ctit">Próximos Eventos <span class="cact" onclick="carregarDados()">↻ Atualizar</span></div>
+        <div id="l-proximos"><div style="color:var(--tx3)">Carregando...</div></div>
+      </div>
+    </div>
+
+    <!-- POR MÊS -->
+    <div id="pg-mes" style="display:none">
+      <div class="card">
+        <div class="ctit">
+          Eventos por Mês
+          <select id="sel-mes" onchange="renderMes()" style="background:var(--input);border:1px solid var(--bd2);border-radius:5px;color:var(--tx1);font-size:11px;padding:4px 8px;outline:none;font-family:var(--sans)">
+            <option value="">Selecione o mês</option>
+            <option>Janeiro</option><option>Fevereiro</option><option>Março</option>
+            <option>Abril</option><option>Maio</option><option>Junho</option>
+            <option>Julho</option><option>Agosto</option><option>Setembro</option>
+            <option>Outubro</option><option>Novembro</option><option>Dezembro</option>
+          </select>
+          <span class="cact" onclick="renderMes()">↻</span>
+        </div>
+        <div id="l-mes"><div style="color:var(--tx3)">Selecione um mês acima</div></div>
+      </div>
+    </div>
+
+    <!-- POR ESPAÇO -->
+    <div id="pg-espacos" style="display:none">
+      <div class="card">
+        <div class="ctit">Uso por Espaço / Ambiente <span class="cact" onclick="renderEspacos()">↻ Atualizar</span></div>
+        <div id="l-espacos"><div style="color:var(--tx3)">Carregando...</div></div>
+      </div>
+      <div class="card" id="card-esp-det" style="display:none">
+        <div class="ctit" id="esp-det-tit">Eventos no Espaço</div>
+        <div id="l-esp-det"></div>
+      </div>
+    </div>
+
+    <!-- TODOS -->
+    <div id="pg-todos" style="display:none">
+      <div class="card">
+        <div class="ctit">
+          Todos os Eventos
+          <input type="text" id="busca" placeholder="Buscar..." oninput="renderTodos()" style="margin-left:8px;background:var(--input);border:1px solid var(--bd2);border-radius:5px;color:var(--tx1);font-size:11px;padding:5px 10px;outline:none;font-family:var(--sans);width:200px">
+          <span class="cact" onclick="renderTodos()">↻</span>
+        </div>
+        <div id="l-todos"><div style="color:var(--tx3)">Carregando...</div></div>
+      </div>
+    </div>
+
+    <!-- MINHAS SOLICITAÇÕES -->
+    <div id="pg-minhas" style="display:none">
+      <div class="card">
+        <div class="ctit">Minhas Solicitações <span class="cact" onclick="renderMinhas()">↻</span></div>
+        <div id="l-minhas"><div style="color:var(--tx3);font-size:11.5px">Suas solicitações aparecerão aqui após o envio.</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="mb" id="modal" onclick="if(event.target===this)fecharModal()">
+  <div class="md">
+    <div class="md-h">
+      <h3>📝 Solicitar Agendamento</h3>
+      <button onclick="fecharModal()" style="background:none;border:none;color:var(--tx3);font-size:16px;cursor:pointer">✕</button>
+    </div>
+    <div class="md-b">
+      <div style="background:var(--tealbg);border:1px solid rgba(42,181,192,0.2);border-radius:6px;padding:9px 12px;font-size:10.5px;color:var(--tx2)">
+        📌 Sua solicitação será registrada e analisada pela equipe administrativa da IPPenha.
+      </div>
+      <div class="fi"><label>Seu nome *</label><input type="text" id="s-nome" placeholder="Nome completo"></div>
+      <div class="fi"><label>WhatsApp *</label><input type="tel" id="s-tel" placeholder="(11) 9 0000-0000"></div>
+      <div class="fi"><label>Título do evento *</label><input type="text" id="s-titulo" placeholder="Ex: Reunião do Ministério de Louvor"></div>
+      <div class="frow">
+        <div class="fi"><label>Data *</label><input type="date" id="s-data"></div>
+        <div class="fi"><label>Espaço desejado *</label>
+          <select id="s-espaco">
+            <option value="">Selecione...</option>
+            <option>Templo</option><option>Penha Kids</option><option>Sala 01</option>
+            <option>Sala 03</option><option>Sala 201</option><option>Salão Social</option>
+            <option>Pátio</option><option>Cozinha</option><option>Auditório</option><option>Outro</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fi"><label>Hora início</label><input type="time" id="s-inicio"></div>
+        <div class="fi"><label>Hora fim</label><input type="time" id="s-fim"></div>
+      </div>
+      <div class="fi"><label>Ministério / Organização</label><input type="text" id="s-org" placeholder="Ex: Min. de Louvor, EBD..."></div>
+      <div class="fi"><label>Observações</label><textarea id="s-obs" placeholder="Detalhes, recursos necessários, número de pessoas..."></textarea></div>
+    </div>
+    <div class="md-f">
+      <button class="tbt" onclick="fecharModal()">Cancelar</button>
+      <button class="tbt pri" onclick="enviar()">📨 Enviar Solicitação</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-t" id="toast-t"></div>
+  <div class="toast-s" id="toast-s"></div>
+</div>
+
+<script>
+/* ══ CONFIG ══ */
+const SUPA_URL = "https://erhwryfzpycahgsohhbh.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyaHdyeWZ6cHljYWhnc29oaGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg2MTUsImV4cCI6MjA5MTg0NDYxNX0.T0hp90Bmufj6a3oUPq1vYcLiGx9YjyMaZiE38S0e3_8";
+const LOGIN_USER = "agenda";
+const LOGIN_PASS = "ippenha2026";
+
+/* ══ LOGIN ══ */
+function doLogin() {
+  const u = document.getElementById("l-user").value.trim().toLowerCase();
+  const p = document.getElementById("l-pass").value;
+  const err = document.getElementById("l-err");
+  err.textContent = "";
+  if (!u || !p) { err.textContent = "Preencha usuário e senha."; return; }
+  if (u !== LOGIN_USER || p !== LOGIN_PASS) { err.textContent = "Usuário ou senha incorretos."; return; }
+  sessionStorage.setItem("ag_ok","1");
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("app").style.display = "block";
+  carregarDados();
+}
+
+function sair() {
+  sessionStorage.removeItem("ag_ok");
+  location.reload();
+}
+
+/* ══ API ══ */
+function hdrs(extra={}) {
+  return { "apikey":SUPA_KEY, "Authorization":`Bearer ${SUPA_KEY}`, "Content-Type":"application/json", ...extra };
+}
+
+let _cache = null;
+async function getDados() {
+  if (_cache) return _cache;
+  const r = await fetch(`${SUPA_URL}/rest/v1/agenda?select=*&order=data.asc&limit=1000`, { headers: hdrs() });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  _cache = await r.json();
+  return _cache;
+}
+
+/* ══ CARREGAR INICIAL ══ */
+async function carregarDados() {
+  _cache = null;
+  try {
+    const rows = await getDados();
+    const hoje = new Date().toISOString().split("T")[0];
+    const mesNome = new Date().toLocaleString("pt-BR",{month:"long"});
+    const mes = mesNome.charAt(0).toUpperCase()+mesNome.slice(1);
+
+    sv("k-total", rows.length);
+    sv("k-esp", new Set(rows.map(r=>r.espaco).filter(Boolean)).size);
+    sv("k-mes", rows.filter(r=>r.mes===mes).length);
+    sv("k-conf", rows.filter(r=>r.status==="confirmado").length);
+
+    const prox = rows.filter(r=>r.data>=hoje).slice(0,40);
+    renderEvs(prox, "l-proximos");
+  } catch(e) {
+    sv("l-proximos",`<div style="color:var(--rose)">Erro: ${esc(e.message)}</div>`);
+  }
+}
+
+/* ══ RENDER EVENTOS ══ */
+function renderEvs(rows, id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!rows.length) {
+    el.innerHTML = `<div style="text-align:center;padding:28px;color:var(--tx3)"><div style="font-size:28px;margin-bottom:8px">📭</div><div>Nenhum evento encontrado</div></div>`;
+    return;
+  }
+  el.innerHTML = rows.map(e => `
+    <div class="ev">
+      <div class="ev-dt">
+        <div class="m">${(e.mes||"").slice(0,3)}</div>
+        <div class="d">${(e.data||"").slice(8)||"—"}</div>
+        <div class="w">${ds(e.dia_semana)}</div>
+      </div>
+      <div class="ev-body">
+        <div class="ev-title">${esc(e.titulo||"—")}</div>
+        <div class="ev-meta">
+          ${e.hora_inicio?`<span>🕐 ${e.hora_inicio.slice(0,5)}${e.hora_fim?" → "+e.hora_fim.slice(0,5):""}</span>`:""}
+          ${e.espaco?`<span>📍 ${esc(e.espaco)}</span>`:""}
+          ${e.organizador?`<span>👥 ${esc(e.organizador)}</span>`:""}
+          ${e.responsavel?`<span>👤 ${esc(e.responsavel)}</span>`:""}
+          ${e.recorrencia?`<span class="badge bt">${esc(e.recorrencia)}</span>`:""}
+          ${sbadge(e.status)}
+        </div>
+        ${e.observacao?`<div style="font-size:10px;color:var(--tx3);margin-top:4px">${esc(e.observacao)}</div>`:""}
+      </div>
+    </div>`).join("");
+}
+
+function sbadge(s) {
+  if (!s||s==="confirmado") return `<span class="badge bg">✓ Confirmado</span>`;
+  if (s==="pendente") return `<span class="badge bgo">⏳ Pendente</span>`;
+  if (s==="cancelado") return `<span class="badge br">✗ Cancelado</span>`;
+  if (s==="reagendado") return `<span class="badge bt">↻ Reagendado</span>`;
+  return `<span class="badge" style="background:var(--surface);color:var(--tx2);border:1px solid var(--bd2)">${esc(s)}</span>`;
+}
+
+function ds(d) {
+  const m={"segunda-feira":"Seg","terça-feira":"Ter","quarta-feira":"Qua","quinta-feira":"Qui","sexta-feira":"Sex","sábado":"Sáb","domingo":"Dom"};
+  return m[(d||"").toLowerCase()]||"";
+}
+
+/* ══ ABA MÊS ══ */
+async function renderMes() {
+  const mes = document.getElementById("sel-mes").value;
+  if (!mes) return;
+  sv("l-mes", spin());
+  const rows = await getDados();
+  const f = rows.filter(r=>r.mes===mes).sort((a,b)=>a.data.localeCompare(b.data));
+  renderEvs(f,"l-mes");
+}
+
+/* ══ ABA ESPAÇOS ══ */
+async function renderEspacos() {
+  sv("l-espacos", spin());
+  try {
+    const rows = await getDados();
+    const map = {};
+    rows.forEach(r=>{ const e=r.espaco||"Não informado"; if(!map[e])map[e]=[]; map[e].push(r); });
+    const sorted = Object.entries(map).sort((a,b)=>b[1].length-a[1].length);
+    const max = sorted[0]?.[1].length||1;
+    sv("l-espacos", sorted.map(([e,evs])=>`
+      <div class="bar" onclick="verEsp('${e.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}',${evs.length})">
+        <div class="bar-h"><span class="bar-n">${esc(e)}</span><span class="bar-v">${evs.length} eventos</span></div>
+        <div class="bar-t"><div class="bar-f" style="width:${Math.round(evs.length/max*100)}%"></div></div>
+      </div>`).join(""));
+  } catch(e) {
+    sv("l-espacos",`<div style="color:var(--rose)">Erro: ${esc(e.message)}</div>`);
+  }
+}
+
+async function verEsp(esp, total) {
+  const rows = await getDados();
+  const f = rows.filter(r=>(r.espaco||"Não informado")===esp).sort((a,b)=>a.data.localeCompare(b.data));
+  sv("esp-det-tit",`📍 ${esc(esp)} · ${total} eventos`);
+  document.getElementById("card-esp-det").style.display="block";
+  renderEvs(f,"l-esp-det");
+  document.getElementById("card-esp-det").scrollIntoView({behavior:"smooth"});
+}
+
+/* ══ ABA TODOS ══ */
+async function renderTodos() {
+  const q = (document.getElementById("busca")?.value||"").toLowerCase().trim();
+  sv("l-todos", spin());
+  const rows = await getDados();
+  const f = q ? rows.filter(r=>JSON.stringify(r).toLowerCase().includes(q)) : rows;
+  if (!f.length) { sv("l-todos",`<div style="color:var(--tx3);text-align:center;padding:20px">Nenhum resultado</div>`); return; }
+  sv("l-todos",`
+    <div style="font-size:10px;color:var(--tx3);margin-bottom:8px">${f.length} eventos</div>
+    <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr>
+        <th>Data</th><th>Dia</th><th>Evento</th><th>Horário</th><th>Espaço</th><th>Organizador</th><th>Status</th>
+      </tr></thead>
+      <tbody>${f.map(e=>`
+        <tr>
+          <td style="white-space:nowrap;color:var(--tx1);font-family:var(--mono);font-size:11px">${e.data||"—"}</td>
+          <td style="white-space:nowrap">${ds(e.dia_semana)}</td>
+          <td style="font-weight:500;color:var(--tx1)">${esc(e.titulo||"—")}</td>
+          <td style="white-space:nowrap">${e.hora_inicio?e.hora_inicio.slice(0,5):""} ${e.hora_fim?"→ "+e.hora_fim.slice(0,5):""}</td>
+          <td>${esc(e.espaco||"—")}</td>
+          <td>${esc(e.organizador||"—")}</td>
+          <td>${sbadge(e.status)}</td>
+        </tr>`).join("")}
+      </tbody>
+    </table></div>`);
+}
+
+/* ══ MINHAS SOLICITAÇÕES ══ */
+function renderMinhas() {
+  const minhas = JSON.parse(localStorage.getItem("ag_minhas")||"[]");
+  const el = document.getElementById("l-minhas");
+  if (!minhas.length) { el.innerHTML=`<div style="color:var(--tx3);font-size:11.5px">Você ainda não fez nenhuma solicitação neste dispositivo.</div>`; return; }
+  el.innerHTML = [...minhas].reverse().map(s=>`
+    <div style="background:var(--surface);border:1px solid var(--bd1);border-radius:6px;padding:10px 12px;margin-bottom:8px">
+      <div style="font-size:12px;font-weight:600;color:var(--tx1);margin-bottom:4px">${esc(s.titulo)}</div>
+      <div style="font-size:10px;color:var(--tx3);display:flex;flex-wrap:wrap;gap:8px">
+        <span>📅 ${s.data}</span>
+        <span>📍 ${esc(s.espaco||"—")}</span>
+        ${s.inicio?`<span>🕐 ${s.inicio} → ${s.fim||"—"}</span>`:""}
+        <span>Enviado em ${s.enviado}</span>
+      </div>
+      <div style="margin-top:6px"><span class="badge bgo">⏳ Aguardando análise</span></div>
+    </div>`).join("");
+}
+
+/* ══ MODAL ══ */
+function abrirModal() {
+  document.getElementById("s-data").value = new Date().toISOString().split("T")[0];
+  document.getElementById("modal").classList.add("on");
+}
+function fecharModal() { document.getElementById("modal").classList.remove("on"); }
+
+async function enviar() {
+  const nome   = document.getElementById("s-nome").value.trim();
+  const tel    = document.getElementById("s-tel").value.trim();
+  const titulo = document.getElementById("s-titulo").value.trim();
+  const data   = document.getElementById("s-data").value;
+  const espaco = document.getElementById("s-espaco").value;
+  const inicio = document.getElementById("s-inicio").value;
+  const fim    = document.getElementById("s-fim").value;
+  const org    = document.getElementById("s-org").value.trim();
+  const obs    = document.getElementById("s-obs").value.trim();
+
+  if (!nome)   return T("Campo obrigatório","Informe seu nome");
+  if (!tel)    return T("Campo obrigatório","Informe seu WhatsApp");
+  if (!titulo) return T("Campo obrigatório","Informe o título do evento");
+  if (!data)   return T("Campo obrigatório","Informe a data");
+  if (!espaco) return T("Campo obrigatório","Selecione o espaço");
+
+  const btn = document.querySelector("#modal .tbt.pri");
+  if (btn) { btn.disabled=true; btn.textContent="Enviando..."; }
+
+  try {
+    await fetch(`${SUPA_URL}/rest/v1/demandas`, {
+      method:"POST",
+      headers: hdrs({"Prefer":"return=representation"}),
+      body: JSON.stringify({
+        titulo: `[AGENDA] ${titulo}`,
+        descricao: `Solicitante: ${nome}\nWhatsApp: ${tel}\nEspaço: ${espaco}\nData: ${data}\nHorário: ${inicio||"—"} → ${fim||"—"}\nMinistério: ${org||"—"}\n\n${obs||""}`.trim(),
+        solicitante: nome,
+        area: "Agenda",
+        status: "Pendente",
+        prioridade: "Média",
+        data_abertura: data,
+        data_conclusao: null,
+        responsavel: null
+      })
+    });
+
+    // Salvar localmente
+    const minhas = JSON.parse(localStorage.getItem("ag_minhas")||"[]");
+    minhas.push({ titulo, data, espaco, inicio, fim, org, obs, nome, tel, enviado: new Date().toLocaleString("pt-BR") });
+    localStorage.setItem("ag_minhas", JSON.stringify(minhas));
+
+    fecharModal();
+    T("✅ Solicitação enviada!","A equipe administrativa será notificada em breve");
+    ["s-nome","s-tel","s-titulo","s-inicio","s-fim","s-org","s-obs"].forEach(id=>{ const el=document.getElementById(id); if(el)el.value=""; });
+    document.getElementById("s-espaco").value="";
+    document.getElementById("s-data").value="";
+  } catch(e) {
+    T("Erro ao enviar", e.message);
+  } finally {
+    if (btn) { btn.disabled=false; btn.textContent="📨 Enviar Solicitação"; }
+  }
+}
+
+/* ══ ABAS ══ */
+const ABAS = ["proximos","mes","espacos","todos","minhas"];
+function aba(id, el) {
+  ABAS.forEach(a=>{ document.getElementById("pg-"+a).style.display=a===id?"block":"none"; });
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("on"));
+  el.classList.add("on");
+  if (id==="mes")     { const m=new Date().toLocaleString("pt-BR",{month:"long"}); const s=document.getElementById("sel-mes"); s.value=m.charAt(0).toUpperCase()+m.slice(1); renderMes(); }
+  if (id==="espacos") renderEspacos();
+  if (id==="todos")   renderTodos();
+  if (id==="minhas")  renderMinhas();
+}
+
+/* ══ UTILS ══ */
+function esc(v){ return String(v??'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
+function sv(id,v){ const el=document.getElementById(id); if(el) el.innerHTML=v; }
+function spin(){ return `<span style="display:inline-block;width:11px;height:11px;border:2px solid var(--teal);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px"></span> Carregando...`; }
+
+let _tt;
+function T(t,s){
+  sv("toast-t",t); sv("toast-s",s||"");
+  const el=document.getElementById("toast");
+  el.classList.add("on"); clearTimeout(_tt);
+  _tt=setTimeout(()=>el.classList.remove("on"),3500);
+}
+
+/* ══ INIT ══ */
+document.addEventListener("DOMContentLoaded",()=>{
+  if (sessionStorage.getItem("ag_ok")==="1") {
+    document.getElementById("login-screen").style.display="none";
+    document.getElementById("app").style.display="block";
+    carregarDados();
+  }
+});
+</script>
+</body>
+</html>
