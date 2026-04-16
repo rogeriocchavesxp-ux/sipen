@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIPEN v5.5.8</title>
+<style>
+body{font-family:Arial;background:#0f141a;color:#e6edf3;margin:0}
+.container{padding:20px}
+.card{background:#1c232b;padding:16px;border-radius:10px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid #2c333b;font-size:12px}
+.badge{padding:3px 6px;border-radius:6px;font-size:11px}
+.aberta{background:#6b4b1f;color:#ffd28a}
+.andamento{background:#1f4b6b;color:#8ad0ff}
+</style>
+</head>
+<body>
+<div class="container">
+<h2>Infraestrutura - Ordens de Serviço</h2>
+<div class="card">
+<table>
+<thead>
+<tr><th>OS</th><th>Descrição</th><th>Status</th></tr>
+</thead>
+<tbody id="tabela-os"></tbody>
+</table>
+</div>
+</div>
+
+<script>
+// Simulação de dados vindos do banco
+const demandas = [
+  {id:"a1",descricao:"Troca de lâmpadas",status:"aberta"},
+  {id:"a2",descricao:"Reparo no telhado",status:"andamento"},
+  {id:"a3",descricao:"Limpeza caixa d'água",status:"aberta"}
+];
+
+function gerarNumeroOS(index){
+  const num = String(index+1).padStart(3,'0');
+  return "OS-" + num;
+}
+
+function render(){
+  const tbody = document.getElementById("tabela-os");
+  tbody.innerHTML = "";
+  demandas.forEach((d,i)=>{
+    const tr = document.createElement("tr");
+    const os = gerarNumeroOS(i);
+    tr.innerHTML = `
+      <td>${os}</td>
+      <td>${d.descricao}</td>
+      <td><span class="badge ${d.status}">${d.status}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
