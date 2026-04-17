@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.suo
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Temp
+*.tmp
+*.bak
