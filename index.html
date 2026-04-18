@@ -630,12 +630,23 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
         <div class="si" onclick="go('admin-sec')">Secretaria e Cadastro</div>
         <div class="si" onclick="go('admin-rh')">RH / Gestão de Pessoas</div>
         <div class="sdiv"></div>
-        <div class="si" onclick="go('admin-fin')">Financeiro</div>
         <div class="si" onclick="go('admin-con')">Contratos</div>
         <div class="si" onclick="go('admin-doc')">Documentos</div>
         <div class="si" onclick="go('admin-est')">Controle de Estoque</div>
       </div>
 
+    </div>
+
+    <!-- Financeiro -->
+    <div class="mwrap" id="mw-fin">
+      <div class="mhdr" onclick="tog('fin')">
+        <div class="micon" style="background:rgba(61,160,85,0.14);border-color:rgba(61,160,85,0.25);color:var(--gr)">◇</div>
+        <span class="mname">Financeiro</span>
+        <span class="marr">▶</span>
+      </div>
+      <div class="msub" id="ms-fin">
+        <div class="si" onclick="go('admin-fin')">Lançamentos e Fluxo de Caixa</div>
+      </div>
     </div>
 
     <!-- Jurídico -->
@@ -2610,7 +2621,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 </div>
 
 <script>
-const MC={geral:"var(--gmd)",admin:"var(--gold)",jur:"var(--blue)",conselho:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)",cong:"var(--gr)"};
+const MC={geral:"var(--gmd)",admin:"var(--gold)",fin:"var(--gr)",jur:"var(--blue)",conselho:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)",cong:"var(--gr)"};
 const CRUMB={
   geral:["","Dashboard Geral","/ IPPenha · visão executiva consolidada"],
   "admin-dash":["Administrativo","Dashboard","/ visão do módulo"],
@@ -2677,7 +2688,7 @@ const CRUMB={
   "memb-vis":["Membresia","Visitantes",""],
 };
 const SL={sec:"Secretaria e Cadastro",rh:"RH / Gestão de Pessoas",doc:"Documentos",aud:"Auditoria",fin:"Financeiro",con:"Contratos",est:"Controle de Estoque",demandas:"Processos e Demandas Jurídicas",contratos:"Contratos e Instrumentos",pareceres:"Pareceres",documentos:"Documentos Jurídicos",riscos:"Riscos e Pendências",historico:"Histórico",rel:"Relatórios Estratégicos",ind:"Indicadores",cong:"Congregações",nomeados:"Nomeados",ordenados:"Ordenados",ate:"Atendimentos",ora:"Pedidos de Oração",aco:"Acompanhamentos",reg:"Registros Pastorais",pri:"Casos Prioritários",min:"Ministérios",lid:"Liderança Ministerial",esc:"Escalas",prog:"Programações",lit:"Liturgia dos Cultos",vol:"Voluntários",calendario:"Calendário Geral",solicitacoes:"Solicitações de Agendamento",aprovacoes:"Aprovações Pendentes",confirmados:"Eventos Confirmados",recusados:"Eventos Recusados",reagendamentos:"Reagendamentos e Ajustes",ambientes:"Ambientes e Recursos",conflitos:"Conflitos de Agenda",config:"Configurações da Agenda",lista:"Lista de PGs",encontros:"Encontros",participantes:"Participantes",visitantes:"Visitantes",estudos:"Estudos",relatorios:"Relatórios",oracao:"Pedidos de Oração",man:"Manutenção",lim:"Limpeza e Conservação",sol:"Solicitações Operacionais",pat:"Patrimônio",pre:"Prestadores",todas:"Todas as Solicitações",pend:"Pendentes",and:"Em Andamento",conc:"Concluídas",hist:"Histórico",mod:"Por Módulo",exp:"Exportações",uni:"Por Congregação",res:"Por Responsável",cad:"Cadastro de Membros",bat:"Batismos",prof:"Profissões de Fé",trans:"Transferências",vis:"Visitantes"};
-const MN={admin:"Administrativo",jur:"Jurídico",conselho:"Conselho",pastoral:"Pastoral",min:"Ministerial",agenda:"Agenda",pgs:"Pequenos Grupos",infra:"Infraestrutura",dem:"Demandas",rel:"Relatórios",memb:"Membresia",cong:"Congregações"};
+const MN={admin:"Administrativo",fin:"Financeiro",jur:"Jurídico",conselho:"Conselho",pastoral:"Pastoral",min:"Ministerial",agenda:"Agenda",pgs:"Pequenos Grupos",infra:"Infraestrutura",dem:"Demandas",rel:"Relatórios",memb:"Membresia",cong:"Congregações"};
 
 function go(id){
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
@@ -3649,10 +3660,10 @@ function atualizarSidebarUsuario() {
 
 /* ── PERMISSÕES ────────────────────────────── */
 const MODULOS_PERFIL = {
-  admin_geral:         ["geral","admin","jur","conselho","pastoral","min","agenda","pgs","infra","dem","rel","memb","config","cong"],
-  conselho:            ["geral","conselho","rel","dem","memb","pastoral","min","pgs","cong"],
+  admin_geral:         ["geral","admin","fin","jur","conselho","pastoral","min","agenda","pgs","infra","dem","rel","memb","config","cong"],
+  conselho:            ["geral","conselho","fin","rel","dem","memb","pastoral","min","pgs","cong"],
   pastoral:            ["geral","pastoral","memb","pgs","dem","min","agenda","cong"],
-  adm_operacional:     ["geral","admin","dem","rel","memb","agenda","infra","cong"],
+  adm_operacional:     ["geral","admin","fin","dem","rel","memb","agenda","infra","cong"],
   lider_ministerio:    ["geral","min","agenda","dem","pgs","cong"],
   membro_ministerio:   ["geral","min","agenda","dem","cong"],
   operacional_servicos:["geral","infra","dem"],
