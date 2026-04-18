@@ -804,10 +804,10 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
       <div class="msub" id="ms-dem">
         <div class="si" onclick="go('dem-dash')">Dashboard de Demandas</div>
         <div class="si" onclick="go('dem-todas')">Todas as Solicitações</div>
-        <div class="si" onclick="go('dem-pend')">Demandas Pendentes</div>
+        <div class="si" onclick="go('dem-analise')">Em Análise</div>
         <div class="si" onclick="go('dem-and')">Em Andamento</div>
         <div class="si" onclick="go('dem-conc')">Concluídas</div>
-        <div class="si" onclick="go('dem-pri')">Prioridades</div>
+        <div class="si" onclick="go('dem-pri')">Alta Prioridade</div>
         <div class="si" onclick="go('dem-hist')">Histórico</div>
       </div>
     </div>
@@ -1290,36 +1290,17 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
     <div class="hero">
       <div class="hero-ic" style="background:var(--rosebg);border-color:rgba(208,104,104,0.25)">◻</div>
       <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Solicitações e Demandas</div><div class="hero-dsc">Central de tasks da IPPenha — roteamento automático, acompanhamento e histórico</div></div>
-      <div class="hero-act"><button class="tbt pri" onclick="openModal()">+ Nova Demanda</button></div>
+      <div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div>
     </div>
     <div class="inav" style="--mc:var(--rose)">
-      <div class="ini on">Dashboard</div><div class="ini" onclick="go('dem-todas')">Todas</div>
-      <div class="ini" onclick="go('dem-pend')">Pendentes</div><div class="ini" onclick="go('dem-and')">Em Andamento</div>
-      <div class="ini" onclick="go('dem-conc')">Concluídas</div><div class="ini" onclick="go('dem-pri')">Prioridades</div>
+      <div class="ini on">Dashboard</div>
+      <div class="ini" onclick="go('dem-todas')">Todas</div>
+      <div class="ini" onclick="go('dem-analise')">Em Análise</div>
+      <div class="ini" onclick="go('dem-and')">Em Andamento</div>
+      <div class="ini" onclick="go('dem-conc')">Concluídas</div>
+      <div class="ini" onclick="go('dem-pri')">Prioridades</div>
     </div>
-    <div class="ct">
-      <div class="kpis c4">
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,85,85,0.15);color:var(--rose);">◻</div><div class="kpi-body"><div class="kpi-lbl">Total abertas</div><div class="kpi-val">47</div><div class="kpi-d nu">este mês</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Em andamento</div><div class="kpi-val">23</div><div class="kpi-d nu">em execução</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Atrasadas</div><div class="kpi-val">8</div><div class="kpi-d dn">▼ requer ação</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gmd);">✦</div><div class="kpi-body"><div class="kpi-lbl">Concluídas (Abr)</div><div class="kpi-val">118</div><div class="kpi-d up">▲ alto desempenho</div></div></div>
-      </div>
-      <div class="srch"><span style="color:var(--t3);font-size:12px">⌕</span><input type="text" placeholder="Buscar por título, responsável ou módulo..."></div>
-      <div class="card">
-        <div class="ctit">Demandas recentes</div>
-        <table class="tbl">
-          <thead><tr><th>Protocolo</th><th>Título</th><th>Módulo</th><th>Responsável</th><th>Venc.</th><th>Prior.</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr onclick="T('#1042','3 dias de atraso · João Costa')"><td class="tdc">#1042</td><td class="tdp">Manutenção elétrica — Sala principal</td><td>Infra</td><td>João Costa</td><td class="neg mono">09/04</td><td><span class="pill pl">Alta</span></td><td><span class="pill pl">Atrasada</span></td></tr>
-            <tr onclick="T('#1041','Aguardando Conselho')"><td class="tdc">#1041</td><td class="tdp">Aprovação contrato fornecedor TI</td><td>Admin</td><td>Conselho</td><td class="mono">18/04</td><td><span class="pill pl">Alta</span></td><td><span class="pill pn">Aprovação</span></td></tr>
-            <tr onclick="T('#1040','Em andamento · Ana Lima')"><td class="tdc">#1040</td><td class="tdp">Escala ministério louvor — Mai/26</td><td>Ministerial</td><td>Ana Lima</td><td class="mono">25/04</td><td><span class="pill po">Média</span></td><td><span class="pill pp">Andamento</span></td></tr>
-            <tr onclick="T('#1039','Concluída em 10/04')"><td class="tdc">#1039</td><td class="tdp">Cadastro de 14 novos membros</td><td>Membresia</td><td>Maria Souza</td><td class="mono">10/04</td><td><span class="pill pz">Baixa</span></td><td><span class="pill pd">Concluída</span></td></tr>
-            <tr onclick="T('#1038','Culto domingo')"><td class="tdc">#1038</td><td class="tdp">Limpeza auditório — culto domingo</td><td>Infra</td><td>Eq. Oper.</td><td class="mono">13/04</td><td><span class="pill po">Média</span></td><td><span class="pill pp">Andamento</span></td></tr>
-            <tr onclick="T('#1037','Reunião de diáconos · 15/04')"><td class="tdc">#1037</td><td class="tdp">Preparação reunião de diáconos</td><td>Pastoral</td><td>Pr. Carlos</td><td class="mono">15/04</td><td><span class="pill po">Média</span></td><td><span class="pill po">Aberta</span></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <div class="ct" id="dem-dash-content"></div>
   </div>
 
   <!-- ════ CONSELHO ════════════════════════ -->
@@ -2116,35 +2097,78 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
     <div class="ct" id="fin-aud-content"></div>
   </div>
 
-  <!-- DEMANDAS -->
+  <!-- DEMANDAS TODAS -->
   <div class="view" id="v-dem-todas">
-    <div class="hero"><div class="hero-ic" style="background:rgba(224,85,85,0.12)">📋</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Todas as Solicitações</div><div class="hero-dsc">Gerencie demandas, OS e solicitações de todos os módulos</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova Demanda</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:rgba(224,85,85,0.12)">📋</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Todas as Solicitações</div><div class="hero-dsc">Todas as demandas abertas, em andamento, concluídas e canceladas</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
     <div class="ct">
       <div class="card">
-        <div class="ctit">Demandas <span class="cact" onclick="listarModulo('DEMANDAS','dem-todas-list')">↻ Atualizar</span></div>
-        <div id="dem-todas-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('dem-todas-content')">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="dem-todas-content-fstatus" onchange="demFiltrar('dem-todas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
+          </select>
+          <select id="dem-todas-content-fcat" onchange="demFiltrar('dem-todas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as categorias</option>
+            <option>Conselho</option><option>Agendamentos</option><option>Manutenção</option><option>Limpeza e Organização</option><option>Logística</option><option>Financeiro</option><option>Comunicação e Divulgação</option><option>Secretaria</option><option>Cadastro</option><option>Oração e Aconselhamento</option><option>Visitação</option><option>Apoio ao Culto</option><option>Ensino (EBT)</option><option>Ação Social / Hebron</option><option>Administrativo Geral</option>
+          </select>
+          <select id="dem-todas-content-fprio" onchange="demFiltrar('dem-todas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as prioridades</option>
+            <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
+          </select>
+          <input id="dem-todas-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('dem-todas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div id="dem-todas-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
       </div>
     </div>
   </div>
 
-  <!-- DEMANDAS PENDENTES -->
-  <div class="view" id="v-dem-pend">
-    <div class="hero"><div class="hero-ic" style="background:rgba(224,138,42,0.12)">⏳</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Pendentes</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova Demanda</button></div></div>
+  <!-- DEMANDAS EM ANÁLISE -->
+  <div class="view" id="v-dem-analise">
+    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🔍</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Em Análise</div><div class="hero-dsc">Demandas aguardando análise e triagem</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
     <div class="ct">
       <div class="card">
-        <div class="ctit">Demandas Pendentes <span class="cact" onclick="listarModulo('DEMANDAS','dem-pend-list',{status:'Pendente'})">↻ Atualizar</span></div>
-        <div id="dem-pend-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('dem-analise-content',{status:'Em Análise'})">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="dem-analise-content-fcat" onchange="demFiltrar('dem-analise-content',{status:'Em Análise'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as categorias</option>
+            <option>Conselho</option><option>Agendamentos</option><option>Manutenção</option><option>Limpeza e Organização</option><option>Logística</option><option>Financeiro</option><option>Comunicação e Divulgação</option><option>Secretaria</option><option>Cadastro</option><option>Oração e Aconselhamento</option><option>Visitação</option><option>Apoio ao Culto</option><option>Ensino (EBT)</option><option>Ação Social / Hebron</option><option>Administrativo Geral</option>
+          </select>
+          <select id="dem-analise-content-fprio" onchange="demFiltrar('dem-analise-content',{status:'Em Análise'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as prioridades</option>
+            <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
+          </select>
+          <input id="dem-analise-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('dem-analise-content',{status:'Em Análise'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div id="dem-analise-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
       </div>
     </div>
   </div>
 
   <!-- DEMANDAS EM ANDAMENTO -->
   <div class="view" id="v-dem-and">
-    <div class="hero"><div class="hero-ic" style="background:rgba(74,156,245,0.12)">🔄</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Em Andamento</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova Demanda</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:rgba(139,111,212,0.12)">🔄</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Em Andamento</div><div class="hero-dsc">Demandas em execução</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
     <div class="ct">
       <div class="card">
-        <div class="ctit">Em Andamento <span class="cact" onclick="listarModulo('DEMANDAS','dem-and-list',{status:'Em Andamento'})">↻ Atualizar</span></div>
-        <div id="dem-and-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('dem-and-content',{status:'Em Andamento'})">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="dem-and-content-fcat" onchange="demFiltrar('dem-and-content',{status:'Em Andamento'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as categorias</option>
+            <option>Conselho</option><option>Agendamentos</option><option>Manutenção</option><option>Limpeza e Organização</option><option>Logística</option><option>Financeiro</option><option>Comunicação e Divulgação</option><option>Secretaria</option><option>Cadastro</option><option>Oração e Aconselhamento</option><option>Visitação</option><option>Apoio ao Culto</option><option>Ensino (EBT)</option><option>Ação Social / Hebron</option><option>Administrativo Geral</option>
+          </select>
+          <select id="dem-and-content-fprio" onchange="demFiltrar('dem-and-content',{status:'Em Andamento'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as prioridades</option>
+            <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
+          </select>
+          <input id="dem-and-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('dem-and-content',{status:'Em Andamento'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div id="dem-and-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
       </div>
     </div>
   </div>
@@ -2468,21 +2492,72 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
     <div class="ct"><div class="card"><div class="ctit">Prestadores <span class="cact" onclick="listarModulo('MEMBROS','infra-pre-list')">↻</span></div><div id="infra-pre-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
-  <!-- DEMANDAS -->
+  <!-- DEMANDAS CONCLUÍDAS -->
   <div class="view" id="v-dem-conc">
-    <div class="hero"><div class="hero-ic" style="background:rgba(58,170,92,0.12)">✅</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Concluídas</div></div></div>
-    <div class="ct"><div class="card"><div class="ctit">Concluídas <span class="cact" onclick="listarModulo('DEMANDAS','dem-conc-list',{status:'Concluída'})">↻</span></div><div id="dem-conc-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+    <div class="hero"><div class="hero-ic" style="background:rgba(58,170,92,0.12)">✅</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Concluídas</div><div class="hero-dsc">Demandas finalizadas com sucesso</div></div></div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('dem-conc-content',{status:'Concluída'})">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="dem-conc-content-fcat" onchange="demFiltrar('dem-conc-content',{status:'Concluída'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as categorias</option>
+            <option>Conselho</option><option>Agendamentos</option><option>Manutenção</option><option>Limpeza e Organização</option><option>Logística</option><option>Financeiro</option><option>Comunicação e Divulgação</option><option>Secretaria</option><option>Cadastro</option><option>Oração e Aconselhamento</option><option>Visitação</option><option>Apoio ao Culto</option><option>Ensino (EBT)</option><option>Ação Social / Hebron</option><option>Administrativo Geral</option>
+          </select>
+          <input id="dem-conc-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('dem-conc-content',{status:'Concluída'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div id="dem-conc-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
   </div>
 
+  <!-- DEMANDAS ALTA PRIORIDADE -->
   <div class="view" id="v-dem-pri">
-    <div class="hero"><div class="hero-ic" style="background:var(--rosebg)">🚨</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Prioridades</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova</button></div></div>
-    <div class="ct"><div class="card"><div class="ctit">Alta Prioridade <span class="cact" onclick="listarModulo('DEMANDAS','dem-pri-list',{prioridade:'Alta'})">↻</span></div><div id="dem-pri-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+    <div class="hero"><div class="hero-ic" style="background:var(--rosebg)">🚨</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Alta Prioridade</div><div class="hero-dsc">Demandas urgentes e de alta prioridade</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova</button></div></div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('dem-pri-content',{prioridade:'Alta'})">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="dem-pri-content-fstatus" onchange="demFiltrar('dem-pri-content',{prioridade:'Alta'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
+          </select>
+          <input id="dem-pri-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('dem-pri-content',{prioridade:'Alta'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div id="dem-pri-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
   </div>
 
+  <!-- DEMANDAS HISTÓRICO -->
   <div class="view" id="v-dem-hist">
-    <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">📜</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Histórico</div></div></div>
-    <div class="ct"><div class="card"><div class="ctit">Todas as Demandas <span class="cact" onclick="listarModulo('DEMANDAS','dem-hist-list')">↻</span></div><div id="dem-hist-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+    <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">📜</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Histórico</div><div class="hero-dsc">Todas as demandas de todos os períodos</div></div></div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('dem-hist-content')">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="dem-hist-content-fstatus" onchange="demFiltrar('dem-hist-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
+          </select>
+          <select id="dem-hist-content-fcat" onchange="demFiltrar('dem-hist-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as categorias</option>
+            <option>Conselho</option><option>Agendamentos</option><option>Manutenção</option><option>Limpeza e Organização</option><option>Logística</option><option>Financeiro</option><option>Comunicação e Divulgação</option><option>Secretaria</option><option>Cadastro</option><option>Oração e Aconselhamento</option><option>Visitação</option><option>Apoio ao Culto</option><option>Ensino (EBT)</option><option>Ação Social / Hebron</option><option>Administrativo Geral</option>
+          </select>
+          <input id="dem-hist-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('dem-hist-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div id="dem-hist-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
   </div>
+
+  <!-- DEMANDA DETALHE -->
+  <div class="view" id="v-dem-detalhe"></div>
 
   <!-- RELATÓRIOS -->
   <div class="view" id="v-rel-mod">
@@ -2835,10 +2910,14 @@ const CRUMB={
   "infra-dash":["Infraestrutura","Dashboard",""],
   "infra-man":["Infraestrutura","Manutenção",""],
   "infra-lim":["Infraestrutura","Limpeza",""],
-  "dem-dash":["Demandas","Dashboard",""],
-  "dem-todas":["Demandas","Todas as Solicitações",""],
-  "dem-pend":["Demandas","Pendentes",""],
-  "dem-and":["Demandas","Em Andamento",""],
+  "dem-dash":["Demandas","Dashboard","/ visão geral e métricas"],
+  "dem-todas":["Demandas","Todas as Solicitações","/ lista completa"],
+  "dem-analise":["Demandas","Em Análise","/ triagem e classificação"],
+  "dem-and":["Demandas","Em Andamento","/ execução"],
+  "dem-conc":["Demandas","Concluídas","/ finalizadas"],
+  "dem-pri":["Demandas","Alta Prioridade","/ urgentes e críticas"],
+  "dem-hist":["Demandas","Histórico","/ todos os registros"],
+  "dem-detalhe":["Demandas","Detalhe da Solicitação",""],
   "rel-dash":["Relatórios","Dashboard Gerencial",""],
   "memb-dash":["Membresia","Dashboard",""],
   "memb-cad":["Membresia","Cadastro de Membros",""],
@@ -2994,7 +3073,7 @@ const SCHEMA = {
   campos: {
     AGENDA:        ["titulo","data","dia_semana","hora_inicio","hora_fim","organizador","responsavel","espaco","recorrencia","mes","observacao","status"],
     VISITANTES:    ["nome","telefone","email","origem","observacoes","convertido_em_membro"],
-    DEMANDAS:      ["titulo","descricao","solicitante","area","status","prioridade","responsavel","data_abertura","data_conclusao"],
+    DEMANDAS:      ["titulo","descricao","solicitante","area","subcategoria","status","prioridade","responsavel","data_abertura","data_conclusao"],
     FINANCEIRO:    ["tipo","categoria","descricao","valor","data_lancamento","status","responsavel","observacoes"],
     PGS:           ["nome","lider","anfitriao","dia_semana","horario","local","ativo","observacoes"],
     ESTOQUE_ITENS: ["nome","categoria","quantidade","unidade","localizacao","observacoes","ativo"],
@@ -3014,7 +3093,7 @@ const SCHEMA = {
   tipos: {
     AGENDA:     { data:"date", hora_inicio:"date", hora_fim:"date", status:"select:confirmado,pendente,cancelado,reagendado", recorrencia:"select:Semanal,Quinzenal,Mensal,Anual" },
     VISITANTES: { convertido_em_membro: "boolean" },
-    DEMANDAS:   { data_abertura: "date", data_conclusao: "date", status: "select:Pendente,Em Andamento,Concluída,Cancelada", prioridade: "select:Baixa,Média,Alta,Urgente" },
+    DEMANDAS:   { data_abertura: "date", data_conclusao: "date", status: "select:Aberta,Em Análise,Em Andamento,Concluída,Cancelada", prioridade: "select:Baixa,Média,Alta,Urgente" },
     FINANCEIRO: { valor: "number", data_lancamento: "date", tipo: "select:Receita,Despesa", status: "select:Pendente,Confirmado,Cancelado" },
     PGS:        { ativo: "boolean", dia_semana: "select:Segunda,Terça,Quarta,Quinta,Sexta,Sábado,Domingo" },
     ESTOQUE_ITENS: { quantidade: "number", ativo: "boolean" }
@@ -4579,6 +4658,70 @@ document.addEventListener("DOMContentLoaded", () => {
 
 <!-- ═══ MÓDULO FINANCEIRO ════════════════════════════ -->
 <script src="financeiro.js"></script>
+
+<!-- ═══ MÓDULO DEMANDAS ══════════════════════════════ -->
+<script src="demandas.js"></script>
+
+<!-- ═══ MODAL: NOVA DEMANDA ══════════════════════════ -->
+<div id="modal-nova-demanda" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.35)">
+    <div style="padding:20px 24px 16px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Demandas</div>
+        <div style="font-size:17px;font-weight:700;color:var(--tx1)">Nova Solicitação</div>
+      </div>
+      <button onclick="fecharModalNovaDemanda()" style="background:none;border:none;font-size:20px;color:var(--tx3);cursor:pointer;padding:4px 8px;border-radius:6px">×</button>
+    </div>
+    <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Categoria *</label>
+        <select id="dem-f-cat" onchange="demOnCatChange()" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px">
+          <option value="">Selecione a categoria</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Subcategoria *</label>
+        <select id="dem-f-sub" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px">
+          <option value="">Selecione a categoria primeiro</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Título *</label>
+        <input id="dem-f-titulo" type="text" placeholder="Descreva brevemente a solicitação" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Descrição detalhada</label>
+        <textarea id="dem-f-desc" rows="3" placeholder="Informações adicionais, contexto, urgência..." style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;resize:vertical;box-sizing:border-box"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Prioridade</label>
+          <select id="dem-f-prio" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px">
+            <option>Baixa</option><option selected>Média</option><option>Alta</option><option>Urgente</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Conclusão prevista</label>
+          <input id="dem-f-venc" type="date" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Solicitante</label>
+          <input id="dem-f-sol" type="text" placeholder="Nome do solicitante" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Responsável</label>
+          <input id="dem-f-resp" type="text" placeholder="Auto-preenchido pela categoria" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+        </div>
+      </div>
+    </div>
+    <div style="padding:16px 24px 20px;border-top:1px solid var(--bd1);display:flex;gap:10px;justify-content:flex-end">
+      <button onclick="fecharModalNovaDemanda()" style="padding:9px 20px;border-radius:8px;border:1px solid var(--bd2);background:none;color:var(--tx2);font-size:13px;cursor:pointer">Cancelar</button>
+      <button onclick="salvarNovaDemanda()" style="padding:9px 20px;border-radius:8px;border:none;background:var(--rose);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Registrar Demanda</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
