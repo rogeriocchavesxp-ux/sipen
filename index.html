@@ -323,6 +323,13 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 .ini:hover{color:var(--tx2)}
 .ini.on{color:var(--tx1);border-bottom-color:var(--mc,var(--gr))}
 
+/* ═══ SECTION NAV (nível 1 de módulo) ══════ */
+.secnav{display:flex;align-items:center;gap:5px;padding:14px 20px 12px;border-bottom:1px solid var(--bd1);margin-bottom:0;}
+.sni{padding:6px 15px;font-size:12px;font-weight:600;color:var(--tx3);cursor:pointer;border-radius:var(--r);border:1px solid var(--bd1);transition:all .12s;white-space:nowrap;}
+.sni:hover{color:var(--tx1);border-color:var(--bd2);background:var(--bg-card)}
+.sni.on{color:var(--tx1);background:var(--bg-card);border-color:rgba(88,152,212,0.5);color:#7db8f0;box-shadow:0 0 0 1px rgba(88,152,212,0.18) inset}
+.sni-sep{width:1px;height:16px;background:var(--bd1);margin:0 2px;flex-shrink:0;}
+
 /* ═══ CONTENT ══════════════════════ */
 .ct{padding:0 20px 28px}
 
@@ -687,6 +694,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
         <div class="si" onclick="go('conselho-dash')">Dashboard do Conselho</div>
         <div class="si" onclick="go('conselho-nomeados')">Nomeados</div>
         <div class="si" onclick="go('conselho-ordenados')">Ordenados</div>
+        <div class="si" onclick="go('conselho-contratados')">Contratados</div>
         <div class="si" onclick="go('conselho-rel')">Relatórios Estratégicos</div>
         <div class="si" onclick="go('conselho-ind')">Indicadores Institucionais</div>
         <div class="si" onclick="go('conselho-doc')">Documentos do Conselho</div>
@@ -1335,6 +1343,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
       <div class="ini on">Dashboard</div>
       <div class="ini" onclick="go('conselho-nomeados')">Nomeados</div>
       <div class="ini" onclick="go('conselho-ordenados')">Ordenados</div>
+      <div class="ini" onclick="go('conselho-contratados')">Contratados</div>
       <div class="ini" onclick="T('Estratégico','Relatórios macro')">Estratégico</div>
       <div class="ini" onclick="T('Documentos','Atas e resoluções')">Documentos</div>
     </div>
@@ -1426,7 +1435,14 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
       <div><div class="hero-lbl">Conselho e Governança</div><div class="hero-ttl">Nomeados</div><div class="hero-dsc">Funções designadas e temporárias sempre vinculadas à membresia, com histórico, ata de origem e possibilidade de permissões derivadas.</div></div>
       <div class="hero-act"><button class="tbt pri" onclick="T('Novo nomeado','Registro vinculado à membresia e à ata')">+ Novo Registro</button></div>
     </div>
-    <div class="inav" style="--mc:var(--sky)">
+    <div class="secnav">
+      <div class="sni on">Nomeados</div>
+      <div class="sni-sep"></div>
+      <div class="sni" onclick="go('conselho-ordenados')">Ordenados</div>
+      <div class="sni-sep"></div>
+      <div class="sni" onclick="go('conselho-contratados')">Contratados</div>
+    </div>
+    <div class="inav" style="--mc:var(--sky);margin-top:0">
       <div class="ini on">Lista Geral</div><div class="ini" onclick="T('Área','Filtro por área e função')">Por Área</div>
       <div class="ini" onclick="T('Período','Histórico sem sobrescrever registros')">Por Período</div><div class="ini" onclick="T('Permissões','Permissões automáticas derivadas')">Permissões</div>
     </div>
@@ -1461,29 +1477,186 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
       <div><div class="hero-lbl">Conselho e Governança</div><div class="hero-ttl">Ordenados</div><div class="hero-dsc">Oficiais ordenados da igreja com tratamento distinto de funções temporárias, histórico de ordenação, situação atual e mandatos.</div></div>
       <div class="hero-act"><button class="tbt pri" onclick="T('Novo oficial','Cadastro restrito para ordenados')">+ Novo Oficial</button></div>
     </div>
-    <div class="inav" style="--mc:var(--sky)">
-      <div class="ini on">Lista Geral</div><div class="ini" onclick="T('Pastores','Filtro por tipo de ofício')">Pastores</div>
-      <div class="ini" onclick="T('Presbíteros','Filtro por tipo de ofício')">Presbíteros</div><div class="ini" onclick="T('Diáconos','Filtro por tipo de ofício')">Diáconos</div>
+    <div class="secnav">
+      <div class="sni" onclick="go('conselho-nomeados')">Nomeados</div>
+      <div class="sni-sep"></div>
+      <div class="sni on">Ordenados</div>
+      <div class="sni-sep"></div>
+      <div class="sni" onclick="go('conselho-contratados')">Contratados</div>
+    </div>
+    <div class="inav" style="--mc:var(--sky);margin-top:0">
+      <div class="ini on">Lista Geral</div>
+      <div class="ini" onclick="T('Pastores','Filtro por tipo de ofício')">Pastores</div>
+      <div class="ini" onclick="T('Presbíteros','Filtro por tipo de ofício')">Presbíteros</div>
       <div class="ini" onclick="T('Histórico','Mandatos e situação ministerial')">Histórico</div>
     </div>
     <div class="ct">
-      <div class="alr alr-w"><div class="alr-i">⚠</div><div><strong>Regra crítica:</strong> Ordenado é ofício permanente. Pode acumular função atual em Nomeados, mas o sistema não mistura ofício com designação temporária.</div></div>
+      <div class="alr alr-w"><div class="alr-i">⚠</div><div><strong>Regra crítica:</strong> Ordenado é ofício permanente. Não se confunde com nomeação temporária. O sistema mantém registros separados para ofício e função designada. Supervisor deve ser sempre um ordenado.</div></div>
       <div class="kpis c4">
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Oficiais ativos</div><div class="kpi-val">27</div><div class="kpi-d nu">pastores, presbíteros e diáconos</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal);">◈</div><div class="kpi-body"><div class="kpi-lbl">Presbíteros</div><div class="kpi-val">11</div><div class="kpi-d nu">4 em função atual</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Diáconos</div><div class="kpi-val">13</div><div class="kpi-d nu">2 licenças registradas</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Mandatos a vencer</div><div class="kpi-val">3</div><div class="kpi-d wa">⚠ próximos 90 dias</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Ordenados ativos</div><div class="kpi-val">14</div><div class="kpi-d nu">pastores e presbíteros</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal);">✝</div><div class="kpi-body"><div class="kpi-lbl">Pastores</div><div class="kpi-val">3</div><div class="kpi-d nu">supervisão e governo</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Presbíteros</div><div class="kpi-val">11</div><div class="kpi-d nu">4 em função atual</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Mandatos a vencer</div><div class="kpi-val">3</div><div class="kpi-d wa">⚠ próximos 90 dias</div></div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Pastores</div>
+          <table class="tbl">
+            <thead><tr><th>Nome</th><th>Tipo</th><th>Ordenação</th><th>Área supervisionada</th><th>Mandato</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="tdp">Rev. Amauri Costa</td><td><span class="pill pp">Pastor</span></td><td class="tdc">IPB · 12/12/2008</td><td>Presidente do Conselho</td><td class="tdc">2026</td><td><span class="pill pd">Ativo</span></td></tr>
+              <tr><td class="tdp">Rev. Filipe Checon</td><td><span class="pill pp">Pastor</span></td><td class="tdc">IPB · 21/11/2015</td><td>Supervisor Ministerial</td><td class="tdc">2026</td><td><span class="pill pd">Ativo</span></td></tr>
+              <tr><td class="tdp">Rev. Rogério Chaves</td><td><span class="pill pp">Pastor</span></td><td class="tdc">IPB · 15/06/2019</td><td>Missões e Plantio</td><td class="tdc">2026</td><td><span class="pill pd">Ativo</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="ctit">Presbíteros</div>
+          <table class="tbl">
+            <thead><tr><th>Nome</th><th>Tipo</th><th>Ordenação</th><th>Área supervisionada</th><th>Mandato</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="tdp">Presb. Edson Vieira</td><td><span class="pill pv">Presbítero</span></td><td class="tdc">IPPenha · 05/08/2017</td><td>Supervisor Infraestrutura</td><td class="tdc">2026</td><td><span class="pill pd">Ativo</span></td></tr>
+              <tr><td class="tdp">Presb. Marcos Andrade</td><td><span class="pill pv">Presbítero</span></td><td class="tdc">IPPenha · 12/03/2019</td><td>Conselheiro Financeiro</td><td class="tdc">2026</td><td><span class="pill pd">Ativo</span></td></tr>
+              <tr><td class="tdp">Presb. Luís Carvalho</td><td><span class="pill pv">Presbítero</span></td><td class="tdc">IPPenha · 20/09/2021</td><td>Conselheiro PGs</td><td class="tdc">2026</td><td><span class="pill pd">Ativo</span></td></tr>
+              <tr><td class="tdp">Presb. Fernando Lopes</td><td><span class="pill pv">Presbítero</span></td><td class="tdc">IPPenha · 11/11/2022</td><td>—</td><td class="tdc">2027</td><td><span class="pill pd">Ativo</span></td></tr>
+              <tr><td class="tdp">Presb. Paulo R.</td><td><span class="pill pv">Presbítero</span></td><td class="tdc">IPPenha · 20/06/2004</td><td>—</td><td class="tdc">encerrado</td><td><span class="pill pz">Jubilado</span></td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
       <div class="card">
-        <div class="ctit">Lista geral de ordenados</div>
+        <div class="ctit">Hierarquia funcional</div>
+        <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;padding:4px 0">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 16px;background:var(--bg-surface);border-radius:var(--r);border:1px solid rgba(88,152,212,0.25)"><span style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em">Conselho</span><span style="font-size:12px;font-weight:700;color:var(--tx1)">Governo</span></div>
+          <div style="color:var(--tx4);padding:0 8px;font-size:14px">→</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 16px;background:var(--bg-surface);border-radius:var(--r);border:1px solid rgba(88,152,212,0.2)"><span style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em">Supervisor</span><span style="font-size:12px;font-weight:700;color:var(--tx1)">Ordenado</span></div>
+          <div style="color:var(--tx4);padding:0 8px;font-size:14px">→</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 16px;background:var(--bg-surface);border-radius:var(--r);border:1px solid var(--bd1)"><span style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em">Conselheiro</span><span style="font-size:12px;font-weight:700;color:var(--tx1)">Nomeado</span></div>
+          <div style="color:var(--tx4);padding:0 8px;font-size:14px">→</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 16px;background:var(--bg-surface);border-radius:var(--r);border:1px solid var(--bd1)"><span style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em">Coordenador</span><span style="font-size:12px;font-weight:700;color:var(--tx1)">Nomeado</span></div>
+          <div style="color:var(--tx4);padding:0 8px;font-size:14px">→</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 16px;background:var(--bg-surface);border-radius:var(--r);border:1px solid var(--bd1)"><span style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em">Líder de Área</span><span style="font-size:12px;font-weight:700;color:var(--tx1)">Nomeado</span></div>
+          <div style="color:var(--tx4);padding:0 8px;font-size:14px">→</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 16px;background:var(--bg-surface);border-radius:var(--r);border:1px solid var(--bd1)"><span style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em">Membro</span><span style="font-size:12px;font-weight:700;color:var(--tx1)">Nomeado</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ CONSELHO CONTRATADOS ═══════════ -->
+  <div class="view" id="v-conselho-contratados">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--skybg);border-color:rgba(88,152,212,0.25)">◫</div>
+      <div><div class="hero-lbl">Conselho e Governança</div><div class="hero-ttl">Contratados</div><div class="hero-dsc">Funcionários terceirizados e contratados que prestam apoio operacional e administrativo à IPPenha. Registro separado de nomeados e ordenados.</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="T('Novo contratado','Cadastro de funcionário ou prestador')">+ Novo Contratado</button></div>
+    </div>
+    <div class="secnav">
+      <div class="sni" onclick="go('conselho-nomeados')">Nomeados</div>
+      <div class="sni-sep"></div>
+      <div class="sni" onclick="go('conselho-ordenados')">Ordenados</div>
+      <div class="sni-sep"></div>
+      <div class="sni on">Contratados</div>
+    </div>
+    <div class="inav" style="--mc:var(--sky);margin-top:0">
+      <div class="ini on">Lista Geral</div>
+      <div class="ini" onclick="T('Terceirizados','Empresas contratadas')">Terceirizados</div>
+      <div class="ini" onclick="T('Diretos','Contratação direta')">Contratação Direta</div>
+      <div class="ini" onclick="T('Por Categoria','Segurança, Limpeza, Admin, Manutenção')">Por Categoria</div>
+    </div>
+    <div class="ct">
+      <div class="alr alr-w"><div class="alr-i">⚠</div><div><strong>Regra crítica:</strong> Contratados <strong>não são</strong> nomeados nem ordenados. Não aparecem em escalas ministeriais nem recebem permissões de módulo. Seu cadastro é exclusivo desta seção.</div></div>
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◫</div><div class="kpi-body"><div class="kpi-lbl">Contratados ativos</div><div class="kpi-val">4</div><div class="kpi-d nu">2 diretos · 1 empresa</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Terceirizados</div><div class="kpi-val">2</div><div class="kpi-d nu">via empresa Generall</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Contratação direta</div><div class="kpi-val">2</div><div class="kpi-d nu">administrativo e manutenção</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr);">✦</div><div class="kpi-body"><div class="kpi-lbl">Contratos vigentes</div><div class="kpi-val">3</div><div class="kpi-d nu">sem pendências</div></div></div>
+      </div>
+
+      <div class="g2" style="margin-bottom:14px">
+        <!-- Empresa Generall -->
+        <div class="card" style="border-left:3px solid rgba(88,152,212,0.4)">
+          <div class="ctit">
+            <span style="background:rgba(88,152,212,0.12);border:1px solid rgba(88,152,212,0.22);border-radius:4px;padding:2px 8px;font-size:10px;color:#7db8f0;font-weight:700">EMPRESA</span>
+            <span style="margin-left:6px">Generall — Segurança e Limpeza</span>
+          </div>
+          <div style="margin-bottom:12px">
+            <div class="sr"><span class="sl">Tipo de vínculo</span><span class="sv">Terceirizado</span></div>
+            <div class="sr"><span class="sl">Categoria</span><span class="sv">Segurança · Limpeza</span></div>
+            <div class="sr"><span class="sl">Contrato desde</span><span class="sv mono">01/2024</span></div>
+            <div class="sr"><span class="sl">Área atendida</span><span class="sv">Sede · todas as unidades</span></div>
+            <div class="sr"><span class="sl">Status</span><span class="sv"><span class="pill pd">Ativo</span></span></div>
+          </div>
+          <div class="ctit" style="font-size:11px;margin-bottom:8px">Profissionais alocados pela Generall</div>
+          <table class="tbl">
+            <thead><tr><th>Nome / Cargo</th><th>Categoria</th><th>Área</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="tdp">Equipe de limpeza (2 funcionários)</td><td><span class="pill pz">Limpeza</span></td><td class="tdc">Sede</td><td><span class="pill pd">Ativo</span></td></tr>
+              <tr><td class="tdp">Segurança (1 porteiro)</td><td><span class="pill pz">Segurança</span></td><td class="tdc">Sede · entrada principal</td><td><span class="pill pd">Ativo</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Contratados diretos -->
+        <div class="gcol">
+          <!-- Jhonatan -->
+          <div class="card" style="border-left:3px solid rgba(139,111,212,0.4)">
+            <div class="ctit">
+              <span style="background:rgba(139,111,212,0.12);border:1px solid rgba(139,111,212,0.22);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--violet);font-weight:700">DIRETO</span>
+              <span style="margin-left:6px">Jhonatan Diego</span>
+            </div>
+            <div class="sr"><span class="sl">Função</span><span class="sv">Auxiliar Administrativo</span></div>
+            <div class="sr"><span class="sl">Tipo de vínculo</span><span class="sv">Contratação direta</span></div>
+            <div class="sr"><span class="sl">Categoria</span><span class="sv">Administrativo</span></div>
+            <div class="sr"><span class="sl">Área atendida</span><span class="sv">Secretaria · Administração</span></div>
+            <div class="sr"><span class="sl">Empresa</span><span class="sv">—</span></div>
+            <div class="sr"><span class="sl">Status</span><span class="sv"><span class="pill pd">Ativo</span></span></div>
+          </div>
+          <!-- Davi -->
+          <div class="card" style="border-left:3px solid rgba(224,138,42,0.4)">
+            <div class="ctit">
+              <span style="background:rgba(224,138,42,0.12);border:1px solid rgba(224,138,42,0.22);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--amber);font-weight:700">DIRETO</span>
+              <span style="margin-left:6px">Davi</span>
+            </div>
+            <div class="sr"><span class="sl">Função</span><span class="sv">Manutenção</span></div>
+            <div class="sr"><span class="sl">Tipo de vínculo</span><span class="sv">Contratação direta</span></div>
+            <div class="sr"><span class="sl">Categoria</span><span class="sv">Manutenção</span></div>
+            <div class="sr"><span class="sl">Área atendida</span><span class="sv">Infraestrutura · todas as unidades</span></div>
+            <div class="sr"><span class="sl">Empresa</span><span class="sv">—</span></div>
+            <div class="sr"><span class="sl">Status</span><span class="sv"><span class="pill pd">Ativo</span></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabela geral -->
+      <div class="card">
+        <div class="ctit">Lista geral de contratados</div>
         <table class="tbl">
-          <thead><tr><th>Nome</th><th>Ofício</th><th>Ordenação</th><th>Função atual</th><th>Mandato</th><th>Status</th></tr></thead>
+          <thead><tr><th>Nome / Empresa</th><th>Função</th><th>Categoria</th><th>Tipo de Vínculo</th><th>Área Atendida</th><th>Status</th></tr></thead>
           <tbody>
-            <tr><td class="tdp">Rev. Amauri Costa</td><td>pastor</td><td class="tdc">IPB · 12/12/2008</td><td>Presidente do Conselho</td><td class="tdc">2026</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdp">Rev. Filipe Checon</td><td>pastor</td><td class="tdc">IPB · 21/11/2015</td><td>Supervisor Ministerial</td><td class="tdc">2026</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdp">Presb. Edson Vieira</td><td>presbítero</td><td class="tdc">IPPenha · 05/08/2017</td><td>Supervisor Infraestrutura</td><td class="tdc">2026</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdp">Diác. Sergio Oliveira</td><td>diácono</td><td class="tdc">IPPenha · 18/03/2018</td><td>Exame de Contas</td><td class="tdc">2026</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdp">Presb. Paulo R.</td><td>presbítero</td><td class="tdc">IPPenha · 20/06/2004</td><td>—</td><td class="tdc">encerrado</td><td><span class="pill pz">Jubilado</span></td></tr>
+            <tr>
+              <td class="tdp">Generall (equipe)</td>
+              <td>Limpeza e Portaria</td>
+              <td><span class="pill pz">Segurança / Limpeza</span></td>
+              <td class="tdc">Terceirizado</td>
+              <td class="tdc">Sede · todas as unidades</td>
+              <td><span class="pill pd">Ativo</span></td>
+            </tr>
+            <tr>
+              <td class="tdp">Jhonatan Diego</td>
+              <td>Auxiliar Administrativo</td>
+              <td><span class="pill pv">Administrativo</span></td>
+              <td class="tdc">Contratação direta</td>
+              <td class="tdc">Secretaria</td>
+              <td><span class="pill pd">Ativo</span></td>
+            </tr>
+            <tr>
+              <td class="tdp">Davi</td>
+              <td>Manutenção</td>
+              <td><span class="pill po">Manutenção</span></td>
+              <td class="tdc">Contratação direta</td>
+              <td class="tdc">Infraestrutura</td>
+              <td><span class="pill pd">Ativo</span></td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -3261,6 +3434,7 @@ const CRUMB={
   "conselho-nomeados":["Conselho e Governança","Nomeados","/ funções temporárias"],
   "conselho-ordenados":["Conselho e Governança","Ordenados","/ ofícios permanentes"],
   "conselho-hist":["Conselho e Governança","Histórico de Atas e Deliberações",""],
+  "conselho-contratados":["Conselho e Governança","Contratados","/ terceirizados e apoio operacional"],
   "diac-dash":["Junta Diaconal","Dashboard Diaconal","/ visão geral do serviço"],
   "diac-diaconos":["Junta Diaconal","Diáconos","/ cadastro e atuação"],
   "diac-escalas":["Junta Diaconal","Escalas de Serviço","/ cultos e atividades"],
