@@ -1453,23 +1453,14 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
     <div class="ct">
       <div class="alr alr-w"><div class="alr-i">⚠</div><div><strong>Regra crítica:</strong> Nomeado é função temporária. Não substitui ofício ordenado. Toda mudança deve encerrar o vínculo anterior e abrir novo registro histórico.</div></div>
       <div class="kpis c4">
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Nomeados ativos</div><div class="kpi-val">64</div><div class="kpi-d nu">14 áreas</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Vínculo ministerial</div><div class="kpi-val">31</div><div class="kpi-d nu">lideranças e apoio</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Vínculo administrativo</div><div class="kpi-val">18</div><div class="kpi-d nu">secretaria e gestão</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Vínculo operacional</div><div class="kpi-val">15</div><div class="kpi-d nu">apoio e execução</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Nomeados ativos</div><div class="kpi-val" id="nom-kpi-total">—</div><div class="kpi-d nu" id="nom-kpi-orgaos">carregando…</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Ministérios</div><div class="kpi-val" id="nom-kpi-min">—</div><div class="kpi-d nu">lideranças e apoio</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Governo / Comissões</div><div class="kpi-val" id="nom-kpi-gov">—</div><div class="kpi-d nu">secretaria e gestão</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Sociedades / Grupos</div><div class="kpi-val" id="nom-kpi-soc">—</div><div class="kpi-d nu">apoio e execução</div></div></div>
       </div>
       <div class="card">
-        <div class="ctit">Lista geral de nomeados</div>
-        <table class="tbl">
-          <thead><tr><th>Membro</th><th>Função</th><th>Área</th><th>Vínculo</th><th>Período</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr><td class="tdp">Ana Lima</td><td>Líder de Ministério</td><td>Louvor</td><td>ministerial</td><td class="tdc">01/02/2026 – aberto</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdp">Maria Souza</td><td>Secretária auxiliar</td><td>Administrativo</td><td>administrativo</td><td class="tdc">15/01/2026 – aberto</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdp">João Costa</td><td>Coordenador operacional</td><td>Infraestrutura</td><td>operacional</td><td class="tdc">03/03/2026 – aberto</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdp">Carlos M.</td><td>Supervisor de PGs</td><td>PGs</td><td>ministerial</td><td class="tdc">10/01/2026 – aberto</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdp">Debora N.</td><td>Coord. de Recepção</td><td>Integração</td><td>operacional</td><td class="tdc">01/11/2025 – 31/01/2026</td><td><span class="pill pz">Encerrado</span></td></tr>
-          </tbody>
-        </table>
+        <div class="ctit">Lista geral de nomeados <span class="cact" onclick="renderNomeados()">↻ Atualizar</span></div>
+        <div id="nomeados-list-container"><div style="color:var(--tx3);font-size:11px">Carregando…</div></div>
       </div>
     </div>
   </div>
@@ -1499,42 +1490,18 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
     <div class="ct">
       <div class="alr alr-w"><div class="alr-i">⚠</div><div><strong>Regra crítica:</strong> Ordenado é ofício permanente. Não se confunde com nomeação temporária. O sistema mantém registros separados para ofício e função designada. Supervisor deve ser sempre um ordenado.</div></div>
       <div class="kpis c4">
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Ordenados ativos</div><div class="kpi-val">16</div><div class="kpi-d nu">3 pastores · 13 presbíteros</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal);">✝</div><div class="kpi-body"><div class="kpi-lbl">Pastores</div><div class="kpi-val">3</div><div class="kpi-d nu">supervisão e governo</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Presbíteros</div><div class="kpi-val">13</div><div class="kpi-d nu">atualizado AGE 28/04/2024</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Mandatos a vencer</div><div class="kpi-val">5</div><div class="kpi-d wa">⚠ Fim: 20/11/2026</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Ordenados ativos</div><div class="kpi-val" id="ord-kpi-total">—</div><div class="kpi-d nu" id="ord-kpi-detalhe">carregando…</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal);">✝</div><div class="kpi-body"><div class="kpi-lbl">Pastores</div><div class="kpi-val" id="ord-kpi-pastores">—</div><div class="kpi-d nu">supervisão e governo</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Presbíteros</div><div class="kpi-val" id="ord-kpi-presbs">—</div><div class="kpi-d nu">atualizado AGE 28/04/2024</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Mandatos a vencer</div><div class="kpi-val" id="ord-kpi-vencer">—</div><div class="kpi-d wa" id="ord-kpi-vencer-d">⚠ verificando…</div></div></div>
       </div>
       <div class="card" style="margin-bottom:14px">
-          <div class="ctit">Pastores <span class="csub">— ofício permanente · supervisão e governo</span></div>
-          <table class="tbl">
-            <thead><tr><th>Nome</th><th>Tipo</th><th>Área supervisionada</th><th>Status</th></tr></thead>
-            <tbody>
-              <tr><td class="tdp">Rev. Amauri Costa</td><td><span class="pill pp">Pastor</span></td><td>Presidente do Conselho · Sede</td><td><span class="pill pd">Ativo</span></td></tr>
-              <tr><td class="tdp">Rev. Filipe Checon</td><td><span class="pill pp">Pastor</span></td><td>Supervisor Ministerial</td><td><span class="pill pd">Ativo</span></td></tr>
-              <tr><td class="tdp">Rev. Rogério Chaves</td><td><span class="pill pp">Pastor</span></td><td>Missões e Plantio</td><td><span class="pill pd">Ativo</span></td></tr>
-            </tbody>
-          </table>
-        </div>
+        <div class="ctit">Pastores <span class="csub">— ofício permanente · supervisão e governo</span><span class="cact" onclick="renderOficiaisOrdenados()">↻ Atualizar</span></div>
+        <div id="ord-pastores-list"><div style="color:var(--tx3);font-size:11px">Carregando…</div></div>
+      </div>
       <div class="card" style="margin-bottom:14px">
-        <div class="ctit">Presbíteros <span class="csub">— Quadro oficial · Atualização: 05/07/2024 · AGE 28/04/2024</span></div>
-        <table class="tbl">
-          <thead><tr><th>#</th><th>Nome</th><th>Posse</th><th>Fim Mandato</th><th>Ata</th><th>Obs.</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr><td class="tdc mono" style="color:var(--tx4)">01</td><td class="tdp">Alberto Shiniti Noguti</td><td class="tdc mono">21/11/2021</td><td class="tdc mono">20/11/2026</td><td class="tdc mono">1205/25</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">02</td><td class="tdp">Euclides Portella da Rocha</td><td class="tdc mono">21/11/2021</td><td class="tdc mono">20/11/2026</td><td class="tdc mono">1205/25</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">03</td><td class="tdp">Hugo Alcântara Miguel</td><td class="tdc mono">21/11/2021</td><td class="tdc mono">20/11/2026</td><td class="tdc mono">1205/25</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">04</td><td class="tdp">Marcus V. Barros de Novaes</td><td class="tdc mono">21/11/2021</td><td class="tdc mono">20/11/2026</td><td class="tdc mono">1205/25</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">05</td><td class="tdp">Mauricio Tosta</td><td class="tdc mono">21/11/2021</td><td class="tdc mono">20/11/2026</td><td class="tdc mono">1205/25</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">06</td><td class="tdp">Laércio Ferreira Lima</td><td class="tdc mono">15/05/2022</td><td class="tdc mono">14/05/2027</td><td class="tdc mono">1218</td><td class="tdc">2º mandato</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">07</td><td class="tdp">Edson Luís Vieira</td><td class="tdc mono">22/10/2023</td><td class="tdc mono">21/10/2028</td><td class="tdc mono">1241</td><td class="tdc">2º mandato</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">08</td><td class="tdp">Eder Góis de Oliveira</td><td class="tdc mono">22/10/2023</td><td class="tdc mono">21/10/2028</td><td class="tdc mono">1237</td><td class="tdc">2º mandato</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">09</td><td class="tdp">Anízio Alves Borges</td><td class="tdc mono">04/08/2024</td><td class="tdc mono">03/08/2029</td><td class="tdc mono">1250</td><td class="tdc" style="color:var(--gold);font-size:10px">Emerência · 395 votos · 2º mand.</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">10</td><td class="tdp">Carlos Alberto R. da Silva</td><td class="tdc mono">04/08/2024</td><td class="tdc mono">03/08/2029</td><td class="tdc mono">1250</td><td class="tdc">2º mandato</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">11</td><td class="tdp">Percílio Diório</td><td class="tdc mono">04/08/2024</td><td class="tdc mono">03/08/2029</td><td class="tdc mono">1250</td><td class="tdc" style="color:var(--gold);font-size:10px">Emerência · 411 votos · 2º mand.</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">12</td><td class="tdp">Anderson Lopes Portela Rocha</td><td class="tdc mono">04/08/2024</td><td class="tdc mono">03/08/2029</td><td class="tdc mono">1250</td><td class="tdc" style="font-size:10px">Ex-Diácono (AGE 2024)</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">13</td><td class="tdp">Max Filipe Silva Gonçalves</td><td class="tdc mono">04/08/2024</td><td class="tdc mono">03/08/2029</td><td class="tdc mono">1250</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-          </tbody>
-        </table>
+        <div class="ctit">Presbíteros <span class="csub">— Quadro oficial · AGE 28/04/2024</span></div>
+        <div id="ord-presbs-list"><div style="color:var(--tx3);font-size:11px">Carregando…</div></div>
       </div>
       <div class="card">
         <div class="ctit">Hierarquia funcional</div>
@@ -1580,54 +1547,14 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
     <div class="ct">
       <div class="alr alr-w"><div class="alr-i">ℹ</div><div><strong>Nota:</strong> Seminaristas são membros em formação. Não são ordenados nem nomeados para funções de governo. Sua atuação prática deve ser supervisionada por um pastor ordenado.</div></div>
       <div class="kpis c4">
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">✦</div><div class="kpi-body"><div class="kpi-lbl">Seminaristas ativos</div><div class="kpi-val">4</div><div class="kpi-d nu">em formação teológica</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr);">◎</div><div class="kpi-body"><div class="kpi-lbl">Em estágio prático</div><div class="kpi-val">2</div><div class="kpi-d nu">atuando na IPPenha</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Concluídos (2026)</div><div class="kpi-val">1</div><div class="kpi-d nu">aguardando ordenação</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Seminários víncul.</div><div class="kpi-val">2</div><div class="kpi-d nu">STB · STBNB</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">✦</div><div class="kpi-body"><div class="kpi-lbl">Seminaristas ativos</div><div class="kpi-val" id="sem-kpi-total">—</div><div class="kpi-d nu">em formação teológica</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr);">◎</div><div class="kpi-body"><div class="kpi-lbl">Em estágio prático</div><div class="kpi-val" id="sem-kpi-estagio">—</div><div class="kpi-d nu">atuando na IPPenha</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Concluídos</div><div class="kpi-val" id="sem-kpi-concl">—</div><div class="kpi-d nu">aguardando ordenação</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Seminários víncul.</div><div class="kpi-val" id="sem-kpi-semin">—</div><div class="kpi-d nu">instituições parceiras</div></div></div>
       </div>
       <div class="card">
-        <div class="ctit">Lista de seminaristas</div>
-        <table class="tbl">
-          <thead><tr><th>Nome</th><th>Seminário</th><th>Curso</th><th>Ano</th><th>Supervisor</th><th>Estágio</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr>
-              <td class="tdp">Elias Martins</td>
-              <td class="tdc">STB</td>
-              <td>Teologia</td>
-              <td class="tdc mono">3º ano</td>
-              <td>Rev. Amauri Costa</td>
-              <td><span class="pill pd">Sim · Louvor</span></td>
-              <td><span class="pill pd">Ativo</span></td>
-            </tr>
-            <tr>
-              <td class="tdp">Rafael Souza</td>
-              <td class="tdc">STB</td>
-              <td>Teologia</td>
-              <td class="tdc mono">1º ano</td>
-              <td>Rev. Filipe Checon</td>
-              <td><span class="pill pz">Não</span></td>
-              <td><span class="pill pd">Ativo</span></td>
-            </tr>
-            <tr>
-              <td class="tdp">Bruno Almeida</td>
-              <td class="tdc">STBNB</td>
-              <td>Teologia</td>
-              <td class="tdc mono">2º ano</td>
-              <td>Rev. Rogério Chaves</td>
-              <td><span class="pill pd">Sim · PGs</span></td>
-              <td><span class="pill pd">Ativo</span></td>
-            </tr>
-            <tr>
-              <td class="tdp">Daniel Ferreira</td>
-              <td class="tdc">STB</td>
-              <td>Teologia</td>
-              <td class="tdc mono">4º ano</td>
-              <td>Rev. Amauri Costa</td>
-              <td><span class="pill pd">Sim · Pregação</span></td>
-              <td><span class="pill pp">Concluído</span></td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="ctit">Lista de seminaristas <span class="cact" onclick="renderSeminaristas()">↻ Atualizar</span></div>
+        <div id="seminaristas-list-container"><div style="color:var(--tx3);font-size:11px">Carregando…</div></div>
       </div>
     </div>
   </div>
@@ -1657,99 +1584,14 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
     <div class="ct">
       <div class="alr alr-w"><div class="alr-i">⚠</div><div><strong>Regra crítica:</strong> Contratados <strong>não são</strong> nomeados nem ordenados. Não aparecem em escalas ministeriais nem recebem permissões de módulo. Seu cadastro é exclusivo desta seção.</div></div>
       <div class="kpis c4">
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◫</div><div class="kpi-body"><div class="kpi-lbl">Contratados ativos</div><div class="kpi-val">4</div><div class="kpi-d nu">2 diretos · 1 empresa</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Terceirizados</div><div class="kpi-val">2</div><div class="kpi-d nu">via empresa Generall</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Contratação direta</div><div class="kpi-val">2</div><div class="kpi-d nu">administrativo e manutenção</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr);">✦</div><div class="kpi-body"><div class="kpi-lbl">Contratos vigentes</div><div class="kpi-val">3</div><div class="kpi-d nu">sem pendências</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◫</div><div class="kpi-body"><div class="kpi-lbl">Contratados ativos</div><div class="kpi-val" id="cont-kpi-total">—</div><div class="kpi-d nu" id="cont-kpi-detalhe">carregando…</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Terceirizados</div><div class="kpi-val" id="cont-kpi-terc">—</div><div class="kpi-d nu">via empresa</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Contratação direta</div><div class="kpi-val" id="cont-kpi-dir">—</div><div class="kpi-d nu">administrativo e manutenção</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr);">✦</div><div class="kpi-body"><div class="kpi-lbl">Contratos vigentes</div><div class="kpi-val" id="cont-kpi-vig">—</div><div class="kpi-d nu">sem pendências</div></div></div>
       </div>
-
-      <div class="g2" style="margin-bottom:14px">
-        <!-- Empresa Generall -->
-        <div class="card" style="border-left:3px solid rgba(88,152,212,0.4)">
-          <div class="ctit">
-            <span style="background:rgba(88,152,212,0.12);border:1px solid rgba(88,152,212,0.22);border-radius:4px;padding:2px 8px;font-size:10px;color:#7db8f0;font-weight:700">EMPRESA</span>
-            <span style="margin-left:6px">Generall — Segurança e Limpeza</span>
-          </div>
-          <div style="margin-bottom:12px">
-            <div class="sr"><span class="sl">Tipo de vínculo</span><span class="sv">Terceirizado</span></div>
-            <div class="sr"><span class="sl">Categoria</span><span class="sv">Segurança · Limpeza</span></div>
-            <div class="sr"><span class="sl">Contrato desde</span><span class="sv mono">01/2024</span></div>
-            <div class="sr"><span class="sl">Área atendida</span><span class="sv">Sede · todas as unidades</span></div>
-            <div class="sr"><span class="sl">Status</span><span class="sv"><span class="pill pd">Ativo</span></span></div>
-          </div>
-          <div class="ctit" style="font-size:11px;margin-bottom:8px">Profissionais alocados pela Generall</div>
-          <table class="tbl">
-            <thead><tr><th>Nome / Cargo</th><th>Categoria</th><th>Área</th><th>Status</th></tr></thead>
-            <tbody>
-              <tr><td class="tdp">Equipe de limpeza (2 funcionários)</td><td><span class="pill pz">Limpeza</span></td><td class="tdc">Sede</td><td><span class="pill pd">Ativo</span></td></tr>
-              <tr><td class="tdp">Segurança (1 porteiro)</td><td><span class="pill pz">Segurança</span></td><td class="tdc">Sede · entrada principal</td><td><span class="pill pd">Ativo</span></td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Contratados diretos -->
-        <div class="gcol">
-          <!-- Jhonatan -->
-          <div class="card" style="border-left:3px solid rgba(139,111,212,0.4)">
-            <div class="ctit">
-              <span style="background:rgba(139,111,212,0.12);border:1px solid rgba(139,111,212,0.22);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--violet);font-weight:700">DIRETO</span>
-              <span style="margin-left:6px">Jhonatan Diego</span>
-            </div>
-            <div class="sr"><span class="sl">Função</span><span class="sv">Auxiliar Administrativo</span></div>
-            <div class="sr"><span class="sl">Tipo de vínculo</span><span class="sv">Contratação direta</span></div>
-            <div class="sr"><span class="sl">Categoria</span><span class="sv">Administrativo</span></div>
-            <div class="sr"><span class="sl">Área atendida</span><span class="sv">Secretaria · Administração</span></div>
-            <div class="sr"><span class="sl">Empresa</span><span class="sv">—</span></div>
-            <div class="sr"><span class="sl">Status</span><span class="sv"><span class="pill pd">Ativo</span></span></div>
-          </div>
-          <!-- Davi -->
-          <div class="card" style="border-left:3px solid rgba(224,138,42,0.4)">
-            <div class="ctit">
-              <span style="background:rgba(224,138,42,0.12);border:1px solid rgba(224,138,42,0.22);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--amber);font-weight:700">DIRETO</span>
-              <span style="margin-left:6px">Davi</span>
-            </div>
-            <div class="sr"><span class="sl">Função</span><span class="sv">Manutenção</span></div>
-            <div class="sr"><span class="sl">Tipo de vínculo</span><span class="sv">Contratação direta</span></div>
-            <div class="sr"><span class="sl">Categoria</span><span class="sv">Manutenção</span></div>
-            <div class="sr"><span class="sl">Área atendida</span><span class="sv">Infraestrutura · todas as unidades</span></div>
-            <div class="sr"><span class="sl">Empresa</span><span class="sv">—</span></div>
-            <div class="sr"><span class="sl">Status</span><span class="sv"><span class="pill pd">Ativo</span></span></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tabela geral -->
       <div class="card">
-        <div class="ctit">Lista geral de contratados</div>
-        <table class="tbl">
-          <thead><tr><th>Nome / Empresa</th><th>Função</th><th>Categoria</th><th>Tipo de Vínculo</th><th>Área Atendida</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr>
-              <td class="tdp">Generall (equipe)</td>
-              <td>Limpeza e Portaria</td>
-              <td><span class="pill pz">Segurança / Limpeza</span></td>
-              <td class="tdc">Terceirizado</td>
-              <td class="tdc">Sede · todas as unidades</td>
-              <td><span class="pill pd">Ativo</span></td>
-            </tr>
-            <tr>
-              <td class="tdp">Jhonatan Diego</td>
-              <td>Auxiliar Administrativo</td>
-              <td><span class="pill pv">Administrativo</span></td>
-              <td class="tdc">Contratação direta</td>
-              <td class="tdc">Secretaria</td>
-              <td><span class="pill pd">Ativo</span></td>
-            </tr>
-            <tr>
-              <td class="tdp">Davi</td>
-              <td>Manutenção</td>
-              <td><span class="pill po">Manutenção</span></td>
-              <td class="tdc">Contratação direta</td>
-              <td class="tdc">Infraestrutura</td>
-              <td><span class="pill pd">Ativo</span></td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="ctit">Lista geral de contratados <span class="cact" onclick="renderContratados()">↻ Atualizar</span></div>
+        <div id="contratados-list-container"><div style="color:var(--tx3);font-size:11px">Carregando…</div></div>
       </div>
     </div>
   </div>
@@ -2762,64 +2604,14 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
     </div>
     <div class="ct">
       <div class="kpis c4">
-        <div class="kpi"><div class="kpi-ico" style="background:var(--copperbg);color:var(--copper);">✚</div><div class="kpi-body"><div class="kpi-lbl">Diáconos ativos</div><div class="kpi-val">37</div><div class="kpi-d nu">quadro oficial IPPenha</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Mandato até 2026</div><div class="kpi-val">7</div><div class="kpi-d wa">⚠ eleição: ago–set/2026</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr);">✦</div><div class="kpi-body"><div class="kpi-lbl">Mandato 2027–2029</div><div class="kpi-val">30</div><div class="kpi-d nu">em pleno exercício</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Situações especiais</div><div class="kpi-val">4</div><div class="kpi-d nu">encerrados / transferidos</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--copperbg);color:var(--copper);">✚</div><div class="kpi-body"><div class="kpi-lbl">Diáconos ativos</div><div class="kpi-val" id="diac-kpi-ativos">—</div><div class="kpi-d nu">quadro oficial IPPenha</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Mandato até 2026</div><div class="kpi-val" id="diac-kpi-2026">—</div><div class="kpi-d wa">⚠ eleição: ago–set/2026</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr);">✦</div><div class="kpi-body"><div class="kpi-lbl">Mandato 2027–2029</div><div class="kpi-val" id="diac-kpi-outros">—</div><div class="kpi-d nu">em pleno exercício</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Situações especiais</div><div class="kpi-val" id="diac-kpi-especiais">—</div><div class="kpi-d nu">encerrados / transferidos</div></div></div>
       </div>
       <div class="card">
-        <div class="ctit">Diáconos — Quadro Oficial <span class="csub">Atualização: 05/07/2024 · AGE 28/04/2024 · Posse 04/08/2024</span></div>
-        <table class="tbl">
-          <thead><tr><th>#</th><th>Nome</th><th>Posse</th><th>Fim Mandato</th><th>Ata</th><th>Obs.</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr><td colspan="7" style="background:rgba(224,138,42,0.06);color:var(--amber);font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;padding:6px 10px;font-weight:700">Mandato até 20/11/2026 · Eleição: 08/08/2026 · Posse orientada: 05/09/2026</td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">01</td><td class="tdp">Osías Vasconcelos Júnior</td><td class="tdc mono">21/11/2021</td><td class="tdc mono">20/11/2026</td><td class="tdc mono">1205/25</td><td class="tdc" style="color:var(--gold);font-size:10px">Emerência · 392 votos</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">02</td><td class="tdp">Adilson Aparecido Villano</td><td class="tdc mono">21/11/2021</td><td class="tdc mono">20/11/2026</td><td class="tdc mono">1205/25</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">03</td><td class="tdp">Adriano Portella da Rocha</td><td class="tdc mono">21/11/2021</td><td class="tdc mono">20/11/2026</td><td class="tdc mono">1205/25</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">04</td><td class="tdp">Amauri Costa de O. Junior</td><td class="tdc mono">21/11/2021</td><td class="tdc mono">20/11/2026</td><td class="tdc mono">1205/25</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">05</td><td class="tdp">Carlos Eduardo V. de Oliveira</td><td class="tdc mono">21/11/2021</td><td class="tdc mono">20/11/2026</td><td class="tdc mono">1205/25</td><td class="tdc" style="color:var(--blue);font-size:10px">Residindo no exterior</td><td><span class="pill po">Especial</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">06</td><td class="tdp">Marcos Marcandali de Jesus</td><td class="tdc mono">21/11/2021</td><td class="tdc mono">20/11/2026</td><td class="tdc mono">1205/25</td><td class="tdc" style="color:var(--blue);font-size:10px">Residindo no litoral</td><td><span class="pill po">Especial</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">07</td><td class="tdp">Yarian Santana Tamoyo</td><td class="tdc mono">21/11/2021</td><td class="tdc mono">20/11/2026</td><td class="tdc mono">1207/25</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td colspan="7" style="background:rgba(58,170,92,0.05);color:var(--gr);font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;padding:6px 10px;font-weight:700">Mandato até 14/05/2027 · Ata 1218</td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">08</td><td class="tdp">Éber Costa Moreira Lopes</td><td class="tdc mono">15/05/2022</td><td class="tdc mono">14/05/2027</td><td class="tdc mono">1218</td><td class="tdc">2º mandato</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">09</td><td class="tdp">José Antonio Bohorquez Romero</td><td class="tdc mono">15/05/2022</td><td class="tdc mono">14/05/2027</td><td class="tdc mono">1218</td><td class="tdc">2º mandato</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">10</td><td class="tdp">Douglas Miguel</td><td class="tdc mono">15/05/2022</td><td class="tdc mono">14/05/2027</td><td class="tdc mono">1218</td><td class="tdc">2º mandato</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">11</td><td class="tdp">Márcio Dal Maso</td><td class="tdc mono">15/05/2022</td><td class="tdc mono">14/05/2027</td><td class="tdc mono">1218</td><td class="tdc">2º mandato</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">12</td><td class="tdp">Agilson Alves Oliveira</td><td class="tdc mono">15/05/2022</td><td class="tdc mono">14/05/2027</td><td class="tdc mono">1218</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">13</td><td class="tdp">José Carlos Bento</td><td class="tdc mono">15/05/2022</td><td class="tdc mono">14/05/2027</td><td class="tdc mono">1218</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">14</td><td class="tdp">Daniel Pereira Aguiar</td><td class="tdc mono">15/05/2022</td><td class="tdc mono">14/05/2027</td><td class="tdc mono">1218</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">15</td><td class="tdp">Ely da Conceição Coelho</td><td class="tdc mono">15/05/2022</td><td class="tdc mono">14/05/2027</td><td class="tdc mono">1218</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">16</td><td class="tdp">Gabriel Dias Marinho</td><td class="tdc mono">15/05/2022</td><td class="tdc mono">14/05/2027</td><td class="tdc mono">1218</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">17</td><td class="tdp">Hermínio Estevão Ramos Rodrigues</td><td class="tdc mono">15/05/2022</td><td class="tdc mono">14/05/2027</td><td class="tdc mono">1218</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">18</td><td class="tdp">Ricardo Riul</td><td class="tdc mono">15/05/2022</td><td class="tdc mono">14/05/2027</td><td class="tdc mono">1218</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">19</td><td class="tdp">Ronaldo Gomes da Silva</td><td class="tdc mono">15/05/2022</td><td class="tdc mono">14/05/2027</td><td class="tdc mono">1218</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">20</td><td class="tdp">Uelton Ramos de Oliveira</td><td class="tdc mono">15/05/2022</td><td class="tdc mono">14/05/2027</td><td class="tdc mono">1218</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td colspan="7" style="background:rgba(58,170,92,0.05);color:var(--gr);font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;padding:6px 10px;font-weight:700">Mandato até 21/10/2028 · Ata 1237</td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">21</td><td class="tdp">Alexandre Carralero Martins</td><td class="tdc mono">22/10/2023</td><td class="tdc mono">21/10/2028</td><td class="tdc mono">1237</td><td class="tdc">2º mandato</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">22</td><td class="tdp">Ismael Molina</td><td class="tdc mono">22/10/2023</td><td class="tdc mono">21/10/2028</td><td class="tdc mono">1237</td><td class="tdc">2º mandato</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">23</td><td class="tdp">Vitor Góis de Oliveira</td><td class="tdc mono">22/10/2023</td><td class="tdc mono">21/10/2028</td><td class="tdc mono">1237</td><td class="tdc">2º mandato</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">24</td><td class="tdp">Flavio Gallani Silva</td><td class="tdc mono">22/10/2023</td><td class="tdc mono">21/10/2028</td><td class="tdc mono">1237</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">25</td><td class="tdp">Thiago de Paula Solino</td><td class="tdc mono">22/10/2023</td><td class="tdc mono">21/10/2028</td><td class="tdc mono">1237</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td colspan="7" style="background:rgba(58,170,92,0.05);color:var(--gr);font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;padding:6px 10px;font-weight:700">Mandato até 03/08/2029 · Ata 1250 · AGE 28/04/2024 · Posse 04/08/2024</td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">26</td><td class="tdp">Fladimir Pessoa Martins</td><td class="tdc mono">04/08/2024</td><td class="tdc mono">03/08/2029</td><td class="tdc mono">1250</td><td class="tdc">2º mandato</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">27</td><td class="tdp">Marcos Roberto Piacente</td><td class="tdc mono">04/08/2024</td><td class="tdc mono">03/08/2029</td><td class="tdc mono">1250</td><td class="tdc">2º mandato</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">28</td><td class="tdp">Orlando Luiz Guedelha</td><td class="tdc mono">04/08/2024</td><td class="tdc mono">03/08/2029</td><td class="tdc mono">1250</td><td class="tdc">2º mandato</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">29</td><td class="tdp">Thiago Caputo Cavalieri</td><td class="tdc mono">04/08/2024</td><td class="tdc mono">03/08/2029</td><td class="tdc mono">1250</td><td class="tdc">2º mandato</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">30</td><td class="tdp">Ariel Choquetarqui</td><td class="tdc mono">04/08/2024</td><td class="tdc mono">03/08/2029</td><td class="tdc mono">1250</td><td class="tdc" style="font-size:10px">Comunidade Hispanos</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">32</td><td class="tdp">Cícero Martins da Silva</td><td class="tdc mono">04/08/2024</td><td class="tdc mono">03/08/2029</td><td class="tdc mono">1250</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">33</td><td class="tdp">Daniel Felipe de Souza</td><td class="tdc mono">04/08/2024</td><td class="tdc mono">03/08/2029</td><td class="tdc mono">1250</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">34</td><td class="tdp">Edson Meneses Junior</td><td class="tdc mono">04/08/2024</td><td class="tdc mono">03/08/2029</td><td class="tdc mono">1250</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">35</td><td class="tdp">Gabriel Assis Brogim</td><td class="tdc mono">04/08/2024</td><td class="tdc mono">03/08/2029</td><td class="tdc mono">1250</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">36</td><td class="tdp">Moisés Florencio Mamani</td><td class="tdc mono">04/08/2024</td><td class="tdc mono">03/08/2029</td><td class="tdc mono">1250</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">37</td><td class="tdp">Sergio Paulo Crecchi</td><td class="tdc mono">04/08/2024</td><td class="tdc mono">03/08/2029</td><td class="tdc mono">1250</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">38</td><td class="tdp">Símon Roque Vides</td><td class="tdc mono">04/08/2024</td><td class="tdc mono">03/08/2029</td><td class="tdc mono">1250</td><td class="tdc">—</td><td><span class="pill pd">Ativo</span></td></tr>
-            <tr><td colspan="7" style="background:rgba(255,255,255,0.02);color:var(--tx4);font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;padding:6px 10px;font-weight:700">Situações especiais / encerrados</td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">—</td><td class="tdp" style="color:var(--tx3)">Ernesto Rodrigues Alves</td><td class="tdc mono" style="color:var(--tx4)">21/05/2017</td><td class="tdc mono" style="color:var(--tx4)">20/05/2022</td><td class="tdc mono" style="color:var(--tx4)">1140/22</td><td class="tdc" style="color:var(--rose);font-size:10px">Mandato finalizado 05/2022</td><td><span class="pill pz">Encerrado</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">—</td><td class="tdp" style="color:var(--tx3)">Sidnei Ferreira Lima</td><td class="tdc mono" style="color:var(--tx4)">04/08/2019</td><td class="tdc mono" style="color:var(--tx4)">03/08/2024</td><td class="tdc mono" style="color:var(--tx4)">1176/24</td><td class="tdc" style="color:var(--rose);font-size:10px">Mandato vencido 2024</td><td><span class="pill pz">Encerrado</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">—</td><td class="tdp" style="color:var(--tx3)">Anderson Lopes Portela Rocha</td><td class="tdc mono" style="color:var(--tx4)">15/05/2022</td><td class="tdc mono" style="color:var(--tx4)">14/05/2027</td><td class="tdc mono" style="color:var(--tx4)">1218</td><td class="tdc" style="color:var(--violet);font-size:10px">Eleito Presbítero AGE 28/04/2024</td><td><span class="pill pv">Transferido</span></td></tr>
-            <tr><td class="tdc mono" style="color:var(--tx4)">—</td><td class="tdp" style="color:var(--tx3)">Rogério de Castro Chaves</td><td class="tdc mono" style="color:var(--tx4)">28/10/2018</td><td class="tdc mono" style="color:var(--tx4)">27/10/2023</td><td class="tdc mono" style="color:var(--tx4)">1163/22</td><td class="tdc" style="color:var(--teal);font-size:10px">Ordenado Pastor</td><td><span class="pill pn">Transferido</span></td></tr>
-          </tbody>
-        </table>
+        <div class="ctit">Diáconos — Quadro Oficial <span class="csub">Atualização: 05/07/2024 · AGE 28/04/2024 · Posse 04/08/2024</span><span class="cact" onclick="renderDiaconos()">↻ Atualizar</span></div>
+        <div id="diac-diaconos-list"><div style="color:var(--tx3);font-size:11px">Carregando…</div></div>
       </div>
     </div>
   </div>
@@ -3663,7 +3455,8 @@ function go(id){
   // Auto-load Supabase data for connected views
   if (SUPABASE_URL && VIEW_AUTOLOAD[id]) {
     const cfg = VIEW_AUTOLOAD[id];
-    listarModulo(cfg.tab, cfg.id, cfg.filtro || {});
+    if (cfg && cfg.fn) cfg.fn();
+    else if (cfg) listarModulo(cfg.tab, cfg.id, cfg.filtro || {});
   }
 }
 
@@ -3757,6 +3550,10 @@ const TABLE_MAP = {
   "MINISTERIOS":           "demandas",
   "SERIES":                "pgs",
   "ESTUDOS":               "pgs",
+  "OFICIAIS":              "oficiais",
+  "NOMEADOS_CARGOS":       "nomeados",
+  "SEMINARISTAS":          "seminaristas",
+  "CONTRATADOS":           "contratados",
 };
 
 /* SCHEMA baseado na estrutura real do Supabase */
@@ -3770,7 +3567,11 @@ const SCHEMA = {
     FINANCEIRO:   "Financeiro",
     PGS:          "Pequenos Grupos",
     ESTOQUE_ITENS:"Estoque",
-    LOG_AUDITORIA:"Logs do Sistema"
+    LOG_AUDITORIA:"Logs do Sistema",
+    OFICIAIS:     "Oficiais",
+    NOMEADOS_CARGOS:"Nomeados / Cargos",
+    SEMINARISTAS: "Seminaristas",
+    CONTRATADOS:  "Contratados"
   },
   campos: {
     AGENDA:        ["titulo","data","dia_semana","hora_inicio","hora_fim","organizador","responsavel","espaco","recorrencia","mes","observacao","status"],
@@ -3779,7 +3580,11 @@ const SCHEMA = {
     FINANCEIRO:    ["tipo","categoria","descricao","valor","data_lancamento","status","responsavel","observacoes"],
     PGS:           ["nome","lider","anfitriao","dia_semana","horario","local","ativo","observacoes"],
     ESTOQUE_ITENS: ["nome","categoria","quantidade","unidade","localizacao","observacoes","ativo"],
-    LOG_AUDITORIA: ["modulo","acao","entidade","entidade_id","detalhes"]
+    LOG_AUDITORIA:  ["modulo","acao","entidade","entidade_id","detalhes"],
+    OFICIAIS:       ["nome","cargo","posse","fim_mandato","ata","mandato_numero","area","obs","status"],
+    NOMEADOS_CARGOS:["nome","orgao_tipo","orgao","suborgao","cargo","obs","status"],
+    SEMINARISTAS:   ["nome","seminario","curso","ano_curso","supervisor","tem_estagio","area_estagio","status"],
+    CONTRATADOS:    ["nome","tipo_vinculo","empresa","funcao","categoria","area_atendida","status"]
   },
   /* Campos obrigatórios por tabela (NOT NULL sem default) */
   obrigatorios: {
@@ -5350,6 +5155,228 @@ document.addEventListener("DOMContentLoaded", () => {
   // (login-screen já visível por padrão)
 });
 
+/* ── HELPER: fetch com filtros Supabase ───── */
+async function apiFetchTable(tableName, params = {}) {
+  let qs = "select=*";
+  for (const [k, v] of Object.entries(params)) {
+    if (k === "_order") qs += `&order=${v}`;
+    else if (k === "_limit") qs += `&limit=${v}`;
+    else qs += `&${encodeURIComponent(k)}=eq.${encodeURIComponent(v)}`;
+  }
+  const res = await fetch(`${apiBaseUrl()}/rest/v1/${tableName}?${qs}`, {
+    method: "GET", headers: apiHeaders()
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (!Array.isArray(data)) throw new Error(data.message || "Resposta inválida");
+  return data;
+}
+
+/* ── OFICIAIS ORDENADOS ────────────────────── */
+async function renderOficiaisOrdenados() {
+  const setV = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  try {
+    const rows = await apiFetchTable("oficiais", { status: "ativo", _order: "fim_mandato.asc", _limit: 500 });
+    const pastores = rows.filter(r => r.cargo === "pastor");
+    const presbs   = rows.filter(r => r.cargo === "presbitero");
+    const vencer   = rows.filter(r => r.cargo !== "pastor" && r.fim_mandato && r.fim_mandato <= new Date().getFullYear() + "/" + 12 + "/" + 31 && r.fim_mandato >= new Date().toISOString().split("T")[0]);
+
+    setV("ord-kpi-total", pastores.length + presbs.length);
+    setV("ord-kpi-detalhe", `${pastores.length} pastores · ${presbs.length} presbíteros`);
+    setV("ord-kpi-pastores", pastores.length);
+    setV("ord-kpi-presbs", presbs.length);
+    setV("ord-kpi-vencer", vencer.length);
+    if (vencer.length > 0) setV("ord-kpi-vencer-d", "⚠ mandatos a vencer");
+    else setV("ord-kpi-vencer-d", "todos em dia");
+
+    const fmtDate = d => d ? d.split("-").reverse().join("/") : "—";
+    const fmtPill = (s) => s === "ativo" ? `<span class="pill pd">Ativo</span>` : `<span class="pill pz">${s}</span>`;
+
+    const makeTable = (list) => {
+      if (!list.length) return `<p style="color:var(--tx4);font-size:12px;padding:8px">Nenhum registro.</p>`;
+      return `<table class="tbl"><thead><tr><th>Nome</th><th>Posse</th><th>Fim Mandato</th><th>Ata</th><th>Área</th><th>Obs</th><th>Status</th></tr></thead><tbody>` +
+        list.map(r => `<tr><td class="tdp">${r.nome}</td><td class="tdc mono">${fmtDate(r.posse)}</td><td class="tdc mono">${fmtDate(r.fim_mandato)}</td><td class="tdc mono">${r.ata || "—"}</td><td class="tdc">${r.area || "—"}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs || "—"}</td><td>${fmtPill(r.status)}</td></tr>`).join("") +
+        `</tbody></table>`;
+    };
+
+    const pEl = document.getElementById("ord-pastores-list");
+    const rEl = document.getElementById("ord-presbs-list");
+    if (pEl) pEl.innerHTML = makeTable(pastores);
+    if (rEl) rEl.innerHTML = makeTable(presbs);
+  } catch(e) {
+    ["ord-pastores-list","ord-presbs-list"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = `<p style="color:var(--rose);font-size:12px;padding:8px">Erro: ${e.message}</p>`;
+    });
+  }
+}
+VIEW_AUTOLOAD["conselho-ordenados"] = { fn: () => renderOficiaisOrdenados() };
+
+/* ── DIÁCONOS ───────────────────────────────── */
+async function renderDiaconos() {
+  const setV = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const el = document.getElementById("diac-diaconos-list");
+  try {
+    const rows = await apiFetchTable("oficiais", { cargo: "diacono", _order: "fim_mandato.asc", _limit: 500 });
+    const ativos    = rows.filter(r => r.status === "ativo");
+    const especiais = rows.filter(r => r.status !== "ativo");
+    const ano2026   = ativos.filter(r => r.fim_mandato && r.fim_mandato.startsWith("2026"));
+    const outros    = ativos.filter(r => !r.fim_mandato || !r.fim_mandato.startsWith("2026"));
+
+    setV("diac-kpi-ativos", ativos.length);
+    setV("diac-kpi-2026", ano2026.length);
+    setV("diac-kpi-outros", outros.length);
+    setV("diac-kpi-especiais", especiais.length);
+
+    const fmtDate = d => d ? d.split("-").reverse().join("/") : "—";
+    const pillStatus = s => s === "ativo"
+      ? `<span class="pill pd">Ativo</span>`
+      : s === "encerrado" ? `<span class="pill pz">Encerrado</span>`
+      : `<span class="pill pv">${s}</span>`;
+
+    // Group by fim_mandato year
+    const groups = {};
+    for (const r of rows) {
+      const yr = r.fim_mandato ? r.fim_mandato.substring(0,4) : "especial";
+      if (!groups[yr]) groups[yr] = [];
+      groups[yr].push(r);
+    }
+
+    let html = `<table class="tbl"><thead><tr><th>Nome</th><th>Posse</th><th>Fim Mandato</th><th>Ata</th><th>Obs.</th><th>Status</th></tr></thead><tbody>`;
+    const labelColor = yr => yr === "2026" ? "rgba(224,138,42,0.06);color:var(--amber)" : yr === "especial" ? "rgba(255,255,255,0.02);color:var(--tx4)" : "rgba(58,170,92,0.05);color:var(--gr)";
+    for (const [yr, list] of Object.entries(groups).sort()) {
+      const label = yr === "especial" ? "Situações especiais / encerrados" : `Mandato até ${yr}`;
+      html += `<tr><td colspan="6" style="background:${labelColor(yr)};font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;padding:6px 10px;font-weight:700">${label}</td></tr>`;
+      list.forEach(r => {
+        html += `<tr><td class="tdp" style="${r.status!=='ativo'?'color:var(--tx3)':''}">${r.nome}</td><td class="tdc mono">${fmtDate(r.posse)}</td><td class="tdc mono">${fmtDate(r.fim_mandato)}</td><td class="tdc mono">${r.ata||"—"}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs||"—"}</td><td>${pillStatus(r.status)}</td></tr>`;
+      });
+    }
+    html += `</tbody></table>`;
+    if (el) el.innerHTML = html;
+  } catch(e) {
+    if (el) el.innerHTML = `<p style="color:var(--rose);font-size:12px;padding:8px">Erro: ${e.message}</p>`;
+  }
+}
+VIEW_AUTOLOAD["diac-diaconos"] = { fn: () => renderDiaconos() };
+
+/* ── NOMEADOS ──────────────────────────────── */
+async function renderNomeados() {
+  const setV = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const el = document.getElementById("nomeados-list-container");
+  try {
+    const rows = await apiFetchTable("nomeados", { status: "ativo", _order: "orgao_tipo.asc,orgao.asc,nome.asc", _limit: 1000 });
+
+    const byTipo = {};
+    for (const r of rows) {
+      const t = r.orgao_tipo || "outros";
+      if (!byTipo[t]) byTipo[t] = {};
+      const o = r.orgao || "—";
+      if (!byTipo[t][o]) byTipo[t][o] = [];
+      byTipo[t][o].push(r);
+    }
+
+    const total = rows.length;
+    const min   = rows.filter(r => r.orgao_tipo === "ministerio").length;
+    const gov   = rows.filter(r => r.orgao_tipo === "governo" || r.orgao_tipo === "comissao").length;
+    const soc   = rows.filter(r => r.orgao_tipo === "sociedade" || r.orgao_tipo === "grupo").length;
+
+    setV("nom-kpi-total", total);
+    setV("nom-kpi-orgaos", `${Object.keys(byTipo).length} categorias`);
+    setV("nom-kpi-min", min);
+    setV("nom-kpi-gov", gov);
+    setV("nom-kpi-soc", soc);
+
+    const tipoLabel = { governo:"Governo", comissao:"Comissões", ministerio:"Ministérios", sociedade:"Sociedades", grupo:"Grupos", congregacao:"Congregações", outros:"Outros" };
+    const tipoOrder = ["governo","comissao","ministerio","sociedade","grupo","congregacao","outros"];
+
+    let html = "";
+    for (const tipo of tipoOrder) {
+      if (!byTipo[tipo]) continue;
+      html += `<div style="margin-bottom:18px"><div class="ctit" style="margin-bottom:8px">${tipoLabel[tipo]||tipo}</div>`;
+      for (const [orgao, list] of Object.entries(byTipo[tipo]).sort()) {
+        html += `<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">${orgao}</div>`;
+        html += `<table class="tbl"><thead><tr><th>Nome</th><th>Cargo</th><th>Subórgão</th><th>Obs</th></tr></thead><tbody>`;
+        list.forEach(r => {
+          html += `<tr><td class="tdp">${r.nome}</td><td>${r.cargo||"—"}</td><td class="tdc">${r.suborgao||"—"}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs||"—"}</td></tr>`;
+        });
+        html += `</tbody></table></div>`;
+      }
+      html += `</div>`;
+    }
+    if (el) el.innerHTML = html || `<p style="color:var(--tx4);font-size:12px;padding:8px">Nenhum registro.</p>`;
+  } catch(e) {
+    if (el) el.innerHTML = `<p style="color:var(--rose);font-size:12px;padding:8px">Erro: ${e.message}</p>`;
+  }
+}
+VIEW_AUTOLOAD["conselho-nomeados"] = { fn: () => renderNomeados() };
+
+/* ── SEMINARISTAS ──────────────────────────── */
+async function renderSeminaristas() {
+  const setV = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const el = document.getElementById("seminaristas-list-container");
+  try {
+    const rows = await apiFetchTable("seminaristas", { _order: "nome.asc", _limit: 200 });
+    const ativos  = rows.filter(r => r.status === "ativo");
+    const estagio = ativos.filter(r => r.tem_estagio);
+    const concl   = rows.filter(r => r.status === "concluido");
+    const semin   = new Set(rows.map(r => r.seminario).filter(Boolean)).size;
+
+    setV("sem-kpi-total", ativos.length);
+    setV("sem-kpi-estagio", estagio.length);
+    setV("sem-kpi-concl", concl.length);
+    setV("sem-kpi-semin", semin);
+
+    const fmtPill = s => s === "ativo" ? `<span class="pill pd">Ativo</span>` : s === "concluido" ? `<span class="pill pp">Concluído</span>` : `<span class="pill pz">${s}</span>`;
+
+    if (!rows.length) { if (el) el.innerHTML = `<p style="color:var(--tx4);font-size:12px;padding:8px">Nenhum registro.</p>`; return; }
+    let html = `<table class="tbl"><thead><tr><th>Nome</th><th>Seminário</th><th>Curso</th><th>Ano</th><th>Supervisor</th><th>Estágio</th><th>Status</th></tr></thead><tbody>`;
+    rows.forEach(r => {
+      const est = r.tem_estagio ? `<span class="pill pd">Sim · ${r.area_estagio||""}</span>` : `<span class="pill pz">Não</span>`;
+      html += `<tr><td class="tdp">${r.nome}</td><td class="tdc">${r.seminario||"—"}</td><td>${r.curso||"—"}</td><td class="tdc mono">${r.ano_curso||"—"}</td><td>${r.supervisor||"—"}</td><td>${est}</td><td>${fmtPill(r.status)}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+    if (el) el.innerHTML = html;
+  } catch(e) {
+    if (el) el.innerHTML = `<p style="color:var(--rose);font-size:12px;padding:8px">Erro: ${e.message}</p>`;
+  }
+}
+VIEW_AUTOLOAD["conselho-seminaristas"] = { fn: () => renderSeminaristas() };
+
+/* ── CONTRATADOS ────────────────────────────── */
+async function renderContratados() {
+  const setV = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const el = document.getElementById("contratados-list-container");
+  try {
+    const rows = await apiFetchTable("contratados", { _order: "nome.asc", _limit: 200 });
+    const ativos = rows.filter(r => r.status === "ativo");
+    const terc   = ativos.filter(r => r.tipo_vinculo === "terceirizado");
+    const dir    = ativos.filter(r => r.tipo_vinculo !== "terceirizado");
+    const vig    = ativos.length;
+
+    setV("cont-kpi-total", ativos.length);
+    setV("cont-kpi-detalhe", `${terc.length} terc. · ${dir.length} diretos`);
+    setV("cont-kpi-terc", terc.length);
+    setV("cont-kpi-dir", dir.length);
+    setV("cont-kpi-vig", vig);
+
+    const pillCat = c => {
+      const m = { administrativo:"pv", manutencao:"po", seguranca:"pz", limpeza:"pz", pastoral:"pn" };
+      return `<span class="pill ${m[c?.toLowerCase()]||'pz'}">${c||"—"}</span>`;
+    };
+    const fmtPill = s => s === "ativo" ? `<span class="pill pd">Ativo</span>` : `<span class="pill pz">${s}</span>`;
+
+    if (!rows.length) { if (el) el.innerHTML = `<p style="color:var(--tx4);font-size:12px;padding:8px">Nenhum registro.</p>`; return; }
+    let html = `<table class="tbl"><thead><tr><th>Nome / Empresa</th><th>Função</th><th>Categoria</th><th>Tipo de Vínculo</th><th>Área Atendida</th><th>Status</th></tr></thead><tbody>`;
+    rows.forEach(r => {
+      html += `<tr><td class="tdp">${r.nome}${r.empresa?` <span style="font-size:10px;color:var(--tx3)">(${r.empresa})</span>`:""}</td><td>${r.funcao||"—"}</td><td>${pillCat(r.categoria)}</td><td class="tdc">${r.tipo_vinculo||"—"}</td><td class="tdc">${r.area_atendida||"—"}</td><td>${fmtPill(r.status)}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+    if (el) el.innerHTML = html;
+  } catch(e) {
+    if (el) el.innerHTML = `<p style="color:var(--rose);font-size:12px;padding:8px">Erro: ${e.message}</p>`;
+  }
+}
+VIEW_AUTOLOAD["conselho-contratados"] = { fn: () => renderContratados() };
 
 
 </script>
