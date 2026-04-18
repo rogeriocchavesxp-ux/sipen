@@ -41,6 +41,7 @@
   --gold:   #d4a843;  --goldbg:   rgba(212,168,67,0.10);
   --amber:  #e08a2a;  --amberbg:  rgba(224,138,42,0.10);
   --rose:   #e05555;  --rosebg:   rgba(224,85,85,0.10);
+  --copper: #b87a56;  --copperbg: rgba(184,122,86,0.10);
 
   --sw: 256px;
   --th: 56px;
@@ -691,6 +692,27 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
         <div class="si" onclick="go('conselho-doc')">Documentos do Conselho</div>
         <div class="si" onclick="go('conselho-cong')">Acomp. das Congregações</div>
         <div class="si" onclick="go('conselho-hist')">Histórico de Atas e Deliberações</div>
+      </div>
+    </div>
+
+    <!-- Junta Diaconal -->
+    <div class="mwrap" id="mw-diac">
+      <div class="mhdr" onclick="tog('diac')">
+        <div class="micon" style="background:rgba(184,122,86,0.14);border-color:rgba(184,122,86,0.25);color:var(--copper)">✚</div>
+        <span class="mname">Junta Diaconal</span>
+        <span class="marr">▶</span>
+      </div>
+      <div class="msub" id="ms-diac">
+        <div class="si" onclick="go('diac-dash')">Dashboard Diaconal</div>
+        <div class="si" onclick="go('diac-diaconos')">Diáconos</div>
+        <div class="si" onclick="go('diac-escalas')">Escalas de Serviço</div>
+        <div class="si" onclick="go('diac-familias')">Famílias Assistidas</div>
+        <div class="si" onclick="go('diac-social')">Ação Social e Beneficência</div>
+        <div class="si" onclick="go('diac-visitacao')">Visitação Diaconal</div>
+        <div class="si" onclick="go('diac-patrimonio')">Patrimônio e Apoio Op.</div>
+        <div class="si" onclick="go('diac-solicitacoes')">Solicitações Diaconais</div>
+        <div class="si" onclick="go('diac-relatorios')">Relatórios Diaconais</div>
+        <div class="si" onclick="go('diac-historico')">Histórico e Atas</div>
       </div>
     </div>
 
@@ -2419,6 +2441,369 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
     <div class="ct"><div class="card"><div class="ctit">Histórico <span class="cact" onclick="listarModulo('LOG_AUDITORIA','conselho-hist-list')">↻</span></div><div id="conselho-hist-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
+  <!-- ════ JUNTA DIACONAL ══════════════════════ -->
+  <div class="view" id="v-diac-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--copperbg);border-color:rgba(184,122,86,0.28)">✚</div>
+      <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Junta Diaconal</div><div class="hero-dsc">Visão geral do serviço diaconal — diáconos, famílias assistidas, escalas e atendimentos sociais da IPPenha</div></div>
+    </div>
+    <div class="inav" style="--mc:var(--copper)">
+      <div class="ini on">Dashboard</div>
+      <div class="ini" onclick="go('diac-diaconos')">Diáconos</div>
+      <div class="ini" onclick="go('diac-escalas')">Escalas</div>
+      <div class="ini" onclick="go('diac-familias')">Famílias</div>
+      <div class="ini" onclick="go('diac-social')">Ação Social</div>
+      <div class="ini" onclick="go('diac-solicitacoes')">Solicitações</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:var(--copperbg);color:var(--copper);">✚</div><div class="kpi-body"><div class="kpi-lbl">Diáconos ativos</div><div class="kpi-val">12</div><div class="kpi-d nu">em serviço regular</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal);">⌂</div><div class="kpi-body"><div class="kpi-lbl">Famílias assistidas</div><div class="kpi-val">34</div><div class="kpi-d up">▲ +3 este mês</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Escalas do mês</div><div class="kpi-val">8</div><div class="kpi-d nu">cultos e eventos</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Solicitações pendentes</div><div class="kpi-val">5</div><div class="kpi-d wa">⚠ aguardando triagem</div></div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Atividades recentes</div>
+          <div class="feed">
+            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--copper)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Diác. Carlos Silva</b> realizou visita domiciliar à família Rodrigues</div><div class="ftm">hoje · 14:30 · Visitação</div></div></div>
+            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--teal)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Ação Social</b> distribuiu 18 cestas básicas — Campanha Abril</div><div class="ftm">ontem · 10:00 · Beneficência</div></div></div>
+            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--gold)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Escala dominical</b> confirmada para os cultos de 20/04</div><div class="ftm">18/04 · 09:00 · Escalas</div></div></div>
+            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--amber)"></div></div><div class="fb"><div class="ft"><b>Nova solicitação</b> recebida — família Pereira (prioridade alta)</div><div class="ftm">17/04 · 16:45 · Solicitações</div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ctit">Indicadores diaconais</div>
+          <div class="bars" style="gap:9px">
+            <div><div class="bh"><span class="bn">Visitas realizadas no mês</span><span class="bv">22</span></div><div class="bt"><div class="bf" style="width:88%;background:var(--copper)"></div></div></div>
+            <div><div class="bh"><span class="bn">Famílias com acompanhamento ativo</span><span class="bv">34</span></div><div class="bt"><div class="bf" style="width:72%;background:var(--teal)"></div></div></div>
+            <div><div class="bh"><span class="bn">Auxílios concedidos (Abr)</span><span class="bv">11</span></div><div class="bt"><div class="bf" style="width:44%;background:var(--gold)"></div></div></div>
+            <div><div class="bh"><span class="bn">Solicitações resolvidas</span><span class="bv">18/23</span></div><div class="bt"><div class="bf" style="width:78%;background:var(--amber)"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="v-diac-diaconos">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--copperbg);border-color:rgba(184,122,86,0.28)">✚</div>
+      <div><div class="hero-lbl">Junta Diaconal</div><div class="hero-ttl">Diáconos</div><div class="hero-dsc">Cadastro, status, área de atuação e contato dos diáconos da IPPenha</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="T('Novo Diácono','Registro vinculado à membresia e ordenação')">+ Novo Registro</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--copper)">
+      <div class="ini on">Lista Geral</div>
+      <div class="ini" onclick="T('Por Área','Filtro por área de atuação')">Por Área</div>
+      <div class="ini" onclick="T('Por Congregação','Distribuição por unidade')">Por Congregação</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:var(--copperbg);color:var(--copper);">✚</div><div class="kpi-body"><div class="kpi-lbl">Diáconos ativos</div><div class="kpi-val">12</div><div class="kpi-d nu">em serviço regular</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Inativos / afastados</div><div class="kpi-val">3</div><div class="kpi-d nu">aguardando retorno</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal);">⌂</div><div class="kpi-body"><div class="kpi-lbl">Congregações cobertas</div><div class="kpi-val">5</div><div class="kpi-d nu">de 6 unidades</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Áreas de atuação</div><div class="kpi-val">8</div><div class="kpi-d nu">serviço, social, culto</div></div></div>
+      </div>
+      <div class="card">
+        <div class="ctit">Diáconos cadastrados</div>
+        <table class="tbl">
+          <thead><tr><th>Nome</th><th>Status</th><th>Área de Atuação</th><th>Congregação</th><th>Contato</th></tr></thead>
+          <tbody>
+            <tr><td class="tdp">Diác. Marcos Alves</td><td><span class="pill pd">Ativo</span></td><td>Apoio ao Culto</td><td class="tdc">Sede</td><td class="tdc">(11) 99999-0001</td></tr>
+            <tr><td class="tdp">Diác. Carlos Silva</td><td><span class="pill pd">Ativo</span></td><td>Visitação e Social</td><td class="tdc">Sede</td><td class="tdc">(11) 99999-0002</td></tr>
+            <tr><td class="tdp">Diác. José Santos</td><td><span class="pill pd">Ativo</span></td><td>Patrimônio</td><td class="tdc">Penha Norte</td><td class="tdc">(11) 99999-0003</td></tr>
+            <tr><td class="tdp">Diác. Pedro Lima</td><td><span class="pill po">Afastado</span></td><td>Ação Social</td><td class="tdc">Cangaíba</td><td class="tdc">(11) 99999-0004</td></tr>
+            <tr><td class="tdp">Diác. Antônio Costa</td><td><span class="pill pd">Ativo</span></td><td>Beneficência</td><td class="tdc">Sede</td><td class="tdc">(11) 99999-0005</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="v-diac-escalas">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--copperbg);border-color:rgba(184,122,86,0.28)">📋</div>
+      <div><div class="hero-lbl">Junta Diaconal</div><div class="hero-ttl">Escalas de Serviço</div><div class="hero-dsc">Programação dos diáconos por culto, evento ou atividade diaconal</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="T('Nova Escala','Programação de escala diaconal')">+ Nova Escala</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--copper)">
+      <div class="ini on">Visão Geral</div>
+      <div class="ini" onclick="T('Por Culto','Escala por culto semanal')">Por Culto</div>
+      <div class="ini" onclick="T('Por Evento','Escala para eventos especiais')">Por Evento</div>
+      <div class="ini" onclick="T('Histórico','Escalas anteriores')">Histórico</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c3">
+        <div class="kpi"><div class="kpi-ico" style="background:var(--copperbg);color:var(--copper);">📋</div><div class="kpi-body"><div class="kpi-lbl">Escalas do mês</div><div class="kpi-val">8</div><div class="kpi-d nu">cultos e atividades</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr);">✦</div><div class="kpi-body"><div class="kpi-lbl">Confirmadas</div><div class="kpi-val">6</div><div class="kpi-d up">▲ 75% confirmação</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Pendentes</div><div class="kpi-val">2</div><div class="kpi-d wa">⚠ aguardando confirmação</div></div></div>
+      </div>
+      <div class="card">
+        <div class="ctit">Escalas de Abril/2026</div>
+        <table class="tbl">
+          <thead><tr><th>Data</th><th>Culto / Atividade</th><th>Responsável</th><th>Auxiliares</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td class="tdc mono">20/04</td><td class="tdp">Culto Manhã (9h)</td><td>Diác. Marcos Alves</td><td class="tdc">Diác. Carlos, Diác. José</td><td><span class="pill pd">Confirmado</span></td></tr>
+            <tr><td class="tdc mono">20/04</td><td class="tdp">Culto Noite (18h)</td><td>Diác. Antônio Costa</td><td class="tdc">Diác. Marcos</td><td><span class="pill pd">Confirmado</span></td></tr>
+            <tr><td class="tdc mono">23/04</td><td class="tdp">Culto 4ª feira</td><td>Diác. Carlos Silva</td><td class="tdc">—</td><td><span class="pill po">Pendente</span></td></tr>
+            <tr><td class="tdc mono">27/04</td><td class="tdp">Culto Manhã (9h)</td><td>Diác. José Santos</td><td class="tdc">Diác. Antônio</td><td><span class="pill po">Pendente</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="v-diac-familias">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--copperbg);border-color:rgba(184,122,86,0.28)">⌂</div>
+      <div><div class="hero-lbl">Junta Diaconal</div><div class="hero-ttl">Famílias Assistidas</div><div class="hero-dsc">Acompanhamento pastoral-diaconal de famílias em situação de necessidade ou vulnerabilidade</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="T('Nova Família','Registro de família para acompanhamento')">+ Nova Família</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--copper)">
+      <div class="ini on">Lista Geral</div>
+      <div class="ini" onclick="T('Por Necessidade','Categorias de necessidade')">Por Necessidade</div>
+      <div class="ini" onclick="T('Por Prioridade','Alta, média, baixa')">Por Prioridade</div>
+      <div class="ini" onclick="T('Histórico','Registros anteriores')">Histórico</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:var(--copperbg);color:var(--copper);">⌂</div><div class="kpi-body"><div class="kpi-lbl">Famílias assistidas</div><div class="kpi-val">34</div><div class="kpi-d up">▲ +3 este mês</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,85,85,0.15);color:var(--rose);">⚑</div><div class="kpi-body"><div class="kpi-lbl">Prioridade alta</div><div class="kpi-val">7</div><div class="kpi-d wa">⚠ atenção imediata</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">◎</div><div class="kpi-body"><div class="kpi-lbl">Prioridade média</div><div class="kpi-val">14</div><div class="kpi-d nu">acompanhamento regular</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr);">✦</div><div class="kpi-body"><div class="kpi-lbl">Prioridade baixa</div><div class="kpi-val">13</div><div class="kpi-d nu">monitoramento</div></div></div>
+      </div>
+      <div class="card">
+        <div class="ctit">Famílias em acompanhamento</div>
+        <table class="tbl">
+          <thead><tr><th>Família</th><th>Categoria de Necessidade</th><th>Responsável</th><th>Prioridade</th><th>Última Visita</th></tr></thead>
+          <tbody>
+            <tr><td class="tdp">Fam. Rodrigues</td><td>Alimentação / Social</td><td>Diác. Carlos Silva</td><td><span class="pill pl">Alta</span></td><td class="tdc mono">18/04</td></tr>
+            <tr><td class="tdp">Fam. Pereira</td><td>Saúde / Medicamentos</td><td>Diác. Marcos Alves</td><td><span class="pill pl">Alta</span></td><td class="tdc mono">15/04</td></tr>
+            <tr><td class="tdp">Fam. Oliveira</td><td>Moradia / Infraestrutura</td><td>Diác. Antônio Costa</td><td><span class="pill po">Média</span></td><td class="tdc mono">12/04</td></tr>
+            <tr><td class="tdp">Fam. Souza</td><td>Apoio emocional / Luto</td><td>Diác. Carlos Silva</td><td><span class="pill po">Média</span></td><td class="tdc mono">10/04</td></tr>
+            <tr><td class="tdp">Fam. Ferreira</td><td>Documentação / Jurídico</td><td>Diác. José Santos</td><td><span class="pill pn">Baixa</span></td><td class="tdc mono">05/04</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="v-diac-social">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--copperbg);border-color:rgba(184,122,86,0.28)">🤝</div>
+      <div><div class="hero-lbl">Junta Diaconal</div><div class="hero-ttl">Ação Social e Beneficência</div><div class="hero-dsc">Doações, cestas básicas, auxílios, campanhas e atendimentos sociais coordenados pela Junta Diaconal</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="T('Novo Auxílio','Registro de doação ou benefício')">+ Novo Auxílio</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--copper)">
+      <div class="ini on">Visão Geral</div>
+      <div class="ini" onclick="T('Doações','Entradas e dízimos sociais')">Doações</div>
+      <div class="ini" onclick="T('Cestas Básicas','Distribuição mensal')">Cestas Básicas</div>
+      <div class="ini" onclick="T('Campanhas','Campanhas ativas e encerradas')">Campanhas</div>
+      <div class="ini" onclick="T('Auxílios','Benefícios concedidos')">Auxílios</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:var(--copperbg);color:var(--copper);">🤝</div><div class="kpi-body"><div class="kpi-lbl">Atendimentos (Abr)</div><div class="kpi-val">23</div><div class="kpi-d up">▲ +5 vs março</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr);">◆</div><div class="kpi-body"><div class="kpi-lbl">Cestas distribuídas</div><div class="kpi-val">18</div><div class="kpi-d nu">Campanha Abril</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Auxílios concedidos</div><div class="kpi-val">11</div><div class="kpi-d nu">medicamentos e transporte</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--blue);">◉</div><div class="kpi-body"><div class="kpi-lbl">Campanhas ativas</div><div class="kpi-val">2</div><div class="kpi-d nu">Páscoa e Fundo Social</div></div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Campanhas em andamento</div>
+          <div class="feed">
+            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--copper)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Campanha Páscoa Solidária</b> — Arrecadação de alimentos e fraldas</div><div class="ftm">ativa · até 30/04 · meta: 200 kg alimentos</div></div></div>
+            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--teal)"></div></div><div class="fb"><div class="ft"><b>Fundo Social Permanente</b> — Auxílio contínuo a famílias cadastradas</div><div class="ftm">contínuo · R$ 4.200 disponível</div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ctit">Últimas distribuições</div>
+          <table class="tbl">
+            <thead><tr><th>Item</th><th>Qtd.</th><th>Data</th><th>Beneficiados</th></tr></thead>
+            <tbody>
+              <tr><td class="tdp">Cesta básica</td><td class="tdc mono">18</td><td class="tdc mono">17/04</td><td class="tdc">14 famílias</td></tr>
+              <tr><td class="tdp">Medicamentos</td><td class="tdc mono">7 kits</td><td class="tdc mono">15/04</td><td class="tdc">7 pessoas</td></tr>
+              <tr><td class="tdp">Roupas / agasalhos</td><td class="tdc mono">42 un.</td><td class="tdc mono">10/04</td><td class="tdc">12 famílias</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="v-diac-visitacao">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--copperbg);border-color:rgba(184,122,86,0.28)">👣</div>
+      <div><div class="hero-lbl">Junta Diaconal</div><div class="hero-ttl">Visitação Diaconal</div><div class="hero-dsc">Registro e programação de visitas domiciliares realizadas pelos diáconos</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="T('Nova Visita','Registro ou agendamento de visita')">+ Nova Visita</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--copper)">
+      <div class="ini on">Visão Geral</div>
+      <div class="ini" onclick="T('Agendadas','Visitas programadas')">Agendadas</div>
+      <div class="ini" onclick="T('Concluídas','Visitas realizadas')">Concluídas</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c3">
+        <div class="kpi"><div class="kpi-ico" style="background:var(--copperbg);color:var(--copper);">👣</div><div class="kpi-body"><div class="kpi-lbl">Visitas no mês</div><div class="kpi-val">22</div><div class="kpi-d up">▲ +4 vs março</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr);">✦</div><div class="kpi-body"><div class="kpi-lbl">Concluídas</div><div class="kpi-val">18</div><div class="kpi-d up">▲ 82% realização</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--blue);">◎</div><div class="kpi-body"><div class="kpi-lbl">Agendadas</div><div class="kpi-val">4</div><div class="kpi-d nu">esta semana</div></div></div>
+      </div>
+      <div class="card">
+        <div class="ctit">Visitas recentes e agendadas</div>
+        <table class="tbl">
+          <thead><tr><th>Família / Membro</th><th>Responsável</th><th>Data</th><th>Status</th><th>Observações</th></tr></thead>
+          <tbody>
+            <tr><td class="tdp">Fam. Rodrigues</td><td>Diác. Carlos Silva</td><td class="tdc mono">18/04</td><td><span class="pill pd">Concluída</span></td><td class="tdc">Necessidade alimentar confirmada</td></tr>
+            <tr><td class="tdp">Fam. Pereira</td><td>Diác. Marcos Alves</td><td class="tdc mono">20/04</td><td><span class="pill pp">Agendada</span></td><td class="tdc">Acompanhamento saúde</td></tr>
+            <tr><td class="tdp">Ir. Maria Souza</td><td>Diác. Antônio Costa</td><td class="tdc mono">15/04</td><td><span class="pill pd">Concluída</span></td><td class="tdc">Visita de apoio — luto recente</td></tr>
+            <tr><td class="tdp">Fam. Oliveira</td><td>Diác. José Santos</td><td class="tdc mono">22/04</td><td><span class="pill pp">Agendada</span></td><td class="tdc">Avaliar situação habitacional</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="v-diac-patrimonio">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--copperbg);border-color:rgba(184,122,86,0.28)">⚙</div>
+      <div><div class="hero-lbl">Junta Diaconal</div><div class="hero-ttl">Patrimônio e Apoio Operacional</div><div class="hero-dsc">Demandas de apoio em infraestrutura, equipamentos e organização sob supervisão diaconal</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="T('Nova Demanda','Registro de demanda operacional')">+ Nova Demanda</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--copper)">
+      <div class="ini on">Visão Geral</div>
+      <div class="ini" onclick="T('Equipamentos','Controle de equipamentos')">Equipamentos</div>
+      <div class="ini" onclick="T('Organização','Demandas de organização')">Organização</div>
+      <div class="ini" onclick="T('Suporte','Apoio logístico e operacional')">Suporte</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c3">
+        <div class="kpi"><div class="kpi-ico" style="background:var(--copperbg);color:var(--copper);">⚙</div><div class="kpi-body"><div class="kpi-lbl">Demandas abertas</div><div class="kpi-val">6</div><div class="kpi-d nu">apoio operacional</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr);">✦</div><div class="kpi-body"><div class="kpi-lbl">Itens sob custódia</div><div class="kpi-val">38</div><div class="kpi-d nu">equipamentos e mobiliário</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Manutenções pendentes</div><div class="kpi-val">3</div><div class="kpi-d wa">⚠ aguardando execução</div></div></div>
+      </div>
+      <div class="card">
+        <div class="ctit">Demandas operacionais recentes</div>
+        <table class="tbl">
+          <thead><tr><th>Item / Área</th><th>Tipo</th><th>Responsável</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td class="tdp">Cadeiras do auditório</td><td>Organização</td><td>Diác. José Santos</td><td><span class="pill po">Em andamento</span></td></tr>
+            <tr><td class="tdp">Microfone sem fio</td><td>Equipamento</td><td>Diác. Marcos Alves</td><td><span class="pill pl">Pendente</span></td></tr>
+            <tr><td class="tdp">Mesa de oração — sala lateral</td><td>Organização</td><td>Diác. Antônio</td><td><span class="pill pd">Concluído</span></td></tr>
+            <tr><td class="tdp">Suprimentos para culto</td><td>Suporte</td><td>Diác. Carlos Silva</td><td><span class="pill pd">Concluído</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="v-diac-solicitacoes">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--copperbg);border-color:rgba(184,122,86,0.28)">📥</div>
+      <div><div class="hero-lbl">Junta Diaconal</div><div class="hero-ttl">Solicitações Diaconais</div><div class="hero-dsc">Pedidos recebidos para atendimento diaconal — triagem, status e prioridade</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="T('Nova Solicitação','Registro de pedido diaconal')">+ Nova Solicitação</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--copper)">
+      <div class="ini on">Todas</div>
+      <div class="ini" onclick="T('Pendentes','Aguardando triagem')">Pendentes</div>
+      <div class="ini" onclick="T('Em Atendimento','Em execução')">Em Atendimento</div>
+      <div class="ini" onclick="T('Concluídas','Finalizadas')">Concluídas</div>
+      <div class="ini" onclick="T('Alta Prioridade','Urgentes')">Alta Prioridade</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:var(--copperbg);color:var(--copper);">📥</div><div class="kpi-body"><div class="kpi-lbl">Total (Abr)</div><div class="kpi-val">23</div><div class="kpi-d nu">solicitações recebidas</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Pendentes</div><div class="kpi-val">5</div><div class="kpi-d wa">⚠ aguardando triagem</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--blue);">◎</div><div class="kpi-body"><div class="kpi-lbl">Em atendimento</div><div class="kpi-val">8</div><div class="kpi-d nu">em execução</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr);">✦</div><div class="kpi-body"><div class="kpi-lbl">Concluídas</div><div class="kpi-val">10</div><div class="kpi-d up">▲ 43% resolução</div></div></div>
+      </div>
+      <div class="card">
+        <div class="ctit">Solicitações recentes</div>
+        <table class="tbl">
+          <thead><tr><th>Solicitante</th><th>Tipo</th><th>Prioridade</th><th>Responsável</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td class="tdp">Fam. Pereira</td><td>Alimentação</td><td><span class="pill pl">Alta</span></td><td>Diác. Carlos Silva</td><td><span class="pill po">Triagem</span></td></tr>
+            <tr><td class="tdp">Ir. João Almeida</td><td>Medicamentos</td><td><span class="pill pl">Alta</span></td><td>Diác. Marcos Alves</td><td><span class="pill pp">Em atendimento</span></td></tr>
+            <tr><td class="tdp">Fam. Torres</td><td>Apoio emocional</td><td><span class="pill po">Média</span></td><td>—</td><td><span class="pill po">Pendente</span></td></tr>
+            <tr><td class="tdp">Ir. Ana Barbosa</td><td>Transporte médico</td><td><span class="pill po">Média</span></td><td>Diác. Antônio</td><td><span class="pill pp">Em atendimento</span></td></tr>
+            <tr><td class="tdp">Fam. Rodrigues</td><td>Cesta básica</td><td><span class="pill pn">Baixa</span></td><td>Diác. José Santos</td><td><span class="pill pd">Concluída</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="v-diac-relatorios">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--copperbg);border-color:rgba(184,122,86,0.28)">📊</div>
+      <div><div class="hero-lbl">Junta Diaconal</div><div class="hero-ttl">Relatórios Diaconais</div><div class="hero-dsc">Relatórios mensais, indicadores de atendimento e exportações da Junta Diaconal</div></div>
+      <div class="hero-act"><button class="tbt" onclick="T('Exportar','Exportar relatório em PDF ou XLSX')">Exportar</button><button class="tbt pri" onclick="T('Gerar Relatório','Relatório mensal da Junta Diaconal')">Gerar Relatório</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--copper)">
+      <div class="ini on">Mensal</div>
+      <div class="ini" onclick="T('Indicadores','Métricas de atendimento')">Indicadores</div>
+      <div class="ini" onclick="T('Por Diácono','Performance individual')">Por Diácono</div>
+      <div class="ini" onclick="T('Exportações','Downloads disponíveis')">Exportações</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:var(--copperbg);color:var(--copper);">📊</div><div class="kpi-body"><div class="kpi-lbl">Atendimentos (Abr)</div><div class="kpi-val">23</div><div class="kpi-d up">▲ +5 vs março</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr);">✦</div><div class="kpi-body"><div class="kpi-lbl">Visitas realizadas</div><div class="kpi-val">22</div><div class="kpi-d up">▲ +4 vs março</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Auxílios concedidos</div><div class="kpi-val">11</div><div class="kpi-d nu">este mês</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--blue);">◎</div><div class="kpi-body"><div class="kpi-lbl">Taxa de resolução</div><div class="kpi-val">78%</div><div class="kpi-d up">▲ acima da meta</div></div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Performance mensal</div>
+          <div class="bars" style="gap:9px">
+            <div><div class="bh"><span class="bn">Janeiro</span><span class="bv">16</span></div><div class="bt"><div class="bf" style="width:70%;background:var(--copper)"></div></div></div>
+            <div><div class="bh"><span class="bn">Fevereiro</span><span class="bv">14</span></div><div class="bt"><div class="bf" style="width:61%;background:var(--copper)"></div></div></div>
+            <div><div class="bh"><span class="bn">Março</span><span class="bv">18</span></div><div class="bt"><div class="bf" style="width:78%;background:var(--copper)"></div></div></div>
+            <div><div class="bh"><span class="bn">Abril</span><span class="bv">23</span></div><div class="bt"><div class="bf" style="width:100%;background:var(--copper)"></div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ctit">Relatórios disponíveis</div>
+          <div class="feed">
+            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--copper)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Relatório Mensal — Abril 2026</b></div><div class="ftm">em elaboração · disponível 01/05</div></div></div>
+            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--teal)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Relatório Mensal — Março 2026</b></div><div class="ftm">concluído · <span style="color:var(--gr)">disponível para download</span></div></div></div>
+            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--gold)"></div></div><div class="fb"><div class="ft"><b>Relatório Trimestral — 1T 2026</b></div><div class="ftm">concluído · <span style="color:var(--gr)">disponível para download</span></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="v-diac-historico">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--copperbg);border-color:rgba(184,122,86,0.28)">📜</div>
+      <div><div class="hero-lbl">Junta Diaconal</div><div class="hero-ttl">Histórico e Atas</div><div class="hero-dsc">Atas de reuniões, deliberações e registros históricos da Junta Diaconal</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="T('Nova Ata','Registro de reunião da Junta Diaconal')">+ Nova Ata</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--copper)">
+      <div class="ini on">Atas</div>
+      <div class="ini" onclick="T('Deliberações','Decisões tomadas')">Deliberações</div>
+      <div class="ini" onclick="T('Histórico Geral','Linha do tempo')">Histórico Geral</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c3">
+        <div class="kpi"><div class="kpi-ico" style="background:var(--copperbg);color:var(--copper);">📜</div><div class="kpi-body"><div class="kpi-lbl">Reuniões em 2026</div><div class="kpi-val">4</div><div class="kpi-d nu">reuniões ordinárias</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--blue);">◎</div><div class="kpi-body"><div class="kpi-lbl">Deliberações</div><div class="kpi-val">17</div><div class="kpi-d nu">registradas em ata</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Pendências de ata</div><div class="kpi-val">1</div><div class="kpi-d wa">⚠ aguardando aprovação</div></div></div>
+      </div>
+      <div class="card">
+        <div class="ctit">Atas recentes</div>
+        <table class="tbl">
+          <thead><tr><th>Data</th><th>Tipo de Reunião</th><th>Pauta</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td class="tdc mono">14/04/2026</td><td class="tdp">Reunião Ordinária</td><td>Relatório de visitas, distribuição de cestas, escala maio</td><td><span class="pill po">Rascunho</span></td></tr>
+            <tr><td class="tdc mono">10/03/2026</td><td class="tdp">Reunião Ordinária</td><td>Avaliação de famílias, campanha Páscoa, relatório março</td><td><span class="pill pd">Aprovada</span></td></tr>
+            <tr><td class="tdc mono">10/02/2026</td><td class="tdp">Reunião Ordinária</td><td>Planejamento 1T, novas famílias, escalas fevereiro</td><td><span class="pill pd">Aprovada</span></td></tr>
+            <tr><td class="tdc mono">13/01/2026</td><td class="tdp">Reunião Extraordinária</td><td>Eleição de novo diácono, redistribuição de áreas</td><td><span class="pill pd">Aprovada</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- PASTORAL -->
   <div class="view" id="v-pastoral-ate">
     <div class="hero"><div class="hero-ic" style="background:var(--tealbg)">🤝</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Atendimentos</div><div class="hero-dsc">Registro de atendimentos pastorais</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo Atendimento</button></div></div>
@@ -2846,7 +3231,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 </div>
 
 <script>
-const MC={geral:"var(--gmd)",admin:"var(--gold)",fin:"var(--gr)",jur:"var(--blue)",conselho:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)",cong:"var(--gr)"};
+const MC={geral:"var(--gmd)",admin:"var(--gold)",fin:"var(--gr)",jur:"var(--blue)",conselho:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)",cong:"var(--gr)",diac:"var(--copper)"};
 const CRUMB={
   geral:["","Dashboard Geral","/ IPPenha · visão executiva consolidada"],
   "admin-dash":["Administrativo","Dashboard","/ visão do módulo"],
@@ -2876,6 +3261,16 @@ const CRUMB={
   "conselho-nomeados":["Conselho e Governança","Nomeados","/ funções temporárias"],
   "conselho-ordenados":["Conselho e Governança","Ordenados","/ ofícios permanentes"],
   "conselho-hist":["Conselho e Governança","Histórico de Atas e Deliberações",""],
+  "diac-dash":["Junta Diaconal","Dashboard Diaconal","/ visão geral do serviço"],
+  "diac-diaconos":["Junta Diaconal","Diáconos","/ cadastro e atuação"],
+  "diac-escalas":["Junta Diaconal","Escalas de Serviço","/ cultos e atividades"],
+  "diac-familias":["Junta Diaconal","Famílias Assistidas","/ acompanhamento diaconal"],
+  "diac-social":["Junta Diaconal","Ação Social e Beneficência","/ doações e auxílios"],
+  "diac-visitacao":["Junta Diaconal","Visitação Diaconal","/ visitas domiciliares"],
+  "diac-patrimonio":["Junta Diaconal","Patrimônio e Apoio Operacional",""],
+  "diac-solicitacoes":["Junta Diaconal","Solicitações Diaconais","/ triagem e atendimento"],
+  "diac-relatorios":["Junta Diaconal","Relatórios Diaconais","/ indicadores e exportações"],
+  "diac-historico":["Junta Diaconal","Histórico e Atas","/ reuniões e deliberações"],
   "pgs-dash":["Pequenos Grupos","Dashboard","/ discipulado e acompanhamento"],
   "pgs-lista":["Pequenos Grupos","Lista de PGs",""],
   "pgs-encontros":["Pequenos Grupos","Encontros",""],
@@ -2924,8 +3319,8 @@ const CRUMB={
   "memb-bat":["Membresia","Batismos",""],
   "memb-vis":["Membresia","Visitantes",""],
 };
-const SL={sec:"Secretaria e Cadastro",rh:"RH / Gestão de Pessoas",doc:"Documentos",aud:"Auditoria",fin:"Financeiro",con:"Contratos",est:"Controle de Estoque",demandas:"Processos e Demandas Jurídicas",contratos:"Contratos e Instrumentos",pareceres:"Pareceres",documentos:"Documentos Jurídicos",riscos:"Riscos e Pendências",historico:"Histórico",rel:"Relatórios Estratégicos",ind:"Indicadores",cong:"Congregações",nomeados:"Nomeados",ordenados:"Ordenados",ate:"Atendimentos",ora:"Pedidos de Oração",aco:"Acompanhamentos",reg:"Registros Pastorais",pri:"Casos Prioritários",min:"Ministérios",lid:"Liderança Ministerial",esc:"Escalas",prog:"Programações",lit:"Liturgia dos Cultos",vol:"Voluntários",calendario:"Calendário Geral",solicitacoes:"Solicitações de Agendamento",aprovacoes:"Aprovações Pendentes",confirmados:"Eventos Confirmados",recusados:"Eventos Recusados",reagendamentos:"Reagendamentos e Ajustes",ambientes:"Ambientes e Recursos",conflitos:"Conflitos de Agenda",config:"Configurações da Agenda",lista:"Lista de PGs",encontros:"Encontros",participantes:"Participantes",visitantes:"Visitantes",estudos:"Estudos",relatorios:"Relatórios",oracao:"Pedidos de Oração",man:"Manutenção",lim:"Limpeza e Conservação",sol:"Solicitações Operacionais",pat:"Patrimônio",pre:"Prestadores",todas:"Todas as Solicitações",pend:"Pendentes",and:"Em Andamento",conc:"Concluídas",hist:"Histórico",mod:"Por Módulo",exp:"Exportações",uni:"Por Congregação",res:"Por Responsável",cad:"Cadastro de Membros",bat:"Batismos",prof:"Profissões de Fé",trans:"Transferências",vis:"Visitantes"};
-const MN={admin:"Administrativo",fin:"Financeiro",jur:"Jurídico",conselho:"Conselho",pastoral:"Pastoral",min:"Ministerial",agenda:"Agenda",pgs:"Pequenos Grupos",infra:"Infraestrutura",dem:"Demandas",rel:"Relatórios",memb:"Membresia",cong:"Congregações"};
+const SL={dash:"Dashboard",diaconos:"Diáconos",escalas:"Escalas de Serviço",familias:"Famílias Assistidas",social:"Ação Social e Beneficência",visitacao:"Visitação Diaconal",patrimonio:"Patrimônio e Apoio Operacional",solicitacoes:"Solicitações Diaconais",relatorios:"Relatórios Diaconais",historico:"Histórico e Atas",sec:"Secretaria e Cadastro",rh:"RH / Gestão de Pessoas",doc:"Documentos",aud:"Auditoria",fin:"Financeiro",con:"Contratos",est:"Controle de Estoque",demandas:"Processos e Demandas Jurídicas",contratos:"Contratos e Instrumentos",pareceres:"Pareceres",documentos:"Documentos Jurídicos",riscos:"Riscos e Pendências",historico:"Histórico",rel:"Relatórios Estratégicos",ind:"Indicadores",cong:"Congregações",nomeados:"Nomeados",ordenados:"Ordenados",ate:"Atendimentos",ora:"Pedidos de Oração",aco:"Acompanhamentos",reg:"Registros Pastorais",pri:"Casos Prioritários",min:"Ministérios",lid:"Liderança Ministerial",esc:"Escalas",prog:"Programações",lit:"Liturgia dos Cultos",vol:"Voluntários",calendario:"Calendário Geral",solicitacoes:"Solicitações de Agendamento",aprovacoes:"Aprovações Pendentes",confirmados:"Eventos Confirmados",recusados:"Eventos Recusados",reagendamentos:"Reagendamentos e Ajustes",ambientes:"Ambientes e Recursos",conflitos:"Conflitos de Agenda",config:"Configurações da Agenda",lista:"Lista de PGs",encontros:"Encontros",participantes:"Participantes",visitantes:"Visitantes",estudos:"Estudos",relatorios:"Relatórios",oracao:"Pedidos de Oração",man:"Manutenção",lim:"Limpeza e Conservação",sol:"Solicitações Operacionais",pat:"Patrimônio",pre:"Prestadores",todas:"Todas as Solicitações",pend:"Pendentes",and:"Em Andamento",conc:"Concluídas",hist:"Histórico",mod:"Por Módulo",exp:"Exportações",uni:"Por Congregação",res:"Por Responsável",cad:"Cadastro de Membros",bat:"Batismos",prof:"Profissões de Fé",trans:"Transferências",vis:"Visitantes"};
+const MN={admin:"Administrativo",fin:"Financeiro",jur:"Jurídico",conselho:"Conselho",pastoral:"Pastoral",min:"Ministerial",agenda:"Agenda",pgs:"Pequenos Grupos",infra:"Infraestrutura",dem:"Demandas",rel:"Relatórios",memb:"Membresia",cong:"Congregações",diac:"Junta Diaconal"};
 
 function go(id){
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
@@ -3897,9 +4292,9 @@ function atualizarSidebarUsuario() {
 
 /* ── PERMISSÕES ────────────────────────────── */
 const MODULOS_PERFIL = {
-  admin_geral:         ["geral","admin","fin","jur","conselho","pastoral","min","agenda","pgs","infra","dem","rel","memb","config","cong"],
-  conselho:            ["geral","conselho","fin","rel","dem","memb","pastoral","min","pgs","cong"],
-  pastoral:            ["geral","pastoral","memb","pgs","dem","min","agenda","cong"],
+  admin_geral:         ["geral","admin","fin","jur","conselho","diac","pastoral","min","agenda","pgs","infra","dem","rel","memb","config","cong"],
+  conselho:            ["geral","conselho","diac","fin","rel","dem","memb","pastoral","min","pgs","cong"],
+  pastoral:            ["geral","pastoral","diac","memb","pgs","dem","min","agenda","cong"],
   adm_operacional:     ["geral","admin","fin","dem","rel","memb","agenda","infra","cong"],
   lider_ministerio:    ["geral","min","agenda","dem","pgs","cong"],
   membro_ministerio:   ["geral","min","agenda","dem","cong"],
