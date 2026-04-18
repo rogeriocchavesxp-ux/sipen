@@ -1446,22 +1446,22 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
       <div class="sni-sep"></div>
       <div class="sni" onclick="go('conselho-contratados')">Contratados</div>
     </div>
-    <div class="inav" style="--mc:var(--sky);margin-top:0">
-      <div class="ini on">Lista Geral</div><div class="ini" onclick="T('Área','Filtro por área e função')">Por Área</div>
-      <div class="ini" onclick="T('Período','Histórico sem sobrescrever registros')">Por Período</div><div class="ini" onclick="T('Permissões','Permissões automáticas derivadas')">Permissões</div>
+    <div class="inav" style="--mc:var(--sky);margin-top:0" id="nom-inav">
+      <div class="ini on" onclick="switchNomTab('governo')">Governo</div>
+      <div class="ini" onclick="switchNomTab('comissao')">Comissões</div>
+      <div class="ini" onclick="switchNomTab('ministerio')">Ministérios</div>
+      <div class="ini" onclick="switchNomTab('sociedade')">Sociedades</div>
+      <div class="ini" onclick="switchNomTab('grupo')">Grupos</div>
+      <div class="ini" onclick="switchNomTab('congregacao')">Congregações</div>
     </div>
     <div class="ct">
-      <div class="alr alr-w"><div class="alr-i">⚠</div><div><strong>Regra crítica:</strong> Nomeado é função temporária. Não substitui ofício ordenado. Toda mudança deve encerrar o vínculo anterior e abrir novo registro histórico.</div></div>
       <div class="kpis c4">
         <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Nomeados ativos</div><div class="kpi-val" id="nom-kpi-total">—</div><div class="kpi-d nu" id="nom-kpi-orgaos">carregando…</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Ministérios</div><div class="kpi-val" id="nom-kpi-min">—</div><div class="kpi-d nu">lideranças e apoio</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Governo / Comissões</div><div class="kpi-val" id="nom-kpi-gov">—</div><div class="kpi-d nu">secretaria e gestão</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Governo / Comissões</div><div class="kpi-val" id="nom-kpi-gov">—</div><div class="kpi-d nu">governo e comissões</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Sociedades / Grupos</div><div class="kpi-val" id="nom-kpi-soc">—</div><div class="kpi-d nu">apoio e execução</div></div></div>
       </div>
-      <div class="card">
-        <div class="ctit">Lista geral de nomeados <span class="cact" onclick="renderNomeados()">↻ Atualizar</span></div>
-        <div id="nomeados-list-container"><div style="color:var(--tx3);font-size:11px">Carregando…</div></div>
-      </div>
+      <div id="nomeados-list-container"><div style="color:var(--tx3);font-size:11px;padding:20px">Carregando…</div></div>
     </div>
   </div>
 
@@ -5260,52 +5260,94 @@ async function renderDiaconos() {
 VIEW_AUTOLOAD["diac-diaconos"] = { fn: () => renderDiaconos() };
 
 /* ── NOMEADOS ──────────────────────────────── */
+let _nomeadosData = null;
+let _nomeadosByTipo = {};
+let _nomTabAtivo = "governo";
+
+const NOM_TIPO_LABEL = { governo:"Governo", comissao:"Comissões", ministerio:"Ministérios", sociedade:"Sociedades", grupo:"Grupos", congregacao:"Congregações" };
+const NOM_TIPO_COR   = { governo:"var(--sky)", comissao:"var(--violet)", ministerio:"var(--teal)", sociedade:"var(--gold)", grupo:"var(--amber)", congregacao:"var(--gr)" };
+const NOM_TIPO_BG    = { governo:"rgba(74,156,245,0.12)", comissao:"rgba(139,111,212,0.12)", ministerio:"rgba(42,181,192,0.12)", sociedade:"rgba(212,168,67,0.12)", grupo:"rgba(224,138,42,0.12)", congregacao:"rgba(58,170,92,0.12)" };
+
+function switchNomTab(tipo) {
+  _nomTabAtivo = tipo;
+  // atualiza aba ativa
+  const nav = document.getElementById("nom-inav");
+  if (nav) nav.querySelectorAll(".ini").forEach(el => {
+    el.classList.toggle("on", el.getAttribute("onclick")?.includes(`'${tipo}'`));
+  });
+  _renderNomTabContent(tipo);
+}
+
+function _renderNomTabContent(tipo) {
+  const el = document.getElementById("nomeados-list-container");
+  if (!el) return;
+  if (!_nomeadosData) { el.innerHTML = `<p style="color:var(--tx4);font-size:12px;padding:20px">Carregando…</p>`; return; }
+
+  const byOrgao = _nomeadosByTipo[tipo] || {};
+  const orgaos  = Object.keys(byOrgao).sort();
+  const cor     = NOM_TIPO_COR[tipo] || "var(--sky)";
+  const bg      = NOM_TIPO_BG[tipo]  || "rgba(74,156,245,0.12)";
+
+  if (!orgaos.length) {
+    el.innerHTML = `<p style="color:var(--tx4);font-size:12px;padding:20px">Nenhum registro nesta categoria.</p>`;
+    return;
+  }
+
+  // Grid de cards — 2 colunas para comissões/ministérios (muitos órgãos), 1 para governo
+  const cols = tipo === "governo" ? 1 : 2;
+  let html = `<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:12px;padding:2px 0">`;
+
+  for (const orgao of orgaos) {
+    const pessoas = byOrgao[orgao];
+    html += `
+      <div class="card" style="border-left:3px solid ${cor};padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="width:28px;height:28px;border-radius:6px;background:${bg};display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">◈</div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--tx1)">${orgao}</div>
+            <div style="font-size:10px;color:var(--tx4)">${pessoas.length} membro${pessoas.length !== 1 ? 's' : ''}</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">`;
+
+    for (const p of pessoas) {
+      const sub = p.suborgao ? `<span style="font-size:9px;color:var(--tx4);margin-left:4px">${p.suborgao}</span>` : "";
+      const obs = p.obs ? `<span style="font-size:9px;color:var(--tx3);font-style:italic"> · ${p.obs}</span>` : "";
+      html += `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-radius:5px;background:var(--bg-surface)">
+            <span style="font-size:12px;color:var(--tx1);font-weight:500">${p.nome}${sub}</span>
+            <span style="font-size:10px;color:${cor};font-weight:600;white-space:nowrap;margin-left:8px">${p.cargo||""}${obs}</span>
+          </div>`;
+    }
+    html += `</div></div>`;
+  }
+  html += `</div>`;
+  el.innerHTML = html;
+}
+
 async function renderNomeados() {
   const setV = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   const el = document.getElementById("nomeados-list-container");
+  if (el) el.innerHTML = `<p style="color:var(--tx3);font-size:11px;padding:20px">Carregando…</p>`;
   try {
-    const rows = await apiFetchTable("nomeados", { status: "ativo", _order: "orgao_tipo.asc,orgao.asc,nome.asc", _limit: 1000 });
-
-    const byTipo = {};
+    const rows = await apiFetchTable("nomeados", { status: "ativo", _order: "orgao.asc,nome.asc", _limit: 1000 });
+    _nomeadosData = rows;
+    _nomeadosByTipo = {};
     for (const r of rows) {
       const t = r.orgao_tipo || "outros";
-      if (!byTipo[t]) byTipo[t] = {};
+      if (!_nomeadosByTipo[t]) _nomeadosByTipo[t] = {};
       const o = r.orgao || "—";
-      if (!byTipo[t][o]) byTipo[t][o] = [];
-      byTipo[t][o].push(r);
+      if (!_nomeadosByTipo[t][o]) _nomeadosByTipo[t][o] = [];
+      _nomeadosByTipo[t][o].push(r);
     }
-
-    const total = rows.length;
-    const min   = rows.filter(r => r.orgao_tipo === "ministerio").length;
-    const gov   = rows.filter(r => r.orgao_tipo === "governo" || r.orgao_tipo === "comissao").length;
-    const soc   = rows.filter(r => r.orgao_tipo === "sociedade" || r.orgao_tipo === "grupo").length;
-
-    setV("nom-kpi-total", total);
-    setV("nom-kpi-orgaos", `${Object.keys(byTipo).length} categorias`);
-    setV("nom-kpi-min", min);
-    setV("nom-kpi-gov", gov);
-    setV("nom-kpi-soc", soc);
-
-    const tipoLabel = { governo:"Governo", comissao:"Comissões", ministerio:"Ministérios", sociedade:"Sociedades", grupo:"Grupos", congregacao:"Congregações", outros:"Outros" };
-    const tipoOrder = ["governo","comissao","ministerio","sociedade","grupo","congregacao","outros"];
-
-    let html = "";
-    for (const tipo of tipoOrder) {
-      if (!byTipo[tipo]) continue;
-      html += `<div style="margin-bottom:18px"><div class="ctit" style="margin-bottom:8px">${tipoLabel[tipo]||tipo}</div>`;
-      for (const [orgao, list] of Object.entries(byTipo[tipo]).sort()) {
-        html += `<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">${orgao}</div>`;
-        html += `<table class="tbl"><thead><tr><th>Nome</th><th>Cargo</th><th>Subórgão</th><th>Obs</th></tr></thead><tbody>`;
-        list.forEach(r => {
-          html += `<tr><td class="tdp">${r.nome}</td><td>${r.cargo||"—"}</td><td class="tdc">${r.suborgao||"—"}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs||"—"}</td></tr>`;
-        });
-        html += `</tbody></table></div>`;
-      }
-      html += `</div>`;
-    }
-    if (el) el.innerHTML = html || `<p style="color:var(--tx4);font-size:12px;padding:8px">Nenhum registro.</p>`;
+    setV("nom-kpi-total", rows.length);
+    setV("nom-kpi-orgaos", `${Object.keys(_nomeadosByTipo).length} categorias`);
+    setV("nom-kpi-min",  rows.filter(r => r.orgao_tipo === "ministerio").length);
+    setV("nom-kpi-gov",  rows.filter(r => r.orgao_tipo === "governo" || r.orgao_tipo === "comissao").length);
+    setV("nom-kpi-soc",  rows.filter(r => r.orgao_tipo === "sociedade" || r.orgao_tipo === "grupo").length);
+    switchNomTab(_nomTabAtivo);
   } catch(e) {
-    if (el) el.innerHTML = `<p style="color:var(--rose);font-size:12px;padding:8px">Erro: ${e.message}</p>`;
+    if (el) el.innerHTML = `<p style="color:var(--rose);font-size:12px;padding:20px">Erro: ${e.message}</p>`;
   }
 }
 VIEW_AUTOLOAD["conselho-nomeados"] = { fn: () => renderNomeados() };
