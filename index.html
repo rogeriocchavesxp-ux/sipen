@@ -510,6 +510,61 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 .pos{color:#4dc470;font-weight:600}
 .neg{color:var(--rose);font-weight:600}
 .wrn{color:var(--amber);font-weight:600}
+
+/* ═══ CONGREGAÇÕES MODULE ════════════════════════ */
+.cong-layout{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - var(--th) - 4px);overflow:hidden}
+.cong-list-col{border-right:1px solid var(--bd1);overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column}
+.cong-detail-col{overflow-y:auto;display:flex;flex-direction:column;min-width:0}
+.cong-card{background:var(--bg-card);border:1px solid var(--bd1);border-left:3px solid transparent;border-radius:var(--rl);padding:13px 14px;margin-bottom:8px;cursor:pointer;transition:all .15s;flex-shrink:0}
+.cong-card:hover{border-color:var(--bd2);background:var(--bg-hover)}
+.cong-card.sel{border-left-color:var(--gr);background:rgba(58,170,92,0.07)}
+.cong-card-name{font-size:12.5px;font-weight:700;color:var(--tx1);margin-bottom:4px}
+.cong-card-meta{font-size:10.5px;color:var(--tx3);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cbadge{font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px}
+.cbg-a{background:rgba(58,170,92,0.12);color:var(--gr);border:1px solid rgba(58,170,92,0.2)}
+.cbg-i{background:rgba(224,85,85,0.08);color:var(--rose);border:1px solid rgba(224,85,85,0.18)}
+.cong-inner-tabs{display:flex;gap:0;border-bottom:1px solid var(--bd1);overflow-x:auto;padding:0 20px;flex-shrink:0;background:var(--bg-sidebar)}
+.cong-inner-tabs::-webkit-scrollbar{height:0}
+.citab{padding:10px 14px;font-size:11.5px;color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;font-weight:500;transition:all .12s;flex-shrink:0}
+.citab:hover{color:var(--tx2)}.citab.on{color:var(--tx1);border-bottom-color:var(--gr)}
+.citab-pane{display:none;padding:20px}.citab-pane.on{display:block}
+.culto-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bd1)}
+.culto-row:last-child{border-bottom:none}
+.culto-dt{font-family:var(--mono);font-size:10.5px;color:var(--tx3);width:82px;flex-shrink:0}
+.culto-num-blk{text-align:center;min-width:38px}
+.culto-num-val{font-size:15px;font-weight:700;color:var(--tx1);font-family:var(--mono);line-height:1}
+.culto-num-lbl{font-size:8.5px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.culto-obs{flex:1;font-size:11px;color:var(--tx2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lid-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd1)}
+.lid-row:last-child{border-bottom:none}
+.lid-av{width:30px;height:30px;border-radius:50%;background:var(--grd);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;flex-shrink:0}
+.lid-name{font-size:12px;font-weight:600;color:var(--tx1)}
+.lid-func{font-size:10.5px;color:var(--tx3);margin-top:1px}
+.plan-row{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--bd1)}
+.plan-row:last-child{border-bottom:none}
+.plan-dt-blk{background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:6px 8px;text-align:center;min-width:46px;flex-shrink:0}
+.plan-dt-d{font-size:16px;font-weight:700;color:var(--tx1);font-family:var(--mono);line-height:1}
+.plan-dt-m{font-size:8.5px;color:var(--teal);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.plan-body{flex:1;min-width:0}
+.plan-ttl{font-size:12px;font-weight:600;color:var(--tx1);margin-bottom:3px}
+.plan-meta{font-size:10.5px;color:var(--tx3)}
+.cong-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;min-height:320px;color:var(--tx3);padding:40px}
+.cong-empty-ico{font-size:36px;opacity:.3;margin-bottom:12px}
+.cong-empty-txt{font-size:13px;color:var(--tx2);margin-bottom:4px;font-weight:600}
+.cong-empty-sub{font-size:11px;text-align:center;line-height:1.6}
+.cong-detail-hero{padding:20px 20px 0;display:flex;align-items:flex-start;gap:14px;margin-bottom:4px;flex-shrink:0}
+.cong-stat-row{display:flex;gap:0;padding:0 20px 14px;flex-shrink:0;border-bottom:1px solid var(--bd1)}
+.cong-stat{flex:1;text-align:center;padding:10px 8px;border-right:1px solid var(--bd1)}
+.cong-stat:last-child{border-right:none}
+.cong-stat-val{font-size:20px;font-weight:700;font-family:var(--mono);color:var(--tx1);line-height:1}
+.cong-stat-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-top:3px;font-weight:500}
+@media(max-width:768px){
+  .cong-layout{grid-template-columns:1fr;height:auto;overflow:visible}
+  .cong-list-col{max-height:260px;border-right:none;border-bottom:1px solid var(--bd1)}
+  .cong-inner-tabs{padding:0 12px}
+  .citab{padding:8px 10px;font-size:11px}
+  .citab-pane{padding:14px}
+}
 </style>
 
 </head>
@@ -579,8 +634,6 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
         <div class="si" onclick="go('admin-con')">Contratos</div>
         <div class="si" onclick="go('admin-doc')">Documentos</div>
         <div class="si" onclick="go('admin-est')">Controle de Estoque</div>
-        <div class="sdiv"></div>
-        <div class="si" onclick="go('admin-aud')">Auditoria Administrativa</div>
       </div>
 
     </div>
@@ -682,25 +735,6 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
       </div>
     </div>
 
-    <!-- Congregações -->
-    <div class="mwrap" id="mw-cong">
-      <div class="mhdr" onclick="tog('cong')">
-        <div class="micon" style="background:rgba(58,170,92,0.14);border-color:rgba(58,170,92,0.25);color:var(--gr)">⛪</div>
-        <span class="mname">Congregações</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-cong">
-        <div class="si" onclick="go('cong-dash')">Dashboard</div>
-        <div class="si" onclick="go('cong-lista')">Lista de Congregações</div>
-        <div class="sdiv"></div>
-        <div class="si" onclick="go('cong-cultos')">Registro de Cultos</div>
-        <div class="si" onclick="go('cong-relatorios')">Relatórios</div>
-        <div class="si" onclick="go('cong-demandas')">Demandas</div>
-        <div class="si" onclick="go('cong-planejamento')">Planejamento</div>
-      </div>
-    </div>
-
-
     <!-- PGs -->
     <div class="mwrap" id="mw-pgs">
       <div class="mhdr" onclick="tog('pgs')">
@@ -756,6 +790,18 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
         <div class="si" onclick="go('dem-conc')">Concluídas</div>
         <div class="si" onclick="go('dem-pri')">Prioridades</div>
         <div class="si" onclick="go('dem-hist')">Histórico</div>
+      </div>
+    </div>
+
+    <!-- Congregações -->
+    <div class="mwrap" id="mw-cong">
+      <div class="mhdr" onclick="tog('cong')">
+        <div class="micon" style="background:rgba(58,170,92,0.14);border-color:rgba(58,170,92,0.25);color:var(--gr)">⛪</div>
+        <span class="mname">Congregações</span>
+        <span class="marr">▶</span>
+      </div>
+      <div class="msub" id="ms-cong">
+        <div class="si" onclick="go('cong-dash')">Dashboard Geral</div>
       </div>
     </div>
 
@@ -2377,6 +2423,144 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
     <div class="ct"><div class="card"><div class="ctit">Histórico de PGs <span class="cact" onclick="listarModulo('PGS','pgs-hist-list')">↻</span></div><div id="pgs-hist-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
+  <!-- ════ CONGREGAÇÕES DASHBOARD ════════════════ -->
+  <div class="view" id="v-cong-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(58,170,92,0.12);border-color:rgba(58,170,92,0.28)">⛪</div>
+      <div>
+        <div class="hero-lbl">Módulo</div>
+        <div class="hero-ttl">Congregações</div>
+        <div class="hero-dsc">Gestão de cultos, liderança, demandas e relatórios de cada congregação</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="abrirModalNovaCong()">+ Nova Congregação</button>
+      </div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4" id="cong-dash-kpis"></div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Congregações</div>
+          <div id="cong-dash-lista"></div>
+        </div>
+        <div class="card">
+          <div class="ctit">Cultos Recentes</div>
+          <div id="cong-dash-cultos"></div>
+        </div>
+      </div>
+      <div id="cong-dash-comparativo"></div>
+    </div>
+  </div>
+
+  <!-- ════ CONGREGAÇÃO — VISÃO INDIVIDUAL ════════════ -->
+  <div class="view" id="v-cong-ver"></div>
+
+  <!-- ════ MODAIS DO MÓDULO CONGREGAÇÕES ══════════ -->
+  <div class="mo" id="modal-nova-cong" onclick="if(event.target===this)fecharModalNovaCong()">
+    <div class="md" style="width:500px">
+      <div class="md-t">Nova Congregação</div>
+      <div class="md-s">Cadastre uma congregação vinculada à IPPenha</div>
+      <div class="frow">
+        <div class="fg" style="grid-column:1/-1"><label class="flb">Nome da Congregação *</label><input class="fi2" id="nc-nome" placeholder="Ex: Congregação Norte"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Localização</label><input class="fi2" id="nc-local" placeholder="Bairro / Cidade"></div>
+        <div class="fg"><label class="flb">Status</label>
+          <select class="fi2" id="nc-status"><option value="ativa">Ativa</option><option value="inativa">Inativa</option></select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Pastor / Líder Responsável</label><input class="fi2" id="nc-lider" placeholder="Nome do responsável"></div>
+        <div class="fg"><label class="flb">Data de Início</label><input class="fi2" type="date" id="nc-inicio"></div>
+      </div>
+      <div class="fg"><label class="flb">Endereço Completo</label><input class="fi2" id="nc-endereco" placeholder="Rua, número, bairro..."></div>
+      <div class="fg"><label class="flb">Observações</label><textarea class="fi2" id="nc-obs" rows="2" placeholder="Informações adicionais..."></textarea></div>
+      <div class="ma">
+        <button class="btn" onclick="fecharModalNovaCong()">Cancelar</button>
+        <button class="btn btn-p" onclick="salvarNovaCong()">Cadastrar Congregação</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mo" id="modal-novo-culto" onclick="if(event.target===this)fecharModalNovoCulto()">
+    <div class="md" style="width:480px">
+      <div class="md-t">Registrar Culto</div>
+      <div class="md-s">Registre a frequência e ocorrências do culto</div>
+      <div class="fg">
+        <label class="flb">Congregação *</label>
+        <select class="fi2" id="culto-cong-select"></select>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Data do Culto *</label><input class="fi2" type="date" id="culto-data"></div>
+        <div class="fg"><label class="flb">Tipo</label>
+          <select class="fi2" id="culto-tipo">
+            <option>Domingo — manhã</option><option>Domingo — noite</option>
+            <option>Quarta-feira</option><option>Sexta-feira</option>
+            <option>Especial</option><option>Outro</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Participantes *</label><input class="fi2" type="number" id="culto-participantes" placeholder="0" min="0"></div>
+        <div class="fg"><label class="flb">Visitantes</label><input class="fi2" type="number" id="culto-visitantes" placeholder="0" min="0"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Decisões / Profissões de Fé</label><input class="fi2" type="number" id="culto-decisoes" placeholder="0" min="0"></div>
+        <div class="fg"><label class="flb">Pregador</label><input class="fi2" id="culto-pregador" placeholder="Nome do pregador"></div>
+      </div>
+      <div class="fg"><label class="flb">Observações</label><textarea class="fi2" id="culto-obs" rows="2" placeholder="Ocorrências, destaques..."></textarea></div>
+      <div class="ma">
+        <button class="btn" onclick="fecharModalNovoCulto()">Cancelar</button>
+        <button class="btn btn-p" onclick="salvarNovoCulto()">Registrar Culto</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mo" id="modal-novo-evento" onclick="if(event.target===this)fecharModalNovoEvento()">
+    <div class="md" style="width:460px">
+      <div class="md-t">Novo Evento / Planejamento</div>
+      <div class="md-s">Registre um evento ou ação planejada para a congregação</div>
+      <div class="fg"><label class="flb">Congregação</label><select class="fi2" id="evento-cong-select"></select></div>
+      <div class="fg"><label class="flb">Título do Evento *</label><input class="fi2" id="evento-titulo" placeholder="Ex: Culto de Aniversário"></div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Data *</label><input class="fi2" type="date" id="evento-data"></div>
+        <div class="fg"><label class="flb">Tipo</label>
+          <select class="fi2" id="evento-tipo">
+            <option>Culto Especial</option><option>Evangelismo</option>
+            <option>Batismo</option><option>Conferência</option>
+            <option>Ação Social</option><option>Treinamento</option><option>Outro</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label class="flb">Descrição</label><textarea class="fi2" id="evento-desc" rows="2" placeholder="Detalhes do evento..."></textarea></div>
+      <div class="ma">
+        <button class="btn" onclick="fecharModalNovoEvento()">Cancelar</button>
+        <button class="btn btn-p" onclick="salvarNovoEvento()">Salvar Evento</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mo" id="modal-nova-demanda-cong" onclick="if(event.target===this)fecharModalNovaDemandaCong()">
+    <div class="md" style="width:480px">
+      <div class="md-t">Nova Demanda da Congregação</div>
+      <div class="md-s">Registre uma demanda originada em uma congregação</div>
+      <div class="fg"><label class="flb">Congregação *</label><select class="fi2" id="dem-cong-select"></select></div>
+      <div class="fg"><label class="flb">Título da Demanda *</label><input class="fi2" id="dem-titulo" placeholder="Descreva a demanda..."></div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Prioridade</label>
+          <select class="fi2" id="dem-prioridade"><option>Alta</option><option selected>Média</option><option>Baixa</option></select>
+        </div>
+        <div class="fg"><label class="flb">Responsável</label><input class="fi2" id="dem-resp" placeholder="Nome do responsável"></div>
+      </div>
+      <div class="fg"><label class="flb">Vencimento</label><input class="fi2" type="date" id="dem-venc"></div>
+      <div class="fg"><label class="flb">Observações</label><textarea class="fi2" id="dem-obs" rows="2" placeholder="Detalhes..."></textarea></div>
+      <div class="ma">
+        <button class="btn" onclick="fecharModalNovaDemandaCong()">Cancelar</button>
+        <button class="btn btn-p" onclick="salvarNovaDemandaCong()">Criar Demanda</button>
+      </div>
+    </div>
+  </div>
+
   <div class="view" id="v-generic">
     <div class="ct" style="padding-top:56px;text-align:center">
       <div style="font-size:36px;margin-bottom:12px;opacity:.3">🚧</div>
@@ -2426,7 +2610,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 </div>
 
 <script>
-const MC={geral:"var(--gmd)",admin:"var(--gold)",jur:"var(--blue)",conselho:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)"};
+const MC={geral:"var(--gmd)",admin:"var(--gold)",jur:"var(--blue)",conselho:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)",cong:"var(--gr)"};
 const CRUMB={
   geral:["","Dashboard Geral","/ IPPenha · visão executiva consolidada"],
   "admin-dash":["Administrativo","Dashboard","/ visão do módulo"],
@@ -2493,7 +2677,7 @@ const CRUMB={
   "memb-vis":["Membresia","Visitantes",""],
 };
 const SL={sec:"Secretaria e Cadastro",rh:"RH / Gestão de Pessoas",doc:"Documentos",aud:"Auditoria",fin:"Financeiro",con:"Contratos",est:"Controle de Estoque",demandas:"Processos e Demandas Jurídicas",contratos:"Contratos e Instrumentos",pareceres:"Pareceres",documentos:"Documentos Jurídicos",riscos:"Riscos e Pendências",historico:"Histórico",rel:"Relatórios Estratégicos",ind:"Indicadores",cong:"Congregações",nomeados:"Nomeados",ordenados:"Ordenados",ate:"Atendimentos",ora:"Pedidos de Oração",aco:"Acompanhamentos",reg:"Registros Pastorais",pri:"Casos Prioritários",min:"Ministérios",lid:"Liderança Ministerial",esc:"Escalas",prog:"Programações",lit:"Liturgia dos Cultos",vol:"Voluntários",calendario:"Calendário Geral",solicitacoes:"Solicitações de Agendamento",aprovacoes:"Aprovações Pendentes",confirmados:"Eventos Confirmados",recusados:"Eventos Recusados",reagendamentos:"Reagendamentos e Ajustes",ambientes:"Ambientes e Recursos",conflitos:"Conflitos de Agenda",config:"Configurações da Agenda",lista:"Lista de PGs",encontros:"Encontros",participantes:"Participantes",visitantes:"Visitantes",estudos:"Estudos",relatorios:"Relatórios",oracao:"Pedidos de Oração",man:"Manutenção",lim:"Limpeza e Conservação",sol:"Solicitações Operacionais",pat:"Patrimônio",pre:"Prestadores",todas:"Todas as Solicitações",pend:"Pendentes",and:"Em Andamento",conc:"Concluídas",hist:"Histórico",mod:"Por Módulo",exp:"Exportações",uni:"Por Congregação",res:"Por Responsável",cad:"Cadastro de Membros",bat:"Batismos",prof:"Profissões de Fé",trans:"Transferências",vis:"Visitantes"};
-const MN={admin:"Administrativo",jur:"Jurídico",conselho:"Conselho",pastoral:"Pastoral",min:"Ministerial",agenda:"Agenda",pgs:"Pequenos Grupos",infra:"Infraestrutura",dem:"Demandas",rel:"Relatórios",memb:"Membresia"};
+const MN={admin:"Administrativo",jur:"Jurídico",conselho:"Conselho",pastoral:"Pastoral",min:"Ministerial",agenda:"Agenda",pgs:"Pequenos Grupos",infra:"Infraestrutura",dem:"Demandas",rel:"Relatórios",memb:"Membresia",cong:"Congregações"};
 
 function go(id){
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
@@ -3465,12 +3649,12 @@ function atualizarSidebarUsuario() {
 
 /* ── PERMISSÕES ────────────────────────────── */
 const MODULOS_PERFIL = {
-  admin_geral:         ["geral","admin","jur","conselho","pastoral","min","agenda","pgs","infra","dem","rel","memb","config"],
-  conselho:            ["geral","conselho","rel","dem","memb","pastoral","min","pgs"],
-  pastoral:            ["geral","pastoral","memb","pgs","dem","min","agenda"],
-  adm_operacional:     ["geral","admin","dem","rel","memb","agenda","infra"],
-  lider_ministerio:    ["geral","min","agenda","dem","pgs"],
-  membro_ministerio:   ["geral","min","agenda","dem"],
+  admin_geral:         ["geral","admin","jur","conselho","pastoral","min","agenda","pgs","infra","dem","rel","memb","config","cong"],
+  conselho:            ["geral","conselho","rel","dem","memb","pastoral","min","pgs","cong"],
+  pastoral:            ["geral","pastoral","memb","pgs","dem","min","agenda","cong"],
+  adm_operacional:     ["geral","admin","dem","rel","memb","agenda","infra","cong"],
+  lider_ministerio:    ["geral","min","agenda","dem","pgs","cong"],
+  membro_ministerio:   ["geral","min","agenda","dem","cong"],
   operacional_servicos:["geral","infra","dem"],
 };
 
@@ -4219,6 +4403,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 </script>
+
+<!-- ═══ MÓDULO CONGREGAÇÕES ═════════════════════════ -->
+<script src="congregacoes-data.js"></script>
+<script src="congregacoes.js"></script>
 
 </body>
 </html>
