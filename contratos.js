@@ -197,6 +197,36 @@
   let _cache = [];
   let _tipoFiltro = "";
   let _abrirApos = null;
+  let _responsaveis = [];
+
+  async function _carregarResponsaveis() {
+    if (_responsaveis.length) return _responsaveis;
+    try {
+      const [oficiais, nomeados] = await Promise.all([
+        apiRead("OFICIAIS_TABLE"),
+        apiRead("NOMEADOS_TABLE"),
+      ]);
+
+      const labels = { pastor: "Rev.", presbitero: "Presb.", diacono: "Diác." };
+      const ordens = oficiais
+        .filter(o => ["ativo", "especial"].includes(o.status))
+        .map(o => `${labels[o.cargo] || ""} ${o.nome}`.trim());
+
+      const noms = nomeados
+        .filter(n => n.status === "ativo")
+        .map(n => n.nome);
+
+      const seen = new Set();
+      _responsaveis = [...ordens, ...noms].filter(n => {
+        if (seen.has(n)) return false;
+        seen.add(n);
+        return true;
+      });
+    } catch (e) {
+      console.warn("Responsáveis load:", e.message);
+    }
+    return _responsaveis;
+  }
 
   async function _load() {
     try { _cache = await apiRead("CONTRATOS"); }
@@ -449,6 +479,7 @@
     m.querySelector("#con-f-tipo").value = tipoAtual;
     m.querySelector("#con-modal-title").textContent = _editandoId ? "Editar Contrato" : "Novo Contrato";
 
+    await _carregarResponsaveis();
     _renderCamposModal(tipoAtual, dados);
     m.style.display = "flex";
   };
@@ -507,8 +538,12 @@
     }).join("") + `
       <div style="margin-bottom:12px">
         <label style="display:block;font-size:11px;color:var(--tx3);margin-bottom:4px">Responsável interno</label>
-        <input type="text" id="con-cf-responsavel" value="${dados.responsavel || ""}" placeholder="Nome do responsável"
+        <input type="text" id="con-cf-responsavel" value="${dados.responsavel || ""}"
+          placeholder="Digite ou selecione..." list="con-resp-datalist" autocomplete="off"
           style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg2));color:var(--tx1);font-size:12px;box-sizing:border-box">
+        <datalist id="con-resp-datalist">
+          ${_responsaveis.map(n => `<option value="${n}">`).join("")}
+        </datalist>
       </div>
       <div style="margin-bottom:12px">
         <label style="display:block;font-size:11px;color:var(--tx3);margin-bottom:4px">Observações</label>
