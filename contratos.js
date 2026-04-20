@@ -28,6 +28,8 @@
         { id: "data_vencimento",    label: "Data de vencimento",     tipo: "date",   req: true  },
         { id: "renovacao_automatica", label: "Renovação automática", tipo: "toggle", req: false },
         { id: "contato_fornecedor", label: "Contato do fornecedor",  tipo: "text",   req: false },
+        { id: "forma_pagamento",    label: "Forma de pagamento",     tipo: "select", req: false,
+          opcoes: ["Boleto bancário","Débito automático","Cartão de crédito","Transferência/PIX","Cheque","Nota fiscal","Outros"] },
       ]
     },
     {
@@ -50,6 +52,8 @@
         { id: "data_inicio",        label: "Início do contrato",     tipo: "date",   req: false },
         { id: "data_vencimento",    label: "Vencimento do contrato", tipo: "date",   req: true  },
         { id: "contato_fornecedor", label: "Contato do proprietário",tipo: "text",   req: false },
+        { id: "forma_pagamento",    label: "Forma de pagamento",     tipo: "select", req: false,
+          opcoes: ["Boleto bancário","Débito automático","Cartão de crédito","Transferência/PIX","Cheque","Nota fiscal","Outros"] },
       ]
     },
     {
@@ -68,6 +72,8 @@
         { id: "data_vencimento",    label: "Data de vencimento",     tipo: "date",   req: true  },
         { id: "renovacao_automatica", label: "Renovação automática", tipo: "toggle", req: false },
         { id: "contato_fornecedor", label: "Contato do prestador",   tipo: "text",   req: false },
+        { id: "forma_pagamento",    label: "Forma de pagamento",     tipo: "select", req: false,
+          opcoes: ["Boleto bancário","Débito automático","Cartão de crédito","Transferência/PIX","Cheque","Nota fiscal","Outros"] },
       ]
     },
     {
@@ -90,6 +96,8 @@
         { id: "data_vencimento",    label: "Fim da vigência",        tipo: "date",   req: true  },
         { id: "renovacao_automatica", label: "Renovação automática", tipo: "toggle", req: false },
         { id: "contato_fornecedor", label: "Contato da seguradora",  tipo: "text",   req: false },
+        { id: "forma_pagamento",    label: "Forma de pagamento",     tipo: "select", req: false,
+          opcoes: ["Boleto bancário","Débito automático","Cartão de crédito","Transferência/PIX","Cheque","Nota fiscal","Outros"] },
       ]
     },
     {
@@ -108,6 +116,8 @@
         { id: "data_inicio",        label: "Início",                 tipo: "date",   req: false },
         { id: "data_vencimento",    label: "Vencimento",             tipo: "date",   req: true  },
         { id: "contato_fornecedor", label: "Contato do fornecedor",  tipo: "text",   req: false },
+        { id: "forma_pagamento",    label: "Forma de pagamento",     tipo: "select", req: false,
+          opcoes: ["Boleto bancário","Débito automático","Cartão de crédito","Transferência/PIX","Cheque","Nota fiscal","Outros"] },
       ]
     },
     {
@@ -125,6 +135,8 @@
         { id: "data_inicio",        label: "Data de início",         tipo: "date",   req: false },
         { id: "data_vencimento",    label: "Data de vencimento",     tipo: "date",   req: true  },
         { id: "contato_fornecedor", label: "Contato",                tipo: "text",   req: false },
+        { id: "forma_pagamento",    label: "Forma de pagamento",     tipo: "select", req: false,
+          opcoes: ["Boleto bancário","Débito automático","Cartão de crédito","Transferência/PIX","Cheque","Nota fiscal","Outros"] },
       ]
     },
   ];
@@ -347,6 +359,7 @@
       con.renovacao_automatica != null ? ["Renovação automática", con.renovacao_automatica ? "✅ Sim" : "Não"] : null,
       con.responsavel   ? ["Responsável",        con.responsavel]           : null,
       con.contato_fornecedor ? ["Contato",        con.contato_fornecedor]   : null,
+      con.forma_pagamento ? ["Forma de pagamento", con.forma_pagamento]     : null,
     ].filter(Boolean);
 
     el.innerHTML = `

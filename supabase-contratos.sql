@@ -44,6 +44,9 @@ CREATE TABLE IF NOT EXISTS contratos (
   num_apolice         text,
   tipo_seguro         text,       -- Patrimonial | Incêndio | Veicular | Vida | Outros
 
+  -- Pagamento
+  forma_pagamento     text,       -- Boleto | Débito automático | Cartão | Transferência/PIX | Cheque | Outros
+
   -- Controle
   responsavel         text,
   observacoes         text,
@@ -60,17 +63,20 @@ CREATE INDEX IF NOT EXISTS idx_contratos_data_vencimento ON contratos(data_venci
 -- RLS (Row Level Security) — ajuste conforme sua política Supabase
 ALTER TABLE contratos ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "contratos_select_all"
-  ON contratos FOR SELECT USING (true);
-
-CREATE POLICY IF NOT EXISTS "contratos_insert_auth"
-  ON contratos FOR INSERT WITH CHECK (true);
-
-CREATE POLICY IF NOT EXISTS "contratos_update_auth"
-  ON contratos FOR UPDATE USING (true);
-
-CREATE POLICY IF NOT EXISTS "contratos_delete_auth"
-  ON contratos FOR DELETE USING (true);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='contratos' AND policyname='contratos_select_all') THEN
+    CREATE POLICY "contratos_select_all" ON contratos FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='contratos' AND policyname='contratos_insert_auth') THEN
+    CREATE POLICY "contratos_insert_auth" ON contratos FOR INSERT WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='contratos' AND policyname='contratos_update_auth') THEN
+    CREATE POLICY "contratos_update_auth" ON contratos FOR UPDATE USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='contratos' AND policyname='contratos_delete_auth') THEN
+    CREATE POLICY "contratos_delete_auth" ON contratos FOR DELETE USING (true);
+  END IF;
+END $$;
 
 -- ── Inserção de exemplo: Microsoft Office 365 ────────────
 INSERT INTO contratos (
