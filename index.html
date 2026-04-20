@@ -2478,9 +2478,37 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 
   <!-- ADMINISTRATIVO -->
   <div class="view" id="v-admin-con">
-    <div class="hero"><div class="hero-ic" style="background:var(--goldbg)">📄</div><div><div class="hero-lbl">Administrativo</div><div class="hero-ttl">Contratos</div><div class="hero-dsc">Contratos vigentes, vencimentos e renovações</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo Contrato</button></div></div>
-    <div class="ct"><div class="card"><div class="ctit">Contratos <span class="cact" onclick="listarModulo('DEMANDAS','admin-con-list',{area:'Contratos'})">↻ Atualizar</span></div><div id="admin-con-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--goldbg)">📄</div>
+      <div>
+        <div class="hero-lbl">Administrativo</div>
+        <div class="hero-ttl">Contratos</div>
+        <div class="hero-dsc">Contratos vigentes, vencimentos e renovações</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="conAbrirModal()">+ Novo Contrato</button>
+      </div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4" id="con-kpis"></div>
+      <div class="inav" style="--mc:var(--gold);margin-bottom:16px" id="con-tipo-tabs">
+        <div class="ini on" data-tipo="" onclick="conFiltrarTipo('')">Todos</div>
+        <div class="ini" data-tipo="Software" onclick="conFiltrarTipo('Software')">💻 Software</div>
+        <div class="ini" data-tipo="Imóvel" onclick="conFiltrarTipo('Imóvel')">🏢 Imóvel</div>
+        <div class="ini" data-tipo="Serviço" onclick="conFiltrarTipo('Serviço')">🛠 Serviço</div>
+        <div class="ini" data-tipo="Seguro" onclick="conFiltrarTipo('Seguro')">🛡 Seguro</div>
+        <div class="ini" data-tipo="Fornecimento" onclick="conFiltrarTipo('Fornecimento')">📦 Fornecimento</div>
+        <div class="ini" data-tipo="Outro" onclick="conFiltrarTipo('Outro')">📄 Outro</div>
+      </div>
+      <div class="card">
+        <div class="ctit">Contratos <span class="csub" id="con-count"></span><span class="cact" onclick="conRecarregar()">↻ Atualizar</span></div>
+        <div id="con-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
   </div>
+
+  <!-- CONTRATOS: view de detalhe -->
+  <div class="view" id="v-admin-con-detalhe"></div>
 
   <div class="view" id="v-admin-doc">
     <div class="hero"><div class="hero-ic" style="background:var(--goldbg)">🗂</div><div><div class="hero-lbl">Administrativo</div><div class="hero-ttl">Documentos</div><div class="hero-dsc">Documentos institucionais e arquivos</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo Doc.</button></div></div>
@@ -3532,6 +3560,7 @@ const TABLE_MAP = {
   "ORDENADOS":             "membros",
   "AGENDA":            "agenda",
   "DEMANDAS":              "demandas",
+  "CONTRATOS":             "contratos",
   "ESTOQUE_ITENS":         "estoque_itens",
   "ESTOQUE_MOVIMENTACOES": "estoque_itens",
   "FINANCEIRO":            "financeiro",
@@ -5446,6 +5475,43 @@ VIEW_AUTOLOAD["conselho-contratados"] = { fn: () => renderContratados() };
 
 <!-- ═══ MÓDULO DEMANDAS ══════════════════════════════ -->
 <script src="demandas.js"></script>
+
+<!-- ═══ MÓDULO CONTRATOS ═════════════════════════════ -->
+<script src="contratos.js"></script>
+
+<!-- ═══ MODAL: NOVO/EDITAR CONTRATO ══════════════════ -->
+<div id="modal-contrato" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)conFecharModal()">
+  <div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+    <div style="padding:20px 24px 16px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg-card);z-index:1">
+      <div>
+        <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Administrativo · Contratos</div>
+        <div id="con-modal-title" style="font-size:17px;font-weight:700;color:var(--tx1)">Novo Contrato</div>
+      </div>
+      <button onclick="conFecharModal()" style="background:none;border:none;font-size:22px;color:var(--tx3);cursor:pointer;padding:4px 8px;border-radius:6px">×</button>
+    </div>
+    <div style="padding:20px 24px;display:flex;flex-direction:column;gap:4px">
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Tipo de contrato <span style="color:var(--rose)">*</span></label>
+        <select id="con-f-tipo" onchange="conOnTipoChange()" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px">
+          <option value="">Selecione o tipo...</option>
+          <option value="Software">💻 Software / Licença</option>
+          <option value="Imóvel">🏢 Imóvel / Aluguel</option>
+          <option value="Serviço">🛠 Serviço / Terceirizado</option>
+          <option value="Seguro">🛡 Seguro</option>
+          <option value="Fornecimento">📦 Fornecimento</option>
+          <option value="Outro">📄 Outro</option>
+        </select>
+      </div>
+      <div id="con-campos-dinamicos">
+        <div style="color:var(--tx3);font-size:12px;padding:8px 0">Selecione o tipo de contrato para ver os campos.</div>
+      </div>
+    </div>
+    <div style="padding:16px 24px 20px;border-top:1px solid var(--bd1);display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:var(--bg-card)">
+      <button onclick="conFecharModal()" style="padding:9px 20px;border-radius:8px;border:1px solid var(--bd2);background:none;color:var(--tx2);font-size:13px;cursor:pointer">Cancelar</button>
+      <button onclick="conSalvar()" style="padding:9px 24px;border-radius:8px;border:none;background:var(--gold);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Salvar Contrato</button>
+    </div>
+  </div>
+</div>
 
 <!-- ═══ MODAL: NOVA DEMANDA ══════════════════════════ -->
 <div id="modal-nova-demanda" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;padding:16px">
