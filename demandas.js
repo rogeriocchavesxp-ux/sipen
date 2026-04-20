@@ -339,7 +339,7 @@
             <div class="ctit">Alterar Status</div>
             <div style="font-size:11px;color:var(--tx3);margin-bottom:10px">Status atual: ${pillStatus(dem.status)}</div>
             <div style="display:flex;flex-direction:column;gap:6px" id="dem-status-btns-${id}">
-              ${["Aberta","Em Análise","Em Andamento","Concluída","Cancelada","Pendente"].map(st => `
+              ${["Aberta","Em Análise","Em Andamento","Concluída","Cancelada"].map(st => `
                 <button
                   data-demid="${id}"
                   data-status="${st}"
