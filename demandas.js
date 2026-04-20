@@ -120,31 +120,75 @@
     await _load();
     _atualizarBadge();
 
-    const ABERTAS_STATUS = ["Aberta","Em Análise","Em Andamento","Pendente"];
-    const abertas  = _cache.filter(r => ABERTAS_STATUS.includes(r.status));
-    const emAnd    = _cache.filter(r => r.status === "Em Andamento");
-    const alta     = _cache.filter(r => ["Alta","Urgente"].includes(r.prioridade) && ABERTAS_STATUS.includes(r.status));
+    const ATIVAS = ["Aberta","Em Análise","Em Andamento","Pendente"];
+    const novas    = _cache.filter(r => r.status === "Aberta");
+    const analise  = _cache.filter(r => r.status === "Em Análise");
+    const andando  = _cache.filter(r => r.status === "Em Andamento");
+    const pendente = _cache.filter(r => r.status === "Pendente");
     const concl    = _cache.filter(r => r.status === "Concluída");
-    const recentes = [..._cache].sort((a,b) => (b.criado_em||"").localeCompare(a.criado_em||"")).slice(0, 8);
+    const cancel   = _cache.filter(r => r.status === "Cancelada");
+    const urgentes = _cache.filter(r => ["Alta","Urgente"].includes(r.prioridade) && ATIVAS.includes(r.status));
+    const total    = _cache.filter(r => ATIVAS.includes(r.status));
 
+    /* Recentes: abertas + em análise ordenadas por criado_em */
+    const recentes = [..._cache]
+      .sort((a,b) => (b.criado_em||"").localeCompare(a.criado_em||""))
+      .slice(0, 10);
+
+    /* Top categorias com abertas */
     const porCat = {};
-    abertas.forEach(r => {
-      const a = r.area || "Sem categoria";
-      porCat[a] = (porCat[a] || 0) + 1;
-    });
+    total.forEach(r => { const a = r.area||"Sem categoria"; porCat[a] = (porCat[a]||0)+1; });
     const catRank = Object.entries(porCat).sort((a,b) => b[1]-a[1]).slice(0, 6);
     const maxCat  = catRank[0]?.[1] || 1;
 
+    /* Visão do pipeline por status */
+    const totalGeral = _cache.length || 1;
+    const pipeline = [
+      { label:"Aberta",       val:novas.length,   cor:"var(--blue)",   view:"dem-todas" },
+      { label:"Em Análise",   val:analise.length, cor:"var(--gold)",   view:"dem-analise" },
+      { label:"Em Andamento", val:andando.length, cor:"var(--violet)", view:"dem-and" },
+      { label:"Pendente",     val:pendente.length,cor:"var(--amber)",  view:"dem-todas" },
+      { label:"Concluída",    val:concl.length,   cor:"var(--gr)",     view:"dem-conc" },
+      { label:"Cancelada",    val:cancel.length,  cor:"var(--tx4)",    view:"dem-hist" },
+    ];
+
+    const alertaUrgente = urgentes.length > 0 ? `
+      <div class="alr alr-r" style="margin-bottom:16px;cursor:pointer" onclick="window.go('dem-pri')">
+        <span class="alr-i">🚨</span>
+        <div><strong>${urgentes.length} demanda${urgentes.length>1?"s":""} urgente${urgentes.length>1?"s":""}</strong> aguardando ação —
+          ${urgentes.slice(0,3).map(r => `<em>${r.titulo||r.area}</em>`).join(", ")}${urgentes.length>3?" e mais...":""}
+        </div>
+        <span class="alr-a">Ver →</span>
+      </div>` : "";
+
     el.innerHTML = `
-      <div class="kpis c4">
-        <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">◻</div><div class="kpi-body"><div class="kpi-lbl">Abertas</div><div class="kpi-val">${abertas.length}</div><div class="kpi-d nu">em aberto</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:var(--violetbg);color:var(--violet)">◎</div><div class="kpi-body"><div class="kpi-lbl">Em andamento</div><div class="kpi-val">${emAnd.length}</div><div class="kpi-d nu">em execução</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">!</div><div class="kpi-body"><div class="kpi-lbl">Alta prioridade</div><div class="kpi-val">${alta.length}</div><div class="kpi-d ${alta.length > 0 ? "dn" : "up"}">requer atenção</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,.12);color:var(--gr)">✓</div><div class="kpi-body"><div class="kpi-lbl">Concluídas</div><div class="kpi-val">${concl.length}</div><div class="kpi-d up">▲ total</div></div></div>
+      ${alertaUrgente}
+      <div class="kpis" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;background:var(--bg-card);border:1px solid var(--bd1);border-radius:var(--rl);overflow:hidden;margin-bottom:18px">
+        <div class="kpi" style="cursor:pointer;border-radius:0;border:none;border-right:1px solid var(--bd1)" onclick="window.go('dem-todas')">
+          <div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">◻</div>
+          <div class="kpi-body"><div class="kpi-lbl">Novas</div><div class="kpi-val">${novas.length}</div><div class="kpi-d nu">aguardando</div></div>
+        </div>
+        <div class="kpi" style="cursor:pointer;border-radius:0;border:none;border-right:1px solid var(--bd1)" onclick="window.go('dem-analise')">
+          <div class="kpi-ico" style="background:rgba(212,168,67,.12);color:var(--gold)">🔍</div>
+          <div class="kpi-body"><div class="kpi-lbl">Em Análise</div><div class="kpi-val">${analise.length}</div><div class="kpi-d nu">triagem</div></div>
+        </div>
+        <div class="kpi" style="cursor:pointer;border-radius:0;border:none;border-right:1px solid var(--bd1)" onclick="window.go('dem-and')">
+          <div class="kpi-ico" style="background:var(--violetbg);color:var(--violet)">◎</div>
+          <div class="kpi-body"><div class="kpi-lbl">Em Andamento</div><div class="kpi-val">${andando.length}</div><div class="kpi-d nu">em execução</div></div>
+        </div>
+        <div class="kpi" style="cursor:pointer;border-radius:0;border:none;border-right:1px solid var(--bd1)" onclick="window.go('dem-pri')">
+          <div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">!</div>
+          <div class="kpi-body"><div class="kpi-lbl">Prioritárias</div><div class="kpi-val">${urgentes.length}</div><div class="kpi-d ${urgentes.length>0?"dn":"up"}">alta/urgente</div></div>
+        </div>
+        <div class="kpi" style="cursor:pointer;border-radius:0;border:none" onclick="window.go('dem-conc')">
+          <div class="kpi-ico" style="background:rgba(58,170,92,.12);color:var(--gr)">✓</div>
+          <div class="kpi-body"><div class="kpi-lbl">Concluídas</div><div class="kpi-val">${concl.length}</div><div class="kpi-d up">total</div></div>
+        </div>
       </div>
+
       <div class="g2">
         <div class="card">
-          <div class="ctit">Demandas recentes <span class="cact" onclick="demRecarregarDash()">↻ Atualizar</span></div>
+          <div class="ctit">Solicitações recentes <span class="cact" onclick="demRecarregarDash()">↻ Atualizar</span></div>
           ${recentes.length === 0
             ? '<div style="color:var(--tx3);font-size:11.5px">Nenhuma demanda registrada</div>'
             : recentes.map(r => `
@@ -160,20 +204,37 @@
                 </div>
               </div>`).join("")}
         </div>
-        <div class="card">
-          <div class="ctit">Abertas por categoria</div>
-          ${catRank.length === 0
-            ? '<div style="color:var(--tx3);font-size:11.5px">Sem dados</div>'
-            : catRank.map(([cat, qtd]) => `
-              <div style="margin-bottom:10px">
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="card">
+            <div class="ctit">Pipeline de status</div>
+            ${pipeline.map(p => `
+              <div style="margin-bottom:9px;cursor:pointer" onclick="window.go('${p.view}')">
                 <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
-                  <span style="color:var(--tx2)">${catIcon(cat)} ${cat}</span>
-                  <span style="color:var(--tx1);font-weight:700">${qtd}</span>
+                  <span style="color:var(--tx2)">${p.label}</span>
+                  <span style="color:var(--tx1);font-weight:700">${p.val}</span>
                 </div>
                 <div style="height:5px;border-radius:3px;background:var(--bd1)">
-                  <div style="height:5px;border-radius:3px;background:${catCor(cat)};width:${Math.round(qtd/maxCat*100)}%"></div>
+                  <div style="height:5px;border-radius:3px;background:${p.cor};width:${p.val?Math.max(Math.round(p.val/totalGeral*100),2):0}%;transition:width .3s"></div>
                 </div>
               </div>`).join("")}
+          </div>
+
+          <div class="card">
+            <div class="ctit">Por categoria (em aberto)</div>
+            ${catRank.length === 0
+              ? '<div style="color:var(--tx3);font-size:11.5px">Sem dados</div>'
+              : catRank.map(([cat, qtd]) => `
+                <div style="margin-bottom:9px">
+                  <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+                    <span style="color:var(--tx2)">${catIcon(cat)} ${cat}</span>
+                    <span style="color:var(--tx1);font-weight:700">${qtd}</span>
+                  </div>
+                  <div style="height:5px;border-radius:3px;background:var(--bd1)">
+                    <div style="height:5px;border-radius:3px;background:${catCor(cat)};width:${Math.round(qtd/maxCat*100)}%"></div>
+                  </div>
+                </div>`).join("")}
+          </div>
         </div>
       </div>`;
   }
