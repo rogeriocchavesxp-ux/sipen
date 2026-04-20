@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    SIPEN — Módulo Solicitações e Demandas
-   demandas.js · v1.0
+   demandas.js · v2.0
    15 categorias + subcategorias + fluxo de status completo
 ═══════════════════════════════════════════════════════ */
 
@@ -41,12 +41,12 @@
       subcats:["Demandas gerais","Apoio administrativo","Solicitações internas","Processos institucionais"] },
   ];
 
-  function getCat(area){
+  function getCat(area) {
     return CATS.find(c => c.nome === area || c.id === area) || null;
   }
-  function catIcon(area){ return getCat(area)?.icon || "📋"; }
-  function catCor(area) { return getCat(area)?.cor  || "var(--tx3)"; }
-  function catResp(area){ return getCat(area)?.resp  || ""; }
+  function catIcon(area) { return getCat(area)?.icon || "📋"; }
+  function catCor(area)  { return getCat(area)?.cor  || "var(--tx3)"; }
+  function catResp(area) { return getCat(area)?.resp  || ""; }
 
   /* ── Status e prioridade ────────────────────────────── */
 
@@ -90,6 +90,7 @@
 
   let _cache = [];
   let _ativo = null;
+  let _origemView = "dem-todas"; // rastreia de onde o detalhe foi aberto
 
   async function _load() {
     try { _cache = await apiRead("DEMANDAS"); }
@@ -120,11 +121,11 @@
     _atualizarBadge();
 
     const ABERTAS_STATUS = ["Aberta","Em Análise","Em Andamento","Pendente"];
-    const abertas   = _cache.filter(r => ABERTAS_STATUS.includes(r.status));
-    const emAnd     = _cache.filter(r => r.status === "Em Andamento");
-    const alta      = _cache.filter(r => ["Alta","Urgente"].includes(r.prioridade) && ABERTAS_STATUS.includes(r.status));
-    const concl     = _cache.filter(r => r.status === "Concluída");
-    const recentes  = [..._cache].sort((a,b) => (b.criado_em||"").localeCompare(a.criado_em||"")).slice(0, 8);
+    const abertas  = _cache.filter(r => ABERTAS_STATUS.includes(r.status));
+    const emAnd    = _cache.filter(r => r.status === "Em Andamento");
+    const alta     = _cache.filter(r => ["Alta","Urgente"].includes(r.prioridade) && ABERTAS_STATUS.includes(r.status));
+    const concl    = _cache.filter(r => r.status === "Concluída");
+    const recentes = [..._cache].sort((a,b) => (b.criado_em||"").localeCompare(a.criado_em||"")).slice(0, 8);
 
     const porCat = {};
     abertas.forEach(r => {
@@ -147,7 +148,7 @@
           ${recentes.length === 0
             ? '<div style="color:var(--tx3);font-size:11.5px">Nenhuma demanda registrada</div>'
             : recentes.map(r => `
-              <div class="trow" style="cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}')">
+              <div class="trow" style="cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','dem-dash')">
                 <div class="tdot" style="background:${catCor(r.area)}"></div>
                 <div class="tbody">
                   <div class="ttitle">${catIcon(r.area)} ${r.titulo||"Sem título"}</div>
@@ -190,12 +191,19 @@
 
     let rows = [..._cache];
 
+    /* Filtros fixos (ex: status:"Em Análise") — comparação exata */
     if (filtrosFixos) {
-      Object.entries(filtrosFixos).forEach(([k,v]) => {
-        if (v) rows = rows.filter(r => String(r[k]||"").toLowerCase().includes(String(v).toLowerCase()));
+      Object.entries(filtrosFixos).forEach(([k, v]) => {
+        if (!v) return;
+        if (k === "prioridade" && v === "Alta") {
+          rows = rows.filter(r => ["Alta","Urgente"].includes(r.prioridade));
+        } else {
+          rows = rows.filter(r => String(r[k]||"") === String(v));
+        }
       });
     }
 
+    /* Filtros da UI */
     const fStatus = document.getElementById(elId+"-fstatus")?.value || "";
     const fCat    = document.getElementById(elId+"-fcat")?.value    || "";
     const fPrio   = document.getElementById(elId+"-fprio")?.value   || "";
@@ -219,6 +227,9 @@
       return;
     }
 
+    /* Determina a view de origem para o botão Voltar no detalhe */
+    const viewOrigem = _viewIdFromListId(elId);
+
     el.innerHTML = `
       <div style="overflow-x:auto">
         <table style="width:100%;border-collapse:collapse;font-size:12px">
@@ -232,7 +243,7 @@
           <tbody>
             ${rows.map(r => `
               <tr style="border-bottom:1px solid var(--bd1);cursor:pointer"
-                  onclick="demAbrirDetalhe('${r.id||r._row}')"
+                  onclick="demAbrirDetalhe('${r.id||r._row}','${viewOrigem}')"
                   onmouseover="this.style.background='var(--bg-hover)'"
                   onmouseout="this.style.background=''">
                 <td style="padding:8px 6px">
@@ -252,22 +263,39 @@
       </div>`;
   }
 
+  function _viewIdFromListId(elId) {
+    const MAP = {
+      "dem-dash-content":    "dem-dash",
+      "dem-todas-content":   "dem-todas",
+      "dem-analise-content": "dem-analise",
+      "dem-and-content":     "dem-and",
+      "dem-conc-content":    "dem-conc",
+      "dem-pri-content":     "dem-pri",
+      "dem-hist-content":    "dem-hist",
+    };
+    return MAP[elId] || "dem-todas";
+  }
+
   /* ── Detalhe individual ─────────────────────────────── */
 
-  window.demAbrirDetalhe = async function(id) {
+  window.demAbrirDetalhe = async function(id, origem) {
+    _origemView = origem || _origemView || "dem-todas";
     if (!_cache.length) await _load();
     const dem = _cache.find(r => String(r.id||r._row) === String(id));
-    if (!dem) { if(typeof T==="function") T("Erro","Demanda não encontrada"); return; }
+    if (!dem) {
+      if (typeof T === "function") T("Erro","Demanda não encontrada");
+      return;
+    }
     _ativo = dem;
     _renderDetalhe(dem);
-    if (typeof go === "function") go("dem-detalhe");
+    if (typeof window.go === "function") window.go("dem-detalhe");
   };
-  window.demAbrirDetalhe = window.demAbrirDetalhe;
 
   function _renderDetalhe(dem) {
     const el = document.getElementById("v-dem-detalhe");
     if (!el) return;
     const id = dem.id || dem._row;
+    const origem = _origemView;
 
     el.innerHTML = `
       <div class="hero">
@@ -281,7 +309,7 @@
           </div>
         </div>
         <div class="hero-act">
-          <button class="tbt" onclick="history.back()">← Voltar</button>
+          <button class="tbt" onclick="window.go('${origem}')">← Voltar</button>
         </div>
       </div>
       <div class="ct">
@@ -290,14 +318,14 @@
             <div class="ctit">Detalhes</div>
             <table style="width:100%;font-size:11.5px;border-collapse:collapse">
               ${[
-                ["Categoria",    `<span style="color:${catCor(dem.area)};font-weight:600">${catIcon(dem.area)} ${dem.area||"—"}</span>`],
-                ["Subcategoria", dem.subcategoria||"—"],
-                ["Solicitante",  dem.solicitante||"—"],
-                ["Responsável",  dem.responsavel||"—"],
-                ["Prioridade",   pillPrio(dem.prioridade)],
-                ["Abertura",     fmtD(dem.data_abertura||dem.criado_em)],
+                ["Categoria",     `<span style="color:${catCor(dem.area)};font-weight:600">${catIcon(dem.area)} ${dem.area||"—"}</span>`],
+                ["Subcategoria",  dem.subcategoria||"—"],
+                ["Solicitante",   dem.solicitante||"—"],
+                ["Responsável",   dem.responsavel||"—"],
+                ["Prioridade",    pillPrio(dem.prioridade)],
+                ["Abertura",      fmtD(dem.data_abertura||dem.criado_em)],
                 ["Conclusão prev.",fmtD(dem.data_conclusao)],
-              ].map(([ lbl, val ], i) => `
+              ].map(([lbl, val], i) => `
                 <tr style="${i>0?"border-top:1px solid var(--bd1)":""}">
                   <td style="color:var(--tx3);padding:7px 0;width:40%">${lbl}</td>
                   <td style="color:var(--tx1)">${val}</td>
@@ -308,14 +336,17 @@
               <div style="font-size:12px;color:var(--tx1);line-height:1.7;margin-top:6px">${dem.descricao}</div>` : ""}
           </div>
           <div class="card">
-            <div class="ctit">Atualizar status</div>
+            <div class="ctit">Alterar Status</div>
             <div style="font-size:11px;color:var(--tx3);margin-bottom:10px">Status atual: ${pillStatus(dem.status)}</div>
-            <div style="display:flex;flex-direction:column;gap:6px">
-              ${["Aberta","Em Análise","Em Andamento","Concluída","Cancelada"].map(st => `
-                <button onclick="demAtualizarStatus('${id}','${st}')"
+            <div style="display:flex;flex-direction:column;gap:6px" id="dem-status-btns-${id}">
+              ${["Aberta","Em Análise","Em Andamento","Concluída","Cancelada","Pendente"].map(st => `
+                <button
+                  data-demid="${id}"
+                  data-status="${st}"
+                  onclick="demAtualizarStatus(this.dataset.demid, this.dataset.status)"
                   style="text-align:left;padding:9px 14px;border-radius:6px;border:1px solid ${dem.status===st?"var(--gr)":"var(--bd2)"};background:${dem.status===st?"rgba(58,170,92,.1)":"var(--bg-card)"};color:${dem.status===st?"var(--gr)":"var(--tx1)"};font-size:12px;font-weight:${dem.status===st?"700":"400"};cursor:pointer;transition:all .15s"
-                  onmouseover="if('${dem.status}'!=='${st}')this.style.background='var(--bg-hover)'"
-                  onmouseout="if('${dem.status}'!=='${st}')this.style.background='var(--bg-card)'">
+                  onmouseover="this.style.background=this.dataset.status==='${dem.status}'?'rgba(58,170,92,.1)':'var(--bg-hover)'"
+                  onmouseout="this.style.background=this.dataset.status==='${dem.status}'?'rgba(58,170,92,.1)':'var(--bg-card)'">
                   ${dem.status===st?"✓ ":"○ "} ${st}
                 </button>`).join("")}
             </div>
@@ -324,24 +355,32 @@
       </div>`;
   }
 
-  /* ── Atualizar status via Supabase ──────────────────── */
+  /* ── Atualizar status ───────────────────────────────── */
 
   window.demAtualizarStatus = async function(id, novoStatus) {
+    if (!id || id === "undefined") {
+      if (typeof T === "function") T("Erro", "ID da demanda inválido");
+      return;
+    }
     try {
       const payload = { status: novoStatus };
-      if (novoStatus === "Concluída") payload.data_conclusao = new Date().toISOString().split("T")[0];
+      if (novoStatus === "Concluída") {
+        payload.data_conclusao = new Date().toISOString().split("T")[0];
+      }
       await apiWrite("update", "DEMANDAS", { _row: id, ...payload });
-      if (typeof T === "function") T("✅ Status atualizado", `Demanda: ${novoStatus}`);
+      if (typeof T === "function") T("✅ Status atualizado", novoStatus);
+
       const idx = _cache.findIndex(r => String(r.id||r._row) === String(id));
       if (idx >= 0) Object.assign(_cache[idx], payload);
+
       if (_ativo && String(_ativo.id||_ativo._row) === String(id)) {
         Object.assign(_ativo, payload);
         _renderDetalhe(_ativo);
       }
       _atualizarBadge();
     } catch(e) {
-      if (typeof T === "function") T("Erro", "Não foi possível atualizar o status");
-      console.error(e);
+      if (typeof T === "function") T("Erro ao atualizar", e.message || "Tente novamente");
+      console.error("demAtualizarStatus:", e);
     }
   };
 
@@ -382,14 +421,14 @@
   };
 
   window.salvarNovaDemanda = async function() {
-    const cat   = document.getElementById("dem-f-cat")?.value;
-    const sub   = document.getElementById("dem-f-sub")?.value;
-    const titulo= document.getElementById("dem-f-titulo")?.value?.trim();
-    const desc  = document.getElementById("dem-f-desc")?.value?.trim();
-    const prio  = document.getElementById("dem-f-prio")?.value;
-    const sol   = document.getElementById("dem-f-sol")?.value?.trim();
-    const resp  = document.getElementById("dem-f-resp")?.value?.trim();
-    const venc  = document.getElementById("dem-f-venc")?.value || null;
+    const cat    = document.getElementById("dem-f-cat")?.value;
+    const sub    = document.getElementById("dem-f-sub")?.value;
+    const titulo = document.getElementById("dem-f-titulo")?.value?.trim();
+    const desc   = document.getElementById("dem-f-desc")?.value?.trim();
+    const prio   = document.getElementById("dem-f-prio")?.value;
+    const sol    = document.getElementById("dem-f-sol")?.value?.trim();
+    const resp   = document.getElementById("dem-f-resp")?.value?.trim();
+    const venc   = document.getElementById("dem-f-venc")?.value || null;
 
     if (!cat || !sub || !titulo) {
       if (typeof T === "function") T("Campo obrigatório", "Preencha categoria, subcategoria e título");
@@ -417,9 +456,10 @@
       const view = document.querySelector(".view.on");
       if (view?.id === "v-dem-dash")   renderDash();
       if (view?.id === "v-dem-todas")  renderLista("dem-todas-content");
+      _atualizarBadge();
     } catch(e) {
-      if (typeof T === "function") T("Erro", "Não foi possível registrar a demanda");
-      console.error(e);
+      if (typeof T === "function") T("Erro ao criar", e.message || "Tente novamente");
+      console.error("salvarNovaDemanda:", e);
     }
   };
 
