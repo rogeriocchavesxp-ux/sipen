@@ -40,11 +40,25 @@ except ImportError:
 # ══════════════════════════════════════════════════════════════════════
 
 SUPABASE_URL = "https://erhwryfzpycahgsohhbh.supabase.co"
-SUPABASE_KEY = (
+
+# A chave service_role bypassa RLS e é necessária para ETL.
+# Obtenha em: Supabase Dashboard → Settings → API → service_role (secret)
+# Passe via variável de ambiente para não expor no código:
+#   export SUPABASE_SERVICE_KEY="eyJ..."
+#   python3 importar-prover.py
+_ANON_KEY = (
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
     ".eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyaHdyeWZ6cHljYWhnc29oaGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg2MTUsImV4cCI6MjA5MTg0NDYxNX0"
     ".T0hp90Bmufj6a3oUPq1vYcLiGx9YjyMaZiE38S0e3_8"
 )
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY") or _ANON_KEY
+
+if SUPABASE_KEY == _ANON_KEY:
+    print("⚠  Usando chave anon — pode falhar por RLS.")
+    print("   Para usar a chave service_role:")
+    print('   export SUPABASE_SERVICE_KEY="eyJ..."')
+    print("   Obtenha em: Supabase Dashboard → Settings → API → service_role")
+    print()
 
 CSV_ENCODING   = "ISO-8859-1"
 CSV_DELIMITER  = ";"
