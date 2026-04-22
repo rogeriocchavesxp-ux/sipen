@@ -105,34 +105,51 @@ HEADERS = {
     "Prefer":        "return=representation",
 }
 
+_RETRY_MAX   = 5
+_RETRY_DELAY = 3  # segundos base (dobra a cada tentativa)
+
+def _com_retry(fn):
+    """Executa fn() com retry exponencial em erros de rede."""
+    delay = _RETRY_DELAY
+    for tentativa in range(1, _RETRY_MAX + 1):
+        try:
+            return fn()
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as e:
+            if tentativa == _RETRY_MAX:
+                raise
+            log.warning(f"  ⚠ Rede indisponível (tentativa {tentativa}/{_RETRY_MAX}), aguardando {delay}s... ({e.__class__.__name__})")
+            time.sleep(delay)
+            delay *= 2
+
 def _get(table: str, params: dict = None) -> list:
-    """GET /rest/v1/{table}"""
     url = f"{SUPABASE_URL}/rest/v1/{table}"
-    r = requests.get(url, headers=HEADERS, params=params, timeout=30)
-    r.raise_for_status()
-    return r.json()
+    def fn():
+        r = requests.get(url, headers=HEADERS, params=params, timeout=30)
+        r.raise_for_status()
+        return r.json()
+    return _com_retry(fn)
 
 def _post(table: str, payload, prefer: str = "return=representation"):
-    """POST /rest/v1/{table}"""
     h = {**HEADERS, "Prefer": prefer}
     url = f"{SUPABASE_URL}/rest/v1/{table}"
-    r = requests.post(url, headers=h, json=payload, timeout=30)
-    if not r.ok:
-        raise RuntimeError(f"POST {table} HTTP {r.status_code}: {r.text[:400]}")
-    if prefer == "return=minimal":
-        return {}
-    return r.json()
+    def fn():
+        r = requests.post(url, headers=h, json=payload, timeout=30)
+        if not r.ok:
+            raise RuntimeError(f"POST {table} HTTP {r.status_code}: {r.text[:400]}")
+        return {} if prefer == "return=minimal" else r.json()
+    return _com_retry(fn)
 
 def _upsert(table: str, payload, on_conflict: str, prefer: str = "return=representation"):
     """POST com Prefer: resolution=merge-duplicates"""
     h = {**HEADERS, "Prefer": f"resolution=merge-duplicates,{prefer}"}
     url = f"{SUPABASE_URL}/rest/v1/{table}?on_conflict={on_conflict}"
-    r = requests.post(url, headers=h, json=payload, timeout=30)
-    if not r.ok:
-        raise RuntimeError(f"UPSERT {table} HTTP {r.status_code}: {r.text[:400]}")
-    if "minimal" in prefer:
-        return {}
-    return r.json()
+    def fn():
+        r = requests.post(url, headers=h, json=payload, timeout=30)
+        if not r.ok:
+            raise RuntimeError(f"UPSERT {table} HTTP {r.status_code}: {r.text[:400]}")
+        return {} if "minimal" in prefer else r.json()
+    return _com_retry(fn)
 
 # ══════════════════════════════════════════════════════════════════════
 # NORMALIZAÇÃO DE DADOS
