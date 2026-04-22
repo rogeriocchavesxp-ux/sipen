@@ -461,10 +461,14 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 
 /* ═══ TABLE ══════════════════════════ */
 .tbl{width:100%;border-collapse:collapse}
-.tbl th{text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--tx3);padding:0 0 8px;border-bottom:1px solid var(--bd1);font-weight:600}
-.tbl td{padding:8px 0;font-size:11.5px;border-bottom:1px solid var(--bd1);color:var(--tx2);vertical-align:middle}
+.tbl thead tr{background:var(--bg-surface)}
+.tbl th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);padding:9px 10px 9px 0;border-bottom:2px solid var(--teal);font-weight:700;white-space:nowrap}
+.tbl th:first-child{padding-left:10px;border-radius:6px 0 0 0}
+.tbl th:last-child{border-radius:0 6px 0 0}
+.tbl td{padding:9px 10px 9px 0;font-size:11.5px;border-bottom:1px solid var(--bd1);color:var(--tx2);vertical-align:middle}
+.tbl td:first-child{padding-left:10px}
 .tbl tr:last-child td{border-bottom:none}
-.tbl tr:hover td{color:var(--tx1);background:rgba(255,255,255,0.02);cursor:pointer}
+.tbl tr:hover td{color:var(--tx1);background:rgba(255,255,255,0.03);cursor:pointer}
 .tdp{color:var(--tx1)!important;font-weight:600}
 .tdc{font-family:var(--mono);font-size:10.5px;color:var(--tx3)!important}
 
