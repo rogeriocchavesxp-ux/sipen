@@ -85,13 +85,11 @@ ALTER TABLE public.pessoa_ministerios  ENABLE ROW LEVEL SECURITY;
 DO $pol$ DECLARE t text;
 BEGIN
   FOREACH t IN ARRAY ARRAY['pessoa_congregacoes','pessoa_ministerios'] LOOP
-    EXECUTE format(
-      'CREATE POLICY IF NOT EXISTS "auth_select_%I"  ON public.%I FOR SELECT  TO authenticated USING (true);
-       CREATE POLICY IF NOT EXISTS "auth_insert_%I"  ON public.%I FOR INSERT  TO authenticated WITH CHECK (true);
-       CREATE POLICY IF NOT EXISTS "auth_update_%I"  ON public.%I FOR UPDATE  TO authenticated USING (true) WITH CHECK (true);
-       CREATE POLICY IF NOT EXISTS "auth_delete_%I"  ON public.%I FOR DELETE  TO authenticated USING (true);
-       CREATE POLICY IF NOT EXISTS "service_all_%I"  ON public.%I FOR ALL     TO service_role  USING (true) WITH CHECK (true);',
-      t,t, t,t, t,t, t,t, t,t);
+    BEGIN EXECUTE format('CREATE POLICY "auth_select_%I" ON public.%I FOR SELECT TO authenticated USING (true)', t, t);              EXCEPTION WHEN duplicate_object THEN NULL; END;
+    BEGIN EXECUTE format('CREATE POLICY "auth_insert_%I" ON public.%I FOR INSERT TO authenticated WITH CHECK (true)', t, t);          EXCEPTION WHEN duplicate_object THEN NULL; END;
+    BEGIN EXECUTE format('CREATE POLICY "auth_update_%I" ON public.%I FOR UPDATE TO authenticated USING (true) WITH CHECK (true)', t, t); EXCEPTION WHEN duplicate_object THEN NULL; END;
+    BEGIN EXECUTE format('CREATE POLICY "auth_delete_%I" ON public.%I FOR DELETE TO authenticated USING (true)', t, t);              EXCEPTION WHEN duplicate_object THEN NULL; END;
+    BEGIN EXECUTE format('CREATE POLICY "service_all_%I" ON public.%I FOR ALL TO service_role USING (true) WITH CHECK (true)', t, t); EXCEPTION WHEN duplicate_object THEN NULL; END;
   END LOOP;
 END $pol$;
 
