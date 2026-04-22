@@ -5935,30 +5935,58 @@ async function renderOficiaisOrdenados() {
     const rows = await apiFetchTable("v_oficiais", { status: "ativo", _order: "fim_mandato.asc", _limit: 500 });
     const pastores = rows.filter(r => r.cargo === "pastor");
     const presbs   = rows.filter(r => r.cargo === "presbitero");
-    const vencer   = rows.filter(r => r.cargo !== "pastor" && r.fim_mandato && r.fim_mandato <= new Date().getFullYear() + "/" + 12 + "/" + 31 && r.fim_mandato >= new Date().toISOString().split("T")[0]);
 
-    setV("ord-kpi-total", pastores.length + presbs.length);
-    setV("ord-kpi-detalhe", `${pastores.length} pastores · ${presbs.length} presbíteros`);
+    const hoje   = new Date().toISOString().split("T")[0];
+    const em12m  = new Date(); em12m.setFullYear(em12m.getFullYear() + 1);
+    const em12mS = em12m.toISOString().split("T")[0];
+    const vencer = rows.filter(r => r.cargo !== "pastor" && r.fim_mandato && r.fim_mandato >= hoje && r.fim_mandato <= em12mS);
+
+    setV("ord-kpi-total",   pastores.length + presbs.length);
+    setV("ord-kpi-detalhe", `${pastores.length} pastor · ${presbs.length} presbíteros`);
     setV("ord-kpi-pastores", pastores.length);
-    setV("ord-kpi-presbs", presbs.length);
-    setV("ord-kpi-vencer", vencer.length);
-    if (vencer.length > 0) setV("ord-kpi-vencer-d", "⚠ mandatos a vencer");
-    else setV("ord-kpi-vencer-d", "todos em dia");
+    setV("ord-kpi-presbs",   presbs.length);
+    setV("ord-kpi-vencer",   vencer.length);
+    setV("ord-kpi-vencer-d", vencer.length > 0 ? "⚠ mandatos a vencer em 12 meses" : "todos em dia");
 
     const fmtDate = d => d ? d.split("-").reverse().join("/") : "—";
-    const fmtPill = (s) => s === "ativo" ? `<span class="pill pd">Ativo</span>` : `<span class="pill pz">${s}</span>`;
+    const fmtPill = s => s === "ativo" ? `<span class="pill pd">Ativo</span>` : `<span class="pill pz">${s}</span>`;
+    const fmtEmer = v => v ? `<span style="font-size:9px;background:rgba(212,168,67,0.15);color:var(--gold);border:1px solid rgba(212,168,67,0.3);border-radius:3px;padding:1px 5px">${v} vts</span>` : "—";
+    const fmtMand = n => n ? `<span style="font-size:9px;color:var(--tx3)">${n}º</span>` : "—";
 
-    const makeTable = (list) => {
+    const makePastoresTable = list => {
       if (!list.length) return `<p style="color:var(--tx4);font-size:12px;padding:8px">Nenhum registro.</p>`;
-      return `<table class="tbl"><thead><tr><th>Nome</th><th>Posse</th><th>Fim Mandato</th><th>Ata</th><th>Área</th><th>Obs</th><th>Status</th></tr></thead><tbody>` +
-        list.map(r => `<tr><td class="tdp">${r.nome}</td><td class="tdc mono">${fmtDate(r.posse)}</td><td class="tdc mono">${fmtDate(r.fim_mandato)}</td><td class="tdc mono">${r.ata || "—"}</td><td class="tdc">${r.area || "—"}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs || "—"}</td><td>${fmtPill(r.status)}</td></tr>`).join("") +
+      return `<table class="tbl"><thead><tr><th>Nome</th><th>Posse</th><th>Ata</th><th>Obs</th><th>Status</th></tr></thead><tbody>` +
+        list.map(r => `<tr><td class="tdp">${r.nome}</td><td class="tdc mono">${fmtDate(r.posse)}</td><td class="tdc mono">${r.ata||"—"}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs||"—"}</td><td>${fmtPill(r.status)}</td></tr>`).join("") +
         `</tbody></table>`;
+    };
+
+    const makePressbsTable = list => {
+      if (!list.length) return `<p style="color:var(--tx4);font-size:12px;padding:8px">Nenhum registro.</p>`;
+      const groups = {};
+      for (const r of list) {
+        const yr = r.fim_mandato ? r.fim_mandato.substring(0,4) : "—";
+        if (!groups[yr]) groups[yr] = [];
+        groups[yr].push(r);
+      }
+      const anoAtual = new Date().getFullYear();
+      const bgLbl = yr => parseInt(yr) <= anoAtual + 1
+        ? "rgba(224,138,42,0.06);color:var(--amber)"
+        : "rgba(58,170,92,0.05);color:var(--gr)";
+      let html = `<table class="tbl"><thead><tr><th>Nome</th><th>Posse</th><th>Fim Mandato</th><th>Ata</th><th>Mand.</th><th>Emerência</th><th>Obs</th><th>Status</th></tr></thead><tbody>`;
+      for (const [yr, grp] of Object.entries(groups).sort()) {
+        html += `<tr><td colspan="8" style="background:${bgLbl(yr)};font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;padding:6px 10px;font-weight:700">Mandato até ${yr} — ${grp.length} presbítero${grp.length>1?'s':''}</td></tr>`;
+        grp.forEach(r => {
+          html += `<tr><td class="tdp">${r.nome}</td><td class="tdc mono">${fmtDate(r.posse)}</td><td class="tdc mono">${fmtDate(r.fim_mandato)}</td><td class="tdc mono">${r.ata||"—"}</td><td class="tdc" style="text-align:center">${fmtMand(r.mandato_numero)}</td><td class="tdc" style="text-align:center">${fmtEmer(r.emerencia_votos)}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs||"—"}</td><td>${fmtPill(r.status)}</td></tr>`;
+        });
+      }
+      html += `</tbody></table>`;
+      return html;
     };
 
     const pEl = document.getElementById("ord-pastores-list");
     const rEl = document.getElementById("ord-presbs-list");
-    if (pEl) pEl.innerHTML = makeTable(pastores);
-    if (rEl) rEl.innerHTML = makeTable(presbs);
+    if (pEl) pEl.innerHTML = makePastoresTable(pastores);
+    if (rEl) rEl.innerHTML = makePressbsTable(presbs);
   } catch(e) {
     ["ord-pastores-list","ord-presbs-list"].forEach(id => {
       const el = document.getElementById(id);
@@ -5989,8 +6017,9 @@ async function renderDiaconos() {
       ? `<span class="pill pd">Ativo</span>`
       : s === "encerrado" ? `<span class="pill pz">Encerrado</span>`
       : `<span class="pill pv">${s}</span>`;
+    const fmtEmer = v => v ? `<span style="font-size:9px;background:rgba(212,168,67,0.15);color:var(--gold);border:1px solid rgba(212,168,67,0.3);border-radius:3px;padding:1px 5px">${v} vts</span>` : "";
+    const fmtMand = n => n ? `<span style="font-size:9px;color:var(--tx3)">${n}º</span>` : "—";
 
-    // Group by fim_mandato year
     const groups = {};
     for (const r of rows) {
       const yr = r.fim_mandato ? r.fim_mandato.substring(0,4) : "especial";
@@ -5998,13 +6027,13 @@ async function renderDiaconos() {
       groups[yr].push(r);
     }
 
-    let html = `<table class="tbl"><thead><tr><th>Nome</th><th>Posse</th><th>Fim Mandato</th><th>Ata</th><th>Obs.</th><th>Status</th></tr></thead><tbody>`;
+    let html = `<table class="tbl"><thead><tr><th>Nome</th><th>Posse</th><th>Fim Mandato</th><th>Ata</th><th>Mand.</th><th>Emerência</th><th>Obs.</th><th>Status</th></tr></thead><tbody>`;
     const labelColor = yr => yr === "2026" ? "rgba(224,138,42,0.06);color:var(--amber)" : yr === "especial" ? "rgba(255,255,255,0.02);color:var(--tx4)" : "rgba(58,170,92,0.05);color:var(--gr)";
     for (const [yr, list] of Object.entries(groups).sort()) {
-      const label = yr === "especial" ? "Situações especiais / encerrados" : `Mandato até ${yr}`;
-      html += `<tr><td colspan="6" style="background:${labelColor(yr)};font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;padding:6px 10px;font-weight:700">${label}</td></tr>`;
+      const label = yr === "especial" ? `Situações especiais / encerrados — ${list.length}` : `Mandato até ${yr} — ${list.length} diácono${list.length>1?'s':''}`;
+      html += `<tr><td colspan="8" style="background:${labelColor(yr)};font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;padding:6px 10px;font-weight:700">${label}</td></tr>`;
       list.forEach(r => {
-        html += `<tr><td class="tdp" style="${r.status!=='ativo'?'color:var(--tx3)':''}">${r.nome}</td><td class="tdc mono">${fmtDate(r.posse)}</td><td class="tdc mono">${fmtDate(r.fim_mandato)}</td><td class="tdc mono">${r.ata||"—"}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs||"—"}</td><td>${pillStatus(r.status)}</td></tr>`;
+        html += `<tr><td class="tdp" style="${r.status!=='ativo'?'color:var(--tx3)':''}">${r.nome}</td><td class="tdc mono">${fmtDate(r.posse)}</td><td class="tdc mono">${fmtDate(r.fim_mandato)}</td><td class="tdc mono">${r.ata||"—"}</td><td class="tdc" style="text-align:center">${fmtMand(r.mandato_numero)}</td><td class="tdc" style="text-align:center">${fmtEmer(r.emerencia_votos)}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs||"—"}</td><td>${pillStatus(r.status)}</td></tr>`;
       });
     }
     html += `</tbody></table>`;
