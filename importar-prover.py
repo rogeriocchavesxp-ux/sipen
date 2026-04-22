@@ -98,7 +98,7 @@ def _get(table: str, params: dict = None) -> list:
     r.raise_for_status()
     return r.json()
 
-def _post(table: str, payload, prefer: str = "return=representation") -> list | dict:
+def _post(table: str, payload, prefer: str = "return=representation"):
     """POST /rest/v1/{table}"""
     h = {**HEADERS, "Prefer": prefer}
     url = f"{SUPABASE_URL}/rest/v1/{table}"
@@ -109,7 +109,7 @@ def _post(table: str, payload, prefer: str = "return=representation") -> list | 
         return {}
     return r.json()
 
-def _upsert(table: str, payload, on_conflict: str, prefer: str = "return=representation") -> list | dict:
+def _upsert(table: str, payload, on_conflict: str, prefer: str = "return=representation"):
     """POST com Prefer: resolution=merge-duplicates"""
     h = {**HEADERS, "Prefer": f"resolution=merge-duplicates,{prefer}"}
     url = f"{SUPABASE_URL}/rest/v1/{table}?on_conflict={on_conflict}"
@@ -124,20 +124,20 @@ def _upsert(table: str, payload, on_conflict: str, prefer: str = "return=represe
 # NORMALIZAÇÃO DE DADOS
 # ══════════════════════════════════════════════════════════════════════
 
-def normalizar(texto: str) -> str | None:
+def normalizar(texto: str) -> str:
     """Remove espaços, None se vazio."""
     if not texto:
         return None
     s = str(texto).strip()
     return s if s else None
 
-def normalizar_nome(texto: str) -> str | None:
+def normalizar_nome(texto: str) -> str:
     s = normalizar(texto)
     if not s:
         return None
     return " ".join(s.split())  # colapsa múltiplos espaços
 
-def normalizar_cpf(cpf: str) -> str | None:
+def normalizar_cpf(cpf: str) -> str:
     if not cpf:
         return None
     c = re.sub(r"\D", "", cpf)
@@ -145,13 +145,13 @@ def normalizar_cpf(cpf: str) -> str | None:
         return None
     return c
 
-def normalizar_telefone(t: str) -> str | None:
+def normalizar_telefone(t: str) -> str:
     if not t:
         return None
     digits = re.sub(r"\D", "", t)
     return digits if len(digits) >= 8 else None
 
-def normalizar_data(d: str) -> str | None:
+def normalizar_data(d: str) -> str:
     if not d:
         return None
     s = d.strip()
@@ -164,13 +164,13 @@ def normalizar_data(d: str) -> str | None:
         return f"{m.group(3)}-{m.group(2)}-{m.group(1)}"
     return None
 
-def normalizar_email(e: str) -> str | None:
+def normalizar_email(e: str) -> str:
     if not e:
         return None
     s = e.strip().lower()
     return s if "@" in s else None
 
-def slug_nome_nasc(nome: str, nasc: str) -> str | None:
+def slug_nome_nasc(nome: str, nasc: str) -> str:
     """Chave de dedup quando não há CPF nem email."""
     if not nome or not nasc:
         return None
@@ -185,7 +185,7 @@ def mapear_genero(sexo: str) -> str:
     if s in ("feminino", "f", "female", "mulher"):  return "F"
     return "nao_informado"
 
-def mapear_estado_civil(ec: str) -> str | None:
+def mapear_estado_civil(ec: str) -> str:
     s = (ec or "").strip().lower()
     mapa = {
         "solteiro(a)": "solteiro", "solteiro": "solteiro", "solteira": "solteiro",
@@ -203,7 +203,7 @@ def mapear_status_membro(status_csv: str) -> str:
     if s == "falecido":   return "falecido"
     return "ativo"
 
-def multivalorado(campo: str, sep: str = "/") -> list[str]:
+def multivalorado(campo: str, sep: str = "/") -> list:
     """Divide campo multivalorado e retorna lista normalizada sem vazios."""
     if not campo or not campo.strip():
         return []
@@ -263,7 +263,7 @@ cnt = {
     "erros": 0, "pulados": 0,
 }
 
-erros_log: list[dict] = []
+erros_log = []
 
 # ══════════════════════════════════════════════════════════════════════
 # CAMADA 0: PRÉ-CARGA DOS CACHES
@@ -272,16 +272,44 @@ erros_log: list[dict] = []
 def pre_carregar_caches():
     log.info("Pré-carregando caches de pessoas e congregações existentes...")
 
-    # Pessoas existentes
+    # Pessoas existentes — tenta com prover_id, cai para sem ele se coluna não existir
     offset = 0
     batch  = 1000
-    while True:
-        rows = _get("pessoas", {
-            "select": "id,cpf,email,nome,data_nascimento,prover_id",
-            "deleted_at": "is.null",
-            "limit":  str(batch),
-            "offset": str(offset),
-        })
+    select_pessoas = "id,cpf,email,nome,data_nascimento,prover_id"
+    pessoas_ok = True
+    while pessoas_ok:
+        try:
+            rows = _get("pessoas", {
+                "select":     select_pessoas,
+                "deleted_at": "is.null",
+                "limit":      str(batch),
+                "offset":     str(offset),
+            })
+        except Exception as e:
+            msg = str(e)
+            if "prover_id" in msg:
+                # Migration ainda não rodou: tentar sem prover_id
+                select_pessoas = "id,cpf,email,nome,data_nascimento"
+                log.warning("  ⚠ Coluna prover_id não existe — rode a migration SQL antes.")
+                log.warning("  ⚠ Continuando sem cache de prover_id (dedup via CPF/email).")
+                try:
+                    rows = _get("pessoas", {
+                        "select":     select_pessoas,
+                        "deleted_at": "is.null",
+                        "limit":      str(batch),
+                        "offset":     str(offset),
+                    })
+                except Exception:
+                    log.warning("  ⚠ Não foi possível pré-carregar cache de pessoas (RLS ou migration pendente).")
+                    log.warning("  ⚠ Dedup funcionará apenas via constraints do banco.")
+                    pessoas_ok = False
+                    break
+            else:
+                log.warning(f"  ⚠ Não foi possível pré-carregar cache de pessoas: {e}")
+                log.warning("  ⚠ Dedup funcionará apenas via constraints do banco.")
+                pessoas_ok = False
+                break
+
         for p in rows:
             pid = p["id"]
             if p.get("cpf"):
@@ -298,9 +326,12 @@ def pre_carregar_caches():
         offset += batch
 
     # Congregações existentes
-    rows = _get("congregacoes", {"select": "id,nome", "deleted_at": "is.null", "limit": "1000"})
-    for c in rows:
-        _cong_cache[_norm_cong(c["nome"])] = c["id"]
+    try:
+        rows = _get("congregacoes", {"select": "id,nome", "deleted_at": "is.null", "limit": "1000"})
+        for c in rows:
+            _cong_cache[_norm_cong(c["nome"])] = c["id"]
+    except Exception as e:
+        log.warning(f"  ⚠ Não foi possível pré-carregar congregações: {e}")
 
     log.info(
         f"  → {len(_cpf_cache)} CPFs | {len(_email_cache)} emails | "
@@ -317,7 +348,7 @@ def _norm_cong(nome: str) -> str:
 # CAMADA 1: CONGREGAÇÕES
 # ══════════════════════════════════════════════════════════════════════
 
-def garantir_congregacao(nome: str) -> str | None:
+def garantir_congregacao(nome: str) -> str:
     """Retorna id da congregação (criando se não existir)."""
     if not nome or not nome.strip():
         return None
@@ -337,7 +368,7 @@ def garantir_congregacao(nome: str) -> str | None:
     log.info(f"  + Congregação criada: {nome.strip()}")
     return novo_id
 
-def processar_congregacoes_csv(rows: list[dict]):
+def processar_congregacoes_csv(rows = []):
     """Pré-scan de todas as congregações únicas para criar antes do ETL principal."""
     log.info("CAMADA 1: Pré-processando congregações...")
     nomes = set()
@@ -354,7 +385,7 @@ def processar_congregacoes_csv(rows: list[dict]):
 # CAMADA 2: PESSOAS
 # ══════════════════════════════════════════════════════════════════════
 
-def _encontrar_pessoa(cpf, email, slug) -> str | None:
+def _encontrar_pessoa(cpf, email, slug) -> str:
     """Busca pessoa no cache local (sem round-trip ao banco)."""
     if cpf and cpf in _cpf_cache:
         return _cpf_cache[cpf]
@@ -374,7 +405,7 @@ def _atualizar_caches(pid: str, cpf, email, slug, prover_id=None):
     if prover_id:
         _prover_cache[str(prover_id)] = pid
 
-def inserir_ou_encontrar_pessoa(d: dict) -> str | None:
+def inserir_ou_encontrar_pessoa(d: dict) -> str:
     """
     Estratégia de dedup:
       1. prover_id (re-importação idempotente)
@@ -443,19 +474,41 @@ def inserir_ou_encontrar_pessoa(d: dict) -> str | None:
     # Remover nulos para não sobrescrever defaults
     payload = {k: v for k, v in payload.items() if v is not None}
 
+    def _tentar_post(p):
+        result = _post("pessoas", p)
+        return result[0]["id"] if isinstance(result, list) else result["id"]
+
     try:
-        result = _post("pessoas", payload)
-        pid = result[0]["id"] if isinstance(result, list) else result["id"]
+        pid = _tentar_post(payload)
         _atualizar_caches(pid, cpf, email, slug, prover_id)
         cnt["pessoas_inseridas"] += 1
         return pid
     except RuntimeError as e:
         msg = str(e)
-        # Conflito de CPF único (race condition improvável, mas possível)
-        if "idx_pessoas_cpf" in msg or "idx_pessoas_email" in msg:
-            # Tentar buscar no banco
+        # Coluna não existe (migration não rodou) — retirar campos extras e tentar de novo
+        if "column" in msg and ("prover_id" in msg or "apelido" in msg or "dizimista" in msg):
+            extras = ["prover_id","apelido","nome_mae","nome_pai","naturalidade","profissao",
+                      "empresa","escolaridade","procedencia_religiosa","dizimista","tipo_sanguineo"]
+            payload_min = {k: v for k, v in payload.items() if k not in extras}
+            log.warning(f"  ⚠ Migration pendente — inserindo {nome} sem campos extras do Prover.")
+            try:
+                pid = _tentar_post(payload_min)
+                _atualizar_caches(pid, cpf, email, slug, prover_id)
+                cnt["pessoas_inseridas"] += 1
+                return pid
+            except RuntimeError as e2:
+                msg = str(e2)
+        # Conflito de unicidade — buscar a pessoa existente
+        if "unique" in msg.lower() or "idx_pessoas_cpf" in msg or "idx_pessoas_email" in msg:
             if cpf:
                 rows = _get("pessoas", {"cpf": f"eq.{cpf}", "select": "id", "deleted_at": "is.null"})
+                if rows:
+                    pid = rows[0]["id"]
+                    _atualizar_caches(pid, cpf, email, slug, prover_id)
+                    cnt["pessoas_reutilizadas"] += 1
+                    return pid
+            if email:
+                rows = _get("pessoas", {"email": f"eq.{email}", "select": "id", "deleted_at": "is.null"})
                 if rows:
                     pid = rows[0]["id"]
                     _atualizar_caches(pid, cpf, email, slug, prover_id)
@@ -469,7 +522,7 @@ def inserir_ou_encontrar_pessoa(d: dict) -> str | None:
 # CAMADA 3: VÍNCULOS ESPECIALIZADOS
 # ══════════════════════════════════════════════════════════════════════
 
-def _cong_principal(d: dict, campo: str = "Congregações") -> str | None:
+def _cong_principal(d: dict, campo: str = "Congregações") -> str:
     congs = multivalorado(d.get(campo, ""))
     if not congs:
         return None
