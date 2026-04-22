@@ -3726,15 +3726,18 @@ function renderModuloList(rows, tab, containerId) {
     return;
   }
 
+  const COL_PT = {titulo:"Título",data:"Data",mes:"Mês",dia_semana:"Dia da Semana",hora_inicio:"Início",hora_fim:"Fim",recorrencia:"Recorrência",espaco:"Espaço",organizador:"Organizador",observacao:"Observação",status:"Status",tipo:"Tipo",nome:"Nome",email:"E-mail",telefone:"Telefone",cargo:"Cargo",ministerio:"Ministério",area:"Área",descricao:"Descrição",valor:"Valor",quantidade:"Qtd",pgs:"PGS",lider:"Líder",endereco:"Endereço",data_batismo:"Batismo",data_membro:"Membro desde",data_entrada:"Entrada",data_saida:"Saída",categoria:"Categoria",prioridade:"Prioridade",responsavel:"Responsável",solicitante:"Solicitante",item:"Item",unidade:"Unidade",estoque_minimo:"Mín.",localizacao:"Localização"};
+  const colLabel = c => COL_PT[c] || c.replace(/_/g," ").replace(/\b\w/g,l=>l.toUpperCase());
+
   const visibleCols = cols.filter(c => !["id","criado_em","atualizado_em"].includes(c));
   el.innerHTML = `
     <div style="font-size:10px;color:var(--tx3);margin-bottom:10px">${rows.length} registro${rows.length!==1?"s":""}</div>
     <div style="overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;font-size:11.5px">
         <thead>
-          <tr style="border-bottom:1px solid var(--bd2)">
-            ${visibleCols.slice(0,6).map(c=>`<th style="text-align:left;padding:6px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);font-weight:600">${escapeHtml(c)}</th>`).join("")}
-            <th style="text-align:right;padding:6px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);font-weight:600">Ações</th>
+          <tr style="background:var(--bg-surface);border-bottom:2px solid var(--teal)">
+            ${visibleCols.slice(0,6).map(c=>`<th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700;white-space:nowrap">${escapeHtml(colLabel(c))}</th>`).join("")}
+            <th style="text-align:right;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Ações</th>
           </tr>
         </thead>
         <tbody>
