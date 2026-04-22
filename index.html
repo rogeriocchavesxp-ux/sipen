@@ -1813,21 +1813,68 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
       <div class="ini" onclick="go('agenda-confirmados')">Confirmados</div>
     </div>
     <div class="ct">
-      <!-- KPIs dinâmicos -->
+      <!-- KPIs linha 1 -->
       <div class="kpis c4" id="agenda-kpis">
         <div class="kpi"><div class="kpi-ico" style="background:var(--tealbg);color:var(--teal)">📅</div><div class="kpi-body"><div class="kpi-lbl">Total de Eventos</div><div class="kpi-val" id="ag-total">—</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:var(--bluebg);color:var(--blue)">📍</div><div class="kpi-body"><div class="kpi-lbl">Espaços utilizados</div><div class="kpi-val" id="ag-espacos">—</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:var(--goldbg);color:var(--gold)">👥</div><div class="kpi-body"><div class="kpi-lbl">Organizadores</div><div class="kpi-val" id="ag-org">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--bluebg);color:var(--blue)">🗓</div><div class="kpi-body"><div class="kpi-lbl">Esta Semana</div><div class="kpi-val" id="ag-semana">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--goldbg);color:var(--gold)">📆</div><div class="kpi-body"><div class="kpi-lbl">Próx. 30 dias</div><div class="kpi-val" id="ag-prox30">—</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:rgba(82,196,110,0.12);color:var(--gr)">✅</div><div class="kpi-body"><div class="kpi-lbl">Confirmados</div><div class="kpi-val" id="ag-conf">—</div></div></div>
       </div>
+      <!-- KPIs linha 2 -->
+      <div class="kpis c4" style="margin-top:0">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.12);color:var(--violet)">🔄</div><div class="kpi-body"><div class="kpi-lbl">Recorrentes</div><div class="kpi-val" id="ag-recorrentes">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--bluebg);color:var(--blue)">📍</div><div class="kpi-body"><div class="kpi-lbl">Espaços Usados</div><div class="kpi-val" id="ag-espacos">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--amberbg);color:var(--amber)">👥</div><div class="kpi-body"><div class="kpi-lbl">Organizadores</div><div class="kpi-val" id="ag-org">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--tealbg);color:var(--teal)">🏛</div><div class="kpi-body"><div class="kpi-lbl">Espaço + Usado</div><div class="kpi-val" id="ag-top-espaco" style="font-size:12px;line-height:1.2">—</div></div></div>
+      </div>
+
+      <!-- Próximos eventos + Mini-calendário -->
       <div class="g2">
         <div class="card">
-          <div class="ctit">Próximos Eventos <span class="cact" onclick="carregarAgendaDash()">↻ Atualizar</span></div>
+          <div class="ctit">Próximos Eventos <span class="csub" id="ag-prox-count"></span><span class="cact" onclick="carregarAgendaDash()">↻</span></div>
           <div id="agenda-proximos"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
         </div>
         <div class="card">
-          <div class="ctit">Eventos por Mês</div>
-          <div id="agenda-por-mes"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+          <div class="ctit" id="ag-cal-titulo">Calendário</div>
+          <div id="ag-mini-cal"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        </div>
+      </div>
+
+      <!-- Eventos por mês — barras clicáveis -->
+      <div class="card">
+        <div class="ctit">Eventos por Mês <span class="csub">· clique na barra para listar os eventos</span></div>
+        <div id="agenda-por-mes"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        <!-- Lista expandida inline -->
+        <div id="ag-mes-expandido" style="display:none;margin-top:16px;border-top:1px solid var(--bd1);padding-top:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div class="ctit" id="ag-mes-exp-titulo" style="margin:0"></div>
+            <button onclick="document.getElementById('ag-mes-expandido').style.display='none';_agMesElAtivo=null" style="background:none;border:none;color:var(--tx3);font-size:13px;cursor:pointer;padding:2px 6px">✕</button>
+          </div>
+          <div id="ag-mes-exp-list"></div>
+        </div>
+      </div>
+
+      <!-- Gráficos secundários linha 1 -->
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Distribuição por Dia da Semana</div>
+          <div id="ag-chart-diasemana"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        </div>
+        <div class="card">
+          <div class="ctit">Frequência por Recorrência</div>
+          <div id="ag-chart-recorrencia"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        </div>
+      </div>
+
+      <!-- Gráficos secundários linha 2 -->
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Top Espaços / Ambientes <span class="cact" onclick="go('agenda-ambientes')">Ver todos →</span></div>
+          <div id="ag-chart-espacos"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        </div>
+        <div class="card">
+          <div class="ctit">Top Organizadores / Ministérios</div>
+          <div id="ag-chart-orgs"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
         </div>
       </div>
     </div>
@@ -4722,69 +4769,281 @@ async function getAgenda() {
   return _agendaCache;
 }
 
+let _agMesElAtivo = null;
+let _agCalAno = new Date().getFullYear();
+let _agCalMes = new Date().getMonth();
+
 async function carregarAgendaDash() {
   _agendaCache = null;
   try {
     const rows = await getAgenda();
     const hoje = new Date().toISOString().split("T")[0];
+    const d7 = new Date(); d7.setDate(d7.getDate()+7);
+    const prox7 = d7.toISOString().split("T")[0];
+    const d30 = new Date(); d30.setDate(d30.getDate()+30);
+    const prox30str = d30.toISOString().split("T")[0];
 
-    // KPIs
+    // --- KPIs ---
     const total = rows.length;
-    const espacos = new Set(rows.map(r=>r.espaco).filter(Boolean)).size;
-    const orgs = new Set(rows.map(r=>r.organizador).filter(Boolean)).size;
+    const semana = rows.filter(r=>r.data>=hoje && r.data<=prox7).length;
+    const p30 = rows.filter(r=>r.data>=hoje && r.data<=prox30str).length;
     const conf = rows.filter(r=>r.status==="confirmado").length;
+    const recorrentes = rows.filter(r=>r.recorrencia && r.recorrencia!=="Único").length;
+    const espacosSet = new Set(rows.map(r=>r.espaco).filter(Boolean));
+    const orgs = new Set(rows.map(r=>r.organizador).filter(Boolean)).size;
+    const espCount = {};
+    rows.forEach(r=>{if(r.espaco) espCount[r.espaco]=(espCount[r.espaco]||0)+1;});
+    const topEsp = Object.entries(espCount).sort((a,b)=>b[1]-a[1])[0]?.[0] || "—";
+
     const setV = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
     setV("ag-total", total);
-    setV("ag-espacos", espacos);
-    setV("ag-org", orgs);
+    setV("ag-semana", semana);
+    setV("ag-prox30", p30);
     setV("ag-conf", conf);
+    setV("ag-recorrentes", recorrentes);
+    setV("ag-espacos", espacosSet.size);
+    setV("ag-org", orgs);
+    setV("ag-top-espaco", topEsp.length>18 ? topEsp.slice(0,16)+"…" : topEsp);
 
-    // Próximos eventos
-    const proximos = rows
-      .filter(r => r.data >= hoje)
-      .sort((a,b) => a.data.localeCompare(b.data))
-      .slice(0, 10);
-
+    // --- Próximos eventos ---
+    const proximos = rows.filter(r=>r.data>=hoje).slice(0,8);
+    const proxCount = document.getElementById("ag-prox-count");
+    if(proxCount) proxCount.textContent = `· ${rows.filter(r=>r.data>=hoje).length} futuros`;
     const proxEl = document.getElementById("agenda-proximos");
-    if (proxEl) {
-      if (!proximos.length) {
+    if(proxEl) {
+      if(!proximos.length) {
         proxEl.innerHTML = `<div style="color:var(--tx3);text-align:center;padding:20px">Nenhum evento próximo</div>`;
       } else {
-        proxEl.innerHTML = proximos.map(e => `
-          <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd1);align-items:flex-start">
-            <div style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:6px 8px;text-align:center;min-width:44px;flex-shrink:0">
-              <div style="font-size:9px;color:var(--teal);text-transform:uppercase;font-weight:600">${e.mes?.slice(0,3)||""}</div>
-              <div style="font-size:16px;font-weight:700;color:var(--tx1);font-family:var(--mono)">${e.data?.slice(8)||"—"}</div>
+        proxEl.innerHTML = proximos.map(e => {
+          const isHoje = e.data===hoje;
+          return `<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd1);align-items:flex-start">
+            <div style="background:${isHoje?'var(--teal)':'var(--bg-surface)'};border:1px solid ${isHoje?'var(--teal)':'var(--bd1)'};border-radius:6px;padding:5px 8px;text-align:center;min-width:42px;flex-shrink:0">
+              <div style="font-size:8px;color:${isHoje?'rgba(255,255,255,.75)':'var(--teal)'};text-transform:uppercase;font-weight:700;letter-spacing:.05em">${e.mes?.slice(0,3)||""}</div>
+              <div style="font-size:17px;font-weight:700;color:${isHoje?'#fff':'var(--tx1)'};font-family:var(--mono);line-height:1">${e.data?.slice(8)||"—"}</div>
             </div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:11.5px;font-weight:600;color:var(--tx1);margin-bottom:2px">${escapeHtml(e.titulo||"—")}</div>
-              <div style="font-size:10px;color:var(--tx3)">${e.hora_inicio||""} ${e.hora_fim?"→ "+e.hora_fim:""} · ${escapeHtml(e.espaco||"—")}</div>
-              <div style="font-size:10px;color:var(--tx3)">${escapeHtml(e.organizador||"")}</div>
+              <div style="font-size:11.5px;font-weight:600;color:var(--tx1);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(e.titulo||"—")}</div>
+              <div style="font-size:10px;color:var(--tx3)">${e.hora_inicio?e.hora_inicio.slice(0,5):""} ${e.hora_fim?"→ "+e.hora_fim.slice(0,5):""}</div>
+              <div style="font-size:10px;color:var(--teal);margin-top:1px">${escapeHtml(e.espaco||"")}${e.organizador?" · "+escapeHtml(e.organizador):""}</div>
             </div>
-            <button onclick='openCrudForm("AGENDA",${safeJsonForHtml(e)})' style="background:none;border:1px solid var(--bd1);border-radius:4px;color:var(--tx3);font-size:10px;padding:3px 7px;cursor:pointer;flex-shrink:0">✏️</button>
-          </div>`).join("");
+            <button onclick='openCrudForm("AGENDA",${safeJsonForHtml(e)})' style="background:none;border:1px solid var(--bd1);border-radius:4px;color:var(--tx3);font-size:10px;padding:3px 6px;cursor:pointer;flex-shrink:0">✏️</button>
+          </div>`;
+        }).join("");
       }
     }
 
-    // Por mês
-    const porMes = {};
+    // --- Mini calendário ---
+    agRenderMiniCal(rows, _agCalAno, _agCalMes);
+
+    // --- Gráfico por mês (barras clicáveis, 2 colunas) ---
     const ordem = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-    rows.forEach(r => { if(r.mes) porMes[r.mes] = (porMes[r.mes]||0)+1; });
+    const cores = ["#2ab5c0","#4a9cf5","#8b6fd4","#52c46e","#f5a623","#e05555","#2ab5c0","#4a9cf5","#8b6fd4","#52c46e","#f5a623","#e05555"];
+    const porMes = {};
+    rows.forEach(r=>{if(r.mes) porMes[r.mes]=(porMes[r.mes]||0)+1;});
     const maxVal = Math.max(...Object.values(porMes), 1);
     const mesEl = document.getElementById("agenda-por-mes");
-    if (mesEl) {
-      mesEl.innerHTML = ordem.filter(m=>porMes[m]).map(m => `
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;cursor:pointer" onclick="go('agenda-solicitacoes');document.getElementById('ag-mes-sel').value='${m}';carregarMes()">
-          <div style="font-size:10.5px;color:var(--tx2);width:80px;flex-shrink:0">${m}</div>
-          <div style="flex:1;background:var(--bg-surface);border-radius:4px;overflow:hidden;height:12px">
-            <div style="height:100%;background:var(--teal);border-radius:4px;width:${Math.round((porMes[m]/maxVal)*100)}%;opacity:0.7"></div>
+    if(mesEl) {
+      mesEl.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 28px">` +
+        ordem.filter(m=>porMes[m]).map((m,i) => `
+          <div id="ag-barra-${m}" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:5px 6px;border-radius:5px;transition:background .15s"
+               onmouseover="this.style.background='var(--bg-surface)'" onmouseout="this.style.background=''"
+               onclick="agVerMes('${m}',this)">
+            <div style="font-size:10.5px;color:var(--tx2);width:76px;flex-shrink:0;font-weight:500">${m}</div>
+            <div style="flex:1;background:var(--bg-surface);border-radius:4px;overflow:hidden;height:14px">
+              <div style="height:100%;background:${cores[i]};border-radius:4px;width:${Math.round((porMes[m]/maxVal)*100)}%;opacity:.75;transition:width .4s"></div>
+            </div>
+            <div style="font-size:11px;font-family:var(--mono);color:var(--tx1);width:28px;text-align:right;font-weight:600">${porMes[m]}</div>
+          </div>`).join("") + `</div>`;
+    }
+
+    // --- Dia da semana ---
+    const diasSemana = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+    const abrevDia = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+    const contDia = {}; diasSemana.forEach(d=>contDia[d]=0);
+    rows.forEach(r=>{if(r.dia_semana && contDia.hasOwnProperty(r.dia_semana)) contDia[r.dia_semana]++;});
+    const maxDia = Math.max(...Object.values(contDia), 1);
+    const diasEl = document.getElementById("ag-chart-diasemana");
+    if(diasEl) {
+      diasEl.innerHTML = diasSemana.map((dia,i) => {
+        const pct = Math.round((contDia[dia]/maxDia)*100);
+        const isWeekend = i===0||i===6;
+        return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div style="font-size:10.5px;color:${isWeekend?'var(--teal)':'var(--tx2)'};width:32px;flex-shrink:0;font-weight:${isWeekend?600:400}">${abrevDia[i]}</div>
+          <div style="flex:1;background:var(--bg-surface);border-radius:3px;overflow:hidden;height:12px;position:relative">
+            <div style="height:100%;background:${isWeekend?'var(--teal)':'var(--blue)'};border-radius:3px;width:${pct}%;opacity:.7"></div>
           </div>
-          <div style="font-size:10.5px;color:var(--tx1);font-family:var(--mono);width:28px;text-align:right">${porMes[m]}</div>
+          <div style="font-size:10px;font-family:var(--mono);color:var(--tx1);width:28px;text-align:right">${contDia[dia]}</div>
+        </div>`;
+      }).join("");
+    }
+
+    // --- Recorrência ---
+    const recTypes = {};
+    rows.forEach(r=>{const k=r.recorrencia||"Único"; recTypes[k]=(recTypes[k]||0)+1;});
+    const recSorted = Object.entries(recTypes).sort((a,b)=>b[1]-a[1]).slice(0,7);
+    const maxRec = recSorted[0]?.[1]||1;
+    const recCores = {Semanal:"#2ab5c0",Mensal:"#4a9cf5",Quinzenal:"#8b6fd4",Anual:"#f5a623","Único":"#52c46e",Eventual:"#d4a843","Esporádico":"#e05555"};
+    const recEl = document.getElementById("ag-chart-recorrencia");
+    if(recEl) {
+      recEl.innerHTML = recSorted.map(([tipo,n]) => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px">
+          <div style="width:8px;height:8px;border-radius:50%;background:${recCores[tipo]||'var(--teal)'};flex-shrink:0"></div>
+          <div style="font-size:10.5px;color:var(--tx2);flex:1">${tipo}</div>
+          <div style="flex:2;background:var(--bg-surface);border-radius:3px;overflow:hidden;height:10px">
+            <div style="height:100%;background:${recCores[tipo]||'var(--teal)'};border-radius:3px;width:${Math.round((n/maxRec)*100)}%;opacity:.7"></div>
+          </div>
+          <div style="font-size:10px;font-family:var(--mono);color:var(--tx1);width:28px;text-align:right">${n}</div>
         </div>`).join("");
     }
+
+    // --- Top espaços ---
+    const espSorted = Object.entries(espCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const maxEsp = espSorted[0]?.[1]||1;
+    const espEl = document.getElementById("ag-chart-espacos");
+    if(espEl) {
+      espEl.innerHTML = espSorted.map(([esp,n]) => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer" onclick="agVerEspaco(this.dataset.e)" data-e="${escapeHtml(esp)}">
+          <div style="font-size:10.5px;color:var(--tx2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(esp)}">${escapeHtml(esp)}</div>
+          <div style="flex:2;background:var(--bg-surface);border-radius:3px;overflow:hidden;height:10px">
+            <div style="height:100%;background:var(--blue);border-radius:3px;width:${Math.round((n/maxEsp)*100)}%;opacity:.7"></div>
+          </div>
+          <div style="font-size:10px;font-family:var(--mono);color:var(--tx1);width:28px;text-align:right">${n}</div>
+        </div>`).join("");
+    }
+
+    // --- Top organizadores ---
+    const orgCount = {};
+    rows.forEach(r=>{if(r.organizador) orgCount[r.organizador]=(orgCount[r.organizador]||0)+1;});
+    const orgSorted = Object.entries(orgCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const maxOrg = orgSorted[0]?.[1]||1;
+    const orgEl = document.getElementById("ag-chart-orgs");
+    if(orgEl) {
+      orgEl.innerHTML = orgSorted.map(([org,n]) => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div style="font-size:10.5px;color:var(--tx2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(org)}">${escapeHtml(org)}</div>
+          <div style="flex:2;background:var(--bg-surface);border-radius:3px;overflow:hidden;height:10px">
+            <div style="height:100%;background:var(--violet);border-radius:3px;width:${Math.round((n/maxOrg)*100)}%;opacity:.7"></div>
+          </div>
+          <div style="font-size:10px;font-family:var(--mono);color:var(--tx1);width:28px;text-align:right">${n}</div>
+        </div>`).join("");
+    }
+
   } catch(e) {
     T("Erro na Agenda", e.message);
   }
+}
+
+function agRenderMiniCal(rows, ano, mes) {
+  const nomes = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const nomeMes = nomes[mes];
+  const titulo = document.getElementById("ag-cal-titulo");
+  if(titulo) titulo.innerHTML = `Calendário <span class="csub">· ${nomeMes} ${ano}</span>`;
+
+  const eventosPorDia = {};
+  rows.forEach(r => {
+    if(!r.data) return;
+    const [y,m,dia] = r.data.split("-").map(Number);
+    if(y===ano && m===mes+1) { if(!eventosPorDia[dia]) eventosPorDia[dia]=[]; eventosPorDia[dia].push(r); }
+  });
+
+  const primeiroDia = new Date(ano, mes, 1).getDay();
+  const ultimoDia = new Date(ano, mes+1, 0).getDate();
+  const hj = new Date(); const diaHoje = hj.getFullYear()===ano && hj.getMonth()===mes ? hj.getDate() : -1;
+  const dias = ["D","S","T","Q","Q","S","S"];
+
+  let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <button onclick="agNavCal(-1)" style="background:none;border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:11px;padding:2px 8px;cursor:pointer">←</button>
+    <span style="font-size:11px;font-weight:600;color:var(--tx1)">${nomeMes} ${ano}</span>
+    <button onclick="agNavCal(1)" style="background:none;border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:11px;padding:2px 8px;cursor:pointer">→</button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">`;
+  dias.forEach(d => { html += `<div style="font-size:8.5px;color:var(--tx3);text-align:center;padding:2px 0;font-weight:600">${d}</div>`; });
+  for(let i=0;i<primeiroDia;i++) html += `<div></div>`;
+  for(let dia=1;dia<=ultimoDia;dia++) {
+    const evs = eventosPorDia[dia]||[];
+    const isHoje = dia===diaHoje;
+    const temEv = evs.length>0;
+    const tip = temEv ? evs.map(e=>e.titulo).slice(0,3).join(", ")+(evs.length>3?` +${evs.length-3}`:"") : "";
+    html += `<div title="${escapeHtml(tip)}"
+      onclick="${temEv?`agVerDia(${ano},${mes+1},${dia})`:'void(0)'}"
+      style="aspect-ratio:1;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;font-weight:${isHoje?700:400};cursor:${temEv?'pointer':'default'};
+      background:${isHoje?'var(--teal)':temEv?'rgba(42,181,192,.12)':'transparent'};
+      color:${isHoje?'#fff':temEv?'var(--teal)':'var(--tx3)'};
+      border:1px solid ${isHoje?'var(--teal)':temEv?'rgba(42,181,192,.25)':'transparent'}">
+      ${dia}${temEv?`<div style="width:3px;height:3px;border-radius:50%;background:${isHoje?'rgba(255,255,255,.7)':'var(--teal)'};margin-top:1px"></div>`:""}
+    </div>`;
+  }
+  html += `</div>`;
+  const el = document.getElementById("ag-mini-cal"); if(el) el.innerHTML = html;
+}
+
+async function agNavCal(dir) {
+  _agCalMes += dir;
+  if(_agCalMes>11){_agCalMes=0;_agCalAno++;} if(_agCalMes<0){_agCalMes=11;_agCalAno--;}
+  const rows = await getAgenda(); agRenderMiniCal(rows, _agCalAno, _agCalMes);
+}
+
+async function agVerDia(ano, mes, dia) {
+  const rows = await getAgenda();
+  const m = String(mes).padStart(2,"0"); const d = String(dia).padStart(2,"0");
+  const dataStr = `${ano}-${m}-${d}`;
+  const evsDia = rows.filter(r=>r.data===dataStr);
+  const nomes = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  agMostrarExpandido(`${evsDia.length} evento${evsDia.length!==1?"s":""} em ${d}/${m}/${ano}`, evsDia);
+}
+
+async function agVerMes(mes, el) {
+  if(_agMesElAtivo===el) {
+    const exp = document.getElementById("ag-mes-expandido");
+    if(exp && exp.style.display!=="none") { exp.style.display="none"; _agMesElAtivo=null; return; }
+  }
+  _agMesElAtivo = el;
+  const rows = await getAgenda();
+  const evsMes = rows.filter(r=>r.mes===mes).sort((a,b)=>a.data?.localeCompare(b.data)||0||(a.hora_inicio||"").localeCompare(b.hora_inicio||""));
+  agMostrarExpandido(`${evsMes.length} eventos em ${mes}`, evsMes);
+}
+
+async function agVerEspaco(espaco) {
+  const rows = await getAgenda();
+  const evs = rows.filter(r=>r.espaco===espaco).sort((a,b)=>a.data?.localeCompare(b.data)||0);
+  agMostrarExpandido(`${evs.length} eventos · ${espaco}`, evs);
+}
+
+function agMostrarExpandido(titulo, evs) {
+  const expEl = document.getElementById("ag-mes-expandido");
+  const titEl = document.getElementById("ag-mes-exp-titulo");
+  const listEl = document.getElementById("ag-mes-exp-list");
+  if(!expEl||!listEl) return;
+  if(titEl) titEl.textContent = titulo;
+  expEl.style.display = "block";
+  listEl.innerHTML = agRenderEventList(evs);
+  expEl.scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+
+function agRenderEventList(evs) {
+  if(!evs.length) return `<div style="color:var(--tx3);font-size:11.5px;text-align:center;padding:20px">Nenhum evento</div>`;
+  const byDate = {};
+  evs.forEach(e => { const k=e.data||"sem-data"; if(!byDate[k]) byDate[k]=[]; byDate[k].push(e); });
+  const nomeDias = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
+  return Object.entries(byDate).sort(([a],[b])=>a.localeCompare(b)).map(([data,evsDia]) => {
+    const [,, dd] = data.split("-");
+    const nomeDia = data!=="sem-data" ? nomeDias[new Date(data+"T12:00:00").getDay()] : "";
+    return `<div style="margin-bottom:14px">
+      <div style="font-size:9.5px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;display:flex;align-items:center;gap:8px">
+        <span style="background:var(--teal);color:#fff;border-radius:4px;padding:1px 7px;font-size:9px">${dd||data}</span>${nomeDia}
+      </div>
+      ${evsDia.map(e=>`
+        <div style="display:flex;gap:10px;padding:7px 10px;background:var(--bg-surface);border-radius:6px;margin-bottom:4px;align-items:flex-start">
+          <div style="font-size:10px;color:var(--tx3);min-width:52px;font-family:var(--mono);padding-top:1px">${e.hora_inicio?e.hora_inicio.slice(0,5):"—"}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${escapeHtml(e.titulo||"—")}</div>
+            <div style="font-size:10px;color:var(--tx3);margin-top:1px">${e.espaco?'<span style="color:var(--teal)">'+escapeHtml(e.espaco)+"</span>":""} ${e.organizador?"· "+escapeHtml(e.organizador):""}</div>
+          </div>
+          ${e.recorrencia?`<span style="font-size:9px;background:rgba(42,181,192,.1);color:var(--teal);border-radius:3px;padding:1px 5px;flex-shrink:0;white-space:nowrap">${e.recorrencia}</span>`:""}
+          <button onclick='openCrudForm("AGENDA",${safeJsonForHtml(e)})' style="background:none;border:1px solid var(--bd1);border-radius:4px;color:var(--tx3);font-size:10px;padding:2px 6px;cursor:pointer;flex-shrink:0">✏️</button>
+        </div>`).join("")}
+    </div>`;
+  }).join("");
 }
 
 async function filtrarAgendaMes() {
