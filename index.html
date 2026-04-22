@@ -4715,7 +4715,10 @@ let _agendaCache = null;
 
 async function getAgenda() {
   if (_agendaCache) return _agendaCache;
-  _agendaCache = await apiRead("AGENDA");
+  const agRes = await fetch(`${apiBaseUrl()}/rest/v1/agenda?select=*&order=data.asc,hora_inicio.asc&limit=2000`, { method:"GET", headers:apiHeaders() });
+  if (!agRes.ok) throw new Error(await agRes.text());
+  const agData = await agRes.json();
+  _agendaCache = Array.isArray(agData) ? agData.map(r=>({...r,_row:r.id})) : [];
   return _agendaCache;
 }
 
