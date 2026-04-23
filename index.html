@@ -1497,7 +1497,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
         <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Ordenados ativos</div><div class="kpi-val" id="ord-kpi-total">—</div><div class="kpi-d nu" id="ord-kpi-detalhe">carregando…</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal);">✝</div><div class="kpi-body"><div class="kpi-lbl">Pastores</div><div class="kpi-val" id="ord-kpi-pastores">—</div><div class="kpi-d nu">supervisão e governo</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Presbíteros</div><div class="kpi-val" id="ord-kpi-presbs">—</div><div class="kpi-d nu">atualizado AGE 28/04/2024</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Mandatos a vencer</div><div class="kpi-val" id="ord-kpi-vencer">—</div><div class="kpi-d wa" id="ord-kpi-vencer-d">⚠ verificando…</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(184,122,86,0.15);color:var(--copper);">✚</div><div class="kpi-body"><div class="kpi-lbl">Diáconos</div><div class="kpi-val" id="ord-kpi-diac">—</div><div class="kpi-d nu" id="ord-kpi-diac-d">quadro oficial</div></div></div>
       </div>
       <div class="card" style="margin-bottom:14px">
         <div class="ctit">Pastores <span class="csub">— ofício permanente · supervisão e governo</span><span class="cact" onclick="renderOficiaisOrdenados()">↻ Atualizar</span></div>
@@ -1506,6 +1506,10 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
       <div class="card" style="margin-bottom:14px">
         <div class="ctit">Presbíteros <span class="csub">— Quadro oficial · AGE 28/04/2024</span></div>
         <div id="ord-presbs-list"><div style="color:var(--tx3);font-size:11px">Carregando…</div></div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="ctit">Diáconos <span class="csub">— Quadro oficial · AGE 28/04/2024</span></div>
+        <div id="ord-diac-list"><div style="color:var(--tx3);font-size:11px">Carregando…</div></div>
       </div>
       <div class="card">
         <div class="ctit">Hierarquia funcional</div>
@@ -5932,21 +5936,18 @@ async function apiFetchTable(tableName, params = {}) {
 async function renderOficiaisOrdenados() {
   const setV = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   try {
-    const rows = await apiFetchTable("v_oficiais", { status: "ativo", _order: "fim_mandato.asc", _limit: 500 });
-    const pastores = rows.filter(r => r.cargo === "pastor");
-    const presbs   = rows.filter(r => r.cargo === "presbitero");
+    const rows = await apiFetchTable("v_oficiais", { _order: "fim_mandato.asc", _limit: 500 });
+    const ativos   = rows.filter(r => r.status === "ativo" || r.status === "especial");
+    const pastores = ativos.filter(r => r.cargo === "pastor");
+    const presbs   = ativos.filter(r => r.cargo === "presbitero");
+    const diac     = ativos.filter(r => r.cargo === "diacono");
 
-    const hoje   = new Date().toISOString().split("T")[0];
-    const em12m  = new Date(); em12m.setFullYear(em12m.getFullYear() + 1);
-    const em12mS = em12m.toISOString().split("T")[0];
-    const vencer = rows.filter(r => r.cargo !== "pastor" && r.fim_mandato && r.fim_mandato >= hoje && r.fim_mandato <= em12mS);
-
-    setV("ord-kpi-total",   pastores.length + presbs.length);
-    setV("ord-kpi-detalhe", `${pastores.length} pastor · ${presbs.length} presbíteros`);
+    setV("ord-kpi-total",   pastores.length + presbs.length + diac.length);
+    setV("ord-kpi-detalhe", `${pastores.length} pastor · ${presbs.length} presbíteros · ${diac.length} diáconos`);
     setV("ord-kpi-pastores", pastores.length);
     setV("ord-kpi-presbs",   presbs.length);
-    setV("ord-kpi-vencer",   vencer.length);
-    setV("ord-kpi-vencer-d", vencer.length > 0 ? "⚠ mandatos a vencer em 12 meses" : "todos em dia");
+    setV("ord-kpi-diac",     diac.length);
+    setV("ord-kpi-diac-d",   "quadro oficial AGE 28/04/2024");
 
     const fmtDate = d => d ? d.split("-").reverse().join("/") : "—";
     const fmtPill = s => s === "ativo" ? `<span class="pill pd">Ativo</span>` : `<span class="pill pz">${s}</span>`;
@@ -5960,7 +5961,7 @@ async function renderOficiaisOrdenados() {
         `</tbody></table>`;
     };
 
-    const makePressbsTable = list => {
+    const makeGroupedTable = (list, labelSingular, labelPlural) => {
       if (!list.length) return `<p style="color:var(--tx4);font-size:12px;padding:8px">Nenhum registro.</p>`;
       const groups = {};
       for (const r of list) {
@@ -5974,7 +5975,8 @@ async function renderOficiaisOrdenados() {
         : "rgba(58,170,92,0.05);color:var(--gr)";
       let html = `<table class="tbl"><thead><tr><th>Nome</th><th>Posse</th><th>Fim Mandato</th><th>Ata</th><th>Mand.</th><th>Emerência</th><th>Obs</th><th>Status</th></tr></thead><tbody>`;
       for (const [yr, grp] of Object.entries(groups).sort()) {
-        html += `<tr><td colspan="8" style="background:${bgLbl(yr)};font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;padding:6px 10px;font-weight:700">Mandato até ${yr} — ${grp.length} presbítero${grp.length>1?'s':''}</td></tr>`;
+        const lbl = grp.length > 1 ? labelPlural : labelSingular;
+        html += `<tr><td colspan="8" style="background:${bgLbl(yr)};font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;padding:6px 10px;font-weight:700">Mandato até ${yr} — ${grp.length} ${lbl}</td></tr>`;
         grp.forEach(r => {
           html += `<tr><td class="tdp">${r.nome}</td><td class="tdc mono">${fmtDate(r.posse)}</td><td class="tdc mono">${fmtDate(r.fim_mandato)}</td><td class="tdc mono">${r.ata||"—"}</td><td class="tdc" style="text-align:center">${fmtMand(r.mandato_numero)}</td><td class="tdc" style="text-align:center">${fmtEmer(r.emerencia_votos)}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs||"—"}</td><td>${fmtPill(r.status)}</td></tr>`;
         });
@@ -5985,10 +5987,12 @@ async function renderOficiaisOrdenados() {
 
     const pEl = document.getElementById("ord-pastores-list");
     const rEl = document.getElementById("ord-presbs-list");
+    const dEl = document.getElementById("ord-diac-list");
     if (pEl) pEl.innerHTML = makePastoresTable(pastores);
-    if (rEl) rEl.innerHTML = makePressbsTable(presbs);
+    if (rEl) rEl.innerHTML = makeGroupedTable(presbs, "presbítero", "presbíteros");
+    if (dEl) dEl.innerHTML = makeGroupedTable(diac, "diácono", "diáconos");
   } catch(e) {
-    ["ord-pastores-list","ord-presbs-list"].forEach(id => {
+    ["ord-pastores-list","ord-presbs-list","ord-diac-list"].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = `<p style="color:var(--rose);font-size:12px;padding:8px">Erro: ${e.message}</p>`;
     });
