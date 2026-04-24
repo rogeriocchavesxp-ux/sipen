@@ -1355,10 +1355,10 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
     </div>
     <div class="ct">
       <div class="kpis c4">
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Nomeados ativos</div><div class="kpi-val">64</div><div class="kpi-d nu">com histórico íntegro</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal);">◈</div><div class="kpi-body"><div class="kpi-lbl">Ordenados ativos</div><div class="kpi-val">27</div><div class="kpi-d nu">ofício distinto de função</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Mandatos a vencer</div><div class="kpi-val">3</div><div class="kpi-d wa">⚠ próximos 90 dias</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Funções em aberto</div><div class="kpi-val">7</div><div class="kpi-d nu">governança e ministérios</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Nomeados ativos</div><div class="kpi-val" id="cdash-kpi-nom">—</div><div class="kpi-d nu" id="cdash-kpi-nom-d">carregando…</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal);">◈</div><div class="kpi-body"><div class="kpi-lbl">Ordenados ativos</div><div class="kpi-val" id="cdash-kpi-ord">—</div><div class="kpi-d nu" id="cdash-kpi-ord-d">carregando…</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Mandatos a vencer</div><div class="kpi-val" id="cdash-kpi-mand">—</div><div class="kpi-d wa" id="cdash-kpi-mand-d">próximos 90 dias</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Contratados ativos</div><div class="kpi-val" id="cdash-kpi-cont">—</div><div class="kpi-d nu" id="cdash-kpi-cont-d">carregando…</div></div></div>
       </div>
       <div class="g2">
         <div class="card">
@@ -5681,7 +5681,10 @@ Object.assign(VIEW_AUTOLOAD, _newAutoloads);
 
 // CRUMBs para novas views
 Object.assign(CRUMB, {
-  "conselho-ind":["Conselho","Indicadores","/ métricas institucionais"],
+  "conselho-ind":["Conselho e Governança","Indicadores Institucionais","/ métricas institucionais"],
+  "conselho-rel":["Conselho e Governança","Relatórios Estratégicos","/ demandas e governança"],
+  "conselho-doc":["Conselho e Governança","Documentos do Conselho","/ atas e registros"],
+  "conselho-cong":["Conselho e Governança","Acomp. das Congregações","/ membros por congregação"],
   "rel-ind":["Relatórios","Indicadores","/ resumo geral"],
   "rel-exp":["Relatórios","Exportações","/ download de dados"],
   "rel-mod":["Relatórios","Por Módulo","/ demandas por área"],
@@ -5932,6 +5935,37 @@ async function apiFetchTable(tableName, params = {}) {
   return data;
 }
 
+/* ── CONSELHO DASHBOARD ─────────────────────── */
+async function carregarConselhoKpis() {
+  const sv = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  try {
+    const [nomeados, oficiais, contratados] = await Promise.all([
+      apiFetchTable("v_nomeados", { _limit: 2000 }).catch(() => []),
+      apiFetchTable("v_oficiais", { _limit: 500 }).catch(() => []),
+      apiFetchTable("v_contratados", { _limit: 200 }).catch(() => [])
+    ]);
+    const nomAtivos = nomeados.filter(r => !r.status || r.status === "ativo");
+    const ordAtivos = oficiais.filter(r => r.status === "ativo" || r.status === "especial");
+    const contAtivos = contratados.filter(r => r.status === "ativo");
+    const hoje = new Date();
+    const lim90 = new Date(hoje.getTime() + 90 * 24 * 60 * 60 * 1000);
+    const mandVencer = ordAtivos.filter(r => {
+      if (!r.fim_mandato) return false;
+      const d = new Date(r.fim_mandato);
+      return d >= hoje && d <= lim90;
+    });
+    sv("cdash-kpi-nom", nomAtivos.length);
+    sv("cdash-kpi-nom-d", `${Object.keys(nomAtivos.reduce((a,r)=>{a[r.orgao_tipo||"?"]++;return a;},{})).length} categorias`);
+    sv("cdash-kpi-ord", ordAtivos.length);
+    sv("cdash-kpi-ord-d", `${ordAtivos.filter(r=>r.cargo==="pastor").length} past. · ${ordAtivos.filter(r=>r.cargo==="presbitero").length} presb. · ${ordAtivos.filter(r=>r.cargo==="diacono").length} diác.`);
+    sv("cdash-kpi-mand", mandVencer.length);
+    sv("cdash-kpi-mand-d", mandVencer.length > 0 ? `⚠ ${mandVencer.length} próximos 90 dias` : "nenhum nos próximos 90 dias");
+    sv("cdash-kpi-cont", contAtivos.length);
+    sv("cdash-kpi-cont-d", `${contAtivos.filter(r=>r.tipo_vinculo==="terceirizado").length} terc. · ${contAtivos.filter(r=>r.tipo_vinculo!=="terceirizado").length} diretos`);
+  } catch(e) { console.warn("carregarConselhoKpis:", e); }
+}
+VIEW_AUTOLOAD["conselho-dash"] = { fn: () => carregarConselhoKpis() };
+
 /* ── OFICIAIS ORDENADOS ────────────────────── */
 async function renderOficiaisOrdenados() {
   const setV = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
@@ -6160,7 +6194,7 @@ async function renderSeminaristas() {
   const setV = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   const el = document.getElementById("seminaristas-list-container");
   try {
-    const rows = await apiFetchTable("seminaristas", { _order: "nome.asc", _limit: 200 });
+    const rows = await apiFetchTable("v_seminaristas", { _order: "nome.asc", _limit: 200 });
     const ativos  = rows.filter(r => r.status === "ativo");
     const estagio = ativos.filter(r => r.tem_estagio);
     const concl   = rows.filter(r => r.status === "concluido");
@@ -6192,7 +6226,7 @@ async function renderContratados() {
   const setV = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   const el = document.getElementById("contratados-list-container");
   try {
-    const rows = await apiFetchTable("contratados", { _order: "nome.asc", _limit: 200 });
+    const rows = await apiFetchTable("v_contratados", { _order: "nome.asc", _limit: 200 });
     const ativos = rows.filter(r => r.status === "ativo");
     const terc   = ativos.filter(r => r.tipo_vinculo === "terceirizado");
     const dir    = ativos.filter(r => r.tipo_vinculo !== "terceirizado");
@@ -6209,11 +6243,12 @@ async function renderContratados() {
       return `<span class="pill ${m[c?.toLowerCase()]||'pz'}">${c||"—"}</span>`;
     };
     const fmtPill = s => s === "ativo" ? `<span class="pill pd">Ativo</span>` : `<span class="pill pz">${s}</span>`;
+    const fmtDate = d => d ? d.split("-").reverse().join("/") : "—";
 
     if (!rows.length) { if (el) el.innerHTML = `<p style="color:var(--tx4);font-size:12px;padding:8px">Nenhum registro.</p>`; return; }
-    let html = `<table class="tbl"><thead><tr><th>Nome / Empresa</th><th>Função</th><th>Categoria</th><th>Tipo de Vínculo</th><th>Área Atendida</th><th>Status</th></tr></thead><tbody>`;
+    let html = `<table class="tbl"><thead><tr><th>Nome / Empresa</th><th>Função</th><th>Categoria</th><th>Tipo de Vínculo</th><th>Área Atendida</th><th>Desde</th><th>Até</th><th>Status</th></tr></thead><tbody>`;
     rows.forEach(r => {
-      html += `<tr><td class="tdp">${r.nome}${r.empresa?` <span style="font-size:10px;color:var(--tx3)">(${r.empresa})</span>`:""}</td><td>${r.funcao||"—"}</td><td>${pillCat(r.categoria)}</td><td class="tdc">${r.tipo_vinculo||"—"}</td><td class="tdc">${r.area_atendida||"—"}</td><td>${fmtPill(r.status)}</td></tr>`;
+      html += `<tr><td class="tdp">${r.nome}${r.empresa?` <span style="font-size:10px;color:var(--tx3)">(${r.empresa})</span>`:""}</td><td>${r.funcao||"—"}</td><td>${pillCat(r.categoria)}</td><td class="tdc">${r.tipo_vinculo||"—"}</td><td class="tdc">${r.area_atendida||"—"}</td><td class="tdc mono">${fmtDate(r.contrato_desde)}</td><td class="tdc mono">${fmtDate(r.contrato_ate)}</td><td>${fmtPill(r.status)}</td></tr>`;
     });
     html += `</tbody></table>`;
     if (el) el.innerHTML = html;
