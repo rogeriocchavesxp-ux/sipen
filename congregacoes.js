@@ -641,9 +641,38 @@ function fecharModalNovaDemandaCong(){ const m=document.getElementById("modal-no
 window.fecharModalNovaDemandaCong=fecharModalNovaDemandaCong;
 
 function salvarNovaDemandaCong(){
-  const titulo=document.getElementById("dem-titulo")?.value?.trim();
-  if(!titulo){ alert("Informe o título da demanda"); return; }
-  fecharModalNovaDemandaCong();
+  const titulo  = document.getElementById("dem-titulo")?.value?.trim();
+  const congId  = document.getElementById("dem-cong-select")?.value;
+  const congNome= document.getElementById("dem-cong-select")?.selectedOptions?.[0]?.text || "";
+  const prio    = document.getElementById("dem-prioridade")?.value || "Média";
+  const resp    = document.getElementById("dem-resp")?.value?.trim();
+  const venc    = document.getElementById("dem-venc")?.value || null;
+  const obs     = document.getElementById("dem-obs")?.value?.trim();
+
+  if (!titulo) {
+    if (typeof T === "function") T("Campo obrigatório", "Informe o título da demanda");
+    return;
+  }
+
+  apiWrite("create", "DEMANDAS", {
+    titulo,
+    area:          "Congregações",
+    subcategoria:  "Demanda de Congregação",
+    descricao:     obs || "",
+    prioridade:    prio,
+    status:        "Aberta",
+    solicitante:   congNome || (congId ? `Congregação #${congId}` : ""),
+    responsavel:   resp || "Secretaria / Administração",
+    data_abertura: new Date().toISOString().split("T")[0],
+    data_conclusao: venc,
+  }).then(() => {
+    if (typeof T === "function") T("✅ Demanda criada!", `Roteada para: ${resp || "Secretaria / Administração"}`);
+    fecharModalNovaDemandaCong();
+    if (typeof window.demRecarregarDash === "function") window.demRecarregarDash();
+  }).catch(e => {
+    if (typeof T === "function") T("Erro ao criar demanda", e.message || "Tente novamente");
+    console.error("salvarNovaDemandaCong:", e);
+  });
 }
 window.salvarNovaDemandaCong=salvarNovaDemandaCong;
 

@@ -369,8 +369,9 @@
             <span style="color:var(--tx3);font-size:11px">${catIcon(dem.area)} ${dem.area||"—"} → ${dem.subcategoria||"—"}</span>
           </div>
         </div>
-        <div class="hero-act">
+        <div class="hero-act" style="display:flex;gap:8px;align-items:center">
           <button class="tbt" onclick="window.go('${origem}')">← Voltar</button>
+          <button class="tbt" style="color:var(--rose);border-color:rgba(224,85,85,.3)" onclick="demExcluirDemanda('${id}')">🗑 Excluir</button>
         </div>
       </div>
       <div class="ct">
@@ -413,6 +414,36 @@
             </div>
           </div>
         </div>
+        <div class="card" style="margin-top:0">
+          <div class="ctit">Editar Demanda</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Título *</label>
+              <input id="dem-edit-titulo" type="text" value="${(dem.titulo||'').replace(/"/g,'&quot;')}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Prioridade</label>
+              <select id="dem-edit-prio" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px">
+                ${["Baixa","Média","Alta","Urgente"].map(p => `<option${p===dem.prioridade?" selected":""}>${p}</option>`).join("")}
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Responsável</label>
+              <input id="dem-edit-resp" type="text" value="${(dem.responsavel||'').replace(/"/g,'&quot;')}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Conclusão prevista</label>
+              <input id="dem-edit-venc" type="date" value="${dem.data_conclusao||''}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+            </div>
+          </div>
+          <div style="margin-top:12px">
+            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Descrição</label>
+            <textarea id="dem-edit-desc" rows="3" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;resize:vertical;box-sizing:border-box">${(dem.descricao||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+          </div>
+          <div style="margin-top:12px;display:flex;justify-content:flex-end">
+            <button onclick="demSalvarEdicao('${id}')" style="padding:8px 20px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer">Salvar alterações</button>
+          </div>
+        </div>
       </div>`;
   }
 
@@ -442,6 +473,54 @@
     } catch(e) {
       if (typeof T === "function") T("Erro ao atualizar", e.message || "Tente novamente");
       console.error("demAtualizarStatus:", e);
+    }
+  };
+
+  /* ── Salvar edição ──────────────────────────────────── */
+
+  window.demSalvarEdicao = async function(id) {
+    const titulo = document.getElementById("dem-edit-titulo")?.value?.trim();
+    const desc   = document.getElementById("dem-edit-desc")?.value?.trim();
+    const prio   = document.getElementById("dem-edit-prio")?.value;
+    const resp   = document.getElementById("dem-edit-resp")?.value?.trim();
+    const venc   = document.getElementById("dem-edit-venc")?.value || null;
+
+    if (!titulo) {
+      if (typeof T === "function") T("Campo obrigatório", "Informe o título");
+      return;
+    }
+
+    try {
+      const payload = { titulo, descricao: desc || "", prioridade: prio, responsavel: resp || "", data_conclusao: venc };
+      await apiWrite("update", "DEMANDAS", { _row: id, ...payload });
+      if (typeof T === "function") T("✅ Demanda atualizada!", "");
+
+      const idx = _cache.findIndex(r => String(r.id||r._row) === String(id));
+      if (idx >= 0) Object.assign(_cache[idx], payload);
+      if (_ativo && String(_ativo.id||_ativo._row) === String(id)) {
+        Object.assign(_ativo, payload);
+        _renderDetalhe(_ativo);
+      }
+      _atualizarBadge();
+    } catch(e) {
+      if (typeof T === "function") T("Erro ao atualizar", e.message || "Tente novamente");
+      console.error("demSalvarEdicao:", e);
+    }
+  };
+
+  /* ── Excluir demanda ────────────────────────────────── */
+
+  window.demExcluirDemanda = async function(id) {
+    if (!confirm("Confirmar exclusão desta demanda? Esta ação não pode ser desfeita.")) return;
+    try {
+      await apiWrite("delete", "DEMANDAS", { _row: id });
+      if (typeof T === "function") T("Demanda excluída", "Registro removido com sucesso");
+      _invalidate();
+      _atualizarBadge();
+      if (typeof window.go === "function") window.go(_origemView || "dem-todas");
+    } catch(e) {
+      if (typeof T === "function") T("Erro ao excluir", e.message || "Tente novamente");
+      console.error("demExcluirDemanda:", e);
     }
   };
 

@@ -1334,6 +1334,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
       <div class="ini" onclick="go('dem-and')">Em Andamento</div>
       <div class="ini" onclick="go('dem-conc')">Concluídas</div>
       <div class="ini" onclick="go('dem-pri')">Prioridades</div>
+      <div class="ini" onclick="go('dem-hist')">Histórico</div>
     </div>
     <div class="ct" id="dem-dash-content"></div>
   </div>
@@ -3869,9 +3870,6 @@ const VIEW_AUTOLOAD = {
   "admin-sec":     { tab:"MEMBROS",       id:"sec-list" },
   "admin-rh":      { tab:"MEMBROS",       id:"rh-list" },
   "admin-fin":     { tab:"FINANCEIRO",    id:"fin-list" },
-  "dem-todas":     { tab:"DEMANDAS",      id:"dem-todas-list" },
-  "dem-pend":      { tab:"DEMANDAS",      id:"dem-pend-list",  filtro:{status:"Pendente"} },
-  "dem-and":       { tab:"DEMANDAS",      id:"dem-and-list",   filtro:{status:"Em Andamento"} },
   "admin-est":     { tab:"ESTOQUE_ITENS", id:"est-list" },
   "pgs-lista":     { tab:"PGS",           id:"pgs-lista-list" },
   "jur-demandas":  { tab:"DEMANDAS",      id:"jur-dem-list",   filtro:{area:"Jurídico"} },
@@ -5658,9 +5656,6 @@ const _newAutoloads = {
   "infra-sol":       { tab:"DEMANDAS",       id:"infra-sol-list",   filtro:{area:"Infraestrutura"} },
   "infra-pat":       { tab:"ESTOQUE_ITENS",  id:"infra-pat-list" },
   "infra-pre":       { tab:"MEMBROS",        id:"infra-pre-list" },
-  "dem-conc":        { tab:"DEMANDAS",       id:"dem-conc-list",    filtro:{status:"Concluída"} },
-  "dem-pri":         { tab:"DEMANDAS",       id:"dem-pri-list",     filtro:{prioridade:"Alta"} },
-  "dem-hist":        { tab:"DEMANDAS",       id:"dem-hist-list" },
   "rel-mod":         { tab:"DEMANDAS",       id:"rel-mod-list" },
   "rel-uni":         { tab:"MEMBROS",        id:"rel-uni-list" },
   "rel-res":         { tab:"DEMANDAS",       id:"rel-res-list" },
