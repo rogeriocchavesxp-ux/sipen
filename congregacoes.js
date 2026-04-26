@@ -660,7 +660,7 @@ function salvarNovaDemandaCong(){
     subcategoria:  "Demanda de Congregação",
     descricao:     obs || "",
     prioridade:    prio,
-    status:        "Aberta",
+    status:        "ABERTA",
     solicitante:   congNome || (congId ? `Congregação #${congId}` : ""),
     responsavel:   resp || "Secretaria / Administração",
     data_abertura: new Date().toISOString().split("T")[0],

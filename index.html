@@ -3649,7 +3649,7 @@ function submitTask(){
     responsavel: responsavel === "— Roteamento automático —" ? null : responsavel,
     data_conclusao: data_conclusao || null,
     descricao: observacoes || null,
-    status: "Pendente"
+    status: "PENDENTE"
   }).then(()=>{
     closeModal();
     T("✅ Demanda criada!","Registrada no Supabase");

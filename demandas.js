@@ -66,9 +66,33 @@
     "Baixa":   "var(--gr)",
   };
 
+  /* ── Normalização de status (DB ↔ label) ─────────────── */
+
+  const _STATUS_DB = {
+    "Aberta":       "ABERTA",
+    "Em Análise":   "EM_ANALISE",
+    "Em Andamento": "EM_ANDAMENTO",
+    "Pendente":     "PENDENTE",
+    "Concluída":    "CONCLUIDA",
+    "Cancelada":    "CANCELADA",
+  };
+
+  const _STATUS_LABEL = {
+    "ABERTA":       "Aberta",
+    "EM_ANALISE":   "Em Análise",
+    "EM_ANDAMENTO": "Em Andamento",
+    "PENDENTE":     "Pendente",
+    "CONCLUIDA":    "Concluída",
+    "CANCELADA":    "Cancelada",
+  };
+
+  function _toDb(st)    { return _STATUS_DB[st]    || st || "ABERTA"; }
+  function _toLabel(st) { return _STATUS_LABEL[st] || st || "Aberta"; }
+
   function pillStatus(st) {
-    const s = STATUS_CFG[st] || { bg:"rgba(90,96,104,.15)", cl:"var(--tx3)" };
-    return `<span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;white-space:nowrap;background:${s.bg};color:${s.cl}">${st||"—"}</span>`;
+    const label = _toLabel(st);
+    const s = STATUS_CFG[label] || { bg:"rgba(90,96,104,.15)", cl:"var(--tx3)" };
+    return `<span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;white-space:nowrap;background:${s.bg};color:${s.cl}">${label||"—"}</span>`;
   }
 
   function pillPrio(p) {
@@ -93,7 +117,10 @@
   let _origemView = "dem-todas"; // rastreia de onde o detalhe foi aberto
 
   async function _load() {
-    try { _cache = await apiRead("DEMANDAS"); }
+    try {
+      const rows = await apiRead("DEMANDAS");
+      _cache = rows.map(r => ({ ...r, status: _toLabel(r.status) }));
+    }
     catch(e) { console.warn("Demandas load:", e.message); _cache = []; }
     return _cache;
   }
@@ -455,18 +482,22 @@
       return;
     }
     try {
-      const payload = { status: novoStatus };
+      const dbPayload = { status: _toDb(novoStatus) };
       if (novoStatus === "Concluída") {
-        payload.data_conclusao = new Date().toISOString().split("T")[0];
+        dbPayload.data_conclusao = new Date().toISOString().split("T")[0];
       }
-      await apiWrite("update", "DEMANDAS", { _row: id, ...payload });
+      await apiWrite("update", "DEMANDAS", { _row: id, ...dbPayload });
       if (typeof T === "function") T("✅ Status atualizado", novoStatus);
 
+      // Cache armazena labels — não usar o dbPayload diretamente
+      const cacheUpd = { status: novoStatus };
+      if (dbPayload.data_conclusao) cacheUpd.data_conclusao = dbPayload.data_conclusao;
+
       const idx = _cache.findIndex(r => String(r.id||r._row) === String(id));
-      if (idx >= 0) Object.assign(_cache[idx], payload);
+      if (idx >= 0) Object.assign(_cache[idx], cacheUpd);
 
       if (_ativo && String(_ativo.id||_ativo._row) === String(id)) {
-        Object.assign(_ativo, payload);
+        Object.assign(_ativo, cacheUpd);
         _renderDetalhe(_ativo);
       }
       _atualizarBadge();
@@ -581,7 +612,7 @@
       titulo,
       descricao:     desc || "",
       prioridade:    prio || "Média",
-      status:        "Aberta",
+      status:        "ABERTA",
       solicitante:   sol || "",
       responsavel:   resp || catResp(cat),
       data_abertura: new Date().toISOString().split("T")[0],
