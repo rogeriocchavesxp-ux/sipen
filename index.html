@@ -2889,6 +2889,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
                 <th style="text-align:center;padding:8px 6px;color:var(--tx3);font-size:9px;min-width:72px">🎯 Líder</th>
                 <th style="text-align:center;padding:8px 6px;color:var(--tx3);font-size:9px;min-width:72px">🙌 Membro</th>
                 <th style="text-align:center;padding:8px 6px;color:var(--tx3);font-size:9px;min-width:72px">🔧 Serviços</th>
+                <th style="text-align:center;padding:8px 6px;color:var(--tx3);font-size:9px;min-width:72px">⛪ Mb. Igreja</th>
               </tr>
             </thead>
             <tbody id="perm-matrix-body">
@@ -4824,7 +4825,7 @@ document.head.appendChild(styleEl);
    Perfis, permissões, login e controle por módulo
 ══════════════════════════════════════════════════════ */
 
-/* 7 perfis conforme documento institucional */
+/* 8 perfis conforme documento institucional */
 const PERFIS = {
   admin_geral:        { nome:"Administrativo Geral", icon:"👑", cor:"var(--gold)",   nivel:7 },
   conselho:           { nome:"Conselho",             icon:"🏛", cor:"var(--blue)",   nivel:6 },
@@ -4833,26 +4834,27 @@ const PERFIS = {
   lider_ministerio:   { nome:"Líder de Ministério",  icon:"🎯", cor:"var(--violet)", nivel:3 },
   membro_ministerio:  { nome:"Membro de Ministério", icon:"🙌", cor:"var(--gr)",     nivel:2 },
   operacional_servicos:{ nome:"Operacional Serviços",icon:"🔧", cor:"var(--tx2)",    nivel:1 },
+  membro_igreja:      { nome:"Membro Igreja",        icon:"⛪", cor:"var(--sky)",    nivel:0 },
 };
 
 /* Matriz de permissões por módulo e perfil
    Valores: "full" | "read" | "restricted" | false
 */
 const PERMISSOES_MATRIZ = {
-  "Administrativo":    { admin_geral:"full", conselho:"read",       pastoral:"read",       adm_operacional:"full",       lider_ministerio:false,    membro_ministerio:false,    operacional_servicos:false },
-  "Financeiro":        { admin_geral:"full", conselho:"read",       pastoral:false,        adm_operacional:"full",       lider_ministerio:false,    membro_ministerio:false,    operacional_servicos:false },
-  "Jurídico":          { admin_geral:"full", conselho:"read",       pastoral:false,        adm_operacional:"restricted", lider_ministerio:false,    membro_ministerio:false,    operacional_servicos:false },
-  "Pastoral":          { admin_geral:"full", conselho:"read",       pastoral:"full",       adm_operacional:false,        lider_ministerio:false,    membro_ministerio:false,    operacional_servicos:false },
-  "Conselho/Gov.":     { admin_geral:"full", conselho:"full",       pastoral:"read",       adm_operacional:false,        lider_ministerio:false,    membro_ministerio:false,    operacional_servicos:false },
-  "Ministerial":       { admin_geral:"full", conselho:"read",       pastoral:"read",       adm_operacional:"read",       lider_ministerio:"full",   membro_ministerio:"restricted", operacional_servicos:false },
-  "Agenda":            { admin_geral:"full", conselho:"read",       pastoral:"full",       adm_operacional:"full",       lider_ministerio:"full",   membro_ministerio:"restricted", operacional_servicos:false },
-  "Pequenos Grupos":   { admin_geral:"full", conselho:"read",       pastoral:"full",       adm_operacional:"read",       lider_ministerio:"full",   membro_ministerio:"restricted", operacional_servicos:false },
-  "Infraestrutura":    { admin_geral:"full", conselho:"read",       pastoral:false,        adm_operacional:"full",       lider_ministerio:false,    membro_ministerio:false,    operacional_servicos:"restricted" },
-  "Demandas":          { admin_geral:"full", conselho:"read",       pastoral:"read",       adm_operacional:"full",       lider_ministerio:"restricted", membro_ministerio:"restricted", operacional_servicos:"restricted" },
-  "Relatórios":        { admin_geral:"full", conselho:"full",       pastoral:"restricted", adm_operacional:"restricted", lider_ministerio:"restricted", membro_ministerio:false,    operacional_servicos:false },
-  "Membresia":         { admin_geral:"full", conselho:"read",       pastoral:"full",       adm_operacional:"full",       lider_ministerio:"read",   membro_ministerio:false,    operacional_servicos:false },
-  "Estoque":           { admin_geral:"full", conselho:"read",       pastoral:false,        adm_operacional:"full",       lider_ministerio:false,    membro_ministerio:false,    operacional_servicos:"restricted" },
-  "Configurações":     { admin_geral:"full", conselho:false,        pastoral:false,        adm_operacional:false,        lider_ministerio:false,    membro_ministerio:false,    operacional_servicos:false },
+  "Administrativo":    { admin_geral:"full", conselho:"read",       pastoral:"read",       adm_operacional:"full",       lider_ministerio:false,       membro_ministerio:false,       operacional_servicos:false,        membro_igreja:false },
+  "Financeiro":        { admin_geral:"full", conselho:"read",       pastoral:false,        adm_operacional:"full",       lider_ministerio:false,       membro_ministerio:false,       operacional_servicos:false,        membro_igreja:false },
+  "Jurídico":          { admin_geral:"full", conselho:"read",       pastoral:false,        adm_operacional:"restricted", lider_ministerio:false,       membro_ministerio:false,       operacional_servicos:false,        membro_igreja:false },
+  "Pastoral":          { admin_geral:"full", conselho:"read",       pastoral:"full",       adm_operacional:false,        lider_ministerio:false,       membro_ministerio:false,       operacional_servicos:false,        membro_igreja:false },
+  "Conselho/Gov.":     { admin_geral:"full", conselho:"full",       pastoral:"read",       adm_operacional:false,        lider_ministerio:false,       membro_ministerio:false,       operacional_servicos:false,        membro_igreja:false },
+  "Ministerial":       { admin_geral:"full", conselho:"read",       pastoral:"read",       adm_operacional:"read",       lider_ministerio:"full",      membro_ministerio:"restricted", operacional_servicos:false,        membro_igreja:false },
+  "Agenda":            { admin_geral:"full", conselho:"read",       pastoral:"full",       adm_operacional:"full",       lider_ministerio:"full",      membro_ministerio:"restricted", operacional_servicos:false,        membro_igreja:false },
+  "Pequenos Grupos":   { admin_geral:"full", conselho:"read",       pastoral:"full",       adm_operacional:"read",       lider_ministerio:"full",      membro_ministerio:"restricted", operacional_servicos:false,        membro_igreja:false },
+  "Infraestrutura":    { admin_geral:"full", conselho:"read",       pastoral:false,        adm_operacional:"full",       lider_ministerio:false,       membro_ministerio:false,       operacional_servicos:"restricted", membro_igreja:false },
+  "Demandas":          { admin_geral:"full", conselho:"read",       pastoral:"read",       adm_operacional:"full",       lider_ministerio:"restricted", membro_ministerio:"restricted", operacional_servicos:"restricted", membro_igreja:"restricted" },
+  "Relatórios":        { admin_geral:"full", conselho:"full",       pastoral:"restricted", adm_operacional:"restricted", lider_ministerio:"restricted", membro_ministerio:false,       operacional_servicos:false,        membro_igreja:false },
+  "Membresia":         { admin_geral:"full", conselho:"read",       pastoral:"full",       adm_operacional:"full",       lider_ministerio:"read",      membro_ministerio:false,       operacional_servicos:false,        membro_igreja:false },
+  "Estoque":           { admin_geral:"full", conselho:"read",       pastoral:false,        adm_operacional:"full",       lider_ministerio:false,       membro_ministerio:false,       operacional_servicos:"restricted", membro_igreja:false },
+  "Configurações":     { admin_geral:"full", conselho:false,        pastoral:false,        adm_operacional:false,        lider_ministerio:false,       membro_ministerio:false,       operacional_servicos:false,        membro_igreja:false },
 };
 
 /* Usuário logado atual */
@@ -4920,7 +4922,7 @@ async function doLogin() {
       id: usuario.id,
       nome: usuario.nome,
       email: usuario.email,
-      perfil: usuario.funcao || "membro_ministerio",
+      perfil: usuario.funcao || "membro_igreja",
       ativo: usuario.ativo
     };
     sessionStorage.setItem("sipen_usuario", JSON.stringify(USUARIO_ATUAL));
@@ -4975,6 +4977,7 @@ const MODULOS_PERFIL = {
   lider_ministerio:    ["geral","min","agenda","dem","pgs","cong"],
   membro_ministerio:   ["geral","min","agenda","dem","cong"],
   operacional_servicos:["geral","infra","dem"],
+  membro_igreja:       ["geral","dem"],
 };
 
 function aplicarPermissoes() {
@@ -5019,7 +5022,8 @@ function renderPerfisAcesso() {
     ["💼","Adm. Operacional","Admin e financeiro","var(--amber)","adm_operacional"],
     ["🎯","Líder de Ministério","Restrito ao ministério","var(--violet)","lider_ministerio"],
     ["🙌","Membro de Ministério","Operacional do setor","var(--gr)","membro_ministerio"],
-    ["🔧","Operacional Serviços","Só demandas do setor","var(--tx2)","operacional_servicos"]
+    ["🔧","Operacional Serviços","Só demandas do setor","var(--tx2)","operacional_servicos"],
+    ["⛪","Membro Igreja","Membro comum sem função ativa","var(--sky)","membro_igreja"]
   ];
   el.innerHTML = perfisData.map(([ic,nome,desc,cor,id]) => `
     <div onclick="verPerfil('${id}')" style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:9px 11px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='var(--bd2)'" onmouseout="this.style.borderColor='var(--bd1)'">
@@ -5080,7 +5084,7 @@ function openNovoUsuario() {
   const modal = document.createElement("div");
   modal.id = "usr-modal";
   modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:310";
-  const perfilOptions = Object.entries(PERFIS).map(([k,v])=>`<option value="${k}">${v.icon} ${v.nome}</option>`).join("");
+  const perfilOptions = Object.entries(PERFIS).map(([k,v])=>`<option value="${k}"${k==="membro_igreja"?" selected":""}>${v.icon} ${v.nome}</option>`).join("");
   modal.innerHTML = `
     <div style="width:min(480px,92vw);background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;overflow:hidden">
       <div style="padding:14px 16px;border-bottom:1px solid var(--bd1);display:flex;justify-content:space-between;align-items:center">
