@@ -370,6 +370,8 @@
       "infra-demandas-infra-content":     "infra-demandas-infra",
       "jur-demandas-tab-content":         "jur-demandas-tab",
       "jur-demandas-jur-content":         "jur-demandas-jur",
+      "pastoral-demandas-content":        "pastoral-demandas",
+      "pastoral-demandas-pas-content":    "pastoral-demandas-pas",
     };
     return MAP[elId] || "dem-todas";
   }
@@ -669,6 +671,8 @@
       "infra-demandas-infra":     () => renderLista("infra-demandas-infra-content",    { area:"Infraestrutura" }),
       "jur-demandas-tab":         () => renderLista("jur-demandas-tab-content"),
       "jur-demandas-jur":         () => renderLista("jur-demandas-jur-content",        { area:"Jurídico" }),
+      "pastoral-demandas":        () => renderLista("pastoral-demandas-content"),
+      "pastoral-demandas-pas":    () => renderLista("pastoral-demandas-pas-content",   { area:"Pastoral" }),
     };
     if (MAP[id]) MAP[id]();
   };
