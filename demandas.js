@@ -368,6 +368,8 @@
       "conselho-demandas-cons-content":   "conselho-demandas-cons",
       "infra-demandas-content":           "infra-demandas",
       "infra-demandas-infra-content":     "infra-demandas-infra",
+      "jur-demandas-tab-content":         "jur-demandas-tab",
+      "jur-demandas-jur-content":         "jur-demandas-jur",
     };
     return MAP[elId] || "dem-todas";
   }
@@ -665,6 +667,8 @@
       "conselho-demandas-cons":   () => renderLista("conselho-demandas-cons-content",  { area:"Conselho" }),
       "infra-demandas":           () => renderLista("infra-demandas-content"),
       "infra-demandas-infra":     () => renderLista("infra-demandas-infra-content",    { area:"Infraestrutura" }),
+      "jur-demandas-tab":         () => renderLista("jur-demandas-tab-content"),
+      "jur-demandas-jur":         () => renderLista("jur-demandas-jur-content",        { area:"Jurídico" }),
     };
     if (MAP[id]) MAP[id]();
   };
