@@ -356,12 +356,14 @@
   function _viewIdFromListId(elId) {
     const MAP = {
       "dem-dash-content":    "dem-dash",
-      "dem-todas-content":   "dem-todas",
-      "dem-analise-content": "dem-analise",
-      "dem-and-content":     "dem-and",
-      "dem-conc-content":    "dem-conc",
-      "dem-pri-content":     "dem-pri",
-      "dem-hist-content":    "dem-hist",
+      "dem-todas-content":         "dem-todas",
+      "dem-analise-content":       "dem-analise",
+      "dem-and-content":           "dem-and",
+      "dem-conc-content":          "dem-conc",
+      "dem-pri-content":           "dem-pri",
+      "dem-hist-content":          "dem-hist",
+      "admin-demandas-content":    "admin-demandas",
+      "admin-demandas-adm-content":"admin-demandas-adm",
     };
     return MAP[elId] || "dem-todas";
   }
@@ -651,8 +653,10 @@
       "dem-analise": () => renderLista("dem-analise-content", { status:"EM_ANALISE" }),
       "dem-and":     () => renderLista("dem-and-content",     { status:"EM_ANDAMENTO" }),
       "dem-conc":    () => renderLista("dem-conc-content",    { status:"CONCLUIDA" }),
-      "dem-pri":     () => renderLista("dem-pri-content",     { prioridade:"Alta" }),
-      "dem-hist":    () => renderLista("dem-hist-content"),
+      "dem-pri":          () => renderLista("dem-pri-content",              { prioridade:"Alta" }),
+      "dem-hist":         () => renderLista("dem-hist-content"),
+      "admin-demandas":     () => renderLista("admin-demandas-content"),
+      "admin-demandas-adm": () => renderLista("admin-demandas-adm-content", { area:"Administrativo" }),
     };
     if (MAP[id]) MAP[id]();
   };
