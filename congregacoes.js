@@ -654,7 +654,7 @@ function salvarNovaDemandaCong(){
     return;
   }
 
-  apiWrite("create", "DEMANDAS", {
+  const _payload = {
     titulo,
     area:          "Congregações",
     subcategoria:  "Demanda de Congregação",
@@ -665,7 +665,9 @@ function salvarNovaDemandaCong(){
     responsavel:   resp || "Secretaria / Administração",
     data_abertura: new Date().toISOString().split("T")[0],
     data_conclusao: venc,
-  }).then(() => {
+  };
+  console.log("PAYLOAD DEMANDA:", { ..._payload });
+  apiWrite("create", "DEMANDAS", _payload).then(() => {
     if (typeof T === "function") T("✅ Demanda criada!", `Roteada para: ${resp || "Secretaria / Administração"}`);
     fecharModalNovaDemandaCong();
     if (typeof window.demRecarregarDash === "function") window.demRecarregarDash();

@@ -3644,13 +3644,15 @@ function submitTask(){
   const data_conclusao = document.querySelectorAll(".md .fi2")[4]?.value;
   const observacoes = document.querySelectorAll(".md textarea")[0]?.value;
   if (!titulo) return T("Campo obrigatório","Informe o título da demanda");
-  apiWrite("create","DEMANDAS",{
+  const _taskPayload = {
     titulo, area: modulo, prioridade,
     responsavel: responsavel === "— Roteamento automático —" ? null : responsavel,
     data_conclusao: data_conclusao || null,
     descricao: observacoes || null,
     status: "PENDENTE"
-  }).then(()=>{
+  };
+  console.log("PAYLOAD DEMANDA:", { ..._taskPayload });
+  apiWrite("create","DEMANDAS",_taskPayload).then(()=>{
     closeModal();
     T("✅ Demanda criada!","Registrada no Supabase");
     loadKPIs();
@@ -3771,7 +3773,7 @@ const SCHEMA = {
     AGENDA:     { data:"date", hora_inicio:"date", hora_fim:"date", status:"select:confirmado,pendente,cancelado,reagendado", recorrencia:"select:Semanal,Quinzenal,Mensal,Anual" },
     MEMBROS:    { status:"select:ativo,inativo,transferido,falecido,disciplinado,afastado", data_ingresso:"date", data_saida:"date", data_batismo:"date", batizado:"boolean", casado_na_igreja:"boolean", tipo_ingresso:"select:batismo,transferência,profissão de fé,restauração,outro" },
     VISITANTES: { data_primeira_visita:"date", interesse_nivel:"select:baixo,médio,alto,convertido" },
-    DEMANDAS:   { data_abertura: "date", data_conclusao: "date", status: "select:Aberta,Em Análise,Em Andamento,Concluída,Cancelada", prioridade: "select:Baixa,Média,Alta,Urgente" },
+    DEMANDAS:   { data_abertura: "date", data_conclusao: "date", status: "select:ABERTA=Aberta,EM_ANALISE=Em Análise,EM_ANDAMENTO=Em Andamento,PENDENTE=Pendente,CONCLUIDA=Concluída,CANCELADA=Cancelada", prioridade: "select:Baixa,Média,Alta,Urgente" },
     FINANCEIRO: { valor: "number", data_lancamento: "date", tipo: "select:Receita,Despesa", status: "select:Pendente,Confirmado,Cancelado" },
     PGS:        { ativo: "boolean", dia_semana: "select:Segunda,Terça,Quarta,Quinta,Sexta,Sábado,Domingo" },
     ESTOQUE_ITENS: { quantidade: "number", ativo: "boolean" }
@@ -4321,10 +4323,13 @@ function openCrudForm(tab, preset = null) {
         ${escapeHtml(f)}</label></div>`;
     }
     if (tipo.startsWith("select:")) {
-      const opts = tipo.replace("select:","").split(",");
+      const opts = tipo.replace("select:","").split(",").map(o => {
+        const sep = o.indexOf("=");
+        return sep === -1 ? { value: o, label: o } : { value: o.slice(0, sep), label: o.slice(sep + 1) };
+      });
       return `<div><label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">${escapeHtml(f)}${req}</label>
         <select data-field="${escapeHtmlAttr(f)}" style="${inputStyle}">
-          ${opts.map(o=>`<option value="${escapeHtmlAttr(o)}" ${String(val)===o?"selected":""}>${escapeHtml(o)}</option>`).join("")}
+          ${opts.map(o=>`<option value="${escapeHtmlAttr(o.value)}" ${String(val)===o.value?"selected":""}>${escapeHtml(o.label)}</option>`).join("")}
         </select></div>`;
     }
     if (tipo === "number") {
@@ -4386,6 +4391,13 @@ async function salvarRegistro(tab, recordId = null) {
     if (!data[f] || String(data[f]).trim() === "") {
       return T("Campo obrigatório", `Preencha o campo: ${f}`);
     }
+  }
+  // Normalização de status para DEMANDAS — banco só aceita valores em maiúsculas
+  if (tab === "DEMANDAS") {
+    const _sn = { "Aberta":"ABERTA","Em Análise":"EM_ANALISE","Em Andamento":"EM_ANDAMENTO","Pendente":"PENDENTE","Concluída":"CONCLUIDA","Cancelada":"CANCELADA" };
+    data.status = data.status ? (_sn[data.status] || data.status) : (!recordId ? "ABERTA" : undefined);
+    if (data.status === undefined) delete data.status;
+    console.log("PAYLOAD DEMANDA:", { ...data });
   }
   try {
     await apiWrite(recordId ? "update" : "create", tab, recordId ? { ...data, _row: recordId } : data);

@@ -620,6 +620,7 @@
     };
 
     try {
+      console.log("PAYLOAD DEMANDA:", { ...payload });
       await apiWrite("create", "DEMANDAS", payload);
       if (typeof T === "function") T("✅ Demanda criada!", `Roteada para: ${payload.responsavel}`);
       window.fecharModalNovaDemanda();
