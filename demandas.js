@@ -364,8 +364,10 @@
       "dem-hist-content":          "dem-hist",
       "admin-demandas-content":         "admin-demandas",
       "admin-demandas-adm-content":     "admin-demandas-adm",
-      "conselho-demandas-content":      "conselho-demandas",
-      "conselho-demandas-cons-content": "conselho-demandas-cons",
+      "conselho-demandas-content":        "conselho-demandas",
+      "conselho-demandas-cons-content":   "conselho-demandas-cons",
+      "infra-demandas-content":           "infra-demandas",
+      "infra-demandas-infra-content":     "infra-demandas-infra",
     };
     return MAP[elId] || "dem-todas";
   }
@@ -659,8 +661,10 @@
       "dem-hist":         () => renderLista("dem-hist-content"),
       "admin-demandas":          () => renderLista("admin-demandas-content"),
       "admin-demandas-adm":      () => renderLista("admin-demandas-adm-content",      { area:"Administrativo" }),
-      "conselho-demandas":       () => renderLista("conselho-demandas-content"),
-      "conselho-demandas-cons":  () => renderLista("conselho-demandas-cons-content",  { area:"Conselho" }),
+      "conselho-demandas":        () => renderLista("conselho-demandas-content"),
+      "conselho-demandas-cons":   () => renderLista("conselho-demandas-cons-content",  { area:"Conselho" }),
+      "infra-demandas":           () => renderLista("infra-demandas-content"),
+      "infra-demandas-infra":     () => renderLista("infra-demandas-infra-content",    { area:"Infraestrutura" }),
     };
     if (MAP[id]) MAP[id]();
   };
