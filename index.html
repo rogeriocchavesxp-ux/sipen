@@ -2370,17 +2370,17 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
     <div class="hero"><div class="hero-ic" style="background:rgba(139,111,212,0.12)">🔄</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Em Andamento</div><div class="hero-dsc">Demandas em execução</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
     <div class="ct">
       <div class="card">
-        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('dem-and-content',{status:'Em Andamento'})">↻ Atualizar</span></div>
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('dem-and-content',{status:'EM_ANDAMENTO'})">↻ Atualizar</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-          <select id="dem-and-content-fcat" onchange="demFiltrar('dem-and-content',{status:'Em Andamento'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+          <select id="dem-and-content-fcat" onchange="demFiltrar('dem-and-content',{status:'EM_ANDAMENTO'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
             <option value="">Todas as categorias</option>
             <option>Conselho</option><option>Agendamentos</option><option>Manutenção</option><option>Limpeza e Organização</option><option>Logística</option><option>Financeiro</option><option>Comunicação e Divulgação</option><option>Secretaria</option><option>Cadastro</option><option>Oração e Aconselhamento</option><option>Visitação</option><option>Apoio ao Culto</option><option>Ensino (EBT)</option><option>Ação Social / Hebron</option><option>Administrativo Geral</option>
           </select>
-          <select id="dem-and-content-fprio" onchange="demFiltrar('dem-and-content',{status:'Em Andamento'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+          <select id="dem-and-content-fprio" onchange="demFiltrar('dem-and-content',{status:'EM_ANDAMENTO'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
             <option value="">Todas as prioridades</option>
             <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
           </select>
-          <input id="dem-and-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('dem-and-content',{status:'Em Andamento'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+          <input id="dem-and-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('dem-and-content',{status:'EM_ANDAMENTO'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
         </div>
       </div>
       <div class="card" style="margin-top:0">
@@ -3649,7 +3649,7 @@ function submitTask(){
     responsavel: responsavel === "— Roteamento automático —" ? null : responsavel,
     data_conclusao: data_conclusao || null,
     descricao: observacoes || null,
-    status: "PENDENTE"
+    status: "ABERTA"
   };
   console.log("PAYLOAD DEMANDA:", { ..._taskPayload });
   apiWrite("create","DEMANDAS",_taskPayload).then(()=>{
@@ -3943,6 +3943,20 @@ async function apiWrite(action, sheet, payload) {
   delete body.criado_em;
   delete body.atualizado_em;
 
+  if (sheet === "DEMANDAS") {
+    const STATUS_DEMANDA_MAP = {
+      "Aberta":"ABERTA","aberta":"ABERTA",
+      "Pendente":"PENDENTE","pendente":"PENDENTE",
+      "Em Análise":"EM_ANALISE","em análise":"EM_ANALISE","Em Analise":"EM_ANALISE","em analise":"EM_ANALISE",
+      "Em Andamento":"EM_ANDAMENTO","em andamento":"EM_ANDAMENTO",
+      "Concluída":"CONCLUIDA","concluída":"CONCLUIDA","Concluida":"CONCLUIDA","concluida":"CONCLUIDA",
+      "Cancelada":"CANCELADA","cancelada":"CANCELADA"
+    };
+    if (body.status !== undefined) {
+      body.status = STATUS_DEMANDA_MAP[body.status] || body.status || "ABERTA";
+    }
+  }
+
   let url = `${apiBaseUrl()}/rest/v1/${tbl}`;
   let method = "POST";
   let headers = apiHeaders({ "Prefer": "return=representation" });
@@ -3960,6 +3974,7 @@ async function apiWrite(action, sheet, payload) {
     throw new Error("Ação inválida");
   }
 
+  console.log("PAYLOAD FINAL SUPABASE:", sheet, body);
   const res = await fetch(url, {
     method,
     headers,

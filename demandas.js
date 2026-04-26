@@ -279,12 +279,14 @@
 
     let rows = [..._cache];
 
-    /* Filtros fixos (ex: status:"Em Análise") — comparação exata */
+    /* Filtros fixos — comparação normalizada (aceita label ou código DB) */
     if (filtrosFixos) {
       Object.entries(filtrosFixos).forEach(([k, v]) => {
         if (!v) return;
         if (k === "prioridade" && v === "Alta") {
           rows = rows.filter(r => ["Alta","Urgente"].includes(r.prioridade));
+        } else if (k === "status") {
+          rows = rows.filter(r => _toDb(String(r[k]||"")) === _toDb(String(v)));
         } else {
           rows = rows.filter(r => String(r[k]||"") === String(v));
         }
@@ -297,7 +299,7 @@
     const fPrio   = document.getElementById(elId+"-fprio")?.value   || "";
     const fBusca  = (document.getElementById(elId+"-fbusca")?.value || "").toLowerCase();
 
-    if (fStatus) rows = rows.filter(r => r.status === fStatus);
+    if (fStatus) rows = rows.filter(r => _toDb(r.status) === _toDb(fStatus));
     if (fCat)    rows = rows.filter(r => r.area === fCat);
     if (fPrio)   rows = rows.filter(r => r.prioridade === fPrio);
     if (fBusca)  rows = rows.filter(r =>
@@ -646,9 +648,9 @@
     const MAP = {
       "dem-dash":    () => renderDash(),
       "dem-todas":   () => renderLista("dem-todas-content"),
-      "dem-analise": () => renderLista("dem-analise-content", { status:"Em Análise" }),
-      "dem-and":     () => renderLista("dem-and-content",     { status:"Em Andamento" }),
-      "dem-conc":    () => renderLista("dem-conc-content",    { status:"Concluída" }),
+      "dem-analise": () => renderLista("dem-analise-content", { status:"EM_ANALISE" }),
+      "dem-and":     () => renderLista("dem-and-content",     { status:"EM_ANDAMENTO" }),
+      "dem-conc":    () => renderLista("dem-conc-content",    { status:"CONCLUIDA" }),
       "dem-pri":     () => renderLista("dem-pri-content",     { prioridade:"Alta" }),
       "dem-hist":    () => renderLista("dem-hist-content"),
     };
