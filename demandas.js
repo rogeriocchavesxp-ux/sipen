@@ -652,6 +652,50 @@
 
   /* ── Hook no go() ────────────────────────────────────── */
 
+  /* ── Dashboard de Infraestrutura ───────────────────── */
+
+  async function _renderInfraDash() {
+    if (!_cache.length) await _load();
+    const rows = _cache.filter(r => String(r.area||"") === "Infraestrutura");
+    const mes   = new Date().toISOString().slice(0, 7);
+
+    const nAbertas = rows.filter(r => ["ABERTA","EM_ANALISE"].includes(_toDb(r.status))).length;
+    const nAnd     = rows.filter(r => _toDb(r.status) === "EM_ANDAMENTO").length;
+    const nPri     = rows.filter(r => ["Alta","Urgente"].includes(r.prioridade) && _toDb(r.status) !== "CONCLUIDA").length;
+    const nConc    = rows.filter(r => _toDb(r.status) === "CONCLUIDA" && (r.data_conclusao||r.criado_em||"").startsWith(mes)).length;
+
+    const sv = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    sv("infra-kpi-abertas", nAbertas);
+    sv("infra-kpi-and",     nAnd);
+    sv("infra-kpi-pri",     nPri);
+    sv("infra-kpi-conc",    nConc);
+
+    function _miniRow(r) {
+      return `<tr style="border-bottom:1px solid var(--bd1);cursor:pointer" onclick="window.demAbrirDetalhe('${r.id||r._row}','infra-dash')">
+        <td style="padding:7px 6px;font-weight:600;color:var(--tx1);max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.titulo||"—"}</td>
+        <td style="padding:7px 6px">${pillStatus(r.status)}</td>
+        <td style="padding:7px 4px;color:var(--tx3);font-size:11px">${r.responsavel||"—"}</td>
+      </tr>`;
+    }
+    function _miniTable(list) {
+      return `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>${list.map(_miniRow).join("")}</tbody></table></div>`;
+    }
+    function _empty(msg) {
+      return `<div style="color:var(--tx3);font-size:11.5px;padding:8px 0">${msg}</div>`;
+    }
+
+    const elAb  = document.getElementById("infra-dash-abertas");
+    const abList = rows.filter(r => ["ABERTA","EM_ANALISE","EM_ANDAMENTO"].includes(_toDb(r.status)))
+                       .sort((a,b) => (b.criado_em||"").localeCompare(a.criado_em||"")).slice(0, 6);
+    if (elAb) elAb.innerHTML = abList.length ? _miniTable(abList) : _empty("Nenhuma demanda em aberto.");
+
+    const elPri = document.getElementById("infra-dash-prioridade");
+    const priList = rows.filter(r => ["Alta","Urgente"].includes(r.prioridade) && _toDb(r.status) !== "CONCLUIDA")
+                        .sort((a,b) => (b.criado_em||"").localeCompare(a.criado_em||"")).slice(0, 6);
+    if (elPri) elPri.innerHTML = priList.length ? _miniTable(priList) : _empty("Nenhuma demanda prioritária.");
+  }
+  window.infra_dash_load = function() { _renderInfraDash(); };
+
   const _origGo = window.go;
   window.go = function(id) {
     _origGo(id);
@@ -667,6 +711,7 @@
       "admin-demandas-adm":      () => renderLista("admin-demandas-adm-content",      { area:"Administrativo" }),
       "conselho-demandas":        () => renderLista("conselho-demandas-content"),
       "conselho-demandas-cons":   () => renderLista("conselho-demandas-cons-content",  { area:"Conselho" }),
+      "infra-dash":               () => _renderInfraDash(),
       "infra-demandas":           () => renderLista("infra-demandas-content"),
       "infra-demandas-infra":     () => renderLista("infra-demandas-infra-content",    { area:"Infraestrutura" }),
       "jur-demandas-tab":         () => renderLista("jur-demandas-tab-content"),

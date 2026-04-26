@@ -824,7 +824,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
     <div class="mwrap" id="mw-infra">
       <div class="mhdr" onclick="tog('infra')">
         <div class="micon" style="background:rgba(208,144,64,0.14);border-color:rgba(208,144,64,0.25);color:var(--amber)">⊞</div>
-        <span class="mname">Infraestrutura</span>
+        <span class="mname">Infraestrutura e Conservação</span>
         <span class="mbadge" style="background:rgba(208,104,104,0.12);color:var(--rose);border:1px solid rgba(208,104,104,0.2)">2</span>
         <span class="marr">▶</span>
       </div>
@@ -1051,7 +1051,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
         <div class="modcard" style="--mc:var(--amber)" onclick="go('infra-dash')">
           <div class="mc-head">
             <div class="mc-icon" style="background:rgba(208,144,64,0.14);border-color:rgba(208,144,64,0.25);color:var(--amber)">⊞</div>
-            <span class="mc-name">Infraestrutura</span><span class="mc-open">abrir →</span>
+            <span class="mc-name">Infraestrutura e Conservação</span><span class="mc-open">abrir →</span>
           </div>
           <div class="sr"><span class="sl">OS abertas</span><span class="sv">5</span></div>
           <div class="sr"><span class="sl">Atrasadas</span><span class="sv dn">2 urgentes</span></div>
@@ -1300,34 +1300,58 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
   <!-- ════ INFRAESTRUTURA ═══════════════════ -->
   <div class="view" id="v-infra-dash">
     <div class="hero">
-      <div class="hero-ic" style="background:var(--amberbg);border-color:rgba(208,144,64,0.25)">⊞</div>
-      <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Infraestrutura e Conservação</div><div class="hero-dsc">Manutenção, limpeza, patrimônio, prestadores e solicitações operacionais</div></div>
-      <div class="hero-act"><button class="tbt pri" onclick="openModal()">+ Nova OS</button></div>
+      <div class="hero-ic" style="background:var(--amberbg);border-color:rgba(208,144,64,0.25)">🛠</div>
+      <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Infraestrutura e Conservação</div><div class="hero-dsc">Gestão de ordens de serviço, limpeza, patrimônio, prestadores e solicitações operacionais</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova OS</button></div>
     </div>
     <div class="inav" style="--mc:var(--amber)">
-      <div class="ini on">Dashboard</div><div class="ini" onclick="go('infra-man')">Manutenção</div>
-      <div class="ini" onclick="go('infra-lim')">Limpeza</div><div class="ini" onclick="go('infra-sol')">Solicitações</div>
-      <div class="ini" onclick="go('infra-pat')">Patrimônio</div><div class="ini" onclick="go('infra-pre')">Prestadores</div>
+      <div class="ini on">Dashboard</div>
+      <div class="ini" onclick="go('infra-man')">Manutenção</div>
+      <div class="ini" onclick="go('infra-lim')">Limpeza</div>
+      <div class="ini" onclick="go('infra-sol')">Solicitações</div>
+      <div class="ini" onclick="go('infra-pat')">Patrimônio</div>
+      <div class="ini" onclick="go('infra-pre')">Prestadores</div>
+      <div class="ini" onclick="go('infra-demandas')">Demandas</div>
     </div>
     <div class="ct">
       <div class="kpis c4">
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,85,85,0.15);color:var(--rose);">◻</div><div class="kpi-body"><div class="kpi-lbl">OS atrasadas</div><div class="kpi-val">2</div><div class="kpi-d dn">▼ requer ação</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Em andamento</div><div class="kpi-val">3</div><div class="kpi-d nu">no prazo</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gmd);">✦</div><div class="kpi-body"><div class="kpi-lbl">Concluídas (Abr)</div><div class="kpi-val">18</div><div class="kpi-d up">▲ alta produtividade</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Patrimônio</div><div class="kpi-val">213</div><div class="kpi-d nu">itens cadastrados</div></div></div>
+        <div class="kpi" style="cursor:pointer" onclick="go('infra-demandas-infra')">
+          <div class="kpi-ico" style="background:rgba(224,85,85,0.15);color:var(--rose)">📋</div>
+          <div class="kpi-body"><div class="kpi-lbl">Abertas</div><div class="kpi-val" id="infra-kpi-abertas">—</div><div class="kpi-d nu">demandas em aberto</div></div>
+        </div>
+        <div class="kpi" style="cursor:pointer" onclick="go('infra-demandas-infra')">
+          <div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber)">⚙️</div>
+          <div class="kpi-body"><div class="kpi-lbl">Em Andamento</div><div class="kpi-val" id="infra-kpi-and">—</div><div class="kpi-d nu">em execução</div></div>
+        </div>
+        <div class="kpi" style="cursor:pointer" onclick="go('infra-demandas-infra')">
+          <div class="kpi-ico" style="background:rgba(208,104,104,0.15);color:var(--rose)">⚠️</div>
+          <div class="kpi-body"><div class="kpi-lbl">Alta Prioridade</div><div class="kpi-val" id="infra-kpi-pri">—</div><div class="kpi-d dn">requer atenção</div></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gmd)">✅</div>
+          <div class="kpi-body"><div class="kpi-lbl">Concluídas</div><div class="kpi-val" id="infra-kpi-conc">—</div><div class="kpi-d up">este mês</div></div>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Demandas em aberto <span class="cact" onclick="infra_dash_load()">↻ Atualizar</span></div>
+          <div id="infra-dash-abertas"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        </div>
+        <div class="card">
+          <div class="ctit">Alta prioridade <span class="cact" onclick="infra_dash_load()">↻ Atualizar</span></div>
+          <div id="infra-dash-prioridade"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        </div>
       </div>
       <div class="card">
-        <div class="ctit">Ordens de Serviço ativas</div>
-        <table class="tbl">
-          <thead><tr><th>OS</th><th>Descrição</th><th>Local</th><th>Responsável</th><th>Vencimento</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr onclick="T('OS-042','3 dias de atraso')"><td class="tdc">OS-042</td><td class="tdp">Elétrica — Sala principal</td><td>Templo</td><td>João Costa</td><td class="neg mono">09/04</td><td><span class="pill pl">Atrasada</span></td></tr>
-            <tr onclick="T('OS-041','2 dias de atraso')"><td class="tdc">OS-041</td><td class="tdp">Pintura corredor B</td><td>Educacional</td><td>Pedro Alves</td><td class="neg mono">11/04</td><td><span class="pill pl">Atrasada</span></td></tr>
-            <tr onclick="T('OS-040','Em andamento')"><td class="tdc">OS-040</td><td class="tdp">Reparo calha — fundos</td><td>Externo</td><td>João Costa</td><td class="mono">20/04</td><td><span class="pill pp">Andamento</span></td></tr>
-            <tr onclick="T('OS-039','Técnico agendado')"><td class="tdc">OS-039</td><td class="tdp">Revisão ar-condicionado</td><td>Escritório</td><td>Técnico Ext.</td><td class="mono">22/04</td><td><span class="pill pp">Andamento</span></td></tr>
-            <tr onclick="T('OS-038','Aguardando início')"><td class="tdc">OS-038</td><td class="tdp">Limpeza caixa d'água</td><td>Térreo</td><td>Eq. Manutenção</td><td class="mono">30/04</td><td><span class="pill po">Aberta</span></td></tr>
-          </tbody>
-        </table>
+        <div class="ctit">Acesso rápido</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+          <button class="tbt" onclick="go('infra-man')">🔧 Manutenção</button>
+          <button class="tbt" onclick="go('infra-lim')">🧹 Limpeza e Conservação</button>
+          <button class="tbt" onclick="go('infra-sol')">📝 Solicitações Operacionais</button>
+          <button class="tbt" onclick="go('infra-pat')">🏛 Patrimônio</button>
+          <button class="tbt" onclick="go('infra-pre')">👷 Prestadores de Serviço</button>
+          <button class="tbt" onclick="go('infra-demandas')">📋 Todas as Demandas</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1382,7 +1406,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
               <tr><td class="tdp">Membresia</td><td>Crescimento mensal</td><td class="mono pos">+12</td><td><span class="pill pd">Regular</span></td></tr>
               <tr><td class="tdp">Financeiro</td><td>Saldo do período</td><td class="mono pos">R$ 13.600</td><td><span class="pill pd">Regular</span></td></tr>
               <tr><td class="tdp">Ministerial</td><td>Escalas completas</td><td class="mono">7 de 8</td><td><span class="pill po">Atenção</span></td></tr>
-              <tr><td class="tdp">Infraestrutura</td><td>OS atrasadas</td><td class="mono neg">2</td><td><span class="pill pl">Urgente</span></td></tr>
+              <tr><td class="tdp">Infra. e Conservação</td><td>OS atrasadas</td><td class="mono neg">2</td><td><span class="pill pl">Urgente</span></td></tr>
               <tr><td class="tdp">Pastoral</td><td>Taxa de resolução</td><td class="mono pos">66%</td><td><span class="pill pd">Regular</span></td></tr>
             </tbody>
           </table>
@@ -2541,7 +2565,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 
   <!-- INFRAESTRUTURA: SOLICITAÇÕES E DEMANDAS (com abas) -->
   <div class="view" id="v-infra-demandas">
-    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🛠</div><div><div class="hero-lbl">Infraestrutura</div><div class="hero-ttl">Solicitações e Demandas</div><div class="hero-dsc">Todas as demandas e as direcionadas ao módulo Infraestrutura</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🛠</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Solicitações e Demandas</div><div class="hero-dsc">Todas as demandas e as direcionadas ao módulo Infraestrutura e Conservação</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
     <div class="ct">
       <div class="card">
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
@@ -2574,7 +2598,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 
   <!-- INFRAESTRUTURA: DEMANDAS DE INFRAESTRUTURA (aba filtrada) -->
   <div class="view" id="v-infra-demandas-infra">
-    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🛠</div><div><div class="hero-lbl">Infraestrutura</div><div class="hero-ttl">Demandas de Infraestrutura</div><div class="hero-dsc">Demandas direcionadas ao módulo Infraestrutura</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🛠</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Demandas de Infraestrutura</div><div class="hero-dsc">Demandas direcionadas ao módulo Infraestrutura e Conservação</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
     <div class="ct">
       <div class="card">
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
@@ -2746,7 +2770,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 
   <!-- INFRA MANUTENÇÃO -->
   <div class="view" id="v-infra-man">
-    <div class="hero"><div class="hero-ic" style="background:rgba(224,138,42,0.12)">🔧</div><div><div class="hero-lbl">Infraestrutura</div><div class="hero-ttl">Manutenção</div><div class="hero-dsc">Ordens de serviço e manutenções preventivas</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova OS</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:rgba(224,138,42,0.12)">🔧</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Manutenção</div><div class="hero-dsc">Ordens de serviço e manutenções preventivas</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova OS</button></div></div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Ordens de Serviço <span class="cact" onclick="listarModulo('DEMANDAS','infra-man-list',{area:'Infraestrutura'})">↻ Atualizar</span></div>
@@ -3399,22 +3423,22 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 
   <!-- INFRAESTRUTURA -->
   <div class="view" id="v-infra-lim">
-    <div class="hero"><div class="hero-ic" style="background:var(--amberbg)">🧹</div><div><div class="hero-lbl">Infraestrutura</div><div class="hero-ttl">Limpeza e Conservação</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova OS</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:var(--amberbg)">🧹</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Limpeza e Conservação</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova OS</button></div></div>
     <div class="ct"><div class="card"><div class="ctit">Demandas de Limpeza <span class="cact" onclick="listarModulo('DEMANDAS','infra-lim-list',{area:'Limpeza'})">↻</span></div><div id="infra-lim-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-infra-sol">
-    <div class="hero"><div class="hero-ic" style="background:var(--amberbg)">📝</div><div><div class="hero-lbl">Infraestrutura</div><div class="hero-ttl">Solicitações Operacionais</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova Solicitação</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:var(--amberbg)">📝</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Solicitações Operacionais</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova Solicitação</button></div></div>
     <div class="ct"><div class="card"><div class="ctit">Solicitações <span class="cact" onclick="listarModulo('DEMANDAS','infra-sol-list',{area:'Infraestrutura'})">↻</span></div><div id="infra-sol-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-infra-pat">
-    <div class="hero"><div class="hero-ic" style="background:var(--amberbg)">🏛</div><div><div class="hero-lbl">Infraestrutura</div><div class="hero-ttl">Patrimônio</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('ESTOQUE_ITENS')">+ Novo Item</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:var(--amberbg)">🏛</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Patrimônio</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('ESTOQUE_ITENS')">+ Novo Item</button></div></div>
     <div class="ct"><div class="card"><div class="ctit">Itens de Patrimônio <span class="cact" onclick="listarModulo('ESTOQUE_ITENS','infra-pat-list')">↻</span></div><div id="infra-pat-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-infra-pre">
-    <div class="hero"><div class="hero-ic" style="background:var(--amberbg)">👷</div><div><div class="hero-lbl">Infraestrutura</div><div class="hero-ttl">Prestadores de Serviço</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo Prestador</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:var(--amberbg)">👷</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Prestadores de Serviço</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo Prestador</button></div></div>
     <div class="ct"><div class="card"><div class="ctit">Prestadores <span class="cact" onclick="listarModulo('MEMBROS','infra-pre-list')">↻</span></div><div id="infra-pre-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
@@ -3894,17 +3918,17 @@ const CRUMB={
   "agenda-conflitos":["Agenda","Conflitos de Agenda",""],
   "agenda-historico":["Agenda","Histórico de Agendamentos",""],
   "agenda-config":["Agenda","Configurações da Agenda",""],
-  "infra-dash":["Infraestrutura","Dashboard",""],
-  "infra-man":["Infraestrutura","Manutenção",""],
-  "infra-lim":["Infraestrutura","Limpeza",""],
+  "infra-dash":["Infraestrutura e Conservação","Dashboard",""],
+  "infra-man":["Infraestrutura e Conservação","Manutenção",""],
+  "infra-lim":["Infraestrutura e Conservação","Limpeza",""],
   "dem-dash":["Demandas","Dashboard","/ visão geral e métricas"],
   "dem-todas":["Demandas","Todas as Solicitações","/ lista completa"],
   "admin-demandas":         ["Administrativo","Solicitações e Demandas","/ todas"],
   "admin-demandas-adm":     ["Administrativo","Demandas Administrativas","/ filtradas"],
   "conselho-demandas":      ["Conselho e Governança","Solicitações e Demandas","/ todas"],
   "conselho-demandas-cons": ["Conselho e Governança","Demandas do Conselho","/ filtradas"],
-  "infra-demandas":         ["Infraestrutura","Solicitações e Demandas","/ todas"],
-  "infra-demandas-infra":   ["Infraestrutura","Demandas de Infraestrutura","/ filtradas"],
+  "infra-demandas":         ["Infraestrutura e Conservação","Solicitações e Demandas","/ todas"],
+  "infra-demandas-infra":   ["Infraestrutura e Conservação","Demandas de Infraestrutura","/ filtradas"],
   "jur-demandas-tab":       ["Jurídico","Solicitações e Demandas","/ todas"],
   "jur-demandas-jur":       ["Jurídico","Demandas Jurídicas","/ filtradas"],
   "pastoral-demandas":      ["Pastoral","Solicitações e Demandas","/ todas"],
@@ -3922,7 +3946,7 @@ const CRUMB={
   "memb-vis":["Membresia","Visitantes",""],
 };
 const SL={dash:"Dashboard",diaconos:"Diáconos",escalas:"Escalas de Serviço",familias:"Famílias Assistidas",social:"Ação Social e Beneficência",visitacao:"Visitação Diaconal",patrimonio:"Patrimônio e Apoio Operacional",solicitacoes:"Solicitações Diaconais",relatorios:"Relatórios Diaconais",historico:"Histórico e Atas",sec:"Secretaria e Cadastro",rh:"RH / Gestão de Pessoas",doc:"Documentos",aud:"Auditoria",fin:"Financeiro",con:"Contratos",est:"Controle de Estoque",demandas:"Processos e Demandas Jurídicas",contratos:"Contratos e Instrumentos",pareceres:"Pareceres",documentos:"Documentos Jurídicos",riscos:"Riscos e Pendências",historico:"Histórico",rel:"Relatórios Estratégicos",ind:"Indicadores",cong:"Congregações",nomeados:"Nomeados",ordenados:"Ordenados",ate:"Atendimentos",ora:"Pedidos de Oração",aco:"Acompanhamentos",reg:"Registros Pastorais",pri:"Casos Prioritários",min:"Ministérios",lid:"Liderança Ministerial",esc:"Escalas",prog:"Programações",lit:"Liturgia dos Cultos",vol:"Voluntários",calendario:"Calendário Geral",solicitacoes:"Solicitações de Agendamento",aprovacoes:"Aprovações Pendentes",confirmados:"Eventos Confirmados",recusados:"Eventos Recusados",reagendamentos:"Reagendamentos e Ajustes",ambientes:"Ambientes e Recursos",conflitos:"Conflitos de Agenda",config:"Configurações da Agenda",lista:"Lista de PGs",encontros:"Encontros",participantes:"Participantes",visitantes:"Visitantes",estudos:"Estudos",relatorios:"Relatórios",oracao:"Pedidos de Oração",man:"Manutenção",lim:"Limpeza e Conservação",sol:"Solicitações Operacionais",pat:"Patrimônio",pre:"Prestadores",todas:"Todas as Solicitações",pend:"Pendentes",and:"Em Andamento",conc:"Concluídas",hist:"Histórico",mod:"Por Módulo",exp:"Exportações",uni:"Por Congregação",res:"Por Responsável",cad:"Cadastro de Membros",bat:"Batismos",prof:"Profissões de Fé",trans:"Transferências",vis:"Visitantes"};
-const MN={admin:"Administrativo",fin:"Financeiro",jur:"Jurídico",conselho:"Conselho",pastoral:"Pastoral",min:"Ministerial",agenda:"Agenda",pgs:"Pequenos Grupos",infra:"Infraestrutura",dem:"Demandas",rel:"Relatórios",memb:"Membresia",cong:"Congregações",diac:"Junta Diaconal"};
+const MN={admin:"Administrativo",fin:"Financeiro",jur:"Jurídico",conselho:"Conselho",pastoral:"Pastoral",min:"Ministerial",agenda:"Agenda",pgs:"Pequenos Grupos",infra:"Infraestrutura e Conservação",dem:"Demandas",rel:"Relatórios",memb:"Membresia",cong:"Congregações",diac:"Junta Diaconal"};
 
 function go(id){
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
