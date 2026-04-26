@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SIPEN v6.3.0 — Sistema Integrado da IPPenha</title>
+<title>SIPEN v6.4.0 — Sistema Integrado da IPPenha</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -42,6 +42,7 @@
   --amber:  #e08a2a;  --amberbg:  rgba(224,138,42,0.10);
   --rose:   #e05555;  --rosebg:   rgba(224,85,85,0.10);
   --copper: #b87a56;  --copperbg: rgba(184,122,86,0.10);
+  --sky:    #5898d4;  --skybg:    rgba(88,152,212,0.10);
 
   --sw: 256px;
   --th: 56px;
@@ -907,6 +908,24 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
         <div class="si" onclick="go('memb-prof')">Profissões de Fé</div>
         <div class="si" onclick="go('memb-trans')">Transferências</div>
         <div class="si" onclick="go('memb-hist')">Histórico de Membros</div>
+      </div>
+    </div>
+
+    <div class="slbl">Portal do Membro</div>
+
+    <!-- Área do Membro -->
+    <div class="mwrap" id="mw-area">
+      <div class="mhdr" onclick="tog('area')">
+        <div class="micon" style="background:rgba(58,170,92,0.14);border-color:rgba(58,170,92,0.25);color:var(--gr)">⛪</div>
+        <span class="mname">Área do Membro</span>
+        <span class="marr">▶</span>
+      </div>
+      <div class="msub" id="ms-area">
+        <div class="si" onclick="go('area-dash')">Painel Pessoal</div>
+        <div class="si" onclick="go('area-agenda')">Agenda</div>
+        <div class="si" onclick="go('area-min')">Meus Ministérios</div>
+        <div class="si" onclick="go('area-pgs')">Meu PG</div>
+        <div class="si" onclick="go('area-dem')">Minhas Solicitações</div>
       </div>
     </div>
 
@@ -3797,6 +3816,239 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
     </div>
   </div>
 
+  <!-- ════ ÁREA DO MEMBRO ═══════════════════════════ -->
+  <div class="view" id="v-area-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(58,170,92,0.12);border-color:rgba(58,170,92,0.25)">⛪</div>
+      <div>
+        <div class="hero-lbl">Portal do Membro</div>
+        <div class="hero-ttl" id="area-saudacao">Bem-vindo!</div>
+        <div class="hero-dsc">Acesse sua agenda, PG, ministério e solicitações em um só lugar</div>
+      </div>
+      <div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Solicitação</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--gr)">
+      <div class="ini on">Início</div>
+      <div class="ini" onclick="go('area-agenda')">Agenda</div>
+      <div class="ini" onclick="go('area-min')">Ministérios</div>
+      <div class="ini" onclick="go('area-pgs')">Meu PG</div>
+      <div class="ini" onclick="go('area-dem')">Solicitações</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4">
+        <div class="kpi" style="cursor:pointer" onclick="go('area-agenda')">
+          <div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal)">🗓</div>
+          <div class="kpi-body"><div class="kpi-lbl">Próximo Evento</div><div class="kpi-val" id="area-kpi-evento" style="font-size:13px">—</div><div class="kpi-d nu" id="area-kpi-evento-data">ver agenda</div></div>
+        </div>
+        <div class="kpi" style="cursor:pointer" onclick="go('area-pgs')">
+          <div class="kpi-ico" style="background:rgba(82,196,110,0.15);color:var(--gbr)">⌂</div>
+          <div class="kpi-body"><div class="kpi-lbl">Meu PG</div><div class="kpi-val" id="area-kpi-pg" style="font-size:13px">—</div><div class="kpi-d nu">pequeno grupo</div></div>
+        </div>
+        <div class="kpi" style="cursor:pointer" onclick="go('area-dem')">
+          <div class="kpi-ico" style="background:rgba(224,85,85,0.15);color:var(--rose)">📋</div>
+          <div class="kpi-body"><div class="kpi-lbl">Solicitações</div><div class="kpi-val" id="area-kpi-dem">—</div><div class="kpi-d nu">em aberto</div></div>
+        </div>
+        <div class="kpi" style="cursor:pointer" onclick="go('area-min')">
+          <div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet)">◉</div>
+          <div class="kpi-body"><div class="kpi-lbl">Meu Ministério</div><div class="kpi-val" id="area-kpi-min" style="font-size:13px">—</div><div class="kpi-d nu">ver detalhes</div></div>
+        </div>
+      </div>
+      <div class="sh"><span class="sh-t">Acesso Rápido</span><span class="sh-s">dois cliques para qualquer área</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:14px;margin-bottom:22px">
+        <div onclick="go('area-agenda')" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:22px 16px;cursor:pointer;text-align:center;transition:border-color .15s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--bd2)'">
+          <div style="font-size:30px;margin-bottom:10px">🗓</div>
+          <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">Agenda</div>
+          <div style="font-size:10.5px;color:var(--tx3);margin-top:3px">eventos e cultos</div>
+        </div>
+        <div onclick="go('area-min')" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:22px 16px;cursor:pointer;text-align:center;transition:border-color .15s" onmouseover="this.style.borderColor='var(--violet)'" onmouseout="this.style.borderColor='var(--bd2)'">
+          <div style="font-size:30px;margin-bottom:10px">◉</div>
+          <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">Ministérios</div>
+          <div style="font-size:10.5px;color:var(--tx3);margin-top:3px">serviço e escala</div>
+        </div>
+        <div onclick="go('area-pgs')" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:22px 16px;cursor:pointer;text-align:center;transition:border-color .15s" onmouseover="this.style.borderColor='var(--gbr)'" onmouseout="this.style.borderColor='var(--bd2)'">
+          <div style="font-size:30px;margin-bottom:10px">⌂</div>
+          <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">Meu PG</div>
+          <div style="font-size:10.5px;color:var(--tx3);margin-top:3px">encontros e estudos</div>
+        </div>
+        <div onclick="go('area-dem')" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:22px 16px;cursor:pointer;text-align:center;transition:border-color .15s" onmouseover="this.style.borderColor='var(--rose)'" onmouseout="this.style.borderColor='var(--bd2)'">
+          <div style="font-size:30px;margin-bottom:10px">📋</div>
+          <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">Solicitações</div>
+          <div style="font-size:10.5px;color:var(--tx3);margin-top:3px">pedidos e demandas</div>
+        </div>
+        <div onclick="go('agenda-confirmados')" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:22px 16px;cursor:pointer;text-align:center;transition:border-color .15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--bd2)'">
+          <div style="font-size:30px;margin-bottom:10px">🎶</div>
+          <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">Cultos</div>
+          <div style="font-size:10.5px;color:var(--tx3);margin-top:3px">programação</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ctit">Minhas Solicitações Recentes <span class="cact" onclick="area_dash_load()">↻ Atualizar</span></div>
+        <div id="area-dash-dem"><div style="color:var(--tx3);font-size:11.5px;padding:16px 0">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="v-area-agenda">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(42,181,192,0.12);border-color:rgba(42,181,192,0.25)">🗓</div>
+      <div>
+        <div class="hero-lbl">Área do Membro</div>
+        <div class="hero-ttl">Agenda</div>
+        <div class="hero-dsc">Próximos eventos, cultos e compromissos da IPPenha</div>
+      </div>
+      <div class="hero-act"><button class="tbt" onclick="go('area-dash')">← Voltar</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--gr)">
+      <div class="ini" onclick="go('area-dash')">Início</div>
+      <div class="ini on">Agenda</div>
+      <div class="ini" onclick="go('area-min')">Ministérios</div>
+      <div class="ini" onclick="go('area-pgs')">Meu PG</div>
+      <div class="ini" onclick="go('area-dem')">Solicitações</div>
+    </div>
+    <div class="ct">
+      <div class="alr alr-w"><div class="alr-i">ℹ</div><div>Esta seção exibe os próximos eventos confirmados da igreja. Para solicitar um agendamento ou espaço, use <strong>+ Nova Solicitação</strong> no painel principal.</div></div>
+      <div class="card">
+        <div class="ctit">Próximos Eventos <span class="cact" onclick="go('agenda-confirmados')">ver todos →</span></div>
+        <div id="area-agenda-list"><div style="color:var(--tx3);font-size:11.5px;padding:16px 0">Carregando eventos...</div></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="ctit">Acesso Rápido à Agenda</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+          <button class="tbt" onclick="go('agenda-confirmados')">📅 Eventos Confirmados</button>
+          <button class="tbt" onclick="go('agenda-calendario')">🗓 Calendário Geral</button>
+          <button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Solicitar Agendamento</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="v-area-min">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(139,111,212,0.12);border-color:rgba(139,111,212,0.25)">◉</div>
+      <div>
+        <div class="hero-lbl">Área do Membro</div>
+        <div class="hero-ttl">Meus Ministérios</div>
+        <div class="hero-dsc">Ministérios e escalas de serviço na IPPenha</div>
+      </div>
+      <div class="hero-act"><button class="tbt" onclick="go('area-dash')">← Voltar</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--gr)">
+      <div class="ini" onclick="go('area-dash')">Início</div>
+      <div class="ini" onclick="go('area-agenda')">Agenda</div>
+      <div class="ini on">Ministérios</div>
+      <div class="ini" onclick="go('area-pgs')">Meu PG</div>
+      <div class="ini" onclick="go('area-dem')">Solicitações</div>
+    </div>
+    <div class="ct">
+      <div class="alr alr-w"><div class="alr-i">ℹ</div><div>Veja abaixo os ministérios ativos da IPPenha. Para participar de um ministério, entre em contato com o líder responsável ou solicite via <strong>+ Nova Solicitação</strong>.</div></div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Ministérios Ativos</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+            <div style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:10px 12px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="color:var(--violet)">♪</span><strong style="font-size:12px">Louvor e Adoração</strong></div>
+              <div style="font-size:10.5px;color:var(--tx3)">Líder: Ana Lima · 28 membros · Ensaios: Sáb 19h</div>
+            </div>
+            <div style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:10px 12px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="color:var(--teal)">◈</span><strong style="font-size:12px">O Movimento (UMP)</strong></div>
+              <div style="font-size:10.5px;color:var(--tx3)">Líder: Lucas Ferreira · 89 membros · Sáb 19h30</div>
+            </div>
+            <div style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:10px 12px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="color:var(--rose)">✦</span><strong style="font-size:12px">SAF</strong></div>
+              <div style="font-size:10.5px;color:var(--tx3)">Presidente: Elisa Santos · 54 membros · Qua 16h</div>
+            </div>
+            <div style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:10px 12px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="color:var(--amber)">◉</span><strong style="font-size:12px">SOS (Adolescentes)</strong></div>
+              <div style="font-size:10.5px;color:var(--tx3)">Líder: Marcos Dias · 41 adolescentes · Sex 19h</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ctit">Acesso Rápido</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+            <button class="tbt" onclick="go('min-min')">◉ Ver todos os Ministérios</button>
+            <button class="tbt" onclick="go('min-esc')">📅 Escalas de Serviço</button>
+            <button class="tbt" onclick="go('min-prog')">📋 Programações</button>
+            <button class="tbt" onclick="go('min-vol')">🙌 Voluntários</button>
+            <button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Solicitar inclusão em Ministério</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="v-area-pgs">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(82,196,110,0.12);border-color:rgba(82,196,110,0.25)">⌂</div>
+      <div>
+        <div class="hero-lbl">Área do Membro</div>
+        <div class="hero-ttl">Meu PG</div>
+        <div class="hero-dsc">Informações do seu Pequeno Grupo de discipulado</div>
+      </div>
+      <div class="hero-act"><button class="tbt" onclick="go('area-dash')">← Voltar</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--gr)">
+      <div class="ini" onclick="go('area-dash')">Início</div>
+      <div class="ini" onclick="go('area-agenda')">Agenda</div>
+      <div class="ini" onclick="go('area-min')">Ministérios</div>
+      <div class="ini on">Meu PG</div>
+      <div class="ini" onclick="go('area-dem')">Solicitações</div>
+    </div>
+    <div class="ct">
+      <div class="alr alr-w"><div class="alr-i">ℹ</div><div>Seu PG é definido pelo seu líder de célula. Se ainda não participa de um PG, entre em contato com a secretaria ou faça uma solicitação abaixo.</div></div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Informações do PG</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+            <div class="sr"><span class="sl">Nome do PG</span><span class="sv" id="area-pg-nome">—</span></div>
+            <div class="sr"><span class="sl">Líder</span><span class="sv" id="area-pg-lider">—</span></div>
+            <div class="sr"><span class="sl">Encontros</span><span class="sv" id="area-pg-encontros">—</span></div>
+            <div class="sr"><span class="sl">Local</span><span class="sv" id="area-pg-local">—</span></div>
+            <div class="sr"><span class="sl">Estudo atual</span><span class="sv" id="area-pg-estudo">—</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ctit">Próximos Encontros</div>
+          <div id="area-pg-prox" style="margin-top:10px"><div style="color:var(--tx3);font-size:11.5px">Nenhum encontro agendado</div></div>
+          <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+            <button class="tbt" onclick="go('pgs-lista')">⌂ Ver todos os PGs</button>
+            <button class="tbt" onclick="go('pgs-estudos')">📖 Material de Estudo</button>
+            <button class="tbt" onclick="go('pgs-oracao')">🙏 Pedidos de Oração</button>
+            <button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Solicitar participação em PG</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="v-area-dem">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(224,85,85,0.12);border-color:rgba(224,85,85,0.25)">📋</div>
+      <div>
+        <div class="hero-lbl">Área do Membro</div>
+        <div class="hero-ttl">Minhas Solicitações</div>
+        <div class="hero-dsc">Acompanhe o status das suas solicitações e demandas</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt" onclick="go('area-dash')">← Voltar</button>
+        <button class="tbt pri" onclick="abrirModalNovaDemanda()" style="margin-left:8px">+ Nova Solicitação</button>
+      </div>
+    </div>
+    <div class="inav" style="--mc:var(--gr)">
+      <div class="ini" onclick="go('area-dash')">Início</div>
+      <div class="ini" onclick="go('area-agenda')">Agenda</div>
+      <div class="ini" onclick="go('area-min')">Ministérios</div>
+      <div class="ini" onclick="go('area-pgs')">Meu PG</div>
+      <div class="ini on">Solicitações</div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Todas as Solicitações <span class="cact" onclick="window.demFiltrar('area-dem-content',{})">↻ Atualizar</span></div>
+        <div id="area-dem-content"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="view" id="v-generic">
     <div class="ct" style="padding-top:56px;text-align:center">
       <div style="font-size:36px;margin-bottom:12px;opacity:.3">🚧</div>
@@ -3846,7 +4098,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 </div>
 
 <script>
-const MC={geral:"var(--gmd)",admin:"var(--gold)",fin:"var(--gr)",jur:"var(--blue)",conselho:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)",cong:"var(--gr)",diac:"var(--copper)"};
+const MC={geral:"var(--gmd)",admin:"var(--gold)",fin:"var(--gr)",jur:"var(--blue)",conselho:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)",cong:"var(--gr)",diac:"var(--copper)",area:"var(--gr)"};
 const CRUMB={
   geral:["","Dashboard Geral","/ IPPenha · visão executiva consolidada"],
   "admin-dash":["Administrativo","Dashboard","/ visão do módulo"],
@@ -3945,9 +4197,14 @@ const CRUMB={
   "memb-cad":["Membresia","Cadastro de Membros",""],
   "memb-bat":["Membresia","Batismos",""],
   "memb-vis":["Membresia","Visitantes",""],
+  "area-dash": ["Área do Membro","Painel Pessoal","/ bem-vindo"],
+  "area-agenda":["Área do Membro","Agenda","/ próximos compromissos"],
+  "area-min":  ["Área do Membro","Meus Ministérios","/ serviço e escala"],
+  "area-pgs":  ["Área do Membro","Meu PG","/ pequeno grupo"],
+  "area-dem":  ["Área do Membro","Minhas Solicitações","/ pedidos e demandas"],
 };
 const SL={dash:"Dashboard",diaconos:"Diáconos",escalas:"Escalas de Serviço",familias:"Famílias Assistidas",social:"Ação Social e Beneficência",visitacao:"Visitação Diaconal",patrimonio:"Patrimônio e Apoio Operacional",solicitacoes:"Solicitações Diaconais",relatorios:"Relatórios Diaconais",historico:"Histórico e Atas",sec:"Secretaria e Cadastro",rh:"RH / Gestão de Pessoas",doc:"Documentos",aud:"Auditoria",fin:"Financeiro",con:"Contratos",est:"Controle de Estoque",demandas:"Processos e Demandas Jurídicas",contratos:"Contratos e Instrumentos",pareceres:"Pareceres",documentos:"Documentos Jurídicos",riscos:"Riscos e Pendências",historico:"Histórico",rel:"Relatórios Estratégicos",ind:"Indicadores",cong:"Congregações",nomeados:"Nomeados",ordenados:"Ordenados",ate:"Atendimentos",ora:"Pedidos de Oração",aco:"Acompanhamentos",reg:"Registros Pastorais",pri:"Casos Prioritários",min:"Ministérios",lid:"Liderança Ministerial",esc:"Escalas",prog:"Programações",lit:"Liturgia dos Cultos",vol:"Voluntários",calendario:"Calendário Geral",solicitacoes:"Solicitações de Agendamento",aprovacoes:"Aprovações Pendentes",confirmados:"Eventos Confirmados",recusados:"Eventos Recusados",reagendamentos:"Reagendamentos e Ajustes",ambientes:"Ambientes e Recursos",conflitos:"Conflitos de Agenda",config:"Configurações da Agenda",lista:"Lista de PGs",encontros:"Encontros",participantes:"Participantes",visitantes:"Visitantes",estudos:"Estudos",relatorios:"Relatórios",oracao:"Pedidos de Oração",man:"Manutenção",lim:"Limpeza e Conservação",sol:"Solicitações Operacionais",pat:"Patrimônio",pre:"Prestadores",todas:"Todas as Solicitações",pend:"Pendentes",and:"Em Andamento",conc:"Concluídas",hist:"Histórico",mod:"Por Módulo",exp:"Exportações",uni:"Por Congregação",res:"Por Responsável",cad:"Cadastro de Membros",bat:"Batismos",prof:"Profissões de Fé",trans:"Transferências",vis:"Visitantes"};
-const MN={admin:"Administrativo",fin:"Financeiro",jur:"Jurídico",conselho:"Conselho",pastoral:"Pastoral",min:"Ministerial",agenda:"Agenda",pgs:"Pequenos Grupos",infra:"Infraestrutura e Conservação",dem:"Demandas",rel:"Relatórios",memb:"Membresia",cong:"Congregações",diac:"Junta Diaconal"};
+const MN={admin:"Administrativo",fin:"Financeiro",jur:"Jurídico",conselho:"Conselho",pastoral:"Pastoral",min:"Ministerial",agenda:"Agenda",pgs:"Pequenos Grupos",infra:"Infraestrutura e Conservação",dem:"Demandas",rel:"Relatórios",memb:"Membresia",cong:"Congregações",diac:"Junta Diaconal",area:"Área do Membro"};
 
 function go(id){
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
@@ -4855,6 +5112,7 @@ const PERMISSOES_MATRIZ = {
   "Membresia":         { admin_geral:"full", conselho:"read",       pastoral:"full",       adm_operacional:"full",       lider_ministerio:"read",      membro_ministerio:false,       operacional_servicos:false,        membro_igreja:false },
   "Estoque":           { admin_geral:"full", conselho:"read",       pastoral:false,        adm_operacional:"full",       lider_ministerio:false,       membro_ministerio:false,       operacional_servicos:"restricted", membro_igreja:false },
   "Configurações":     { admin_geral:"full", conselho:false,        pastoral:false,        adm_operacional:false,        lider_ministerio:false,       membro_ministerio:false,       operacional_servicos:false,        membro_igreja:false },
+  "Área do Membro":   { admin_geral:"full", conselho:"restricted", pastoral:"restricted", adm_operacional:"restricted", lider_ministerio:"restricted", membro_ministerio:"restricted", operacional_servicos:"restricted", membro_igreja:"restricted" },
 };
 
 /* Usuário logado atual */
@@ -4970,14 +5228,14 @@ function atualizarSidebarUsuario() {
 
 /* ── PERMISSÕES ────────────────────────────── */
 const MODULOS_PERFIL = {
-  admin_geral:         ["geral","admin","fin","jur","conselho","diac","pastoral","min","agenda","pgs","infra","dem","rel","memb","config","cong"],
-  conselho:            ["geral","conselho","diac","fin","rel","dem","memb","pastoral","min","pgs","cong"],
-  pastoral:            ["geral","pastoral","diac","memb","pgs","dem","min","agenda","cong"],
-  adm_operacional:     ["geral","admin","fin","dem","rel","memb","agenda","infra","cong"],
-  lider_ministerio:    ["geral","min","agenda","dem","pgs","cong"],
-  membro_ministerio:   ["geral","min","agenda","dem","cong"],
-  operacional_servicos:["geral","infra","dem"],
-  membro_igreja:       ["geral","dem"],
+  admin_geral:         ["geral","admin","fin","jur","conselho","diac","pastoral","min","agenda","pgs","infra","dem","rel","memb","config","cong","area"],
+  conselho:            ["geral","conselho","diac","fin","rel","dem","memb","pastoral","min","pgs","cong","area"],
+  pastoral:            ["geral","pastoral","diac","memb","pgs","dem","min","agenda","cong","area"],
+  adm_operacional:     ["geral","admin","fin","dem","rel","memb","agenda","infra","cong","area"],
+  lider_ministerio:    ["geral","min","agenda","dem","pgs","cong","area"],
+  membro_ministerio:   ["geral","min","agenda","dem","cong","area"],
+  operacional_servicos:["geral","infra","dem","area"],
+  membro_igreja:       ["geral","dem","area"],
 };
 
 function aplicarPermissoes() {
@@ -6246,6 +6504,57 @@ async function carregarConfigAgenda() {
 }
 
 
+// ── ÁREA DO MEMBRO — DASHBOARD ─────────────────
+function _areaDashLoad() {
+  // Saudação personalizada
+  const nome = USUARIO_ATUAL?.nome?.split(" ")[0] || "Membro";
+  const hora = new Date().getHours();
+  const saud = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
+  const el = document.getElementById("area-saudacao");
+  if (el) el.textContent = `${saud}, ${nome}!`;
+
+  // KPIs via demandas.js (exposto via window.area_dash_load_kpi se disponível)
+  if (typeof window._area_kpi_load === "function") window._area_kpi_load();
+
+  // Agenda: carrega próximos eventos confirmados
+  _areaCarregarAgenda();
+}
+
+async function _areaCarregarAgenda() {
+  const el = document.getElementById("area-agenda-list");
+  if (!el) return;
+  try {
+    const today = new Date().toISOString().slice(0,10);
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/AGENDA?data_inicio=gte.${today}&status=eq.confirmado&order=data_inicio.asc&limit=5&select=titulo,data_inicio,local`, { headers: apiHeaders() });
+    const rows = await res.json();
+    if (!Array.isArray(rows) || !rows.length) {
+      el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Nenhum evento confirmado nos próximos dias.</div>`;
+      return;
+    }
+    el.innerHTML = rows.map(r => {
+      const d = r.data_inicio ? new Date(r.data_inicio).toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit"}) : "—";
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd1)">
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--tx1)">${r.titulo||"—"}</div>
+          <div style="font-size:10.5px;color:var(--tx3)">${r.local||""}</div>
+        </div>
+        <span style="font-size:10.5px;color:var(--teal);white-space:nowrap;margin-left:12px">${d}</span>
+      </div>`;
+    }).join("");
+    // Atualiza KPI de próximo evento
+    const kpiEl = document.getElementById("area-kpi-evento");
+    const kpiData = document.getElementById("area-kpi-evento-data");
+    if (kpiEl && rows[0]) {
+      kpiEl.textContent = rows[0].titulo?.split(" ").slice(0,2).join(" ") || "—";
+      const d = new Date(rows[0].data_inicio).toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"});
+      if (kpiData) kpiData.textContent = d;
+    }
+  } catch(e) {
+    if (el) el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Erro ao carregar agenda.</div>`;
+  }
+}
+window.area_dash_load = function() { _areaDashLoad(); };
+
 // ── GO() OVERRIDE CONSOLIDADO ──────────────────
 const _goBase = go; // captura a função original
 window.go = function(id) {
@@ -6266,6 +6575,7 @@ window.go = function(id) {
   if (id === "rel-ind")       carregarIndicadoresGerais();
 
   if (id === "config-permissoes")     renderMatrizPermissoes();
+  if (id === "area-dash")             _areaDashLoad();
 };
 
 // CRUMBs adicionais
@@ -6282,6 +6592,12 @@ CRUMB["config-usuarios"]      = ["Configurações","Usuários e Acessos","/ perf
 CRUMB["config-permissoes"]    = ["Configurações","Permissões por Módulo","/ matriz de acesso"];
 CRUMB["config-auditoria"]     = ["Configurações","Auditoria de Acessos","/ log completo"];
 MN["config"] = "Configurações";
+MN["area"]   = "Área do Membro";
+CRUMB["area-dash"]   = ["Área do Membro","Painel Pessoal","/ bem-vindo"];
+CRUMB["area-agenda"] = ["Área do Membro","Agenda","/ próximos compromissos"];
+CRUMB["area-min"]    = ["Área do Membro","Meus Ministérios","/ serviço e escala"];
+CRUMB["area-pgs"]    = ["Área do Membro","Meu PG","/ pequeno grupo"];
+CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e demandas"];
 
 
 

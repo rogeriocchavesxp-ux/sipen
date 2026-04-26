@@ -372,6 +372,7 @@
       "jur-demandas-jur-content":         "jur-demandas-jur",
       "pastoral-demandas-content":        "pastoral-demandas",
       "pastoral-demandas-pas-content":    "pastoral-demandas-pas",
+      "area-dem-content":                 "area-dem",
     };
     return MAP[elId] || "dem-todas";
   }
@@ -696,6 +697,35 @@
   }
   window.infra_dash_load = function() { _renderInfraDash(); };
 
+  window._area_kpi_load = async function() {
+    if (!_cache.length) await _load();
+    const abertas = _cache.filter(r => ["ABERTA","EM_ANALISE","EM_ANDAMENTO"].includes(_toDb(r.status))).length;
+    const kpi = document.getElementById("area-kpi-dem");
+    if (kpi) kpi.textContent = abertas;
+
+    const elDem = document.getElementById("area-dash-dem");
+    if (!elDem) return;
+    const recentes = [..._cache].sort((a,b) => (b.criado_em||"").localeCompare(a.criado_em||"")).slice(0,6);
+    if (!recentes.length) {
+      elDem.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Nenhuma solicitação registrada.</div>`;
+      return;
+    }
+    elDem.innerHTML = `<table style="width:100%;border-collapse:collapse">
+      <thead><tr>
+        <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Título</th>
+        <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Status</th>
+        <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Área</th>
+        <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Data</th>
+      </tr></thead>
+      <tbody>${recentes.map(r => `<tr style="border-top:1px solid var(--bd1);cursor:pointer" onclick="window.demAbrirDetalhe('${r.id||r._row}','area-dem')">
+        <td style="padding:8px;font-size:11.5px;color:var(--tx1)"><strong>${r.titulo||"—"}</strong></td>
+        <td style="padding:8px">${pillStatus(r.status)}</td>
+        <td style="padding:8px;font-size:11px;color:var(--tx3)">${r.area||"—"}</td>
+        <td style="padding:8px;font-size:10.5px;color:var(--tx3);font-family:var(--mono)">${fmtD(r.criado_em)}</td>
+      </tr>`).join("")}</tbody>
+    </table>`;
+  };
+
   const _origGo = window.go;
   window.go = function(id) {
     _origGo(id);
@@ -718,6 +748,7 @@
       "jur-demandas-jur":         () => renderLista("jur-demandas-jur-content",        { area:"Jurídico" }),
       "pastoral-demandas":        () => renderLista("pastoral-demandas-content"),
       "pastoral-demandas-pas":    () => renderLista("pastoral-demandas-pas-content",   { area:"Pastoral" }),
+      "area-dem":                 () => renderLista("area-dem-content"),
     };
     if (MAP[id]) MAP[id]();
   };
