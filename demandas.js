@@ -362,8 +362,10 @@
       "dem-conc-content":          "dem-conc",
       "dem-pri-content":           "dem-pri",
       "dem-hist-content":          "dem-hist",
-      "admin-demandas-content":    "admin-demandas",
-      "admin-demandas-adm-content":"admin-demandas-adm",
+      "admin-demandas-content":         "admin-demandas",
+      "admin-demandas-adm-content":     "admin-demandas-adm",
+      "conselho-demandas-content":      "conselho-demandas",
+      "conselho-demandas-cons-content": "conselho-demandas-cons",
     };
     return MAP[elId] || "dem-todas";
   }
@@ -655,8 +657,10 @@
       "dem-conc":    () => renderLista("dem-conc-content",    { status:"CONCLUIDA" }),
       "dem-pri":          () => renderLista("dem-pri-content",              { prioridade:"Alta" }),
       "dem-hist":         () => renderLista("dem-hist-content"),
-      "admin-demandas":     () => renderLista("admin-demandas-content"),
-      "admin-demandas-adm": () => renderLista("admin-demandas-adm-content", { area:"Administrativo" }),
+      "admin-demandas":          () => renderLista("admin-demandas-content"),
+      "admin-demandas-adm":      () => renderLista("admin-demandas-adm-content",      { area:"Administrativo" }),
+      "conselho-demandas":       () => renderLista("conselho-demandas-content"),
+      "conselho-demandas-cons":  () => renderLista("conselho-demandas-cons-content",  { area:"Conselho" }),
     };
     if (MAP[id]) MAP[id]();
   };

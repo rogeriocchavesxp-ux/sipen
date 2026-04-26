@@ -710,7 +710,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
         <div class="si" onclick="go('conselho-cong')">Acomp. das Congregações</div>
         <div class="si" onclick="go('conselho-hist')">Histórico de Atas e Deliberações</div>
         <div class="sdiv"></div>
-        <div class="si" onclick="go('dem-todas')">Solicitações e Demandas</div>
+        <div class="si" onclick="go('conselho-demandas')">Solicitações e Demandas</div>
       </div>
     </div>
 
@@ -2415,6 +2415,68 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
     </div>
   </div>
 
+  <!-- CONSELHO: SOLICITAÇÕES E DEMANDAS (com abas) -->
+  <div class="view" id="v-conselho-demandas">
+    <div class="hero"><div class="hero-ic" style="background:rgba(88,152,212,0.12)">🏛</div><div><div class="hero-lbl">Conselho e Governança</div><div class="hero-ttl">Solicitações e Demandas</div><div class="hero-dsc">Todas as demandas e as direcionadas ao Conselho e Governança</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="ct">
+      <div class="card">
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
+          <div class="sni on">Todas</div>
+          <div class="sni-sep"></div>
+          <div class="sni" onclick="go('conselho-demandas-cons')">Conselho e Governança</div>
+        </div>
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('conselho-demandas-content')">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="conselho-demandas-content-fstatus" onchange="demFiltrar('conselho-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
+          </select>
+          <select id="conselho-demandas-content-fcat" onchange="demFiltrar('conselho-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as categorias</option>
+            <option>Conselho</option><option>Agendamentos</option><option>Manutenção</option><option>Limpeza e Organização</option><option>Logística</option><option>Financeiro</option><option>Comunicação e Divulgação</option><option>Secretaria</option><option>Cadastro</option><option>Oração e Aconselhamento</option><option>Visitação</option><option>Apoio ao Culto</option><option>Ensino (EBT)</option><option>Ação Social / Hebron</option><option>Administrativo Geral</option>
+          </select>
+          <select id="conselho-demandas-content-fprio" onchange="demFiltrar('conselho-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as prioridades</option>
+            <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
+          </select>
+          <input id="conselho-demandas-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('conselho-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div id="conselho-demandas-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONSELHO: DEMANDAS DO CONSELHO (aba filtrada) -->
+  <div class="view" id="v-conselho-demandas-cons">
+    <div class="hero"><div class="hero-ic" style="background:rgba(88,152,212,0.12)">🏛</div><div><div class="hero-lbl">Conselho e Governança</div><div class="hero-ttl">Demandas do Conselho</div><div class="hero-dsc">Demandas direcionadas ao Conselho e Governança</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="ct">
+      <div class="card">
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
+          <div class="sni" onclick="go('conselho-demandas')">Todas</div>
+          <div class="sni-sep"></div>
+          <div class="sni on">Conselho e Governança</div>
+        </div>
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('conselho-demandas-cons-content',{area:'Conselho'})">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="conselho-demandas-cons-content-fstatus" onchange="demFiltrar('conselho-demandas-cons-content',{area:'Conselho'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
+          </select>
+          <select id="conselho-demandas-cons-content-fprio" onchange="demFiltrar('conselho-demandas-cons-content',{area:'Conselho'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as prioridades</option>
+            <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
+          </select>
+          <input id="conselho-demandas-cons-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('conselho-demandas-cons-content',{area:'Conselho'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div id="conselho-demandas-cons-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
   <!-- DEMANDAS EM ANÁLISE -->
   <div class="view" id="v-dem-analise">
     <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🔍</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Em Análise</div><div class="hero-dsc">Demandas aguardando análise e triagem</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
@@ -3645,8 +3707,10 @@ const CRUMB={
   "infra-lim":["Infraestrutura","Limpeza",""],
   "dem-dash":["Demandas","Dashboard","/ visão geral e métricas"],
   "dem-todas":["Demandas","Todas as Solicitações","/ lista completa"],
-  "admin-demandas":    ["Administrativo","Solicitações e Demandas","/ todas"],
-  "admin-demandas-adm":["Administrativo","Demandas Administrativas","/ filtradas"],
+  "admin-demandas":         ["Administrativo","Solicitações e Demandas","/ todas"],
+  "admin-demandas-adm":     ["Administrativo","Demandas Administrativas","/ filtradas"],
+  "conselho-demandas":      ["Conselho e Governança","Solicitações e Demandas","/ todas"],
+  "conselho-demandas-cons": ["Conselho e Governança","Demandas do Conselho","/ filtradas"],
   "dem-analise":["Demandas","Em Análise","/ triagem e classificação"],
   "dem-and":["Demandas","Em Andamento","/ execução"],
   "dem-conc":["Demandas","Concluídas","/ finalizadas"],
