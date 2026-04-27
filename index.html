@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SIPEN v6.6.0 — Sistema Integrado da IPPenha</title>
+<title>SIPEN v6.7.0 — Sistema Integrado da IPPenha</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -1266,17 +1266,18 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
       </div>
       <!-- Legenda de tipos -->
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-        <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx2)"><span style="display:inline-block;width:10px;height:10px;background:#4a9cf5;border-radius:2px"></span>Culto</div>
-        <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx2)"><span style="display:inline-block;width:10px;height:10px;background:#3aaa5c;border-radius:2px"></span>Atendimento</div>
-        <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx2)"><span style="display:inline-block;width:10px;height:10px;background:#e08a2a;border-radius:2px"></span>Visita</div>
-        <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx2)"><span style="display:inline-block;width:10px;height:10px;background:#8b6fd4;border-radius:2px"></span>Plantão</div>
-        <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx2)"><span style="display:inline-block;width:10px;height:10px;background:#d4a843;border-radius:2px"></span>Evento</div>
-        <div style="margin-left:auto;font-size:10px;color:var(--tx3)">🟢 hoje destacado · 🌅 fins de semana destacados</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx2)"><span style="display:inline-block;width:10px;height:10px;background:#4a9cf5;border-radius:2px"></span>☀️ Domingo Manhã</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx2)"><span style="display:inline-block;width:10px;height:10px;background:#8b6fd4;border-radius:2px"></span>🌙 Domingo Noite</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx2)"><span style="display:inline-block;width:10px;height:10px;background:#2ab5c0;border-radius:2px"></span>🙏 Conexão com Deus</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx2)"><span style="display:inline-block;width:10px;height:10px;background:#d4a843;border-radius:2px"></span>✝️ Tarde da Esperança</div>
+        <div style="margin-left:auto;font-size:10px;color:var(--tx3)">🟢 hoje · clique no culto para editar</div>
       </div>
       <!-- Área principal de conteúdo -->
       <div id="ep-conteudo"></div>
       <!-- Indicadores -->
       <div id="ep-indicadores" style="margin-top:16px"></div>
+      <!-- Modal compartilhado -->
+      <div id="ep-modal" style="display:none"></div>
     </div>
   </div>
 
@@ -6595,472 +6596,442 @@ CRUMB["area-pgs"]    = ["Área do Membro","Meu PG","/ pequeno grupo"];
 CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e demandas"];
 
 /* ═══════════════════════════════════════════════════════════════
-   ESCALA PASTORAL — módulo dinâmico
-   Navegação multi-período · 3 modos · indicadores de carga
+   ESCALA DE PREGAÇÃO v2.0 — Supabase · CRUD · Geração automática
+   Tabelas: pastores, escala_pregacao
 ═══════════════════════════════════════════════════════════════ */
 (function () {
 
-  /* ── Base de dados da escala ─────────────────────────────────── */
-  const _D = [
-    // ── Abril 2026 ──────────────────────────────────────────────
-    {id:"e001",data:"2026-04-05",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e002",data:"2026-04-05",tipo:"culto",turno:"noite",   pastor:"Rev. Carlos Lima",       local:"Templo Principal",obs:""},
-    {id:"e003",data:"2026-04-07",tipo:"culto",turno:"tarde",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e004",data:"2026-04-12",tipo:"culto",turno:"manhã",   pastor:"Rev. Flávio Ramos",      local:"Templo Principal",obs:""},
-    {id:"e005",data:"2026-04-12",tipo:"culto",turno:"noite",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e006",data:"2026-04-14",tipo:"culto",turno:"tarde",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e007",data:"2026-04-15",tipo:"atendimento",turno:"",  pastor:"Rev. Amauri Oliveira",  local:"Sala Pastoral",   obs:"Aconselhamento"},
-    {id:"e008",data:"2026-04-19",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e009",data:"2026-04-19",tipo:"culto",turno:"noite",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:""},
-    {id:"e010",data:"2026-04-21",tipo:"culto",turno:"tarde",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e011",data:"2026-04-22",tipo:"visita",turno:"",       pastor:"Rev. Fábio Carvalho",   local:"Hospital",        obs:"Visita hospitalar"},
-    {id:"e012",data:"2026-04-26",tipo:"culto",turno:"manhã",   pastor:"Rev. Carlos Henrique",  local:"Templo Principal",obs:""},
-    {id:"e013",data:"2026-04-26",tipo:"culto",turno:"noite",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e014",data:"2026-04-28",tipo:"culto",turno:"tarde",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:"Tarde da Esperança"},
-    // ── Maio 2026 ───────────────────────────────────────────────
-    {id:"e015",data:"2026-05-03",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e016",data:"2026-05-03",tipo:"culto",turno:"noite",   pastor:"Rev. Flávio Ramos",      local:"Templo Principal",obs:""},
-    {id:"e017",data:"2026-05-05",tipo:"culto",turno:"tarde",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e018",data:"2026-05-10",tipo:"culto",turno:"manhã",   pastor:"Rev. Carlos Lima",       local:"Templo Principal",obs:""},
-    {id:"e019",data:"2026-05-10",tipo:"culto",turno:"noite",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e020",data:"2026-05-12",tipo:"culto",turno:"tarde",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e021",data:"2026-05-13",tipo:"atendimento",turno:"",  pastor:"Rev. Amauri Oliveira",  local:"Sala Pastoral",   obs:""},
-    {id:"e022",data:"2026-05-17",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e023",data:"2026-05-17",tipo:"culto",turno:"noite",   pastor:"Rev. Carlos Henrique",  local:"Templo Principal",obs:""},
-    {id:"e024",data:"2026-05-19",tipo:"culto",turno:"tarde",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e025",data:"2026-05-20",tipo:"visita",turno:"",       pastor:"Rev. Cornélio Castro",   local:"Externo",         obs:"Visita pastoral"},
-    {id:"e026",data:"2026-05-24",tipo:"culto",turno:"manhã",   pastor:"Rev. Flávio Ramos",      local:"Templo Principal",obs:""},
-    {id:"e027",data:"2026-05-24",tipo:"culto",turno:"noite",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:""},
-    {id:"e028",data:"2026-05-26",tipo:"culto",turno:"tarde",   pastor:"Rev. Carlos Lima",       local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e029",data:"2026-05-31",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e030",data:"2026-05-31",tipo:"culto",turno:"noite",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:""},
-    // ── Junho 2026 ──────────────────────────────────────────────
-    {id:"e031",data:"2026-06-02",tipo:"culto",turno:"tarde",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e032",data:"2026-06-07",tipo:"culto",turno:"manhã",   pastor:"Rev. Carlos Lima",       local:"Templo Principal",obs:""},
-    {id:"e033",data:"2026-06-07",tipo:"culto",turno:"noite",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e034",data:"2026-06-09",tipo:"culto",turno:"tarde",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e035",data:"2026-06-14",tipo:"culto",turno:"manhã",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:""},
-    {id:"e036",data:"2026-06-14",tipo:"culto",turno:"noite",   pastor:"Rev. Flávio Ramos",      local:"Templo Principal",obs:""},
-    {id:"e037",data:"2026-06-16",tipo:"culto",turno:"tarde",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e038",data:"2026-06-21",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e039",data:"2026-06-21",tipo:"culto",turno:"noite",   pastor:"Rev. Carlos Henrique",  local:"Templo Principal",obs:""},
-    {id:"e040",data:"2026-06-23",tipo:"evento",turno:"",       pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:"Retiro Pastoral"},
-    {id:"e041",data:"2026-06-28",tipo:"culto",turno:"manhã",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:""},
-    {id:"e042",data:"2026-06-28",tipo:"culto",turno:"noite",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e043",data:"2026-06-30",tipo:"culto",turno:"tarde",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:"Tarde da Esperança"},
-    // ── Julho 2026 ──────────────────────────────────────────────
-    {id:"e044",data:"2026-07-05",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e045",data:"2026-07-05",tipo:"culto",turno:"noite",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:""},
-    {id:"e046",data:"2026-07-07",tipo:"culto",turno:"tarde",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e047",data:"2026-07-12",tipo:"culto",turno:"manhã",   pastor:"Rev. Flávio Ramos",      local:"Templo Principal",obs:""},
-    {id:"e048",data:"2026-07-12",tipo:"culto",turno:"noite",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e049",data:"2026-07-14",tipo:"culto",turno:"tarde",   pastor:"Rev. Carlos Lima",       local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e050",data:"2026-07-19",tipo:"culto",turno:"manhã",   pastor:"Rev. Carlos Lima",       local:"Templo Principal",obs:""},
-    {id:"e051",data:"2026-07-19",tipo:"culto",turno:"noite",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:""},
-    {id:"e052",data:"2026-07-21",tipo:"culto",turno:"tarde",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e053",data:"2026-07-26",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e054",data:"2026-07-26",tipo:"culto",turno:"noite",   pastor:"Rev. Carlos Henrique",  local:"Templo Principal",obs:""},
-    {id:"e055",data:"2026-07-28",tipo:"culto",turno:"tarde",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:"Tarde da Esperança"},
-    // ── Agosto 2026 ─────────────────────────────────────────────
-    {id:"e056",data:"2026-08-02",tipo:"culto",turno:"manhã",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:""},
-    {id:"e057",data:"2026-08-02",tipo:"culto",turno:"noite",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e058",data:"2026-08-04",tipo:"culto",turno:"tarde",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e059",data:"2026-08-09",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e060",data:"2026-08-09",tipo:"culto",turno:"noite",   pastor:"Rev. Flávio Ramos",      local:"Templo Principal",obs:""},
-    {id:"e061",data:"2026-08-11",tipo:"culto",turno:"tarde",   pastor:"Rev. Carlos Lima",       local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e062",data:"2026-08-16",tipo:"culto",turno:"manhã",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:""},
-    {id:"e063",data:"2026-08-16",tipo:"culto",turno:"noite",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:""},
-    {id:"e064",data:"2026-08-18",tipo:"culto",turno:"tarde",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e065",data:"2026-08-23",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e066",data:"2026-08-23",tipo:"culto",turno:"noite",   pastor:"Rev. Carlos Lima",       local:"Templo Principal",obs:""},
-    {id:"e067",data:"2026-08-25",tipo:"culto",turno:"tarde",   pastor:"Rev. Flávio Ramos",      local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e068",data:"2026-08-30",tipo:"culto",turno:"manhã",   pastor:"Rev. Carlos Henrique",  local:"Templo Principal",obs:""},
-    {id:"e069",data:"2026-08-30",tipo:"culto",turno:"noite",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    // ── Setembro 2026 ───────────────────────────────────────────
-    {id:"e070",data:"2026-09-01",tipo:"culto",turno:"tarde",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e071",data:"2026-09-06",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e072",data:"2026-09-06",tipo:"culto",turno:"noite",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:""},
-    {id:"e073",data:"2026-09-08",tipo:"culto",turno:"tarde",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e074",data:"2026-09-13",tipo:"culto",turno:"manhã",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:""},
-    {id:"e075",data:"2026-09-13",tipo:"culto",turno:"noite",   pastor:"Rev. Flávio Ramos",      local:"Templo Principal",obs:""},
-    {id:"e076",data:"2026-09-15",tipo:"culto",turno:"tarde",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e077",data:"2026-09-20",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e078",data:"2026-09-20",tipo:"culto",turno:"noite",   pastor:"Rev. Carlos Lima",       local:"Templo Principal",obs:""},
-    {id:"e079",data:"2026-09-22",tipo:"culto",turno:"tarde",   pastor:"Rev. Carlos Henrique",  local:"Templo Principal",obs:"Tarde da Esperança"},
-    {id:"e080",data:"2026-09-27",tipo:"culto",turno:"manhã",   pastor:"Rev. Carlos Henrique",  local:"Templo Principal",obs:""},
-    {id:"e081",data:"2026-09-27",tipo:"culto",turno:"noite",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
-    {id:"e082",data:"2026-09-29",tipo:"culto",turno:"tarde",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:"Tarde da Esperança"},
-  ];
+  /* ── Configuração de cultos ──────────────────────────────────── */
+  const _TIPO_SLOT = {
+    domingo_manha:     {label:"Domingo Manhã",      cor:"#4a9cf5", ico:"☀️"},
+    domingo_noite:     {label:"Domingo Noite",      cor:"#8b6fd4", ico:"🌙"},
+    conexao_com_deus:  {label:"Conexão com Deus",   cor:"#2ab5c0", ico:"🙏"},
+    tarde_da_esperanca:{label:"Tarde da Esperança", cor:"#d4a843", ico:"✝️"},
+  };
+  const _STATUS_CFG = {
+    PENDENTE:   {bg:"rgba(212,168,67,.15)",  cl:"#d4a843", label:"Pendente"},
+    PREENCHIDA: {bg:"rgba(74,156,245,.15)",  cl:"#4a9cf5", label:"Preenchida"},
+    CONFIRMADA: {bg:"rgba(58,170,92,.15)",   cl:"#3aaa5c", label:"Confirmada"},
+  };
+  const TC = {
+    domingo_manha:     {bg:"rgba(74,156,245,.13)",  cl:"#4a9cf5"},
+    domingo_noite:     {bg:"rgba(139,111,212,.13)", cl:"#8b6fd4"},
+    conexao_com_deus:  {bg:"rgba(42,181,192,.13)",  cl:"#2ab5c0"},
+    tarde_da_esperanca:{bg:"rgba(212,168,67,.13)",  cl:"#d4a843"},
+  };
+  const PCORES = ["#2ab5c0","#4a9cf5","#8b6fd4","#e08a2a","#e05555","#3aaa5c","#d4a843"];
 
   /* ── Estado ──────────────────────────────────────────────────── */
   const _nowMesKey = (() => { const n=new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}`; })();
   const _st = {
     mes: (() => { const d=new Date(); d.setDate(1); d.setHours(0,0,0,0); return d; })(),
-    modo:"mensal",
-    pastor:"",
+    modo: "mensal",
+    pastor: "",
     openMonths: new Set([_nowMesKey]),
+    loaded: false,
+    loading: false,
   };
+  let _editingSlotKey  = null;
+  let _editingPastorId = null;
 
-  /* ── Pastores oficiais ─────────────────────────────────────────── */
-  const _PASTORES_OFICIAIS = [
-    "Rev. Amauri Oliveira",
-    "Rev. Carlos Henrique",
-    "Rev. Carlos Lima",
-    "Rev. Cornélio Castro",
-    "Rev. Fábio Carvalho",
-    "Rev. Flávio Ramos",
+  /* ── Dados ───────────────────────────────────────────────────── */
+  let _pastores = [];
+  const _escala = new Map(); // "YYYY-MM-DD-culto_tipo" → {id, pastor_id, local, observacoes, status, origem}
+
+  const _SEED_PASTORES = [
+    {id:"p1",nome_completo:"Rev. Amauri Oliveira",  nome_exibicao:"Rev. Amauri",    funcao:"Pastor Presidente", ativo:true},
+    {id:"p2",nome_completo:"Rev. Carlos Henrique",  nome_exibicao:"Rev. C. Henrique",funcao:"Pastor",           ativo:true},
+    {id:"p3",nome_completo:"Rev. Carlos Lima",       nome_exibicao:"Rev. C. Lima",   funcao:"Pastor",            ativo:true},
+    {id:"p4",nome_completo:"Rev. Cornélio Castro",   nome_exibicao:"Rev. Cornélio",  funcao:"Pastor",            ativo:true},
+    {id:"p5",nome_completo:"Rev. Fábio Carvalho",   nome_exibicao:"Rev. Fábio",     funcao:"Pastor",            ativo:true},
+    {id:"p6",nome_completo:"Rev. Flávio Ramos",      nome_exibicao:"Rev. Flávio",    funcao:"Pastor",            ativo:true},
   ];
 
-  /* ── Banco de dados de slots (estado em memória) ──────────────── */
-  const _TIPO_SLOT = {
-    manha:   {label:"Domingo Manhã",      cor:"#4a9cf5", ico:"☀️"},
-    noite:   {label:"Domingo Noite",      cor:"#8b6fd4", ico:"🌙"},
-    conexao: {label:"Conexão com Deus",   cor:"#2ab5c0", ico:"🙏"},
-    tarde:   {label:"Tarde da Esperança", cor:"#d4a843", ico:"✝️"},
-  };
-  const _STATUS_CFG = {
-    pendente:   {bg:"rgba(212,168,67,.15)",  cl:"#d4a843",label:"Pendente"},
-    preenchida: {bg:"rgba(74,156,245,.15)",  cl:"#4a9cf5", label:"Preenchida"},
-    confirmada: {bg:"rgba(58,170,92,.15)",   cl:"#3aaa5c", label:"Confirmada"},
-  };
-  const _slots = new Map(); // key → {pastor, obs, status}
-  // Pré-popular _slots a partir de _D (dados já cadastrados)
-  _D.forEach(item => {
-    if (item.tipo !== "culto") return;
-    const sfx = item.turno==="manhã"?"manha":item.turno==="noite"?"noite":item.turno==="tarde"?"tarde":null;
-    if (!sfx) return;
-    const key = `${item.data}-${sfx}`;
-    _slots.set(key, { pastor: item.pastor||"", obs: item.obs||"", status: item.pastor?"preenchida":"pendente" });
-  });
-
-  /* ── Tipo → visual ───────────────────────────────────────────── */
-  const TC = {
-    culto:       {bg:"rgba(74,156,245,.13)",  cl:"#4a9cf5", ico:"⛪",label:"Culto"},
-    atendimento: {bg:"rgba(58,170,92,.13)",   cl:"#3aaa5c", ico:"🤝",label:"Atendimento"},
-    visita:      {bg:"rgba(224,138,42,.13)",  cl:"#e08a2a", ico:"🏠",label:"Visita"},
-    plantao:     {bg:"rgba(139,111,212,.13)", cl:"#8b6fd4", ico:"📞",label:"Plantão"},
-    evento:      {bg:"rgba(212,168,67,.13)",  cl:"#d4a843", ico:"🎉",label:"Evento"},
-  };
-  const PCORES = ["#2ab5c0","#4a9cf5","#8b6fd4","#e08a2a","#e05555","#3aaa5c","#d4a843"];
-
-  /* ── Helpers ─────────────────────────────────────────────────── */
-  function _addM(d,n){ const r=new Date(d); r.setMonth(r.getMonth()+n); r.setDate(1); return r; }
-  function _fmtMes(d){ return d.toLocaleDateString("pt-BR",{month:"long",year:"numeric"}); }
-  function _iso(d){ return d.toISOString().slice(0,10); }
-  function _today(){ return new Date().toISOString().slice(0,10); }
-  function _pastores(){ return [...new Set(_D.map(e=>e.pastor))].sort(); }
-  function _forDate(s){ return _D.filter(e=>e.data===s&&(!_st.pastor||e.pastor===_st.pastor)); }
-
-  /* ── Pill de evento ──────────────────────────────────────────── */
-  function _pill(item, compact){
-    const t=TC[item.tipo]||TC.culto;
-    if(compact) return `<div style="background:${t.bg};border-left:2px solid ${t.cl};padding:2px 5px;border-radius:3px;margin-top:2px;font-size:9px;color:${t.cl};cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%" title="${item.pastor} · ${t.label}${item.turno?' · '+item.turno:''}" onclick="ep_ver('${item.id}')">${t.ico} ${item.pastor.replace(/Rev\.\s*/,"").split(" ")[0]}</div>`;
-    return `<div style="background:${t.bg};border-left:3px solid ${t.cl};padding:5px 9px;border-radius:5px;margin-top:5px;cursor:pointer;transition:opacity .12s" onclick="ep_ver('${item.id}')" onmouseover="this.style.opacity='.72'" onmouseout="this.style.opacity='1'">
-      <div style="font-size:9px;font-weight:700;color:${t.cl};text-transform:uppercase;letter-spacing:.05em">${t.ico} ${t.label}${item.turno?' · '+item.turno:''}</div>
-      <div style="font-size:11.5px;color:var(--tx1);font-weight:600;margin-top:1px">${item.pastor}</div>
-      <div style="font-size:10px;color:var(--tx3)">${item.local}${item.obs?' · '+item.obs:''}</div>
-    </div>`;
+  /* ── Supabase ────────────────────────────────────────────────── */
+  async function _loadAll() {
+    if (_st.loading) return;
+    _st.loading = true;
+    try {
+      const r = await fetch(`${apiBaseUrl()}/rest/v1/pastores?select=*&order=nome_completo.asc`, {headers:apiHeaders()});
+      if (r.ok) { const d=await r.json(); _pastores=(Array.isArray(d)&&d.length)?d:_SEED_PASTORES; }
+      else _pastores = _SEED_PASTORES;
+    } catch(e) { _pastores = _SEED_PASTORES; }
+    try {
+      const r = await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao?select=*&order=data.asc&limit=3000`, {headers:apiHeaders()});
+      if (r.ok) {
+        const d = await r.json();
+        if (Array.isArray(d)) {
+          _escala.clear();
+          d.forEach(row => {
+            const key = `${row.data}-${row.culto_tipo}`;
+            _escala.set(key, {id:row.id, pastor_id:row.pastor_id||"", local:row.local||"Templo Principal", observacoes:row.observacoes||"", status:row.status||"PENDENTE", origem:row.origem||"manual"});
+          });
+        }
+      }
+    } catch(e) {}
+    _st.loaded = true; _st.loading = false;
+    _render();
   }
 
-  /* ── Grid de um mês ──────────────────────────────────────────── */
-  function _grid(targetMes, compact){
-    const ano=targetMes.getFullYear(), mes=targetMes.getMonth();
-    const today=_today();
-    const lastDay=new Date(ano,mes+1,0).getDate();
-    const firstDow=new Date(ano,mes,1).getDay();
+  async function _upsertSlot(key, fields) {
+    const data = key.slice(0,10), culto_tipo = key.slice(11);
+    if (!culto_tipo) return;
+    const existing = _escala.get(key);
+    const autoStatus = !fields.pastor_id ? "PENDENTE" : (fields.status==="PENDENTE" ? "PREENCHIDA" : fields.status);
+    const payload = {...fields, status:autoStatus};
+    if (existing?.id) {
+      try {
+        await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao?id=eq.${existing.id}`, {method:"PATCH", headers:apiHeaders({"Prefer":"return=minimal"}), body:JSON.stringify(payload)});
+        _escala.set(key, {...existing, ...payload});
+      } catch(e) {}
+    } else {
+      try {
+        const r = await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao`, {method:"POST", headers:apiHeaders({"Prefer":"return=representation"}), body:JSON.stringify({data, culto_tipo, ...payload})});
+        if (r.ok) {
+          const rows = await r.json();
+          const row  = Array.isArray(rows) ? rows[0] : rows;
+          _escala.set(key, {id:row.id, pastor_id:row.pastor_id||"", local:row.local||"Templo Principal", observacoes:row.observacoes||"", status:row.status||"PENDENTE", origem:row.origem||"manual"});
+        }
+      } catch(e) {}
+    }
+  }
+
+  async function _gerarMes(ano, mes) {
+    const ativos = _pastores.filter(p=>p.ativo!==false);
+    if (!ativos.length) return;
+    const slots = _slotsForMes(ano, mes);
+    const novos = slots.filter(s=>!_escala.has(s.key));
+    if (!novos.length) return;
+    const cnt = {};
+    ativos.forEach(p=>{cnt[p.id]=0;});
+    _escala.forEach(s=>{if(s.pastor_id&&cnt[s.pastor_id]!==undefined) cnt[s.pastor_id]++;});
+    let idx = ativos.reduce((mi,p,i)=>(cnt[p.id]<cnt[ativos[mi].id]?i:mi), 0);
+    const inserts = novos.map(slot => {
+      const pastor = ativos[idx % ativos.length]; idx++;
+      return {data:slot.ds, culto_tipo:slot.tipo, pastor_id:pastor.id, local:"Templo Principal", observacoes:"", status:"PENDENTE", origem:"automatico"};
+    });
+    try {
+      await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao`, {method:"POST", headers:apiHeaders({"Prefer":"return=minimal,resolution=ignore-duplicates"}), body:JSON.stringify(inserts)});
+    } catch(e) {}
+    await _loadAll();
+  }
+
+  /* ── Helpers ─────────────────────────────────────────────────── */
+  function _addM(d,n){const r=new Date(d);r.setMonth(r.getMonth()+n);r.setDate(1);return r;}
+  function _fmtMes(d){return d.toLocaleDateString("pt-BR",{month:"long",year:"numeric"});}
+  function _iso(d){return d.toISOString().slice(0,10);}
+  function _today(){return new Date().toISOString().slice(0,10);}
+  function _byId(id){return _pastores.find(p=>p.id===id);}
+  function _nomePastor(id){const p=_byId(id);return p?p.nome_exibicao||p.nome_completo:"—";}
+  function _canEdit(){
+    return (typeof temPermissao==="function"&&temPermissao("Pastoral","full"))||
+           (typeof USUARIO_ATUAL!=="undefined"&&USUARIO_ATUAL?.perfil==="admin_geral");
+  }
+  function _isAdmin(){return typeof USUARIO_ATUAL!=="undefined"&&USUARIO_ATUAL?.perfil==="admin_geral";}
+  function _slotsForMes(ano,mes){
+    const slots=[],last=new Date(ano,mes+1,0).getDate();
+    for(let d=1;d<=last;d++){
+      const dt=new Date(ano,mes,d),dow=dt.getDay(),ds=_iso(dt);
+      if(dow===0){slots.push({ds,tipo:"domingo_manha",key:`${ds}-domingo_manha`});slots.push({ds,tipo:"domingo_noite",key:`${ds}-domingo_noite`});}
+      if(dow===1) slots.push({ds,tipo:"conexao_com_deus",key:`${ds}-conexao_com_deus`});
+      if(dow===3) slots.push({ds,tipo:"tarde_da_esperanca",key:`${ds}-tarde_da_esperanca`});
+    }
+    return slots;
+  }
+  function _forDate(ds){
+    const res=[];
+    Object.keys(_TIPO_SLOT).forEach(tipo=>{
+      const key=`${ds}-${tipo}`;
+      if(_escala.has(key)){
+        const s=_escala.get(key);
+        if(!_st.pastor||s.pastor_id===_st.pastor) res.push({key,tipo,...s});
+      }
+    });
+    return res;
+  }
+
+  /* ── Modal de slot ───────────────────────────────────────────── */
+  function _openSlotModal(key){
+    if(!_canEdit()) return;
+    _editingSlotKey = key;
+    const tipo = key.slice(11), ts = _TIPO_SLOT[tipo]||_TIPO_SLOT.domingo_manha;
+    const st   = _escala.get(key)||{pastor_id:"",local:"Templo Principal",observacoes:"",status:"PENDENTE"};
+    const ativos = _pastores.filter(p=>p.ativo!==false);
+    const dt = new Date(key.slice(0,10)+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"});
+    let opts = `<option value="">— Selecionar pastor —</option>`;
+    ativos.forEach(p=>{opts+=`<option value="${p.id}"${st.pastor_id===p.id?" selected":""}>${p.nome_completo}</option>`;});
+    let sOpts = "";
+    Object.entries(_STATUS_CFG).forEach(([k,v])=>{sOpts+=`<option value="${k}"${st.status===k?" selected":""}>${v.label}</option>`;});
+    const modal = document.getElementById("ep-modal"); if(!modal) return;
+    modal.innerHTML = `<div style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9990;display:flex;align-items:center;justify-content:center" onclick="if(event.target===this)ep_closeModal()"><div style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;width:460px;max-width:94vw;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.4)"><div style="display:flex;align-items:center;gap:10px;margin-bottom:18px"><span style="font-size:20px">${ts.ico}</span><div><div style="font-size:13px;font-weight:700;color:${ts.cor}">${ts.label}</div><div style="font-size:10.5px;color:var(--tx3);text-transform:capitalize">${dt}</div></div><button onclick="ep_closeModal()" style="margin-left:auto;background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer;padding:4px 8px">✕</button></div><div style="display:flex;flex-direction:column;gap:12px"><div><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Pastor</label><select id="ep-modal-pastor" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans)">${opts}</select></div><div><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Local</label><input id="ep-modal-local" type="text" value="${(st.local||"Templo Principal").replace(/"/g,"&quot;")}" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans);box-sizing:border-box"></div><div><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Status</label><select id="ep-modal-status" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans)">${sOpts}</select></div><div><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Observações</label><input id="ep-modal-obs" type="text" value="${(st.observacoes||"").replace(/"/g,"&quot;")}" placeholder="Observações opcionais..." style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans);box-sizing:border-box"></div></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px"><button onclick="ep_closeModal()" style="padding:8px 16px;background:var(--bg-surface);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:12px;cursor:pointer;font-family:var(--sans)">Cancelar</button><button onclick="ep_saveModal()" style="padding:8px 16px;background:var(--teal);border:none;border-radius:6px;color:#fff;font-size:12px;cursor:pointer;font-weight:600;font-family:var(--sans)">Salvar</button></div></div></div>`;
+    modal.style.display = "block";
+  }
+  window.ep_closeModal = function(){const m=document.getElementById("ep-modal");if(m){m.innerHTML="";m.style.display="none";}};
+  window.ep_saveModal  = async function(){
+    const key=_editingSlotKey; if(!key) return;
+    const pastor_id  = document.getElementById("ep-modal-pastor")?.value||"";
+    const local      = document.getElementById("ep-modal-local")?.value||"Templo Principal";
+    const status     = document.getElementById("ep-modal-status")?.value||"PENDENTE";
+    const observacoes= document.getElementById("ep-modal-obs")?.value||"";
+    await _upsertSlot(key, {pastor_id, local, observacoes, status});
+    ep_closeModal(); _render();
+  };
+  window.ep_openSlot = function(key){_openSlotModal(key);};
+
+  /* ── Modal de pastor ─────────────────────────────────────────── */
+  function _openPastorModal(pastor){
+    _editingPastorId = pastor?.id||null;
+    const isNew = !pastor;
+    const v = n=>(n||"").replace(/"/g,"&quot;");
+    const modal = document.getElementById("ep-modal"); if(!modal) return;
+    modal.innerHTML = `<div style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9990;display:flex;align-items:center;justify-content:center" onclick="if(event.target===this)ep_closeModal()"><div style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;width:420px;max-width:94vw;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.4)"><div style="display:flex;align-items:center;margin-bottom:18px"><div style="font-size:13px;font-weight:700;color:var(--tx1)">${isNew?"Novo Pastor":"Editar Pastor"}</div><button onclick="ep_closeModal()" style="margin-left:auto;background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button></div><div style="display:flex;flex-direction:column;gap:12px"><div><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;margin-bottom:4px;display:block">Nome Completo</label><input id="ep-pm-nome" type="text" value="${v(pastor?.nome_completo)}" placeholder="Rev. Nome Sobrenome" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans);box-sizing:border-box"></div><div><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;margin-bottom:4px;display:block">Nome de Exibição</label><input id="ep-pm-exib" type="text" value="${v(pastor?.nome_exibicao)}" placeholder="Rev. Nome" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans);box-sizing:border-box"></div><div><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;margin-bottom:4px;display:block">Função</label><input id="ep-pm-funcao" type="text" value="${v(pastor?.funcao)}" placeholder="Pastor, Diácono, etc." style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans);box-sizing:border-box"></div><div><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;margin-bottom:4px;display:block">Unidade</label><input id="ep-pm-unidade" type="text" value="${v(pastor?.unidade)}" placeholder="Sede, Filial, etc." style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans);box-sizing:border-box"></div><div style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="ep-pm-ativo" ${pastor?.ativo!==false?"checked":""} style="width:14px;height:14px;accent-color:var(--teal)"><label for="ep-pm-ativo" style="font-size:12px;color:var(--tx2)">Pastor ativo (aparece nas escalas)</label></div></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px"><button onclick="ep_closeModal()" style="padding:8px 16px;background:var(--bg-surface);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:12px;cursor:pointer;font-family:var(--sans)">Cancelar</button><button onclick="ep_savePastor()" style="padding:8px 16px;background:var(--teal);border:none;border-radius:6px;color:#fff;font-size:12px;cursor:pointer;font-weight:600;font-family:var(--sans)">Salvar</button></div></div></div>`;
+    modal.style.display = "block";
+  }
+  window.ep_novoPastor   = function(){_openPastorModal(null);};
+  window.ep_editarPastor = function(id){const p=_byId(id);if(p)_openPastorModal(p);};
+  window.ep_savePastor   = async function(){
+    const nome_completo=(document.getElementById("ep-pm-nome")?.value||"").trim();
+    if(!nome_completo){alert("Nome completo é obrigatório.");return;}
+    const payload={nome_completo, nome_exibicao:(document.getElementById("ep-pm-exib")?.value||"").trim(), funcao:(document.getElementById("ep-pm-funcao")?.value||"").trim(), unidade:(document.getElementById("ep-pm-unidade")?.value||"").trim(), ativo:document.getElementById("ep-pm-ativo")?.checked??true};
+    try {
+      const id=_editingPastorId;
+      if(id) await fetch(`${apiBaseUrl()}/rest/v1/pastores?id=eq.${id}`,{method:"PATCH",headers:apiHeaders({"Prefer":"return=minimal"}),body:JSON.stringify(payload)});
+      else   await fetch(`${apiBaseUrl()}/rest/v1/pastores`,{method:"POST",headers:apiHeaders({"Prefer":"return=representation"}),body:JSON.stringify(payload)});
+    } catch(e){alert("Erro ao salvar: "+e.message);return;}
+    ep_closeModal(); await _loadAll();
+  };
+  window.ep_togglePastorAtivo = async function(id,ativo){
+    try{await fetch(`${apiBaseUrl()}/rest/v1/pastores?id=eq.${id}`,{method:"PATCH",headers:apiHeaders({"Prefer":"return=minimal"}),body:JSON.stringify({ativo})});await _loadAll();}catch(e){}
+  };
+
+  /* ── Painel de gerenciamento (admin) ─────────────────────────── */
+  function _renderGerenciarPastores(){
+    if(!_isAdmin()) return "";
+    let h=`<div class="card" style="margin-bottom:14px"><div class="ctit" style="display:flex;align-items:center">Gerenciar Pastores <span class="csub">/ cadastro e ativação</span><button onclick="ep_novoPastor()" style="margin-left:auto;padding:5px 12px;background:var(--teal);border:none;border-radius:5px;color:#fff;font-size:11px;cursor:pointer;font-weight:600">+ Novo</button></div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">`;
+    _pastores.forEach(p=>{
+      const cor=p.ativo!==false?"#3aaa5c":"#888";
+      h+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-surface);border:1px solid var(--bd2);border-radius:7px;min-width:200px"><span style="color:${cor};font-size:12px">●</span><div style="flex:1;min-width:0"><div style="font-size:11.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nome_completo}</div><div style="font-size:9.5px;color:var(--tx3)">${p.funcao||""}</div></div><button onclick="ep_editarPastor('${p.id}')" style="background:none;border:1px solid var(--bd2);border-radius:4px;color:var(--tx3);font-size:10px;padding:3px 7px;cursor:pointer">✏️</button><button onclick="ep_togglePastorAtivo('${p.id}',${!p.ativo})" style="background:none;border:1px solid var(--bd2);border-radius:4px;color:${p.ativo!==false?"var(--rose)":"var(--gr)"};font-size:10px;padding:3px 7px;cursor:pointer">${p.ativo!==false?"Desativar":"Ativar"}</button></div>`;
+    });
+    return h+`</div></div>`;
+  }
+
+  /* ── Pills de calendário ─────────────────────────────────────── */
+  function _pill(item,compact){
+    const t=TC[item.tipo]||TC.domingo_manha, ts=_TIPO_SLOT[item.tipo]||_TIPO_SLOT.domingo_manha;
+    const nomeP=item.pastor_id?_nomePastor(item.pastor_id):"—";
+    const shortN=nomeP.replace(/Rev\.\s*/,"").split(" ")[0];
+    if(compact) return `<div style="background:${t.bg};border-left:2px solid ${t.cl};padding:2px 5px;border-radius:3px;margin-top:2px;font-size:9px;color:${t.cl};cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%" title="${nomeP} · ${ts.label}" onclick="ep_openSlot('${item.key}')">${ts.ico} ${shortN}</div>`;
+    return `<div style="background:${t.bg};border-left:3px solid ${t.cl};padding:5px 9px;border-radius:5px;margin-top:5px;cursor:pointer;transition:opacity .12s" onclick="ep_openSlot('${item.key}')" onmouseover="this.style.opacity='.72'" onmouseout="this.style.opacity='1'"><div style="font-size:9px;font-weight:700;color:${t.cl};text-transform:uppercase;letter-spacing:.05em">${ts.ico} ${ts.label}</div><div style="font-size:11.5px;color:var(--tx1);font-weight:600;margin-top:1px">${nomeP}</div></div>`;
+  }
+  function _pillEmpty(ds,tipo){
+    if(!_canEdit()) return "";
+    const t=TC[tipo]||TC.domingo_manha, ts=_TIPO_SLOT[tipo]||_TIPO_SLOT.domingo_manha;
+    return `<div style="border:1px dashed ${t.cl}44;padding:2px 5px;border-radius:3px;margin-top:2px;font-size:9px;color:${t.cl}88;cursor:pointer" onclick="ep_openSlot('${ds}-${tipo}')" title="Adicionar ${ts.label}">${ts.ico} +</div>`;
+  }
+
+  /* ── Grid calendário ─────────────────────────────────────────── */
+  function _grid(targetMes,compact){
+    const ano=targetMes.getFullYear(),mes=targetMes.getMonth();
+    const today=_today(),lastDay=new Date(ano,mes+1,0).getDate(),firstDow=new Date(ano,mes,1).getDay();
     const DIAS=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
     let h=`<div style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:8px;overflow:hidden">`;
     h+=`<div style="display:grid;grid-template-columns:repeat(7,1fr);background:var(--bg-surface);border-bottom:1px solid var(--bd1)">`;
-    DIAS.forEach((d,i)=>{ h+=`<div style="padding:${compact?'5px':'7px'} 4px;text-align:center;font-size:${compact?'8.5':'9.5'}px;font-weight:700;color:${i===0||i===6?'var(--tx2)':'var(--tx3)'};text-transform:uppercase">${compact?d[0]:d}</div>`; });
+    DIAS.forEach((d,i)=>{h+=`<div style="padding:${compact?'5px':'7px'} 4px;text-align:center;font-size:${compact?'8.5':'9.5'}px;font-weight:700;color:${i===0||i===6?'var(--tx2)':'var(--tx3)'};text-transform:uppercase">${compact?d[0]:d}</div>`;});
     h+=`</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--bd1)">`;
     const mh=compact?"60px":"88px";
     for(let i=0;i<firstDow;i++) h+=`<div style="min-height:${mh};background:var(--bg-body)"></div>`;
     for(let day=1;day<=lastDay;day++){
       const ds=`${ano}-${String(mes+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
-      const dow=(firstDow+day-1)%7;
-      const isToday=ds===today, isWe=dow===0||dow===6;
-      const items=_forDate(ds);
+      const dow=(firstDow+day-1)%7, isToday=ds===today, isWe=dow===0||dow===6;
       const bg=isToday?"rgba(58,170,92,0.07)":isWe?"rgba(255,255,255,0.02)":"var(--bg-card)";
       h+=`<div style="min-height:${mh};background:${bg};padding:${compact?'4':'5'}px;border-top:2px solid ${isToday?'#3aaa5c':'transparent'}">`;
-      if(isToday) h+=`<span style="display:inline-flex;align-items:center;justify-content:center;width:${compact?'16':'20'}px;height:${compact?'16':'20'}px;background:#3aaa5c;color:#fff;border-radius:50%;font-size:${compact?'9':'10.5'}px;font-weight:800">${day}</span>`;
-      else h+=`<span style="font-size:${compact?'9.5':'11'}px;font-weight:600;color:${isWe?'var(--tx2)':'var(--tx3)'}">${day}</span>`;
-      items.forEach(item=>{ h+=_pill(item,compact||false); });
+      h+=isToday?`<span style="display:inline-flex;align-items:center;justify-content:center;width:${compact?'16':'20'}px;height:${compact?'16':'20'}px;background:#3aaa5c;color:#fff;border-radius:50%;font-size:${compact?'9':'10.5'}px;font-weight:800">${day}</span>`:
+                 `<span style="font-size:${compact?'9.5':'11'}px;font-weight:600;color:${isWe?'var(--tx2)':'var(--tx3)'}">${day}</span>`;
+      _forDate(ds).forEach(item=>{h+=_pill(item,compact);});
+      if(!compact){
+        const empties=dow===0?["domingo_manha","domingo_noite"]:dow===1?["conexao_com_deus"]:dow===3?["tarde_da_esperanca"]:[];
+        empties.forEach(tipo=>{if(!_escala.has(`${ds}-${tipo}`)) h+=_pillEmpty(ds,tipo);});
+      }
       h+=`</div>`;
     }
     const trail=(firstDow+lastDay)%7; if(trail>0) for(let i=0;i<7-trail;i++) h+=`<div style="min-height:${mh};background:var(--bg-body)"></div>`;
-    h+=`</div></div>`;
-    return h;
+    return h+`</div></div>`;
   }
 
-  /* ── Modo mensal ─────────────────────────────────────────────── */
-  function _renderMensal(){ return _grid(_st.mes, false); }
-
-  /* ── Modo trimestral ─────────────────────────────────────────── */
+  /* ── Modos de calendário ─────────────────────────────────────── */
+  function _renderMensal(){return _grid(_st.mes,false);}
   function _renderTrimestral(){
     let h=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;overflow-x:auto">`;
-    for(let i=0;i<3;i++){
-      const m=_addM(_st.mes,i);
-      h+=`<div><div style="font-size:12px;font-weight:700;color:var(--tx1);text-transform:capitalize;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid var(--teal)">${_fmtMes(m)}</div>${_grid(m,true)}</div>`;
-    }
+    for(let i=0;i<3;i++){const m=_addM(_st.mes,i);h+=`<div><div style="font-size:12px;font-weight:700;color:var(--tx1);text-transform:capitalize;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid var(--teal)">${_fmtMes(m)}</div>${_grid(m,true)}</div>`;}
     return h+`</div>`;
   }
-
-  /* ── Modo semestral ──────────────────────────────────────────── */
   function _renderSemestral(){
-    const pastores=_pastores();
-    // Coletar todos os domingos dos 6 meses
+    const ps=_pastores.filter(p=>p.ativo!==false);
     const weeks=[];
     for(let mi=0;mi<6;mi++){
-      const m=_addM(_st.mes,mi);
-      const ano=m.getFullYear(), mes=m.getMonth();
-      const last=new Date(ano,mes+1,0).getDate();
-      for(let d=1;d<=last;d++){
-        const dt=new Date(ano,mes,d);
-        if(dt.getDay()===0) weeks.push({ds:_iso(dt),lbl:dt.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"}),mes});
-      }
+      const m=_addM(_st.mes,mi),ano=m.getFullYear(),mes=m.getMonth(),last=new Date(ano,mes+1,0).getDate();
+      for(let d=1;d<=last;d++){const dt=new Date(ano,mes,d);if(dt.getDay()===0) weeks.push({ds:_iso(dt),lbl:dt.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"}),mes});}
     }
-    // Contar escalas por pastor × semana (domingo + terça adjacente)
-    function _cnt(pastor,ds){
-      const sun=new Date(ds+"T12:00:00");
-      const tue=new Date(sun); tue.setDate(tue.getDate()+2);
-      const dates=new Set([ds,_iso(tue)]);
-      return _D.filter(e=>dates.has(e.data)&&e.pastor===pastor).length;
+    function _cnt(pid,ds){
+      const mon=new Date(ds+"T12:00:00"),wed=new Date(ds+"T12:00:00");
+      mon.setDate(mon.getDate()+1); wed.setDate(wed.getDate()+3);
+      const dates=[ds,_iso(mon),_iso(wed)]; let n=0;
+      dates.forEach(d=>Object.keys(_TIPO_SLOT).forEach(tipo=>{const s=_escala.get(`${d}-${tipo}`);if(s?.pastor_id===pid)n++;}));
+      return n;
     }
     const today=_today();
-    let h=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:540px">`;
-    // Cabeçalho com separador por mês
-    h+=`<thead><tr><th style="text-align:left;padding:8px 12px;font-size:10px;color:var(--tx3);font-weight:700;white-space:nowrap;background:var(--bg-card);border-bottom:1px solid var(--bd2);position:sticky;left:0;z-index:2;min-width:140px">Pastor / Semana</th>`;
+    let h=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:540px"><thead><tr><th style="text-align:left;padding:8px 12px;font-size:10px;color:var(--tx3);font-weight:700;white-space:nowrap;background:var(--bg-card);border-bottom:1px solid var(--bd2);position:sticky;left:0;z-index:2;min-width:140px">Pastor / Semana</th>`;
     let lastM=-1;
-    weeks.forEach(w=>{
-      const sep=w.mes!==lastM; lastM=w.mes;
-      h+=`<th style="padding:5px 3px;font-size:9px;color:${w.ds===today?'var(--gr)':'var(--tx3)'};font-weight:600;text-align:center;min-width:40px;background:${sep?"var(--bg-surface)":"var(--bg-card)"};border-bottom:1px solid var(--bd2);border-left:${sep?'2px solid var(--bd2)':'1px solid var(--bd1)'}">${w.lbl}</th>`;
-    });
+    weeks.forEach(w=>{const sep=w.mes!==lastM;lastM=w.mes;h+=`<th style="padding:5px 3px;font-size:9px;color:${w.ds===today?'var(--gr)':'var(--tx3)'};font-weight:600;text-align:center;min-width:40px;background:${sep?"var(--bg-surface)":"var(--bg-card)"};border-bottom:1px solid var(--bd2);border-left:${sep?'2px solid var(--bd2)':'1px solid var(--bd1)'}">${w.lbl}</th>`;});
     h+=`</tr></thead><tbody>`;
-    pastores.forEach((p,pi)=>{
-      const tot=weeks.reduce((s,w)=>s+_cnt(p,w.ds),0);
-      const rowBg=pi%2===0?"var(--bg-card)":"var(--bg-surface)";
-      h+=`<tr style="border-bottom:1px solid var(--bd1)">`;
-      h+=`<td style="padding:7px 12px;font-size:11px;font-weight:600;color:var(--tx1);white-space:nowrap;background:${rowBg};position:sticky;left:0;z-index:1;border-right:1px solid var(--bd2)"><span style="color:${PCORES[pi%PCORES.length]}">●</span> ${p}<span style="color:var(--tx3);font-size:9.5px;margin-left:8px">${tot} total</span></td>`;
+    ps.forEach((p,pi)=>{
+      const tot=weeks.reduce((s,w)=>s+_cnt(p.id,w.ds),0),rowBg=pi%2===0?"var(--bg-card)":"var(--bg-surface)";
+      h+=`<tr style="border-bottom:1px solid var(--bd1)"><td style="padding:7px 12px;font-size:11px;font-weight:600;color:var(--tx1);white-space:nowrap;background:${rowBg};position:sticky;left:0;z-index:1;border-right:1px solid var(--bd2)"><span style="color:${PCORES[pi%PCORES.length]}">●</span> ${p.nome_exibicao||p.nome_completo}<span style="color:var(--tx3);font-size:9.5px;margin-left:8px">${tot} total</span></td>`;
       let lM=-1;
-      weeks.forEach(w=>{
-        const n=_cnt(p,w.ds);
-        const sep=w.mes!==lM; lM=w.mes;
-        const col=n>=3?"#e05555":n===2?"#e08a2a":"#2ab5c0";
-        const cell=n>0?`<div style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:${n>=3?"rgba(224,85,85,.18)":n===2?"rgba(224,138,42,.18)":"rgba(42,181,192,.18)"};color:${col};border-radius:50%;font-size:10.5px;font-weight:700">${n}</div>`:"";
-        h+=`<td style="text-align:center;padding:4px 2px;border-left:${sep?'2px solid var(--bd2)':'1px solid var(--bd1)'};background:${w.ds===today?"rgba(58,170,92,0.05)":"transparent"}">${cell}</td>`;
-      });
+      weeks.forEach(w=>{const n=_cnt(p.id,w.ds),sep=w.mes!==lM;lM=w.mes;const col=n>=3?"#e05555":n===2?"#e08a2a":"#2ab5c0";const cell=n>0?`<div style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:${n>=3?"rgba(224,85,85,.18)":n===2?"rgba(224,138,42,.18)":"rgba(42,181,192,.18)"};color:${col};border-radius:50%;font-size:10.5px;font-weight:700">${n}</div>`:"";h+=`<td style="text-align:center;padding:4px 2px;border-left:${sep?'2px solid var(--bd2)':'1px solid var(--bd1)'};background:${w.ds===today?"rgba(58,170,92,0.05)":"transparent"}">${cell}</td>`;});
       h+=`</tr>`;
     });
-    h+=`</tbody></table></div>`;
-    return h;
+    return h+`</tbody></table></div>`;
   }
 
-  /* ── Indicadores de carga ────────────────────────────────────── */
+  /* ── Indicadores ─────────────────────────────────────────────── */
   function _renderIndicadores(){
     const el=document.getElementById("ep-indicadores"); if(!el) return;
-    const ps=_pastores();
-    const cnt={}; ps.forEach(p=>{ cnt[p]=0; }); _D.forEach(e=>{ if(cnt[e.pastor]!==undefined) cnt[e.pastor]++; });
-    const vals=Object.values(cnt); const total=vals.reduce((s,v)=>s+v,0); const media=total/ps.length; const maxV=Math.max(...vals);
-    const sorted=[...ps].sort((a,b)=>cnt[b]-cnt[a]);
-    let h=`<div class="card"><div class="ctit">Distribuição de Carga por Pastor <span class="csub">/ ${total} escalas cadastradas · média ${Math.round(media)}/pastor</span><span class="cact" onclick="ep_render()">↻</span></div><div class="bars" style="gap:9px;margin-top:12px">`;
+    const ps=_pastores.filter(p=>p.ativo!==false);
+    if(!ps.length){el.innerHTML="";return;}
+    const cnt={};
+    ps.forEach(p=>{cnt[p.id]=0;});
+    _escala.forEach(s=>{if(s.pastor_id&&cnt[s.pastor_id]!==undefined)cnt[s.pastor_id]++;});
+    const vals=Object.values(cnt),total=vals.reduce((s,v)=>s+v,0),media=ps.length>0?total/ps.length:0,maxV=Math.max(...vals,1);
+    const sorted=[...ps].sort((a,b)=>(cnt[b.id]||0)-(cnt[a.id]||0));
+    const semEscala=ps.filter(p=>!cnt[p.id]);
+    const semPastor=[..._escala.values()].filter(s=>!s.pastor_id).length;
+    const pendentes=[..._escala.values()].filter(s=>s.status==="PENDENTE"&&s.pastor_id).length;
+    let alerts="";
+    if(semEscala.length) alerts+=`<div style="background:rgba(224,138,42,.1);border:1px solid rgba(224,138,42,.3);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--amber);margin-bottom:10px">⚠️ Sem escalas: ${semEscala.map(p=>p.nome_exibicao||p.nome_completo).join(", ")}</div>`;
+    if(semPastor) alerts+=`<div style="background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.3);border-radius:6px;padding:8px 12px;font-size:11px;color:#d4a843;margin-bottom:10px">◌ ${semPastor} cultos sem pastor definido</div>`;
+    if(pendentes) alerts+=`<div style="background:rgba(74,156,245,.1);border:1px solid rgba(74,156,245,.3);border-radius:6px;padding:8px 12px;font-size:11px;color:#4a9cf5;margin-bottom:10px">● ${pendentes} escalas aguardando confirmação</div>`;
+    let h=`<div class="card">${alerts}<div class="ctit">Distribuição de Carga <span class="csub">/ ${total} escalas · média ${Math.round(media)}/pastor</span><span class="cact" onclick="ep_render()">↻</span></div><div class="bars" style="gap:9px;margin-top:12px">`;
     sorted.forEach((p,i)=>{
-      const n=cnt[p], pct=maxV>0?Math.round((n/maxV)*100):0;
-      const over=n>media*1.45, under=n<media*0.55;
-      const cor=PCORES[i%PCORES.length];
-      const badge=over?`<span style="background:rgba(224,85,85,.15);color:var(--rose);font-size:8.5px;padding:1px 6px;border-radius:8px;margin-left:6px;font-weight:700">▲ sobrecarregado</span>`:
-                  under?`<span style="background:rgba(224,138,42,.15);color:var(--amber);font-size:8.5px;padding:1px 6px;border-radius:8px;margin-left:6px;font-weight:700">▼ poucas atribuições</span>`:"";
-      h+=`<div><div class="bh"><span class="bn">${p}${badge}</span><span class="bv">${n}</span></div><div class="bt"><div class="bf" style="width:${pct}%;background:${cor}"></div></div></div>`;
+      const n=cnt[p.id]||0,pct=Math.round((n/maxV)*100),over=n>media*1.45,under=n<media*0.55&&n>0,cor=PCORES[i%PCORES.length];
+      const badge=over?`<span style="background:rgba(224,85,85,.15);color:var(--rose);font-size:8.5px;padding:1px 6px;border-radius:8px;margin-left:6px;font-weight:700">▲ sobrecarregado</span>`:under?`<span style="background:rgba(224,138,42,.15);color:var(--amber);font-size:8.5px;padding:1px 6px;border-radius:8px;margin-left:6px;font-weight:700">▼ poucas atribuições</span>`:"";
+      h+=`<div><div class="bh"><span class="bn">${p.nome_exibicao||p.nome_completo}${badge}</span><span class="bv">${n}</span></div><div class="bt"><div class="bf" style="width:${pct}%;background:${cor}"></div></div></div>`;
     });
-    h+=`</div></div>`;
-    el.innerHTML=h;
+    el.innerHTML=h+`</div></div>`;
   }
 
-  /* ── Gera slots de um mês (dom/seg/qua) ─────────────────────── */
-  function _slotsForMes(ano, mes) {
-    const slots = [];
-    const last = new Date(ano, mes+1, 0).getDate();
-    for (let d=1; d<=last; d++) {
-      const dt = new Date(ano, mes, d);
-      const dow = dt.getDay();
-      const ds = _iso(dt);
-      if (dow===0) { // domingo
-        slots.push({ds, tipo:"manha",   key:`${ds}-manha`});
-        slots.push({ds, tipo:"noite",   key:`${ds}-noite`});
+  /* ── Lista (accordion) ───────────────────────────────────────── */
+  function _renderMesSlots(slots,canEdit){
+    if(!slots.length) return `<div style="color:var(--tx3);font-size:11.5px;padding:12px 4px">Nenhum culto neste mês.</div>`;
+    let h="",lastDs="";
+    slots.forEach(slot=>{
+      const st=_escala.get(slot.key)||{pastor_id:"",local:"Templo Principal",observacoes:"",status:"PENDENTE"};
+      const sc=_STATUS_CFG[st.status]||_STATUS_CFG.PENDENTE, tc=_TIPO_SLOT[slot.tipo];
+      const nomeP=st.pastor_id?_nomePastor(st.pastor_id):"";
+      if(slot.ds!==lastDs){
+        lastDs=slot.ds;
+        const dt=new Date(slot.ds+"T12:00:00"),isToday=slot.ds===_today();
+        h+=`<div style="font-size:10.5px;font-weight:700;color:${isToday?"#3aaa5c":"var(--tx3)"};text-transform:capitalize;padding:14px 4px 5px;border-top:1px solid var(--bd1);margin-top:4px">${isToday?"● ":""}${dt.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"2-digit",year:"numeric"})}</div>`;
       }
-      if (dow===1) { // segunda
-        slots.push({ds, tipo:"conexao", key:`${ds}-conexao`});
+      h+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 10px;margin:3px 0;background:var(--bg-card);border-radius:6px;border-left:3px solid ${tc.cor}"><div style="min-width:154px;flex-shrink:0"><span style="font-size:9.5px;font-weight:700;color:${tc.cor};text-transform:uppercase;letter-spacing:.04em">${tc.ico} ${tc.label}</span></div>`;
+      if(canEdit){
+        h+=`<div style="flex:1;min-width:170px;font-size:11.5px;color:${nomeP?"var(--tx1)":"var(--tx3)"};cursor:pointer" onclick="ep_openSlot('${slot.key}')">${nomeP||"— Clique para definir —"}</div>`;
+        h+=`<span style="font-size:9.5px;padding:3px 9px;border-radius:8px;font-weight:700;background:${sc.bg};color:${sc.cl};cursor:pointer" onclick="ep_openSlot('${slot.key}')">${sc.label}</span>`;
+        h+=`<button onclick="ep_openSlot('${slot.key}')" style="background:none;border:1px solid var(--bd2);border-radius:4px;color:var(--tx3);font-size:10px;padding:3px 8px;cursor:pointer">✏️</button>`;
+      }else{
+        h+=`<div style="flex:1;min-width:170px;font-size:11.5px;color:${nomeP?"var(--tx1)":"var(--tx3)"}">${nomeP||"— Não definido —"}</div>`;
+        h+=`<span style="font-size:9.5px;padding:3px 9px;border-radius:8px;font-weight:700;background:${sc.bg};color:${sc.cl}">${sc.label}</span>`;
+        if(st.observacoes) h+=`<span style="font-size:10px;color:var(--tx3);font-style:italic">${st.observacoes}</span>`;
       }
-      if (dow===3) { // quarta
-        slots.push({ds, tipo:"tarde",   key:`${ds}-tarde`});
-      }
-    }
-    return slots;
-  }
-
-  /* ── Linhas de slots de um mês aberto ───────────────────────── */
-  function _renderMesSlots(slots, canEdit) {
-    if (!slots.length) return `<div style="color:var(--tx3);font-size:11.5px;padding:12px 4px">Nenhum culto registrado.</div>`;
-    let h = ""; let lastDs = "";
-    slots.forEach(slot => {
-      const st = _slots.get(slot.key) || {pastor:"", obs:"", status:"pendente"};
-      // Cabeçalho de data
-      if (slot.ds !== lastDs) {
-        lastDs = slot.ds;
-        const dt = new Date(slot.ds+"T12:00:00");
-        const isToday = slot.ds===_today();
-        const dLbl = dt.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"2-digit",year:"numeric"});
-        h += `<div style="font-size:10.5px;font-weight:700;color:${isToday?"#3aaa5c":"var(--tx3)"};text-transform:capitalize;padding:${lastDs===""?"8px":"14px"} 4px 5px;${lastDs===""?"":"border-top:1px solid var(--bd1);margin-top:4px"}">${isToday?"● ":""}${dLbl}</div>`;
-      }
-      // Linha do slot
-      const tc = _TIPO_SLOT[slot.tipo];
-      const sc = _STATUS_CFG[st.status] || _STATUS_CFG.pendente;
-      h += `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 10px;margin:3px 0;background:var(--bg-card);border-radius:6px;border-left:3px solid ${tc.cor}">`;
-      // Tipo
-      h += `<div style="min-width:154px;flex-shrink:0"><span style="font-size:9.5px;font-weight:700;color:${tc.cor};text-transform:uppercase;letter-spacing:.04em">${tc.ico} ${tc.label}</span></div>`;
-      // Pastor
-      if (canEdit) {
-        h += `<select onchange="ep_setPastor('${slot.key}',this.value)" style="flex:1;min-width:170px;background:var(--bg-input);border:1px solid var(--bd2);border-radius:5px;color:var(--tx1);font-size:11.5px;padding:5px 8px;outline:none;font-family:var(--sans)">`;
-        h += `<option value="">— Selecionar pastor —</option>`;
-        _PASTORES_OFICIAIS.forEach(p => { h += `<option value="${p}"${st.pastor===p?" selected":""}>${p}</option>`; });
-        h += `</select>`;
-      } else {
-        h += `<div style="flex:1;min-width:170px;font-size:11.5px;color:${st.pastor?"var(--tx1)":"var(--tx3)"}">${st.pastor||"— Não definido —"}</div>`;
-      }
-      // Status
-      if (canEdit) {
-        h += `<select onchange="ep_setStatus('${slot.key}',this.value)" style="background:${sc.bg};border:1px solid ${sc.cl}44;border-radius:5px;color:${sc.cl};font-size:10px;padding:4px 7px;outline:none;font-weight:700;font-family:var(--sans);cursor:pointer">`;
-        Object.entries(_STATUS_CFG).forEach(([k,v]) => { h += `<option value="${k}"${st.status===k?" selected":""}>${v.label}</option>`; });
-        h += `</select>`;
-      } else {
-        h += `<span style="font-size:9.5px;padding:3px 9px;border-radius:8px;font-weight:700;background:${sc.bg};color:${sc.cl}">${sc.label}</span>`;
-      }
-      // Observações
-      if (canEdit) {
-        h += `<input type="text" value="${(st.obs||"").replace(/"/g,"&quot;")}" placeholder="Observações..." onblur="ep_setObs('${slot.key}',this.value)" style="width:180px;background:var(--bg-input);border:1px solid var(--bd2);border-radius:5px;color:var(--tx2);font-size:10.5px;padding:5px 8px;outline:none;font-family:var(--sans)">`;
-      } else if (st.obs) {
-        h += `<span style="font-size:10px;color:var(--tx3);font-style:italic">${st.obs}</span>`;
-      }
-      h += `</div>`;
+      h+=`</div>`;
     });
     return h;
   }
 
-  /* ── Modo Lista (accordion por mês) ─────────────────────────── */
-  function _renderLista() {
-    const canEdit = (typeof temPermissao==="function" && temPermissao("Pastoral","full")) ||
-                    (typeof USUARIO_ATUAL!=="undefined" && USUARIO_ATUAL?.perfil==="admin_geral");
-    let h = "";
-    for (let i=0; i<14; i++) {
-      const m  = _addM(_st.mes, i);
-      const ano = m.getFullYear(), mes = m.getMonth();
-      const mk  = `${ano}-${String(mes+1).padStart(2,"0")}`;
-      const isOpen    = _st.openMonths.has(mk);
-      const isCurrent = mk === _nowMesKey;
-      const slots     = _slotsForMes(ano, mes);
-      // Contagem de status
-      const cnt = {pendente:0, preenchida:0, confirmada:0};
-      slots.forEach(s => { const st=(_slots.get(s.key)||{}).status||"pendente"; cnt[st]++; });
-      const nomeMes = m.toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
-
-      h += `<div style="border:1px solid ${isCurrent?"var(--teal)":"var(--bd2)"};border-radius:8px;overflow:hidden;margin-bottom:8px">`;
-      // Header do accordion
-      h += `<div onclick="ep_toggleMes('${mk}')" style="display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;background:${isCurrent?"rgba(42,181,192,0.06)":"var(--bg-card)"};user-select:none" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">`;
-      h += `<span style="font-size:12px;color:var(--teal);transition:transform .2s;display:inline-block">${isOpen?"▼":"▶"}</span>`;
-      h += `<span style="font-size:12.5px;font-weight:700;color:var(--tx1);text-transform:capitalize;flex:1">${nomeMes}</span>`;
-      if (isCurrent) h += `<span style="font-size:8.5px;background:rgba(42,181,192,.18);color:var(--teal);padding:2px 8px;border-radius:10px;font-weight:700;flex-shrink:0">MÊS ATUAL</span>`;
-      // Badges de status
-      if (cnt.confirmada) h += `<span style="font-size:9px;background:rgba(58,170,92,.15);color:#3aaa5c;padding:2px 8px;border-radius:8px;font-weight:700;flex-shrink:0">✓ ${cnt.confirmada}</span>`;
-      if (cnt.preenchida) h += `<span style="font-size:9px;background:rgba(74,156,245,.15);color:#4a9cf5;padding:2px 8px;border-radius:8px;font-weight:700;flex-shrink:0">● ${cnt.preenchida}</span>`;
-      if (cnt.pendente)   h += `<span style="font-size:9px;background:rgba(212,168,67,.15);color:#d4a843;padding:2px 8px;border-radius:8px;font-weight:700;flex-shrink:0">◌ ${cnt.pendente}</span>`;
-      h += `</div>`;
-      // Corpo expandido
-      if (isOpen) {
-        h += `<div style="border-top:1px solid var(--bd1);padding:8px 12px 14px;background:var(--bg-surface)">`;
-        if (!canEdit) h += `<div style="font-size:10px;color:var(--tx3);padding:4px 4px 10px">Visualização somente leitura. Apenas usuários autorizados podem editar a escala.</div>`;
-        h += _renderMesSlots(slots, canEdit);
-        h += `</div>`;
-      }
-      h += `</div>`;
+  function _renderLista(){
+    const canEdit=_canEdit();
+    let h="";
+    if(_isAdmin()) h+=_renderGerenciarPastores();
+    if(canEdit){
+      const ano=_st.mes.getFullYear(),mes=_st.mes.getMonth();
+      const mn=_st.mes.toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+      h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><button onclick="ep_gerarMes(${ano},${mes})" style="padding:7px 14px;background:var(--bg-card);border:1px solid var(--teal);border-radius:6px;color:var(--teal);font-size:11.5px;cursor:pointer;font-weight:600;font-family:var(--sans)">⚡ Gerar ${mn.charAt(0).toUpperCase()+mn.slice(1)}</button><button onclick="ep_gerar3Meses(${ano},${mes})" style="padding:7px 14px;background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:11.5px;cursor:pointer;font-family:var(--sans)">⚡⚡ Gerar Próximos 3 Meses</button></div>`;
+    }
+    for(let i=0;i<14;i++){
+      const m=_addM(_st.mes,i),ano=m.getFullYear(),mes=m.getMonth();
+      const mk=`${ano}-${String(mes+1).padStart(2,"0")}`;
+      const isOpen=_st.openMonths.has(mk),isCurrent=mk===_nowMesKey;
+      const slots=_slotsForMes(ano,mes);
+      const cnt={PENDENTE:0,PREENCHIDA:0,CONFIRMADA:0};
+      slots.forEach(s=>{const st=(_escala.get(s.key)||{}).status||"PENDENTE";cnt[st]=(cnt[st]||0)+1;});
+      const nomeMes=m.toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+      h+=`<div style="border:1px solid ${isCurrent?"var(--teal)":"var(--bd2)"};border-radius:8px;overflow:hidden;margin-bottom:8px"><div onclick="ep_toggleMes('${mk}')" style="display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;background:${isCurrent?"rgba(42,181,192,0.06)":"var(--bg-card)"};user-select:none" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'"><span style="font-size:12px;color:var(--teal)">${isOpen?"▼":"▶"}</span><span style="font-size:12.5px;font-weight:700;color:var(--tx1);text-transform:capitalize;flex:1">${nomeMes}</span>`;
+      if(isCurrent) h+=`<span style="font-size:8.5px;background:rgba(42,181,192,.18);color:var(--teal);padding:2px 8px;border-radius:10px;font-weight:700;flex-shrink:0">MÊS ATUAL</span>`;
+      if(cnt.CONFIRMADA) h+=`<span style="font-size:9px;background:rgba(58,170,92,.15);color:#3aaa5c;padding:2px 8px;border-radius:8px;font-weight:700;flex-shrink:0">✓ ${cnt.CONFIRMADA}</span>`;
+      if(cnt.PREENCHIDA) h+=`<span style="font-size:9px;background:rgba(74,156,245,.15);color:#4a9cf5;padding:2px 8px;border-radius:8px;font-weight:700;flex-shrink:0">● ${cnt.PREENCHIDA}</span>`;
+      if(cnt.PENDENTE)   h+=`<span style="font-size:9px;background:rgba(212,168,67,.15);color:#d4a843;padding:2px 8px;border-radius:8px;font-weight:700;flex-shrink:0">◌ ${cnt.PENDENTE}</span>`;
+      h+=`</div>`;
+      if(isOpen){h+=`<div style="border-top:1px solid var(--bd1);padding:8px 12px 14px;background:var(--bg-surface)">`;if(!canEdit)h+=`<div style="font-size:10px;color:var(--tx3);padding:4px 4px 10px">Visualização somente leitura.</div>`;h+=_renderMesSlots(slots,canEdit)+`</div>`;}
+      h+=`</div>`;
     }
     return h;
   }
 
   /* ── Render principal ────────────────────────────────────────── */
   function _render(){
-    // Label do período
-    // Label do período
+    if(!_st.loaded&&!_st.loading){
+      const ct=document.getElementById("ep-conteudo");
+      if(ct) ct.innerHTML=`<div style="text-align:center;padding:40px;color:var(--tx3)">Carregando escala...</div>`;
+      _loadAll(); return;
+    }
+    if(_st.loading) return;
     const lbl=document.getElementById("ep-mes-label");
     if(lbl){
-      const t=_st.modo==="mensal"?_fmtMes(_st.mes):
-               _st.modo==="trimestral"?`${_fmtMes(_st.mes)} → ${_fmtMes(_addM(_st.mes,2))}`:
-               _st.modo==="semestral"?`${_fmtMes(_st.mes)} → ${_fmtMes(_addM(_st.mes,5))}`:
-               `${_fmtMes(_st.mes)} → ${_fmtMes(_addM(_st.mes,13))}`;
+      const t=_st.modo==="mensal"?_fmtMes(_st.mes):_st.modo==="trimestral"?`${_fmtMes(_st.mes)} → ${_fmtMes(_addM(_st.mes,2))}`:_st.modo==="semestral"?`${_fmtMes(_st.mes)} → ${_fmtMes(_addM(_st.mes,5))}`:`${_fmtMes(_st.mes)} → ${_fmtMes(_addM(_st.mes,13))}`;
       lbl.textContent=t.charAt(0).toUpperCase()+t.slice(1);
     }
-    // Botões de modo
     ["mensal","trimestral","semestral","lista"].forEach(m=>{
-      const btn=document.getElementById(`ep-btn-${m}`);
-      if(!btn) return;
+      const btn=document.getElementById(`ep-btn-${m}`); if(!btn) return;
       const on=_st.modo===m;
       btn.style.cssText=`padding:6px 12px;border:none;${m!=="mensal"?"border-left:1px solid var(--bd2);":""}cursor:pointer;font-size:11.5px;font-family:var(--sans);transition:all .15s;background:${on?"var(--teal)":"var(--bg-card)"};color:${on?"#fff":"var(--tx2)"};font-weight:${on?700:400}`;
     });
-    // Popula filtro de pastor (só na primeira vez)
     const sel=document.getElementById("ep-pastor-filter");
-    if(sel&&sel.options.length<=1) _pastores().forEach(p=>sel.add(new Option(p,p)));
-    // Conteúdo
+    if(sel){
+      const curVal=sel.value;
+      sel.innerHTML=`<option value="">Todos os pastores</option>`;
+      _pastores.filter(p=>p.ativo!==false).forEach(p=>{const o=new Option(p.nome_exibicao||p.nome_completo,p.id);if(p.id===curVal)o.selected=true;sel.add(o);});
+    }
     const ct=document.getElementById("ep-conteudo"); if(!ct) return;
-    ct.innerHTML=_st.modo==="mensal"?_renderMensal():
-                 _st.modo==="trimestral"?_renderTrimestral():
-                 _st.modo==="semestral"?_renderSemestral():
-                 _renderLista();
-    // Indicadores: só para modos de calendário
+    ct.innerHTML=_st.modo==="mensal"?_renderMensal():_st.modo==="trimestral"?_renderTrimestral():_st.modo==="semestral"?_renderSemestral():_renderLista();
     if(_st.modo!=="lista") _renderIndicadores();
-    else document.getElementById("ep-indicadores").innerHTML="";
+    else {const ind=document.getElementById("ep-indicadores");if(ind)ind.innerHTML="";}
   }
 
   /* ── API pública ─────────────────────────────────────────────── */
-  window.ep_render       = _render;
-  window.ep_mesAnterior  = ()=>{ _st.mes=_addM(_st.mes,-1); _render(); };
-  window.ep_mesProximo   = ()=>{ _st.mes=_addM(_st.mes,1);  _render(); };
-  window.ep_setModo      = m =>{ _st.modo=m; _render(); };
-  window.ep_filtrarPastor= ()=>{ const s=document.getElementById("ep-pastor-filter"); _st.pastor=s?s.value:""; _render(); };
-  window.ep_ver          = id=>{
-    const item=_D.find(e=>e.id===id); if(!item) return;
-    const t=TC[item.tipo]||TC.culto;
-    const d=new Date(item.data+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"});
-    T(`${t.ico} ${t.label}${item.turno?" · "+item.turno:""} — ${item.pastor}`,`📅 ${d.charAt(0).toUpperCase()+d.slice(1)}\n📍 ${item.local}${item.obs?"\n📝 "+item.obs:""}`);
+  window.ep_render      = _render;
+  window.ep_mesAnterior = ()=>{_st.mes=_addM(_st.mes,-1);_render();};
+  window.ep_mesProximo  = ()=>{_st.mes=_addM(_st.mes,1); _render();};
+  window.ep_setModo     = m=>{_st.modo=m;_render();};
+  window.ep_filtrarPastor=()=>{const s=document.getElementById("ep-pastor-filter");_st.pastor=s?s.value:"";_render();};
+  window.ep_toggleMes   = function(mk){if(_st.openMonths.has(mk))_st.openMonths.delete(mk);else _st.openMonths.add(mk);_render();};
+  window.ep_novaEscala  = ()=>{if(_isAdmin()) ep_setModo("lista"); else T("Escala de Pregação","Acesse o modo Lista para visualizar a programação pastoral.");};
+  window.ep_gerarMes    = async function(ano,mes){
+    const nm=new Date(ano,mes,1).toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+    if(!confirm(`Gerar escala automática para ${nm}?\nSlots já preenchidos serão preservados.`)) return;
+    const ct=document.getElementById("ep-conteudo");
+    if(ct) ct.innerHTML=`<div style="text-align:center;padding:40px;color:var(--teal)">⚡ Gerando escala de ${nm}...</div>`;
+    await _gerarMes(ano,mes);
   };
-  window.ep_novaEscala   = ()=>T("+ Nova Escala Pastoral","Funcionalidade de cadastro em desenvolvimento. Será integrada à tabela ESCALA_PASTORAL do Supabase.");
-
-  window.ep_toggleMes = function(mk) {
-    if (_st.openMonths.has(mk)) _st.openMonths.delete(mk);
-    else _st.openMonths.add(mk);
-    _render();
+  window.ep_gerar3Meses = async function(ano,mes){
+    if(!confirm("Gerar escala automática para os próximos 3 meses?\nSlots já preenchidos serão preservados.")) return;
+    const ct=document.getElementById("ep-conteudo");
+    if(ct) ct.innerHTML=`<div style="text-align:center;padding:40px;color:var(--teal)">⚡ Gerando escalas...</div>`;
+    for(let i=0;i<3;i++){const m=new Date(ano,mes+i,1);await _gerarMes(m.getFullYear(),m.getMonth());}
   };
-
-  window.ep_setPastor = function(key, pastor) {
-    const cur = _slots.get(key) || {pastor:"", obs:"", status:"pendente"};
-    cur.pastor = pastor;
-    if (pastor && cur.status==="pendente") cur.status="preenchida";
-    if (!pastor) cur.status="pendente";
-    _slots.set(key, cur);
-    // Atualizar badges do mês sem re-render completo
-    _render();
-  };
-
-  window.ep_setStatus = function(key, status) {
-    const cur = _slots.get(key) || {pastor:"", obs:"", status:"pendente"};
-    cur.status = status;
-    _slots.set(key, cur);
-    _render();
-  };
-
-  window.ep_setObs = function(key, obs) {
-    const cur = _slots.get(key) || {pastor:"", obs:"", status:"pendente"};
-    cur.obs = obs;
-    _slots.set(key, cur);
-    // Não re-render para não perder foco do input
-  };
+  window.ep_setPastor = function(){};
+  window.ep_setStatus = function(){};
+  window.ep_setObs    = function(){};
+  window.ep_ver       = function(key){ep_openSlot(key);};
 
 })();
 
