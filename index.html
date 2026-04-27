@@ -130,7 +130,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
   background:var(--bg-sidebar);
   border-right:1px solid var(--bd1);
   display:flex;flex-direction:column;
-  height:100vh;overflow:hidden;
+  height:100%;overflow:hidden;
   position:relative;z-index:50;
 }
 
@@ -943,17 +943,17 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 
   <div class="sb-sys" id="sb-sys">
     <div class="slbl">Sistema</div>
-    <div class="mwrap" id="mw-config">
-      <div class="mhdr" onclick="tog('config')">
-        <div class="micon" style="background:rgba(139,111,212,0.14);border-color:rgba(139,111,212,0.25);color:var(--violet)">⊛</div>
-        <span class="mname">Configurações</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-config">
-        <div class="si" onclick="go('config-usuarios')">Usuários e Acessos</div>
-        <div class="si" onclick="go('config-permissoes')">Permissões por Módulo</div>
-        <div class="si" onclick="go('config-auditoria')">Auditoria de Acessos</div>
-      </div>
+    <div class="l1" onclick="go('config-usuarios')">
+      <div class="l1-ic" style="background:rgba(139,111,212,0.14);border-color:rgba(139,111,212,0.25);color:var(--violet)">⊛</div>
+      Usuários e Acessos
+    </div>
+    <div class="l1" onclick="go('config-permissoes')">
+      <div class="l1-ic" style="background:rgba(139,111,212,0.1);border-color:rgba(139,111,212,0.2);color:var(--violet)">🔒</div>
+      Permissões
+    </div>
+    <div class="l1" onclick="go('config-auditoria')">
+      <div class="l1-ic" style="background:rgba(139,111,212,0.1);border-color:rgba(139,111,212,0.2);color:var(--violet)">📋</div>
+      Auditoria
     </div>
   </div>
 
