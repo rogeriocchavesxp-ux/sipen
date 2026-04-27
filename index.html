@@ -6653,9 +6653,9 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
     _st.loading = true;
     try {
       const r = await fetch(`${apiBaseUrl()}/rest/v1/pastores?select=*&order=nome_completo.asc`, {headers:apiHeaders()});
-      if (r.ok) { const d=await r.json(); _pastores=(Array.isArray(d)&&d.length)?d:_SEED_PASTORES; }
-      else _pastores = _SEED_PASTORES;
-    } catch(e) { _pastores = _SEED_PASTORES; }
+      if (r.ok) { const d=await r.json(); if(Array.isArray(d)&&d.length){_pastores=d;}else{console.warn("pastores: tabela vazia, usando seed");_pastores=_SEED_PASTORES;} }
+      else { console.warn("pastores: HTTP",r.status,"usando seed"); _pastores=_SEED_PASTORES; }
+    } catch(e) { console.warn("pastores: erro de rede, usando seed",e); _pastores=_SEED_PASTORES; }
     try {
       const r = await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao?select=*&order=data.asc&limit=3000`, {headers:apiHeaders()});
       if (r.ok) {
@@ -6680,19 +6680,19 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
     const autoStatus = !fields.pastor_id ? "PENDENTE" : (fields.status==="PENDENTE" ? "PREENCHIDA" : fields.status);
     const payload = {...fields, status:autoStatus};
     if (existing?.id) {
-      try {
-        await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao?id=eq.${existing.id}`, {method:"PATCH", headers:apiHeaders({"Prefer":"return=minimal"}), body:JSON.stringify(payload)});
-        _escala.set(key, {...existing, ...payload});
-      } catch(e) {}
+      let r;
+      try { r = await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao?id=eq.${existing.id}`, {method:"PATCH", headers:apiHeaders({"Prefer":"return=minimal"}), body:JSON.stringify(payload)}); }
+      catch(e) { console.error("PATCH escala_pregacao:", e); T("Erro de rede", e.message); return; }
+      if (!r.ok) { const err=await r.text(); console.error("PATCH escala_pregacao:",r.status,err); T(`Erro ao salvar (${r.status})`,err); return; }
+      _escala.set(key, {...existing, ...payload});
     } else {
-      try {
-        const r = await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao`, {method:"POST", headers:apiHeaders({"Prefer":"return=representation"}), body:JSON.stringify({data, culto_tipo, ...payload})});
-        if (r.ok) {
-          const rows = await r.json();
-          const row  = Array.isArray(rows) ? rows[0] : rows;
-          _escala.set(key, {id:row.id, pastor_id:row.pastor_id||"", local:row.local||"Templo Principal", observacoes:row.observacoes||"", status:row.status||"PENDENTE", origem:row.origem||"manual"});
-        }
-      } catch(e) {}
+      let r;
+      try { r = await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao`, {method:"POST", headers:apiHeaders({"Prefer":"return=representation"}), body:JSON.stringify({data, culto_tipo, ...payload})}); }
+      catch(e) { console.error("POST escala_pregacao:", e); T("Erro de rede", e.message); return; }
+      if (!r.ok) { const err=await r.text(); console.error("POST escala_pregacao:",r.status,err); T(`Erro ao inserir (${r.status})`,err); return; }
+      const rows = await r.json();
+      const row  = Array.isArray(rows) ? rows[0] : rows;
+      _escala.set(key, {id:row.id, pastor_id:row.pastor_id||"", local:row.local||"Templo Principal", observacoes:row.observacoes||"", status:row.status||"PENDENTE", origem:row.origem||"manual"});
     }
   }
 
@@ -6711,8 +6711,9 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
       return {data:slot.ds, culto_tipo:slot.tipo, pastor_id:pastor.id, local:"Templo Principal", observacoes:"", status:"PENDENTE", origem:"automatico"};
     });
     try {
-      await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao`, {method:"POST", headers:apiHeaders({"Prefer":"return=minimal,resolution=ignore-duplicates"}), body:JSON.stringify(inserts)});
-    } catch(e) {}
+      const r = await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao`, {method:"POST", headers:apiHeaders({"Prefer":"return=minimal,resolution=ignore-duplicates"}), body:JSON.stringify(inserts)});
+      if (!r.ok) { const err=await r.text(); console.error("POST batch escala:",r.status,err); T(`Erro ao gerar (${r.status})`,err); }
+    } catch(e) { console.error("POST batch escala:", e); T("Erro ao gerar",e.message); }
     await _loadAll();
   }
 
