@@ -709,7 +709,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
         <div class="si" onclick="go('conselho-ind')">Indicadores Institucionais</div>
         <div class="si" onclick="go('conselho-doc')">Documentos do Conselho</div>
         <div class="si" onclick="go('conselho-cong')">Acomp. das Congregações</div>
-        <div class="si" onclick="go('conselho-hist')">Histórico de Atas e Deliberações</div>
+        <div class="si" onclick="go('atas-dash')">Atas e Deliberações</div>
         <div class="sdiv"></div>
         <div class="si" onclick="go('conselho-demandas')">Solicitações e Demandas</div>
       </div>
@@ -1439,6 +1439,86 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
         </div>
       </div>
     </div>
+  </div>
+
+
+  <!-- ════ ATAS E DELIBERAÇÕES ════════════ -->
+  <div class="view" id="v-atas-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)">◈</div>
+      <div>
+        <div class="hero-lbl">Conselho e Governança</div>
+        <div class="hero-ttl">Atas e Deliberações</div>
+        <div class="hero-dsc">Gestão de atas, deliberações e demandas geradas automaticamente pelo banco de dados</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="go('atas-nova')">+ Nova Ata</button>
+      </div>
+    </div>
+    <div class="inav" style="--mc:var(--sky)">
+      <div class="ini on" onclick="go('atas-dash')">Dashboard</div>
+      <div class="ini" onclick="go('atas-todas')">Todas as Atas</div>
+      <div class="ini" onclick="go('atas-nova')">Nova Ata</div>
+      <div class="ini" onclick="go('atas-delib')">Deliberações</div>
+    </div>
+    <div class="ct"><div id="atas-dash-content"><div style="padding:20px;color:var(--tx3);font-size:13px">Carregando...</div></div></div>
+  </div>
+
+  <div class="view" id="v-atas-todas">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)">◈</div>
+      <div>
+        <div class="hero-lbl">Conselho e Governança</div>
+        <div class="hero-ttl">Todas as Atas</div>
+        <div class="hero-dsc">Lista completa de atas com filtros e ações de aprovação</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="go('atas-nova')">+ Nova Ata</button>
+      </div>
+    </div>
+    <div class="inav" style="--mc:var(--sky)">
+      <div class="ini" onclick="go('atas-dash')">Dashboard</div>
+      <div class="ini on" onclick="go('atas-todas')">Todas as Atas</div>
+      <div class="ini" onclick="go('atas-nova')">Nova Ata</div>
+      <div class="ini" onclick="go('atas-delib')">Deliberações</div>
+    </div>
+    <div class="ct"><div id="atas-todas-content"><div style="padding:20px;color:var(--tx3);font-size:13px">Carregando...</div></div></div>
+  </div>
+
+  <div class="view" id="v-atas-nova">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)">◈</div>
+      <div>
+        <div class="hero-lbl">Conselho e Governança</div>
+        <div class="hero-ttl">Nova Ata</div>
+        <div class="hero-dsc">Registre uma nova ata e adicione as deliberações com geração automática de demandas</div>
+      </div>
+    </div>
+    <div class="inav" style="--mc:var(--sky)">
+      <div class="ini" onclick="go('atas-dash')">Dashboard</div>
+      <div class="ini" onclick="go('atas-todas')">Todas as Atas</div>
+      <div class="ini on" onclick="go('atas-nova')">Nova Ata</div>
+      <div class="ini" onclick="go('atas-delib')">Deliberações</div>
+    </div>
+    <div class="ct"><div id="atas-nova-content"><div style="padding:20px;color:var(--tx3);font-size:13px">Carregando...</div></div></div>
+  </div>
+
+  <div class="view" id="v-atas-delib">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)">◈</div>
+      <div>
+        <div class="hero-lbl">Conselho e Governança</div>
+        <div class="hero-ttl">Deliberações</div>
+        <div class="hero-dsc">Todas as deliberações com vínculos às atas e demandas geradas automaticamente</div>
+      </div>
+    </div>
+    <div class="inav" style="--mc:var(--sky)">
+      <div class="ini" onclick="go('atas-dash')">Dashboard</div>
+      <div class="ini" onclick="go('atas-todas')">Todas as Atas</div>
+      <div class="ini" onclick="go('atas-nova')">Nova Ata</div>
+      <div class="ini on" onclick="go('atas-delib')">Deliberações</div>
+    </div>
+    <div class="ct"><div id="atas-delib-content"><div style="padding:20px;color:var(--tx3);font-size:13px">Carregando...</div></div></div>
   </div>
 
 
@@ -6403,6 +6483,10 @@ Object.assign(VIEW_AUTOLOAD, _newAutoloads);
 
 // CRUMBs para novas views
 Object.assign(CRUMB, {
+  "atas-dash":  ["Conselho e Governança","Atas e Deliberações","/ painel geral"],
+  "atas-todas": ["Conselho e Governança","Todas as Atas","/ lista completa"],
+  "atas-nova":  ["Conselho e Governança","Nova Ata","/ formulário"],
+  "atas-delib": ["Conselho e Governança","Deliberações","/ todas as deliberações"],
   "conselho-ind":["Conselho e Governança","Indicadores Institucionais","/ métricas institucionais"],
   "conselho-rel":["Conselho e Governança","Relatórios Estratégicos","/ demandas e governança"],
   "conselho-doc":["Conselho e Governança","Documentos do Conselho","/ atas e registros"],
@@ -7909,6 +7993,9 @@ VIEW_AUTOLOAD["conselho-contratados"] = { fn: () => renderContratados() };
 
 <!-- ═══ MÓDULO CONTRATOS ═════════════════════════════ -->
 <script src="contratos.js"></script>
+
+<!-- ═══ MÓDULO ATAS E DELIBERAÇÕES ══════════════════ -->
+<script src="atas.js"></script>
 
 <!-- ═══ MODAL: NOVO/EDITAR CONTRATO ══════════════════ -->
 <div id="modal-contrato" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)conFecharModal()">
