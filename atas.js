@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    SIPEN — Módulo Atas e Deliberações
-   atas.js · v1.0
+   atas.js · v1.1
    Conselho e Governança — Gestão de Atas, Deliberações e Demandas
 ═══════════════════════════════════════════════════════ */
 
@@ -27,6 +27,15 @@
     "EM_ANALISE":  { label:"Em Análise",  bg:"rgba(212,168,67,.12)",  cl:"var(--gold)"  },
   };
 
+  const STATUS_DEM_CFG = {
+    "ABERTA":       { label:"Aberta",       bg:"rgba(74,156,245,.12)",  cl:"var(--blue)"  },
+    "EM_ANALISE":   { label:"Em Análise",   bg:"rgba(212,168,67,.12)",  cl:"var(--gold)"  },
+    "EM_ANDAMENTO": { label:"Em Andamento", bg:"rgba(139,111,212,.12)", cl:"var(--violet)"},
+    "PENDENTE":     { label:"Pendente",     bg:"rgba(224,138,42,.12)",  cl:"var(--amber)" },
+    "CONCLUIDA":    { label:"Concluída",    bg:"rgba(58,170,92,.12)",   cl:"var(--gr)"    },
+    "CANCELADA":    { label:"Cancelada",    bg:"rgba(90,96,104,.15)",   cl:"var(--tx3)"   },
+  };
+
   const PRIO_CFG = {
     "Urgente": "var(--rose)",
     "Alta":    "var(--amber)",
@@ -34,11 +43,11 @@
     "Baixa":   "var(--gr)",
   };
 
-  /* ── Estado do módulo ───────────────────────────────── */
+  /* ── Estado ─────────────────────────────────────────── */
 
-  let _atasCache      = null;
+  let _atasCache        = null;
   let _deliberacoesCache = null;
-  let _ataEditando    = null;
+  let _ataEditando      = null;
   let _deliberacoesTemp = [];
 
   /* ── Helpers visuais ────────────────────────────────── */
@@ -46,11 +55,9 @@
   function _sp() {
     return `<span style="display:inline-block;width:11px;height:11px;border:2px solid var(--sky);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px"></span>`;
   }
-
   function _loading(msg) {
     return `<div style="padding:24px;color:var(--tx3);font-size:13px;text-align:center">${_sp()}${msg || "Carregando..."}</div>`;
   }
-
   function _vazio(msg) {
     return `<div style="padding:32px 16px;color:var(--tx3);font-size:13px;text-align:center;opacity:.7">${msg}</div>`;
   }
@@ -60,32 +67,34 @@
     const s = (d.split("T")[0]).split("-");
     return s.length === 3 ? `${s[2]}/${s[1]}/${s[0]}` : d;
   }
-
-  function hoje() {
-    return new Date().toISOString().split("T")[0];
-  }
-
-  function isAtrasada(prazo) {
-    return !!prazo && prazo < hoje();
-  }
-
-  function tipoLabel(t) {
-    return TIPO_ATA[t] || t || "—";
-  }
+  function hoje() { return new Date().toISOString().split("T")[0]; }
+  function isAtrasada(prazo) { return !!prazo && prazo < hoje(); }
+  function tipoLabel(t) { return TIPO_ATA[t] || t || "—"; }
 
   function pillAta(st) {
     const s = STATUS_ATA_CFG[st] || { label: st || "—", bg:"rgba(90,96,104,.15)", cl:"var(--tx3)" };
     return `<span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;white-space:nowrap;background:${s.bg};color:${s.cl}">${s.label}</span>`;
   }
-
   function pillDelib(st) {
     const s = STATUS_DELIB_CFG[st] || { label: st || "—", bg:"rgba(90,96,104,.15)", cl:"var(--tx3)" };
     return `<span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;white-space:nowrap;background:${s.bg};color:${s.cl}">${s.label}</span>`;
   }
-
+  function pillDem(st) {
+    const s = STATUS_DEM_CFG[st] || { label: (st || "—").replace(/_/g," "), bg:"rgba(90,96,104,.15)", cl:"var(--tx3)" };
+    return `<span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;white-space:nowrap;background:${s.bg};color:${s.cl}">${s.label}</span>`;
+  }
   function pillPrio(p) {
     const c = PRIO_CFG[p] || "var(--tx3)";
     return `<span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;white-space:nowrap;background:${c}18;color:${c}">${p || "—"}</span>`;
+  }
+
+  /* Obtém o prazo de uma demanda independente do nome da coluna */
+  function _prazoDem(d) {
+    return d.prazo || d.data_prazo || d.prazo_previsto || d.data_conclusao_prevista || null;
+  }
+  /* Obtém o responsável de uma demanda */
+  function _respDem(d) {
+    return d.responsavel || d.responsavel_txt || "—";
   }
 
   /* ── API Supabase ───────────────────────────────────── */
@@ -98,7 +107,6 @@
       "Prefer": "return=representation",
     };
   }
-
   function _base() {
     return (SUPABASE_URL || "").trim().replace(/\/$/, "") + "/rest/v1";
   }
@@ -109,31 +117,23 @@
     if (!r.ok) throw new Error(await r.text());
     return r.json();
   }
-
   async function _post(table, body) {
     const r = await fetch(`${_base()}/${table}`, {
-      method: "POST",
-      headers: _hdrs(),
-      body: JSON.stringify(body),
+      method: "POST", headers: _hdrs(), body: JSON.stringify(body),
     });
     if (!r.ok) throw new Error(await r.text());
     return r.json();
   }
-
   async function _patch(table, id, body) {
     const r = await fetch(`${_base()}/${table}?id=eq.${id}`, {
-      method: "PATCH",
-      headers: _hdrs(),
-      body: JSON.stringify(body),
+      method: "PATCH", headers: _hdrs(), body: JSON.stringify(body),
     });
     if (!r.ok) throw new Error(await r.text());
     return r.json();
   }
-
   async function _del(table, id) {
     const r = await fetch(`${_base()}/${table}?id=eq.${id}`, {
-      method: "DELETE",
-      headers: _hdrs(),
+      method: "DELETE", headers: _hdrs(),
     });
     if (!r.ok) throw new Error(await r.text());
     return true;
@@ -155,9 +155,114 @@
     return _deliberacoesCache;
   }
 
+  /* Carrega deliberações e enriquece com dados das demandas vinculadas */
+  async function _loadDelibsEnriquecidas(force) {
+    const [atas, delibs] = await Promise.all([_loadAtas(force), _loadDelibs(force)]);
+
+    const ataMap = {};
+    atas.forEach(a => { ataMap[a.id] = a; });
+
+    const demIds = [...new Set(delibs.map(d => d.demanda_id).filter(Boolean))];
+    let demMap = {};
+    if (demIds.length > 0) {
+      try {
+        const dems = await _get("demandas", `id=in.(${demIds.join(",")})`);
+        dems.forEach(dm => { demMap[dm.id] = dm; });
+      } catch(e) { console.warn("[delibs-dem]", e.message); }
+    }
+
+    return delibs.map(d => ({
+      ...d,
+      _ata:     ataMap[d.ata_id]    || null,
+      _demanda: demMap[d.demanda_id] || null,
+    }));
+  }
+
+  /* Enriquece as deliberações de uma ata específica com dados das demandas */
+  async function _enriquecerDelibsDeAta(delibRows) {
+    const demIds = [...new Set(delibRows.map(d => d.demanda_id).filter(Boolean))];
+    let demMap = {};
+    if (demIds.length > 0) {
+      try {
+        const dems = await _get("demandas", `id=in.(${demIds.join(",")})`);
+        dems.forEach(dm => { demMap[dm.id] = dm; });
+      } catch(e) { console.warn("[enrich-delibs]", e.message); }
+    }
+    return delibRows.map(d => ({ ...d, _demanda: demMap[d.demanda_id] || null }));
+  }
+
   function _invalidate() {
-    _atasCache = null;
+    _atasCache        = null;
     _deliberacoesCache = null;
+  }
+
+  /* ── Abrir demanda (com fallback) ───────────────────── */
+
+  function _abrirDemanda(demandaId, origem) {
+    if (typeof window.demAbrirDetalhe === "function") {
+      window.demAbrirDetalhe(demandaId, origem || "atas-dash");
+    } else {
+      _modalDemandaSimples(demandaId);
+    }
+  }
+
+  async function _modalDemandaSimples(demandaId) {
+    const existe = document.getElementById("modal-dem-simples");
+    if (existe) existe.remove();
+
+    const modal = document.createElement("div");
+    modal.id = "modal-dem-simples";
+    modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:10001;display:flex;align-items:center;justify-content:center;padding:16px";
+    modal.onclick = e => { if (e.target === modal) modal.remove(); };
+    modal.innerHTML = `<div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:540px;min-height:80px;box-shadow:0 20px 60px rgba(0,0,0,.4)">${_loading("Carregando demanda...")}</div>`;
+    document.body.appendChild(modal);
+
+    try {
+      const rows = await _get("demandas", `id=eq.${demandaId}`);
+      const d = rows[0];
+      if (!d) {
+        modal.querySelector("div").innerHTML = `${_vazio("Demanda não encontrada.")}<div style="text-align:center;padding-bottom:16px"><button class="tbt" onclick="document.getElementById('modal-dem-simples').remove()">Fechar</button></div>`;
+        return;
+      }
+      const prazo = _prazoDem(d);
+      const resp  = _respDem(d);
+      modal.innerHTML = `
+        <div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:540px;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+          <div style="padding:18px 22px 14px;border-bottom:1px solid var(--bd1);display:flex;align-items:flex-start;justify-content:space-between">
+            <div>
+              <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Demanda gerada por ata</div>
+              <div style="font-size:16px;font-weight:700;color:var(--tx1)">${d.titulo || "Sem título"}</div>
+              <div style="margin-top:5px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                ${pillDem(d.status)}
+                ${d.area ? `<span style="font-size:11px;color:var(--tx3)">${d.area}</span>` : ""}
+              </div>
+            </div>
+            <button onclick="document.getElementById('modal-dem-simples').remove()" style="background:none;border:none;font-size:22px;color:var(--tx3);cursor:pointer;padding:4px 8px;border-radius:6px;flex-shrink:0">×</button>
+          </div>
+          <div style="padding:16px 22px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            ${[
+              ["Área",         d.area],
+              ["Responsável",  resp !== "—" ? resp : null],
+              ["Prazo",        prazo ? fmtD(prazo) : null],
+              ["Status",       d.status ? (STATUS_DEM_CFG[d.status]?.label || d.status) : null],
+            ].filter(([,v]) => v).map(([lbl, val]) => `
+              <div style="background:var(--bg-body);border-radius:8px;padding:8px 12px">
+                <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">${lbl}</div>
+                <div style="font-size:13px;color:var(--tx1)">${val}</div>
+              </div>`).join("")}
+            ${d.descricao ? `
+              <div style="background:var(--bg-body);border-radius:8px;padding:8px 12px;grid-column:1/-1">
+                <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Descrição</div>
+                <div style="font-size:13px;color:var(--tx1);line-height:1.5">${d.descricao}</div>
+              </div>` : ""}
+          </div>
+          <div style="padding:0 22px 18px;display:flex;justify-content:flex-end">
+            <button class="tbt" onclick="document.getElementById('modal-dem-simples').remove()">Fechar</button>
+          </div>
+        </div>`;
+    } catch(e) {
+      modal.querySelector("div").innerHTML = `<div class="alr alr-r" style="margin:16px">${e.message}</div><div style="text-align:center;padding-bottom:16px"><button class="tbt" onclick="document.getElementById('modal-dem-simples').remove()">Fechar</button></div>`;
+    }
   }
 
   /* ══════════════════════════════════════════════════════
@@ -169,10 +274,7 @@
     if (!el) return;
     el.innerHTML = _loading();
 
-    const [atas, delibs] = await Promise.all([
-      _loadAtas(true),
-      _loadDelibs(true),
-    ]);
+    const [atas, delibs] = await Promise.all([_loadAtas(true), _loadDelibs(true)]);
 
     let demandas = [];
     try { demandas = await _get("demandas", "origem_tipo=eq.ATA&order=criado_em.desc"); }
@@ -183,15 +285,12 @@
     const rascunho   = atas.filter(a => a.status === "RASCUNHO").length;
     const arquivadas = atas.filter(a => a.status === "ARQUIVADA").length;
 
-    const totalDelibs    = delibs.length;
-    const totalDem       = demandas.length;
-    const demPendentes   = demandas.filter(d => !["CONCLUIDA","CANCELADA"].includes(d.status)).length;
-    const demAtrasadas   = demandas.filter(d =>
-      d.status !== "CONCLUIDA" && d.status !== "CANCELADA" &&
-      isAtrasada(d.prazo || d.data_conclusao_prevista)
+    const totalDelibs  = delibs.length;
+    const totalDem     = demandas.length;
+    const demPendentes = demandas.filter(d => !["CONCLUIDA","CANCELADA"].includes(d.status)).length;
+    const demAtrasadas = demandas.filter(d =>
+      !["CONCLUIDA","CANCELADA"].includes(d.status) && isAtrasada(_prazoDem(d))
     ).length;
-
-    const recentes = atas.slice(0, 8);
 
     el.innerHTML = `
       ${demAtrasadas > 0 ? `
@@ -233,10 +332,10 @@
       <div class="g2">
         <div class="card">
           <div class="ctit">Atas Recentes <span class="cact" onclick="window.go('atas-todas')">Ver todas →</span></div>
-          ${recentes.length === 0 ? _vazio("Nenhuma ata registrada ainda.") : `
+          ${atas.slice(0,8).length === 0 ? _vazio("Nenhuma ata registrada ainda.") : `
             <table class="tbl">
               <thead><tr><th>Nº</th><th>Tipo</th><th>Data</th><th>Presidente</th><th>Status</th></tr></thead>
-              <tbody>${recentes.map(a => `
+              <tbody>${atas.slice(0,8).map(a => `
                 <tr style="cursor:pointer" onclick="atasVerDetalhes('${a.id}')">
                   <td class="tdc" style="font-weight:700">${a.numero || "—"}</td>
                   <td style="font-size:11px">${tipoLabel(a.tipo)}</td>
@@ -251,13 +350,13 @@
           <div class="ctit">Distribuição</div>
           <div class="bars" style="gap:10px">
             ${[
-              { label:"Aprovadas",  val:aprovadas,  cor:"var(--gr)",    total },
-              { label:"Rascunhos",  val:rascunho,   cor:"var(--gold)",  total },
-              { label:"Arquivadas", val:arquivadas, cor:"var(--blue)",  total },
+              { label:"Aprovadas",  val:aprovadas,  cor:"var(--gr)",   total },
+              { label:"Rascunhos",  val:rascunho,   cor:"var(--gold)", total },
+              { label:"Arquivadas", val:arquivadas, cor:"var(--blue)", total },
             ].map(b => `
               <div>
                 <div class="bh"><span class="bn">${b.label}</span><span class="bv">${b.val}</span></div>
-                <div class="bt"><div class="bf" style="width:${b.total ? Math.round((b.val / b.total) * 100) : 0}%;background:${b.cor}"></div></div>
+                <div class="bt"><div class="bf" style="width:${b.total ? Math.round((b.val/b.total)*100) : 0}%;background:${b.cor}"></div></div>
               </div>`).join("")}
           </div>
           <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--bd1)">
@@ -332,8 +431,7 @@
             <td style="font-size:11px;color:var(--tx2);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.sintese || "—"}</td>
             <td>${pillAta(a.status)}</td>
             <td onclick="event.stopPropagation()" style="text-align:center;white-space:nowrap">
-              <button class="tbt" style="padding:3px 7px;font-size:11px;margin-right:2px"
-                onclick="atasVerDetalhes('${a.id}')">Ver</button>
+              <button class="tbt" style="padding:3px 7px;font-size:11px;margin-right:2px" onclick="atasVerDetalhes('${a.id}')">Ver</button>
               ${a.status !== "APROVADA" && a.status !== "ARQUIVADA" ? `
                 <button class="tbt" style="padding:3px 7px;font-size:11px;margin-right:2px;color:var(--gold);border-color:var(--gold)"
                   onclick="atasEditarAta('${a.id}')">Editar</button>` : ""}
@@ -354,29 +452,47 @@
     const lista   = (window._atasData || []).filter(a =>
       (!busca || [a.numero, a.presidente, a.secretario, a.sintese].some(v => (v || "").toLowerCase().includes(busca))) &&
       (!fStatus || a.status === fStatus) &&
-      (!fTipo   || a.tipo === fTipo)
+      (!fTipo   || a.tipo   === fTipo)
     );
     const wrap = document.getElementById("atas-tabela-wrap");
     if (wrap) wrap.innerHTML = _tabelaAtas(lista);
   };
 
   /* ══════════════════════════════════════════════════════
-     APROVAR ATA
+     APROVAR ATA — update real + reload completo
   ══════════════════════════════════════════════════════ */
 
-  window.atasAprovar = async function (id) {
-    if (!confirm("Aprovar esta ata?\n\nO banco de dados irá gerar automaticamente as demandas vinculadas às deliberações marcadas para geração.")) return;
+  window.atasAprovar = async function (id, btn) {
+    if (!confirm("Aprovar esta ata?\n\nO banco irá gerar automaticamente as demandas vinculadas às deliberações marcadas para geração.")) return;
+
+    if (btn) { btn.disabled = true; btn.textContent = "Aprovando…"; }
+
     try {
+      /* 1. Update real na tabela atas */
       await _patch("atas", id, { status: "APROVADA" });
+
+      /* 2. Invalida cache — próxima leitura virá do banco com dados atualizados */
       _invalidate();
-      _toast("Ata aprovada! As demandas serão geradas automaticamente pelo banco.", "ok");
-      // Fecha modal de detalhe se aberto
+
+      /* 3. Fecha modal de detalhe se aberto */
       document.getElementById("modal-ata-detalhe")?.remove();
-      // Atualiza view atual
+
+      /* 4. Recarrega views abertas */
       const vid = document.querySelector(".view.on")?.id?.replace("v-", "");
-      if (vid === "atas-todas") renderTodasAtas();
-      else if (vid === "atas-dash") renderDash();
-    } catch(e) { _toast("Erro ao aprovar: " + e.message, "err"); }
+      if (vid === "atas-todas") await renderTodasAtas();
+      else if (vid === "atas-dash") await renderDash();
+      else if (vid === "atas-delib") await renderDeliberacoesGlobal();
+
+      /* 5. Mensagem confirmando que o banco gerou as demandas */
+      _toast("Ata aprovada e demandas geradas automaticamente pelo banco.", "ok");
+
+      /* 6. Reabre o detalhe da ata para o usuário ver as demandas geradas */
+      setTimeout(() => atasVerDetalhes(id), 400);
+
+    } catch(e) {
+      _toast("Erro ao aprovar: " + e.message, "err");
+      if (btn) { btn.disabled = false; btn.textContent = "Aprovar Ata"; }
+    }
   };
 
   /* ══════════════════════════════════════════════════════
@@ -392,15 +508,15 @@
       Promise.all([
         _get("atas", `id=eq.${ataId}`),
         _get("atas_deliberacoes", `ata_id=eq.${ataId}&order=created_at.asc`),
-      ]).then(([ataRows, deliberRows]) => {
+      ]).then(async ([ataRows, deliberRows]) => {
         const ata = ataRows[0];
         if (!ata) { el.innerHTML = _vazio("Ata não encontrada."); return; }
-        _ataEditando    = ata;
-        _deliberacoesTemp = deliberRows;
+        _ataEditando      = ata;
+        _deliberacoesTemp = await _enriquecerDelibsDeAta(deliberRows);
         _renderFormAta(el, ata, true);
       }).catch(e => { el.innerHTML = `<div class="alr alr-r">${e.message}</div>`; });
     } else {
-      _ataEditando    = null;
+      _ataEditando      = null;
       _deliberacoesTemp = [];
       _renderFormAta(el, null, false);
     }
@@ -413,8 +529,7 @@
     const ph   = opts.placeholder ? `placeholder="${opts.placeholder}"` : "";
     if (tipo === "select") {
       return `${lbl}<select id="${id}" style="${base}">${(opts.options || []).map(o =>
-        `<option value="${o.v}" ${val === o.v ? "selected" : ""}>${o.l}</option>`
-      ).join("")}</select>`;
+        `<option value="${o.v}" ${val === o.v ? "selected" : ""}>${o.l}</option>`).join("")}</select>`;
     }
     if (tipo === "textarea") {
       return `${lbl}<textarea id="${id}" rows="3" ${ph} style="${base};resize:vertical">${val}</textarea>`;
@@ -467,24 +582,20 @@
               <tr>
                 <th>Descrição</th><th>Tipo</th><th>Departamento</th>
                 <th>Responsável</th><th>Prazo</th><th>Prior.</th>
-                <th style="text-align:center">Demanda</th><th></th>
+                <th>Demanda</th><th></th>
               </tr>
             </thead>
             <tbody>
               ${delibs.map(d => `
-              <tr style="${isAtrasada(d.prazo) ? "background:rgba(224,85,85,.04)" : ""}">
+              <tr style="${isAtrasada(d.prazo) && !d.demanda_id ? "background:rgba(224,85,85,.04)" : ""}">
                 <td style="font-size:12px;max-width:200px">${d.descricao || "—"}</td>
                 <td>${pillDelib(d.tipo)}</td>
                 <td style="font-size:11.5px">${d.departamento || "—"}</td>
                 <td style="font-size:11.5px">${d.responsavel || "—"}</td>
                 <td style="font-size:11px;font-family:var(--mono);color:${isAtrasada(d.prazo) ? "var(--rose)" : "var(--tx2)"}">${fmtD(d.prazo)}${isAtrasada(d.prazo) ? " ⚠" : ""}</td>
                 <td>${pillPrio(d.prioridade)}</td>
-                <td style="text-align:center">
-                  ${d.demanda_id
-                    ? `<button class="tbt" style="font-size:10px;padding:2px 7px;color:var(--sky);border-color:var(--sky)" onclick="window.demAbrirDetalhe&&window.demAbrirDetalhe('${d.demanda_id}','atas-nova')">Abrir</button>`
-                    : `<span style="font-size:10px;color:var(--tx3)">${d.gerar_demanda ? "Pendente" : "—"}</span>`}
-                </td>
-                <td>
+                <td>${_celulaDemanda(d)}</td>
+                <td style="white-space:nowrap">
                   <button class="tbt" style="font-size:10px;padding:2px 6px;margin-right:2px" onclick="atasModalDelib('${d.id}')">✎</button>
                   <button class="tbt" style="font-size:10px;padding:2px 6px;color:var(--rose);border-color:rgba(224,85,85,.3)" onclick="atasRemoverDelib('${d.id}')">×</button>
                 </td>
@@ -495,12 +606,30 @@
       </div>`;
   }
 
+  /* Renderiza a célula de demanda de forma padronizada */
+  function _celulaDemanda(d) {
+    if (d.demanda_id) {
+      const dem = d._demanda;
+      return `
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:rgba(58,170,92,.15);color:var(--gr);width:fit-content">Gerada</span>
+          ${dem ? pillDem(dem.status) : ""}
+          <button class="tbt" style="font-size:10px;padding:2px 7px;color:var(--sky);border-color:var(--sky);margin-top:1px"
+            onclick="_abrirDemanda('${d.demanda_id}','atas-nova')">Abrir demanda</button>
+        </div>`;
+    }
+    if (d.gerar_demanda) {
+      return `<span style="font-size:11px;color:var(--tx3)">Não gerada</span>`;
+    }
+    return `<span style="font-size:11px;color:var(--tx3)">—</span>`;
+  }
+
   /* ── Salvar ata ─────────────────────────────────────── */
 
   window.atasSalvar = async function (ataId) {
-    const numero     = document.getElementById("ata-numero")?.value?.trim();
-    const tipo       = document.getElementById("ata-tipo")?.value;
-    const data       = document.getElementById("ata-data")?.value;
+    const numero = document.getElementById("ata-numero")?.value?.trim();
+    const tipo   = document.getElementById("ata-tipo")?.value;
+    const data   = document.getElementById("ata-data")?.value;
 
     if (!numero) { _toast("Informe o número da ata.", "err"); return; }
     if (!tipo)   { _toast("Selecione o tipo de reunião.", "err"); return; }
@@ -512,10 +641,10 @@
       data,
       hora_inicio: document.getElementById("ata-hora-ini")?.value || null,
       hora_fim:    document.getElementById("ata-hora-fim")?.value || null,
-      local:       document.getElementById("ata-local")?.value?.trim() || null,
+      local:       document.getElementById("ata-local")?.value?.trim()      || null,
       presidente:  document.getElementById("ata-presidente")?.value?.trim() || null,
       secretario:  document.getElementById("ata-secretario")?.value?.trim() || null,
-      sintese:     document.getElementById("ata-sintese")?.value?.trim() || null,
+      sintese:     document.getElementById("ata-sintese")?.value?.trim()    || null,
     };
 
     try {
@@ -533,12 +662,10 @@
       _ataEditando = ata;
       _invalidate();
 
-      if (!ataId) {
-        // Carrega deliberacoes do novo registro (devem estar vazias)
-        _deliberacoesTemp = [];
-      } else {
-        _deliberacoesTemp = await _get("atas_deliberacoes", `ata_id=eq.${ata.id}&order=created_at.asc`).catch(() => []);
-      }
+      const delibRows = ataId
+        ? await _get("atas_deliberacoes", `ata_id=eq.${ata.id}&order=created_at.asc`).catch(() => [])
+        : [];
+      _deliberacoesTemp = await _enriquecerDelibsDeAta(delibRows);
 
       const sec = document.getElementById("atas-delib-section");
       if (sec) { sec.style.display = ""; sec.innerHTML = _secaoDeliberacoes(); }
@@ -580,10 +707,10 @@
               <div style="font-size:11px;color:var(--tx3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">Tipo *</div>
               <select id="dlib-tipo" style="width:100%;padding:8px 10px;background:var(--bg-body);border:1px solid var(--bd1);border-radius:6px;color:var(--tx1);font-size:13px;box-sizing:border-box">
                 <option value="">Selecione</option>
-                <option value="APROVADO"    ${d?.tipo === "APROVADO"    ? "selected" : ""}>Aprovado</option>
-                <option value="REJEITADO"   ${d?.tipo === "REJEITADO"   ? "selected" : ""}>Rejeitado</option>
-                <option value="ENCAMINHADO" ${d?.tipo === "ENCAMINHADO" ? "selected" : ""}>Encaminhado</option>
-                <option value="EM_ANALISE"  ${d?.tipo === "EM_ANALISE"  ? "selected" : ""}>Em Análise</option>
+                <option value="APROVADO"    ${d?.tipo==="APROVADO"    ? "selected" : ""}>Aprovado</option>
+                <option value="REJEITADO"   ${d?.tipo==="REJEITADO"   ? "selected" : ""}>Rejeitado</option>
+                <option value="ENCAMINHADO" ${d?.tipo==="ENCAMINHADO" ? "selected" : ""}>Encaminhado</option>
+                <option value="EM_ANALISE"  ${d?.tipo==="EM_ANALISE"  ? "selected" : ""}>Em Análise</option>
               </select>
             </div>
             <div>
@@ -604,10 +731,10 @@
             <div>
               <div style="font-size:11px;color:var(--tx3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">Prioridade</div>
               <select id="dlib-prio" style="width:100%;padding:8px 10px;background:var(--bg-body);border:1px solid var(--bd1);border-radius:6px;color:var(--tx1);font-size:13px;box-sizing:border-box">
-                <option value="Baixa"  ${d?.prioridade === "Baixa"   ? "selected" : ""}>Baixa</option>
-                <option value="Média"  ${(!d || d?.prioridade === "Média")  ? "selected" : ""}>Média</option>
-                <option value="Alta"   ${d?.prioridade === "Alta"    ? "selected" : ""}>Alta</option>
-                <option value="Urgente"${d?.prioridade === "Urgente" ? "selected" : ""}>Urgente</option>
+                <option value="Baixa"   ${d?.prioridade==="Baixa"   ? "selected" : ""}>Baixa</option>
+                <option value="Média"   ${(!d||d?.prioridade==="Média")  ? "selected" : ""}>Média</option>
+                <option value="Alta"    ${d?.prioridade==="Alta"    ? "selected" : ""}>Alta</option>
+                <option value="Urgente" ${d?.prioridade==="Urgente" ? "selected" : ""}>Urgente</option>
               </select>
             </div>
             <div style="display:flex;align-items:center;padding-top:18px">
@@ -636,13 +763,13 @@
     if (!tipo)      { _toast("Selecione o tipo da deliberação.", "err"); return; }
 
     const payload = {
-      ata_id:       _ataEditando.id,
+      ata_id:        _ataEditando.id,
       descricao,
       tipo,
-      departamento: document.getElementById("dlib-dept")?.value?.trim()  || null,
-      responsavel:  document.getElementById("dlib-resp")?.value?.trim()  || null,
-      prazo:        document.getElementById("dlib-prazo")?.value         || null,
-      prioridade:   document.getElementById("dlib-prio")?.value          || "Média",
+      departamento:  document.getElementById("dlib-dept")?.value?.trim()  || null,
+      responsavel:   document.getElementById("dlib-resp")?.value?.trim()  || null,
+      prazo:         document.getElementById("dlib-prazo")?.value         || null,
+      prioridade:    document.getElementById("dlib-prio")?.value          || "Média",
       gerar_demanda: document.getElementById("dlib-gerar")?.checked ?? true,
     };
 
@@ -656,7 +783,8 @@
       document.getElementById("modal-delib-atas")?.remove();
       _toast(deliberacaoId ? "Deliberação atualizada." : "Deliberação adicionada.", "ok");
 
-      _deliberacoesTemp = await _get("atas_deliberacoes", `ata_id=eq.${_ataEditando.id}&order=created_at.asc`).catch(() => []);
+      const delibRows = await _get("atas_deliberacoes", `ata_id=eq.${_ataEditando.id}&order=created_at.asc`).catch(() => []);
+      _deliberacoesTemp = await _enriquecerDelibsDeAta(delibRows);
       const sec = document.getElementById("atas-delib-section");
       if (sec) sec.innerHTML = _secaoDeliberacoes();
     } catch(e) { _toast("Erro: " + e.message, "err"); }
@@ -675,7 +803,7 @@
   };
 
   /* ══════════════════════════════════════════════════════
-     DELIBERAÇÕES (GLOBAL)
+     DELIBERAÇÕES GLOBAL — com dados enriquecidos
   ══════════════════════════════════════════════════════ */
 
   async function renderDeliberacoesGlobal() {
@@ -683,12 +811,8 @@
     if (!el) return;
     el.innerHTML = _loading();
 
-    const [atas, delibs] = await Promise.all([_loadAtas(true), _loadDelibs(true)]);
-    const ataMap = {};
-    atas.forEach(a => { ataMap[a.id] = a; });
-    const enriched = delibs.map(d => ({ ...d, _ata: ataMap[d.ata_id] || null }));
-
-    const deptos = [...new Set(enriched.map(d => d.departamento).filter(Boolean))].sort();
+    const enriched = await _loadDelibsEnriquecidas(true);
+    const deptos   = [...new Set(enriched.map(d => d.departamento).filter(Boolean))].sort();
 
     el.innerHTML = `
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
@@ -708,6 +832,12 @@
           <option value="">Todos os departamentos</option>
           ${deptos.map(d => `<option value="${d}">${d}</option>`).join("")}
         </select>
+        <select id="delib-f-dem" onchange="atasAplicarFiltrosDelib()"
+          style="padding:7px 10px;background:var(--bg-body);border:1px solid var(--bd1);border-radius:6px;color:var(--tx2);font-size:12px">
+          <option value="">Todas as demandas</option>
+          <option value="gerada">Com demanda gerada</option>
+          <option value="nao_gerada">Sem demanda</option>
+        </select>
       </div>
       <div id="delib-tabela-wrap">${_tabelaDelibs(enriched)}</div>`;
 
@@ -723,7 +853,7 @@
           <tr>
             <th>Nº Ata</th><th>Data</th><th>Descrição</th><th>Tipo</th>
             <th>Departamento</th><th>Responsável</th><th>Prazo</th>
-            <th>Prior.</th><th>Gerar</th><th>Demanda</th>
+            <th>Prior.</th><th>Demanda</th>
           </tr>
         </thead>
         <tbody>
@@ -737,26 +867,38 @@
             <td style="font-size:11.5px">${d.responsavel || "—"}</td>
             <td style="font-size:11px;font-family:var(--mono);color:${isAtrasada(d.prazo) ? "var(--rose)" : "var(--tx2)"}">${fmtD(d.prazo)}${isAtrasada(d.prazo) ? " ⚠" : ""}</td>
             <td>${pillPrio(d.prioridade)}</td>
-            <td style="text-align:center;font-size:12px">${d.gerar_demanda ? '<span style="color:var(--gr)">✓</span>' : '<span style="color:var(--tx3)">—</span>'}</td>
-            <td>
-              ${d.demanda_id
-                ? `<button class="tbt" style="font-size:10px;padding:2px 8px;color:var(--sky);border-color:var(--sky)" onclick="window.demAbrirDetalhe&&window.demAbrirDetalhe('${d.demanda_id}','atas-delib')">Abrir Demanda</button>`
-                : `<span style="font-size:11px;color:var(--tx3)">${d.gerar_demanda ? "Pendente" : "—"}</span>`}
-            </td>
+            <td>${_celulaDemandaGlobal(d)}</td>
           </tr>`).join("")}
         </tbody>
       </table>
       </div>`;
   }
 
+  function _celulaDemandaGlobal(d) {
+    if (d.demanda_id) {
+      const dem = d._demanda;
+      return `
+        <div style="display:flex;flex-direction:column;gap:3px;min-width:120px">
+          <span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;background:rgba(58,170,92,.15);color:var(--gr);width:fit-content">✓ Gerada</span>
+          ${dem ? `<div>${pillDem(dem.status)}</div>` : ""}
+          ${dem?.titulo ? `<div style="font-size:10.5px;color:var(--tx2);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${dem.titulo}">${dem.titulo}</div>` : ""}
+          <button class="tbt" style="font-size:10px;padding:2px 8px;color:var(--sky);border-color:var(--sky);margin-top:2px;width:fit-content"
+            onclick="_abrirDemanda('${d.demanda_id}','atas-delib')">Abrir demanda</button>
+        </div>`;
+    }
+    return `<span style="font-size:11px;color:var(--tx3)">${d.gerar_demanda ? "Não gerada" : "—"}</span>`;
+  }
+
   window.atasAplicarFiltrosDelib = function () {
     const busca  = (document.getElementById("delib-busca")?.value || "").toLowerCase();
     const fTipo  = document.getElementById("delib-f-tipo")?.value || "";
     const fDept  = document.getElementById("delib-f-dept")?.value || "";
+    const fDem   = document.getElementById("delib-f-dem")?.value  || "";
     const lista  = (window._delibsData || []).filter(d =>
-      (!busca || [d.descricao, d.responsavel, d.departamento, d._ata?.numero].some(v => (v || "").toLowerCase().includes(busca))) &&
-      (!fTipo  || d.tipo === fTipo) &&
-      (!fDept  || d.departamento === fDept)
+      (!busca || [d.descricao, d.responsavel, d.departamento, d._ata?.numero, d._demanda?.titulo].some(v => (v||"").toLowerCase().includes(busca))) &&
+      (!fTipo || d.tipo === fTipo) &&
+      (!fDept || d.departamento === fDept) &&
+      (!fDem  || (fDem === "gerada" ? !!d.demanda_id : !d.demanda_id))
     );
     const wrap = document.getElementById("delib-tabela-wrap");
     if (wrap) wrap.innerHTML = _tabelaDelibs(lista);
@@ -775,10 +917,11 @@
       modal.onclick = e => { if (e.target === modal) modal.remove(); };
       document.body.appendChild(modal);
     }
-    modal.innerHTML = `<div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:800px;margin:auto;box-shadow:0 20px 60px rgba(0,0,0,.4);min-height:100px">${_loading("Carregando ata...")}</div>`;
+    modal.innerHTML = `<div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:840px;margin:auto;min-height:100px;box-shadow:0 20px 60px rgba(0,0,0,.4)">${_loading("Carregando ata...")}</div>`;
 
     try {
-      const [ataRows, delibRows, demRows] = await Promise.all([
+      /* Busca simultânea: ata + deliberações + demandas por ata_id */
+      const [ataRows, delibRowsRaw, demPorAta] = await Promise.all([
         _get("atas", `id=eq.${id}`),
         _get("atas_deliberacoes", `ata_id=eq.${id}&order=created_at.asc`),
         _get("demandas", `ata_id=eq.${id}&order=criado_em.desc`).catch(() => []),
@@ -786,19 +929,67 @@
 
       const ata = ataRows[0];
       if (!ata) {
-        modal.innerHTML = `<div style="background:var(--bg-card);border-radius:12px;padding:24px;max-width:800px;margin:auto">${_vazio("Ata não encontrada.")}<div style="text-align:center"><button class="tbt" onclick="document.getElementById('modal-ata-detalhe').remove()">Fechar</button></div></div>`;
+        modal.innerHTML = `<div style="background:var(--bg-card);border-radius:12px;padding:24px;max-width:840px;margin:auto">${_vazio("Ata não encontrada.")}<div style="text-align:center"><button class="tbt" onclick="document.getElementById('modal-ata-detalhe').remove()">Fechar</button></div></div>`;
         return;
       }
+
+      /* Enriquece deliberações com dados das demandas vinculadas */
+      const delibRows = await _enriquecerDelibsDeAta(delibRowsRaw);
 
       const infoBloco = [
         ["Presidente", ata.presidente],
         ["Secretário",  ata.secretario],
         ["Local",       ata.local],
         ["Tipo",        tipoLabel(ata.tipo)],
-      ].filter(([, v]) => v);
+      ].filter(([,v]) => v);
+
+      /* Constrói linhas das deliberações no modal */
+      function _linhaDelibModal(d) {
+        return `
+          <tr style="${isAtrasada(d.prazo) ? "background:rgba(224,85,85,.04)" : ""}">
+            <td style="font-size:12px;max-width:180px">${d.descricao || "—"}</td>
+            <td>${pillDelib(d.tipo)}</td>
+            <td style="font-size:11px">${d.departamento || "—"}</td>
+            <td style="font-size:11px">${d.responsavel || "—"}</td>
+            <td style="font-size:11px;color:${isAtrasada(d.prazo) ? "var(--rose)" : "var(--tx2)"}">${fmtD(d.prazo)}${isAtrasada(d.prazo) ? " ⚠" : ""}</td>
+            <td>${pillPrio(d.prioridade)}</td>
+            <td>${_celulaDemandaModal(d)}</td>
+          </tr>`;
+      }
+
+      function _celulaDemandaModal(d) {
+        if (d.demanda_id) {
+          const dem = d._demanda;
+          return `
+            <div style="display:flex;flex-direction:column;gap:3px">
+              <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;background:rgba(58,170,92,.15);color:var(--gr);width:fit-content">✓ Gerada</span>
+              ${dem ? pillDem(dem.status) : ""}
+              <button class="tbt" style="font-size:10px;padding:2px 7px;color:var(--sky);border-color:var(--sky);margin-top:1px;width:fit-content"
+                onclick="_abrirDemanda('${d.demanda_id}','atas-dash')">Abrir</button>
+            </div>`;
+        }
+        return `<span style="font-size:11px;color:var(--tx3)">${d.gerar_demanda ? "Não gerada" : "—"}</span>`;
+      }
+
+      /* Constrói linhas das demandas geradas */
+      function _linhaDemModal(d) {
+        const prazo = _prazoDem(d);
+        return `
+          <tr>
+            <td style="font-size:12px;font-weight:600">${d.titulo || "—"}</td>
+            <td style="font-size:11px">${d.area || "—"}</td>
+            <td>${pillDem(d.status)}</td>
+            <td style="font-size:11px">${_respDem(d)}</td>
+            <td style="font-size:11px;color:${isAtrasada(prazo) ? "var(--rose)" : "var(--tx2)"}">${fmtD(prazo)}${isAtrasada(prazo) ? " ⚠" : ""}</td>
+            <td>
+              <button class="tbt" style="font-size:10px;padding:2px 8px;color:var(--sky);border-color:var(--sky)"
+                onclick="_abrirDemanda('${d.id}','atas-dash')">Ver demanda</button>
+            </td>
+          </tr>`;
+      }
 
       modal.innerHTML = `
-        <div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:800px;margin:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+        <div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:840px;margin:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)">
           <!-- Header -->
           <div style="padding:20px 24px 16px;border-bottom:1px solid var(--bd1);display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:var(--bg-card);border-radius:12px 12px 0 0;z-index:1">
             <div>
@@ -810,15 +1001,20 @@
                 ${ata.hora_inicio ? `<span style="font-size:11.5px;color:var(--tx3)">${ata.hora_inicio}${ata.hora_fim ? " — " + ata.hora_fim : ""}</span>` : ""}
               </div>
             </div>
-            <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
-              ${ata.status === "RASCUNHO" ? `<button class="tbt" style="color:var(--gr);border-color:var(--gr);font-size:12px" onclick="atasAprovar('${ata.id}')">Aprovar Ata</button>` : ""}
-              ${ata.status !== "APROVADA" && ata.status !== "ARQUIVADA" ? `<button class="tbt" style="color:var(--gold);border-color:var(--gold);font-size:12px" onclick="document.getElementById('modal-ata-detalhe').remove();atasEditarAta('${ata.id}')">Editar</button>` : ""}
+            <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+              ${ata.status === "RASCUNHO" ? `
+                <button class="tbt" id="btn-aprovar-modal" style="color:var(--gr);border-color:var(--gr);font-size:12px"
+                  onclick="atasAprovar('${ata.id}',this)">Aprovar Ata</button>` : ""}
+              ${ata.status !== "APROVADA" && ata.status !== "ARQUIVADA" ? `
+                <button class="tbt" style="color:var(--gold);border-color:var(--gold);font-size:12px"
+                  onclick="document.getElementById('modal-ata-detalhe').remove();atasEditarAta('${ata.id}')">Editar</button>` : ""}
               <button onclick="document.getElementById('modal-ata-detalhe').remove()" style="background:none;border:none;font-size:22px;color:var(--tx3);cursor:pointer;padding:4px 8px;border-radius:6px">×</button>
             </div>
           </div>
 
-          <div style="padding:20px 24px;display:flex;flex-direction:column;gap:20px">
-            <!-- Dados -->
+          <div style="padding:20px 24px;display:flex;flex-direction:column;gap:22px">
+
+            <!-- Dados principais -->
             ${infoBloco.length > 0 || ata.sintese ? `
             <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
               ${infoBloco.map(([lbl, val]) => `
@@ -833,70 +1029,63 @@
                 </div>` : ""}
             </div>` : ""}
 
-            <!-- Deliberações -->
+            <!-- Deliberações com vínculo de demanda -->
             <div>
               <div style="font-size:13px;font-weight:600;color:var(--tx1);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
                 <span>Deliberações <span style="font-size:11px;color:var(--tx3);font-weight:400">(${delibRows.length})</span></span>
-                ${ata.status === "RASCUNHO" ? `<button class="tbt" style="font-size:11px" onclick="document.getElementById('modal-ata-detalhe').remove();atasEditarAta('${ata.id}')">+ Adicionar</button>` : ""}
+                ${ata.status === "RASCUNHO" ? `
+                  <button class="tbt" style="font-size:11px"
+                    onclick="document.getElementById('modal-ata-detalhe').remove();atasEditarAta('${ata.id}')">+ Adicionar</button>` : ""}
               </div>
               ${delibRows.length === 0 ? _vazio("Nenhuma deliberação registrada.") : `
                 <div style="overflow-x:auto">
                 <table class="tbl">
                   <thead><tr><th>Descrição</th><th>Tipo</th><th>Depto</th><th>Responsável</th><th>Prazo</th><th>Prior.</th><th>Demanda</th></tr></thead>
-                  <tbody>
-                    ${delibRows.map(d => `
-                    <tr style="${isAtrasada(d.prazo) ? "background:rgba(224,85,85,.04)" : ""}">
-                      <td style="font-size:12px;max-width:200px">${d.descricao || "—"}</td>
-                      <td>${pillDelib(d.tipo)}</td>
-                      <td style="font-size:11px">${d.departamento || "—"}</td>
-                      <td style="font-size:11px">${d.responsavel || "—"}</td>
-                      <td style="font-size:11px;color:${isAtrasada(d.prazo) ? "var(--rose)" : "var(--tx2)"}">${fmtD(d.prazo)}${isAtrasada(d.prazo) ? " ⚠" : ""}</td>
-                      <td>${pillPrio(d.prioridade)}</td>
-                      <td>${d.demanda_id ? `<button class="tbt" style="font-size:10px;padding:2px 6px;color:var(--sky)" onclick="window.demAbrirDetalhe&&window.demAbrirDetalhe('${d.demanda_id}','atas-dash')">Abrir</button>` : '<span style="font-size:11px;color:var(--tx3)">—</span>'}</td>
-                    </tr>`).join("")}
-                  </tbody>
+                  <tbody>${delibRows.map(_linhaDelibModal).join("")}</tbody>
                 </table>
                 </div>`}
             </div>
 
-            <!-- Demandas geradas -->
+            <!-- Demandas geradas por esta ata -->
             <div>
-              <div style="font-size:13px;font-weight:600;color:var(--tx1);margin-bottom:10px">
-                Demandas Geradas <span style="font-size:11px;color:var(--tx3);font-weight:400">(${demRows.length})</span>
+              <div style="font-size:13px;font-weight:600;color:var(--tx1);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bd1)">
+                Demandas geradas por esta ata
+                <span style="font-size:11px;color:var(--tx3);font-weight:400">(${demPorAta.length})</span>
+                ${ata.status === "APROVADA" && demPorAta.length === 0 ? `
+                  <span style="font-size:10.5px;color:var(--amber);margin-left:8px">— verifique o trigger no banco</span>` : ""}
               </div>
-              ${demRows.length === 0 ? _vazio("Nenhuma demanda vinculada a esta ata.") : `
+              ${demPorAta.length === 0 ? _vazio(
+                  ata.status === "RASCUNHO"
+                    ? "Ata ainda não aprovada. Aprove para gerar demandas automaticamente."
+                    : "Nenhuma demanda vinculada a esta ata."
+                ) : `
                 <div style="overflow-x:auto">
                 <table class="tbl">
-                  <thead><tr><th>Título</th><th>Status</th><th>Responsável</th><th>Prazo</th><th></th></tr></thead>
-                  <tbody>
-                    ${demRows.map(d => `
-                    <tr>
-                      <td style="font-size:12px">${d.titulo || "—"}</td>
-                      <td><span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;background:rgba(90,96,104,.15);color:var(--tx2)">${(d.status || "").replace("_", " ")}</span></td>
-                      <td style="font-size:11.5px">${d.responsavel || "—"}</td>
-                      <td style="font-size:11px;color:${isAtrasada(d.prazo || d.data_conclusao_prevista) ? "var(--rose)" : "var(--tx2)"}">${fmtD(d.prazo || d.data_conclusao_prevista)}</td>
-                      <td><button class="tbt" style="font-size:10px;padding:2px 8px" onclick="window.demAbrirDetalhe&&window.demAbrirDetalhe('${d.id}','atas-dash')">Ver</button></td>
-                    </tr>`).join("")}
-                  </tbody>
+                  <thead><tr><th>Título</th><th>Área</th><th>Status</th><th>Responsável</th><th>Prazo</th><th></th></tr></thead>
+                  <tbody>${demPorAta.map(_linhaDemModal).join("")}</tbody>
                 </table>
                 </div>`}
             </div>
+
           </div>
         </div>`;
     } catch(e) {
-      modal.innerHTML = `<div style="background:var(--bg-card);border-radius:12px;padding:24px;max-width:800px;margin:auto">
+      modal.innerHTML = `<div style="background:var(--bg-card);border-radius:12px;padding:24px;max-width:840px;margin:auto">
         <div class="alr alr-r">Erro ao carregar: ${e.message}</div>
         <div style="margin-top:12px;text-align:center"><button class="tbt" onclick="document.getElementById('modal-ata-detalhe').remove()">Fechar</button></div>
       </div>`;
     }
   };
 
-  /* ── Editar ata (navega e carrega) ──────────────────── */
+  /* ── Editar ata ─────────────────────────────────────── */
 
   window.atasEditarAta = function (id) {
     window.go("atas-nova");
     setTimeout(() => renderNovaAta(id), 60);
   };
+
+  /* ── Expõe _abrirDemanda globalmente ────────────────── */
+  window._abrirDemanda = _abrirDemanda;
 
   /* ══════════════════════════════════════════════════════
      TOAST
@@ -911,10 +1100,10 @@
       document.body.appendChild(t);
     }
     const item = document.createElement("div");
-    item.style.cssText = `background:${tipo === "ok" ? "var(--gr)" : "var(--rose)"};color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.3);max-width:340px;pointer-events:auto`;
+    item.style.cssText = `background:${tipo === "ok" ? "var(--gr)" : "var(--rose)"};color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.3);max-width:360px;pointer-events:auto`;
     item.textContent = msg;
     t.appendChild(item);
-    setTimeout(() => item.remove(), 4000);
+    setTimeout(() => item.remove(), 5000);
   }
 
   /* ══════════════════════════════════════════════════════
