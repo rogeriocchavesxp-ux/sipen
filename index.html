@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SIPEN v6.5.0 — Sistema Integrado da IPPenha</title>
+<title>SIPEN v6.6.0 — Sistema Integrado da IPPenha</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -1250,6 +1250,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
           <button id="ep-btn-mensal"      onclick="ep_setModo('mensal')"      style="padding:6px 12px;border:none;cursor:pointer;font-size:11.5px;font-family:var(--sans);transition:all .15s">Mensal</button>
           <button id="ep-btn-trimestral"  onclick="ep_setModo('trimestral')"  style="padding:6px 12px;border:none;border-left:1px solid var(--bd2);cursor:pointer;font-size:11.5px;font-family:var(--sans);transition:all .15s">3 Meses</button>
           <button id="ep-btn-semestral"   onclick="ep_setModo('semestral')"   style="padding:6px 12px;border:none;border-left:1px solid var(--bd2);cursor:pointer;font-size:11.5px;font-family:var(--sans);transition:all .15s">Semestral</button>
+          <button id="ep-btn-lista"       onclick="ep_setModo('lista')"       style="padding:6px 12px;border:none;border-left:1px solid var(--bd2);cursor:pointer;font-size:11.5px;font-family:var(--sans);transition:all .15s">☰ Lista</button>
         </div>
         <!-- Navegação de mês -->
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
@@ -6692,7 +6693,45 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
   ];
 
   /* ── Estado ──────────────────────────────────────────────────── */
-  const _st = { mes: (() => { const d=new Date(); d.setDate(1); d.setHours(0,0,0,0); return d; })(), modo:"mensal", pastor:"" };
+  const _nowMesKey = (() => { const n=new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}`; })();
+  const _st = {
+    mes: (() => { const d=new Date(); d.setDate(1); d.setHours(0,0,0,0); return d; })(),
+    modo:"mensal",
+    pastor:"",
+    openMonths: new Set([_nowMesKey]),
+  };
+
+  /* ── Pastores oficiais ─────────────────────────────────────────── */
+  const _PASTORES_OFICIAIS = [
+    "Rev. Amauri Oliveira",
+    "Rev. Carlos Henrique",
+    "Rev. Carlos Lima",
+    "Rev. Cornélio Castro",
+    "Rev. Fábio Carvalho",
+    "Rev. Flávio Ramos",
+  ];
+
+  /* ── Banco de dados de slots (estado em memória) ──────────────── */
+  const _TIPO_SLOT = {
+    manha:   {label:"Domingo Manhã",      cor:"#4a9cf5", ico:"☀️"},
+    noite:   {label:"Domingo Noite",      cor:"#8b6fd4", ico:"🌙"},
+    conexao: {label:"Conexão com Deus",   cor:"#2ab5c0", ico:"🙏"},
+    tarde:   {label:"Tarde da Esperança", cor:"#d4a843", ico:"✝️"},
+  };
+  const _STATUS_CFG = {
+    pendente:   {bg:"rgba(212,168,67,.15)",  cl:"#d4a843",label:"Pendente"},
+    preenchida: {bg:"rgba(74,156,245,.15)",  cl:"#4a9cf5", label:"Preenchida"},
+    confirmada: {bg:"rgba(58,170,92,.15)",   cl:"#3aaa5c", label:"Confirmada"},
+  };
+  const _slots = new Map(); // key → {pastor, obs, status}
+  // Pré-popular _slots a partir de _D (dados já cadastrados)
+  _D.forEach(item => {
+    if (item.tipo !== "culto") return;
+    const sfx = item.turno==="manhã"?"manha":item.turno==="noite"?"noite":item.turno==="tarde"?"tarde":null;
+    if (!sfx) return;
+    const key = `${item.data}-${sfx}`;
+    _slots.set(key, { pastor: item.pastor||"", obs: item.obs||"", status: item.pastor?"preenchida":"pendente" });
+  });
 
   /* ── Tipo → visual ───────────────────────────────────────────── */
   const TC = {
@@ -6836,28 +6875,147 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
     el.innerHTML=h;
   }
 
+  /* ── Gera slots de um mês (dom/seg/qua) ─────────────────────── */
+  function _slotsForMes(ano, mes) {
+    const slots = [];
+    const last = new Date(ano, mes+1, 0).getDate();
+    for (let d=1; d<=last; d++) {
+      const dt = new Date(ano, mes, d);
+      const dow = dt.getDay();
+      const ds = _iso(dt);
+      if (dow===0) { // domingo
+        slots.push({ds, tipo:"manha",   key:`${ds}-manha`});
+        slots.push({ds, tipo:"noite",   key:`${ds}-noite`});
+      }
+      if (dow===1) { // segunda
+        slots.push({ds, tipo:"conexao", key:`${ds}-conexao`});
+      }
+      if (dow===3) { // quarta
+        slots.push({ds, tipo:"tarde",   key:`${ds}-tarde`});
+      }
+    }
+    return slots;
+  }
+
+  /* ── Linhas de slots de um mês aberto ───────────────────────── */
+  function _renderMesSlots(slots, canEdit) {
+    if (!slots.length) return `<div style="color:var(--tx3);font-size:11.5px;padding:12px 4px">Nenhum culto registrado.</div>`;
+    let h = ""; let lastDs = "";
+    slots.forEach(slot => {
+      const st = _slots.get(slot.key) || {pastor:"", obs:"", status:"pendente"};
+      // Cabeçalho de data
+      if (slot.ds !== lastDs) {
+        lastDs = slot.ds;
+        const dt = new Date(slot.ds+"T12:00:00");
+        const isToday = slot.ds===_today();
+        const dLbl = dt.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"2-digit",year:"numeric"});
+        h += `<div style="font-size:10.5px;font-weight:700;color:${isToday?"#3aaa5c":"var(--tx3)"};text-transform:capitalize;padding:${lastDs===""?"8px":"14px"} 4px 5px;${lastDs===""?"":"border-top:1px solid var(--bd1);margin-top:4px"}">${isToday?"● ":""}${dLbl}</div>`;
+      }
+      // Linha do slot
+      const tc = _TIPO_SLOT[slot.tipo];
+      const sc = _STATUS_CFG[st.status] || _STATUS_CFG.pendente;
+      h += `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 10px;margin:3px 0;background:var(--bg-card);border-radius:6px;border-left:3px solid ${tc.cor}">`;
+      // Tipo
+      h += `<div style="min-width:154px;flex-shrink:0"><span style="font-size:9.5px;font-weight:700;color:${tc.cor};text-transform:uppercase;letter-spacing:.04em">${tc.ico} ${tc.label}</span></div>`;
+      // Pastor
+      if (canEdit) {
+        h += `<select onchange="ep_setPastor('${slot.key}',this.value)" style="flex:1;min-width:170px;background:var(--bg-input);border:1px solid var(--bd2);border-radius:5px;color:var(--tx1);font-size:11.5px;padding:5px 8px;outline:none;font-family:var(--sans)">`;
+        h += `<option value="">— Selecionar pastor —</option>`;
+        _PASTORES_OFICIAIS.forEach(p => { h += `<option value="${p}"${st.pastor===p?" selected":""}>${p}</option>`; });
+        h += `</select>`;
+      } else {
+        h += `<div style="flex:1;min-width:170px;font-size:11.5px;color:${st.pastor?"var(--tx1)":"var(--tx3)"}">${st.pastor||"— Não definido —"}</div>`;
+      }
+      // Status
+      if (canEdit) {
+        h += `<select onchange="ep_setStatus('${slot.key}',this.value)" style="background:${sc.bg};border:1px solid ${sc.cl}44;border-radius:5px;color:${sc.cl};font-size:10px;padding:4px 7px;outline:none;font-weight:700;font-family:var(--sans);cursor:pointer">`;
+        Object.entries(_STATUS_CFG).forEach(([k,v]) => { h += `<option value="${k}"${st.status===k?" selected":""}>${v.label}</option>`; });
+        h += `</select>`;
+      } else {
+        h += `<span style="font-size:9.5px;padding:3px 9px;border-radius:8px;font-weight:700;background:${sc.bg};color:${sc.cl}">${sc.label}</span>`;
+      }
+      // Observações
+      if (canEdit) {
+        h += `<input type="text" value="${(st.obs||"").replace(/"/g,"&quot;")}" placeholder="Observações..." onblur="ep_setObs('${slot.key}',this.value)" style="width:180px;background:var(--bg-input);border:1px solid var(--bd2);border-radius:5px;color:var(--tx2);font-size:10.5px;padding:5px 8px;outline:none;font-family:var(--sans)">`;
+      } else if (st.obs) {
+        h += `<span style="font-size:10px;color:var(--tx3);font-style:italic">${st.obs}</span>`;
+      }
+      h += `</div>`;
+    });
+    return h;
+  }
+
+  /* ── Modo Lista (accordion por mês) ─────────────────────────── */
+  function _renderLista() {
+    const canEdit = (typeof temPermissao==="function" && temPermissao("Pastoral","full")) ||
+                    (typeof USUARIO_ATUAL!=="undefined" && USUARIO_ATUAL?.perfil==="admin_geral");
+    let h = "";
+    for (let i=0; i<14; i++) {
+      const m  = _addM(_st.mes, i);
+      const ano = m.getFullYear(), mes = m.getMonth();
+      const mk  = `${ano}-${String(mes+1).padStart(2,"0")}`;
+      const isOpen    = _st.openMonths.has(mk);
+      const isCurrent = mk === _nowMesKey;
+      const slots     = _slotsForMes(ano, mes);
+      // Contagem de status
+      const cnt = {pendente:0, preenchida:0, confirmada:0};
+      slots.forEach(s => { const st=(_slots.get(s.key)||{}).status||"pendente"; cnt[st]++; });
+      const nomeMes = m.toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+
+      h += `<div style="border:1px solid ${isCurrent?"var(--teal)":"var(--bd2)"};border-radius:8px;overflow:hidden;margin-bottom:8px">`;
+      // Header do accordion
+      h += `<div onclick="ep_toggleMes('${mk}')" style="display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;background:${isCurrent?"rgba(42,181,192,0.06)":"var(--bg-card)"};user-select:none" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">`;
+      h += `<span style="font-size:12px;color:var(--teal);transition:transform .2s;display:inline-block">${isOpen?"▼":"▶"}</span>`;
+      h += `<span style="font-size:12.5px;font-weight:700;color:var(--tx1);text-transform:capitalize;flex:1">${nomeMes}</span>`;
+      if (isCurrent) h += `<span style="font-size:8.5px;background:rgba(42,181,192,.18);color:var(--teal);padding:2px 8px;border-radius:10px;font-weight:700;flex-shrink:0">MÊS ATUAL</span>`;
+      // Badges de status
+      if (cnt.confirmada) h += `<span style="font-size:9px;background:rgba(58,170,92,.15);color:#3aaa5c;padding:2px 8px;border-radius:8px;font-weight:700;flex-shrink:0">✓ ${cnt.confirmada}</span>`;
+      if (cnt.preenchida) h += `<span style="font-size:9px;background:rgba(74,156,245,.15);color:#4a9cf5;padding:2px 8px;border-radius:8px;font-weight:700;flex-shrink:0">● ${cnt.preenchida}</span>`;
+      if (cnt.pendente)   h += `<span style="font-size:9px;background:rgba(212,168,67,.15);color:#d4a843;padding:2px 8px;border-radius:8px;font-weight:700;flex-shrink:0">◌ ${cnt.pendente}</span>`;
+      h += `</div>`;
+      // Corpo expandido
+      if (isOpen) {
+        h += `<div style="border-top:1px solid var(--bd1);padding:8px 12px 14px;background:var(--bg-surface)">`;
+        if (!canEdit) h += `<div style="font-size:10px;color:var(--tx3);padding:4px 4px 10px">Visualização somente leitura. Apenas usuários autorizados podem editar a escala.</div>`;
+        h += _renderMesSlots(slots, canEdit);
+        h += `</div>`;
+      }
+      h += `</div>`;
+    }
+    return h;
+  }
+
   /* ── Render principal ────────────────────────────────────────── */
   function _render(){
     // Label do período
+    // Label do período
     const lbl=document.getElementById("ep-mes-label");
     if(lbl){
-      const t=_st.modo==="mensal"?_fmtMes(_st.mes):_st.modo==="trimestral"?`${_fmtMes(_st.mes)} → ${_fmtMes(_addM(_st.mes,2))}`:`${_fmtMes(_st.mes)} → ${_fmtMes(_addM(_st.mes,5))}`;
+      const t=_st.modo==="mensal"?_fmtMes(_st.mes):
+               _st.modo==="trimestral"?`${_fmtMes(_st.mes)} → ${_fmtMes(_addM(_st.mes,2))}`:
+               _st.modo==="semestral"?`${_fmtMes(_st.mes)} → ${_fmtMes(_addM(_st.mes,5))}`:
+               `${_fmtMes(_st.mes)} → ${_fmtMes(_addM(_st.mes,13))}`;
       lbl.textContent=t.charAt(0).toUpperCase()+t.slice(1);
     }
     // Botões de modo
-    ["mensal","trimestral","semestral"].forEach(m=>{
+    ["mensal","trimestral","semestral","lista"].forEach(m=>{
       const btn=document.getElementById(`ep-btn-${m}`);
       if(!btn) return;
       const on=_st.modo===m;
-      btn.style.cssText=`padding:6px 12px;border:none;cursor:pointer;font-size:11.5px;font-family:var(--sans);transition:all .15s;background:${on?"var(--teal)":"var(--bg-card)"};color:${on?"#fff":"var(--tx2)"};font-weight:${on?700:400}`;
+      btn.style.cssText=`padding:6px 12px;border:none;${m!=="mensal"?"border-left:1px solid var(--bd2);":""}cursor:pointer;font-size:11.5px;font-family:var(--sans);transition:all .15s;background:${on?"var(--teal)":"var(--bg-card)"};color:${on?"#fff":"var(--tx2)"};font-weight:${on?700:400}`;
     });
     // Popula filtro de pastor (só na primeira vez)
     const sel=document.getElementById("ep-pastor-filter");
     if(sel&&sel.options.length<=1) _pastores().forEach(p=>sel.add(new Option(p,p)));
     // Conteúdo
     const ct=document.getElementById("ep-conteudo"); if(!ct) return;
-    ct.innerHTML=_st.modo==="mensal"?_renderMensal():_st.modo==="trimestral"?_renderTrimestral():_renderSemestral();
-    _renderIndicadores();
+    ct.innerHTML=_st.modo==="mensal"?_renderMensal():
+                 _st.modo==="trimestral"?_renderTrimestral():
+                 _st.modo==="semestral"?_renderSemestral():
+                 _renderLista();
+    // Indicadores: só para modos de calendário
+    if(_st.modo!=="lista") _renderIndicadores();
+    else document.getElementById("ep-indicadores").innerHTML="";
   }
 
   /* ── API pública ─────────────────────────────────────────────── */
@@ -6873,6 +7031,36 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
     T(`${t.ico} ${t.label}${item.turno?" · "+item.turno:""} — ${item.pastor}`,`📅 ${d.charAt(0).toUpperCase()+d.slice(1)}\n📍 ${item.local}${item.obs?"\n📝 "+item.obs:""}`);
   };
   window.ep_novaEscala   = ()=>T("+ Nova Escala Pastoral","Funcionalidade de cadastro em desenvolvimento. Será integrada à tabela ESCALA_PASTORAL do Supabase.");
+
+  window.ep_toggleMes = function(mk) {
+    if (_st.openMonths.has(mk)) _st.openMonths.delete(mk);
+    else _st.openMonths.add(mk);
+    _render();
+  };
+
+  window.ep_setPastor = function(key, pastor) {
+    const cur = _slots.get(key) || {pastor:"", obs:"", status:"pendente"};
+    cur.pastor = pastor;
+    if (pastor && cur.status==="pendente") cur.status="preenchida";
+    if (!pastor) cur.status="pendente";
+    _slots.set(key, cur);
+    // Atualizar badges do mês sem re-render completo
+    _render();
+  };
+
+  window.ep_setStatus = function(key, status) {
+    const cur = _slots.get(key) || {pastor:"", obs:"", status:"pendente"};
+    cur.status = status;
+    _slots.set(key, cur);
+    _render();
+  };
+
+  window.ep_setObs = function(key, obs) {
+    const cur = _slots.get(key) || {pastor:"", obs:"", status:"pendente"};
+    cur.obs = obs;
+    _slots.set(key, cur);
+    // Não re-render para não perder foco do input
+  };
 
 })();
 
