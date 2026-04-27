@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SIPEN v6.4.0 — Sistema Integrado da IPPenha</title>
+<title>SIPEN v6.5.0 — Sistema Integrado da IPPenha</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -1234,8 +1234,8 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
   <div class="view" id="v-pastoral-preg">
     <div class="hero">
       <div class="hero-ic" style="background:var(--tealbg);border-color:rgba(58,176,184,0.25)">🎙</div>
-      <div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Escala de Pregação</div><div class="hero-dsc">Programação pastoral de pregações da IPPenha, com escala mensal dos cultos de domingo e Tarde da Esperança</div></div>
-      <div class="hero-act"><button class="tbt pri" onclick="T('Nova escala','Cadastro e atualização da escala de pregação')">+ Nova Escala</button></div>
+      <div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Escala de Pregação</div><div class="hero-dsc">Planejamento contínuo, distribuição equilibrada e visualização estratégica da escala pastoral</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="ep_novaEscala()">+ Nova Escala</button></div>
     </div>
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini" onclick="go('pastoral-dash')">Dashboard</div><div class="ini on">Escala de Pregação</div>
@@ -1243,46 +1243,39 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
       <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div><div class="ini" onclick="go('pastoral-reg')">Registros</div><div class="ini" onclick="go('pastoral-pri')">Prioritários</div>
     </div>
     <div class="ct">
-      <div class="g2">
-        <div class="card">
-          <div class="ctit">Culto de Domingo <span class="csub">Abril</span><span class="cact" onclick="T('Escala dominical','Escala mensal de pregação dos cultos de domingo')">↻ Atualizar</span></div>
-          <table class="tbl">
-            <thead><tr><th>Dia</th><th>Manhã</th><th>Noite</th></tr></thead>
-            <tbody>
-              <tr><td class="tdc">06</td><td class="tdp">Rev. Amauri Oliveira</td><td>Rev. Carlos Lima</td></tr>
-              <tr><td class="tdc">12</td><td class="tdp">Rev. Flávio Ramos</td><td>Rev. Amauri Oliveira</td></tr>
-              <tr><td class="tdc">19</td><td class="tdp">Rev. Amauri Oliveira</td><td>Rev. Fábio Carvalho</td></tr>
-              <tr><td class="tdc">26</td><td class="tdp">Rev. Carlos Henrique</td><td>Rev. Amauri Oliveira</td></tr>
-            </tbody>
-          </table>
+      <!-- Barra de controles -->
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding:12px 14px;background:var(--bg-card);border:1px solid var(--bd1);border-radius:8px">
+        <!-- Seletor de modo -->
+        <div style="display:flex;border:1px solid var(--bd2);border-radius:6px;overflow:hidden;flex-shrink:0">
+          <button id="ep-btn-mensal"      onclick="ep_setModo('mensal')"      style="padding:6px 12px;border:none;cursor:pointer;font-size:11.5px;font-family:var(--sans);transition:all .15s">Mensal</button>
+          <button id="ep-btn-trimestral"  onclick="ep_setModo('trimestral')"  style="padding:6px 12px;border:none;border-left:1px solid var(--bd2);cursor:pointer;font-size:11.5px;font-family:var(--sans);transition:all .15s">3 Meses</button>
+          <button id="ep-btn-semestral"   onclick="ep_setModo('semestral')"   style="padding:6px 12px;border:none;border-left:1px solid var(--bd2);cursor:pointer;font-size:11.5px;font-family:var(--sans);transition:all .15s">Semestral</button>
         </div>
-        <div class="gcol">
-          <div class="card">
-            <div class="ctit">Tarde da Esperança <span class="csub">Abril</span></div>
-            <table class="tbl">
-              <thead><tr><th>Dia</th><th>Pregador</th></tr></thead>
-              <tbody>
-                <tr><td class="tdc">01</td><td class="tdp">Rev. Amauri Oliveira</td></tr>
-                <tr><td class="tdc">08</td><td class="tdp">Rev. Fábio Carvalho</td></tr>
-                <tr><td class="tdc">15</td><td class="tdp">Rev. Cornélio Castro</td></tr>
-                <tr><td class="tdc">22</td><td class="tdp">Rev. Fábio Carvalho</td></tr>
-                <tr><td class="tdc">29</td><td class="tdp">Rev. Cornélio Castro</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="card">
-            <div class="ctit">Resumo da Escala</div>
-            <div class="bars" style="gap:8px">
-              <div><div class="bh"><span class="bn">Rev. Amauri Oliveira</span><span class="bv">4</span></div><div class="bt"><div class="bf" style="width:100%;background:var(--teal)"></div></div></div>
-              <div><div class="bh"><span class="bn">Rev. Fábio Carvalho</span><span class="bv">3</span></div><div class="bt"><div class="bf" style="width:75%;background:var(--amber)"></div></div></div>
-              <div><div class="bh"><span class="bn">Rev. Cornélio Castro</span><span class="bv">2</span></div><div class="bt"><div class="bf" style="width:50%;background:var(--violet)"></div></div></div>
-              <div><div class="bh"><span class="bn">Rev. Carlos Lima</span><span class="bv">1</span></div><div class="bt"><div class="bf" style="width:25%;background:var(--sky)"></div></div></div>
-              <div><div class="bh"><span class="bn">Rev. Flávio Ramos</span><span class="bv">1</span></div><div class="bt"><div class="bf" style="width:25%;background:var(--gmd)"></div></div></div>
-              <div><div class="bh"><span class="bn">Rev. Carlos Henrique</span><span class="bv">1</span></div><div class="bt"><div class="bf" style="width:25%;background:var(--rose)"></div></div></div>
-            </div>
-          </div>
+        <!-- Navegação de mês -->
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <button class="tbt" onclick="ep_mesAnterior()" style="padding:5px 10px">← Anterior</button>
+          <span id="ep-mes-label" style="min-width:160px;text-align:center;font-size:12px;font-weight:600;color:var(--tx1)">carregando...</span>
+          <button class="tbt" onclick="ep_mesProximo()" style="padding:5px 10px">Próximo →</button>
         </div>
+        <!-- Filtro por pastor -->
+        <select id="ep-pastor-filter" onchange="ep_filtrarPastor()" style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:11.5px;padding:5px 10px;outline:none;height:32px;font-family:var(--sans)">
+          <option value="">Todos os pastores</option>
+        </select>
+        <button class="tbt" onclick="ep_render()" style="margin-left:auto;padding:5px 10px;flex-shrink:0">↻</button>
       </div>
+      <!-- Legenda de tipos -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx2)"><span style="display:inline-block;width:10px;height:10px;background:#4a9cf5;border-radius:2px"></span>Culto</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx2)"><span style="display:inline-block;width:10px;height:10px;background:#3aaa5c;border-radius:2px"></span>Atendimento</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx2)"><span style="display:inline-block;width:10px;height:10px;background:#e08a2a;border-radius:2px"></span>Visita</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx2)"><span style="display:inline-block;width:10px;height:10px;background:#8b6fd4;border-radius:2px"></span>Plantão</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx2)"><span style="display:inline-block;width:10px;height:10px;background:#d4a843;border-radius:2px"></span>Evento</div>
+        <div style="margin-left:auto;font-size:10px;color:var(--tx3)">🟢 hoje destacado · 🌅 fins de semana destacados</div>
+      </div>
+      <!-- Área principal de conteúdo -->
+      <div id="ep-conteudo"></div>
+      <!-- Indicadores -->
+      <div id="ep-indicadores" style="margin-top:16px"></div>
     </div>
   </div>
 
@@ -6576,6 +6569,7 @@ window.go = function(id) {
 
   if (id === "config-permissoes")     renderMatrizPermissoes();
   if (id === "area-dash")             _areaDashLoad();
+  if (id === "pastoral-preg")         ep_render();
 };
 
 // CRUMBs adicionais
@@ -6599,7 +6593,288 @@ CRUMB["area-min"]    = ["Área do Membro","Meus Ministérios","/ serviço e esca
 CRUMB["area-pgs"]    = ["Área do Membro","Meu PG","/ pequeno grupo"];
 CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e demandas"];
 
+/* ═══════════════════════════════════════════════════════════════
+   ESCALA PASTORAL — módulo dinâmico
+   Navegação multi-período · 3 modos · indicadores de carga
+═══════════════════════════════════════════════════════════════ */
+(function () {
 
+  /* ── Base de dados da escala ─────────────────────────────────── */
+  const _D = [
+    // ── Abril 2026 ──────────────────────────────────────────────
+    {id:"e001",data:"2026-04-05",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e002",data:"2026-04-05",tipo:"culto",turno:"noite",   pastor:"Rev. Carlos Lima",       local:"Templo Principal",obs:""},
+    {id:"e003",data:"2026-04-07",tipo:"culto",turno:"tarde",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e004",data:"2026-04-12",tipo:"culto",turno:"manhã",   pastor:"Rev. Flávio Ramos",      local:"Templo Principal",obs:""},
+    {id:"e005",data:"2026-04-12",tipo:"culto",turno:"noite",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e006",data:"2026-04-14",tipo:"culto",turno:"tarde",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e007",data:"2026-04-15",tipo:"atendimento",turno:"",  pastor:"Rev. Amauri Oliveira",  local:"Sala Pastoral",   obs:"Aconselhamento"},
+    {id:"e008",data:"2026-04-19",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e009",data:"2026-04-19",tipo:"culto",turno:"noite",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:""},
+    {id:"e010",data:"2026-04-21",tipo:"culto",turno:"tarde",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e011",data:"2026-04-22",tipo:"visita",turno:"",       pastor:"Rev. Fábio Carvalho",   local:"Hospital",        obs:"Visita hospitalar"},
+    {id:"e012",data:"2026-04-26",tipo:"culto",turno:"manhã",   pastor:"Rev. Carlos Henrique",  local:"Templo Principal",obs:""},
+    {id:"e013",data:"2026-04-26",tipo:"culto",turno:"noite",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e014",data:"2026-04-28",tipo:"culto",turno:"tarde",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:"Tarde da Esperança"},
+    // ── Maio 2026 ───────────────────────────────────────────────
+    {id:"e015",data:"2026-05-03",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e016",data:"2026-05-03",tipo:"culto",turno:"noite",   pastor:"Rev. Flávio Ramos",      local:"Templo Principal",obs:""},
+    {id:"e017",data:"2026-05-05",tipo:"culto",turno:"tarde",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e018",data:"2026-05-10",tipo:"culto",turno:"manhã",   pastor:"Rev. Carlos Lima",       local:"Templo Principal",obs:""},
+    {id:"e019",data:"2026-05-10",tipo:"culto",turno:"noite",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e020",data:"2026-05-12",tipo:"culto",turno:"tarde",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e021",data:"2026-05-13",tipo:"atendimento",turno:"",  pastor:"Rev. Amauri Oliveira",  local:"Sala Pastoral",   obs:""},
+    {id:"e022",data:"2026-05-17",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e023",data:"2026-05-17",tipo:"culto",turno:"noite",   pastor:"Rev. Carlos Henrique",  local:"Templo Principal",obs:""},
+    {id:"e024",data:"2026-05-19",tipo:"culto",turno:"tarde",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e025",data:"2026-05-20",tipo:"visita",turno:"",       pastor:"Rev. Cornélio Castro",   local:"Externo",         obs:"Visita pastoral"},
+    {id:"e026",data:"2026-05-24",tipo:"culto",turno:"manhã",   pastor:"Rev. Flávio Ramos",      local:"Templo Principal",obs:""},
+    {id:"e027",data:"2026-05-24",tipo:"culto",turno:"noite",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:""},
+    {id:"e028",data:"2026-05-26",tipo:"culto",turno:"tarde",   pastor:"Rev. Carlos Lima",       local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e029",data:"2026-05-31",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e030",data:"2026-05-31",tipo:"culto",turno:"noite",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:""},
+    // ── Junho 2026 ──────────────────────────────────────────────
+    {id:"e031",data:"2026-06-02",tipo:"culto",turno:"tarde",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e032",data:"2026-06-07",tipo:"culto",turno:"manhã",   pastor:"Rev. Carlos Lima",       local:"Templo Principal",obs:""},
+    {id:"e033",data:"2026-06-07",tipo:"culto",turno:"noite",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e034",data:"2026-06-09",tipo:"culto",turno:"tarde",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e035",data:"2026-06-14",tipo:"culto",turno:"manhã",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:""},
+    {id:"e036",data:"2026-06-14",tipo:"culto",turno:"noite",   pastor:"Rev. Flávio Ramos",      local:"Templo Principal",obs:""},
+    {id:"e037",data:"2026-06-16",tipo:"culto",turno:"tarde",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e038",data:"2026-06-21",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e039",data:"2026-06-21",tipo:"culto",turno:"noite",   pastor:"Rev. Carlos Henrique",  local:"Templo Principal",obs:""},
+    {id:"e040",data:"2026-06-23",tipo:"evento",turno:"",       pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:"Retiro Pastoral"},
+    {id:"e041",data:"2026-06-28",tipo:"culto",turno:"manhã",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:""},
+    {id:"e042",data:"2026-06-28",tipo:"culto",turno:"noite",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e043",data:"2026-06-30",tipo:"culto",turno:"tarde",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:"Tarde da Esperança"},
+    // ── Julho 2026 ──────────────────────────────────────────────
+    {id:"e044",data:"2026-07-05",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e045",data:"2026-07-05",tipo:"culto",turno:"noite",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:""},
+    {id:"e046",data:"2026-07-07",tipo:"culto",turno:"tarde",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e047",data:"2026-07-12",tipo:"culto",turno:"manhã",   pastor:"Rev. Flávio Ramos",      local:"Templo Principal",obs:""},
+    {id:"e048",data:"2026-07-12",tipo:"culto",turno:"noite",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e049",data:"2026-07-14",tipo:"culto",turno:"tarde",   pastor:"Rev. Carlos Lima",       local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e050",data:"2026-07-19",tipo:"culto",turno:"manhã",   pastor:"Rev. Carlos Lima",       local:"Templo Principal",obs:""},
+    {id:"e051",data:"2026-07-19",tipo:"culto",turno:"noite",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:""},
+    {id:"e052",data:"2026-07-21",tipo:"culto",turno:"tarde",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e053",data:"2026-07-26",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e054",data:"2026-07-26",tipo:"culto",turno:"noite",   pastor:"Rev. Carlos Henrique",  local:"Templo Principal",obs:""},
+    {id:"e055",data:"2026-07-28",tipo:"culto",turno:"tarde",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:"Tarde da Esperança"},
+    // ── Agosto 2026 ─────────────────────────────────────────────
+    {id:"e056",data:"2026-08-02",tipo:"culto",turno:"manhã",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:""},
+    {id:"e057",data:"2026-08-02",tipo:"culto",turno:"noite",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e058",data:"2026-08-04",tipo:"culto",turno:"tarde",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e059",data:"2026-08-09",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e060",data:"2026-08-09",tipo:"culto",turno:"noite",   pastor:"Rev. Flávio Ramos",      local:"Templo Principal",obs:""},
+    {id:"e061",data:"2026-08-11",tipo:"culto",turno:"tarde",   pastor:"Rev. Carlos Lima",       local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e062",data:"2026-08-16",tipo:"culto",turno:"manhã",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:""},
+    {id:"e063",data:"2026-08-16",tipo:"culto",turno:"noite",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:""},
+    {id:"e064",data:"2026-08-18",tipo:"culto",turno:"tarde",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e065",data:"2026-08-23",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e066",data:"2026-08-23",tipo:"culto",turno:"noite",   pastor:"Rev. Carlos Lima",       local:"Templo Principal",obs:""},
+    {id:"e067",data:"2026-08-25",tipo:"culto",turno:"tarde",   pastor:"Rev. Flávio Ramos",      local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e068",data:"2026-08-30",tipo:"culto",turno:"manhã",   pastor:"Rev. Carlos Henrique",  local:"Templo Principal",obs:""},
+    {id:"e069",data:"2026-08-30",tipo:"culto",turno:"noite",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    // ── Setembro 2026 ───────────────────────────────────────────
+    {id:"e070",data:"2026-09-01",tipo:"culto",turno:"tarde",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e071",data:"2026-09-06",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e072",data:"2026-09-06",tipo:"culto",turno:"noite",   pastor:"Rev. Cornélio Castro",   local:"Templo Principal",obs:""},
+    {id:"e073",data:"2026-09-08",tipo:"culto",turno:"tarde",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e074",data:"2026-09-13",tipo:"culto",turno:"manhã",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:""},
+    {id:"e075",data:"2026-09-13",tipo:"culto",turno:"noite",   pastor:"Rev. Flávio Ramos",      local:"Templo Principal",obs:""},
+    {id:"e076",data:"2026-09-15",tipo:"culto",turno:"tarde",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e077",data:"2026-09-20",tipo:"culto",turno:"manhã",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e078",data:"2026-09-20",tipo:"culto",turno:"noite",   pastor:"Rev. Carlos Lima",       local:"Templo Principal",obs:""},
+    {id:"e079",data:"2026-09-22",tipo:"culto",turno:"tarde",   pastor:"Rev. Carlos Henrique",  local:"Templo Principal",obs:"Tarde da Esperança"},
+    {id:"e080",data:"2026-09-27",tipo:"culto",turno:"manhã",   pastor:"Rev. Carlos Henrique",  local:"Templo Principal",obs:""},
+    {id:"e081",data:"2026-09-27",tipo:"culto",turno:"noite",   pastor:"Rev. Amauri Oliveira",  local:"Templo Principal",obs:""},
+    {id:"e082",data:"2026-09-29",tipo:"culto",turno:"tarde",   pastor:"Rev. Fábio Carvalho",   local:"Templo Principal",obs:"Tarde da Esperança"},
+  ];
+
+  /* ── Estado ──────────────────────────────────────────────────── */
+  const _st = { mes: (() => { const d=new Date(); d.setDate(1); d.setHours(0,0,0,0); return d; })(), modo:"mensal", pastor:"" };
+
+  /* ── Tipo → visual ───────────────────────────────────────────── */
+  const TC = {
+    culto:       {bg:"rgba(74,156,245,.13)",  cl:"#4a9cf5", ico:"⛪",label:"Culto"},
+    atendimento: {bg:"rgba(58,170,92,.13)",   cl:"#3aaa5c", ico:"🤝",label:"Atendimento"},
+    visita:      {bg:"rgba(224,138,42,.13)",  cl:"#e08a2a", ico:"🏠",label:"Visita"},
+    plantao:     {bg:"rgba(139,111,212,.13)", cl:"#8b6fd4", ico:"📞",label:"Plantão"},
+    evento:      {bg:"rgba(212,168,67,.13)",  cl:"#d4a843", ico:"🎉",label:"Evento"},
+  };
+  const PCORES = ["#2ab5c0","#4a9cf5","#8b6fd4","#e08a2a","#e05555","#3aaa5c","#d4a843"];
+
+  /* ── Helpers ─────────────────────────────────────────────────── */
+  function _addM(d,n){ const r=new Date(d); r.setMonth(r.getMonth()+n); r.setDate(1); return r; }
+  function _fmtMes(d){ return d.toLocaleDateString("pt-BR",{month:"long",year:"numeric"}); }
+  function _iso(d){ return d.toISOString().slice(0,10); }
+  function _today(){ return new Date().toISOString().slice(0,10); }
+  function _pastores(){ return [...new Set(_D.map(e=>e.pastor))].sort(); }
+  function _forDate(s){ return _D.filter(e=>e.data===s&&(!_st.pastor||e.pastor===_st.pastor)); }
+
+  /* ── Pill de evento ──────────────────────────────────────────── */
+  function _pill(item, compact){
+    const t=TC[item.tipo]||TC.culto;
+    if(compact) return `<div style="background:${t.bg};border-left:2px solid ${t.cl};padding:2px 5px;border-radius:3px;margin-top:2px;font-size:9px;color:${t.cl};cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%" title="${item.pastor} · ${t.label}${item.turno?' · '+item.turno:''}" onclick="ep_ver('${item.id}')">${t.ico} ${item.pastor.replace(/Rev\.\s*/,"").split(" ")[0]}</div>`;
+    return `<div style="background:${t.bg};border-left:3px solid ${t.cl};padding:5px 9px;border-radius:5px;margin-top:5px;cursor:pointer;transition:opacity .12s" onclick="ep_ver('${item.id}')" onmouseover="this.style.opacity='.72'" onmouseout="this.style.opacity='1'">
+      <div style="font-size:9px;font-weight:700;color:${t.cl};text-transform:uppercase;letter-spacing:.05em">${t.ico} ${t.label}${item.turno?' · '+item.turno:''}</div>
+      <div style="font-size:11.5px;color:var(--tx1);font-weight:600;margin-top:1px">${item.pastor}</div>
+      <div style="font-size:10px;color:var(--tx3)">${item.local}${item.obs?' · '+item.obs:''}</div>
+    </div>`;
+  }
+
+  /* ── Grid de um mês ──────────────────────────────────────────── */
+  function _grid(targetMes, compact){
+    const ano=targetMes.getFullYear(), mes=targetMes.getMonth();
+    const today=_today();
+    const lastDay=new Date(ano,mes+1,0).getDate();
+    const firstDow=new Date(ano,mes,1).getDay();
+    const DIAS=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+    let h=`<div style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:8px;overflow:hidden">`;
+    h+=`<div style="display:grid;grid-template-columns:repeat(7,1fr);background:var(--bg-surface);border-bottom:1px solid var(--bd1)">`;
+    DIAS.forEach((d,i)=>{ h+=`<div style="padding:${compact?'5px':'7px'} 4px;text-align:center;font-size:${compact?'8.5':'9.5'}px;font-weight:700;color:${i===0||i===6?'var(--tx2)':'var(--tx3)'};text-transform:uppercase">${compact?d[0]:d}</div>`; });
+    h+=`</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--bd1)">`;
+    const mh=compact?"60px":"88px";
+    for(let i=0;i<firstDow;i++) h+=`<div style="min-height:${mh};background:var(--bg-body)"></div>`;
+    for(let day=1;day<=lastDay;day++){
+      const ds=`${ano}-${String(mes+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+      const dow=(firstDow+day-1)%7;
+      const isToday=ds===today, isWe=dow===0||dow===6;
+      const items=_forDate(ds);
+      const bg=isToday?"rgba(58,170,92,0.07)":isWe?"rgba(255,255,255,0.02)":"var(--bg-card)";
+      h+=`<div style="min-height:${mh};background:${bg};padding:${compact?'4':'5'}px;border-top:2px solid ${isToday?'#3aaa5c':'transparent'}">`;
+      if(isToday) h+=`<span style="display:inline-flex;align-items:center;justify-content:center;width:${compact?'16':'20'}px;height:${compact?'16':'20'}px;background:#3aaa5c;color:#fff;border-radius:50%;font-size:${compact?'9':'10.5'}px;font-weight:800">${day}</span>`;
+      else h+=`<span style="font-size:${compact?'9.5':'11'}px;font-weight:600;color:${isWe?'var(--tx2)':'var(--tx3)'}">${day}</span>`;
+      items.forEach(item=>{ h+=_pill(item,compact||false); });
+      h+=`</div>`;
+    }
+    const trail=(firstDow+lastDay)%7; if(trail>0) for(let i=0;i<7-trail;i++) h+=`<div style="min-height:${mh};background:var(--bg-body)"></div>`;
+    h+=`</div></div>`;
+    return h;
+  }
+
+  /* ── Modo mensal ─────────────────────────────────────────────── */
+  function _renderMensal(){ return _grid(_st.mes, false); }
+
+  /* ── Modo trimestral ─────────────────────────────────────────── */
+  function _renderTrimestral(){
+    let h=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;overflow-x:auto">`;
+    for(let i=0;i<3;i++){
+      const m=_addM(_st.mes,i);
+      h+=`<div><div style="font-size:12px;font-weight:700;color:var(--tx1);text-transform:capitalize;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid var(--teal)">${_fmtMes(m)}</div>${_grid(m,true)}</div>`;
+    }
+    return h+`</div>`;
+  }
+
+  /* ── Modo semestral ──────────────────────────────────────────── */
+  function _renderSemestral(){
+    const pastores=_pastores();
+    // Coletar todos os domingos dos 6 meses
+    const weeks=[];
+    for(let mi=0;mi<6;mi++){
+      const m=_addM(_st.mes,mi);
+      const ano=m.getFullYear(), mes=m.getMonth();
+      const last=new Date(ano,mes+1,0).getDate();
+      for(let d=1;d<=last;d++){
+        const dt=new Date(ano,mes,d);
+        if(dt.getDay()===0) weeks.push({ds:_iso(dt),lbl:dt.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"}),mes});
+      }
+    }
+    // Contar escalas por pastor × semana (domingo + terça adjacente)
+    function _cnt(pastor,ds){
+      const sun=new Date(ds+"T12:00:00");
+      const tue=new Date(sun); tue.setDate(tue.getDate()+2);
+      const dates=new Set([ds,_iso(tue)]);
+      return _D.filter(e=>dates.has(e.data)&&e.pastor===pastor).length;
+    }
+    const today=_today();
+    let h=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:540px">`;
+    // Cabeçalho com separador por mês
+    h+=`<thead><tr><th style="text-align:left;padding:8px 12px;font-size:10px;color:var(--tx3);font-weight:700;white-space:nowrap;background:var(--bg-card);border-bottom:1px solid var(--bd2);position:sticky;left:0;z-index:2;min-width:140px">Pastor / Semana</th>`;
+    let lastM=-1;
+    weeks.forEach(w=>{
+      const sep=w.mes!==lastM; lastM=w.mes;
+      h+=`<th style="padding:5px 3px;font-size:9px;color:${w.ds===today?'var(--gr)':'var(--tx3)'};font-weight:600;text-align:center;min-width:40px;background:${sep?"var(--bg-surface)":"var(--bg-card)"};border-bottom:1px solid var(--bd2);border-left:${sep?'2px solid var(--bd2)':'1px solid var(--bd1)'}">${w.lbl}</th>`;
+    });
+    h+=`</tr></thead><tbody>`;
+    pastores.forEach((p,pi)=>{
+      const tot=weeks.reduce((s,w)=>s+_cnt(p,w.ds),0);
+      const rowBg=pi%2===0?"var(--bg-card)":"var(--bg-surface)";
+      h+=`<tr style="border-bottom:1px solid var(--bd1)">`;
+      h+=`<td style="padding:7px 12px;font-size:11px;font-weight:600;color:var(--tx1);white-space:nowrap;background:${rowBg};position:sticky;left:0;z-index:1;border-right:1px solid var(--bd2)"><span style="color:${PCORES[pi%PCORES.length]}">●</span> ${p}<span style="color:var(--tx3);font-size:9.5px;margin-left:8px">${tot} total</span></td>`;
+      let lM=-1;
+      weeks.forEach(w=>{
+        const n=_cnt(p,w.ds);
+        const sep=w.mes!==lM; lM=w.mes;
+        const col=n>=3?"#e05555":n===2?"#e08a2a":"#2ab5c0";
+        const cell=n>0?`<div style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:${n>=3?"rgba(224,85,85,.18)":n===2?"rgba(224,138,42,.18)":"rgba(42,181,192,.18)"};color:${col};border-radius:50%;font-size:10.5px;font-weight:700">${n}</div>`:"";
+        h+=`<td style="text-align:center;padding:4px 2px;border-left:${sep?'2px solid var(--bd2)':'1px solid var(--bd1)'};background:${w.ds===today?"rgba(58,170,92,0.05)":"transparent"}">${cell}</td>`;
+      });
+      h+=`</tr>`;
+    });
+    h+=`</tbody></table></div>`;
+    return h;
+  }
+
+  /* ── Indicadores de carga ────────────────────────────────────── */
+  function _renderIndicadores(){
+    const el=document.getElementById("ep-indicadores"); if(!el) return;
+    const ps=_pastores();
+    const cnt={}; ps.forEach(p=>{ cnt[p]=0; }); _D.forEach(e=>{ if(cnt[e.pastor]!==undefined) cnt[e.pastor]++; });
+    const vals=Object.values(cnt); const total=vals.reduce((s,v)=>s+v,0); const media=total/ps.length; const maxV=Math.max(...vals);
+    const sorted=[...ps].sort((a,b)=>cnt[b]-cnt[a]);
+    let h=`<div class="card"><div class="ctit">Distribuição de Carga por Pastor <span class="csub">/ ${total} escalas cadastradas · média ${Math.round(media)}/pastor</span><span class="cact" onclick="ep_render()">↻</span></div><div class="bars" style="gap:9px;margin-top:12px">`;
+    sorted.forEach((p,i)=>{
+      const n=cnt[p], pct=maxV>0?Math.round((n/maxV)*100):0;
+      const over=n>media*1.45, under=n<media*0.55;
+      const cor=PCORES[i%PCORES.length];
+      const badge=over?`<span style="background:rgba(224,85,85,.15);color:var(--rose);font-size:8.5px;padding:1px 6px;border-radius:8px;margin-left:6px;font-weight:700">▲ sobrecarregado</span>`:
+                  under?`<span style="background:rgba(224,138,42,.15);color:var(--amber);font-size:8.5px;padding:1px 6px;border-radius:8px;margin-left:6px;font-weight:700">▼ poucas atribuições</span>`:"";
+      h+=`<div><div class="bh"><span class="bn">${p}${badge}</span><span class="bv">${n}</span></div><div class="bt"><div class="bf" style="width:${pct}%;background:${cor}"></div></div></div>`;
+    });
+    h+=`</div></div>`;
+    el.innerHTML=h;
+  }
+
+  /* ── Render principal ────────────────────────────────────────── */
+  function _render(){
+    // Label do período
+    const lbl=document.getElementById("ep-mes-label");
+    if(lbl){
+      const t=_st.modo==="mensal"?_fmtMes(_st.mes):_st.modo==="trimestral"?`${_fmtMes(_st.mes)} → ${_fmtMes(_addM(_st.mes,2))}`:`${_fmtMes(_st.mes)} → ${_fmtMes(_addM(_st.mes,5))}`;
+      lbl.textContent=t.charAt(0).toUpperCase()+t.slice(1);
+    }
+    // Botões de modo
+    ["mensal","trimestral","semestral"].forEach(m=>{
+      const btn=document.getElementById(`ep-btn-${m}`);
+      if(!btn) return;
+      const on=_st.modo===m;
+      btn.style.cssText=`padding:6px 12px;border:none;cursor:pointer;font-size:11.5px;font-family:var(--sans);transition:all .15s;background:${on?"var(--teal)":"var(--bg-card)"};color:${on?"#fff":"var(--tx2)"};font-weight:${on?700:400}`;
+    });
+    // Popula filtro de pastor (só na primeira vez)
+    const sel=document.getElementById("ep-pastor-filter");
+    if(sel&&sel.options.length<=1) _pastores().forEach(p=>sel.add(new Option(p,p)));
+    // Conteúdo
+    const ct=document.getElementById("ep-conteudo"); if(!ct) return;
+    ct.innerHTML=_st.modo==="mensal"?_renderMensal():_st.modo==="trimestral"?_renderTrimestral():_renderSemestral();
+    _renderIndicadores();
+  }
+
+  /* ── API pública ─────────────────────────────────────────────── */
+  window.ep_render       = _render;
+  window.ep_mesAnterior  = ()=>{ _st.mes=_addM(_st.mes,-1); _render(); };
+  window.ep_mesProximo   = ()=>{ _st.mes=_addM(_st.mes,1);  _render(); };
+  window.ep_setModo      = m =>{ _st.modo=m; _render(); };
+  window.ep_filtrarPastor= ()=>{ const s=document.getElementById("ep-pastor-filter"); _st.pastor=s?s.value:""; _render(); };
+  window.ep_ver          = id=>{
+    const item=_D.find(e=>e.id===id); if(!item) return;
+    const t=TC[item.tipo]||TC.culto;
+    const d=new Date(item.data+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"});
+    T(`${t.ico} ${t.label}${item.turno?" · "+item.turno:""} — ${item.pastor}`,`📅 ${d.charAt(0).toUpperCase()+d.slice(1)}\n📍 ${item.local}${item.obs?"\n📝 "+item.obs:""}`);
+  };
+  window.ep_novaEscala   = ()=>T("+ Nova Escala Pastoral","Funcionalidade de cadastro em desenvolvimento. Será integrada à tabela ESCALA_PASTORAL do Supabase.");
+
+})();
 
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".bf").forEach(b => {
