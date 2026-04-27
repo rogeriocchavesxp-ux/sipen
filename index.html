@@ -5273,7 +5273,7 @@ const PERMISSOES_MATRIZ = {
   "Agenda":            { admin_geral:"full", conselho:"read",       pastoral:"full",       adm_operacional:"full",       lider_ministerio:"full",      membro_ministerio:"restricted", operacional_servicos:false,        membro_igreja:false },
   "Pequenos Grupos":   { admin_geral:"full", conselho:"read",       pastoral:"full",       adm_operacional:"read",       lider_ministerio:"full",      membro_ministerio:"restricted", operacional_servicos:false,        membro_igreja:false },
   "Infraestrutura":    { admin_geral:"full", conselho:"read",       pastoral:false,        adm_operacional:"full",       lider_ministerio:false,       membro_ministerio:false,       operacional_servicos:"restricted", membro_igreja:false },
-  "Demandas":          { admin_geral:"full", conselho:"read",       pastoral:"read",       adm_operacional:"full",       lider_ministerio:"restricted", membro_ministerio:"restricted", operacional_servicos:"restricted", membro_igreja:"restricted" },
+  "Demandas":          { admin_geral:"full", conselho:"read",       pastoral:"read",       adm_operacional:"full",       lider_ministerio:"restricted", membro_ministerio:"restricted", operacional_servicos:"restricted", membro_igreja:false },
   "Relatórios":        { admin_geral:"full", conselho:"full",       pastoral:"restricted", adm_operacional:"restricted", lider_ministerio:"restricted", membro_ministerio:false,       operacional_servicos:false,        membro_igreja:false },
   "Membresia":         { admin_geral:"full", conselho:"read",       pastoral:"full",       adm_operacional:"full",       lider_ministerio:"read",      membro_ministerio:false,       operacional_servicos:false,        membro_igreja:false },
   "Estoque":           { admin_geral:"full", conselho:"read",       pastoral:false,        adm_operacional:"full",       lider_ministerio:false,       membro_ministerio:false,       operacional_servicos:"restricted", membro_igreja:false },
@@ -5401,7 +5401,7 @@ const MODULOS_PERFIL = {
   lider_ministerio:    ["geral","min","agenda","dem","pgs","cong","area"],
   membro_ministerio:   ["geral","min","agenda","dem","cong","area"],
   operacional_servicos:["geral","infra","dem","area"],
-  membro_igreja:       ["geral","dem","area"],
+  membro_igreja:       ["geral","area"],
 };
 
 function aplicarPermissoes() {
