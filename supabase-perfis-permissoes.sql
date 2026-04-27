@@ -1,111 +1,195 @@
 -- ══════════════════════════════════════════════════════════════════════
--- SIPEN — Perfis e Permissões Editáveis
+-- SIPEN — Permissões Editáveis por Perfil (v2)
 -- Executar no SQL Editor do Supabase Dashboard.
 -- ══════════════════════════════════════════════════════════════════════
 
--- 1. ENUM de níveis de acesso
-DO $$ BEGIN
-  CREATE TYPE public.nivel_acesso_t AS ENUM ('SEM_ACESSO','LEITURA','EDICAO','COMPLETO');
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-
--- 2. Tabela de perfis
-CREATE TABLE IF NOT EXISTS public.perfis (
-  id         TEXT PRIMARY KEY,
-  nome       TEXT NOT NULL,
-  descricao  TEXT,
-  icone      TEXT,
-  cor        TEXT,
-  nivel      INTEGER NOT NULL DEFAULT 0,
-  criado_em  TIMESTAMPTZ NOT NULL DEFAULT now()
+-- ── 1. Tabela de perfis ────────────────────────────────────────────────
+create table if not exists public.perfis (
+  id         uuid primary key default gen_random_uuid(),
+  nome       text not null unique,
+  descricao  text,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now()
 );
 
--- 3. Tabela de permissões por perfil × módulo
-CREATE TABLE IF NOT EXISTS public.perfis_permissoes (
-  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  perfil_id    TEXT NOT NULL REFERENCES public.perfis(id) ON DELETE CASCADE,
-  modulo       TEXT NOT NULL,
-  nivel_acesso public.nivel_acesso_t NOT NULL DEFAULT 'SEM_ACESSO',
-  UNIQUE(perfil_id, modulo)
+-- ── 2. Tabela de permissões por perfil ────────────────────────────────
+create table if not exists public.perfis_permissoes (
+  id           uuid primary key default gen_random_uuid(),
+  perfil_id    uuid not null references public.perfis(id) on delete cascade,
+  modulo       text not null,
+  nivel_acesso text not null,
+  created_at   timestamp with time zone default now(),
+  updated_at   timestamp with time zone default now(),
+
+  constraint nivel_acesso_check
+    check (nivel_acesso in ('SEM_ACESSO','LEITURA','EDICAO','COMPLETO')),
+
+  constraint uq_perfil_modulo unique (perfil_id, modulo)
 );
 
--- 4. Seed: perfis base
-INSERT INTO public.perfis (id, nome, descricao, icone, cor, nivel) VALUES
-  ('admin_geral',          'Administrativo Geral', 'Acesso total ao sistema',                   '👑', '#D4A843', 7),
-  ('conselho',             'Conselho',             'Panorâmico, sem alterações',                '🏛', '#4A9CF5', 6),
-  ('pastoral',             'Pastoral',             'Módulos pastorais e membresia',             '✝️', '#3AACA5', 5),
-  ('adm_operacional',      'Adm. Operacional',     'Administrativo e financeiro',               '💼', '#E08A2A', 4),
-  ('lider_ministerio',     'Líder de Ministério',  'Restrito ao ministério e agenda',           '🎯', '#8B6FD4', 3),
-  ('membro_ministerio',    'Membro de Ministério', 'Operacional do setor ministerial',          '🙌', '#3AAA5C', 2),
-  ('operacional_servicos', 'Operacional Serviços', 'Infraestrutura e demandas do setor',        '🔧', '#888899', 1),
-  ('membro_igreja',        'Membro Igreja',        'Membro comum sem função ativa',             '⛪', '#5898D4', 0)
-ON CONFLICT (id) DO NOTHING;
+-- ── 3. Índice para performance ─────────────────────────────────────────
+create index if not exists idx_permissoes_perfil
+  on public.perfis_permissoes(perfil_id);
 
--- 5. Seed: permissões (mapeadas de PERMISSOES_MATRIZ)
---    full → COMPLETO | read → LEITURA | restricted → LEITURA | false → SEM_ACESSO
-INSERT INTO public.perfis_permissoes (perfil_id, modulo, nivel_acesso) VALUES
--- Administrativo
-  ('admin_geral','Administrativo','COMPLETO'),('conselho','Administrativo','LEITURA'),('pastoral','Administrativo','LEITURA'),('adm_operacional','Administrativo','COMPLETO'),
-  ('lider_ministerio','Administrativo','SEM_ACESSO'),('membro_ministerio','Administrativo','SEM_ACESSO'),('operacional_servicos','Administrativo','SEM_ACESSO'),('membro_igreja','Administrativo','SEM_ACESSO'),
--- Financeiro
-  ('admin_geral','Financeiro','COMPLETO'),('conselho','Financeiro','LEITURA'),('pastoral','Financeiro','SEM_ACESSO'),('adm_operacional','Financeiro','COMPLETO'),
-  ('lider_ministerio','Financeiro','SEM_ACESSO'),('membro_ministerio','Financeiro','SEM_ACESSO'),('operacional_servicos','Financeiro','SEM_ACESSO'),('membro_igreja','Financeiro','SEM_ACESSO'),
--- Jurídico
-  ('admin_geral','Jurídico','COMPLETO'),('conselho','Jurídico','LEITURA'),('pastoral','Jurídico','SEM_ACESSO'),('adm_operacional','Jurídico','LEITURA'),
-  ('lider_ministerio','Jurídico','SEM_ACESSO'),('membro_ministerio','Jurídico','SEM_ACESSO'),('operacional_servicos','Jurídico','SEM_ACESSO'),('membro_igreja','Jurídico','SEM_ACESSO'),
--- Pastoral
-  ('admin_geral','Pastoral','COMPLETO'),('conselho','Pastoral','LEITURA'),('pastoral','Pastoral','COMPLETO'),('adm_operacional','Pastoral','SEM_ACESSO'),
-  ('lider_ministerio','Pastoral','SEM_ACESSO'),('membro_ministerio','Pastoral','SEM_ACESSO'),('operacional_servicos','Pastoral','SEM_ACESSO'),('membro_igreja','Pastoral','SEM_ACESSO'),
--- Conselho/Gov.
-  ('admin_geral','Conselho/Gov.','COMPLETO'),('conselho','Conselho/Gov.','COMPLETO'),('pastoral','Conselho/Gov.','LEITURA'),('adm_operacional','Conselho/Gov.','SEM_ACESSO'),
-  ('lider_ministerio','Conselho/Gov.','SEM_ACESSO'),('membro_ministerio','Conselho/Gov.','SEM_ACESSO'),('operacional_servicos','Conselho/Gov.','SEM_ACESSO'),('membro_igreja','Conselho/Gov.','SEM_ACESSO'),
--- Ministerial
-  ('admin_geral','Ministerial','COMPLETO'),('conselho','Ministerial','LEITURA'),('pastoral','Ministerial','LEITURA'),('adm_operacional','Ministerial','LEITURA'),
-  ('lider_ministerio','Ministerial','COMPLETO'),('membro_ministerio','Ministerial','LEITURA'),('operacional_servicos','Ministerial','SEM_ACESSO'),('membro_igreja','Ministerial','SEM_ACESSO'),
--- Agenda
-  ('admin_geral','Agenda','COMPLETO'),('conselho','Agenda','LEITURA'),('pastoral','Agenda','COMPLETO'),('adm_operacional','Agenda','COMPLETO'),
-  ('lider_ministerio','Agenda','COMPLETO'),('membro_ministerio','Agenda','LEITURA'),('operacional_servicos','Agenda','SEM_ACESSO'),('membro_igreja','Agenda','SEM_ACESSO'),
--- Pequenos Grupos
-  ('admin_geral','Pequenos Grupos','COMPLETO'),('conselho','Pequenos Grupos','LEITURA'),('pastoral','Pequenos Grupos','COMPLETO'),('adm_operacional','Pequenos Grupos','LEITURA'),
-  ('lider_ministerio','Pequenos Grupos','COMPLETO'),('membro_ministerio','Pequenos Grupos','LEITURA'),('operacional_servicos','Pequenos Grupos','SEM_ACESSO'),('membro_igreja','Pequenos Grupos','SEM_ACESSO'),
--- Infraestrutura
-  ('admin_geral','Infraestrutura','COMPLETO'),('conselho','Infraestrutura','LEITURA'),('pastoral','Infraestrutura','SEM_ACESSO'),('adm_operacional','Infraestrutura','COMPLETO'),
-  ('lider_ministerio','Infraestrutura','SEM_ACESSO'),('membro_ministerio','Infraestrutura','SEM_ACESSO'),('operacional_servicos','Infraestrutura','LEITURA'),('membro_igreja','Infraestrutura','SEM_ACESSO'),
--- Demandas
-  ('admin_geral','Demandas','COMPLETO'),('conselho','Demandas','LEITURA'),('pastoral','Demandas','LEITURA'),('adm_operacional','Demandas','COMPLETO'),
-  ('lider_ministerio','Demandas','LEITURA'),('membro_ministerio','Demandas','LEITURA'),('operacional_servicos','Demandas','LEITURA'),('membro_igreja','Demandas','SEM_ACESSO'),
--- Relatórios
-  ('admin_geral','Relatórios','COMPLETO'),('conselho','Relatórios','COMPLETO'),('pastoral','Relatórios','LEITURA'),('adm_operacional','Relatórios','LEITURA'),
-  ('lider_ministerio','Relatórios','LEITURA'),('membro_ministerio','Relatórios','SEM_ACESSO'),('operacional_servicos','Relatórios','SEM_ACESSO'),('membro_igreja','Relatórios','SEM_ACESSO'),
--- Membresia
-  ('admin_geral','Membresia','COMPLETO'),('conselho','Membresia','LEITURA'),('pastoral','Membresia','COMPLETO'),('adm_operacional','Membresia','COMPLETO'),
-  ('lider_ministerio','Membresia','LEITURA'),('membro_ministerio','Membresia','SEM_ACESSO'),('operacional_servicos','Membresia','SEM_ACESSO'),('membro_igreja','Membresia','SEM_ACESSO'),
--- Estoque
-  ('admin_geral','Estoque','COMPLETO'),('conselho','Estoque','LEITURA'),('pastoral','Estoque','SEM_ACESSO'),('adm_operacional','Estoque','COMPLETO'),
-  ('lider_ministerio','Estoque','SEM_ACESSO'),('membro_ministerio','Estoque','SEM_ACESSO'),('operacional_servicos','Estoque','LEITURA'),('membro_igreja','Estoque','SEM_ACESSO'),
--- Configurações
-  ('admin_geral','Configurações','COMPLETO'),('conselho','Configurações','SEM_ACESSO'),('pastoral','Configurações','SEM_ACESSO'),('adm_operacional','Configurações','SEM_ACESSO'),
-  ('lider_ministerio','Configurações','SEM_ACESSO'),('membro_ministerio','Configurações','SEM_ACESSO'),('operacional_servicos','Configurações','SEM_ACESSO'),('membro_igreja','Configurações','SEM_ACESSO'),
--- Área do Membro
-  ('admin_geral','Área do Membro','COMPLETO'),('conselho','Área do Membro','LEITURA'),('pastoral','Área do Membro','LEITURA'),('adm_operacional','Área do Membro','LEITURA'),
-  ('lider_ministerio','Área do Membro','LEITURA'),('membro_ministerio','Área do Membro','LEITURA'),('operacional_servicos','Área do Membro','LEITURA'),('membro_igreja','Área do Membro','LEITURA')
-ON CONFLICT (perfil_id, modulo) DO NOTHING;
+-- ── 4. Trigger updated_at ─────────────────────────────────────────────
+create or replace function public.update_timestamp()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
 
--- 6. RLS: acesso anon (leitura e escrita)
-ALTER TABLE public.perfis            ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.perfis_permissoes ENABLE ROW LEVEL SECURITY;
+drop trigger if exists update_perfis_updated_at       on public.perfis;
+drop trigger if exists update_permissoes_updated_at   on public.perfis_permissoes;
 
-DO $pol$ BEGIN
-  BEGIN CREATE POLICY "anon_select_perfis" ON public.perfis FOR SELECT TO anon USING (true); EXCEPTION WHEN duplicate_object THEN NULL; END;
-  BEGIN CREATE POLICY "anon_select_perfis_permissoes" ON public.perfis_permissoes FOR SELECT TO anon USING (true); EXCEPTION WHEN duplicate_object THEN NULL; END;
-  BEGIN CREATE POLICY "anon_insert_perfis_permissoes" ON public.perfis_permissoes FOR INSERT TO anon WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; END;
-  BEGIN CREATE POLICY "anon_update_perfis_permissoes" ON public.perfis_permissoes FOR UPDATE TO anon USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; END;
-  BEGIN CREATE POLICY "anon_delete_perfis_permissoes" ON public.perfis_permissoes FOR DELETE TO anon USING (true); EXCEPTION WHEN duplicate_object THEN NULL; END;
-END $pol$;
+create trigger update_perfis_updated_at
+  before update on public.perfis
+  for each row execute function public.update_timestamp();
 
-GRANT SELECT ON public.perfis            TO anon, authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.perfis_permissoes TO anon, authenticated;
+create trigger update_permissoes_updated_at
+  before update on public.perfis_permissoes
+  for each row execute function public.update_timestamp();
+
+-- ── 5. Perfis padrão ───────────────────────────────────────────────────
+insert into public.perfis (nome, descricao) values
+  ('ADMINISTRADOR_GERAL',  'Acesso total ao sistema'),
+  ('CONSELHO',             'Panorâmico, sem alterações'),
+  ('PASTORAL',             'Módulos pastorais e membresia'),
+  ('ADM_OPERACIONAL',      'Administrativo e financeiro'),
+  ('LIDER_MINISTERIO',     'Restrito ao ministério e agenda'),
+  ('MEMBRO_MINISTERIO',    'Operacional do setor ministerial'),
+  ('OPERACIONAL_SERVICOS', 'Infraestrutura e demandas do setor'),
+  ('MEMBRO_IGREJA',        'Membro comum sem função ativa')
+on conflict (nome) do nothing;
+
+-- ── 6. Permissões iniciais — todos os perfis × 15 módulos ─────────────
+
+-- ADMINISTRADOR_GERAL → COMPLETO em tudo
+insert into public.perfis_permissoes (perfil_id, modulo, nivel_acesso)
+select p.id, m.modulo, 'COMPLETO'
+from public.perfis p
+cross join (values
+  ('ADMINISTRATIVO'),('FINANCEIRO'),('JURIDICO'),('PASTORAL'),('CONSELHO'),
+  ('MINISTERIAL'),('AGENDA'),('PGS'),('INFRAESTRUTURA'),('DEMANDAS'),
+  ('RELATORIOS'),('MEMBRESIA'),('ESTOQUE'),('CONFIGURACOES'),('AREA_MEMBRO')
+) as m(modulo)
+where p.nome = 'ADMINISTRADOR_GERAL'
+on conflict (perfil_id, modulo) do nothing;
+
+-- CONSELHO
+insert into public.perfis_permissoes (perfil_id, modulo, nivel_acesso)
+select p.id, m.modulo, m.nivel
+from public.perfis p
+cross join (values
+  ('ADMINISTRATIVO','LEITURA'),('FINANCEIRO','LEITURA'),('JURIDICO','LEITURA'),
+  ('PASTORAL','LEITURA'),('CONSELHO','COMPLETO'),('MINISTERIAL','LEITURA'),
+  ('AGENDA','LEITURA'),('PGS','LEITURA'),('INFRAESTRUTURA','LEITURA'),
+  ('DEMANDAS','LEITURA'),('RELATORIOS','COMPLETO'),('MEMBRESIA','LEITURA'),
+  ('ESTOQUE','LEITURA'),('CONFIGURACOES','SEM_ACESSO'),('AREA_MEMBRO','LEITURA')
+) as m(modulo, nivel)
+where p.nome = 'CONSELHO'
+on conflict (perfil_id, modulo) do nothing;
+
+-- PASTORAL
+insert into public.perfis_permissoes (perfil_id, modulo, nivel_acesso)
+select p.id, m.modulo, m.nivel
+from public.perfis p
+cross join (values
+  ('ADMINISTRATIVO','LEITURA'),('FINANCEIRO','SEM_ACESSO'),('JURIDICO','SEM_ACESSO'),
+  ('PASTORAL','COMPLETO'),('CONSELHO','LEITURA'),('MINISTERIAL','LEITURA'),
+  ('AGENDA','COMPLETO'),('PGS','COMPLETO'),('INFRAESTRUTURA','SEM_ACESSO'),
+  ('DEMANDAS','LEITURA'),('RELATORIOS','LEITURA'),('MEMBRESIA','COMPLETO'),
+  ('ESTOQUE','SEM_ACESSO'),('CONFIGURACOES','SEM_ACESSO'),('AREA_MEMBRO','LEITURA')
+) as m(modulo, nivel)
+where p.nome = 'PASTORAL'
+on conflict (perfil_id, modulo) do nothing;
+
+-- ADM_OPERACIONAL
+insert into public.perfis_permissoes (perfil_id, modulo, nivel_acesso)
+select p.id, m.modulo, m.nivel
+from public.perfis p
+cross join (values
+  ('ADMINISTRATIVO','COMPLETO'),('FINANCEIRO','COMPLETO'),('JURIDICO','LEITURA'),
+  ('PASTORAL','SEM_ACESSO'),('CONSELHO','SEM_ACESSO'),('MINISTERIAL','LEITURA'),
+  ('AGENDA','COMPLETO'),('PGS','LEITURA'),('INFRAESTRUTURA','COMPLETO'),
+  ('DEMANDAS','COMPLETO'),('RELATORIOS','LEITURA'),('MEMBRESIA','COMPLETO'),
+  ('ESTOQUE','COMPLETO'),('CONFIGURACOES','SEM_ACESSO'),('AREA_MEMBRO','LEITURA')
+) as m(modulo, nivel)
+where p.nome = 'ADM_OPERACIONAL'
+on conflict (perfil_id, modulo) do nothing;
+
+-- LIDER_MINISTERIO
+insert into public.perfis_permissoes (perfil_id, modulo, nivel_acesso)
+select p.id, m.modulo, m.nivel
+from public.perfis p
+cross join (values
+  ('ADMINISTRATIVO','SEM_ACESSO'),('FINANCEIRO','SEM_ACESSO'),('JURIDICO','SEM_ACESSO'),
+  ('PASTORAL','SEM_ACESSO'),('CONSELHO','SEM_ACESSO'),('MINISTERIAL','COMPLETO'),
+  ('AGENDA','COMPLETO'),('PGS','COMPLETO'),('INFRAESTRUTURA','SEM_ACESSO'),
+  ('DEMANDAS','LEITURA'),('RELATORIOS','LEITURA'),('MEMBRESIA','LEITURA'),
+  ('ESTOQUE','SEM_ACESSO'),('CONFIGURACOES','SEM_ACESSO'),('AREA_MEMBRO','LEITURA')
+) as m(modulo, nivel)
+where p.nome = 'LIDER_MINISTERIO'
+on conflict (perfil_id, modulo) do nothing;
+
+-- MEMBRO_MINISTERIO
+insert into public.perfis_permissoes (perfil_id, modulo, nivel_acesso)
+select p.id, m.modulo, m.nivel
+from public.perfis p
+cross join (values
+  ('ADMINISTRATIVO','SEM_ACESSO'),('FINANCEIRO','SEM_ACESSO'),('JURIDICO','SEM_ACESSO'),
+  ('PASTORAL','SEM_ACESSO'),('CONSELHO','SEM_ACESSO'),('MINISTERIAL','LEITURA'),
+  ('AGENDA','LEITURA'),('PGS','LEITURA'),('INFRAESTRUTURA','SEM_ACESSO'),
+  ('DEMANDAS','LEITURA'),('RELATORIOS','SEM_ACESSO'),('MEMBRESIA','SEM_ACESSO'),
+  ('ESTOQUE','SEM_ACESSO'),('CONFIGURACOES','SEM_ACESSO'),('AREA_MEMBRO','LEITURA')
+) as m(modulo, nivel)
+where p.nome = 'MEMBRO_MINISTERIO'
+on conflict (perfil_id, modulo) do nothing;
+
+-- OPERACIONAL_SERVICOS
+insert into public.perfis_permissoes (perfil_id, modulo, nivel_acesso)
+select p.id, m.modulo, m.nivel
+from public.perfis p
+cross join (values
+  ('ADMINISTRATIVO','SEM_ACESSO'),('FINANCEIRO','SEM_ACESSO'),('JURIDICO','SEM_ACESSO'),
+  ('PASTORAL','SEM_ACESSO'),('CONSELHO','SEM_ACESSO'),('MINISTERIAL','SEM_ACESSO'),
+  ('AGENDA','SEM_ACESSO'),('PGS','SEM_ACESSO'),('INFRAESTRUTURA','LEITURA'),
+  ('DEMANDAS','LEITURA'),('RELATORIOS','SEM_ACESSO'),('MEMBRESIA','SEM_ACESSO'),
+  ('ESTOQUE','LEITURA'),('CONFIGURACOES','SEM_ACESSO'),('AREA_MEMBRO','LEITURA')
+) as m(modulo, nivel)
+where p.nome = 'OPERACIONAL_SERVICOS'
+on conflict (perfil_id, modulo) do nothing;
+
+-- MEMBRO_IGREJA → apenas Área do Membro
+insert into public.perfis_permissoes (perfil_id, modulo, nivel_acesso)
+select p.id, m.modulo, m.nivel
+from public.perfis p
+cross join (values
+  ('ADMINISTRATIVO','SEM_ACESSO'),('FINANCEIRO','SEM_ACESSO'),('JURIDICO','SEM_ACESSO'),
+  ('PASTORAL','SEM_ACESSO'),('CONSELHO','SEM_ACESSO'),('MINISTERIAL','SEM_ACESSO'),
+  ('AGENDA','SEM_ACESSO'),('PGS','SEM_ACESSO'),('INFRAESTRUTURA','SEM_ACESSO'),
+  ('DEMANDAS','SEM_ACESSO'),('RELATORIOS','SEM_ACESSO'),('MEMBRESIA','SEM_ACESSO'),
+  ('ESTOQUE','SEM_ACESSO'),('CONFIGURACOES','SEM_ACESSO'),('AREA_MEMBRO','LEITURA')
+) as m(modulo, nivel)
+where p.nome = 'MEMBRO_IGREJA'
+on conflict (perfil_id, modulo) do nothing;
+
+-- ── 7. RLS ─────────────────────────────────────────────────────────────
+alter table public.perfis            enable row level security;
+alter table public.perfis_permissoes enable row level security;
+
+do $pol$ begin
+  begin create policy "anon_select_perfis"              on public.perfis            for select to anon using (true); exception when duplicate_object then null; end;
+  begin create policy "anon_select_perfis_permissoes"   on public.perfis_permissoes for select to anon using (true); exception when duplicate_object then null; end;
+  begin create policy "anon_insert_perfis_permissoes"   on public.perfis_permissoes for insert to anon with check (true); exception when duplicate_object then null; end;
+  begin create policy "anon_update_perfis_permissoes"   on public.perfis_permissoes for update to anon using (true) with check (true); exception when duplicate_object then null; end;
+  begin create policy "anon_delete_perfis_permissoes"   on public.perfis_permissoes for delete to anon using (true); exception when duplicate_object then null; end;
+end $pol$;
+
+grant select on public.perfis to anon, authenticated;
+grant select, insert, update, delete on public.perfis_permissoes to anon, authenticated;
 
 -- ══════════════════════════════════════════════════════════════════════
--- FIM — Execute no SQL Editor do Supabase
+-- FIM
 -- ══════════════════════════════════════════════════════════════════════
