@@ -5958,29 +5958,55 @@ function verPerfil(perfilId) {
   document.body.appendChild(modal);
 }
 
+function normalizarNomePerfil(nome) {
+  return nome.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s+/g,"_").toUpperCase();
+}
+
+async function obterPerfilUuid(perfilKey) {
+  if (_perfisUuidMap[perfilKey]) return _perfisUuidMap[perfilKey];
+  // Fallback: busca case-insensitive pelo nome normalizado
+  const nomeDb = PERFIL_KEY_TO_DB_NOME[perfilKey] || normalizarNomePerfil(PERFIS[perfilKey]?.nome || perfilKey);
+  const res = await fetch(
+    `${apiBaseUrl()}/rest/v1/perfis?nome=ilike.${encodeURIComponent(nomeDb)}&select=id,nome&limit=1`,
+    { headers: apiHeaders() }
+  );
+  if (!res.ok) throw new Error("Erro ao buscar perfil no banco");
+  const data = await res.json();
+  if (!data.length) throw new Error(`Perfil "${nomeDb}" não encontrado. Execute supabase-perfis-permissoes.sql no Supabase.`);
+  _perfisUuidMap[perfilKey] = data[0].id;
+  return data[0].id;
+}
+
 async function salvarPermissoesPerfil(perfilId, modalEl) {
-  const perfilUuid = _perfisUuidMap[perfilId];
-  if (!perfilUuid) return T("Erro", "UUID do perfil não encontrado. Recarregue a página.");
-
-  const selects = modalEl.querySelectorAll("select[data-modulo]");
-  const updates = [];
-  selects.forEach(sel => {
-    const moduloDb = MODULO_DISPLAY_TO_DB[sel.dataset.modulo];
-    if (moduloDb) updates.push({ perfil_id: perfilUuid, modulo: moduloDb, nivel_acesso: sel.value });
-  });
-
   const btn = modalEl.querySelector("button[onclick*='salvarPermissoesPerfil']");
   if (btn) { btn.textContent = "Salvando..."; btn.disabled = true; }
 
   try {
-    const res = await fetch(`${apiBaseUrl()}/rest/v1/perfis_permissoes`, {
-      method: "POST",
-      headers: apiHeaders({ "Prefer": "resolution=merge-duplicates,return=representation" }),
-      body: JSON.stringify(updates)
-    });
-    if (!res.ok) { const e = await res.text(); let m=e; try{m=JSON.parse(e).message||e;}catch{} throw new Error(m); }
+    const perfilUuid = await obterPerfilUuid(perfilId);
 
-    // Atualiza cache local com nomes display
+    const selects = modalEl.querySelectorAll("select[data-modulo]");
+    const registros = [];
+    selects.forEach(sel => {
+      const moduloDb = MODULO_DISPLAY_TO_DB[sel.dataset.modulo];
+      if (moduloDb) registros.push({ perfil_id: perfilUuid, modulo: moduloDb, nivel_acesso: sel.value });
+    });
+
+    console.log("Salvando perfil:", perfilId, "UUID:", perfilUuid, "Registros:", registros.length);
+
+    // DELETE + INSERT (mais confiável que upsert com merge-duplicates)
+    const delRes = await fetch(
+      `${apiBaseUrl()}/rest/v1/perfis_permissoes?perfil_id=eq.${encodeURIComponent(perfilUuid)}`,
+      { method: "DELETE", headers: apiHeaders() }
+    );
+    if (!delRes.ok) { const e = await delRes.text(); let m=e; try{m=JSON.parse(e).message||e;}catch{} throw new Error(m); }
+
+    const insRes = await fetch(`${apiBaseUrl()}/rest/v1/perfis_permissoes`, {
+      method: "POST",
+      headers: apiHeaders({ "Prefer": "return=representation" }),
+      body: JSON.stringify(registros)
+    });
+    if (!insRes.ok) { const e = await insRes.text(); let m=e; try{m=JSON.parse(e).message||e;}catch{} throw new Error(m); }
+
     if (!PERMISSOES_DB[perfilId]) PERMISSOES_DB[perfilId] = {};
     selects.forEach(sel => { PERMISSOES_DB[perfilId][sel.dataset.modulo] = sel.value; });
 
