@@ -390,8 +390,8 @@
           <label class="mem-lbl">Tipo de Membro <span style="color:var(--rose)">*</span></label>
           <select id="mem-f-tipo-membro" class="mem-inp">
             <option value="">Selecione…</option>
-            <option value="comungante">Comungante</option>
-            <option value="nao_comungante">Não Comungante</option>
+            <option value="COMUNGANTE">Comungante</option>
+            <option value="NAO_COMUNGANTE">Não Comungante</option>
           </select>
         </div>
         <div>
@@ -402,6 +402,7 @@
             <option value="profissão de fé">Profissão de Fé</option>
             <option value="transferência">Transferência</option>
             <option value="restauração">Restauração</option>
+            <option value="outro">Outro</option>
           </select>
         </div>
         <div>
