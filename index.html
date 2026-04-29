@@ -456,6 +456,20 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 .bt{height:5px;background:var(--bg-hover);border-radius:3px;overflow:hidden}
 .bf{height:100%;border-radius:3px;transition:width 1.1s cubic-bezier(.4,0,.2,1)}
 
+/* ═══ DASHBOARD — RESUMO FINANCEIRO ══ */
+.gfr{display:flex;flex-direction:column;gap:0}
+.gfr-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd1)}
+.gfr-row:last-child{border-bottom:none;padding-top:13px;margin-top:2px}
+.gfr-lbl{font-size:12px;color:var(--tx2);font-weight:500}
+.gfr-val{font-size:16px;font-weight:700;font-family:var(--mono)}
+.gfr-saldo .gfr-lbl{color:var(--tx1);font-weight:700;font-size:12.5px}
+.gfr-saldo .gfr-val{font-size:20px}
+
+/* ═══ DASHBOARD — SEPARADOR DE SEÇÃO ═ */
+.dash-sec{margin:24px 0 14px;display:flex;align-items:baseline;gap:8px}
+.dash-sec-t{font-size:13.5px;font-weight:700;color:var(--tx1)}
+.dash-sec-s{font-size:10.5px;color:var(--tx3)}
+
 /* ═══ FEED ═══════════════════════════ */
 .feed{display:flex;flex-direction:column}
 .fi{display:flex;gap:9px;padding:8px 0;border-bottom:1px solid var(--bd1)}
@@ -625,20 +639,55 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
   .sni{padding:9px 14px;font-size:11.5px;min-height:40px}
 
   /* Conteúdo */
-  .ct{padding:0 12px 24px}
+  .ct{padding:0 12px 28px;font-size:15px}
 
   /* KPIs */
   .kpis.c4,.kpis.c3{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .kpi{padding:12px;gap:10px}
-  .kpi-val{font-size:18px}
-  .kpi-ico{width:36px;height:36px;font-size:15px}
+  .kpi{padding:14px;gap:12px;min-height:72px}
+  .kpi-val{font-size:20px}
+  .kpi-ico{width:38px;height:38px;font-size:16px}
+  .kpi-lbl{font-size:11px}
+  .kpi-d{font-size:11px}
 
   /* Grids */
   .g2{grid-template-columns:1fr}
   .g3{grid-template-columns:repeat(2,minmax(0,1fr))}
   .ostrip{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .osi{padding:12px 14px}
-  .osi-val{font-size:18px}
+  .osi{padding:14px 16px}
+  .osi-val{font-size:20px}
+  .osi-lbl{font-size:11px}
+  .osi-sub{font-size:11px}
+
+  /* Tipografia — Cards e seções */
+  .card{padding:15px 16px}
+  .ctit{font-size:14px;margin-bottom:14px}
+  .csub{font-size:11.5px}
+  .sh-t{font-size:15px}
+  .sh-s{font-size:12px}
+  .sh{margin-bottom:14px}
+
+  /* Tipografia — Feed de atividade */
+  .ft{font-size:13px;line-height:1.6}
+  .ftm{font-size:11px}
+  .fi{padding:10px 0}
+
+  /* Tipografia — Module cards */
+  .mc-name{font-size:13.5px}
+  .sr{padding:6px 0;font-size:12.5px}
+  .sl{font-size:12.5px}
+  .sv{font-size:12px}
+
+  /* Tipografia — Task rows */
+  .ttitle{font-size:13px}
+  .tmeta{font-size:11.5px}
+
+  /* Tipografia — Bars */
+  .bn{font-size:12px}
+  .bv{font-size:12px}
+  .bt{height:6px}
+
+  /* Tipografia — Overview strip */
+  .osi-lbl{letter-spacing:.06em}
 
   /* Quick actions */
   .qa{grid-template-columns:repeat(2,1fr)}
@@ -686,13 +735,16 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
   .c-pg{font-size:12px;max-width:calc(100vw - 130px)}
 
   /* ostrip compacto */
-  .osi{padding:10px 12px}
-  .osi-val{font-size:16px}
-  .osi-lbl{font-size:9px}
+  .osi{padding:12px 14px}
+  .osi-val{font-size:18px}
+  .osi-lbl{font-size:10.5px}
 
   /* KPIs compactos */
-  .kpi{padding:10px;gap:8px}
-  .kpi-val{font-size:17px}
+  .kpi{padding:12px;gap:10px;min-height:64px}
+  .kpi-val{font-size:18px}
+  .kpi-lbl{font-size:10.5px}
+  .ctit{font-size:13.5px}
+  .ft{font-size:12.5px}
 
   /* Login */
   .login-box{padding:24px 16px}
@@ -1133,60 +1185,99 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 
   <!-- ════ DASHBOARD GERAL ══════════════════ -->
   <div class="view on" id="v-geral">
-    <div class="ct" style="padding-top:22px">
-      <div class="alr alr-w" data-modulo="ADMINISTRATIVO">
+    <div class="ct" style="padding-top:20px">
+
+      <!-- Alerta crítico -->
+      <div class="alr alr-w" data-modulo="ADMINISTRATIVO" style="margin-bottom:20px">
         <span class="alr-i">⚠</span>
         <div><strong>3 contratos</strong> vencem em 30 dias · <strong>8 demandas</strong> atrasadas · <strong>2 OS</strong> urgentes sem resposta</div>
-        <span class="alr-a" onclick="go('admin-con')">Ver contratos →</span>
+        <span class="alr-a" onclick="go('admin-con')">Ver →</span>
       </div>
-      <div class="ostrip">
-        <div class="osi" data-modulo="MEMBRESIA" onclick="go('memb-dash')">
-          <div class="osi-lbl">Membros ativos</div>
-          <div class="osi-val">1.284</div>
-          <div class="osi-sub up">▲ +12 este mês</div>
+
+      <!-- ── BLOCO 1: KPIs executivos ───────────────── -->
+      <div class="kpis c4" style="margin-bottom:26px">
+        <div class="kpi" data-modulo="DEMANDAS" onclick="go('dem-todas')" style="cursor:pointer">
+          <div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky)">📋</div>
+          <div class="kpi-body">
+            <div class="kpi-lbl">Demandas abertas</div>
+            <div class="kpi-val" id="geral-kpi-abertas">—</div>
+            <div class="kpi-d nu">em andamento</div>
+          </div>
         </div>
-        <div class="osi" data-modulo="DEMANDAS" onclick="go('dem-todas')">
-          <div class="osi-lbl">Demandas abertas</div>
-          <div class="osi-val">47</div>
-          <div class="osi-sub dn">▼ 8 atrasadas</div>
+        <div class="kpi" data-modulo="DEMANDAS" onclick="go('dem-todas')" style="cursor:pointer">
+          <div class="kpi-ico" style="background:rgba(224,85,85,0.15);color:var(--rose)">⚠️</div>
+          <div class="kpi-body">
+            <div class="kpi-lbl">Em atraso</div>
+            <div class="kpi-val" style="color:var(--rose)">8</div>
+            <div class="kpi-d dn">requer atenção urgente</div>
+          </div>
         </div>
-        <div class="osi" data-modulo="ADMINISTRATIVO" onclick="go('admin-fin')">
-          <div class="osi-lbl">Receita mensal</div>
-          <div class="osi-val">R$ 42.300</div>
-          <div class="osi-sub up">▲ +5% vs março</div>
+        <div class="kpi">
+          <div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gmd)">📥</div>
+          <div class="kpi-body">
+            <div class="kpi-lbl">Solicitações no mês</div>
+            <div class="kpi-val">23</div>
+            <div class="kpi-d up">▲ Abr/26</div>
+          </div>
         </div>
-        <div class="osi" data-modulo="ADMINISTRATIVO" onclick="go('admin-con')">
-          <div class="osi-lbl">Contratos a vencer</div>
-          <div class="osi-val">3</div>
-          <div class="osi-sub wa">⚠ em 30 dias</div>
+        <div class="kpi">
+          <div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber)">⚡</div>
+          <div class="kpi-body">
+            <div class="kpi-lbl">Conflitos</div>
+            <div class="kpi-val">2</div>
+            <div class="kpi-d wa">agenda ou operacional</div>
+          </div>
         </div>
       </div>
-      <div class="sh"><span class="sh-t">Status dos Módulos</span><span class="sh-s">visão consolidada de todas as áreas</span></div>
-      <div class="g3" id="dash-modcards-grid" style="margin-bottom:22px"></div>
-      <div id="dash-modcards-empty" style="display:none;background:var(--bg-card);border:1px solid var(--bd1);border-radius:10px;padding:32px 24px;text-align:center;color:var(--tx3);font-size:13px;margin-bottom:22px">
+
+      <!-- ── BLOCO 2: Status dos Módulos ───────────── -->
+      <div class="dash-sec">
+        <span class="dash-sec-t">Status dos Módulos</span>
+        <span class="dash-sec-s">visão consolidada de todas as áreas</span>
+      </div>
+      <div class="g3" id="dash-modcards-grid" style="margin-bottom:26px"></div>
+      <div id="dash-modcards-empty" style="display:none;background:var(--bg-card);border:1px solid var(--bd1);border-radius:10px;padding:32px 24px;text-align:center;color:var(--tx3);font-size:13px;margin-bottom:26px">
         Nenhum módulo disponível para o seu perfil.<br>Entre em contato com a administração.
       </div>
+
+      <!-- ── BLOCOS 3 + 4: Atividade + Painel estratégico ── -->
       <div class="g2">
+
+        <!-- Atividade recente -->
         <div class="card">
-          <div class="ctit">Atividade recente<span class="csub">— todos os módulos</span><span class="cact" onclick="T('Auditoria','Log imutável disponível')">auditoria →</span></div>
+          <div class="ctit">Atividade recente<span class="csub">— últimas ações</span><span class="cact" onclick="T('Auditoria','Log imutável disponível')">auditoria →</span></div>
           <div class="feed">
-            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--rose);color:var(--rose)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Maria S.</b> alterou status da OS-042 para <b>atrasada</b></div><div class="ftm">hoje · 14:32 · Infraestrutura</div></div></div>
-            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--gbr);color:var(--gbr)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>João C.</b> concluiu OS de manutenção elétrica</div><div class="ftm">hoje · 11:15 · Infraestrutura</div></div></div>
-            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--gold);color:var(--gold)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Admin</b> atribuiu role <i>Líder Ministerial</i> a <b>Ana Lima</b></div><div class="ftm">hoje · 09:48 · Administrativo</div></div></div>
-            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--gmd);color:var(--gmd)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Secretaria</b> cadastrou 14 novos membros em lote</div><div class="ftm">10/04 · 16:20 · Membresia</div></div></div>
-            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--sky);color:var(--sky)"></div></div><div class="fb"><div class="ft"><b>Sistema</b> enviou 8 alertas via WhatsApp aos responsáveis</div><div class="ftm">10/04 · 08:00 · Demandas</div></div></div>
+            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--rose)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Infraestrutura</b> — OS-042 marcada como <b>atrasada</b></div><div class="ftm">hoje · 14:32</div></div></div>
+            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--gmd)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Infraestrutura</b> — OS de manutenção elétrica concluída</div><div class="ftm">hoje · 11:15</div></div></div>
+            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--gold)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Administrativo</b> — <b>Ana Lima</b> nomeada Líder Ministerial</div><div class="ftm">hoje · 09:48</div></div></div>
+            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--teal)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Membresia</b> — 14 novos membros cadastrados em lote</div><div class="ftm">10/04 · 16:20</div></div></div>
+            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--sky)"></div></div><div class="fb"><div class="ft"><b>Demandas</b> — 8 alertas enviados aos responsáveis</div><div class="ftm">10/04 · 08:00</div></div></div>
           </div>
         </div>
+
+        <!-- Painel estratégico -->
         <div class="gcol">
+
+          <!-- Resumo financeiro simplificado -->
           <div class="card">
-            <div class="ctit">Fluxo financeiro — Abr/26</div>
-            <div class="bars">
-              <div><div class="bh"><span class="bn">Dízimos e Ofertas</span><span class="bv">R$ 35.400</span></div><div class="bt"><div class="bf" style="width:84%;background:var(--gmd)"></div></div></div>
-              <div><div class="bh"><span class="bn">Outras Receitas</span><span class="bv">R$ 6.900</span></div><div class="bt"><div class="bf" style="width:16%;background:var(--teal)"></div></div></div>
-              <div><div class="bh"><span class="bn">Despesas totais</span><span class="bv">R$ 28.700</span></div><div class="bt"><div class="bf" style="width:68%;background:var(--rose)"></div></div></div>
-              <div><div class="bh"><span class="bn">Saldo do mês</span><span class="bv pos">R$ 13.600</span></div><div class="bt"><div class="bf" style="width:32%;background:var(--gdk)"></div></div></div>
+            <div class="ctit">Financeiro — Abr/26</div>
+            <div class="gfr">
+              <div class="gfr-row">
+                <span class="gfr-lbl">Entradas</span>
+                <span class="gfr-val pos">R$ 42.300</span>
+              </div>
+              <div class="gfr-row">
+                <span class="gfr-lbl">Saídas</span>
+                <span class="gfr-val neg">R$ 28.700</span>
+              </div>
+              <div class="gfr-row gfr-saldo">
+                <span class="gfr-lbl">Saldo</span>
+                <span class="gfr-val up">R$ 13.600</span>
+              </div>
             </div>
           </div>
+
+          <!-- Demandas por módulo -->
           <div class="card">
             <div class="ctit">Demandas por módulo</div>
             <div class="bars">
@@ -1196,6 +1287,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
               <div><div class="bh"><span class="bn">Pastoral</span><span class="bv">5</span></div><div class="bt"><div class="bf" style="width:22%;background:var(--teal)"></div></div></div>
             </div>
           </div>
+
         </div>
       </div>
     </div>
@@ -5769,7 +5861,24 @@ function aplicarPermissoes() {
 
   const isAdminTotal = USUARIO_ATUAL.perfil === "ADMINISTRADOR_GERAL";
 
-  // Aniversariantes e Área do Membro: acessíveis a todos os usuários logados
+  // ── Garantias mínimas de acesso por perfil ─────────────────────────
+  // Cada perfil tem acesso garantido ao módulo correspondente,
+  // independente do que estiver cadastrado na tabela perfis_permissoes.
+  const _PERFIL_MODULO_NATIVO = {
+    "PASTORAL":             "PASTORAL",
+    "CONSELHO":             "CONSELHO",
+    "JUNTA_DIACONAL":       "JUNTA_DIACONAL",
+    "ADM_OPERACIONAL":      "ADMINISTRATIVO",
+    "LIDER_MINISTERIO":     "MINISTERIAL",
+    "MEMBRO_MINISTERIO":    "MINISTERIAL",
+    "OPERACIONAL_SERVICOS": "INFRAESTRUTURA",
+  };
+  const _moduloNativo = _PERFIL_MODULO_NATIVO[USUARIO_ATUAL.perfil];
+  if (_moduloNativo && (!permissoesUsuario[_moduloNativo] || permissoesUsuario[_moduloNativo] === "SEM_ACESSO")) {
+    permissoesUsuario[_moduloNativo] = "LEITURA";
+  }
+
+  // Área do Membro e Aniversariantes: acessíveis a todos os usuários logados
   if (!permissoesUsuario["AREA_MEMBRO"] || permissoesUsuario["AREA_MEMBRO"] === "SEM_ACESSO") {
     permissoesUsuario["AREA_MEMBRO"] = "LEITURA";
   }
