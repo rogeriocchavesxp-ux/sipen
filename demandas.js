@@ -76,6 +76,40 @@
     } catch(_) { return false; }
   }
 
+  /* Admins e gestores (nivel >= 4) veem todas as demandas */
+  function _podeVerTodas() {
+    try {
+      if (typeof USUARIO_ATUAL === "undefined" || !USUARIO_ATUAL) return true; // sem auth = dev mode
+      if (USUARIO_ATUAL.perfil === "ADMINISTRADOR_GERAL") return true;
+      const p = typeof PERFIS !== "undefined" ? PERFIS[USUARIO_ATUAL.perfil] : null;
+      return p ? (p.nivel >= 4) : true;
+    } catch(_) { return true; }
+  }
+
+  /* Filtra localmente: usuário vê só suas demandas ou do seu ministério */
+  function _filtrarVisibilidade(rows) {
+    if (_podeVerTodas()) return rows;
+    const u = USUARIO_ATUAL;
+    if (!u) return rows;
+    const nomeU = (u.nome || "").toLowerCase().trim();
+    const pessoaId = u.id || u.pessoa_id || null;
+    const ministerios = Array.isArray(u.ministerios) ? u.ministerios.map(m => (m||"").toLowerCase().trim()) : [];
+    return rows.filter(r => {
+      /* 1. Abriu a demanda (por ID ou por nome) */
+      if (pessoaId && r.solicitante_id && String(r.solicitante_id) === String(pessoaId)) return true;
+      if (nomeU && (r.solicitante||"").toLowerCase().trim() === nomeU) return true;
+      /* 2. É responsável pela demanda */
+      if (r.responsavel_id && pessoaId && String(r.responsavel_id) === String(pessoaId)) return true;
+      if (nomeU && (r.responsavel||"").toLowerCase().trim() === nomeU) return true;
+      /* 3. A área da demanda pertence a um ministério do usuário */
+      if (ministerios.length > 0) {
+        const areaD = (r.area||"").toLowerCase().trim();
+        if (ministerios.some(m => areaD.includes(m) || m.includes(areaD))) return true;
+      }
+      return false;
+    });
+  }
+
   /* ── Normalização de status (DB ↔ label) ─────────────── */
 
   const _STATUS_DB = {
@@ -128,11 +162,67 @@
 
   async function _load() {
     try {
-      const rows = await apiRead("DEMANDAS");
+      let rows;
+      if (_podeVerTodas()) {
+        /* Admin/gestor: busca tudo via apiRead padrão */
+        rows = await apiRead("DEMANDAS");
+      } else {
+        /* Usuário restrito: query filtrada diretamente em v_demandas */
+        rows = await _loadFiltrado();
+      }
       _cache = rows.map(r => ({ ...r, status: _toLabel(r.status) }));
+      /* Filtro local como camada de segurança adicional */
+      _cache = _filtrarVisibilidade(_cache);
     }
     catch(e) { console.warn("Demandas load:", e.message); _cache = []; }
     return _cache;
+  }
+
+  /* Query filtrada no backend — evita trafegar dados restritos para o browser */
+  async function _loadFiltrado() {
+    try {
+      const u = USUARIO_ATUAL;
+      if (!u) return apiRead("DEMANDAS");
+
+      const base = (typeof apiBaseUrl === "function" ? apiBaseUrl() : "");
+      const hdrs = (typeof apiHeaders === "function" ? apiHeaders({ "Prefer":"count=none" }) : {});
+      if (!base) return apiRead("DEMANDAS");
+
+      const pessoaId = u.id || u.pessoa_id || null;
+      const nomeU    = (u.nome || "").trim();
+      const mins     = Array.isArray(u.ministerios) ? u.ministerios.filter(Boolean) : [];
+
+      /* Constrói filtro OR: solicitante_id, solicitante_txt, responsavel_id, areas do ministério */
+      const orParts = [];
+      if (pessoaId) {
+        orParts.push(`solicitante_id.eq.${pessoaId}`);
+        orParts.push(`responsavel_id.eq.${pessoaId}`);
+        orParts.push(`created_by.eq.${pessoaId}`);
+      }
+      if (nomeU) {
+        orParts.push(`solicitante_txt.ilike.*${encodeURIComponent(nomeU)}*`);
+        orParts.push(`responsavel_txt.ilike.*${encodeURIComponent(nomeU)}*`);
+      }
+      /* Áreas vinculadas aos ministérios do usuário */
+      mins.forEach(m => {
+        orParts.push(`area.ilike.*${encodeURIComponent(m)}*`);
+      });
+
+      if (orParts.length === 0) return [];
+
+      const filter = `or=(${orParts.join(",")})`;
+      const url = `${base}/rest/v1/v_demandas?select=*&${filter}&order=id.desc.nullslast&limit=500`;
+      const res = await fetch(url, { method:"GET", headers: hdrs });
+      if (!res.ok) {
+        console.warn("_loadFiltrado fallback:", res.status);
+        return []; /* falha segura: não retorna dados não autorizados */
+      }
+      const data = await res.json();
+      return Array.isArray(data) ? data.map(row => ({ ...row, _row: row.id || row._row || null })) : [];
+    } catch(e) {
+      console.warn("_loadFiltrado erro:", e.message);
+      return [];
+    }
   }
 
   function _invalidate() { _cache = []; }
@@ -761,6 +851,20 @@
       "area-dem":                 () => renderLista("area-dem-content"),
     };
     if (MAP[id]) MAP[id]();
+  };
+
+  window.demAtualizarLabels = function() {
+    const restrito = !_podeVerTodas();
+    const label = restrito ? "Minhas Solicitações" : "Todas as Solicitações";
+
+    const sidebarEl = document.getElementById("si-dem-todas");
+    if (sidebarEl) {
+      const span = sidebarEl.querySelector("span") || sidebarEl;
+      span.textContent = label;
+    }
+
+    const hero = document.querySelector("#v-dem-todas .hero-ttl");
+    if (hero) hero.textContent = label;
   };
 
 })();

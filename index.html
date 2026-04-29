@@ -1053,7 +1053,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
       </div>
       <div class="msub" id="ms-dem">
         <div class="si" onclick="go('dem-dash')">Dashboard de Demandas</div>
-        <div class="si" onclick="go('dem-todas')">Todas as Solicitações</div>
+        <div class="si" id="si-dem-todas" onclick="go('dem-todas')">Todas as Solicitações</div>
         <div class="si" onclick="go('dem-analise')">Em Análise</div>
         <div class="si" onclick="go('dem-and')">Em Andamento</div>
         <div class="si" onclick="go('dem-conc')">Concluídas</div>
@@ -5757,7 +5757,7 @@ async function carregarUsuarioLogado(authUserId) {
   // 2ª consulta: busca membro ativo vinculado à pessoa
   const { data: membro, error: membroError } = await sb
     .from("membros")
-    .select("id, pessoa_id, funcao, status")
+    .select("id, pessoa_id, funcao, status, ministerios")
     .eq("pessoa_id", pessoa.id)
     .eq("status", "ativo")
     .is("deleted_at", null)
@@ -5784,6 +5784,7 @@ async function carregarUsuarioLogado(authUserId) {
     nome:         pessoa.nome,
     email:        pessoa.email,
     perfil:       normalizarPerfil(membro.funcao),
+    ministerios:  Array.isArray(membro.ministerios) ? membro.ministerios : [],
   };
   USUARIO_ATUAL = usuarioLogado;
 
@@ -5833,6 +5834,7 @@ async function entrarNoSistema() {
   initSupabaseBadge();
   testApiSilently();
   abrirPrimeiroModuloPermitido();
+  if (typeof window.demAtualizarLabels === "function") window.demAtualizarLabels();
   T(`Bem-vindo, ${USUARIO_ATUAL.nome.split(" ")[0]}! 👋`,
     `Perfil: ${PERFIS[USUARIO_ATUAL.perfil]?.nome || USUARIO_ATUAL.perfil}`);
 }
