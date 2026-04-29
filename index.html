@@ -9604,19 +9604,11 @@ VIEW_AUTOLOAD["conselho-contratados"] = { fn: () => renderContratados() };
       </div>
       <div>
         <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Descrição detalhada</label>
-        <textarea id="dem-f-desc" rows="3" placeholder="Informações adicionais, contexto, urgência..." style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;resize:vertical;box-sizing:border-box"></textarea>
+        <textarea id="dem-f-desc" rows="3" placeholder="Informações adicionais, contexto e detalhes da solicitação..." style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;resize:vertical;box-sizing:border-box"></textarea>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div>
-          <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Prioridade</label>
-          <select id="dem-f-prio" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px">
-            <option>Baixa</option><option selected>Média</option><option>Alta</option><option>Urgente</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Conclusão prevista</label>
-          <input id="dem-f-venc" type="date" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
-        </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Data desejada de conclusão</label>
+        <input id="dem-f-venc" type="date" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div>

@@ -66,6 +66,16 @@
     "Baixa":   "var(--gr)",
   };
 
+  /* Nível mínimo para editar prioridade: adm_operacional (4) e acima */
+  function _podeEditarPrioridade() {
+    try {
+      if (typeof USUARIO_ATUAL === "undefined" || !USUARIO_ATUAL) return false;
+      if (USUARIO_ATUAL.perfil === "ADMINISTRADOR_GERAL") return true;
+      const p = typeof PERFIS !== "undefined" ? PERFIS[USUARIO_ATUAL.perfil] : null;
+      return p ? (p.nivel >= 4) : false;
+    } catch(_) { return false; }
+  }
+
   /* ── Normalização de status (DB ↔ label) ─────────────── */
 
   const _STATUS_DB = {
@@ -461,12 +471,13 @@
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Título *</label>
               <input id="dem-edit-titulo" type="text" value="${(dem.titulo||'').replace(/"/g,'&quot;')}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>
+            ${_podeEditarPrioridade() ? `
             <div>
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Prioridade</label>
               <select id="dem-edit-prio" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px">
                 ${["Baixa","Média","Alta","Urgente"].map(p => `<option${p===dem.prioridade?" selected":""}>${p}</option>`).join("")}
               </select>
-            </div>
+            </div>` : ""}
             <div>
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Responsável</label>
               <input id="dem-edit-resp" type="text" value="${(dem.responsavel||'').replace(/"/g,'&quot;')}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
@@ -523,11 +534,11 @@
   /* ── Salvar edição ──────────────────────────────────── */
 
   window.demSalvarEdicao = async function(id) {
-    const titulo = document.getElementById("dem-edit-titulo")?.value?.trim();
-    const desc   = document.getElementById("dem-edit-desc")?.value?.trim();
-    const prio   = document.getElementById("dem-edit-prio")?.value;
-    const resp   = document.getElementById("dem-edit-resp")?.value?.trim();
-    const venc   = document.getElementById("dem-edit-venc")?.value || null;
+    const titulo  = document.getElementById("dem-edit-titulo")?.value?.trim();
+    const desc    = document.getElementById("dem-edit-desc")?.value?.trim();
+    const prioEl  = document.getElementById("dem-edit-prio");
+    const resp    = document.getElementById("dem-edit-resp")?.value?.trim();
+    const venc    = document.getElementById("dem-edit-venc")?.value || null;
 
     if (!titulo) {
       if (typeof T === "function") T("Campo obrigatório", "Informe o título");
@@ -535,7 +546,8 @@
     }
 
     try {
-      const payload = { titulo, descricao: desc || "", prioridade: prio, responsavel: resp || "", data_conclusao: venc };
+      const payload = { titulo, descricao: desc || "", responsavel: resp || "", data_conclusao: venc };
+      if (prioEl && _podeEditarPrioridade()) payload.prioridade = prioEl.value;
       await apiWrite("update", "DEMANDAS", { _row: id, ...payload });
       if (typeof T === "function") T("✅ Demanda atualizada!", "");
 
@@ -580,7 +592,6 @@
     m.querySelector("#dem-f-sub").innerHTML = `<option value="">Selecione a categoria primeiro</option>`;
     m.querySelector("#dem-f-titulo").value  = "";
     m.querySelector("#dem-f-desc").value    = "";
-    m.querySelector("#dem-f-prio").value    = "Média";
     m.querySelector("#dem-f-sol").value     = usuario;
     m.querySelector("#dem-f-resp").value    = "";
     m.querySelector("#dem-f-venc").value    = "";
@@ -609,7 +620,6 @@
     const sub    = document.getElementById("dem-f-sub")?.value;
     const titulo = document.getElementById("dem-f-titulo")?.value?.trim();
     const desc   = document.getElementById("dem-f-desc")?.value?.trim();
-    const prio   = document.getElementById("dem-f-prio")?.value;
     const sol    = document.getElementById("dem-f-sol")?.value?.trim();
     const resp   = document.getElementById("dem-f-resp")?.value?.trim();
     const venc   = document.getElementById("dem-f-venc")?.value || null;
@@ -624,7 +634,7 @@
       subcategoria:  sub,
       titulo,
       descricao:     desc || "",
-      prioridade:    prio || "Média",
+      prioridade:    "Normal",   // definida por triagem — nunca pelo solicitante
       status:        "ABERTA",
       solicitante:   sol || "",
       responsavel:   resp || catResp(cat),
