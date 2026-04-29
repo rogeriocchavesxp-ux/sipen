@@ -615,14 +615,22 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
   .sb.sb-open{transform:translateX(0)}
   .sb-backdrop.sb-open{display:block}
   .sb-ft{padding-bottom:max(8px,env(safe-area-inset-bottom,8px))}
+  .sb-logo{height:auto;min-height:var(--th);padding-top:max(12px,env(safe-area-inset-top,12px))}
   .si{padding:11px 14px;min-height:44px;display:flex;align-items:center}
 
   /* Main */
   .main{width:100%}
 
-  /* Topbar */
+  /* Topbar — safe-area para iPhone com notch/Dynamic Island */
   .sb-ham{display:flex;align-items:center}
-  .topbar{padding:0 12px;gap:6px;min-height:52px;padding-top:env(safe-area-inset-top,0)}
+  .topbar{
+    height:auto;
+    min-height:calc(var(--th) + env(safe-area-inset-top,0));
+    padding:env(safe-area-inset-top,0) 12px 0;
+    gap:6px;
+    align-items:flex-end;
+    padding-bottom:10px;
+  }
   .c-sub{display:none}
   .c-pg{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100vw - 170px)}
   .trr .tbt:not(.pri){display:none}
