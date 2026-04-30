@@ -5579,17 +5579,18 @@ document.head.appendChild(styleEl);
    Perfis, permissões, login e controle por módulo
 ══════════════════════════════════════════════════════ */
 
-/* 8 perfis conforme documento institucional */
+/* 7 perfis conforme documento institucional (padronização com complemento funcional) */
 const PERFIS = {
-  admin_geral:        { nome:"Administrativo Geral", icon:"👑", cor:"var(--gold)",   nivel:7 },
-  ADMINISTRADOR_GERAL: { nome:"Administrativo Geral", icon:"👑", cor:"var(--gold)",   nivel:7 },
-  conselho:           { nome:"Conselho",             icon:"🏛", cor:"var(--blue)",   nivel:6 },
-  pastoral:           { nome:"Pastoral",             icon:"✝️", cor:"var(--teal)",   nivel:5 },
-  adm_operacional:    { nome:"Adm. Operacional",     icon:"💼", cor:"var(--amber)",  nivel:4 },
-  lider_ministerio:   { nome:"Líder de Ministério",  icon:"🎯", cor:"var(--violet)", nivel:3 },
-  membro_ministerio:  { nome:"Membro de Ministério", icon:"🙌", cor:"var(--gr)",     nivel:2 },
-  operacional_servicos:{ nome:"Operacional Serviços",icon:"🔧", cor:"var(--tx2)",    nivel:1 },
-  membro_igreja:      { nome:"Membro Igreja",        icon:"⛪", cor:"var(--sky)",    nivel:0 },
+  admin_geral:          { nome:"Administrador Geral",                   icon:"👑", cor:"var(--gold)",   nivel:7 },
+  ADMINISTRADOR_GERAL:  { nome:"Administrador Geral",                   icon:"👑", cor:"var(--gold)",   nivel:7 },
+  conselho:             { nome:"Membro do Conselho (Supervisor)",        icon:"🏛", cor:"var(--blue)",   nivel:6 },
+  pastoral:             { nome:"Pastoral",                               icon:"✝️", cor:"var(--teal)",   nivel:5 },
+  adm_operacional:      { nome:"Adm. Operacional",                       icon:"💼", cor:"var(--amber)",  nivel:4 },
+  lider_ministerio:     { nome:"Líder de Ministério (Coordenador)",      icon:"🎯", cor:"var(--violet)", nivel:3 },
+  lider_area:           { nome:"Líder de Área (Líder Setorial)",         icon:"📍", cor:"var(--amber)",  nivel:3 },
+  membro_ministerio:    { nome:"Membro de Ministério (Sacerdote)",       icon:"🙌", cor:"var(--gr)",     nivel:2 },
+  operacional_servicos: { nome:"Operacional Serviços (Contratados)",     icon:"🔧", cor:"var(--tx2)",    nivel:1 },
+  membro_igreja:        { nome:"Membro da Igreja",                       icon:"⛪", cor:"var(--sky)",    nivel:0 },
 };
 
 /* Matriz de permissões por módulo e perfil
@@ -5659,6 +5660,7 @@ const PERFIL_KEY_TO_DB_NOME = {
   pastoral:             "PASTORAL",
   adm_operacional:      "ADM_OPERACIONAL",
   lider_ministerio:     "LIDER_MINISTERIO",
+  lider_area:           "LIDER_AREA",
   membro_ministerio:    "MEMBRO_MINISTERIO",
   operacional_servicos: "OPERACIONAL_SERVICOS",
   membro_igreja:        "MEMBRO_IGREJA",
@@ -5666,14 +5668,21 @@ const PERFIL_KEY_TO_DB_NOME = {
 
 /* Mapeamento nome visual (UI) ↔ nome exato no banco — usado no fallback de UUID */
 const PERFIS_MAP = {
-  "Administrativo Geral":  "ADMINISTRADOR_GERAL",
-  "Conselho":              "CONSELHO",
-  "Pastoral":              "PASTORAL",
-  "Adm. Operacional":      "ADM_OPERACIONAL",
-  "Líder de Ministério":   "LIDER_MINISTERIO",
-  "Membro de Ministério":  "MEMBRO_MINISTERIO",
-  "Operacional Serviços":  "OPERACIONAL_SERVICOS",
-  "Membro Igreja":         "MEMBRO_IGREJA",
+  "Administrador Geral":                  "ADMINISTRADOR_GERAL",
+  "Administrativo Geral":                 "ADMINISTRADOR_GERAL",
+  "Membro do Conselho (Supervisor)":      "CONSELHO",
+  "Conselho":                             "CONSELHO",
+  "Pastoral":                             "PASTORAL",
+  "Adm. Operacional":                     "ADM_OPERACIONAL",
+  "Líder de Ministério (Coordenador)":    "LIDER_MINISTERIO",
+  "Líder de Ministério":                  "LIDER_MINISTERIO",
+  "Líder de Área (Líder Setorial)":       "LIDER_AREA",
+  "Membro de Ministério (Sacerdote)":     "MEMBRO_MINISTERIO",
+  "Membro de Ministério":                 "MEMBRO_MINISTERIO",
+  "Operacional Serviços (Contratados)":   "OPERACIONAL_SERVICOS",
+  "Operacional Serviços":                 "OPERACIONAL_SERVICOS",
+  "Membro da Igreja":                     "MEMBRO_IGREJA",
+  "Membro Igreja":                        "MEMBRO_IGREJA",
 };
 
 /* Mapeamento módulo display ↔ módulo DB */
@@ -5733,6 +5742,7 @@ function normalizarPerfil(funcao) {
     conselho:"CONSELHO", CONSELHO:"CONSELHO",
     adm_operacional:"ADM_OPERACIONAL", ADM_OPERACIONAL:"ADM_OPERACIONAL",
     lider_ministerio:"LIDER_MINISTERIO", LIDER_MINISTERIO:"LIDER_MINISTERIO",
+    lider_area:"LIDER_AREA", LIDER_AREA:"LIDER_AREA",
     membro_ministerio:"MEMBRO_MINISTERIO", MEMBRO_MINISTERIO:"MEMBRO_MINISTERIO",
     operacional_servicos:"OPERACIONAL_SERVICOS", OPERACIONAL_SERVICOS:"OPERACIONAL_SERVICOS",
     membro_igreja:"MEMBRO_IGREJA", MEMBRO_IGREJA:"MEMBRO_IGREJA",
@@ -5965,6 +5975,7 @@ function aplicarPermissoes() {
     "JUNTA_DIACONAL":       "JUNTA_DIACONAL",
     "ADM_OPERACIONAL":      "ADMINISTRATIVO",
     "LIDER_MINISTERIO":     "MINISTERIAL",
+    "LIDER_AREA":           "MINISTERIAL",
     "MEMBRO_MINISTERIO":    "MINISTERIAL",
     "OPERACIONAL_SERVICOS": "INFRAESTRUTURA",
   };
