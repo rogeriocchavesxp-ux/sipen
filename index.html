@@ -4617,6 +4617,10 @@ function go(id){
     if (cfg && cfg.fn) cfg.fn();
     else if (cfg) listarModulo(cfg.tab, cfg.id, cfg.filtro || {});
   }
+
+  // Persistir rota atual para restauração após F5
+  try { localStorage.setItem("sipen_route", id); } catch(_) {}
+  try { history.replaceState(null, "", location.pathname + location.search + "#" + id); } catch(_) {}
 }
 
 function tog(mod){
@@ -5803,6 +5807,35 @@ function abrirPrimeiroModuloPermitido() {
   if (primeiro) go(primeiro[1]); else go("geral");
 }
 
+/* Restaura a rota salva — hash > localStorage.
+   Retorna true se navegou, false se não havia rota válida. */
+function _lerRotaSalva() {
+  try {
+    const hash  = (window.location.hash || "").replace(/^#/, "").trim();
+    const local = localStorage.getItem("sipen_route") || "";
+    const rota  = hash || local;
+    if (!rota) return null;
+    // View existe no DOM ou está registrada no CRUMB (views JS-driven)
+    if (document.getElementById("v-" + rota)) return rota;
+    if (typeof CRUMB !== "undefined" && CRUMB[rota])  return rota;
+    return null;
+  } catch(_) { return null; }
+}
+
+/* Expande o painel lateral do módulo sem triggar navegação. */
+function _expandirSidebar(mod) {
+  try {
+    const sub  = document.getElementById("ms-" + mod);
+    const wrap = document.getElementById("mw-" + mod);
+    if (!sub) return;
+    document.querySelectorAll(".msub").forEach(s => s.classList.remove("open"));
+    document.querySelectorAll(".mhdr").forEach(h => h.classList.remove("open"));
+    sub.classList.add("open");
+    const hdr = wrap?.querySelector(".mhdr");
+    if (hdr) hdr.classList.add("open");
+  } catch(_) {}
+}
+
 /* ── INICIALIZAÇÃO PÓS-LOGIN ─────────────────── */
 async function entrarNoSistema() {
   document.getElementById("login-screen").style.display = "none";
@@ -5810,7 +5843,17 @@ async function entrarNoSistema() {
   aplicarPermissoes();
   initSupabaseBadge();
   testApiSilently();
-  abrirPrimeiroModuloPermitido();
+
+  // Restaurar última tela visitada (F5) ou abrir o primeiro módulo permitido
+  const rotaSalva = _lerRotaSalva();
+  if (rotaSalva) {
+    const mod = rotaSalva.split("-")[0];
+    if (mod !== "geral") _expandirSidebar(mod);
+    go(rotaSalva);
+  } else {
+    abrirPrimeiroModuloPermitido();
+  }
+
   if (typeof window.demAtualizarLabels === "function") window.demAtualizarLabels();
   T(`Bem-vindo, ${USUARIO_ATUAL.nome.split(" ")[0]}! 👋`,
     `Perfil: ${PERFIS[USUARIO_ATUAL.perfil]?.nome || USUARIO_ATUAL.perfil}`);
