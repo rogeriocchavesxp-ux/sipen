@@ -1109,4 +1109,14 @@
     if (hero) hero.textContent = label;
   };
 
+  const _PERFIS_RESTRITOS_DEM = ["MEMBRO_IGREJA", "MEMBRO_MINISTERIO", "LIDER_MINISTERIO"];
+
+  window.aplicarMenuDemandasPorPerfil = function() {
+    if (typeof USUARIO_ATUAL === "undefined" || !USUARIO_ATUAL) return;
+    const restrito = _PERFIS_RESTRITOS_DEM.includes(USUARIO_ATUAL.perfil);
+    document.querySelectorAll("[data-demanda-admin]").forEach(el => {
+      el.style.display = restrito ? "none" : "";
+    });
+  };
+
 })();

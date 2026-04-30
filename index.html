@@ -1067,12 +1067,12 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
         <span class="marr">▶</span>
       </div>
       <div class="msub" id="ms-dem">
-        <div class="si" onclick="go('dem-dash')">Dashboard de Demandas</div>
+        <div class="si" data-demanda-admin onclick="go('dem-dash')">Dashboard de Demandas</div>
         <div class="si" id="si-dem-todas" onclick="go('dem-todas')">Todas as Solicitações</div>
-        <div class="si" onclick="go('dem-analise')">Em Análise</div>
-        <div class="si" onclick="go('dem-and')">Em Andamento</div>
+        <div class="si" data-demanda-admin onclick="go('dem-analise')">Em Análise</div>
+        <div class="si" data-demanda-admin onclick="go('dem-and')">Em Andamento</div>
         <div class="si" onclick="go('dem-conc')">Concluídas</div>
-        <div class="si" onclick="go('dem-pri')">Alta Prioridade</div>
+        <div class="si" data-demanda-admin onclick="go('dem-pri')">Alta Prioridade</div>
         <div class="si" onclick="go('dem-hist')">Histórico</div>
       </div>
     </div>
@@ -5919,6 +5919,7 @@ async function entrarNoSistema() {
   }
 
   if (typeof window.demAtualizarLabels === "function") window.demAtualizarLabels();
+  if (typeof window.aplicarMenuDemandasPorPerfil === "function") window.aplicarMenuDemandasPorPerfil();
   T(`Bem-vindo, ${USUARIO_ATUAL.nome.split(" ")[0]}! 👋`,
     `Perfil: ${PERFIS[USUARIO_ATUAL.perfil]?.nome || USUARIO_ATUAL.perfil}`);
 }
