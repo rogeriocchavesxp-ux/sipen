@@ -945,16 +945,23 @@
       return;
     }
 
+    const u = typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL : null;
+    const pessoaId = u?.id || u?.pessoa_id || null;
+    console.log("Usuário logado:", u);
+    console.log("Pessoa ID:", pessoaId);
+
     const payload = {
-      area:          cat,
-      subcategoria:  sub,
+      area:           cat,
+      subcategoria:   sub,
       titulo,
-      descricao:     desc || "",
-      prioridade:    "Média",    // definida por triagem — nunca pelo solicitante
-      status:        "ABERTA",
-      solicitante:   sol || "",
-      responsavel:   resp || catResp(cat),
-      data_abertura: new Date().toISOString().split("T")[0],
+      descricao:      desc || "",
+      prioridade:     "Média",    // definida por triagem — nunca pelo solicitante
+      status:         "ABERTA",
+      solicitante:    sol || "",
+      solicitante_id: pessoaId,
+      created_by:     pessoaId,
+      responsavel:    resp || catResp(cat),
+      data_abertura:  new Date().toISOString().split("T")[0],
       data_conclusao: venc,
     };
 
