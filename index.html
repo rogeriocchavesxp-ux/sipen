@@ -787,6 +787,10 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
   /* Abas internas */
   .ini{padding:9px 10px;font-size:11.5px}
 }
+
+/* Itens de menu de demandas visíveis apenas para admins */
+[data-demanda-admin] { display: none !important; }
+body.dem-admin [data-demanda-admin] { display: block !important; }
 </style>
 
 </head>

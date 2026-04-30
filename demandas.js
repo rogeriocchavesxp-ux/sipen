@@ -1115,11 +1115,8 @@
   function _aplicarMenuDem() {
     if (typeof USUARIO_ATUAL === "undefined" || !USUARIO_ATUAL) return;
     const perfil = (USUARIO_ATUAL.perfil || "").toUpperCase();
-    const restrito = _PERFIS_RESTRITOS_DEM.includes(perfil);
-    console.log("[demandas] perfil:", perfil, "| restrito:", restrito);
-    document.querySelectorAll("[data-demanda-admin]").forEach(el => {
-      el.style.display = restrito ? "none" : "";
-    });
+    const isAdmin = !_PERFIS_RESTRITOS_DEM.includes(perfil);
+    document.body.classList.toggle("dem-admin", isAdmin);
   }
 
   window.aplicarMenuDemandasPorPerfil = _aplicarMenuDem;
