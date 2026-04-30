@@ -163,12 +163,12 @@
   /* ── Estado: tela Admin Demandas ────────────────────── */
   const _ADM_KEY = "sipen_adm_dem_filtro";
 
-  // Mapa chave-de-aba → valor do campo `area` (null = sem filtro)
+  // Mapa chave-de-aba → array de áreas aceitas (null = sem filtro / todas)
   const _ADM_FILTROS = {
-    "Administrativo":               "Administrativo",
-    "Financeiro":                   "Financeiro",
-    "Infraestrutura e Conservação": "Infraestrutura e Conservação",
-    "":                             null,
+    "Administrativo": ["Secretaria","Conselho","Agendamentos","Cadastro","Administrativo Geral","Administrativo"],
+    "Financeiro":     ["Financeiro"],
+    "Infraestrutura e Conservação": ["Infraestrutura e Conservação"],
+    "":               null,
   };
 
   // Mapa chave-de-aba → id do botão HTML
@@ -422,7 +422,7 @@
 
     let rows = [..._cache];
 
-    /* Filtros fixos — comparação normalizada (aceita label ou código DB) */
+    /* Filtros fixos — comparação normalizada (aceita label, código DB ou array) */
     if (filtrosFixos) {
       Object.entries(filtrosFixos).forEach(([k, v]) => {
         if (!v) return;
@@ -430,6 +430,8 @@
           rows = rows.filter(r => ["Alta","Urgente"].includes(r.prioridade));
         } else if (k === "status") {
           rows = rows.filter(r => _toDb(String(r[k]||"")) === _toDb(String(v)));
+        } else if (Array.isArray(v)) {
+          rows = rows.filter(r => v.includes(String(r[k]||"")));
         } else {
           rows = rows.filter(r => String(r[k]||"") === String(v));
         }
