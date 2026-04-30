@@ -522,6 +522,122 @@
     return MAP[elId] || "dem-todas";
   }
 
+  /* ── Andamentos ─────────────────────────────────────── */
+
+  function _sbClient() {
+    return typeof getSupabase === "function" ? getSupabase() : null;
+  }
+
+  function _podeRegistrarAndamento(dem) {
+    try {
+      if (typeof USUARIO_ATUAL === "undefined" || !USUARIO_ATUAL) return true;
+      if (USUARIO_ATUAL.perfil === "ADMINISTRADOR_GERAL") return true;
+      const p = typeof PERFIS !== "undefined" ? PERFIS[USUARIO_ATUAL.perfil] : null;
+      if (p && p.nivel >= 4) return true;
+      const nomeU = (USUARIO_ATUAL.nome || "").toLowerCase().trim();
+      if (nomeU && (dem.responsavel || "").toLowerCase().trim() === nomeU) return true;
+      if (nomeU && (dem.solicitante || "").toLowerCase().trim() === nomeU) return true;
+      return false;
+    } catch(_) { return true; }
+  }
+
+  async function _carregarAndamentos(demandaId, dem) {
+    const listEl = document.getElementById("dem-and-list-" + demandaId);
+    if (!listEl) return;
+    const sb = _sbClient();
+    if (!sb) {
+      listEl.innerHTML = `<div style="color:var(--tx3);font-size:12px;padding:8px 0">Supabase não disponível.</div>`;
+      return;
+    }
+    listEl.innerHTML = `<div style="color:var(--tx3);font-size:12px;padding:8px 0">${_sp()} Carregando…</div>`;
+    try {
+      const { data, error } = await sb
+        .from("demanda_andamentos")
+        .select("id, texto, usuario_nome, status_demanda, automatico, created_at")
+        .eq("demanda_id", demandaId)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      if (!data || !data.length) {
+        listEl.innerHTML = `<div style="color:var(--tx3);font-size:12px;padding:8px 0;font-style:italic">Nenhum andamento registrado ainda.</div>`;
+        return;
+      }
+      listEl.innerHTML = data.map(a => {
+        const dt = a.created_at ? (() => {
+          const d = new Date(a.created_at);
+          return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" });
+        })() : "—";
+        return `<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd1)">
+          <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;background:${a.automatico?"rgba(90,96,104,.2)":"rgba(74,156,245,.15)"};display:flex;align-items:center;justify-content:center;font-size:14px;margin-top:2px">
+            ${a.automatico ? "🔄" : "💬"}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
+              <span style="font-size:12px;font-weight:600;color:var(--tx1)">${a.automatico ? "Sistema" : (a.usuario_nome || "Usuário")}</span>
+              <span style="font-size:10.5px;color:var(--tx3)">${dt}</span>
+              ${a.status_demanda ? pillStatus(a.status_demanda) : ""}
+            </div>
+            <div style="font-size:12.5px;color:${a.automatico?"var(--tx3)":"var(--tx1)"};line-height:1.5;font-style:${a.automatico?"italic":"normal"}">${a.texto}</div>
+          </div>
+        </div>`;
+      }).join("");
+    } catch(e) {
+      console.error("[andamentos] carregar:", e);
+      listEl.innerHTML = `<div style="color:var(--rose);font-size:12px;padding:8px 0">Erro ao carregar andamentos: ${e.message}</div>`;
+    }
+  }
+
+  async function _registrarAndamentoAuto(demandaId, texto, statusDemanda) {
+    const sb = _sbClient();
+    if (!sb) return;
+    try {
+      const nomeU = typeof USUARIO_ATUAL !== "undefined" ? (USUARIO_ATUAL?.nome || "") : "";
+      const uidU  = typeof USUARIO_ATUAL !== "undefined" ? (USUARIO_ATUAL?.id   || null) : null;
+      await sb.from("demanda_andamentos").insert({
+        demanda_id:     demandaId,
+        usuario_id:     uidU,
+        usuario_nome:   nomeU,
+        texto,
+        status_demanda: statusDemanda ? _toDb(statusDemanda) : null,
+        automatico:     true,
+      });
+    } catch(e) {
+      console.warn("[andamentos] auto:", e.message);
+    }
+  }
+
+  window.demRegistrarAndamento = async function(demandaId) {
+    const txtEl = document.getElementById("dem-and-txt-" + demandaId);
+    const texto = txtEl ? txtEl.value.trim() : "";
+    if (!texto) {
+      if (typeof T === "function") T("Campo vazio", "Escreva um andamento antes de registrar");
+      return;
+    }
+    const sb = _sbClient();
+    if (!sb) return;
+    const btn = document.querySelector(`[data-and-btn="${demandaId}"]`);
+    if (btn) { btn.disabled = true; btn.textContent = "Salvando…"; }
+    try {
+      const nomeU = typeof USUARIO_ATUAL !== "undefined" ? (USUARIO_ATUAL?.nome || "") : "";
+      const uidU  = typeof USUARIO_ATUAL !== "undefined" ? (USUARIO_ATUAL?.id   || null) : null;
+      const { error } = await sb.from("demanda_andamentos").insert({
+        demanda_id:   demandaId,
+        usuario_id:   uidU,
+        usuario_nome: nomeU,
+        texto,
+        automatico:   false,
+      });
+      if (error) throw error;
+      txtEl.value = "";
+      if (typeof T === "function") T("✅ Andamento registrado!", "");
+      await _carregarAndamentos(demandaId, _ativo);
+    } catch(e) {
+      console.error("[andamentos] registrar:", e);
+      if (typeof T === "function") T("Erro ao registrar", e.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = "Registrar"; }
+    }
+  };
+
   /* ── Detalhe individual ─────────────────────────────── */
 
   window.demAbrirDetalhe = async function(id, origem) {
@@ -630,7 +746,23 @@
             <button onclick="demSalvarEdicao('${id}')" style="padding:8px 20px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer">Salvar alterações</button>
           </div>
         </div>
+        <div class="card" style="margin-top:0">
+          <div class="ctit">Andamentos da Demanda</div>
+          ${_podeRegistrarAndamento(dem) ? `
+          <div style="display:flex;gap:8px;margin-bottom:16px;align-items:flex-end">
+            <textarea id="dem-and-txt-${id}" rows="2" placeholder="Escreva um andamento…"
+              style="flex:1;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;resize:vertical;font-family:var(--ff);box-sizing:border-box"></textarea>
+            <button data-and-btn="${id}" onclick="demRegistrarAndamento('${id}')"
+              style="padding:9px 18px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">
+              Registrar
+            </button>
+          </div>` : ""}
+          <div id="dem-and-list-${id}">
+            <div style="color:var(--tx3);font-size:12px;padding:8px 0">Carregando…</div>
+          </div>
+        </div>
       </div>`;
+    _carregarAndamentos(id, dem);
   }
 
   /* ── Atualizar status ───────────────────────────────── */
@@ -657,6 +789,7 @@
 
       if (_ativo && String(_ativo.id||_ativo._row) === String(id)) {
         Object.assign(_ativo, cacheUpd);
+        await _registrarAndamentoAuto(id, `Status alterado para "${novoStatus}"`, novoStatus);
         _renderDetalhe(_ativo);
       }
       _atualizarBadge();
