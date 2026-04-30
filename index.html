@@ -879,6 +879,8 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
         <div class="si" onclick="go('fin-categorias')">Categorias Financeiras</div>
         <div class="si" onclick="go('fin-relatorios')">Relatórios Financeiros</div>
         <div class="si" onclick="go('fin-auditoria')">Auditoria Financeira</div>
+        <div class="sdiv"></div>
+        <div class="si" onclick="go('fin-demandas')">Solicitações e Demandas</div>
       </div>
     </div>
 
@@ -2608,6 +2610,39 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
       <div><div class="hero-lbl">Financeiro</div><div class="hero-ttl">Auditoria Financeira</div><div class="hero-dsc">Histórico completo de ações, edições e movimentações</div></div>
     </div>
     <div class="ct" id="fin-aud-content"></div>
+  </div>
+
+  <!-- FINANCEIRO: DEMANDAS FINANCEIRAS (com abas) -->
+  <div class="view" id="v-fin-demandas">
+    <div class="hero"><div class="hero-ic" style="background:rgba(61,160,85,0.12)">💰</div><div><div class="hero-lbl">Financeiro</div><div class="hero-ttl">Demandas Financeiras</div><div class="hero-dsc">Solicitações e demandas do módulo Financeiro</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="ct">
+      <div class="card">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+          <div id="fin-dem-btn-fin" class="sni on" onclick="finDemSetFiltro('Financeiro')">Financeiras</div>
+          <div class="sni-sep"></div>
+          <div id="fin-dem-btn-adm" class="sni"    onclick="finDemSetFiltro('Administrativo')">Secretaria</div>
+          <div class="sni-sep"></div>
+          <div id="fin-dem-btn-inf" class="sni"    onclick="finDemSetFiltro('Infraestrutura e Conservação')">Infraestrutura e Conservação</div>
+          <div class="sni-sep"></div>
+          <div id="fin-dem-btn-tod" class="sni"    onclick="finDemSetFiltro('')">Todas</div>
+        </div>
+        <div class="ctit">Filtros <span class="cact" onclick="finDemFiltrar()">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="fin-demandas-content-fstatus" onchange="finDemFiltrar()" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
+          </select>
+          <select id="fin-demandas-content-fprio" onchange="finDemFiltrar()" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as prioridades</option>
+            <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
+          </select>
+          <input id="fin-demandas-content-fbusca" type="text" placeholder="Buscar..." oninput="finDemFiltrar()" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div id="fin-demandas-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
   </div>
 
   <!-- DEMANDAS TODAS -->
@@ -4502,6 +4537,7 @@ const CRUMB={
   "fin-categorias":["Financeiro","Categorias Financeiras","/ classificação de lançamentos"],
   "fin-relatorios":["Financeiro","Relatórios Financeiros","/ consolidados por período"],
   "fin-auditoria":["Financeiro","Auditoria Financeira","/ histórico de ações"],
+  "fin-demandas":["Financeiro","Demandas Financeiras","/ solicitações do módulo"],
   "admin-con":["Administrativo","Contratos",""],
   "admin-rh":["Administrativo","RH",""],
   "jur-dash":["Jurídico","Dashboard","/ contratos, pareceres e riscos"],

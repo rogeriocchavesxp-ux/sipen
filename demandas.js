@@ -203,6 +203,47 @@
     renderLista("admin-demandas-content", fixos);
   }
 
+  /* ── Estado: tela Fin Demandas ─────────────────────── */
+  const _FIN_KEY = "sipen_fin_dem_filtro";
+
+  const _FIN_FILTROS = {
+    "Financeiro":                 ["Financeiro"],
+    "Administrativo":             ["Secretaria","Conselho","Agendamentos","Cadastro","Administrativo Geral","Administrativo"],
+    "Infraestrutura e Conservação": ["Infraestrutura e Conservação"],
+    "": null,
+  };
+
+  const _FIN_BTNS = {
+    "Financeiro":                   "fin-dem-btn-fin",
+    "Administrativo":               "fin-dem-btn-adm",
+    "Infraestrutura e Conservação": "fin-dem-btn-inf",
+    "":                             "fin-dem-btn-tod",
+  };
+
+  let _finFiltro = (function () {
+    try { return localStorage.getItem(_FIN_KEY) ?? "Financeiro"; } catch(_) { return "Financeiro"; }
+  })();
+
+  function _finSetFiltro(area) {
+    _finFiltro = area;
+    try { localStorage.setItem(_FIN_KEY, area); } catch(_) {}
+    _finRender();
+  }
+
+  function _finAtualizarAbas() {
+    Object.entries(_FIN_BTNS).forEach(([chave, btnId]) => {
+      const el = document.getElementById(btnId);
+      if (el) el.className = chave === _finFiltro ? "sni on" : "sni";
+    });
+  }
+
+  function _finRender() {
+    _finAtualizarAbas();
+    const area  = _FIN_FILTROS[_finFiltro] ?? null;
+    const fixos = area ? { area } : undefined;
+    renderLista("fin-demandas-content", fixos);
+  }
+
   async function _load() {
     try {
       let rows;
@@ -924,9 +965,10 @@
       window.fecharModalNovaDemanda();
       _invalidate();
       const view = document.querySelector(".view.on");
-      if (view?.id === "v-dem-dash")      renderDash();
-      if (view?.id === "v-dem-todas")     renderLista("dem-todas-content");
+      if (view?.id === "v-dem-dash")       renderDash();
+      if (view?.id === "v-dem-todas")      renderLista("dem-todas-content");
       if (view?.id === "v-admin-demandas") _admRender();
+      if (view?.id === "v-fin-demandas")   _finRender();
       _atualizarBadge();
     } catch(e) {
       if (typeof T === "function") T("Erro ao criar", e.message || "Tente novamente");
@@ -1025,6 +1067,7 @@
       "dem-hist":         () => renderLista("dem-hist-content"),
       "admin-demandas":          () => _admRender(),
       "admin-demandas-adm":      () => { _admFiltro = "Administrativo"; try { localStorage.setItem(_ADM_KEY, _admFiltro); } catch(_){} go("admin-demandas"); },
+      "fin-demandas":            () => _finRender(),
       "conselho-demandas":        () => renderLista("conselho-demandas-content"),
       "conselho-demandas-cons":   () => renderLista("conselho-demandas-cons-content",  { area:"Conselho" }),
       "infra-dash":               () => _renderInfraDash(),
@@ -1041,6 +1084,9 @@
 
   window.adminDemSetFiltro = _admSetFiltro;
   window.adminDemFiltrar   = function() { _admRender(); };
+
+  window.finDemSetFiltro = _finSetFiltro;
+  window.finDemFiltrar   = function() { _finRender(); };
 
   window.demAtualizarLabels = function() {
     const restrito = !_podeVerTodas();
