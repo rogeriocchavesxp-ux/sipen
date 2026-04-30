@@ -531,12 +531,19 @@
   function _podeRegistrarAndamento(dem) {
     try {
       if (typeof USUARIO_ATUAL === "undefined" || !USUARIO_ATUAL) return true;
-      if (USUARIO_ATUAL.perfil === "ADMINISTRADOR_GERAL") return true;
-      const p = typeof PERFIS !== "undefined" ? PERFIS[USUARIO_ATUAL.perfil] : null;
-      if (p && p.nivel >= 4) return true;
-      const nomeU = (USUARIO_ATUAL.nome || "").toLowerCase().trim();
-      if (nomeU && (dem.responsavel || "").toLowerCase().trim() === nomeU) return true;
-      if (nomeU && (dem.solicitante || "").toLowerCase().trim() === nomeU) return true;
+      if (_podeVerTodas()) return true;
+      const u = USUARIO_ATUAL;
+      const nomeU = (u.nome || "").toLowerCase().trim();
+      const pessoaId = u.id || u.pessoa_id || null;
+      const ministerios = Array.isArray(u.ministerios) ? u.ministerios.map(m => (m||"").toLowerCase().trim()) : [];
+      if (pessoaId && dem.solicitante_id && String(dem.solicitante_id) === String(pessoaId)) return true;
+      if (nomeU && (dem.solicitante||"").toLowerCase().trim() === nomeU) return true;
+      if (dem.responsavel_id && pessoaId && String(dem.responsavel_id) === String(pessoaId)) return true;
+      if (nomeU && (dem.responsavel||"").toLowerCase().trim() === nomeU) return true;
+      if (ministerios.length > 0) {
+        const areaD = (dem.area||"").toLowerCase().trim();
+        if (ministerios.some(m => areaD.includes(m) || m.includes(areaD))) return true;
+      }
       return false;
     } catch(_) { return true; }
   }
