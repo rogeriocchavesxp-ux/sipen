@@ -21,20 +21,26 @@ create table if not exists public.perfis_permissoes (
   nivel_acesso text not null default 'SEM_ACESSO',
   created_at   timestamp with time zone default now(),
   updated_at   timestamp with time zone default now(),
+  constraint uq_perfil_modulo unique (perfil_id, modulo)
+);
 
-  constraint nivel_acesso_check
+-- ── 2b. Remover constraints antigas e recriar com valores corretos ─────
+alter table public.perfis_permissoes
+  drop constraint if exists perfis_permissoes_nivel_check,
+  drop constraint if exists nivel_acesso_check,
+  drop constraint if exists perfis_permissoes_modulo_check,
+  drop constraint if exists modulo_check;
+
+alter table public.perfis_permissoes
+  add constraint nivel_acesso_check
     check (nivel_acesso in ('SEM_ACESSO','LEITURA','EDICAO','COMPLETO')),
-
-  constraint modulo_check
+  add constraint modulo_check
     check (modulo in (
       'ADMINISTRATIVO','FINANCEIRO','JURIDICO','PASTORAL','CONSELHO',
       'MINISTERIAL','AGENDA','PGS','INFRAESTRUTURA','DEMANDAS',
       'RELATORIOS','MEMBRESIA','ESTOQUE','CONFIGURACOES','AREA_MEMBRO',
       'JUNTA_DIACONAL','CONGREGACOES'
-    )),
-
-  constraint uq_perfil_modulo unique (perfil_id, modulo)
-);
+    ));
 
 -- ── 3. Índices ─────────────────────────────────────────────────────────
 create index if not exists idx_permissoes_perfil
