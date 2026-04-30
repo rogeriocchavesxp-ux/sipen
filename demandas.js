@@ -162,8 +162,25 @@
 
   /* ── Estado: tela Admin Demandas ────────────────────── */
   const _ADM_KEY = "sipen_adm_dem_filtro";
+
+  // Mapa chave-de-aba → valor do campo `area` (null = sem filtro)
+  const _ADM_FILTROS = {
+    "Administrativo":               "Administrativo",
+    "Financeiro":                   "Financeiro",
+    "Infraestrutura e Conservação": "Infraestrutura e Conservação",
+    "":                             null,
+  };
+
+  // Mapa chave-de-aba → id do botão HTML
+  const _ADM_BTNS = {
+    "Administrativo":               "adm-dem-btn-adm",
+    "Financeiro":                   "adm-dem-btn-fin",
+    "Infraestrutura e Conservação": "adm-dem-btn-inf",
+    "":                             "adm-dem-btn-tod",
+  };
+
   let _admFiltro = (function () {
-    try { return localStorage.getItem(_ADM_KEY) || "Administrativo"; } catch(_) { return "Administrativo"; }
+    try { return localStorage.getItem(_ADM_KEY) ?? "Administrativo"; } catch(_) { return "Administrativo"; }
   })();
 
   function _admSetFiltro(area) {
@@ -173,15 +190,16 @@
   }
 
   function _admAtualizarAbas() {
-    const btnAdm = document.getElementById("adm-dem-btn-adm");
-    const btnTod = document.getElementById("adm-dem-btn-tod");
-    if (btnAdm) btnAdm.className = _admFiltro ? "sni on" : "sni";
-    if (btnTod) btnTod.className = _admFiltro ? "sni"    : "sni on";
+    Object.entries(_ADM_BTNS).forEach(([chave, btnId]) => {
+      const el = document.getElementById(btnId);
+      if (el) el.className = chave === _admFiltro ? "sni on" : "sni";
+    });
   }
 
   function _admRender() {
     _admAtualizarAbas();
-    const fixos = _admFiltro ? { area: _admFiltro } : undefined;
+    const area  = _ADM_FILTROS[_admFiltro] ?? null;
+    const fixos = area ? { area } : undefined;
     renderLista("admin-demandas-content", fixos);
   }
 

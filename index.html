@@ -2627,8 +2627,12 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
     <div class="hero"><div class="hero-ic" style="background:rgba(224,85,85,0.12)">📋</div><div><div class="hero-lbl">Administrativo</div><div class="hero-ttl">Demandas Administrativas</div><div class="hero-dsc">Demandas do módulo Administrativo e visão geral de todas as demandas</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
     <div class="ct">
       <div class="card">
-        <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
           <div id="adm-dem-btn-adm" class="sni on" onclick="adminDemSetFiltro('Administrativo')">Administrativas</div>
+          <div class="sni-sep"></div>
+          <div id="adm-dem-btn-fin" class="sni"    onclick="adminDemSetFiltro('Financeiro')">Financeiras</div>
+          <div class="sni-sep"></div>
+          <div id="adm-dem-btn-inf" class="sni"    onclick="adminDemSetFiltro('Infraestrutura e Conservação')">Infraestrutura e Conservação</div>
           <div class="sni-sep"></div>
           <div id="adm-dem-btn-tod" class="sni"    onclick="adminDemSetFiltro('')">Todas</div>
         </div>
