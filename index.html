@@ -8493,19 +8493,7 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
 
     let h="";
 
-    /* Alertas */
-    if(alerts.length){
-      const shown=alerts.slice(0,5);
-      h+=`<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">`;
-      shown.forEach(al=>{
-        const c=al.k==="danger"?{bg:"rgba(208,104,104,.10)",bd:"rgba(208,104,104,.3)",cl:"#d06868",i:"🔴"}
-                :al.k==="warning"?{bg:"rgba(212,168,67,.10)",bd:"rgba(212,168,67,.3)",cl:"#d4a843",i:"⚠️"}
-                :{bg:"rgba(58,176,184,.08)",bd:"rgba(58,176,184,.2)",cl:"var(--teal)",i:"ℹ️"};
-        h+=`<div style="display:flex;align-items:center;gap:9px;background:${c.bg};border:1px solid ${c.bd};border-radius:7px;padding:9px 14px;font-size:11.5px;color:${c.cl}"><span>${c.i}</span><span>${al.msg}</span></div>`;
-      });
-      if(alerts.length>5) h+=`<div style="font-size:10.5px;color:var(--tx3);padding:2px 4px">+ ${alerts.length-5} alertas adicionais</div>`;
-      h+=`</div>`;
-    }
+    /* Alertas — ocultados no Dashboard (disponíveis em Escala / Relatórios) */
 
     /* KPIs */
     h+=`<div class="kpis c4" style="margin-bottom:16px">
