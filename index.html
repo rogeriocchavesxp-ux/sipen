@@ -4960,6 +4960,11 @@ async function apiWrite(action, sheet, payload) {
     if (body.status !== undefined) {
       body.status = STATUS_DEMANDA_MAP[body.status] || body.status || "ABERTA";
     }
+    // Garantir que prioridade seja sempre um valor válido do enum prioridade_t
+    const PRIO_VALIDAS = ["Baixa", "Média", "Alta", "Urgente"];
+    const prioNormalizada = PRIO_VALIDAS.includes(body.prioridade) ? body.prioridade : "Média";
+    body.prioridade = prioNormalizada;
+    console.log("Prioridade enviada ao Supabase:", prioNormalizada);
   }
 
   let url = `${apiBaseUrl()}/rest/v1/${tbl}`;
@@ -5426,6 +5431,9 @@ async function salvarRegistro(tab, recordId = null) {
     const _sn = { "Aberta":"ABERTA","Em Análise":"EM_ANALISE","Em Andamento":"EM_ANDAMENTO","Pendente":"PENDENTE","Concluída":"CONCLUIDA","Cancelada":"CANCELADA" };
     data.status = data.status ? (_sn[data.status] || data.status) : (!recordId ? "ABERTA" : undefined);
     if (data.status === undefined) delete data.status;
+    const _pv = ["Baixa","Média","Alta","Urgente"];
+    data.prioridade = _pv.includes(data.prioridade) ? data.prioridade : "Média";
+    console.log("Prioridade enviada ao Supabase:", data.prioridade);
     console.log("PAYLOAD DEMANDA:", { ...data });
   }
   try {
