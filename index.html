@@ -5865,6 +5865,10 @@ function abrirPrimeiroModuloPermitido() {
 
 /* Restaura a rota salva — hash > localStorage.
    Retorna true se navegou, false se não havia rota válida. */
+function _isMobile() {
+  try { return window.matchMedia("(max-width: 768px)").matches; } catch(_) { return false; }
+}
+
 function _lerRotaSalva() {
   try {
     const hash  = (window.location.hash || "").replace(/^#/, "").trim();
@@ -5900,12 +5904,16 @@ async function entrarNoSistema() {
   initSupabaseBadge();
   testApiSilently();
 
-  // Restaurar última tela visitada (F5) ou abrir o primeiro módulo permitido
+  // Restaurar última tela visitada (F5), redirecionar mobile para Área do Membro,
+  // ou abrir o primeiro módulo permitido no desktop.
   const rotaSalva = _lerRotaSalva();
   if (rotaSalva) {
     const mod = rotaSalva.split("-")[0];
     if (mod !== "geral") _expandirSidebar(mod);
     go(rotaSalva);
+  } else if (_isMobile()) {
+    _expandirSidebar("area");
+    go("area-dash");
   } else {
     abrirPrimeiroModuloPermitido();
   }
