@@ -200,12 +200,6 @@
     _admAtualizarAbas();
     const area  = _ADM_FILTROS[_admFiltro] ?? null;
     const fixos = area ? { area } : undefined;
-    // DEBUG — remover após confirmar os valores reais
-    if (_cache.length) {
-      const areas = [...new Set(_cache.map(r => r.area))].sort();
-      console.log("[admin-demandas] areas no cache:", areas);
-      console.log("[admin-demandas] filtro ativo:", _admFiltro, "→ buscando:", area);
-    }
     renderLista("admin-demandas-content", fixos);
   }
 
