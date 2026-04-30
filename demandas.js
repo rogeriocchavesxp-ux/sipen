@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    SIPEN — Módulo Solicitações e Demandas
-   demandas.js · v2.0
+   demandas.js · v2.1
    15 categorias + subcategorias + fluxo de status completo
 ═══════════════════════════════════════════════════════ */
 
