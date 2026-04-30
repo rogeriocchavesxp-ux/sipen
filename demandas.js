@@ -749,7 +749,7 @@
       subcategoria:  sub,
       titulo,
       descricao:     desc || "",
-      prioridade:    "Normal",   // definida por triagem — nunca pelo solicitante
+      prioridade:    "Média",    // definida por triagem — nunca pelo solicitante
       status:        "ABERTA",
       solicitante:   sol || "",
       responsavel:   resp || catResp(cat),
