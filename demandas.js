@@ -81,9 +81,12 @@
     try {
       if (typeof USUARIO_ATUAL === "undefined" || !USUARIO_ATUAL) return true; // sem auth = dev mode
       if (USUARIO_ATUAL.perfil === "ADMINISTRADOR_GERAL") return true;
-      const p = typeof PERFIS !== "undefined" ? PERFIS[USUARIO_ATUAL.perfil] : null;
-      return p ? (p.nivel >= 4) : true;
-    } catch(_) { return true; }
+      if (typeof PERFIS === "undefined") return false;
+      /* PERFIS usa chaves minúsculas (lider_ministerio) mas USUARIO_ATUAL.perfil é maiúsculo */
+      const chave = (USUARIO_ATUAL.perfil || "").toLowerCase();
+      const p = PERFIS[chave] || PERFIS[USUARIO_ATUAL.perfil] || null;
+      return p ? (p.nivel >= 4) : false;
+    } catch(_) { return false; }
   }
 
   /* Filtra localmente: usuário vê só suas demandas ou do seu ministério */
