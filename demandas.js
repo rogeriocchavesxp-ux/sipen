@@ -1064,6 +1064,7 @@
   const _origGo = window.go;
   window.go = function(id) {
     _origGo(id);
+    if (id && id.startsWith("dem-")) _aplicarMenuDem();
     const MAP = {
       "dem-dash":    () => renderDash(),
       "dem-todas":   () => renderLista("dem-todas-content"),
@@ -1111,12 +1112,16 @@
 
   const _PERFIS_RESTRITOS_DEM = ["MEMBRO_IGREJA", "MEMBRO_MINISTERIO", "LIDER_MINISTERIO"];
 
-  window.aplicarMenuDemandasPorPerfil = function() {
+  function _aplicarMenuDem() {
     if (typeof USUARIO_ATUAL === "undefined" || !USUARIO_ATUAL) return;
-    const restrito = _PERFIS_RESTRITOS_DEM.includes(USUARIO_ATUAL.perfil);
+    const perfil = (USUARIO_ATUAL.perfil || "").toUpperCase();
+    const restrito = _PERFIS_RESTRITOS_DEM.includes(perfil);
+    console.log("[demandas] perfil:", perfil, "| restrito:", restrito);
     document.querySelectorAll("[data-demanda-admin]").forEach(el => {
       el.style.display = restrito ? "none" : "";
     });
-  };
+  }
+
+  window.aplicarMenuDemandasPorPerfil = _aplicarMenuDem;
 
 })();
