@@ -2624,29 +2624,25 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 
   <!-- ADMIN: SOLICITAÇÕES E DEMANDAS (com abas) -->
   <div class="view" id="v-admin-demandas">
-    <div class="hero"><div class="hero-ic" style="background:rgba(224,85,85,0.12)">📋</div><div><div class="hero-lbl">Administrativo</div><div class="hero-ttl">Solicitações e Demandas</div><div class="hero-dsc">Todas as demandas e as direcionadas ao módulo Administrativo</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:rgba(224,85,85,0.12)">📋</div><div><div class="hero-lbl">Administrativo</div><div class="hero-ttl">Demandas Administrativas</div><div class="hero-dsc">Demandas do módulo Administrativo e visão geral de todas as demandas</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
     <div class="ct">
       <div class="card">
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
-          <div class="sni on">Todas</div>
+          <div id="adm-dem-btn-adm" class="sni on" onclick="adminDemSetFiltro('Administrativo')">Administrativas</div>
           <div class="sni-sep"></div>
-          <div class="sni" onclick="go('admin-demandas-adm')">Administrativas</div>
+          <div id="adm-dem-btn-tod" class="sni"    onclick="adminDemSetFiltro('')">Todas</div>
         </div>
-        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('admin-demandas-content')">↻ Atualizar</span></div>
+        <div class="ctit">Filtros <span class="cact" onclick="adminDemFiltrar()">↻ Atualizar</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-          <select id="admin-demandas-content-fstatus" onchange="demFiltrar('admin-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+          <select id="admin-demandas-content-fstatus" onchange="adminDemFiltrar()" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
             <option value="">Todos os status</option>
             <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
           </select>
-          <select id="admin-demandas-content-fcat" onchange="demFiltrar('admin-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
-            <option value="">Todas as categorias</option>
-            <option>Conselho</option><option>Agendamentos</option><option>Manutenção</option><option>Limpeza e Organização</option><option>Logística</option><option>Financeiro</option><option>Comunicação e Divulgação</option><option>Secretaria</option><option>Cadastro</option><option>Oração e Aconselhamento</option><option>Visitação</option><option>Apoio ao Culto</option><option>Ensino (EBT)</option><option>Ação Social / Hebron</option><option>Administrativo Geral</option>
-          </select>
-          <select id="admin-demandas-content-fprio" onchange="demFiltrar('admin-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+          <select id="admin-demandas-content-fprio" onchange="adminDemFiltrar()" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
             <option value="">Todas as prioridades</option>
             <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
           </select>
-          <input id="admin-demandas-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('admin-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+          <input id="admin-demandas-content-fbusca" type="text" placeholder="Buscar..." oninput="adminDemFiltrar()" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
         </div>
       </div>
       <div class="card" style="margin-top:0">
@@ -2655,34 +2651,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
     </div>
   </div>
 
-  <!-- ADMIN: DEMANDAS ADMINISTRATIVAS (aba filtrada) -->
-  <div class="view" id="v-admin-demandas-adm">
-    <div class="hero"><div class="hero-ic" style="background:rgba(224,85,85,0.12)">📋</div><div><div class="hero-lbl">Administrativo</div><div class="hero-ttl">Demandas Administrativas</div><div class="hero-dsc">Demandas direcionadas ao módulo Administrativo</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
-    <div class="ct">
-      <div class="card">
-        <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
-          <div class="sni" onclick="go('admin-demandas')">Todas</div>
-          <div class="sni-sep"></div>
-          <div class="sni on">Administrativas</div>
-        </div>
-        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('admin-demandas-adm-content',{area:'Administrativo'})">↻ Atualizar</span></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-          <select id="admin-demandas-adm-content-fstatus" onchange="demFiltrar('admin-demandas-adm-content',{area:'Administrativo'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
-            <option value="">Todos os status</option>
-            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
-          </select>
-          <select id="admin-demandas-adm-content-fprio" onchange="demFiltrar('admin-demandas-adm-content',{area:'Administrativo'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
-            <option value="">Todas as prioridades</option>
-            <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
-          </select>
-          <input id="admin-demandas-adm-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('admin-demandas-adm-content',{area:'Administrativo'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
-        </div>
-      </div>
-      <div class="card" style="margin-top:0">
-        <div id="admin-demandas-adm-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
-      </div>
-    </div>
-  </div>
+  <!-- v-admin-demandas-adm: redirecionado para v-admin-demandas via go() override em demandas.js -->
 
   <!-- PASTORAL: SOLICITAÇÕES E DEMANDAS (com abas) -->
   <div class="view" id="v-pastoral-demandas">
@@ -4581,8 +4550,8 @@ const CRUMB={
   "infra-lim":["Infraestrutura e Conservação","Limpeza",""],
   "dem-dash":["Demandas","Dashboard","/ visão geral e métricas"],
   "dem-todas":["Demandas","Todas as Solicitações","/ lista completa"],
-  "admin-demandas":         ["Administrativo","Solicitações e Demandas","/ todas"],
-  "admin-demandas-adm":     ["Administrativo","Demandas Administrativas","/ filtradas"],
+  "admin-demandas":         ["Administrativo","Demandas Administrativas","/ painel"],
+  "admin-demandas-adm":     ["Administrativo","Demandas Administrativas","/ painel"],
   "conselho-demandas":      ["Conselho e Governança","Solicitações e Demandas","/ todas"],
   "conselho-demandas-cons": ["Conselho e Governança","Demandas do Conselho","/ filtradas"],
   "infra-demandas":         ["Infraestrutura e Conservação","Solicitações e Demandas","/ todas"],

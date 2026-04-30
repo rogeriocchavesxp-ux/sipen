@@ -160,6 +160,31 @@
   let _ativo = null;
   let _origemView = "dem-todas"; // rastreia de onde o detalhe foi aberto
 
+  /* ── Estado: tela Admin Demandas ────────────────────── */
+  const _ADM_KEY = "sipen_adm_dem_filtro";
+  let _admFiltro = (function () {
+    try { return localStorage.getItem(_ADM_KEY) || "Administrativo"; } catch(_) { return "Administrativo"; }
+  })();
+
+  function _admSetFiltro(area) {
+    _admFiltro = area;
+    try { localStorage.setItem(_ADM_KEY, area); } catch(_) {}
+    _admRender();
+  }
+
+  function _admAtualizarAbas() {
+    const btnAdm = document.getElementById("adm-dem-btn-adm");
+    const btnTod = document.getElementById("adm-dem-btn-tod");
+    if (btnAdm) btnAdm.className = _admFiltro ? "sni on" : "sni";
+    if (btnTod) btnTod.className = _admFiltro ? "sni"    : "sni on";
+  }
+
+  function _admRender() {
+    _admAtualizarAbas();
+    const fixos = _admFiltro ? { area: _admFiltro } : undefined;
+    renderLista("admin-demandas-content", fixos);
+  }
+
   async function _load() {
     try {
       let rows;
@@ -837,8 +862,8 @@
       "dem-conc":    () => renderLista("dem-conc-content",    { status:"CONCLUIDA" }),
       "dem-pri":          () => renderLista("dem-pri-content",              { prioridade:"Alta" }),
       "dem-hist":         () => renderLista("dem-hist-content"),
-      "admin-demandas":          () => renderLista("admin-demandas-content"),
-      "admin-demandas-adm":      () => renderLista("admin-demandas-adm-content",      { area:"Administrativo" }),
+      "admin-demandas":          () => _admRender(),
+      "admin-demandas-adm":      () => { _admFiltro = "Administrativo"; try { localStorage.setItem(_ADM_KEY, _admFiltro); } catch(_){} go("admin-demandas"); },
       "conselho-demandas":        () => renderLista("conselho-demandas-content"),
       "conselho-demandas-cons":   () => renderLista("conselho-demandas-cons-content",  { area:"Conselho" }),
       "infra-dash":               () => _renderInfraDash(),
@@ -852,6 +877,9 @@
     };
     if (MAP[id]) MAP[id]();
   };
+
+  window.adminDemSetFiltro = _admSetFiltro;
+  window.adminDemFiltrar   = function() { _admRender(); };
 
   window.demAtualizarLabels = function() {
     const restrito = !_podeVerTodas();
