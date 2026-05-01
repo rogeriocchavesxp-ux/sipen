@@ -1117,16 +1117,16 @@ body.dem-admin [data-demanda-admin] { display: block !important; }
         <span class="marr">▶</span>
       </div>
       <div class="msub" id="ms-memb">
-        <div class="si" onclick="go('memb-dash')">Dashboard de Membresia</div>
+        <div class="si" data-memb-adm="1" onclick="go('memb-dash')">Dashboard de Membresia</div>
         <div class="si" onclick="go('memb-cad')">Cadastro de Membros</div>
-        <div class="si" onclick="go('memb-com')">Comungantes</div>
-        <div class="si" onclick="go('memb-ncom')">Não Comungantes</div>
-        <div class="si" onclick="go('memb-vis')">Visitantes</div>
-        <div class="sdiv"></div>
-        <div class="si" onclick="go('memb-bat')">Batismos</div>
-        <div class="si" onclick="go('memb-prof')">Profissões de Fé</div>
-        <div class="si" onclick="go('memb-trans')">Transferências</div>
-        <div class="si" onclick="go('memb-hist')">Histórico de Membros</div>
+        <div class="si" data-memb-adm="1" onclick="go('memb-com')">Comungantes</div>
+        <div class="si" data-memb-adm="1" onclick="go('memb-ncom')">Não Comungantes</div>
+        <div class="si" data-memb-adm="1" onclick="go('memb-vis')">Visitantes</div>
+        <div class="sdiv" data-memb-adm="1"></div>
+        <div class="si" data-memb-adm="1" onclick="go('memb-bat')">Batismos</div>
+        <div class="si" data-memb-adm="1" onclick="go('memb-prof')">Profissões de Fé</div>
+        <div class="si" data-memb-adm="1" onclick="go('memb-trans')">Transferências</div>
+        <div class="si" data-memb-adm="1" onclick="go('memb-hist')">Histórico de Membros</div>
         <div class="si" onclick="go('memb-aniv')">Aniversariantes</div>
       </div>
     </div>
@@ -1863,20 +1863,20 @@ body.dem-admin [data-demanda-admin] { display: block !important; }
     <div class="hero">
       <div class="hero-ic" style="background:rgba(82,196,110,0.12);border-color:rgba(82,196,110,0.28)">✝</div>
       <div><div class="hero-lbl">Área Estratégica</div><div class="hero-ttl">Membresia</div><div class="hero-dsc">Cadastro, comungantes, não comungantes, visitantes, batismos, profissões de fé e histórico dos membros da IPPenha</div></div>
-      <div class="hero-act">
+      <div class="hero-act" data-memb-adm="1">
         <button class="tbt" onclick="T('Exportar','Gerando planilha de membros...')">⬇ Exportar</button>
         <button class="tbt pri" onclick="T('Novo membro','Formulário de cadastro completo')">+ Novo Membro</button>
       </div>
     </div>
     <div class="inav" style="--mc:var(--gbr)">
-      <div class="ini on">Dashboard</div><div class="ini" onclick="go('memb-cad')">Cadastro</div>
-      <div class="ini" onclick="go('memb-com')">Comungantes</div><div class="ini" onclick="go('memb-ncom')">Não Comungantes</div><div class="ini" onclick="go('memb-vis')">Visitantes</div>
-      <div class="ini" onclick="go('memb-bat')">Batismos</div><div class="ini" onclick="go('memb-prof')">Profissões de Fé</div>
-      <div class="ini" onclick="go('memb-trans')">Transferências</div>
+      <div class="ini on" data-memb-adm="1">Dashboard</div><div class="ini" onclick="go('memb-cad')">Cadastro</div>
+      <div class="ini" data-memb-adm="1" onclick="go('memb-com')">Comungantes</div><div class="ini" data-memb-adm="1" onclick="go('memb-ncom')">Não Comungantes</div><div class="ini" data-memb-adm="1" onclick="go('memb-vis')">Visitantes</div>
+      <div class="ini" data-memb-adm="1" onclick="go('memb-bat')">Batismos</div><div class="ini" data-memb-adm="1" onclick="go('memb-prof')">Profissões de Fé</div>
+      <div class="ini" data-memb-adm="1" onclick="go('memb-trans')">Transferências</div>
       <div class="ini" onclick="go('memb-aniv')">Aniversariantes</div>
     </div>
     <div class="ct">
-      <div class="kpis c4">
+      <div class="kpis c4" data-memb-adm="1">
         <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr)">✝</div><div class="kpi-body"><div class="kpi-lbl">Membros ativos</div><div class="kpi-val" id="md-membros-ativos">—</div><div class="kpi-d nu" id="md-membros-total">carregando...</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.12);color:var(--gr)">🍞</div><div class="kpi-body"><div class="kpi-lbl">Comungantes</div><div class="kpi-val" id="md-comungantes">—</div><div class="kpi-d nu">aptos à Ceia</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal)">◈</div><div class="kpi-body"><div class="kpi-lbl">Não Comungantes</div><div class="kpi-val" id="md-ncomungantes">—</div><div class="kpi-d nu">sem profissão de fé</div></div></div>
@@ -1896,14 +1896,14 @@ body.dem-admin [data-demanda-admin] { display: block !important; }
               <option value="falecido">Falecido</option>
               <option value="disciplinado">Disciplinado</option>
             </select>
-            <select id="md-ftipo" onchange="membresiaFiltrar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:11.5px;padding:0 10px;outline:none;height:34px">
+            <select id="md-ftipo" data-memb-adm="1" onchange="membresiaFiltrar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:11.5px;padding:0 10px;outline:none;height:34px">
               <option value="">Todos os ingressos</option>
               <option value="batismo">Batismo</option>
               <option value="transferência">Transferência</option>
               <option value="profissão de fé">Profissão de Fé</option>
               <option value="restauração">Restauração</option>
             </select>
-            <select id="md-ftipomembro" onchange="membresiaFiltrar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:11.5px;padding:0 10px;outline:none;height:34px">
+            <select id="md-ftipomembro" data-memb-adm="1" onchange="membresiaFiltrar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:11.5px;padding:0 10px;outline:none;height:34px">
               <option value="">Todos os tipos</option>
               <option value="COMUNGANTE">Comungante</option>
               <option value="NAO_COMUNGANTE">Não Comungante</option>
@@ -1911,7 +1911,7 @@ body.dem-admin [data-demanda-admin] { display: block !important; }
           </div>
           <div id="md-lista"><div style="color:var(--tx3);font-size:11.5px;padding:16px 0">Carregando membros...</div></div>
         </div>
-        <div class="gcol">
+        <div class="gcol" data-memb-adm="1">
           <div class="card">
             <div class="ctit">Vida eclesiástica</div>
             <div class="sr"><span class="sl">Batismos</span><span class="sv pos" id="md-ve-batismos">—</span></div>
@@ -2307,7 +2307,7 @@ body.dem-admin [data-demanda-admin] { display: block !important; }
 
   <!-- MEMBROS / CADASTRO -->
   <div class="view" id="v-memb-cad">
-    <div class="hero"><div class="hero-ic" style="background:rgba(82,196,110,0.12)">👤</div><div><div class="hero-lbl">Membresia</div><div class="hero-ttl">Cadastro de Membros</div><div class="hero-dsc">Gerencie membros, funções e status na IPPenha</div></div><div class="hero-act"><button class="tbt pri" onclick="openNovoMembro()">+ Novo Membro</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:rgba(82,196,110,0.12)">👤</div><div><div class="hero-lbl">Membresia</div><div class="hero-ttl">Cadastro de Membros</div><div class="hero-dsc">Gerencie membros, funções e status na IPPenha</div></div><div class="hero-act" data-memb-adm="1"><button class="tbt pri" onclick="openNovoMembro()">+ Novo Membro</button></div></div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Membros <span class="csub" id="memb-cad-count"></span><span class="cact" onclick="listarMembros('memb-cad-list','memb-cad-count')">↻ Atualizar</span></div>
@@ -5952,6 +5952,7 @@ function aplicarPermissoes() {
 
   renderGeralDash();
   _aplicarPermissoesMinisterial();
+  _aplicarMembresia();
 }
 
 function _aplicarPermissoesMinisterial() {
@@ -6029,6 +6030,29 @@ async function _minDashLider() {
       <button class="tbt" style="margin-left:12px" onclick="go('area-min')">Ver detalhes →</button>
     </div></div>`;
   }
+}
+
+// ── MEMBRESIA — controle de acesso por perfil ──────────────────────
+
+// Retorna true para perfis que têm acesso pleno ao módulo de Membresia
+function _podeMembresiaPlena() {
+  const p = USUARIO_ATUAL?.perfil;
+  return (
+    p === "ADMINISTRADOR_GERAL" ||
+    p === "PASTORAL"            ||
+    p === "ADM_OPERACIONAL"     ||
+    p === "CONSELHO"            ||
+    p === "JUNTA_DIACONAL"
+  );
+}
+
+// Aplica restrições visuais de Membresia: oculta/exibe elementos [data-memb-adm]
+function _aplicarMembresia() {
+  if (!USUARIO_ATUAL) return;
+  const plena = _podeMembresiaPlena();
+  document.querySelectorAll("[data-memb-adm]").forEach(el => {
+    el.style.display = plena ? "" : "none";
+  });
 }
 
 function podeAcessar(modulo, acao = "visualizar") {
@@ -8192,8 +8216,16 @@ async function _areaCarregarAgenda() {
 window.area_dash_load = function() { _areaDashLoad(); };
 
 // ── GO() OVERRIDE CONSOLIDADO ──────────────────
+
+// Rotas de Membresia que exigem acesso pleno
+const _MEMB_ROTAS_RESTRITAS = ["memb-dash","memb-com","memb-ncom","memb-vis","memb-bat","memb-prof","memb-trans","memb-hist"];
+
 const _goBase = go; // captura a função original
 window.go = function(id) {
+  // Guarda de rota: redireciona usuários sem acesso pleno à Membresia
+  if (USUARIO_ATUAL && _MEMB_ROTAS_RESTRITAS.includes(id) && !_podeMembresiaPlena()) {
+    id = "memb-aniv";
+  }
   _goBase(id);
   // Agenda
   if (id === "agenda-dash")           carregarAgendaDash();
