@@ -4627,8 +4627,8 @@ function go(id){
     else if (cfg) listarModulo(cfg.tab, cfg.id, cfg.filtro || {});
   }
 
-  // Persistir rota atual para restauração após F5
-  try { localStorage.setItem("sipen_route", id); } catch(_) {}
+  // Persistir rota atual para restauração após F5 (sessionStorage = isolado por aba)
+  try { sessionStorage.setItem("sipen_route", id); } catch(_) {}
   try { history.replaceState(null, "", location.pathname + location.search + "#" + id); } catch(_) {}
 }
 
@@ -4701,8 +4701,16 @@ if (!localStorage.getItem("sipen_supabase_anon_key") && DEFAULT_SUPABASE_ANON_KE
 let _sbClient = null;
 function getSupabase() {
   if (!_sbClient && window.supabase?.createClient) {
+    // Usa sessionStorage para isolar a sessão por aba.
+    // localStorage (padrão) é compartilhado entre todas as abas do mesmo
+    // navegador, o que causava herança de sessão ao fazer F5.
+    const _tabStorage = {
+      getItem:    (k) => sessionStorage.getItem(k),
+      setItem:    (k, v) => sessionStorage.setItem(k, v),
+      removeItem: (k) => sessionStorage.removeItem(k),
+    };
     _sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: { persistSession: true, storageKey: "sipen_auth_session" }
+      auth: { persistSession: true, storageKey: "sipen_auth_session", storage: _tabStorage }
     });
   }
   return _sbClient;
@@ -5826,7 +5834,7 @@ function abrirPrimeiroModuloPermitido() {
   if (primeiro) go(primeiro[1]); else go("geral");
 }
 
-/* Restaura a rota salva — hash > localStorage.
+/* Restaura a rota salva — hash > sessionStorage (isolado por aba).
    Retorna true se navegou, false se não havia rota válida. */
 function _isMobile() {
   try { return window.matchMedia("(max-width: 768px)").matches; } catch(_) { return false; }
@@ -5840,7 +5848,7 @@ function _isMembroComum() {
 function _lerRotaSalva() {
   try {
     const hash  = (window.location.hash || "").replace(/^#/, "").trim();
-    const local = localStorage.getItem("sipen_route") || "";
+    const local = sessionStorage.getItem("sipen_route") || "";
     const rota  = hash || local;
     if (!rota) return null;
     // View existe no DOM ou está registrada no CRUMB (views JS-driven)
@@ -5900,6 +5908,7 @@ async function doLogout() {
   usuarioLogado = null;
   USUARIO_ATUAL = null;
   permissoesUsuario = {};
+  try { sessionStorage.removeItem("sipen_route"); } catch(_) {}
   document.getElementById("login-screen").style.display = "flex";
   document.getElementById("login-password").value = "";
   document.getElementById("login-err").textContent = "";
@@ -9564,10 +9573,21 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const sb = getSupabase();
 
-      // Detecta fluxo de recuperação de senha (link do e-mail)
-      sb.auth.onAuthStateChange((event, session) => {
+      // Listener de estado de autenticação
+      sb.auth.onAuthStateChange(async (event, session) => {
         if (event === "PASSWORD_RECOVERY") {
           abrirModalNovaSenha();
+          return;
+        }
+        // Token expirado / sessão encerrada externamente → volta para login
+        if (event === "SIGNED_OUT" && USUARIO_ATUAL) {
+          usuarioLogado = null;
+          USUARIO_ATUAL = null;
+          permissoesUsuario = {};
+          try { sessionStorage.removeItem("sipen_route"); } catch(_) {}
+          document.getElementById("login-screen").style.display = "flex";
+          document.getElementById("login-password").value = "";
+          document.getElementById("login-err").textContent = "Sessão encerrada. Faça login novamente.";
         }
       });
 
