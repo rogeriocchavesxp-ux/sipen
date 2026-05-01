@@ -1212,111 +1212,8 @@ body.dem-admin [data-demanda-admin] { display: block !important; }
 
   <!-- ════ DASHBOARD GERAL ══════════════════ -->
   <div class="view on" id="v-geral">
-    <div class="ct" style="padding-top:20px">
-
-      <!-- Alerta crítico -->
-      <div class="alr alr-w" data-modulo="ADMINISTRATIVO" style="margin-bottom:20px">
-        <span class="alr-i">⚠</span>
-        <div><strong>3 contratos</strong> vencem em 30 dias · <strong>8 demandas</strong> atrasadas · <strong>2 OS</strong> urgentes sem resposta</div>
-        <span class="alr-a" onclick="go('admin-con')">Ver →</span>
-      </div>
-
-      <!-- ── BLOCO 1: KPIs executivos ───────────────── -->
-      <div class="kpis c4" style="margin-bottom:26px">
-        <div class="kpi" data-modulo="DEMANDAS" onclick="go('dem-todas')" style="cursor:pointer">
-          <div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky)">📋</div>
-          <div class="kpi-body">
-            <div class="kpi-lbl">Demandas abertas</div>
-            <div class="kpi-val" id="geral-kpi-abertas">—</div>
-            <div class="kpi-d nu">em andamento</div>
-          </div>
-        </div>
-        <div class="kpi" data-modulo="DEMANDAS" onclick="go('dem-todas')" style="cursor:pointer">
-          <div class="kpi-ico" style="background:rgba(224,85,85,0.15);color:var(--rose)">⚠️</div>
-          <div class="kpi-body">
-            <div class="kpi-lbl">Em atraso</div>
-            <div class="kpi-val" style="color:var(--rose)">8</div>
-            <div class="kpi-d dn">requer atenção urgente</div>
-          </div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gmd)">📥</div>
-          <div class="kpi-body">
-            <div class="kpi-lbl">Solicitações no mês</div>
-            <div class="kpi-val">23</div>
-            <div class="kpi-d up">▲ Abr/26</div>
-          </div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber)">⚡</div>
-          <div class="kpi-body">
-            <div class="kpi-lbl">Conflitos</div>
-            <div class="kpi-val">2</div>
-            <div class="kpi-d wa">agenda ou operacional</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── BLOCO 2: Status dos Módulos ───────────── -->
-      <div class="dash-sec">
-        <span class="dash-sec-t">Status dos Módulos</span>
-        <span class="dash-sec-s">visão consolidada de todas as áreas</span>
-      </div>
-      <div class="g3" id="dash-modcards-grid" style="margin-bottom:26px"></div>
-      <div id="dash-modcards-empty" style="display:none;background:var(--bg-card);border:1px solid var(--bd1);border-radius:10px;padding:32px 24px;text-align:center;color:var(--tx3);font-size:13px;margin-bottom:26px">
-        Nenhum módulo disponível para o seu perfil.<br>Entre em contato com a administração.
-      </div>
-
-      <!-- ── BLOCOS 3 + 4: Atividade + Painel estratégico ── -->
-      <div class="g2">
-
-        <!-- Atividade recente -->
-        <div class="card">
-          <div class="ctit">Atividade recente<span class="csub">— últimas ações</span><span class="cact" onclick="T('Auditoria','Log imutável disponível')">auditoria →</span></div>
-          <div class="feed">
-            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--rose)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Infraestrutura</b> — OS-042 marcada como <b>atrasada</b></div><div class="ftm">hoje · 14:32</div></div></div>
-            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--gmd)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Infraestrutura</b> — OS de manutenção elétrica concluída</div><div class="ftm">hoje · 11:15</div></div></div>
-            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--gold)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Administrativo</b> — <b>Ana Lima</b> nomeada Líder Ministerial</div><div class="ftm">hoje · 09:48</div></div></div>
-            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--teal)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Membresia</b> — 14 novos membros cadastrados em lote</div><div class="ftm">10/04 · 16:20</div></div></div>
-            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--sky)"></div></div><div class="fb"><div class="ft"><b>Demandas</b> — 8 alertas enviados aos responsáveis</div><div class="ftm">10/04 · 08:00</div></div></div>
-          </div>
-        </div>
-
-        <!-- Painel estratégico -->
-        <div class="gcol">
-
-          <!-- Resumo financeiro simplificado -->
-          <div class="card">
-            <div class="ctit">Financeiro — Abr/26</div>
-            <div class="gfr">
-              <div class="gfr-row">
-                <span class="gfr-lbl">Entradas</span>
-                <span class="gfr-val pos">R$ 42.300</span>
-              </div>
-              <div class="gfr-row">
-                <span class="gfr-lbl">Saídas</span>
-                <span class="gfr-val neg">R$ 28.700</span>
-              </div>
-              <div class="gfr-row gfr-saldo">
-                <span class="gfr-lbl">Saldo</span>
-                <span class="gfr-val up">R$ 13.600</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Demandas por módulo -->
-          <div class="card">
-            <div class="ctit">Demandas por módulo</div>
-            <div class="bars">
-              <div><div class="bh"><span class="bn">Infraestrutura</span><span class="bv">23</span></div><div class="bt"><div class="bf" style="width:100%;background:var(--amber)"></div></div></div>
-              <div><div class="bh"><span class="bn">Ministerial</span><span class="bv">18</span></div><div class="bt"><div class="bf" style="width:78%;background:var(--violet)"></div></div></div>
-              <div><div class="bh"><span class="bn">Administrativo</span><span class="bv">12</span></div><div class="bt"><div class="bf" style="width:52%;background:var(--gold)"></div></div></div>
-              <div><div class="bh"><span class="bn">Pastoral</span><span class="bv">5</span></div><div class="bt"><div class="bf" style="width:22%;background:var(--teal)"></div></div></div>
-            </div>
-          </div>
-
-        </div>
-      </div>
+    <div class="ct" id="geral-ct" style="padding-top:20px">
+      <!-- Conteúdo gerado dinamicamente por renderGeralDash() -->
     </div>
   </div>
 
@@ -6053,7 +5950,7 @@ function aplicarPermissoes() {
     label.style.display = temVisivel ? "" : "none";
   });
 
-  renderDashboardModulos();
+  renderGeralDash();
   _aplicarPermissoesMinisterial();
 }
 
@@ -6249,6 +6146,132 @@ const DASH_MODULOS = [
     ]
   },
 ];
+
+// ── DASHBOARD GERAL — renderização dinâmica por permissão ──────────
+const _GERAL_FEED = [
+  { mod:"INFRAESTRUTURA", cor:"var(--rose)", txt:"<b>Infraestrutura</b> — OS-042 marcada como <b>atrasada</b>",             time:"hoje · 14:32" },
+  { mod:"INFRAESTRUTURA", cor:"var(--gmd)",  txt:"<b>Infraestrutura</b> — OS de manutenção elétrica concluída",             time:"hoje · 11:15" },
+  { mod:"ADMINISTRATIVO", cor:"var(--gold)", txt:"<b>Administrativo</b> — <b>Ana Lima</b> nomeada Líder Ministerial",       time:"hoje · 09:48" },
+  { mod:"MEMBRESIA",      cor:"var(--teal)", txt:"<b>Membresia</b> — 14 novos membros cadastrados em lote",                 time:"10/04 · 16:20"},
+  { mod:"DEMANDAS",       cor:"var(--sky)",  txt:"<b>Demandas</b> — 8 alertas enviados aos responsáveis",                   time:"10/04 · 08:00"},
+];
+
+const _GERAL_BARRAS = [
+  { mod:"INFRAESTRUTURA", nome:"Infraestrutura", val:23, pct:100, cor:"var(--amber)"  },
+  { mod:"MINISTERIAL",    nome:"Ministerial",    val:18, pct:78,  cor:"var(--violet)" },
+  { mod:"ADMINISTRATIVO", nome:"Administrativo", val:12, pct:52,  cor:"var(--gold)"   },
+  { mod:"PASTORAL",       nome:"Pastoral",       val:5,  pct:22,  cor:"var(--teal)"   },
+];
+
+function renderGeralDash() {
+  const ct = document.getElementById("geral-ct");
+  if (!ct || !USUARIO_ATUAL) return;
+
+  // Membros comuns não usam o dashboard geral — redireciona para Área do Membro
+  if (_isMembroComum()) { go("area-dash"); return; }
+
+  const can = (mod) => canAccessModule(mod);
+  let h = "";
+
+  // ── Alerta crítico (só para quem acessa Administrativo) ──────────
+  if (can("ADMINISTRATIVO")) {
+    h += `<div class="alr alr-w" style="margin-bottom:20px">
+      <span class="alr-i">⚠</span>
+      <div><strong>3 contratos</strong> vencem em 30 dias · <strong>8 demandas</strong> atrasadas · <strong>2 OS</strong> urgentes sem resposta</div>
+      <span class="alr-a" onclick="go('admin-con')">Ver →</span>
+    </div>`;
+  }
+
+  // ── KPIs executivos (somente módulos liberados) ──────────────────
+  const kpis = [];
+  if (can("DEMANDAS")) {
+    kpis.push(`<div class="kpi" onclick="go('dem-todas')" style="cursor:pointer">
+      <div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky)">📋</div>
+      <div class="kpi-body"><div class="kpi-lbl">Demandas abertas</div><div class="kpi-val" id="geral-kpi-abertas">—</div><div class="kpi-d nu">em andamento</div></div>
+    </div>`);
+    kpis.push(`<div class="kpi" onclick="go('dem-todas')" style="cursor:pointer">
+      <div class="kpi-ico" style="background:rgba(224,85,85,0.15);color:var(--rose)">⚠️</div>
+      <div class="kpi-body"><div class="kpi-lbl">Em atraso</div><div class="kpi-val" style="color:var(--rose)">8</div><div class="kpi-d dn">requer atenção urgente</div></div>
+    </div>`);
+  }
+  if (can("DEMANDAS") || can("AGENDA")) {
+    kpis.push(`<div class="kpi">
+      <div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gmd)">📥</div>
+      <div class="kpi-body"><div class="kpi-lbl">Solicitações no mês</div><div class="kpi-val">23</div><div class="kpi-d up">▲ Mai/26</div></div>
+    </div>`);
+  }
+  if (can("AGENDA") || can("ADMINISTRATIVO") || can("INFRAESTRUTURA")) {
+    kpis.push(`<div class="kpi">
+      <div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber)">⚡</div>
+      <div class="kpi-body"><div class="kpi-lbl">Conflitos</div><div class="kpi-val">2</div><div class="kpi-d wa">agenda ou operacional</div></div>
+    </div>`);
+  }
+  if (kpis.length) {
+    const cols = Math.min(kpis.length, 4);
+    h += `<div class="kpis c${cols}" style="margin-bottom:26px">${kpis.join("")}</div>`;
+  }
+
+  // ── Status dos módulos (sempre presente; conteúdo renderizado por renderDashboardModulos) ──
+  h += `<div class="dash-sec"><span class="dash-sec-t">Status dos Módulos</span><span class="dash-sec-s">visão consolidada das suas áreas</span></div>
+  <div class="g3" id="dash-modcards-grid" style="margin-bottom:26px"></div>
+  <div id="dash-modcards-empty" style="display:none;background:var(--bg-card);border:1px solid var(--bd1);border-radius:10px;padding:32px 24px;text-align:center;color:var(--tx3);font-size:13px;margin-bottom:26px">
+    Nenhum módulo disponível para o seu perfil.<br>Entre em contato com a administração.
+  </div>`;
+
+  // ── Feed de atividade filtrado por módulos permitidos ────────────
+  const feedItems = _GERAL_FEED.filter(f => can(f.mod));
+
+  // ── Painel estratégico (coluna direita) ─────────────────────────
+  const rightCards = [];
+  if (can("FINANCEIRO") || can("ADMINISTRATIVO")) {
+    rightCards.push(`<div class="card">
+      <div class="ctit">Financeiro — Mai/26</div>
+      <div class="gfr">
+        <div class="gfr-row"><span class="gfr-lbl">Entradas</span><span class="gfr-val pos">R$ 42.300</span></div>
+        <div class="gfr-row"><span class="gfr-lbl">Saídas</span><span class="gfr-val neg">R$ 28.700</span></div>
+        <div class="gfr-row gfr-saldo"><span class="gfr-lbl">Saldo</span><span class="gfr-val up">R$ 13.600</span></div>
+      </div>
+    </div>`);
+  }
+  if (can("DEMANDAS")) {
+    const barras = _GERAL_BARRAS.filter(b => can(b.mod));
+    if (barras.length) {
+      rightCards.push(`<div class="card">
+        <div class="ctit">Demandas por módulo</div>
+        <div class="bars">${barras.map(b =>
+          `<div><div class="bh"><span class="bn">${b.nome}</span><span class="bv">${b.val}</span></div>
+          <div class="bt"><div class="bf" style="width:${b.pct}%;background:${b.cor}"></div></div></div>`
+        ).join("")}</div>
+      </div>`);
+    }
+  }
+
+  // ── Layout da seção inferior ─────────────────────────────────────
+  if (feedItems.length && rightCards.length) {
+    const feedHtml = feedItems.map((f, i) =>
+      `<div class="fi"><div class="fl"><div class="fdot" style="background:${f.cor}"></div>${i < feedItems.length - 1 ? '<div class="fc"></div>' : ''}</div>
+      <div class="fb"><div class="ft">${f.txt}</div><div class="ftm">${f.time}</div></div></div>`
+    ).join("");
+    h += `<div class="g2">
+      <div class="card">
+        <div class="ctit">Atividade recente<span class="csub">— últimas ações</span><span class="cact" onclick="T('Auditoria','Log imutável disponível')">auditoria →</span></div>
+        <div class="feed">${feedHtml}</div>
+      </div>
+      <div class="gcol">${rightCards.join("")}</div>
+    </div>`;
+  } else if (feedItems.length) {
+    const feedHtml = feedItems.map((f, i) =>
+      `<div class="fi"><div class="fl"><div class="fdot" style="background:${f.cor}"></div>${i < feedItems.length - 1 ? '<div class="fc"></div>' : ''}</div>
+      <div class="fb"><div class="ft">${f.txt}</div><div class="ftm">${f.time}</div></div></div>`
+    ).join("");
+    h += `<div class="card"><div class="ctit">Atividade recente<span class="csub">— últimas ações</span></div><div class="feed">${feedHtml}</div></div>`;
+  } else if (rightCards.length) {
+    h += `<div class="gcol">${rightCards.join("")}</div>`;
+  }
+
+  ct.innerHTML = h;
+  renderDashboardModulos();
+}
 
 function renderDashboardModulos() {
   const grid  = document.getElementById("dash-modcards-grid");
@@ -8188,6 +8211,7 @@ window.go = function(id) {
   if (id === "rel-ind")       carregarIndicadoresGerais();
 
   if (id === "config-permissoes")     renderMatrizPermissoes();
+  if (id === "geral")                 renderGeralDash();
   if (id === "area-dash")             _areaDashLoad();
   if (id === "min-dash")              _aplicarPermissoesMinisterial();
   if (id === "pastoral-dash")         { if(typeof ep_render==="function") ep_render(); pd_renderDash(); }
