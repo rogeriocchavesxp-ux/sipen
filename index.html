@@ -3704,8 +3704,35 @@ body.dem-admin [data-demanda-admin] { display: block !important; }
 
   <!-- MINISTERIAL -->
   <div class="view" id="v-min-min">
-    <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">⭐</div><div><div class="hero-lbl">Ministerial</div><div class="hero-ttl">Ministérios</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo Membro</button></div></div>
-    <div class="ct"><div class="card"><div class="ctit">Membros por Ministério <span class="cact" onclick="listarModulo('MEMBROS','min-min-list')">↻</span></div><div id="min-min-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--violetbg)">⭐</div>
+      <div><div class="hero-lbl">Ministerial</div><div class="hero-ttl">Ministérios</div></div>
+      <div class="hero-act" id="min-min-hero-act" style="display:none">
+        <button class="tbt pri" onclick="minMinNovo()">+ Novo Ministério</button>
+      </div>
+    </div>
+    <!-- Painel: lista de ministérios -->
+    <div class="ct" id="min-min-painel-lista">
+      <div id="min-min-grid" class="g3" style="margin-top:4px">
+        <div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center;grid-column:1/-1">Carregando...</div>
+      </div>
+    </div>
+    <!-- Painel: detalhe do ministério -->
+    <div class="ct" id="min-min-painel-detalhe" style="display:none">
+      <div style="margin-bottom:12px">
+        <button class="tbt" onclick="minMinVoltarLista()">← Todos os Ministérios</button>
+      </div>
+      <div id="min-min-detalhe-header" class="card" style="margin-bottom:16px">
+        <div style="color:var(--tx3);font-size:13px;padding:16px 0">Carregando...</div>
+      </div>
+      <div class="card">
+        <div class="ctit">Membros
+          <span id="min-min-membro-count" style="color:var(--tx3);font-weight:400;font-size:12px"></span>
+          <span class="cact" id="min-min-btn-add-membro" style="display:none" onclick="minMinAdicionarMembro()">+ Adicionar</span>
+        </div>
+        <div id="min-min-membro-list"><div style="color:var(--tx3);font-size:13px;padding:16px 0">Carregando...</div></div>
+      </div>
+    </div>
   </div>
 
   <div class="view" id="v-min-lid">
@@ -7799,7 +7826,6 @@ const _newAutoloads = {
   "pastoral-aco":    { tab:"MEMBROS",        id:"pastoral-aco-list" },
   "pastoral-reg":    { tab:"DEMANDAS",       id:"pastoral-reg-list", filtro:{area:"Pastoral"} },
   "pastoral-pri":    { tab:"DEMANDAS",       id:"pastoral-pri-list", filtro:{area:"Pastoral"} },
-  "min-min":         { tab:"MEMBROS",        id:"min-min-list" },
   "min-lid":         { tab:"MEMBROS",        id:"min-lid-list" },
   "min-esc":         { tab:"AGENDA",         id:"min-esc-list" },
   "min-prog":        { tab:"AGENDA",         id:"min-prog-list" },
@@ -8246,6 +8272,7 @@ window.go = function(id) {
   if (id === "geral")                 renderGeralDash();
   if (id === "area-dash")             _areaDashLoad();
   if (id === "min-dash")              _aplicarPermissoesMinisterial();
+  if (id === "min-min")               minMinLoad();
   if (id === "pastoral-dash")         { if(typeof ep_render==="function") ep_render(); pd_renderDash(); }
   if (id === "pastoral-preg")         ep_render();
   if (id === "pastoral-disp")         dp_loadDisps();
@@ -9957,6 +9984,9 @@ VIEW_AUTOLOAD["conselho-contratados"] = { fn: () => renderContratados() };
 
 <!-- ═══ MÓDULO MEMBRESIA — Cadastro de Membros ═══════ -->
 <script src="membresia.js"></script>
+
+<!-- ═══ MÓDULO MINISTERIAL — Ministérios ═════════════ -->
+<script src="ministerios.js"></script>
 
 <!-- ═══ MODAL: NOVO/EDITAR CONTRATO ══════════════════ -->
 <div id="modal-contrato" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)conFecharModal()">
