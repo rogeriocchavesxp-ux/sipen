@@ -20,8 +20,20 @@ CREATE INDEX IF NOT EXISTS idx_minmem_status     ON ministerio_membros(status);
 -- RLS: habilitar e liberar para anon (ajuste conforme política de segurança do projeto)
 ALTER TABLE ministerio_membros ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Leitura pública ministerio_membros"
-  ON ministerio_membros FOR SELECT USING (true);
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE tablename = 'ministerio_membros' AND policyname = 'Leitura pública ministerio_membros'
+  ) THEN
+    CREATE POLICY "Leitura pública ministerio_membros"
+      ON ministerio_membros FOR SELECT USING (true);
+  END IF;
 
-CREATE POLICY IF NOT EXISTS "Escrita autenticada ministerio_membros"
-  ON ministerio_membros FOR ALL USING (auth.role() = 'authenticated');
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE tablename = 'ministerio_membros' AND policyname = 'Escrita autenticada ministerio_membros'
+  ) THEN
+    CREATE POLICY "Escrita autenticada ministerio_membros"
+      ON ministerio_membros FOR ALL USING (auth.role() = 'authenticated');
+  END IF;
+END $$;
