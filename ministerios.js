@@ -1,6 +1,7 @@
-/* ministerios.js — v2.0
- * Módulo Ministerial > Ministérios — CRUD completo
- * Requer tabela ministerio_membros (ver ministerios-migration.sql)
+/* ministerios.js — v2.1
+ * Módulo Ministerial > Ministérios — CRUD completo + auditoria RLS
+ * Requer tabelas criadas em ministerios-migration.sql
+ * e colunas de auditoria de sipen-security-migration.sql
  */
 (function () {
   'use strict';
@@ -22,14 +23,25 @@
   let _editandoId       = null;
 
   /* ══ SUPABASE HEADERS ════════════════════════════════════════ */
+  // Usa o JWT do usuário autenticado (via sipenToken()) para que as
+  // políticas RLS "to authenticated" sejam respeitadas.
   function _hdr() {
-    return { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
+    const token = (typeof sipenToken === 'function') ? sipenToken() : SUPABASE_ANON_KEY;
+    return { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + token };
   }
   function _hdrJson() {
     return Object.assign(_hdr(), {
       'Content-Type': 'application/json',
       Prefer: 'return=representation',
     });
+  }
+
+  /* ══ CAMPOS DE AUDITORIA ══════════════════════════════════════ */
+  function _auditInsert() {
+    return {
+      criado_por: USUARIO_ATUAL?.auth_user_id || null,
+      igreja_id:  USUARIO_ATUAL?.igreja_id    || null,
+    };
   }
 
   /* ══ CACHE DE PESSOAS (para selects) ═════════════════════════ */
@@ -449,7 +461,7 @@
     const btn = document.getElementById('mm-btn');
     btn.disabled = true; btn.textContent = 'Salvando...';
 
-    const payload = {
+    const base = {
       nome,
       descricao:   (document.getElementById('mm-desc').value || '').trim() || null,
       tipo:        document.getElementById('mm-tipo').value        || null,
@@ -458,6 +470,8 @@
       coordenador: document.getElementById('mm-coordenador').value || null,
       ativo:       document.getElementById('mm-ativo').checked,
     };
+    // Inclui campos de auditoria apenas no INSERT (não no PATCH)
+    const payload = _editandoId ? base : Object.assign({}, base, _auditInsert());
 
     try {
       let r;
@@ -533,12 +547,12 @@
     const btn = document.getElementById('mmb-btn');
     btn.disabled = true; btn.textContent = 'Salvando...';
 
-    const payload = {
+    const payload = Object.assign({
       ministerio_id: _ministerioAtual,
       pessoa_id:     pessoaId,
       funcao:  (document.getElementById('mmb-funcao').value  || 'Membro').trim(),
       status:  document.getElementById('mmb-status').value   || 'ativo',
-    };
+    }, _auditInsert());
 
     try {
       const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_membros`, {
