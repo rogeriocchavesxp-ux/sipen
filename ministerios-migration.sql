@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS ministerios (
   supervisor    UUID        REFERENCES pessoas(id) ON DELETE SET NULL,
   conselheiro   UUID        REFERENCES pessoas(id) ON DELETE SET NULL,
   coordenador   UUID        REFERENCES pessoas(id) ON DELETE SET NULL,
-  lider_area    UUID        REFERENCES pessoas(id) ON DELETE SET NULL,
   ativo         BOOLEAN     NOT NULL DEFAULT true,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()

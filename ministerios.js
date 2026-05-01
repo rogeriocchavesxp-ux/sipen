@@ -165,7 +165,7 @@
     try {
       const [rMin] = await Promise.all([
         fetch(
-          `${SUPABASE_URL}/rest/v1/ministerios?id=eq.${id}&select=id,nome,descricao,tipo,ativo,supervisor,conselheiro,coordenador,lider_area`,
+          `${SUPABASE_URL}/rest/v1/ministerios?id=eq.${id}&select=id,nome,descricao,tipo,ativo,supervisor,conselheiro,coordenador`,
           { headers: _hdr() }
         ),
         _carregarPessoas(),
@@ -179,7 +179,7 @@
       }
 
       // Resolver nomes dos cargos de liderança em um único request
-      const pessoaIds = [m.supervisor, m.conselheiro, m.coordenador, m.lider_area].filter(Boolean);
+      const pessoaIds = [m.supervisor, m.conselheiro, m.coordenador].filter(Boolean);
       const nomes = {};
       if (pessoaIds.length) {
         const rp = await fetch(
@@ -201,7 +201,7 @@
            </div>`
         : '';
 
-      const temLideranca = m.supervisor || m.conselheiro || m.coordenador || m.lider_area;
+      const temLideranca = m.supervisor || m.conselheiro || m.coordenador;
       const btnEditar = _isGestor()
         ? `<button onclick="minMinEditar('${m.id}')" class="tbt" style="font-size:12px;padding:5px 12px">✏️ Editar</button>`
         : '';
@@ -221,10 +221,9 @@
             ${temLideranca ? `
               <div style="border-top:1px solid var(--bd1);padding-top:10px;margin-top:4px">
                 <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Liderança</div>
-                ${_linha('Supervisor',   m.supervisor)}
-                ${_linha('Conselheiro',  m.conselheiro)}
-                ${_linha('Coordenador',  m.coordenador)}
-                ${_linha('Líder de Área', m.lider_area)}
+                ${_linha('Supervisor',  m.supervisor)}
+                ${_linha('Conselheiro', m.conselheiro)}
+                ${_linha('Coordenador', m.coordenador)}
               </div>` : ''}
           </div>
         </div>`;
@@ -379,10 +378,9 @@
       ${_fld('mm-nome', 'Nome do Ministério', 'text', true)}
       ${_fld('mm-desc', 'Descrição', 'text', false)}
       ${_sel('mm-tipo', 'Tipo', tiposOpts, false)}
-      ${_sel('mm-supervisor',  'Supervisor',    '<option>Carregando...</option>', false)}
-      ${_sel('mm-conselheiro', 'Conselheiro',   '<option>Carregando...</option>', false)}
-      ${_sel('mm-coordenador', 'Coordenador',   '<option>Carregando...</option>', false)}
-      ${_sel('mm-lider',       'Líder de Área', '<option>Carregando...</option>', false)}
+      ${_sel('mm-supervisor',  'Supervisor',  '<option>Carregando...</option>', false)}
+      ${_sel('mm-conselheiro', 'Conselheiro', '<option>Carregando...</option>', false)}
+      ${_sel('mm-coordenador', 'Coordenador', '<option>Carregando...</option>', false)}
       <div style="display:flex;align-items:center;gap:8px">
         <input type="checkbox" id="mm-ativo" checked style="width:16px;height:16px;cursor:pointer">
         <label for="mm-ativo" style="font-size:13px;color:var(--tx2);cursor:pointer">Ministério ativo</label>
@@ -401,7 +399,6 @@
       ['mm-supervisor',  m?.supervisor],
       ['mm-conselheiro', m?.conselheiro],
       ['mm-coordenador', m?.coordenador],
-      ['mm-lider',       m?.lider_area],
     ].forEach(([id, val]) => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = _optionsPessoa(val || '');
@@ -459,7 +456,6 @@
       supervisor:  document.getElementById('mm-supervisor').value  || null,
       conselheiro: document.getElementById('mm-conselheiro').value || null,
       coordenador: document.getElementById('mm-coordenador').value || null,
-      lider_area:  document.getElementById('mm-lider').value       || null,
       ativo:       document.getElementById('mm-ativo').checked,
     };
 
