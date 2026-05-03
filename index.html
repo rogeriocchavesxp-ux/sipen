@@ -4641,7 +4641,14 @@ function tog(mod){
   if(!isOpen){sub.classList.add("open");hdr.classList.add("open");go(mod+"-dash");}
 }
 
-function openModal(){document.getElementById("modal").classList.add("on")}
+function openModal(){
+  if (typeof window.abrirModalNovaDemanda === "function") {
+    window.abrirModalNovaDemanda();
+    return;
+  }
+  const modal = document.getElementById("modal");
+  if (modal) modal.classList.add("on");
+}
 function closeModal(){document.getElementById("modal").classList.remove("on")}
 function submitTask(){
   const titulo = document.querySelector(".md .fi2[type=text]")?.value?.trim();
