@@ -1357,19 +1357,14 @@ body.dem-admin [data-demanda-admin] { display: block !important; }
     <div class="ct">
       <!-- KPIs globais: visíveis apenas para gestores (admin, conselho, lider_area) -->
       <div class="kpis c4" id="min-kpis-globais">
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Ministérios ativos</div><div class="kpi-val">8</div><div class="kpi-d up">▲ todos operando</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Ministérios ativos</div><div class="kpi-val" id="min-kpi-ativos">—</div><div class="kpi-d up" id="min-kpi-ativos-sub">carregando</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Voluntários</div><div class="kpi-val">342</div><div class="kpi-d up">▲ +14 este mês</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Escalas pendentes</div><div class="kpi-val">1</div><div class="kpi-d wa">Louvor Mai/26</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gmd);">✦</div><div class="kpi-body"><div class="kpi-lbl">Próximo culto</div><div class="kpi-val">Dom 14/04</div><div class="kpi-d nu">9h e 18h</div></div></div>
       </div>
-      <!-- Grid de ministérios: estático para gestores / dinâmico para líderes (renderizado por JS) -->
+      <!-- Grid de ministérios reais, carregado da mesma tabela usada em Ministerial > Ministérios -->
       <div class="g3" id="min-dash-cards-admin">
-        <div class="card" onclick="T('Louvor e Adoração','Líder: Ana Lima · 28 membros')"><div class="ctit"><span style="color:var(--violet)">♪</span> Louvor e Adoração</div><div class="sr"><span class="sl">Líder</span><span class="sv">Ana Lima</span></div><div class="sr"><span class="sl">Próximo ensaio</span><span class="sv">Sáb 17/04</span></div><div class="sr"><span class="sl">Escala Mai/26</span><span class="sv wa">Pendente</span></div></div>
-        <div class="card" onclick="T('PenhaKids','Líder: Carla M. · 45 crianças')"><div class="ctit"><span style="color:var(--gbr)">✦</span> PenhaKids</div><div class="sr"><span class="sl">Líder</span><span class="sv">Carla Mendes</span></div><div class="sr"><span class="sl">Próx. atividade</span><span class="sv">Dom 14/04</span></div><div class="sr"><span class="sl">Escala Mai/26</span><span class="sv pos">Concluída</span></div></div>
-        <div class="card" onclick="T('EBD','Líder: Roberto N. · 67 alunos')"><div class="ctit"><span style="color:var(--sky)">◎</span> Escola Bíblica Dom.</div><div class="sr"><span class="sl">Líder</span><span class="sv">Roberto Neves</span></div><div class="sr"><span class="sl">Próx. aula</span><span class="sv">Dom 14/04</span></div><div class="sr"><span class="sl">Material</span><span class="sv pos">Disponível</span></div></div>
-        <div class="card" onclick="T('O Movimento','UMP · 89 membros')"><div class="ctit"><span style="color:var(--teal)">◈</span> O Movimento (UMP)</div><div class="sr"><span class="sl">Líder</span><span class="sv">Lucas Ferreira</span></div><div class="sr"><span class="sl">Encontros</span><span class="sv">Sáb 19h30</span></div><div class="sr"><span class="sl">Status</span><span class="sv pos">Ativo</span></div></div>
-        <div class="card" onclick="T('SAF','Soc. Auxiliadora Feminina · 54 membros')"><div class="ctit"><span style="color:var(--rose)">✦</span> SAF</div><div class="sr"><span class="sl">Presidente</span><span class="sv">Elisa Santos</span></div><div class="sr"><span class="sl">Reunião</span><span class="sv">Qua 16/04</span></div><div class="sr"><span class="sl">Status</span><span class="sv pos">Ativo</span></div></div>
-        <div class="card" onclick="T('SOS','Adolescentes · 41 membros')"><div class="ctit"><span style="color:var(--amber)">◉</span> SOS (Adolescentes)</div><div class="sr"><span class="sl">Líder</span><span class="sv">Marcos Dias</span></div><div class="sr"><span class="sl">Encontros</span><span class="sv">Sex 19h</span></div><div class="sr"><span class="sl">Status</span><span class="sv pos">Ativo</span></div></div>
+        <div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center;grid-column:1/-1">Carregando ministérios...</div>
       </div>
       <!-- Painel personalizado para líderes (oculto por padrão, renderizado por _minDashLider) -->
       <div id="min-dash-cards-lider" style="display:none"></div>
@@ -6023,69 +6018,131 @@ function _aplicarPermissoesMinisterial() {
   const cardsLider  = document.getElementById("min-dash-cards-lider");
 
   if (isGestor) {
-    // Admin e gestores: visão completa estática
     if (btnEscala)   btnEscala.style.display   = "";
     if (kpisGlobais) kpisGlobais.style.display  = "";
     if (cardsAdmin)  cardsAdmin.style.display   = "";
     if (cardsLider)  cardsLider.style.display   = "none";
+    _minDashMinisterios(cardsAdmin, { mostrarTodos: true });
   } else if (isLider) {
-    // Líderes: oculta KPIs globais e cards de todos; mostra apenas o ministério deles
     if (btnEscala)   btnEscala.style.display   = "";
     if (kpisGlobais) kpisGlobais.style.display  = "none";
     if (cardsAdmin)  cardsAdmin.style.display   = "none";
     if (cardsLider)  cardsLider.style.display   = "";
-    _minDashLider();
+    _minDashMinisterios(cardsLider, { mostrarTodos: false });
   } else {
-    // Membros comuns: oculta botão Nova Escala e KPIs globais
     if (btnEscala)   btnEscala.style.display   = "none";
     if (kpisGlobais) kpisGlobais.style.display  = "none";
     if (cardsAdmin)  cardsAdmin.style.display   = "none";
     if (cardsLider)  cardsLider.style.display   = "";
-    _minDashLider();
+    _minDashMinisterios(cardsLider, { mostrarTodos: false });
   }
 }
 
-async function _minDashLider() {
-  const el = document.getElementById("min-dash-cards-lider");
+async function _minDashMinisterios(el, opts = {}) {
   if (!el) return;
-  const mins = USUARIO_ATUAL?.ministerios || [];
-  if (!mins.length) {
-    el.innerHTML = `<div class="alr alr-w"><div class="alr-i">ℹ</div><div>Você não está vinculado a nenhum ministério no momento.</div></div>`;
-    return;
-  }
-  el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Carregando seu ministério...</div>`;
+  const mostrarTodos = opts.mostrarTodos === true;
+  const mins = Array.isArray(USUARIO_ATUAL?.ministerios) ? USUARIO_ATUAL.ministerios : [];
+  el.classList.add("g3");
+  el.innerHTML = `<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center;grid-column:1/-1">Carregando ministérios...</div>`;
+
+  const setKpi = (total, ativos) => {
+    const val = document.getElementById("min-kpi-ativos");
+    const sub = document.getElementById("min-kpi-ativos-sub");
+    if (val) val.textContent = String(ativos);
+    if (sub) {
+      if (!total) sub.textContent = "nenhum cadastrado";
+      else if (ativos === total) sub.textContent = "todos operando";
+      else sub.textContent = `${total - ativos} inativo${total - ativos !== 1 ? "s" : ""}`;
+    }
+  };
+
   try {
-    const inFilter = mins.map(id => encodeURIComponent(id)).join(",");
-    const res = await fetch(
-      `${apiBaseUrl()}/rest/v1/ministerios?id=in.(${inFilter})&select=nome,descricao,status,lider_nome&limit=10`,
-      { headers: apiHeaders() }
-    );
-    if (!res.ok) throw new Error("query_fail");
-    const rows = await res.json();
-    if (!Array.isArray(rows) || !rows.length) {
-      el.innerHTML = `<div class="alr alr-w"><div class="alr-i">ℹ</div><div>Nenhum ministério encontrado para o seu cadastro.</div></div>`;
+    if (!mostrarTodos && !mins.length) {
+      setKpi(0, 0);
+      el.innerHTML = `<div class="alr alr-w" style="grid-column:1/-1"><div class="alr-i">ℹ</div><div>Você não está vinculado a nenhum ministério no momento.</div></div>`;
       return;
     }
-    el.innerHTML = `<div class="g3">${rows.map(r => {
-      const stCls = (r.status||"").toLowerCase() === "ativo" ? "pos" : "wa";
-      const lider = r.lider_nome ? `<div class="sr"><span class="sl">Contato líder</span><span class="sv">${escapeHtml(r.lider_nome)}</span></div>` : "";
-      return `<div class="card">
-        <div class="ctit">◉ ${escapeHtml(r.nome||"Ministério")}</div>
-        ${r.descricao ? `<div style="font-size:10.5px;color:var(--tx3);margin-bottom:8px">${escapeHtml(r.descricao)}</div>` : ""}
-        ${lider}
-        <div class="sr"><span class="sl">Status</span><span class="sv ${stCls}">${escapeHtml(r.status||"—")}</span></div>
-        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-          <button class="tbt" onclick="go('min-esc')">Escalas</button>
-          <button class="tbt" onclick="go('min-prog')">Programações</button>
-        </div>
-      </div>`;
-    }).join("")}</div>`;
+
+    const filtroIds = mostrarTodos ? "" : `&id=in.(${mins.map(id => encodeURIComponent(id)).join(",")})`;
+    const hoje = new Date().toISOString().slice(0, 10);
+    const [rMin, rMembros, rEscalas] = await Promise.all([
+      fetch(`${apiBaseUrl()}/rest/v1/ministerios?select=id,nome,descricao,tipo,ativo,supervisor,conselheiro,coordenador,updated_at,created_at${filtroIds}&order=nome.asc`, { headers: apiHeaders() }),
+      fetch(`${apiBaseUrl()}/rest/v1/ministerio_membros?select=ministerio_id&status=eq.ativo`, { headers: apiHeaders() }),
+      fetch(`${apiBaseUrl()}/rest/v1/escala_ministerial?data=gte.${hoje}&order=data.asc&limit=200&select=data,ministerio,funcao,status`, { headers: apiHeaders() }).catch(() => null),
+    ]);
+    if (!rMin.ok) throw new Error("Não foi possível carregar os ministérios.");
+
+    const rows = await rMin.json();
+    const membrosRows = rMembros.ok ? await rMembros.json() : [];
+    const escalasRows = rEscalas && rEscalas.ok ? await rEscalas.json() : [];
+    const lista = Array.isArray(rows) ? rows : [];
+    const totalAtivos = lista.filter(m => m.ativo !== false).length;
+    setKpi(lista.length, totalAtivos);
+
+    if (!lista.length) {
+      el.innerHTML = `<div class="alr alr-w" style="grid-column:1/-1"><div class="alr-i">ℹ</div><div>Nenhum ministério cadastrado ainda. Crie um novo ministério para começar.</div></div>`;
+      return;
+    }
+
+    const contagem = {};
+    (Array.isArray(membrosRows) ? membrosRows : []).forEach(m => {
+      contagem[m.ministerio_id] = (contagem[m.ministerio_id] || 0) + 1;
+    });
+
+    const pessoaIds = [...new Set(lista.flatMap(m => [m.supervisor, m.coordenador, m.conselheiro]).filter(Boolean))];
+    const nomes = {};
+    if (pessoaIds.length) {
+      const rp = await fetch(`${apiBaseUrl()}/rest/v1/pessoas?id=in.(${pessoaIds.map(id => encodeURIComponent(id)).join(",")})&select=id,nome`, { headers: apiHeaders() });
+      const pessoas = rp.ok ? await rp.json() : [];
+      pessoas.forEach(p => { nomes[p.id] = p.nome; });
+    }
+
+    const proxPorMinisterio = {};
+    (Array.isArray(escalasRows) ? escalasRows : []).forEach(e => {
+      const chave = String(e.ministerio || "").trim().toLowerCase();
+      if (chave && !proxPorMinisterio[chave]) proxPorMinisterio[chave] = e;
+    });
+
+    el.innerHTML = lista.map(m => _minDashCard(m, {
+      qtdMembros: contagem[m.id] || 0,
+      lider: nomes[m.supervisor] || nomes[m.coordenador] || nomes[m.conselheiro] || "",
+      proxima: proxPorMinisterio[String(m.nome || "").trim().toLowerCase()] || null,
+    })).join("");
   } catch(e) {
-    el.innerHTML = `<div class="alr alr-w"><div class="alr-i">ℹ</div><div>
-      ${mins.length} ministério${mins.length !== 1 ? "s" : ""} vinculado${mins.length !== 1 ? "s" : ""}.
-      <button class="tbt" style="margin-left:12px" onclick="go('area-min')">Ver detalhes →</button>
-    </div></div>`;
+    console.error("_minDashMinisterios:", e);
+    el.innerHTML = `<div class="alr alr-w" style="grid-column:1/-1"><div class="alr-i">ℹ</div><div>Não foi possível carregar os ministérios agora.</div></div>`;
   }
+}
+
+function _minDashCard(m, extra = {}) {
+  const ICONES = { MUSICA:"♪", JOVENS:"◆", INFANTIL:"✦", INTERCESSAO:"◎", EVANGELISMO:"◈", DIACONIA:"✚", COMUNICACAO:"◉", OUTRO:"◉" };
+  const CORES = { MUSICA:"var(--violet)", JOVENS:"var(--teal)", INFANTIL:"var(--gbr)", INTERCESSAO:"var(--sky)", EVANGELISMO:"var(--rose)", DIACONIA:"var(--amber)", COMUNICACAO:"var(--blue)", OUTRO:"var(--violet)" };
+  const tipo = m.tipo || "OUTRO";
+  const ativo = m.ativo !== false;
+  const statusTxt = ativo ? "Ativo" : "Inativo";
+  const statusCls = ativo ? "pos" : "wa";
+  const tipoLabel = m.tipo ? (m.tipo.charAt(0) + m.tipo.slice(1).toLowerCase()) : "Sem tipo definido";
+  const lider = extra.lider || "—";
+  const prox = extra.proxima;
+  const proxTxt = prox ? `${_minFmtData(prox.data)}${prox.funcao ? " · " + prox.funcao : ""}` : "—";
+  const proxStatus = prox?.status || "Sem próxima escala";
+  const desc = m.descricao ? `<div style="font-size:10.5px;color:var(--tx3);margin-bottom:8px">${escapeHtml(m.descricao)}</div>` : "";
+  return `<div class="card" style="cursor:pointer" onclick="go('min-min');setTimeout(()=>minMinAbrir('${m.id}'),0)">
+    <div class="ctit"><span style="color:${CORES[tipo] || CORES.OUTRO}">${ICONES[tipo] || ICONES.OUTRO}</span> ${escapeHtml(m.nome || "Ministério")}</div>
+    ${desc}
+    <div class="sr"><span class="sl">Líder / Responsável</span><span class="sv">${escapeHtml(lider)}</span></div>
+    <div class="sr"><span class="sl">Status</span><span class="sv ${statusCls}">${statusTxt}</span></div>
+    <div class="sr"><span class="sl">Próxima atividade</span><span class="sv">${escapeHtml(proxTxt)}</span></div>
+    <div class="sr"><span class="sl">${escapeHtml(prox ? "Escala" : "Tipo")}</span><span class="sv ${prox ? "" : "nu"}">${escapeHtml(prox ? proxStatus : tipoLabel)}</span></div>
+    <div class="sr"><span class="sl">Membros ativos</span><span class="sv">${extra.qtdMembros || 0}</span></div>
+  </div>`;
+}
+
+function _minFmtData(data) {
+  if (!data) return "—";
+  const d = new Date(`${data}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return data;
+  return d.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" });
 }
 
 // ── MEMBRESIA — controle de acesso por perfil ──────────────────────
