@@ -9253,10 +9253,21 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
     pastorFiltro: "",
   };
 	  let _disps = []; // registros derivados de escala_pregacao
+  let _pastoresDp = [];
+  let _pastoresLoading = null;
   let _loaded = false;
 
   /* ── Helpers ──────────────────────────────────────────────────── */
-  function _getPastores(){ return (typeof ep_getPastores==="function") ? ep_getPastores() : []; }
+  function _normalizarPastores(lista){
+    return (Array.isArray(lista)?lista:[])
+      .filter(p=>p&&p.id&&p.ativo!==false)
+      .sort((a,b)=>(a.nome_exibicao||a.nome_completo||"").localeCompare(b.nome_exibicao||b.nome_completo||"","pt-BR"));
+  }
+  function _getPastores(){
+    const local=_normalizarPastores(_pastoresDp);
+    if(local.length) return local;
+    return _normalizarPastores((typeof ep_getPastores==="function") ? ep_getPastores() : []);
+  }
   function _getPastorById(id){ return _getPastores().find(p=>p.id===id); }
   function _nomePastor(id){ const p=_getPastorById(id); return p ? (p.nome_exibicao||p.nome_completo) : id; }
   function _iso(d){ return d.toISOString().slice(0,10); }
@@ -9330,6 +9341,32 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
 	  }
 
 	  /* ── API Supabase ─────────────────────────────────────────────── */
+	  async function _loadPastores(force=false){
+	    if(_pastoresLoading&&!force) return _pastoresLoading;
+	    if(_pastoresDp.length&&!force) return _pastoresDp;
+	    _pastoresLoading=(async()=>{
+	      try {
+	        const r=await fetch(`${apiBaseUrl()}/rest/v1/pastores?select=*&order=nome_completo.asc`,{headers:apiHeaders()});
+	        if(r.ok){
+	          const d=await r.json();
+	          _pastoresDp=_normalizarPastores(d);
+	          if(!_pastoresDp.length) console.warn("dp_: nenhum pastor ativo retornado pela tabela pastores");
+	          return _pastoresDp;
+	        }
+	        const err=await r.text().catch(()=>"");
+	        console.error("dp_: erro ao carregar pastores",r.status,err);
+	        T("Pastores","Não foi possível carregar a lista de pastores. Tente novamente em instantes.");
+	      } catch(e){
+	        console.error("dp_: erro de rede ao carregar pastores",e);
+	        T("Pastores","Não foi possível carregar a lista de pastores. Verifique sua conexão e tente novamente.");
+	      } finally {
+	        _pastoresLoading=null;
+	      }
+	      return _pastoresDp;
+	    })();
+	    return _pastoresLoading;
+	  }
+
 	  async function _loadDisps(){
 	    try {
 	      const r=await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao?select=*&order=data.asc,culto_tipo.asc&limit=5000`,{headers:apiHeaders()});
@@ -9353,6 +9390,7 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
 	        T("Disponibilidade Pregação",`Não foi possível carregar a escala de pregação (${r.status}).`);
 	      }
 	    } catch(e){ console.warn("dp_: erro de rede",e); T("Erro de rede",e.message); }
+	    await _loadPastores();
 	    _loaded=true;
 	    _renderAll();
 	    _atualizarKpis();
@@ -9430,7 +9468,7 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
 	    const sel=document.getElementById("dp-pastor-sel");
 	    const inferredPastorId=_inferPastorAtualId();
 	    if(sel){
-	      const pastores=_getPastores().filter(p=>p.ativo!==false);
+	      const pastores=_getPastores();
 	      const current=sel.value||_st.pastorFiltro||inferredPastorId||"";
 	      let pOpts=`<option value="${_ea(inferredPastorId)}">Minha disponibilidade</option>`;
 	      if(_isAdmin()) pastores.forEach(p=>{pOpts+=`<option value="${_ea(p.id)}">${_eh(p.nome_exibicao||p.nome_completo)}</option>`;});
@@ -9489,7 +9527,7 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
     const mesKey=document.getElementById("dp-admin-mes")?.value||_mesKey(_st.mes);
     const fPastor=document.getElementById("dp-admin-pastor")?.value||"";
     const fCulto=document.getElementById("dp-admin-culto")?.value||"";
-    const pastores=_getPastores().filter(p=>p.ativo!==false);
+    const pastores=_getPastores();
     const slots=_slotsDoMes(new Date(mesKey+"-01T12:00:00"));
     const map=_dispMap();
 
@@ -9597,7 +9635,7 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
 
   function _preencherPastorSelect(){
     const s=document.getElementById("dp-admin-pastor"); if(!s) return;
-    const pastores=_getPastores().filter(p=>p.ativo!==false);
+    const pastores=_getPastores();
     if(s.options.length===pastores.length+1) return;
     let opts=`<option value="">Todos os pastores</option>`;
 	    pastores.forEach(p=>{opts+=`<option value="${_ea(p.id)}">${_eh(p.nome_exibicao||p.nome_completo)}</option>`;});
@@ -9607,7 +9645,7 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
   /* ── Modal de disponibilidade ─────────────────────────────────── */
   function _openModal(pastor_id, data, culto_tipo, regId){
 	    const modal=document.getElementById("dp-modal"); if(!modal) return;
-	    const pastores=_getPastores().filter(p=>p.ativo!==false);
+	    const pastores=_getPastores();
 	    const reg=regId?_disps.find(r=>r.id===regId):null;
 	    const pOpts=`<option value="">— Selecionar pastor —</option>`+pastores.map(p=>`<option value="${_ea(p.id)}"${(pastor_id===p.id||reg?.pastor_id===p.id)?" selected":""}>${_eh(p.nome_completo)}</option>`).join("");
 	    const tipoOpts=Object.keys(_TIPO).map(k=>`<option value="${_ea(k)}"${(culto_tipo===k||reg?.culto_tipo===k)?" selected":""}>${_eh(_TIPO[k].ico)} ${_eh(_TIPO[k].label)}</option>`).join("");
@@ -9649,19 +9687,22 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
   window.dp_mesAnterior = ()=>{ _st.mes=_addM(_st.mes,-1); _renderMinha(); _atualizarKpis(); };
   window.dp_mesProximo  = ()=>{ _st.mes=_addM(_st.mes,1);  _renderMinha(); _atualizarKpis(); };
 
-  window.dp_abrirFormDisp = function(){
+  window.dp_abrirFormDisp = async function(){
+    await _loadPastores();
     const hoje=_iso(new Date());
     _openModal("",hoje,"domingo_manha",null);
   };
-	  window.dp_marcarDisp = function(pastor_id, data, culto_tipo, disponivel){
+	  window.dp_marcarDisp = async function(pastor_id, data, culto_tipo, disponivel){
+	    await _loadPastores();
 	    _openModal(pastor_id,data,culto_tipo,null);
 	  };
 	  window.dp_marcarIndisp = async function(pastor_id, data, culto_tipo){
-	    if(!pastor_id){ _openModal("",data,culto_tipo,null); return; }
+	    if(!pastor_id){ await _loadPastores(); _openModal("",data,culto_tipo,null); return; }
 	    const ok=await _upsert({pastor_id,data,culto_tipo,disponivel:false,status:"PENDENTE",observacoes:""});
 	    if(ok){ _renderAll(); _atualizarKpis(); }
 	  };
-	  window.dp_editarDisp = function(id){
+	  window.dp_editarDisp = async function(id){
+	    await _loadPastores();
 	    const reg=_disps.find(r=>r.id===id); if(!reg) return;
 	    _openModal(reg.pastor_id,reg.data,reg.culto_tipo,id);
 	  };
