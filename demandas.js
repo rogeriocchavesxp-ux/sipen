@@ -689,6 +689,62 @@
     }
   };
 
+  /* ── Dados financeiros: renderização no detalhe ─────── */
+
+  function _renderFinancialData(dem) {
+    const fd  = dem.financial_data;
+    const sub = dem.subcategoria || "";
+    if (!fd || typeof fd !== "object" || Object.keys(fd).length === 0) return "";
+
+    const fmtVal  = v => v ? `R$ ${parseFloat(v).toLocaleString("pt-BR", { minimumFractionDigits:2, maximumFractionDigits:2 })}` : "—";
+    const fmtLink = l => l ? `<a href="${l}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none">Abrir link →</a>` : "—";
+
+    let rows = [];
+    if (sub === "Solicitação de pagamento") {
+      rows = [
+        ["Tipo",              fd.tipo || "—"],
+        ["Valor",             fmtVal(fd.valor)],
+        ["Vencimento",        fmtD(fd.data_vencimento)],
+        ["Beneficiário",      fd.beneficiario || "—"],
+        ["CPF / CNPJ",        fd.cpf_cnpj || "—"],
+        ["Centro de custo",   fd.centro_custo || "—"],
+        ["Forma de pagamento",fd.forma_pagamento || "—"],
+        fd.chave_pix  ? ["Chave Pix",  fd.chave_pix]  : null,
+        fd.banco      ? ["Banco",       fd.banco]       : null,
+        fd.agencia    ? ["Agência",     fd.agencia]     : null,
+        fd.conta      ? ["Conta",       fd.conta]       : null,
+        fd.boleto_ref ? ["Boleto ref.", fd.boleto_ref]  : null,
+        ["Documentos",        fmtLink(fd.link_docs)],
+        fd.obs        ? ["Observações", fd.obs]         : null,
+      ].filter(Boolean);
+    } else if (sub === "Reembolso") {
+      rows = [
+        ["Reembolsado",       fd.reimb_nome || "—"],
+        ["Valor",             fmtVal(fd.valor)],
+        fd.motivo        ? ["Motivo",          fd.motivo]        : null,
+        fd.chave_pix     ? ["Chave Pix",       fd.chave_pix]     : null,
+        fd.ministerio    ? ["Ministério",       fd.ministerio]    : null,
+        ["Comprovante",       fmtLink(fd.link_nf)],
+        fd.pastor_ciente ? ["Pastor / Aprovador", fd.pastor_ciente] : null,
+        fd.obs           ? ["Observações",      fd.obs]           : null,
+      ].filter(Boolean);
+    }
+
+    if (!rows.length) return "";
+
+    return `
+      <div class="card" style="margin-top:0;border:1px solid rgba(61,160,85,.3);background:rgba(61,160,85,.03)">
+        <div class="ctit" style="color:var(--gr)">💰 Dados Financeiros</div>
+        <table style="width:100%;font-size:11.5px;border-collapse:collapse">
+          ${rows.map(([lbl, val], i) => `
+            <tr style="${i > 0 ? "border-top:1px solid var(--bd1)" : ""}">
+              <td style="color:var(--tx3);padding:7px 0;width:40%;vertical-align:top">${lbl}</td>
+              <td style="color:var(--tx1)">${val}</td>
+            </tr>`).join("")}
+        </table>
+      </div>`;
+  }
+
   /* ── Detalhe individual ─────────────────────────────── */
 
   window.demAbrirDetalhe = async function(id, origem) {
@@ -766,6 +822,7 @@
             </div>
           </div>
         </div>
+        ${_renderFinancialData(dem)}
         <div class="card" style="margin-top:0">
           <div class="ctit">Editar Demanda</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
@@ -914,6 +971,20 @@
     m.querySelector("#dem-f-sol").value     = usuario;
     m.querySelector("#dem-f-resp").value    = "";
     m.querySelector("#dem-f-venc").value    = "";
+    /* Reset financial section */
+    ["dem-f-financeiro-section","dem-f-pag-section","dem-f-reimb-section",
+     "dem-f-pix-section","dem-f-bank-section","dem-f-boleto-section"].forEach(id => {
+      const el = m.querySelector("#" + id);
+      if (el) el.style.display = "none";
+    });
+    ["dem-f-tipo-sol","dem-f-valor","dem-f-data-venc","dem-f-beneficiario","dem-f-cpf-cnpj",
+     "dem-f-centro","dem-f-forma-pag","dem-f-chave-pix","dem-f-banco","dem-f-agencia",
+     "dem-f-conta","dem-f-boleto-ref","dem-f-docs","dem-f-obs-fin","dem-f-reimb-nome",
+     "dem-f-reimb-valor","dem-f-reimb-motivo","dem-f-reimb-pix","dem-f-reimb-min",
+     "dem-f-reimb-nf","dem-f-reimb-pastor","dem-f-reimb-obs"].forEach(id => {
+      const el = m.querySelector("#" + id);
+      if (el) el.value = "";
+    });
     m.style.display = "flex";
   };
 
@@ -932,7 +1003,35 @@
       ? cat.subcats.map(s => `<option value="${s}">${s}</option>`).join("")
       : `<option value="">Selecione a categoria primeiro</option>`;
     if (respEl && cat) respEl.value = cat.resp;
+    _toggleFinanceiroSection();
   };
+
+  function _toggleFinanceiroSection() {
+    const cat      = document.getElementById("dem-f-cat")?.value;
+    const sub      = document.getElementById("dem-f-sub")?.value;
+    const sec      = document.getElementById("dem-f-financeiro-section");
+    const pagSec   = document.getElementById("dem-f-pag-section");
+    const reimbSec = document.getElementById("dem-f-reimb-section");
+    if (!sec) return;
+    const isFinanceiro = cat === "Financeiro";
+    sec.style.display      = isFinanceiro ? "" : "none";
+    if (pagSec)   pagSec.style.display   = (isFinanceiro && sub === "Solicitação de pagamento") ? "flex" : "none";
+    if (reimbSec) reimbSec.style.display = (isFinanceiro && sub === "Reembolso")               ? "flex" : "none";
+    if (isFinanceiro) _toggleFormaPagamento();
+  }
+
+  function _toggleFormaPagamento() {
+    const forma     = document.getElementById("dem-f-forma-pag")?.value;
+    const pixSec    = document.getElementById("dem-f-pix-section");
+    const bankSec   = document.getElementById("dem-f-bank-section");
+    const boletoSec = document.getElementById("dem-f-boleto-section");
+    if (pixSec)    pixSec.style.display    = forma === "Pix"           ? ""     : "none";
+    if (bankSec)   bankSec.style.display   = forma === "Transferência" ? "grid" : "none";
+    if (boletoSec) boletoSec.style.display = forma === "Boleto"        ? ""     : "none";
+  }
+
+  window.demOnSubChange      = _toggleFinanceiroSection;
+  window.demOnFormaPagChange = _toggleFormaPagamento;
 
   window.salvarNovaDemanda = async function() {
     const cat    = document.getElementById("dem-f-cat")?.value;
@@ -946,6 +1045,93 @@
     if (!cat || !sub || !titulo) {
       if (typeof T === "function") T("Campo obrigatório", "Preencha categoria, subcategoria e título");
       return;
+    }
+
+    /* ── Coleta e valida dados financeiros ─────────────── */
+    let financial_data = null;
+
+    if (cat === "Financeiro" && sub === "Solicitação de pagamento") {
+      const valor      = parseFloat(document.getElementById("dem-f-valor")?.value || "0");
+      const benefic    = document.getElementById("dem-f-beneficiario")?.value?.trim();
+      const forma      = document.getElementById("dem-f-forma-pag")?.value;
+      const chave_pix  = document.getElementById("dem-f-chave-pix")?.value?.trim();
+      const banco      = document.getElementById("dem-f-banco")?.value?.trim();
+      const agencia    = document.getElementById("dem-f-agencia")?.value?.trim();
+      const conta      = document.getElementById("dem-f-conta")?.value?.trim();
+      const boleto_ref = document.getElementById("dem-f-boleto-ref")?.value?.trim();
+      const link_docs  = document.getElementById("dem-f-docs")?.value?.trim();
+      if (!valor || isNaN(valor) || valor <= 0) {
+        if (typeof T === "function") T("Campo obrigatório", "Informe o valor da solicitação");
+        return;
+      }
+      if (!benefic) {
+        if (typeof T === "function") T("Campo obrigatório", "Informe o beneficiário / favorecido");
+        return;
+      }
+      if (!forma) {
+        if (typeof T === "function") T("Campo obrigatório", "Selecione a forma de pagamento");
+        return;
+      }
+      if (!link_docs) {
+        if (typeof T === "function") T("Campo obrigatório", "Informe o link dos documentos comprobatórios");
+        return;
+      }
+      if (forma === "Pix" && !chave_pix) {
+        if (typeof T === "function") T("Campo obrigatório", "Informe a chave Pix");
+        return;
+      }
+      if (forma === "Boleto" && !boleto_ref) {
+        if (typeof T === "function") T("Campo obrigatório", "Informe o link ou referência do boleto");
+        return;
+      }
+      if (forma === "Transferência" && (!banco || !agencia || !conta)) {
+        if (typeof T === "function") T("Campo obrigatório", "Informe banco, agência e conta para transferência");
+        return;
+      }
+      financial_data = {
+        tipo:            document.getElementById("dem-f-tipo-sol")?.value || "Pagamento",
+        valor,
+        data_vencimento: document.getElementById("dem-f-data-venc")?.value || null,
+        beneficiario:    benefic,
+        cpf_cnpj:        document.getElementById("dem-f-cpf-cnpj")?.value?.trim() || "",
+        centro_custo:    document.getElementById("dem-f-centro")?.value?.trim() || "",
+        forma_pagamento: forma,
+        chave_pix:       chave_pix || "",
+        banco:           banco || "",
+        agencia:         agencia || "",
+        conta:           conta || "",
+        boleto_ref:      boleto_ref || "",
+        link_docs,
+        obs:             document.getElementById("dem-f-obs-fin")?.value?.trim() || "",
+      };
+    }
+
+    if (cat === "Financeiro" && sub === "Reembolso") {
+      const nome    = document.getElementById("dem-f-reimb-nome")?.value?.trim();
+      const valor   = parseFloat(document.getElementById("dem-f-reimb-valor")?.value || "0");
+      const link_nf = document.getElementById("dem-f-reimb-nf")?.value?.trim();
+      if (!nome) {
+        if (typeof T === "function") T("Campo obrigatório", "Informe o nome de quem será reembolsado");
+        return;
+      }
+      if (!valor || isNaN(valor) || valor <= 0) {
+        if (typeof T === "function") T("Campo obrigatório", "Informe o valor do reembolso");
+        return;
+      }
+      if (!link_nf) {
+        if (typeof T === "function") T("Campo obrigatório", "Informe o link da nota fiscal ou comprovante");
+        return;
+      }
+      financial_data = {
+        reimb_nome:    nome,
+        valor,
+        motivo:        document.getElementById("dem-f-reimb-motivo")?.value?.trim() || "",
+        chave_pix:     document.getElementById("dem-f-reimb-pix")?.value?.trim() || "",
+        ministerio:    document.getElementById("dem-f-reimb-min")?.value?.trim() || "",
+        link_nf,
+        pastor_ciente: document.getElementById("dem-f-reimb-pastor")?.value?.trim() || "",
+        obs:           document.getElementById("dem-f-reimb-obs")?.value?.trim() || "",
+      };
     }
 
     const u = typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL : null;
@@ -967,6 +1153,7 @@
       data_abertura:  new Date().toISOString().split("T")[0],
       data_conclusao: venc,
     };
+    if (financial_data) payload.financial_data = financial_data;
 
     try {
       console.log("PAYLOAD DEMANDA:", { ...payload });
