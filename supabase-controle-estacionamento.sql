@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS public.controle_estacionamento_controles (
   codigo_controle text NOT NULL UNIQUE,
   marca text NOT NULL DEFAULT 'Nice',
   codigo_base text NOT NULL DEFAULT '1EF9C96',
+  status_pagamento text NOT NULL DEFAULT 'pendente'
+    CHECK (status_pagamento IN ('pago','pendente')),
   status text NOT NULL DEFAULT 'disponivel'
     CHECK (status IN ('disponivel','entregue','devolvido','perdido','bloqueado')),
   data_entrega date,
@@ -15,6 +17,11 @@ CREATE TABLE IF NOT EXISTS public.controle_estacionamento_controles (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE public.controle_estacionamento_controles
+ADD COLUMN IF NOT EXISTS status_pagamento text
+DEFAULT 'pendente'
+CHECK (status_pagamento IN ('pago','pendente'));
 
 CREATE TABLE IF NOT EXISTS public.controle_estacionamento_historico (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
