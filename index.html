@@ -5689,6 +5689,15 @@ document.head.appendChild(styleEl);
     const m = _membros.find(x => x.id === id);
     return m ? m.nome : "—";
   }
+  function _membroCell(r){
+    if(r.membro_id){
+      return `<span style="color:var(--tx1);font-weight:700">${escapeHtml(_membroNome(r.membro_id))}</span>`;
+    }
+    return `<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+      <span style="display:inline-flex;align-items:center;border-radius:999px;padding:3px 8px;background:rgba(212,168,67,.15);color:#d4a843;font-size:10px;font-weight:800">Não vinculado</span>
+      <button onclick="ceVincularMembro('${escapeHtmlAttr(r.id)}')" style="background:none;border:1px solid rgba(42,181,192,.35);border-radius:5px;color:var(--teal);font-size:10px;font-weight:800;padding:3px 7px;cursor:pointer">Vincular membro</button>
+    </div>`;
+  }
   function _erro(e){
     const msg = e?.message || String(e || "Erro desconhecido");
     if(msg.includes("does not exist") || msg.includes("PGRST205")) return "Execute o script supabase-controle-estacionamento.sql no Supabase.";
@@ -5775,7 +5784,7 @@ document.head.appendChild(styleEl);
         <tbody>${rows.map(r => {
           const entregue = r.status === "entregue";
           return `<tr style="border-bottom:1px solid var(--bd1)">
-            <td style="padding:9px 10px;color:var(--tx1);font-weight:700">${escapeHtml(_membroNome(r.membro_id))}</td>
+            <td style="padding:9px 10px">${_membroCell(r)}</td>
             <td style="padding:9px 10px;color:var(--tx1);font-family:var(--mono);font-weight:800">${escapeHtml(r.codigo_controle || "—")}</td>
             <td style="padding:9px 10px;color:var(--tx2)">${escapeHtml(r.marca || "Nice")}</td>
             <td style="padding:9px 10px;color:var(--tx2);font-family:var(--mono)">${escapeHtml(r.codigo_base || "1EF9C96")}</td>
@@ -5794,7 +5803,7 @@ document.head.appendChild(styleEl);
     </div>`;
   }
 
-  async function ceAbrirModal(id=""){
+  async function ceAbrirModal(id="", focoMembro=false){
     if(!_membros.length) await ceCarregar();
     const reg = id ? _controles.find(r => r.id === id) : null;
     let modal = document.getElementById("ce-modal");
@@ -5824,6 +5833,11 @@ document.head.appendChild(styleEl);
         <button class="btn btn-p" onclick="ceSalvar('${escapeHtmlAttr(id)}')">Salvar</button>
       </div>
     </div>`;
+    if(focoMembro) setTimeout(()=>document.getElementById("ce-membro")?.focus(), 0);
+  }
+
+  async function ceVincularMembro(id){
+    await ceAbrirModal(id, true);
   }
 
   async function ceSalvar(id=""){
@@ -5891,6 +5905,7 @@ document.head.appendChild(styleEl);
   window.ceCarregar = ceCarregar;
   window.ceRender = ceRender;
   window.ceAbrirModal = ceAbrirModal;
+  window.ceVincularMembro = ceVincularMembro;
   window.ceFecharModal = function(){ document.getElementById("ce-modal")?.remove(); };
   window.ceSalvar = ceSalvar;
   window.ceMudarStatus = ceMudarStatus;
