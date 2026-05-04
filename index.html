@@ -9375,10 +9375,18 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
 	    if(obs) h+=`<div class="dp-slot-obs" title="${_ea(obs)}">${_eh(obs)}</div>`;
 	    h+=`<div class="dp-slot-actions">`;
 	    if(isFuture){
-	      if(estado.key!=="disponivel") h+=`<button class="ok" onclick="dp_marcarDisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}',true)">Estou disponível</button>`;
-	      if(estado.key==="disponivel"&&reg?.id) h+=`<button class="edit" onclick="dp_editarDisp('${_ea(reg.id)}')">Editar</button>`;
-	      if(estado.key!=="indisponivel") h+=`<button class="no" onclick="dp_marcarIndisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}')">Indisponível</button>`;
-	      if(estado.key==="indisponivel"&&reg?.id) h+=`<button class="edit" onclick="dp_editarDisp('${_ea(reg.id)}')">Editar</button>`;
+	      if(estado.key==="disponivel"){
+	        h+=`<span class="done">✓ Disponibilidade registrada</span>`;
+	        if(reg?.id) h+=`<button class="edit" onclick="dp_editarDisp('${_ea(reg.id)}')">Editar</button>`;
+	        h+=`<button class="no" onclick="dp_marcarIndisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}')">Marcar indisponível</button>`;
+	      } else if(estado.key==="indisponivel"){
+	        h+=`<span class="blocked">Indisponível registrado</span>`;
+	        if(reg?.id) h+=`<button class="edit" onclick="dp_editarDisp('${_ea(reg.id)}')">Editar</button>`;
+	        h+=`<button class="ok" onclick="dp_marcarDisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}',true)">Estou disponível</button>`;
+	      } else {
+	        h+=`<button class="ok" onclick="dp_marcarDisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}',true)">Estou disponível</button>`;
+	        h+=`<button class="no" onclick="dp_marcarIndisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}')">Indisponível</button>`;
+	      }
 	    } else {
 	      h+=`<span style="font-size:9.5px;color:var(--tx3)">${_eh(estado.label)}</span>`;
 	    }
@@ -9803,7 +9811,14 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
     if(!data){alert("Informe a data.");return;}
     if(!culto_tipo){alert("Selecione o culto.");return;}
 	    const ok=await _upsert({pastor_id,data,culto_tipo,disponivel,observacoes,status:disponivel?status:"PENDENTE"});
-    if(ok){ dp_fecharModal(); _renderAll(); _atualizarKpis(); }
+    if(ok){
+      _st.pastorFiltro=pastor_id;
+      const sel=document.getElementById("dp-pastor-sel");
+      if(sel&&[...sel.options].some(o=>o.value===pastor_id)) sel.value=pastor_id;
+      dp_fecharModal();
+      _renderAll();
+      _atualizarKpis();
+    }
   };
   window.dp_exportar = function(){
     const mesKey=document.getElementById("dp-admin-mes")?.value||_mesKey(_st.mes);
