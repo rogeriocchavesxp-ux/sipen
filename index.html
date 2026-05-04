@@ -598,6 +598,34 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 .sb-ham{display:none;background:none;border:none;color:var(--tx2);font-size:20px;cursor:pointer;padding:0 10px 0 0;line-height:1;flex-shrink:0}
 .sb-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:149}
 
+.dp-cal{background:var(--bg-card);border:1px solid var(--bd2);border-radius:8px;overflow:hidden}
+.dp-cal-head,.dp-cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.dp-cal-head{background:var(--bg-surface);border-bottom:1px solid var(--bd1)}
+.dp-cal-dow{padding:7px 4px;text-align:center;font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase}
+.dp-cal-grid{gap:1px;background:var(--bd1)}
+.dp-cal-cell{min-height:122px;background:var(--bg-card);padding:6px;box-sizing:border-box;border-top:2px solid transparent}
+.dp-cal-cell.is-weekend{background:rgba(255,255,255,0.02)}
+.dp-cal-cell.is-today{background:rgba(58,176,184,0.07);border-top-color:var(--teal)}
+.dp-cal-cell.has-slots{box-shadow:inset 0 0 0 1px rgba(58,176,184,0.14)}
+.dp-cal-empty{background:var(--bg-body);min-height:122px}
+.dp-cal-day{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:11px;font-weight:700;color:var(--tx3)}
+.dp-cal-cell.is-today .dp-cal-day{background:var(--teal);color:#fff}
+.dp-slot{margin-top:5px;border:1px solid var(--bd2);border-left-width:3px;border-radius:6px;padding:6px;background:var(--bg-surface);display:flex;flex-direction:column;gap:5px}
+.dp-slot.is-disponivel{background:rgba(58,170,92,0.07);border-color:rgba(58,170,92,0.30);border-left-color:#3aaa5c}
+.dp-slot.is-indisponivel{background:rgba(208,104,104,0.07);border-color:rgba(208,104,104,0.30);border-left-color:#d06868}
+.dp-slot.is-pendente{background:rgba(212,168,67,0.06)}
+.dp-slot-top{display:flex;align-items:flex-start;gap:5px;justify-content:space-between}
+.dp-slot-title{font-size:9.5px;font-weight:800;line-height:1.25;text-transform:uppercase;letter-spacing:.04em}
+.dp-slot-state{font-size:8.5px;font-weight:800;border-radius:8px;padding:2px 6px;white-space:nowrap}
+.dp-slot-obs{font-size:9.5px;color:var(--tx3);line-height:1.3;overflow:hidden;text-overflow:ellipsis}
+.dp-slot-actions{display:flex;gap:4px;flex-wrap:wrap}
+.dp-slot-actions button{border-radius:5px;font-size:9.5px;font-weight:700;cursor:pointer;font-family:var(--sans);padding:4px 7px}
+.dp-slot-actions .ok{background:var(--teal);border:none;color:#fff}
+.dp-slot-actions .no{background:none;border:1px solid rgba(208,104,104,0.4);color:#d06868}
+.dp-slot-actions .edit{background:none;border:1px solid var(--bd2);color:var(--tx2)}
+.dp-cal-note{margin-top:10px;color:var(--tx3);font-size:10.5px}
+
+
 /* ─── TABLET + MOBILE (≤ 768px) ─────────────────────── */
 @media(max-width:768px){
 
@@ -605,6 +633,14 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
   body{zoom:1;height:100dvh;height:100vh}
   *{-webkit-tap-highlight-color:transparent}
   ::-webkit-scrollbar{display:none}
+  .dp-cal{border:none;background:transparent;overflow:visible}
+  .dp-cal-head{display:none}
+  .dp-cal-grid{display:flex;flex-direction:column;gap:8px;background:transparent}
+  .dp-cal-empty{display:none}
+  .dp-cal-cell{min-height:auto;border:1px solid var(--bd2);border-radius:8px;background:var(--bg-card)}
+  .dp-cal-cell:not(.has-slots){display:none}
+  .dp-slot{padding:8px}
+  .dp-slot-actions button{font-size:10.5px;padding:6px 9px}
 
   /* Sidebar overlay */
   .sb{
@@ -9193,7 +9229,7 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
 
 /* ═══════════════════════════════════════════════════════════════
    DISPONIBILIDADE PREGAÇÃO v1.0 — Supabase · CRUD
-   Tabela: disponibilidade_pregacao
+   Tabela real: escala_pregacao
    Integra com: pastores, escala_pregacao (via ep_getPastores)
 ═══════════════════════════════════════════════════════════════ */
 (function () {
@@ -9204,13 +9240,11 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
     conexao_com_deus:  {label:"Conexão com Deus",   ico:"🙏",  cor:"#2ab5c0"},
     tarde_da_esperanca:{label:"Tarde da Esperança", ico:"✝️",  cor:"#d4a843"},
   };
-  const _STATUS = {
-    ENVIADA:    {label:"Enviada",    bg:"rgba(74,156,245,.15)",   cl:"#4a9cf5"},
-    EDITADA:    {label:"Editada",    bg:"rgba(212,168,67,.15)",   cl:"#d4a843"},
-    CONFIRMADA: {label:"Confirmada", bg:"rgba(58,170,92,.15)",    cl:"#3aaa5c"},
-    EXPIRADA:   {label:"Expirada",   bg:"rgba(136,136,136,.15)",  cl:"#888"},
-    CANCELADA:  {label:"Cancelada",  bg:"rgba(208,104,104,.15)",  cl:"#d06868"},
-  };
+	  const _STATUS = {
+	    PENDENTE:   {label:"Sem resposta", bg:"rgba(212,168,67,.15)",   cl:"#d4a843"},
+	    PREENCHIDA: {label:"Disponível",   bg:"rgba(58,170,92,.15)",    cl:"#3aaa5c"},
+	    CONFIRMADA: {label:"Confirmada",   bg:"rgba(74,156,245,.15)",   cl:"#4a9cf5"},
+	  };
 
   /* ── Estado ───────────────────────────────────────────────────── */
   const _st = {
@@ -9218,7 +9252,7 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
     tab: "minha",
     pastorFiltro: "",
   };
-  let _disps = []; // array de registros da tabela
+	  let _disps = []; // registros derivados de escala_pregacao
   let _loaded = false;
 
   /* ── Helpers ──────────────────────────────────────────────────── */
@@ -9246,48 +9280,134 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
     const m=new Map();
     _disps.forEach(r=>m.set(_dispKey(r.pastor_id,r.data,r.culto_tipo),r));
     return m;
-  }
-  function _statusPill(s){
-    const cfg=_STATUS[s]||_STATUS.ENVIADA;
-    return `<span style="font-size:9px;padding:2px 7px;border-radius:8px;font-weight:700;background:${cfg.bg};color:${cfg.cl}">${cfg.label}</span>`;
-  }
+	  }
+	  function _statusPill(s){
+	    const cfg=_STATUS[s]||_STATUS.PENDENTE;
+	    return `<span style="font-size:9px;padding:2px 7px;border-radius:8px;font-weight:700;background:${cfg.bg};color:${cfg.cl}">${cfg.label}</span>`;
+	  }
+	  function _eh(v){ return typeof escapeHtml==="function" ? escapeHtml(v) : String(v ?? ""); }
+	  function _ea(v){ return typeof escapeHtmlAttr==="function" ? escapeHtmlAttr(v) : _eh(v); }
+	  function _erroAmigavel(status, detalhe){
+	    const txt=String(detalhe||"");
+	    if(status===404||txt.includes("PGRST205")||txt.includes("schema cache")){
+	      return "A estrutura de disponibilidade não foi encontrada no Supabase. A tela foi ajustada para usar a Escala de Pregação; atualize a página e tente novamente.";
+	    }
+	    return txt||`Erro HTTP ${status}`;
+	  }
+	  function _inferPastorAtualId(){
+	    const nome=(typeof USUARIO_ATUAL!=="undefined" ? (USUARIO_ATUAL?.nome||"") : "").toLowerCase().trim();
+	    if(!nome) return "";
+	    const first=nome.split(/\s+/)[0];
+	    const ps=_getPastores().filter(p=>p.ativo!==false);
+	    const found=ps.find(p=>(p.nome_completo||"").toLowerCase()===nome)||
+	                ps.find(p=>(p.nome_completo||"").toLowerCase().includes(nome))||
+	                ps.find(p=>first&&(p.nome_completo||"").toLowerCase().includes(first));
+	    return found?.id||"";
+	  }
+	  function _estadoDisp(reg){
+	    if(!reg) return {key:"pendente",label:"Sem resposta",bg:"rgba(212,168,67,.15)",cl:"#d4a843"};
+	    if(reg.disponivel&&reg.pastor_id) return {key:"disponivel",label:"Disponível",bg:"rgba(58,170,92,.15)",cl:"#3aaa5c"};
+	    return {key:"indisponivel",label:"Indisponível",bg:"rgba(208,104,104,.15)",cl:"#d06868"};
+	  }
+	  function _slotCard(pastorId, ds, tipo, reg, isFuture){
+	    const t=_TIPO[tipo]||_TIPO.domingo_manha;
+	    const estado=_estadoDisp(reg);
+	    const obs=reg?.observacoes||"";
+	    let h=`<div class="dp-slot is-${estado.key}" style="border-left-color:${estado.key==="pendente"?t.cor:""}">`;
+	    h+=`<div class="dp-slot-top"><div class="dp-slot-title" style="color:${t.cor}">${_eh(t.ico)} ${_eh(t.label)}</div><span class="dp-slot-state" style="background:${estado.bg};color:${estado.cl}">${_eh(estado.label)}</span></div>`;
+	    if(obs) h+=`<div class="dp-slot-obs" title="${_ea(obs)}">${_eh(obs)}</div>`;
+	    h+=`<div class="dp-slot-actions">`;
+	    if(isFuture){
+	      if(estado.key!=="disponivel") h+=`<button class="ok" onclick="dp_marcarDisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}',true)">Estou disponível</button>`;
+	      if(estado.key==="disponivel"&&reg?.id) h+=`<button class="edit" onclick="dp_editarDisp('${_ea(reg.id)}')">Editar</button>`;
+	      if(estado.key!=="indisponivel") h+=`<button class="no" onclick="dp_marcarIndisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}')">Indisponível</button>`;
+	      if(estado.key==="indisponivel"&&reg?.id) h+=`<button class="edit" onclick="dp_editarDisp('${_ea(reg.id)}')">Editar</button>`;
+	    } else {
+	      h+=`<span style="font-size:9.5px;color:var(--tx3)">${_eh(estado.label)}</span>`;
+	    }
+	    h+=`</div></div>`;
+	    return h;
+	  }
 
-  /* ── API Supabase ─────────────────────────────────────────────── */
-  async function _loadDisps(){
-    try {
-      const r=await fetch(`${apiBaseUrl()}/rest/v1/disponibilidade_pregacao?select=*&order=data.asc,culto_tipo.asc&limit=5000`,{headers:apiHeaders()});
-      if(r.ok){ const d=await r.json(); if(Array.isArray(d)) _disps=d; }
-      else console.warn("dp_: HTTP",r.status);
-    } catch(e){ console.warn("dp_: erro de rede",e); }
-    _loaded=true;
-    _renderAll();
-    _atualizarKpis();
-  }
+	  /* ── API Supabase ─────────────────────────────────────────────── */
+	  async function _loadDisps(){
+	    try {
+	      const r=await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao?select=*&order=data.asc,culto_tipo.asc&limit=5000`,{headers:apiHeaders()});
+	      if(r.ok){
+	        const d=await r.json();
+	        if(Array.isArray(d)) _disps=d.map(row=>({
+	          id:row.id,
+	          pastor_id:row.pastor_id||"",
+	          data:row.data,
+	          culto_tipo:row.culto_tipo,
+	          disponivel:!!row.pastor_id,
+	          observacoes:row.observacoes||"",
+	          status:row.status||"PENDENTE",
+	          local:row.local||"Templo Principal",
+	          origem:row.origem||"manual"
+	        }));
+	      }
+	      else {
+	        const err=await r.text().catch(()=>"");
+	        console.warn("dp_: escala_pregacao HTTP",r.status,err);
+	        T("Disponibilidade Pregação",`Não foi possível carregar a escala de pregação (${r.status}).`);
+	      }
+	    } catch(e){ console.warn("dp_: erro de rede",e); T("Erro de rede",e.message); }
+	    _loaded=true;
+	    _renderAll();
+	    _atualizarKpis();
+	  }
 
-  async function _upsert(payload){
-    const {pastor_id,data,culto_tipo}=payload;
-    const existing=_disps.find(r=>r.pastor_id===pastor_id&&r.data===data&&r.culto_tipo===culto_tipo);
-    try {
-      if(existing){
-        const r=await fetch(`${apiBaseUrl()}/rest/v1/disponibilidade_pregacao?id=eq.${existing.id}`,{method:"PATCH",headers:apiHeaders({"Prefer":"return=representation"}),body:JSON.stringify({...payload,updated_at:new Date().toISOString(),status:"EDITADA"})});
-        if(r.ok){ const d=await r.json(); if(Array.isArray(d)&&d[0]){ const idx=_disps.findIndex(x=>x.id===existing.id); if(idx>=0) _disps[idx]=d[0]; } }
-        else { const e=await r.text(); T("Erro ao atualizar",e); return false; }
-      } else {
-        const r=await fetch(`${apiBaseUrl()}/rest/v1/disponibilidade_pregacao`,{method:"POST",headers:apiHeaders({"Prefer":"return=representation"}),body:JSON.stringify({...payload,status:"ENVIADA",created_at:new Date().toISOString(),updated_at:new Date().toISOString()})});
-        if(r.ok){ const d=await r.json(); if(Array.isArray(d)&&d[0]) _disps.push(d[0]); }
-        else { const e=await r.text(); T("Erro ao salvar",e); return false; }
-      }
-    } catch(e){ T("Erro de rede",e.message); return false; }
-    return true;
-  }
+	  async function _upsert(payload){
+	    const {pastor_id,data,culto_tipo}=payload;
+	    const existing=_disps.find(r=>r.data===data&&r.culto_tipo===culto_tipo);
+	    const escalaPayload={
+	      pastor_id:payload.disponivel ? pastor_id : null,
+	      local:payload.local||existing?.local||"Templo Principal",
+	      observacoes:payload.observacoes||"",
+	      status:payload.disponivel ? (payload.status==="CONFIRMADA"?"CONFIRMADA":"PREENCHIDA") : "PENDENTE",
+	      origem:payload.origem||existing?.origem||"manual"
+	    };
+	    try {
+	      if(existing){
+	        const r=await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao?id=eq.${existing.id}`,{method:"PATCH",headers:apiHeaders({"Prefer":"return=representation"}),body:JSON.stringify(escalaPayload)});
+	        if(r.ok){
+	          const d=await r.json();
+	          if(Array.isArray(d)&&d[0]){
+	            const row=d[0];
+	            const idx=_disps.findIndex(x=>x.id===existing.id);
+	            const next={id:row.id,pastor_id:row.pastor_id||"",data:row.data,culto_tipo:row.culto_tipo,disponivel:!!row.pastor_id,observacoes:row.observacoes||"",status:row.status||"PENDENTE",local:row.local||"Templo Principal",origem:row.origem||"manual"};
+	            if(idx>=0) _disps[idx]=next;
+	          }
+	        }
+	        else { const e=await r.text(); T("Erro ao salvar disponibilidade",_erroAmigavel(r.status,e)); return false; }
+	      } else {
+	        const r=await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao`,{method:"POST",headers:apiHeaders({"Prefer":"return=representation"}),body:JSON.stringify({data,culto_tipo,...escalaPayload})});
+	        if(r.ok){
+	          const d=await r.json();
+	          if(Array.isArray(d)&&d[0]){
+	            const row=d[0];
+	            _disps.push({id:row.id,pastor_id:row.pastor_id||"",data:row.data,culto_tipo:row.culto_tipo,disponivel:!!row.pastor_id,observacoes:row.observacoes||"",status:row.status||"PENDENTE",local:row.local||"Templo Principal",origem:row.origem||"manual"});
+	          }
+	        }
+	        else { const e=await r.text(); T("Erro ao salvar disponibilidade",_erroAmigavel(r.status,e)); return false; }
+	      }
+	    } catch(e){ T("Erro de rede",e.message); return false; }
+	    return true;
+	  }
 
-  async function _delete(id){
-    try {
-      const r=await fetch(`${apiBaseUrl()}/rest/v1/disponibilidade_pregacao?id=eq.${id}`,{method:"DELETE",headers:apiHeaders({"Prefer":"return=minimal"})});
-      if(r.ok) _disps=_disps.filter(x=>x.id!==id);
-      else { const e=await r.text(); T("Erro ao remover",e); }
-    } catch(e){ T("Erro de rede",e.message); }
-  }
+	  async function _delete(id){
+	    try {
+	      const r=await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao?id=eq.${id}`,{method:"PATCH",headers:apiHeaders({"Prefer":"return=representation"}),body:JSON.stringify({pastor_id:null,status:"PENDENTE",observacoes:""})});
+	      if(r.ok){
+	        const d=await r.json();
+	        const row=Array.isArray(d)?d[0]:d;
+	        const idx=_disps.findIndex(x=>x.id===id);
+	        if(row&&idx>=0) _disps[idx]={..._disps[idx],pastor_id:"",disponivel:false,status:row.status||"PENDENTE",observacoes:row.observacoes||""};
+	      }
+	      else { const e=await r.text(); T("Erro ao remover",_erroAmigavel(r.status,e)); }
+	    } catch(e){ T("Erro de rede",e.message); }
+	  }
 
   /* ── KPIs ─────────────────────────────────────────────────────── */
   function _atualizarKpis(){
@@ -9296,77 +9416,72 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
     const sv=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
     sv("dp-kpi-enviadas", deMes.length);
     sv("dp-kpi-confirmadas", deMes.filter(r=>r.status==="CONFIRMADA").length);
-    sv("dp-kpi-pendentes", deMes.filter(r=>r.status==="ENVIADA"||r.status==="EDITADA").length);
+	    sv("dp-kpi-pendentes", deMes.filter(r=>!r.pastor_id||r.status==="PENDENTE").length);
     const hoje=new Date(), lim=new Date(hoje.getTime()+60*24*60*60*1000);
     const limisoHoje=_iso(hoje), limisoLim=_iso(lim);
     sv("dp-kpi-escala", _disps.filter(r=>r.data>=limisoHoje&&r.data<=limisoLim).length);
   }
 
-  /* ── Render: Tab Minha ───────────────────────────────────────── */
-  function _renderMinha(){
-    const lbl=document.getElementById("dp-mes-label");
-    if(lbl) lbl.textContent=_fmtMes(_st.mes).charAt(0).toUpperCase()+_fmtMes(_st.mes).slice(1);
+	  /* ── Render: Tab Minha ───────────────────────────────────────── */
+	  function _renderMinha(){
+	    const lbl=document.getElementById("dp-mes-label");
+	    if(lbl) lbl.textContent=_fmtMes(_st.mes).charAt(0).toUpperCase()+_fmtMes(_st.mes).slice(1);
 
-    // Popular select de pastores
-    const sel=document.getElementById("dp-pastor-sel");
-    if(sel){
-      const pastores=_getPastores().filter(p=>p.ativo!==false);
-      let pOpts=`<option value="">Minha disponibilidade</option>`;
-      if(_isAdmin()) pastores.forEach(p=>{pOpts+=`<option value="${p.id}">${p.nome_exibicao||p.nome_completo}</option>`;});
-      if(sel.innerHTML!==pOpts) sel.innerHTML=pOpts;
-    }
+	    const sel=document.getElementById("dp-pastor-sel");
+	    const inferredPastorId=_inferPastorAtualId();
+	    if(sel){
+	      const pastores=_getPastores().filter(p=>p.ativo!==false);
+	      const current=sel.value||_st.pastorFiltro||inferredPastorId||"";
+	      let pOpts=`<option value="${_ea(inferredPastorId)}">Minha disponibilidade</option>`;
+	      if(_isAdmin()) pastores.forEach(p=>{pOpts+=`<option value="${_ea(p.id)}">${_eh(p.nome_exibicao||p.nome_completo)}</option>`;});
+	      if(sel.innerHTML!==pOpts){
+	        sel.innerHTML=pOpts;
+	        if([...sel.options].some(o=>o.value===current)) sel.value=current;
+	      }
+	      _st.pastorFiltro=sel.value||"";
+	    }
 
-    const grade=document.getElementById("dp-grade"); if(!grade) return;
-    const pastorId=sel?.value||"";
-    const slots=_slotsDoMes(_st.mes);
-    const map=_dispMap();
+	    const grade=document.getElementById("dp-grade"); if(!grade) return;
+	    const pastorId=sel?.value||inferredPastorId||"";
+	    const slots=_slotsDoMes(_st.mes);
+	    const map=_dispMap();
 
-    if(!slots.length){ grade.innerHTML=`<div style="color:var(--tx3);font-size:11.5px;padding:20px 0">Nenhum culto neste mês.</div>`; return; }
+	    const porData={};
+	    slots.forEach(s=>{if(!porData[s.ds]) porData[s.ds]=[];porData[s.ds].push(s.tipo);});
 
-    // Agrupar slots por data
-    const porData={};
-    slots.forEach(s=>{if(!porData[s.ds]) porData[s.ds]=[];porData[s.ds].push(s.tipo);});
-
-    const hoje=_iso(new Date());
-    let h=`<div style="display:flex;flex-direction:column;gap:8px">`;
-    Object.keys(porData).sort().forEach(ds=>{
-      const dtFmt=new Date(ds+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long"});
-      const isToday=ds===hoje;
-      const isFuture=ds>=hoje;
-      h+=`<div style="border:1px solid ${isToday?"var(--teal)":"var(--bd2)"};border-radius:8px;overflow:hidden">`;
-      h+=`<div style="padding:10px 14px;background:${isToday?"rgba(58,176,184,0.06)":"var(--bg-card)"};border-bottom:1px solid var(--bd1);display:flex;align-items:center;gap:8px">`;
-      h+=`<span style="font-size:11.5px;font-weight:700;color:${isToday?"var(--teal)":"var(--tx1)"};text-transform:capitalize;flex:1">${dtFmt}</span>`;
-      if(isToday) h+=`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:rgba(58,176,184,0.15);color:var(--teal);font-weight:700">Hoje</span>`;
-      h+=`</div>`;
-      h+=`<div style="padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px">`;
-      porData[ds].forEach(tipo=>{
-        const t=_TIPO[tipo];
-        const key=_dispKey(pastorId||"__self",ds,tipo);
-        const reg=map.get(_dispKey(pastorId,ds,tipo));
-        const marcado=reg&&reg.disponivel;
-        const statusPill=reg?_statusPill(reg.status):"";
-        const obs=reg?.observacoes||"";
-        h+=`<div style="flex:1;min-width:170px;border:1px solid ${marcado?"rgba(58,170,92,0.35)":"var(--bd2)"};border-radius:7px;padding:8px 12px;background:${marcado?"rgba(58,170,92,0.05)":"var(--bg-surface)"};display:flex;flex-direction:column;gap:4px">`;
-        h+=`<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="font-size:10.5px;color:${t.cor};font-weight:700">${t.ico} ${t.label}</span>${statusPill}</div>`;
-        if(obs) h+=`<div style="font-size:10px;color:var(--tx3)">${obs}</div>`;
-        h+=`<div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">`;
-        if(isFuture){
-          if(!marcado){
-            h+=`<button onclick="dp_marcarDisp('${pastorId}','${ds}','${tipo}',true)" style="padding:4px 12px;background:var(--teal);border:none;border-radius:5px;color:#fff;font-size:10px;cursor:pointer;font-weight:600">Estou disponível</button>`;
-          } else {
-            h+=`<button onclick="dp_editarDisp('${reg.id}')" style="padding:4px 10px;background:none;border:1px solid var(--bd2);border-radius:5px;color:var(--tx2);font-size:10px;cursor:pointer">✏ Editar</button>`;
-            h+=`<button onclick="dp_cancelarDisp('${reg.id}')" style="padding:4px 10px;background:none;border:1px solid rgba(208,104,104,0.4);border-radius:5px;color:#d06868;font-size:10px;cursor:pointer">✕ Cancelar</button>`;
-          }
-        } else {
-          h+=`<span style="font-size:9.5px;color:var(--tx3)">${marcado?"✅ Disponível registrado":"— sem registro"}</span>`;
-        }
-        h+=`</div></div>`;
-      });
-      h+=`</div></div>`;
-    });
-    h+=`</div>`;
-    grade.innerHTML=h;
-  }
+	    const hoje=_iso(new Date());
+	    const ano=_st.mes.getFullYear(), mes=_st.mes.getMonth();
+	    const lastDay=new Date(ano,mes+1,0).getDate(), firstDow=new Date(ano,mes,1).getDay();
+	    const DIAS=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+	    let h=`<div class="dp-cal">`;
+	    h+=`<div class="dp-cal-head">`;
+	    DIAS.forEach((d,i)=>{h+=`<div class="dp-cal-dow" style="color:${i===0||i===6?'var(--tx2)':'var(--tx3)'}">${d}</div>`;});
+	    h+=`</div><div class="dp-cal-grid">`;
+	    for(let i=0;i<firstDow;i++) h+=`<div class="dp-cal-empty"></div>`;
+	    for(let day=1;day<=lastDay;day++){
+	      const ds=`${ano}-${String(mes+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+	      const dow=(firstDow+day-1)%7;
+	      const daySlots=porData[ds]||[];
+	      const classes=["dp-cal-cell"];
+	      if(dow===0||dow===6) classes.push("is-weekend");
+	      if(ds===hoje) classes.push("is-today");
+	      if(daySlots.length) classes.push("has-slots");
+	      const dtFmt=new Date(ds+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long"});
+	      h+=`<div class="${classes.join(" ")}" title="${_ea(dtFmt)}">`;
+	      h+=`<span class="dp-cal-day">${day}</span>`;
+	      daySlots.forEach(tipo=>{
+	        const reg=pastorId ? map.get(_dispKey(pastorId,ds,tipo)) : null;
+	        h+=_slotCard(pastorId,ds,tipo,reg,ds>=hoje);
+	      });
+	      h+=`</div>`;
+	    }
+	    const trail=(firstDow+lastDay)%7;
+	    if(trail>0) for(let i=0;i<7-trail;i++) h+=`<div class="dp-cal-empty"></div>`;
+	    h+=`</div></div>`;
+	    if(!slots.length) h+=`<div class="dp-cal-note">Nenhuma oportunidade de pregação neste mês.</div>`;
+	    if(!pastorId) h+=`<div class="dp-cal-note">Selecione um pastor para visualizar respostas salvas neste calendário.</div>`;
+	    grade.innerHTML=h;
+	  }
 
   /* ── Render: Tab Admin ───────────────────────────────────────── */
   function _renderAdmin(){
@@ -9383,10 +9498,10 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
     const naoEnviaram=pastores.filter(p=>!enviaram.has(p.id));
 
     let h="";
-    if(naoEnviaram.length){
-      h+=`<div style="background:rgba(208,104,104,0.08);border:1px solid rgba(208,104,104,0.25);border-radius:7px;padding:10px 14px;font-size:11px;color:#d06868;margin-bottom:12px">`;
-      h+=`⚠ <strong>${naoEnviaram.length} pastor${naoEnviaram.length>1?"es":""} sem disponibilidade neste mês:</strong> ${naoEnviaram.map(p=>p.nome_exibicao||p.nome_completo).join(", ")}</div>`;
-    }
+	    if(naoEnviaram.length){
+	      h+=`<div style="background:rgba(208,104,104,0.08);border:1px solid rgba(208,104,104,0.25);border-radius:7px;padding:10px 14px;font-size:11px;color:#d06868;margin-bottom:12px">`;
+	      h+=`⚠ <strong>${naoEnviaram.length} pastor${naoEnviaram.length>1?"es":""} sem disponibilidade neste mês:</strong> ${naoEnviaram.map(p=>_eh(p.nome_exibicao||p.nome_completo)).join(", ")}</div>`;
+	    }
 
     // Tabela por slot
     const porData={};
@@ -9398,7 +9513,7 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
       const dispsNaData=_disps.filter(r=>r.data===ds&&(!fPastor||r.pastor_id===fPastor)&&(!fCulto||r.culto_tipo===fCulto));
       if(fPastor&&!dispsNaData.length) return;
       h+=`<div style="border:1px solid var(--bd2);border-radius:7px;overflow:hidden">`;
-      h+=`<div style="padding:9px 14px;background:var(--bg-card);border-bottom:1px solid var(--bd1);display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:700;color:var(--tx1);text-transform:capitalize;flex:1">${dtFmt}</span>`;
+	      h+=`<div style="padding:9px 14px;background:var(--bg-card);border-bottom:1px solid var(--bd1);display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:700;color:var(--tx1);text-transform:capitalize;flex:1">${_eh(dtFmt)}</span>`;
       if(!dispsNaData.length) h+=`<span style="font-size:9.5px;color:var(--rose)">⚠ sem disponibilidade</span>`;
       h+=`</div><div style="padding:10px 14px">`;
       (fCulto?[fCulto]:Object.keys(_TIPO)).forEach(tipo=>{
@@ -9409,10 +9524,10 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
         h+=`<span style="font-size:10.5px;color:${t.cor};font-weight:700;min-width:140px">${t.ico} ${t.label}</span>`;
         if(dispsTipo.length){
           h+=`<div style="display:flex;flex-wrap:wrap;gap:4px">`;
-          dispsTipo.forEach(r=>{
-            const nomeP=_nomePastor(r.pastor_id);
-            h+=`<span style="font-size:10px;padding:2px 9px;border-radius:8px;background:rgba(58,170,92,0.12);color:var(--gmd);border:1px solid rgba(58,170,92,0.2)" title="${r.observacoes||""}">✅ ${nomeP}${r.observacoes?` · ${r.observacoes}`:""}</span>`;
-          });
+	          dispsTipo.forEach(r=>{
+	            const nomeP=_nomePastor(r.pastor_id);
+	            h+=`<span style="font-size:10px;padding:2px 9px;border-radius:8px;background:rgba(58,170,92,0.12);color:var(--gmd);border:1px solid rgba(58,170,92,0.2)" title="${_ea(r.observacoes||"")}">✅ ${_eh(nomeP)}${r.observacoes?` · ${_eh(r.observacoes)}`:""}</span>`;
+	          });
           h+=`</div>`;
         } else {
           h+=`<span style="font-size:10px;color:var(--tx3)">— sem disponibilidade informada</span>`;
@@ -9435,14 +9550,14 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
     let h=`<div style="font-family:var(--sans);font-size:11.5px;display:flex;flex-direction:column;gap:10px">`;
     Object.keys(porData).sort().forEach(ds=>{
       const dtFmt=new Date(ds+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"});
-      h+=`<div class="card"><div class="ctit" style="text-transform:capitalize">${dtFmt}</div>`;
+	      h+=`<div class="card"><div class="ctit" style="text-transform:capitalize">${_eh(dtFmt)}</div>`;
       porData[ds].forEach(tipo=>{
         const t=_TIPO[tipo];
         const dispsTipo=_disps.filter(r=>r.data===ds&&r.culto_tipo===tipo&&r.disponivel);
         h+=`<div style="margin-bottom:8px"><div style="font-size:10.5px;font-weight:700;color:${t.cor};margin-bottom:4px">${t.ico} ${t.label}</div>`;
         if(dispsTipo.length){
           h+=`<div style="display:flex;flex-wrap:wrap;gap:4px">`;
-          dispsTipo.forEach(r=>{h+=`<span style="font-size:10.5px;padding:3px 10px;background:rgba(58,170,92,0.10);border:1px solid rgba(58,170,92,0.2);border-radius:6px;color:var(--gmd)">✅ ${_nomePastor(r.pastor_id)}</span>`;});
+	          dispsTipo.forEach(r=>{h+=`<span style="font-size:10.5px;padding:3px 10px;background:rgba(58,170,92,0.10);border:1px solid rgba(58,170,92,0.2);border-radius:6px;color:var(--gmd)">✅ ${_eh(_nomePastor(r.pastor_id))}</span>`;});
           h+=`</div>`;
         } else {
           h+=`<span style="color:var(--tx3);font-size:10px">Nenhum pastor informou disponibilidade.</span>`;
@@ -9476,7 +9591,7 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
     ["dp-admin-mes","dp-rel-mes"].forEach(sid=>{
       const s=document.getElementById(sid); if(!s) return;
       if(s.options.length===meses.length) return;
-      s.innerHTML=meses.map(m=>`<option value="${m.k}"${m.k===curMk?" selected":""}>${m.lbl.charAt(0).toUpperCase()+m.lbl.slice(1)}</option>`).join("");
+	      s.innerHTML=meses.map(m=>`<option value="${_ea(m.k)}"${m.k===curMk?" selected":""}>${_eh(m.lbl.charAt(0).toUpperCase()+m.lbl.slice(1))}</option>`).join("");
     });
   }
 
@@ -9485,31 +9600,31 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
     const pastores=_getPastores().filter(p=>p.ativo!==false);
     if(s.options.length===pastores.length+1) return;
     let opts=`<option value="">Todos os pastores</option>`;
-    pastores.forEach(p=>{opts+=`<option value="${p.id}">${p.nome_exibicao||p.nome_completo}</option>`;});
+	    pastores.forEach(p=>{opts+=`<option value="${_ea(p.id)}">${_eh(p.nome_exibicao||p.nome_completo)}</option>`;});
     s.innerHTML=opts;
   }
 
   /* ── Modal de disponibilidade ─────────────────────────────────── */
   function _openModal(pastor_id, data, culto_tipo, regId){
-    const modal=document.getElementById("dp-modal"); if(!modal) return;
-    const pastores=_getPastores().filter(p=>p.ativo!==false);
-    const reg=regId?_disps.find(r=>r.id===regId):null;
-    const pOpts=`<option value="">— Selecionar pastor —</option>`+pastores.map(p=>`<option value="${p.id}"${(pastor_id===p.id||reg?.pastor_id===p.id)?" selected":""}>${p.nome_completo}</option>`).join("");
-    const tipoOpts=Object.keys(_TIPO).map(k=>`<option value="${k}"${(culto_tipo===k||reg?.culto_tipo===k)?" selected":""}>${_TIPO[k].ico} ${_TIPO[k].label}</option>`).join("");
-    const dispVal=reg?reg.data:(data||"");
-    const statusOpts=Object.entries(_STATUS).map(([k,v])=>`<option value="${k}"${reg?.status===k?" selected":""}>${v.label}</option>`).join("");
-    const obsVal=(reg?.observacoes||"").replace(/"/g,"&quot;");
-    modal.innerHTML=`<div style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9990;display:flex;align-items:center;justify-content:center" onclick="if(event.target===this)dp_fecharModal()"><div style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;width:480px;max-width:94vw;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.4)"><div style="display:flex;align-items:center;gap:10px;margin-bottom:18px"><span style="font-size:20px">📅</span><div style="font-size:13px;font-weight:700;color:var(--teal)">${regId?"Editar Disponibilidade":"Nova Disponibilidade"}</div><button onclick="dp_fecharModal()" style="margin-left:auto;background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button></div><div style="display:flex;flex-direction:column;gap:12px"><div><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Pastor</label><select id="dp-m-pastor" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans)">${pOpts}</select></div><div style="display:flex;gap:10px"><div style="flex:1"><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Data</label><input id="dp-m-data" type="date" value="${dispVal}" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans);box-sizing:border-box"></div><div style="flex:1"><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Culto</label><select id="dp-m-culto" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans)">${tipoOpts}</select></div></div><div style="display:flex;gap:10px"><div style="flex:1"><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Status</label><select id="dp-m-status" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans)">${statusOpts}</select></div><div style="flex:1;display:flex;align-items:center;gap:8px;padding-top:18px"><input type="checkbox" id="dp-m-disp" ${!reg||reg.disponivel?"checked":""} style="width:14px;height:14px;accent-color:var(--teal)"><label for="dp-m-disp" style="font-size:12px;color:var(--tx2)">Disponível</label></div></div><div><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Observações</label><input id="dp-m-obs" type="text" value="${obsVal}" placeholder="Observações opcionais..." style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans);box-sizing:border-box"></div></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">${regId?`<button onclick="dp_removerDisp('${regId}')" style="padding:8px 14px;background:rgba(208,104,104,0.12);border:1px solid rgba(208,104,104,0.3);border-radius:6px;color:#d06868;font-size:12px;cursor:pointer;font-family:var(--sans);margin-right:auto">🗑 Remover</button>`:""}<button onclick="dp_fecharModal()" style="padding:8px 16px;background:var(--bg-surface);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:12px;cursor:pointer;font-family:var(--sans)">Cancelar</button><button onclick="dp_salvarModal('${regId||""}')" style="padding:8px 16px;background:var(--teal);border:none;border-radius:6px;color:#fff;font-size:12px;cursor:pointer;font-weight:600;font-family:var(--sans)">Salvar</button></div></div></div>`;
+	    const modal=document.getElementById("dp-modal"); if(!modal) return;
+	    const pastores=_getPastores().filter(p=>p.ativo!==false);
+	    const reg=regId?_disps.find(r=>r.id===regId):null;
+	    const pOpts=`<option value="">— Selecionar pastor —</option>`+pastores.map(p=>`<option value="${_ea(p.id)}"${(pastor_id===p.id||reg?.pastor_id===p.id)?" selected":""}>${_eh(p.nome_completo)}</option>`).join("");
+	    const tipoOpts=Object.keys(_TIPO).map(k=>`<option value="${_ea(k)}"${(culto_tipo===k||reg?.culto_tipo===k)?" selected":""}>${_eh(_TIPO[k].ico)} ${_eh(_TIPO[k].label)}</option>`).join("");
+	    const dispVal=reg?reg.data:(data||"");
+	    const statusOpts=Object.entries(_STATUS).map(([k,v])=>`<option value="${_ea(k)}"${reg?.status===k?" selected":""}>${_eh(v.label)}</option>`).join("");
+	    const obsVal=_ea(reg?.observacoes||"");
+	    modal.innerHTML=`<div style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9990;display:flex;align-items:center;justify-content:center" onclick="if(event.target===this)dp_fecharModal()"><div style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;width:480px;max-width:94vw;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.4)"><div style="display:flex;align-items:center;gap:10px;margin-bottom:18px"><span style="font-size:20px">📅</span><div style="font-size:13px;font-weight:700;color:var(--teal)">${regId?"Editar Disponibilidade":"Nova Disponibilidade"}</div><button onclick="dp_fecharModal()" style="margin-left:auto;background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button></div><div style="display:flex;flex-direction:column;gap:12px"><div><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Pastor</label><select id="dp-m-pastor" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans)">${pOpts}</select></div><div style="display:flex;gap:10px"><div style="flex:1"><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Data</label><input id="dp-m-data" type="date" value="${_ea(dispVal)}" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans);box-sizing:border-box"></div><div style="flex:1"><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Culto</label><select id="dp-m-culto" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans)">${tipoOpts}</select></div></div><div style="display:flex;gap:10px"><div style="flex:1"><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Status</label><select id="dp-m-status" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans)">${statusOpts}</select></div><div style="flex:1;display:flex;align-items:center;gap:8px;padding-top:18px"><input type="checkbox" id="dp-m-disp" ${!reg||reg.disponivel?"checked":""} style="width:14px;height:14px;accent-color:var(--teal)"><label for="dp-m-disp" style="font-size:12px;color:var(--tx2)">Disponível</label></div></div><div><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Observações</label><input id="dp-m-obs" type="text" value="${obsVal}" placeholder="Observações opcionais..." style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans);box-sizing:border-box"></div></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">${regId?`<button onclick="dp_removerDisp('${_ea(regId)}')" style="padding:8px 14px;background:rgba(208,104,104,0.12);border:1px solid rgba(208,104,104,0.3);border-radius:6px;color:#d06868;font-size:12px;cursor:pointer;font-family:var(--sans);margin-right:auto">🗑 Remover</button>`:""}<button onclick="dp_fecharModal()" style="padding:8px 16px;background:var(--bg-surface);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:12px;cursor:pointer;font-family:var(--sans)">Cancelar</button><button onclick="dp_salvarModal('${_ea(regId||"")}')" style="padding:8px 16px;background:var(--teal);border:none;border-radius:6px;color:#fff;font-size:12px;cursor:pointer;font-weight:600;font-family:var(--sans)">Salvar</button></div></div></div>`;
     modal.style.display="block";
   }
 
   /* ── API pública para Escala de Pregação ─────────────────────── */
-  window.dp_getDisponiveisIds = function(data, culto_tipo){
-    return _disps.filter(r=>r.data===data&&r.culto_tipo===culto_tipo&&r.disponivel&&r.status!=="CANCELADA"&&r.status!=="EXPIRADA").map(r=>r.pastor_id);
-  };
-  window.dp_getObsDisponiveis = function(data, culto_tipo){
-    return _disps.filter(r=>r.data===data&&r.culto_tipo===culto_tipo&&r.disponivel&&r.status!=="CANCELADA"&&r.status!=="EXPIRADA").map(r=>r.observacoes||"");
-  };
+	  window.dp_getDisponiveisIds = function(data, culto_tipo){
+	    return _disps.filter(r=>r.data===data&&r.culto_tipo===culto_tipo&&r.disponivel&&r.pastor_id).map(r=>r.pastor_id);
+	  };
+	  window.dp_getObsDisponiveis = function(data, culto_tipo){
+	    return _disps.filter(r=>r.data===data&&r.culto_tipo===culto_tipo&&r.disponivel&&r.pastor_id).map(r=>r.observacoes||"");
+	  };
 
   /* ── Funções públicas ─────────────────────────────────────────── */
   window.dp_setTab = function(tab){
@@ -9538,25 +9653,30 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
     const hoje=_iso(new Date());
     _openModal("",hoje,"domingo_manha",null);
   };
-  window.dp_marcarDisp = function(pastor_id, data, culto_tipo, disponivel){
-    _openModal(pastor_id,data,culto_tipo,null);
-  };
-  window.dp_editarDisp = function(id){
-    const reg=_disps.find(r=>r.id===id); if(!reg) return;
-    _openModal(reg.pastor_id,reg.data,reg.culto_tipo,id);
-  };
+	  window.dp_marcarDisp = function(pastor_id, data, culto_tipo, disponivel){
+	    _openModal(pastor_id,data,culto_tipo,null);
+	  };
+	  window.dp_marcarIndisp = async function(pastor_id, data, culto_tipo){
+	    if(!pastor_id){ _openModal("",data,culto_tipo,null); return; }
+	    const ok=await _upsert({pastor_id,data,culto_tipo,disponivel:false,status:"PENDENTE",observacoes:""});
+	    if(ok){ _renderAll(); _atualizarKpis(); }
+	  };
+	  window.dp_editarDisp = function(id){
+	    const reg=_disps.find(r=>r.id===id); if(!reg) return;
+	    _openModal(reg.pastor_id,reg.data,reg.culto_tipo,id);
+	  };
   window.dp_cancelarDisp = async function(id){
     if(!confirm("Cancelar disponibilidade?")) return;
     const idx=_disps.findIndex(r=>r.id===id); if(idx<0) return;
     const r=_disps[idx];
-    const ok=await _upsert({pastor_id:r.pastor_id,data:r.data,culto_tipo:r.culto_tipo,disponivel:false,status:"CANCELADA",observacoes:r.observacoes});
-    if(ok){ _disps[idx]={..._disps[idx],status:"CANCELADA",disponivel:false}; _renderAll(); _atualizarKpis(); }
+    const ok=await _upsert({pastor_id:r.pastor_id,data:r.data,culto_tipo:r.culto_tipo,disponivel:false,status:"PENDENTE",observacoes:r.observacoes});
+    if(ok){ _disps[idx]={..._disps[idx],status:"PENDENTE",pastor_id:"",disponivel:false}; _renderAll(); _atualizarKpis(); }
   };
-  window.dp_removerDisp = async function(id){
-    if(!confirm("Remover esta disponibilidade permanentemente?")) return;
-    await _delete(id);
-    dp_fecharModal();
-    _renderAll(); _atualizarKpis();
+	  window.dp_removerDisp = async function(id){
+	    if(!confirm("Limpar esta disponibilidade da escala?")) return;
+	    await _delete(id);
+	    dp_fecharModal();
+	    _renderAll(); _atualizarKpis();
   };
   window.dp_fecharModal = function(){
     const m=document.getElementById("dp-modal"); if(m){m.innerHTML="";m.style.display="none";}
@@ -9565,13 +9685,13 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
     const pastor_id=document.getElementById("dp-m-pastor")?.value||"";
     const data=document.getElementById("dp-m-data")?.value||"";
     const culto_tipo=document.getElementById("dp-m-culto")?.value||"";
-    const status=document.getElementById("dp-m-status")?.value||"ENVIADA";
+	    const status=document.getElementById("dp-m-status")?.value||"PREENCHIDA";
     const disponivel=document.getElementById("dp-m-disp")?.checked??true;
     const observacoes=document.getElementById("dp-m-obs")?.value||"";
     if(!pastor_id){alert("Selecione um pastor.");return;}
     if(!data){alert("Informe a data.");return;}
     if(!culto_tipo){alert("Selecione o culto.");return;}
-    const ok=await _upsert({pastor_id,data,culto_tipo,disponivel,observacoes,status:regId?status:"ENVIADA"});
+	    const ok=await _upsert({pastor_id,data,culto_tipo,disponivel,observacoes,status:disponivel?status:"PENDENTE"});
     if(ok){ dp_fecharModal(); _renderAll(); _atualizarKpis(); }
   };
   window.dp_exportar = function(){
