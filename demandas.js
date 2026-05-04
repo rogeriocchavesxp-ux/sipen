@@ -814,7 +814,7 @@
             <div class="ctit">Alterar Status</div>
             <div style="font-size:11px;color:var(--tx3);margin-bottom:10px">Status atual: ${pillStatus(dem.status)}</div>
             <div style="display:flex;flex-direction:column;gap:6px" id="dem-status-btns-${id}">
-              ${["Aberta","Em Análise","Em Andamento","Concluída","Cancelada"].map(st => `
+              ${[["Aberta","Aberta"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],["Concluída","Concluída"],["Cancelada","Cancelada"]].map(([st, label]) => `
                 <button
                   data-demid="${id}"
                   data-status="${st}"
@@ -822,7 +822,7 @@
                   style="text-align:left;padding:9px 14px;border-radius:6px;border:1px solid ${dem.status===st?"var(--gr)":"var(--bd2)"};background:${dem.status===st?"rgba(58,170,92,.1)":"var(--bg-card)"};color:${dem.status===st?"var(--gr)":"var(--tx1)"};font-size:12px;font-weight:${dem.status===st?"700":"400"};cursor:pointer;transition:all .15s"
                   onmouseover="this.style.background=this.dataset.status==='${dem.status}'?'rgba(58,170,92,.1)':'var(--bg-hover)'"
                   onmouseout="this.style.background=this.dataset.status==='${dem.status}'?'rgba(58,170,92,.1)':'var(--bg-card)'">
-                  ${dem.status===st?"✓ ":"○ "} ${st}
+                  ${dem.status===st?"✓ ":"○ "} ${label}
                 </button>`).join("")}
             </div>
           </div>
