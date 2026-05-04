@@ -381,6 +381,43 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 .kpi-d{font-size:10.5px;display:flex;align-items:center;gap:3px;font-weight:500;margin-top:4px}
 .up{color:#3dc970}.dn{color:var(--rose)}.wa{color:var(--amber)}.nu{color:var(--tx3)}
 
+#v-admin-parking-controls .ce-kpis{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  margin-bottom:10px;
+}
+#v-admin-parking-controls .ce-kpi{
+  min-height:54px;
+  padding:10px 12px;
+  border-radius:8px;
+  gap:10px;
+}
+#v-admin-parking-controls .ce-kpi .kpi-ico{
+  width:34px;
+  height:34px;
+  border-radius:8px;
+  font-size:15px;
+}
+#v-admin-parking-controls .ce-kpi .kpi-lbl{
+  margin-bottom:2px;
+  font-size:9.5px;
+  letter-spacing:.08em;
+}
+#v-admin-parking-controls .ce-kpi .kpi-val{
+  font-size:20px;
+}
+#v-admin-parking-controls .ce-kpi .kpi-d{
+  margin-top:2px;
+  font-size:10px;
+}
+@media(max-width:900px){
+  #v-admin-parking-controls .ce-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:560px){
+  #v-admin-parking-controls .ce-kpis{grid-template-columns:1fr}
+}
+
 /* ═══ CARD ══════════════════════════ */
 .card{
   background:var(--bg-card);
@@ -2659,11 +2696,11 @@ body.dem-admin [data-demanda-admin] { display: block !important; }
       <div class="hero-act"><button class="tbt pri" onclick="ceAbrirModal()">+ Novo Controle</button></div>
     </div>
     <div class="ct">
-      <div class="g4">
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(201,168,76,.15);color:var(--gold)">▣</div><div class="kpi-body"><div class="kpi-lbl">Total</div><div class="kpi-val" id="ce-kpi-total">0</div><div class="kpi-d nu">cadastrados</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,.15);color:var(--blue)">◆</div><div class="kpi-body"><div class="kpi-lbl">Disponíveis</div><div class="kpi-val" id="ce-kpi-disponiveis">0</div><div class="kpi-d">em estoque</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,.15);color:var(--gr)">✓</div><div class="kpi-body"><div class="kpi-lbl">Entregues</div><div class="kpi-val" id="ce-kpi-entregues">0</div><div class="kpi-d ok">com membro</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,85,85,.12);color:var(--rose)">!</div><div class="kpi-body"><div class="kpi-lbl">Perdidos/Bloqueados</div><div class="kpi-val" id="ce-kpi-alertas">0</div><div class="kpi-d wa">atenção</div></div></div>
+      <div class="ce-kpis">
+        <div class="kpi ce-kpi"><div class="kpi-ico" style="background:rgba(201,168,76,.15);color:var(--gold)">▣</div><div class="kpi-body"><div class="kpi-lbl">Total</div><div class="kpi-val" id="ce-kpi-total">0</div><div class="kpi-d nu">cadastrados</div></div></div>
+        <div class="kpi ce-kpi"><div class="kpi-ico" style="background:rgba(74,156,245,.15);color:var(--blue)">◆</div><div class="kpi-body"><div class="kpi-lbl">Disponíveis</div><div class="kpi-val" id="ce-kpi-disponiveis">0</div><div class="kpi-d nu">em estoque</div></div></div>
+        <div class="kpi ce-kpi"><div class="kpi-ico" style="background:rgba(58,170,92,.15);color:var(--gr)">✓</div><div class="kpi-body"><div class="kpi-lbl">Entregues</div><div class="kpi-val" id="ce-kpi-entregues">0</div><div class="kpi-d up">com membro</div></div></div>
+        <div class="kpi ce-kpi"><div class="kpi-ico" style="background:rgba(224,85,85,.12);color:var(--rose)">!</div><div class="kpi-body"><div class="kpi-lbl">Alertas</div><div class="kpi-val" id="ce-kpi-alertas">0</div><div class="kpi-d wa">perdidos/bloqueados</div></div></div>
       </div>
       <div class="card">
         <div class="ctit">Filtros <span class="cact" onclick="ceCarregar()">↻ Atualizar</span></div>
@@ -5722,6 +5759,25 @@ document.head.appendChild(styleEl);
     const m = _membros.find(x => x.id === id);
     return m ? m.nome : "—";
   }
+  function _nomePessoa(r){
+    if(!r?.membro_id) return "";
+    const m = _membros.find(x => x.id === r.membro_id);
+    return m?.nome || "";
+  }
+  function _ordemControle(a, b){
+    const nomeA = _nomePessoa(a);
+    const nomeB = _nomePessoa(b);
+    const aEntregue = a.status === "entregue";
+    const bEntregue = b.status === "entregue";
+    const aGrupo = aEntregue && nomeA ? 0 : aEntregue ? 1 : nomeA ? 2 : 3;
+    const bGrupo = bEntregue && nomeB ? 0 : bEntregue ? 1 : nomeB ? 2 : 3;
+    if(aGrupo !== bGrupo) return aGrupo - bGrupo;
+    if(nomeA && nomeB){
+      const porNome = nomeA.localeCompare(nomeB, "pt-BR", {sensitivity:"base"});
+      if(porNome) return porNome;
+    }
+    return String(a.codigo_controle || "").localeCompare(String(b.codigo_controle || ""), "pt-BR", {sensitivity:"base", numeric:true});
+  }
   function _membroCell(r){
     if(r.membro_id){
       return `<span style="color:var(--tx1);font-weight:700">${escapeHtml(_membroNome(r.membro_id))}</span>`;
@@ -5789,7 +5845,7 @@ document.head.appendChild(styleEl);
              (!status || r.status === status) &&
              (!pagamento || (r.status_pagamento || "pendente") === pagamento) &&
              (!marca || String(r.marca || "").toLowerCase().includes(marca));
-    });
+    }).sort(_ordemControle);
   }
 
   function ceRender(){
