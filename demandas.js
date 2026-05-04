@@ -1227,51 +1227,41 @@
       data_abertura:  new Date().toISOString().split("T")[0],
       data_conclusao: venc,
     };
-    if (financial_data) payload.financial_data = financial_data;
+    /* ── Upload ANTES do INSERT — elimina a necessidade de UPDATE ── */
+    if (financial_data) {
+      const tempKey    = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const uploadErrs = [];
+
+      const nfFile = document.getElementById("dem-f-upload-nf")?.files?.[0];
+      if (nfFile) {
+        try { financial_data.nota_fiscal = await _uploadAnexoFinanceiro(nfFile, `tmp_${tempKey}`, "notas"); }
+        catch(e) { uploadErrs.push(`Nota fiscal: ${e.message}`); }
+      }
+
+      const boletoFile = document.getElementById("dem-f-upload-boleto")?.files?.[0];
+      if (boletoFile) {
+        try { financial_data.boleto = await _uploadAnexoFinanceiro(boletoFile, `tmp_${tempKey}`, "boletos"); }
+        catch(e) { uploadErrs.push(`Boleto: ${e.message}`); }
+      }
+
+      const reimbNfFile = document.getElementById("dem-f-upload-reimb-nf")?.files?.[0];
+      if (reimbNfFile) {
+        try { financial_data.nota_fiscal = await _uploadAnexoFinanceiro(reimbNfFile, `tmp_${tempKey}`, "notas"); }
+        catch(e) { uploadErrs.push(`Comprovante: ${e.message}`); }
+      }
+
+      if (uploadErrs.length) {
+        if (typeof T === "function") T("Erro no upload", uploadErrs.join(" | "));
+        return;
+      }
+
+      payload.financial_data = financial_data;
+    }
 
     try {
       console.log("PAYLOAD DEMANDA:", { ...payload });
-      const result     = await apiWrite("create", "DEMANDAS", payload);
-      const demandaId  = Array.isArray(result) ? result[0]?.id : (result?.id || null);
-
-      /* Upload de arquivos (executa em background — demanda já foi criada) */
-      if (demandaId && financial_data) {
-        const fd           = { ...financial_data };
-        const uploadErrors = [];
-
-        const nfFile = document.getElementById("dem-f-upload-nf")?.files?.[0];
-        if (nfFile) {
-          try { fd.nota_fiscal = await _uploadAnexoFinanceiro(nfFile, demandaId, "notas"); }
-          catch(e) { uploadErrors.push(`Nota fiscal: ${e.message}`); }
-        }
-
-        const boletoFile = document.getElementById("dem-f-upload-boleto")?.files?.[0];
-        if (boletoFile) {
-          try { fd.boleto = await _uploadAnexoFinanceiro(boletoFile, demandaId, "boletos"); }
-          catch(e) { uploadErrors.push(`Boleto: ${e.message}`); }
-        }
-
-        const reimbNfFile = document.getElementById("dem-f-upload-reimb-nf")?.files?.[0];
-        if (reimbNfFile) {
-          try { fd.nota_fiscal = await _uploadAnexoFinanceiro(reimbNfFile, demandaId, "notas"); }
-          catch(e) { uploadErrors.push(`Comprovante: ${e.message}`); }
-        }
-
-        if (fd.nota_fiscal || fd.boleto) {
-          try { await apiWrite("update", "DEMANDAS", { _row: demandaId, financial_data: fd }); }
-          catch(e) { console.warn("Metadados de arquivos não salvos:", e.message); }
-        }
-
-        if (uploadErrors.length) {
-          console.warn("Erros de upload:", uploadErrors);
-          if (typeof T === "function") T("⚠️ Demanda criada com avisos", uploadErrors.join(" | "));
-        } else {
-          if (typeof T === "function") T("✅ Demanda criada!", `Roteada para: ${payload.responsavel}`);
-        }
-      } else {
-        if (typeof T === "function") T("✅ Demanda criada!", `Roteada para: ${payload.responsavel}`);
-      }
-
+      await apiWrite("create", "DEMANDAS", payload);
+      if (typeof T === "function") T("✅ Demanda criada!", `Roteada para: ${payload.responsavel}`);
       window.fecharModalNovaDemanda();
       _invalidate();
       const view = document.querySelector(".view.on");
