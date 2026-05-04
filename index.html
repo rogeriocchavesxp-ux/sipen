@@ -8523,12 +8523,15 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
       _escala.set(key, {...existing, ...payload});
     } else {
       let r;
-      try { r = await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao`, {method:"POST", headers:apiHeaders({"Prefer":"return=representation"}), body:JSON.stringify({data, culto_tipo, ...payload})}); }
-      catch(e) { console.error("POST escala_pregacao:", e); T("Erro de rede", e.message); return; }
-      if (!r.ok) { const err=await r.text(); console.error("POST escala_pregacao:",r.status,err); T(`Erro ao inserir (${r.status})`,err); return; }
+      const url = `${apiBaseUrl()}/rest/v1/escala_pregacao?on_conflict=data,culto_tipo`;
+      const body = JSON.stringify({data, culto_tipo, ...payload});
+      const headers = apiHeaders({"Prefer":"resolution=merge-duplicates,return=representation"});
+      try { r = await fetch(url, {method:"POST", headers, body}); }
+      catch(e) { console.error("UPSERT escala_pregacao:", e); T("Erro de rede", e.message); return; }
+      if (!r.ok) { const err=await r.text(); console.error("UPSERT escala_pregacao:",r.status,err); T(`Erro ao salvar (${r.status})`,err); return; }
       const rows = await r.json();
       const row  = Array.isArray(rows) ? rows[0] : rows;
-      _escala.set(key, {id:row.id, pastor_id:row.pastor_id||"", local:row.local||"Templo Principal", observacoes:row.observacoes||"", status:row.status||"PENDENTE", origem:row.origem||"manual"});
+      if(row) _escala.set(key, {id:row.id, pastor_id:row.pastor_id||"", local:row.local||"Templo Principal", observacoes:row.observacoes||"", status:row.status||"PENDENTE", origem:row.origem||"manual"});
     }
   }
 
