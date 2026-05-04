@@ -9255,6 +9255,14 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
 	  let _disps = []; // registros derivados de escala_pregacao
   let _pastoresDp = [];
   let _pastoresLoading = null;
+  const _PASTORES_PADRAO = [
+    {nome_completo:"Rev. Amauri Oliveira",nome_exibicao:"Rev. Amauri",funcao:"Pastor Presidente",ativo:true},
+    {nome_completo:"Rev. Carlos Henrique",nome_exibicao:"Rev. C. Henrique",funcao:"Pastor",ativo:true},
+    {nome_completo:"Rev. Carlos Lima",nome_exibicao:"Rev. C. Lima",funcao:"Pastor",ativo:true},
+    {nome_completo:"Rev. Cornélio Castro",nome_exibicao:"Rev. Cornélio",funcao:"Pastor",ativo:true},
+    {nome_completo:"Rev. Fábio Carvalho",nome_exibicao:"Rev. Fábio",funcao:"Pastor",ativo:true},
+    {nome_completo:"Rev. Flávio Ramos",nome_exibicao:"Rev. Flávio",funcao:"Pastor",ativo:true},
+  ];
   let _loaded = false;
 
   /* ── Helpers ──────────────────────────────────────────────────── */
@@ -9348,6 +9356,24 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
 	  }
 
 	  /* ── API Supabase ─────────────────────────────────────────────── */
+	  async function _criarPastoresPadrao(){
+	    try {
+	      const r=await fetch(`${apiBaseUrl()}/rest/v1/pastores`,{method:"POST",headers:apiHeaders({"Prefer":"return=representation"}),body:JSON.stringify(_PASTORES_PADRAO)});
+	      if(r.ok){
+	        const d=await r.json();
+	        _pastoresDp=_normalizarPastores(d);
+	        return _pastoresDp;
+	      }
+	      const err=await r.text().catch(()=>"");
+	      console.error("dp_: erro ao criar pastores padrão",r.status,err);
+	      T("Pastores","A tabela de pastores está vazia e o SIPEN não conseguiu cadastrar os pastores padrão. Execute o script supabase-escala-pregacao.sql no Supabase.");
+	    } catch(e){
+	      console.error("dp_: erro de rede ao criar pastores padrão",e);
+	      T("Pastores","A tabela de pastores está vazia e não foi possível cadastrar os pastores padrão agora.");
+	    }
+	    return [];
+	  }
+
 	  async function _loadPastores(force=false){
 	    if(_pastoresLoading&&!force) return _pastoresLoading;
 	    if(_pastoresDp.length&&!force) return _pastoresDp;
@@ -9357,7 +9383,10 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
 	        if(r.ok){
 	          const d=await r.json();
 	          _pastoresDp=_normalizarPastores(d);
-	          if(!_pastoresDp.length) console.warn("dp_: nenhum pastor ativo retornado pela tabela pastores");
+	          if(!_pastoresDp.length){
+	            console.warn("dp_: tabela pastores vazia ou sem UUID real; criando pastores padrão");
+	            return await _criarPastoresPadrao();
+	          }
 	          return _pastoresDp;
 	        }
 	        const err=await r.text().catch(()=>"");
@@ -9654,7 +9683,7 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
 	    const modal=document.getElementById("dp-modal"); if(!modal) return;
 	    const pastores=_getPastores();
 	    if(!pastores.length){
-	      T("Pastores","Não foi possível carregar os pastores reais do Supabase. Atualize a página; se continuar, execute o script de permissões da Escala de Pregação no Supabase.");
+	      T("Pastores","Não foi possível carregar nem cadastrar os pastores reais no Supabase. Execute o script supabase-escala-pregacao.sql no Supabase e atualize a página.");
 	    }
 	    const reg=regId?_disps.find(r=>r.id===regId):null;
 	    const pOpts=`<option value="">— Selecionar pastor —</option>`+pastores.map(p=>`<option value="${_ea(p.id)}"${(pastor_id===p.id||reg?.pastor_id===p.id)?" selected":""}>${_eh(p.nome_completo)}</option>`).join("");
