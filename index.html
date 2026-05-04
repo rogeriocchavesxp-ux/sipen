@@ -4984,13 +4984,20 @@ function tableNameRaw(sheet) {
 }
 
 async function apiPing() {
-  const res = await fetch(`${apiBaseUrl()}/rest/v1/v_membros?select=id&limit=1`, {
-    method: "GET",
-    headers: apiHeaders()
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  await res.json();
-  return { success: true, message: "Supabase online" };
+  const checks = [
+    {path:"pastores?select=id&limit=1", label:"pastores"},
+    {path:"escala_pregacao?select=id&limit=1", label:"escala_pregacao"},
+    {path:"v_membros?select=id&limit=1", label:"v_membros"},
+  ];
+  let lastErr = "";
+  for (const c of checks) {
+    try {
+      const res = await fetch(`${apiBaseUrl()}/rest/v1/${c.path}`, { method:"GET", headers:apiHeaders() });
+      if (res.ok) { await res.json(); return { success:true, message:"Supabase online" }; }
+      lastErr = `${c.label}: HTTP ${res.status}`;
+    } catch(e) { lastErr = `${c.label}: ${e.message}`; }
+  }
+  throw new Error(lastErr || "Supabase indisponível");
 }
 
 async function apiRead(sheet, limit = 200) {
