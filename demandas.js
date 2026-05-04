@@ -697,7 +697,12 @@
     if (!fd || typeof fd !== "object" || Object.keys(fd).length === 0) return "";
 
     const fmtVal  = v => v ? `R$ ${parseFloat(v).toLocaleString("pt-BR", { minimumFractionDigits:2, maximumFractionDigits:2 })}` : "—";
-    const fmtLink = l => l ? `<a href="${l}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none">Abrir link →</a>` : "—";
+    const fmtAnexo = (meta, rotulo) => {
+      if (!meta?.storage_path) return null;
+      const pathEnc = meta.storage_path.replace(/'/g, "\\'");
+      const btn = `<button onclick="demAbrirAnexo('${pathEnc}')" style="padding:4px 14px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--blue);font-size:11.5px;cursor:pointer;font-family:var(--ff)">📎 ${meta.file_name || "Abrir arquivo"}</button>`;
+      return [rotulo, btn];
+    };
 
     let rows = [];
     if (sub === "Solicitação de pagamento") {
@@ -709,24 +714,24 @@
         ["CPF / CNPJ",        fd.cpf_cnpj || "—"],
         ["Centro de custo",   fd.centro_custo || "—"],
         ["Forma de pagamento",fd.forma_pagamento || "—"],
-        fd.chave_pix  ? ["Chave Pix",  fd.chave_pix]  : null,
-        fd.banco      ? ["Banco",       fd.banco]       : null,
-        fd.agencia    ? ["Agência",     fd.agencia]     : null,
-        fd.conta      ? ["Conta",       fd.conta]       : null,
-        fd.boleto_ref ? ["Boleto ref.", fd.boleto_ref]  : null,
-        ["Documentos",        fmtLink(fd.link_docs)],
-        fd.obs        ? ["Observações", fd.obs]         : null,
+        fd.chave_pix ? ["Chave Pix",  fd.chave_pix] : null,
+        fd.banco     ? ["Banco",       fd.banco]     : null,
+        fd.agencia   ? ["Agência",     fd.agencia]   : null,
+        fd.conta     ? ["Conta",       fd.conta]     : null,
+        fmtAnexo(fd.boleto,      "Boleto"),
+        fmtAnexo(fd.nota_fiscal, "Nota Fiscal"),
+        fd.obs       ? ["Observações", fd.obs]       : null,
       ].filter(Boolean);
     } else if (sub === "Reembolso") {
       rows = [
         ["Reembolsado",       fd.reimb_nome || "—"],
         ["Valor",             fmtVal(fd.valor)],
-        fd.motivo        ? ["Motivo",          fd.motivo]        : null,
-        fd.chave_pix     ? ["Chave Pix",       fd.chave_pix]     : null,
-        fd.ministerio    ? ["Ministério",       fd.ministerio]    : null,
-        ["Comprovante",       fmtLink(fd.link_nf)],
+        fd.motivo        ? ["Motivo",            fd.motivo]        : null,
+        fd.chave_pix     ? ["Chave Pix",         fd.chave_pix]     : null,
+        fd.ministerio    ? ["Ministério",         fd.ministerio]    : null,
+        fmtAnexo(fd.nota_fiscal, "Comprovante"),
         fd.pastor_ciente ? ["Pastor / Aprovador", fd.pastor_ciente] : null,
-        fd.obs           ? ["Observações",      fd.obs]           : null,
+        fd.obs           ? ["Observações",        fd.obs]           : null,
       ].filter(Boolean);
     }
 
@@ -979,11 +984,20 @@
     });
     ["dem-f-tipo-sol","dem-f-valor","dem-f-data-venc","dem-f-beneficiario","dem-f-cpf-cnpj",
      "dem-f-centro","dem-f-forma-pag","dem-f-chave-pix","dem-f-banco","dem-f-agencia",
-     "dem-f-conta","dem-f-boleto-ref","dem-f-docs","dem-f-obs-fin","dem-f-reimb-nome",
-     "dem-f-reimb-valor","dem-f-reimb-motivo","dem-f-reimb-pix","dem-f-reimb-min",
-     "dem-f-reimb-nf","dem-f-reimb-pastor","dem-f-reimb-obs"].forEach(id => {
+     "dem-f-conta","dem-f-obs-fin","dem-f-reimb-nome","dem-f-reimb-valor",
+     "dem-f-reimb-motivo","dem-f-reimb-pix","dem-f-reimb-min",
+     "dem-f-reimb-pastor","dem-f-reimb-obs"].forEach(id => {
       const el = m.querySelector("#" + id);
       if (el) el.value = "";
+    });
+    /* Reset file inputs */
+    ["dem-f-upload-nf","dem-f-upload-boleto","dem-f-upload-reimb-nf"].forEach(id => {
+      const el = m.querySelector("#" + id);
+      if (el) el.value = "";
+    });
+    ["dem-f-upload-nf-name","dem-f-upload-boleto-name","dem-f-upload-reimb-nf-name"].forEach(id => {
+      const el = m.querySelector("#" + id);
+      if (el) el.textContent = _FIN_UPLOAD_PLACEHOLDER;
     });
     m.style.display = "flex";
   };
@@ -1033,6 +1047,68 @@
   window.demOnSubChange      = _toggleFinanceiroSection;
   window.demOnFormaPagChange = _toggleFormaPagamento;
 
+  /* ── Upload de anexos financeiros ───────────────────── */
+
+  const _FIN_UPLOAD_PLACEHOLDER = "Escolher arquivo · PDF, JPG ou PNG · máx. 10 MB";
+
+  window.demOnFileSelected = function(input, labelId) {
+    const file  = input.files?.[0];
+    const label = document.getElementById(labelId);
+    if (!label) return;
+    if (!file) { label.textContent = _FIN_UPLOAD_PLACEHOLDER; return; }
+    const err = _validarArquivo(file);
+    if (err) {
+      input.value = "";
+      label.textContent = _FIN_UPLOAD_PLACEHOLDER;
+      if (typeof T === "function") T("Arquivo inválido", err);
+      return;
+    }
+    label.textContent = `✅ ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)`;
+  };
+
+  function _validarArquivo(file) {
+    if (!["application/pdf","image/jpeg","image/png"].includes(file.type))
+      return "Tipo não permitido. Use PDF, JPG ou PNG.";
+    if (file.size > 10 * 1024 * 1024) return "Arquivo maior que 10 MB.";
+    return null;
+  }
+
+  async function _uploadAnexoFinanceiro(file, demandaId, tipo) {
+    const sb = _sbClient();
+    if (!sb) throw new Error("Supabase não disponível para upload");
+    const ts   = Date.now();
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `demandas/${demandaId}/${tipo}/${ts}_${safe}`;
+    const { error } = await sb.storage
+      .from("financial-documents")
+      .upload(path, file, { contentType: file.type, upsert: false });
+    if (error) throw new Error(error.message);
+    const u = typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL : null;
+    return {
+      file_name:    file.name,
+      storage_path: path,
+      mime_type:    file.type,
+      size_bytes:   file.size,
+      uploaded_at:  new Date().toISOString(),
+      uploaded_by:  u?.nome || "",
+    };
+  }
+
+  window.demAbrirAnexo = async function(storagePath) {
+    if (!storagePath) return;
+    const sb = _sbClient();
+    if (!sb) { if (typeof T === "function") T("Erro", "Supabase não disponível"); return; }
+    try {
+      const { data, error } = await sb.storage
+        .from("financial-documents")
+        .createSignedUrl(storagePath, 3600);
+      if (error) throw error;
+      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    } catch(e) {
+      if (typeof T === "function") T("Erro ao abrir arquivo", e.message);
+    }
+  };
+
   window.salvarNovaDemanda = async function() {
     const cat    = document.getElementById("dem-f-cat")?.value;
     const sub    = document.getElementById("dem-f-sub")?.value;
@@ -1051,15 +1127,13 @@
     let financial_data = null;
 
     if (cat === "Financeiro" && sub === "Solicitação de pagamento") {
-      const valor      = parseFloat(document.getElementById("dem-f-valor")?.value || "0");
-      const benefic    = document.getElementById("dem-f-beneficiario")?.value?.trim();
-      const forma      = document.getElementById("dem-f-forma-pag")?.value;
-      const chave_pix  = document.getElementById("dem-f-chave-pix")?.value?.trim();
-      const banco      = document.getElementById("dem-f-banco")?.value?.trim();
-      const agencia    = document.getElementById("dem-f-agencia")?.value?.trim();
-      const conta      = document.getElementById("dem-f-conta")?.value?.trim();
-      const boleto_ref = document.getElementById("dem-f-boleto-ref")?.value?.trim();
-      const link_docs  = document.getElementById("dem-f-docs")?.value?.trim();
+      const valor     = parseFloat(document.getElementById("dem-f-valor")?.value || "0");
+      const benefic   = document.getElementById("dem-f-beneficiario")?.value?.trim();
+      const forma     = document.getElementById("dem-f-forma-pag")?.value;
+      const chave_pix = document.getElementById("dem-f-chave-pix")?.value?.trim();
+      const banco     = document.getElementById("dem-f-banco")?.value?.trim();
+      const agencia   = document.getElementById("dem-f-agencia")?.value?.trim();
+      const conta     = document.getElementById("dem-f-conta")?.value?.trim();
       if (!valor || isNaN(valor) || valor <= 0) {
         if (typeof T === "function") T("Campo obrigatório", "Informe o valor da solicitação");
         return;
@@ -1072,17 +1146,18 @@
         if (typeof T === "function") T("Campo obrigatório", "Selecione a forma de pagamento");
         return;
       }
-      if (!link_docs) {
-        if (typeof T === "function") T("Campo obrigatório", "Informe o link dos documentos comprobatórios");
-        return;
-      }
       if (forma === "Pix" && !chave_pix) {
         if (typeof T === "function") T("Campo obrigatório", "Informe a chave Pix");
         return;
       }
-      if (forma === "Boleto" && !boleto_ref) {
-        if (typeof T === "function") T("Campo obrigatório", "Informe o link ou referência do boleto");
-        return;
+      if (forma === "Boleto") {
+        const bFile = document.getElementById("dem-f-upload-boleto")?.files?.[0];
+        if (!bFile) {
+          if (typeof T === "function") T("Arquivo obrigatório", "Anexe o boleto em PDF, JPG ou PNG");
+          return;
+        }
+        const bErr = _validarArquivo(bFile);
+        if (bErr) { if (typeof T === "function") T("Arquivo inválido", bErr); return; }
       }
       if (forma === "Transferência" && (!banco || !agencia || !conta)) {
         if (typeof T === "function") T("Campo obrigatório", "Informe banco, agência e conta para transferência");
@@ -1100,16 +1175,14 @@
         banco:           banco || "",
         agencia:         agencia || "",
         conta:           conta || "",
-        boleto_ref:      boleto_ref || "",
-        link_docs,
         obs:             document.getElementById("dem-f-obs-fin")?.value?.trim() || "",
       };
     }
 
     if (cat === "Financeiro" && sub === "Reembolso") {
-      const nome    = document.getElementById("dem-f-reimb-nome")?.value?.trim();
-      const valor   = parseFloat(document.getElementById("dem-f-reimb-valor")?.value || "0");
-      const link_nf = document.getElementById("dem-f-reimb-nf")?.value?.trim();
+      const nome  = document.getElementById("dem-f-reimb-nome")?.value?.trim();
+      const valor = parseFloat(document.getElementById("dem-f-reimb-valor")?.value || "0");
+      const nfFile = document.getElementById("dem-f-upload-reimb-nf")?.files?.[0];
       if (!nome) {
         if (typeof T === "function") T("Campo obrigatório", "Informe o nome de quem será reembolsado");
         return;
@@ -1118,17 +1191,18 @@
         if (typeof T === "function") T("Campo obrigatório", "Informe o valor do reembolso");
         return;
       }
-      if (!link_nf) {
-        if (typeof T === "function") T("Campo obrigatório", "Informe o link da nota fiscal ou comprovante");
+      if (!nfFile) {
+        if (typeof T === "function") T("Arquivo obrigatório", "Anexe a nota fiscal ou comprovante");
         return;
       }
+      const nfErr = _validarArquivo(nfFile);
+      if (nfErr) { if (typeof T === "function") T("Arquivo inválido", nfErr); return; }
       financial_data = {
         reimb_nome:    nome,
         valor,
         motivo:        document.getElementById("dem-f-reimb-motivo")?.value?.trim() || "",
         chave_pix:     document.getElementById("dem-f-reimb-pix")?.value?.trim() || "",
         ministerio:    document.getElementById("dem-f-reimb-min")?.value?.trim() || "",
-        link_nf,
         pastor_ciente: document.getElementById("dem-f-reimb-pastor")?.value?.trim() || "",
         obs:           document.getElementById("dem-f-reimb-obs")?.value?.trim() || "",
       };
@@ -1157,8 +1231,47 @@
 
     try {
       console.log("PAYLOAD DEMANDA:", { ...payload });
-      await apiWrite("create", "DEMANDAS", payload);
-      if (typeof T === "function") T("✅ Demanda criada!", `Roteada para: ${payload.responsavel}`);
+      const result     = await apiWrite("create", "DEMANDAS", payload);
+      const demandaId  = Array.isArray(result) ? result[0]?.id : (result?.id || null);
+
+      /* Upload de arquivos (executa em background — demanda já foi criada) */
+      if (demandaId && financial_data) {
+        const fd           = { ...financial_data };
+        const uploadErrors = [];
+
+        const nfFile = document.getElementById("dem-f-upload-nf")?.files?.[0];
+        if (nfFile) {
+          try { fd.nota_fiscal = await _uploadAnexoFinanceiro(nfFile, demandaId, "notas"); }
+          catch(e) { uploadErrors.push(`Nota fiscal: ${e.message}`); }
+        }
+
+        const boletoFile = document.getElementById("dem-f-upload-boleto")?.files?.[0];
+        if (boletoFile) {
+          try { fd.boleto = await _uploadAnexoFinanceiro(boletoFile, demandaId, "boletos"); }
+          catch(e) { uploadErrors.push(`Boleto: ${e.message}`); }
+        }
+
+        const reimbNfFile = document.getElementById("dem-f-upload-reimb-nf")?.files?.[0];
+        if (reimbNfFile) {
+          try { fd.nota_fiscal = await _uploadAnexoFinanceiro(reimbNfFile, demandaId, "notas"); }
+          catch(e) { uploadErrors.push(`Comprovante: ${e.message}`); }
+        }
+
+        if (fd.nota_fiscal || fd.boleto) {
+          try { await apiWrite("update", "DEMANDAS", { _row: demandaId, financial_data: fd }); }
+          catch(e) { console.warn("Metadados de arquivos não salvos:", e.message); }
+        }
+
+        if (uploadErrors.length) {
+          console.warn("Erros de upload:", uploadErrors);
+          if (typeof T === "function") T("⚠️ Demanda criada com avisos", uploadErrors.join(" | "));
+        } else {
+          if (typeof T === "function") T("✅ Demanda criada!", `Roteada para: ${payload.responsavel}`);
+        }
+      } else {
+        if (typeof T === "function") T("✅ Demanda criada!", `Roteada para: ${payload.responsavel}`);
+      }
+
       window.fecharModalNovaDemanda();
       _invalidate();
       const view = document.querySelector(".view.on");
