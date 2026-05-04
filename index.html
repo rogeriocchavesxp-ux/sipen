@@ -9258,9 +9258,10 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
   let _loaded = false;
 
   /* ── Helpers ──────────────────────────────────────────────────── */
+  function _isUuid(v){ return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(v||"")); }
   function _normalizarPastores(lista){
     return (Array.isArray(lista)?lista:[])
-      .filter(p=>p&&p.id&&p.ativo!==false)
+      .filter(p=>p&&_isUuid(p.id)&&p.ativo!==false)
       .sort((a,b)=>(a.nome_exibicao||a.nome_completo||"").localeCompare(b.nome_exibicao||b.nome_completo||"","pt-BR"));
   }
   function _getPastores(){
@@ -9302,6 +9303,9 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
 	    const txt=String(detalhe||"");
 	    if(status===404||txt.includes("PGRST205")||txt.includes("schema cache")){
 	      return "A estrutura de disponibilidade não foi encontrada no Supabase. A tela foi ajustada para usar a Escala de Pregação; atualize a página e tente novamente.";
+	    }
+	    if(txt.includes("22P02")||txt.includes("invalid input syntax for type uuid")){
+	      return "Pastor sem ID real do Supabase. Atualize a página; se o campo Pastor continuar vazio ou inválido, execute o script de permissões da Escala de Pregação no Supabase.";
 	    }
 	    if(status===401||status===403||txt.includes("42501")||txt.includes("permission denied")){
 	      return "Sem permissão para salvar em escala_pregacao. Execute o script supabase-escala-pregacao.sql atualizado no Supabase para liberar gravação do SIPEN.";
@@ -9649,6 +9653,9 @@ CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e d
   function _openModal(pastor_id, data, culto_tipo, regId){
 	    const modal=document.getElementById("dp-modal"); if(!modal) return;
 	    const pastores=_getPastores();
+	    if(!pastores.length){
+	      T("Pastores","Não foi possível carregar os pastores reais do Supabase. Atualize a página; se continuar, execute o script de permissões da Escala de Pregação no Supabase.");
+	    }
 	    const reg=regId?_disps.find(r=>r.id===regId):null;
 	    const pOpts=`<option value="">— Selecionar pastor —</option>`+pastores.map(p=>`<option value="${_ea(p.id)}"${(pastor_id===p.id||reg?.pastor_id===p.id)?" selected":""}>${_eh(p.nome_completo)}</option>`).join("");
 	    const tipoOpts=Object.keys(_TIPO).map(k=>`<option value="${_ea(k)}"${(culto_tipo===k||reg?.culto_tipo===k)?" selected":""}>${_eh(_TIPO[k].ico)} ${_eh(_TIPO[k].label)}</option>`).join("");
