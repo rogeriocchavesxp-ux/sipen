@@ -4,6 +4,8 @@
 -- Execute no SQL Editor do Supabase Dashboard (uma vez).
 -- ══════════════════════════════════════════════════════════════════════
 
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+
 -- ── 1. Tabela pastores ──────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.pastores (
   id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -31,6 +33,8 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN
   CREATE POLICY "anon_delete_pastores" ON public.pastores FOR DELETE TO anon USING (true);
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.pastores TO anon, authenticated;
 
 -- Seed: 6 pastores oficiais da IPPenha
 INSERT INTO public.pastores (nome_completo, nome_exibicao, funcao, ativo) VALUES
@@ -74,3 +78,5 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN
   CREATE POLICY "anon_delete_escala_pregacao" ON public.escala_pregacao FOR DELETE TO anon USING (true);
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.escala_pregacao TO anon, authenticated;

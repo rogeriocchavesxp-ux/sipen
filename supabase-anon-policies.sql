@@ -11,7 +11,7 @@ DECLARE
   tabelas_leitura text[] := ARRAY[
     'pessoas','membros','visitantes','oficiais','nomeados','seminaristas',
     'contratados','congregacoes','demandas','financeiro','contratos','agenda',
-    'pgs','pg_participantes','estoque_itens','logs_sistema'
+    'pgs','pg_participantes','estoque_itens','logs_sistema','pastores','escala_pregacao'
   ];
   t text;
 BEGIN
@@ -32,7 +32,7 @@ DO $pol$
 DECLARE
   tabelas_escrita text[] := ARRAY[
     'pessoas','membros','visitantes','demandas','financeiro','agenda',
-    'pgs','estoque_itens','contratados'
+    'pgs','estoque_itens','contratados','pastores','escala_pregacao'
   ];
   t text;
 BEGIN
@@ -61,6 +61,10 @@ BEGIN
   END LOOP;
 END $pol$;
 
+
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.pastores TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.escala_pregacao TO anon, authenticated;
 
 -- Garantir que as views estejam no search_path do PostgREST
 -- (normalmente já estão, mas esta linha confirma)
