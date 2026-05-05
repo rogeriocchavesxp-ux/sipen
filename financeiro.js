@@ -268,7 +268,7 @@
               ? solAtrasadas.map(r => `
                   <div class="trow">
                     <div class="tdot" style="background:var(--rose)"></div>
-                    <div class="tbody"><div class="ttitle">${r.finalidade || r.fornecedor}</div><div class="tmeta">Venceu ${fmtD(r.vencimento)} · ${r.fornecedor}</div></div>
+                    <div class="tbody"><div class="ttitle">${escapeHtml(r.finalidade || r.fornecedor) || "—"}</div><div class="tmeta">Venceu ${fmtD(r.vencimento)} · ${escapeHtml(r.fornecedor) || "—"}</div></div>
                     <div class="tright"><span class="pill pl">atrasado</span></div>
                   </div>`)
                 .join("")
@@ -281,7 +281,7 @@
               ? proxPagar.map(r => `
                   <div class="trow">
                     <div class="tdot" style="background:var(--gold)"></div>
-                    <div class="tbody"><div class="ttitle">${r.finalidade || r.fornecedor}</div><div class="tmeta">Vence ${fmtD(r.vencimento)} · ${r.categoria || "—"}</div></div>
+                    <div class="tbody"><div class="ttitle">${escapeHtml(r.finalidade || r.fornecedor) || "—"}</div><div class="tmeta">Vence ${fmtD(r.vencimento)} · ${r.categoria || "—"}</div></div>
                     <div class="tright" style="font-size:12px;font-weight:600;color:var(--tx1)">${brl(r.valor)}</div>
                   </div>`).join("")
               : '<div style="color:var(--tx3);font-size:11.5px;padding:4px 0">Sem vencimentos próximos</div>'
@@ -498,13 +498,13 @@
                       : "";
                   return `
                   <tr style="border-bottom:1px solid var(--bd1);${rowBg}" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='${rowBg ? rowBg.split(":")[1].split(";")[0].trim() : ""}'">
-                    <td style="padding:7px 6px;color:var(--tx1);font-weight:500;white-space:nowrap">${r.fornecedor || "—"}</td>
-                    <td style="padding:7px 6px;color:var(--tx1);max-width:180px">${r.finalidade || "—"}</td>
+                    <td style="padding:7px 6px;color:var(--tx1);font-weight:500;white-space:nowrap">${escapeHtml(r.fornecedor) || "—"}</td>
+                    <td style="padding:7px 6px;color:var(--tx1);max-width:180px">${escapeHtml(r.finalidade) || "—"}</td>
                     <td style="padding:7px 6px;text-align:right;font-weight:700;color:var(--rose)">${brl(r.valor)}</td>
                     <td style="padding:7px 6px;color:var(--tx2);white-space:nowrap">${_labelForma(r.forma_pagamento)}</td>
-                    <td style="padding:7px 6px;color:var(--tx3);font-size:10px;max-width:160px;word-break:break-all">${r.codigo_pagamento || "—"}</td>
+                    <td style="padding:7px 6px;color:var(--tx3);font-size:10px;max-width:160px;word-break:break-all">${escapeHtml(r.codigo_pagamento) || "—"}</td>
                     <td style="padding:7px 6px;color:${st === "atrasado" ? "var(--rose)" : "var(--tx2)"};white-space:nowrap;font-weight:${st === "atrasado" ? "600" : "400"}">${fmtD(r.vencimento)}</td>
-                    <td style="padding:7px 6px;color:var(--tx2);white-space:nowrap">${r.solicitante || "—"}</td>
+                    <td style="padding:7px 6px;color:var(--tx2);white-space:nowrap">${escapeHtml(r.solicitante) || "—"}</td>
                     <td style="padding:7px 6px;color:var(--tx2);white-space:nowrap">${r.categoria || "—"}</td>
                     <td style="padding:7px 6px">${pillStatus(st)}</td>
                     <td style="padding:7px 6px;min-width:160px">
@@ -532,7 +532,7 @@
             <div style="font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Observações</div>
             ${rows.filter(r => r.observacoes).map(r => `
               <div style="font-size:11.5px;color:var(--tx2);padding:6px 10px;background:var(--bg-hover);border-radius:6px">
-                <span style="font-weight:600;color:var(--tx1)">${r.fornecedor}</span> — ${r.observacoes}
+                <span style="font-weight:600;color:var(--tx1)">${escapeHtml(r.fornecedor) || "—"}</span> — ${escapeHtml(r.observacoes)}
               </div>`).join("")}
           </div>` : ""}
       </div>`;

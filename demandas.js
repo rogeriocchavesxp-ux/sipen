@@ -370,7 +370,7 @@
       <div class="alr alr-r" style="margin-bottom:16px;cursor:pointer" onclick="window.go('dem-pri')">
         <span class="alr-i">🚨</span>
         <div><strong>${urgentes.length} demanda${urgentes.length>1?"s":""} urgente${urgentes.length>1?"s":""}</strong> aguardando ação —
-          ${urgentes.slice(0,3).map(r => `<em>${r.titulo||r.area}</em>`).join(", ")}${urgentes.length>3?" e mais...":""}
+          ${urgentes.slice(0,3).map(r => `<em>${escapeHtml(r.titulo || r.area) || "—"}</em>`).join(", ")}${urgentes.length>3?" e mais...":""}
         </div>
         <span class="alr-a">Ver →</span>
       </div>` : "";
@@ -409,8 +409,8 @@
               <div class="trow" style="cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','dem-dash')">
                 <div class="tdot" style="background:${catCor(r.area)}"></div>
                 <div class="tbody">
-                  <div class="ttitle">${catIcon(r.area)} ${r.titulo||"Sem título"}</div>
-                  <div class="tmeta">${r.area||"—"}${r.subcategoria?" · "+r.subcategoria:""} · ${r.solicitante||"—"} · ${fmtD(r.data_abertura||r.criado_em)}</div>
+                  <div class="ttitle">${catIcon(r.area)} ${escapeHtml(r.titulo) || "Sem título"}</div>
+                  <div class="tmeta">${r.area||"—"}${r.subcategoria?" · "+r.subcategoria:""} · ${escapeHtml(r.solicitante || r.solicitante_txt) || "—"} · ${fmtD(r.data_abertura||r.criado_em)}</div>
                 </div>
                 <div class="tright" style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">
                   ${pillStatus(r.status)}
@@ -529,9 +529,9 @@
                   <span style="font-size:11px;font-weight:600;color:${catCor(r.area)}">${catIcon(r.area)} ${r.area||"—"}</span>
                 </td>
                 <td style="padding:8px 6px;color:var(--tx2);font-size:11px">${r.subcategoria||"—"}</td>
-                <td style="padding:8px 6px;color:var(--tx1);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.titulo||"—"}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${r.solicitante||"—"}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${r.responsavel||"—"}</td>
+                <td style="padding:8px 6px;color:var(--tx1);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.titulo) || "—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${escapeHtml(r.solicitante || r.solicitante_txt) || "—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${escapeHtml(r.responsavel || r.responsavel_txt) || "—"}</td>
                 <td style="padding:8px 6px">${pillPrio(r.prioridade)}</td>
                 <td style="padding:8px 6px">${pillStatus(r.status)}</td>
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${fmtD(r.data_abertura||r.criado_em)}</td>
@@ -776,7 +776,7 @@
         <div class="hero-ic" style="background:${catCor(dem.area)}18;border-color:${catCor(dem.area)}44;font-size:22px">${catIcon(dem.area)}</div>
         <div>
           <div class="hero-lbl">Demanda · ${fmtD(dem.data_abertura||dem.criado_em)}</div>
-          <div class="hero-ttl">${dem.titulo||"Sem título"}</div>
+          <div class="hero-ttl">${escapeHtml(dem.titulo) || "Sem título"}</div>
           <div class="hero-dsc" style="display:flex;gap:8px;align-items:center;margin-top:4px">
             ${pillStatus(dem.status)} ${pillPrio(dem.prioridade)}
             <span style="color:var(--tx3);font-size:11px">${catIcon(dem.area)} ${dem.area||"—"} → ${dem.subcategoria||"—"}</span>
@@ -795,8 +795,8 @@
               ${[
                 ["Categoria",     `<span style="color:${catCor(dem.area)};font-weight:600">${catIcon(dem.area)} ${dem.area||"—"}</span>`],
                 ["Subcategoria",  dem.subcategoria||"—"],
-                ["Solicitante",   dem.solicitante||"—"],
-                ["Responsável",   dem.responsavel||"—"],
+                ["Solicitante",   escapeHtml(dem.solicitante || dem.solicitante_txt) || "—"],
+                ["Responsável",   escapeHtml(dem.responsavel || dem.responsavel_txt) || "—"],
                 ["Prioridade",    pillPrio(dem.prioridade)],
                 ["Abertura",      fmtD(dem.data_abertura||dem.criado_em)],
                 ["Conclusão prev.",fmtD(dem.data_conclusao)],
@@ -808,7 +808,7 @@
             </table>
             ${dem.descricao ? `
               <div class="ctit" style="margin-top:16px">Descrição</div>
-              <div style="font-size:12px;color:var(--tx1);line-height:1.7;margin-top:6px">${dem.descricao}</div>` : ""}
+              <div style="font-size:12px;color:var(--tx1);line-height:1.7;margin-top:6px">${escapeHtml(dem.descricao)}</div>` : ""}
           </div>
           <div class="card">
             <div class="ctit">Alterar Status</div>
@@ -833,7 +833,7 @@
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
             <div>
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Título *</label>
-              <input id="dem-edit-titulo" type="text" value="${(dem.titulo||'').replace(/"/g,'&quot;')}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+              <input id="dem-edit-titulo" type="text" value="${escapeHtmlAttr(dem.titulo || '')}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>
             ${_podeEditarPrioridade() ? `
             <div>
@@ -844,7 +844,7 @@
             </div>` : ""}
             <div>
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Responsável</label>
-              <input id="dem-edit-resp" type="text" value="${(dem.responsavel||'').replace(/"/g,'&quot;')}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+              <input id="dem-edit-resp" type="text" value="${escapeHtmlAttr(dem.responsavel || dem.responsavel_txt || '')}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>
             <div>
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Conclusão prevista</label>
@@ -853,7 +853,7 @@
           </div>
           <div style="margin-top:12px">
             <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Descrição</label>
-            <textarea id="dem-edit-desc" rows="3" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;resize:vertical;box-sizing:border-box">${(dem.descricao||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+            <textarea id="dem-edit-desc" rows="3" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;resize:vertical;box-sizing:border-box">${escapeHtml(dem.descricao || '')}</textarea>
           </div>
           <div style="margin-top:12px;display:flex;justify-content:flex-end">
             <button onclick="demSalvarEdicao('${id}')" style="padding:8px 20px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer">Salvar alterações</button>
@@ -1301,9 +1301,9 @@
 
     function _miniRow(r) {
       return `<tr style="border-bottom:1px solid var(--bd1);cursor:pointer" onclick="window.demAbrirDetalhe('${r.id||r._row}','infra-dash')">
-        <td style="padding:7px 6px;font-weight:600;color:var(--tx1);max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.titulo||"—"}</td>
+        <td style="padding:7px 6px;font-weight:600;color:var(--tx1);max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(r.titulo) || "—"}</td>
         <td style="padding:7px 6px">${pillStatus(r.status)}</td>
-        <td style="padding:7px 4px;color:var(--tx3);font-size:11px">${r.responsavel||"—"}</td>
+        <td style="padding:7px 4px;color:var(--tx3);font-size:11px">${escapeHtml(r.responsavel || r.responsavel_txt) || "—"}</td>
       </tr>`;
     }
     function _miniTable(list) {
@@ -1346,7 +1346,7 @@
         <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Data</th>
       </tr></thead>
       <tbody>${recentes.map(r => `<tr style="border-top:1px solid var(--bd1);cursor:pointer" onclick="window.demAbrirDetalhe('${r.id||r._row}','area-dem')">
-        <td style="padding:8px;font-size:11.5px;color:var(--tx1)"><strong>${r.titulo||"—"}</strong></td>
+        <td style="padding:8px;font-size:11.5px;color:var(--tx1)"><strong>${escapeHtml(r.titulo) || "—"}</strong></td>
         <td style="padding:8px">${pillStatus(r.status)}</td>
         <td style="padding:8px;font-size:11px;color:var(--tx3)">${r.area||"—"}</td>
         <td style="padding:8px;font-size:10.5px;color:var(--tx3);font-family:var(--mono)">${fmtD(r.criado_em)}</td>
