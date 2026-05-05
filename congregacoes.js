@@ -355,8 +355,8 @@ function renderTab_ministerios(cong, el){
           <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bd1)">
             <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--acc);flex-shrink:0">${iniciais(m.lider)}</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:12px;font-weight:700;color:var(--tx1)">${m.nome}</div>
-              <div style="font-size:10.5px;color:var(--tx3)">Líder: ${m.lider}</div>
+              <div style="font-size:12px;font-weight:700;color:var(--tx1)">${escapeHtml(m.nome)}</div>
+              <div style="font-size:10.5px;color:var(--tx3)">Líder: ${escapeHtml(m.lider)}</div>
             </div>
             <div style="text-align:right;flex-shrink:0">
               <div style="font-size:13px;font-weight:700;color:var(--acc)">${m.membros}</div>
@@ -444,10 +444,10 @@ function renderTab_desafios(cong, el){
         lista.map(d=>`
           <div style="padding:10px 0;border-bottom:1px solid var(--bd1)">
             <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:4px">
-              <div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--tx1)">${d.titulo}</div></div>
+              <div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--tx1)">${escapeHtml(d.titulo)}</div></div>
               <div style="display:flex;gap:5px;flex-shrink:0">${prioBadge(d.prioridade)}${statusBadge(d.status)}</div>
             </div>
-            <div style="font-size:10.5px;color:var(--tx3)">${d.descricao}</div>
+            <div style="font-size:10.5px;color:var(--tx3)">${escapeHtml(d.descricao)}</div>
           </div>`).join("")}
     </div>
   `;

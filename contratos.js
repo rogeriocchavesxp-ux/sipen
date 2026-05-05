@@ -369,7 +369,7 @@
     const dias = diasParaVencer(con.data_vencimento);
 
     const linhas = [
-      ["Tipo", `<span style="color:${t.cor};font-weight:600">${t.icon} ${con.tipo}</span>`],
+      ["Tipo", `<span style="color:${t.cor};font-weight:600">${t.icon} ${escapeHtml(con.tipo)}</span>`],
       con.produto       ? ["Produto / Sistema", escapeHtml(con.produto)]                : null,
       con.fornecedor    ? ["Fornecedor",         escapeHtml(con.fornecedor)]            : null,
       con.proprietario  ? ["Proprietário",       escapeHtml(con.proprietario)]          : null,
