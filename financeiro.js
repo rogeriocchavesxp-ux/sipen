@@ -75,9 +75,10 @@
     { id:8, acao:"criação",               desc:"Lançamento: Dízimos 2ª semana Abr/26",               usuario:"Tesoureiro",    data:"2026-04-08T13:00:00", tipo:"lancamento"    },
   ];
 
-  /* ── ESTADO — Solicitações (banco real) ──────────────────── */
+  /* ── ESTADO — Solicitações e Anexos (banco real) ────────── */
 
-  let _SOLICITACOES = null; // null = não carregado, [] = carregado
+  let _SOLICITACOES = null;
+  let _ANEXOS       = null; // { [solicitacao_id]: [...] }
 
   async function _loadSolicitacoes(force) {
     if (_SOLICITACOES !== null && !force) return;
@@ -94,6 +95,52 @@
       console.error("[financeiro] Erro ao carregar solicitações:", e);
       _SOLICITACOES = [];
     }
+  }
+
+  async function _loadAnexos(force) {
+    if (_ANEXOS !== null && !force) return;
+    try {
+      const sb = _sbClient();
+      const { data, error } = await sb
+        .from("financeiro_anexos")
+        .select("*")
+        .is("deleted_at", null)
+        .not("solicitacao_id", "is", null);
+      if (error) throw error;
+      _ANEXOS = {};
+      (data || []).forEach(a => {
+        if (!_ANEXOS[a.solicitacao_id]) _ANEXOS[a.solicitacao_id] = [];
+        _ANEXOS[a.solicitacao_id].push(a);
+      });
+    } catch (e) {
+      console.error("[financeiro] Erro ao carregar anexos:", e);
+      _ANEXOS = {};
+    }
+  }
+
+  async function _uploadAnexoFin(file, solicitacaoId, tipo) {
+    const sb = _sbClient();
+    if (!sb) throw new Error("Supabase não disponível");
+    if (file.size > 10 * 1024 * 1024) throw new Error("Arquivo maior que 10 MB");
+    const ts   = Date.now();
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `financeiro/solicitacoes/${solicitacaoId}/${tipo}/${ts}_${safe}`;
+    const { error: upErr } = await sb.storage
+      .from("financial-documents")
+      .upload(path, file, { contentType: file.type, upsert: false });
+    if (upErr) throw new Error(upErr.message);
+    const u = typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL : null;
+    const { error: dbErr } = await sb.from("financeiro_anexos").insert({
+      solicitacao_id: solicitacaoId,
+      tipo_arquivo:   tipo,
+      nome_original:  file.name,
+      storage_bucket: "financial-documents",
+      storage_path:   path,
+      mime_type:      file.type,
+      tamanho_bytes:  file.size,
+      criado_por:     u?.nome || "",
+    });
+    if (dbErr) throw new Error(dbErr.message);
   }
 
   /* ── HELPERS ─────────────────────────────────────────────── */
@@ -368,7 +415,7 @@
     if (!el) return;
 
     el.innerHTML = '<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Carregando solicitações...</div>';
-    await _loadSolicitacoes();
+    await Promise.all([_loadSolicitacoes(), _loadAnexos()]);
 
     const H   = hoje();
     const S7  = em7dias();
@@ -432,10 +479,14 @@
               </tr></thead>
               <tbody>
                 ${rows.map(r => {
-                  const st = _statusSolicitacao(r);
-                  const rowBg = st === "atrasado"
+                  const st     = _statusSolicitacao(r);
+                  const anexos = (_ANEXOS || {})[r.id] || [];
+                  const boleto = anexos.find(a => a.tipo_arquivo === "boleto");
+                  const nf     = anexos.find(a => a.tipo_arquivo === "nota_fiscal");
+                  const pago   = ["pago","cancelado"].includes(r.status);
+                  const rowBg  = st === "atrasado"
                     ? "background:rgba(224,85,85,.04)"
-                    : (r.vencimento && r.vencimento >= H && r.vencimento <= S7 && !["pago","cancelado"].includes(r.status))
+                    : (r.vencimento && r.vencimento >= H && r.vencimento <= S7 && !pago)
                       ? "background:rgba(212,168,67,.04)"
                       : "";
                   return `
@@ -449,8 +500,18 @@
                     <td style="padding:7px 6px;color:var(--tx2);white-space:nowrap">${r.solicitante || "—"}</td>
                     <td style="padding:7px 6px;color:var(--tx2);white-space:nowrap">${r.categoria || "—"}</td>
                     <td style="padding:7px 6px">${pillStatus(st)}</td>
+                    <td style="padding:7px 6px;min-width:160px">
+                      <div style="display:flex;flex-direction:column;gap:3px">
+                        ${boleto
+                          ? `<button onclick="finAbrirAnexo('${boleto.storage_path}')" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--blue);cursor:pointer;text-align:left;white-space:nowrap">📎 ${boleto.nome_original}</button>`
+                          : r.id && !pago ? `<button onclick="finAnexar('${r.id}','boleto')" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px dashed var(--bd2);background:transparent;color:var(--tx3);cursor:pointer;white-space:nowrap">+ Boleto</button>` : ""}
+                        ${nf
+                          ? `<button onclick="finAbrirAnexo('${nf.storage_path}')" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--blue);cursor:pointer;text-align:left;white-space:nowrap">📎 ${nf.nome_original}</button>`
+                          : r.id && !pago ? `<button onclick="finAnexar('${r.id}','nota_fiscal')" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px dashed var(--bd2);background:transparent;color:var(--tx3);cursor:pointer;white-space:nowrap">+ Nota Fiscal</button>` : ""}
+                      </div>
+                    </td>
                     <td style="padding:7px 6px">
-                      ${!["pago","cancelado"].includes(r.status) && r.id
+                      ${r.id && !pago
                         ? `<button class="tbt" style="font-size:10px;padding:3px 8px;white-space:nowrap" onclick="finMarcarPago('${r.id}')">✓ Pago</button>`
                         : ""}
                     </td>
@@ -623,6 +684,41 @@
       </div>`;
   }
 
+  /* ── AÇÕES: ANEXOS ───────────────────────────────────────── */
+
+  window.finAnexar = function (solicitacaoId, tipo) {
+    const input = document.createElement("input");
+    input.type    = "file";
+    input.accept  = ".pdf,.jpg,.jpeg,.png";
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+      try {
+        await _uploadAnexoFin(file, solicitacaoId, tipo);
+        _ANEXOS = null;
+        await renderPagar();
+      } catch (e) {
+        if (typeof T === "function") T("Erro no upload", e.message);
+        else alert("Erro: " + e.message);
+      }
+    };
+    input.click();
+  };
+
+  window.finAbrirAnexo = async function (storagePath) {
+    const sb = _sbClient();
+    if (!sb) return;
+    try {
+      const { data, error } = await sb.storage
+        .from("financial-documents")
+        .createSignedUrl(storagePath, 3600);
+      if (error) throw error;
+      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      if (typeof T === "function") T("Erro ao abrir arquivo", e.message);
+    }
+  };
+
   /* ── AÇÃO: MARCAR COMO PAGO ──────────────────────────────── */
 
   window.finMarcarPago = async function (id) {
@@ -634,7 +730,8 @@
         .update({ status: "pago", updated_at: new Date().toISOString() })
         .eq("id", id);
       if (error) throw error;
-      _SOLICITACOES = null; // força reload
+      _SOLICITACOES = null;
+      _ANEXOS       = null;
       await renderPagar();
     } catch (e) {
       alert("Erro ao atualizar: " + (e.message || e));
