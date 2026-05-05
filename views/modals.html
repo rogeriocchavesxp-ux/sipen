@@ -1,0 +1,218 @@
+<!-- ═══ MODAL: NOVO/EDITAR CONTRATO ══════════════════ -->
+<div id="modal-contrato" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)conFecharModal()">
+  <div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+    <div style="padding:20px 24px 16px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg-card);z-index:1">
+      <div>
+        <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Administrativo · Contratos</div>
+        <div id="con-modal-title" style="font-size:17px;font-weight:700;color:var(--tx1)">Novo Contrato</div>
+      </div>
+      <button onclick="conFecharModal()" style="background:none;border:none;font-size:22px;color:var(--tx3);cursor:pointer;padding:4px 8px;border-radius:6px">×</button>
+    </div>
+    <div style="padding:20px 24px;display:flex;flex-direction:column;gap:4px">
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Tipo de contrato <span style="color:var(--rose)">*</span></label>
+        <select id="con-f-tipo" onchange="conOnTipoChange()" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px">
+          <option value="">Selecione o tipo...</option>
+          <option value="Software">💻 Software / Licença</option>
+          <option value="Imóvel">🏢 Imóvel / Aluguel</option>
+          <option value="Serviço">🛠 Serviço / Terceirizado</option>
+          <option value="Seguro">🛡 Seguro</option>
+          <option value="Fornecimento">📦 Fornecimento</option>
+          <option value="Outro">📄 Outro</option>
+        </select>
+      </div>
+      <div id="con-campos-dinamicos">
+        <div style="color:var(--tx3);font-size:12px;padding:8px 0">Selecione o tipo de contrato para ver os campos.</div>
+      </div>
+    </div>
+    <div style="padding:16px 24px 20px;border-top:1px solid var(--bd1);display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:var(--bg-card)">
+      <button onclick="conFecharModal()" style="padding:9px 20px;border-radius:8px;border:1px solid var(--bd2);background:none;color:var(--tx2);font-size:13px;cursor:pointer">Cancelar</button>
+      <button onclick="conSalvar()" style="padding:9px 24px;border-radius:8px;border:none;background:var(--gold);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Salvar Contrato</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: NOVA DEMANDA ══════════════════════════ -->
+<div id="modal-nova-demanda" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.35)">
+    <div style="padding:20px 24px 16px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Demandas</div>
+        <div style="font-size:17px;font-weight:700;color:var(--tx1)">Nova Solicitação</div>
+      </div>
+      <button onclick="fecharModalNovaDemanda()" style="background:none;border:none;font-size:20px;color:var(--tx3);cursor:pointer;padding:4px 8px;border-radius:6px">×</button>
+    </div>
+    <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Categoria *</label>
+        <select id="dem-f-cat" onchange="demOnCatChange()" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px">
+          <option value="">Selecione a categoria</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Subcategoria *</label>
+        <select id="dem-f-sub" onchange="demOnSubChange()" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px">
+          <option value="">Selecione a categoria primeiro</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Título *</label>
+        <input id="dem-f-titulo" type="text" placeholder="Descreva brevemente a solicitação" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Descrição detalhada</label>
+        <textarea id="dem-f-desc" rows="3" placeholder="Informações adicionais, contexto e detalhes da solicitação..." style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;resize:vertical;box-sizing:border-box"></textarea>
+      </div>
+
+      <!-- ── DADOS FINANCEIROS (visível apenas quando categoria = Financeiro) ── -->
+      <div id="dem-f-financeiro-section" style="display:none;border:1px solid rgba(61,160,85,.35);border-radius:10px;padding:16px;background:rgba(61,160,85,.04)">
+        <div style="font-size:11px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px">💰 Dados Financeiros</div>
+
+        <!-- SOLICITAÇÃO DE PAGAMENTO -->
+        <div id="dem-f-pag-section" style="display:none;flex-direction:column;gap:12px">
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Tipo de solicitação *</label>
+            <select id="dem-f-tipo-sol" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px">
+              <option value="Pagamento">Pagamento</option>
+              <option value="Reembolso">Reembolso</option>
+              <option value="Adiantamento">Adiantamento</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Valor *</label>
+              <input id="dem-f-valor" type="number" step="0.01" min="0" placeholder="0,00" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Data de vencimento</label>
+              <input id="dem-f-data-venc" type="date" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Beneficiário / Favorecido *</label>
+              <input id="dem-f-beneficiario" type="text" placeholder="Nome completo" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">CPF / CNPJ</label>
+              <input id="dem-f-cpf-cnpj" type="text" placeholder="000.000.000-00" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+            </div>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Centro de custo / Ministério</label>
+            <input id="dem-f-centro" type="text" placeholder="Ex: Ministério de Louvor" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Forma de pagamento *</label>
+            <select id="dem-f-forma-pag" onchange="demOnFormaPagChange()" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px">
+              <option value="">Selecione</option>
+              <option value="Pix">Pix</option>
+              <option value="Boleto">Boleto</option>
+              <option value="Transferência">Transferência</option>
+              <option value="Cartão">Cartão</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+          <div id="dem-f-pix-section" style="display:none">
+            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Chave Pix *</label>
+            <input id="dem-f-chave-pix" type="text" placeholder="CPF, e-mail, telefone ou chave aleatória" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+          </div>
+          <div id="dem-f-bank-section" style="display:none;grid-template-columns:1fr 1fr 1fr;gap:12px">
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Banco *</label>
+              <input id="dem-f-banco" type="text" placeholder="Ex: Itaú" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Agência *</label>
+              <input id="dem-f-agencia" type="text" placeholder="0000" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Conta *</label>
+              <input id="dem-f-conta" type="text" placeholder="00000-0" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+            </div>
+          </div>
+          <div id="dem-f-boleto-section" style="display:none">
+            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Boleto (PDF) *</label>
+            <div onclick="document.getElementById('dem-f-upload-boleto').click()" style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;border:1.5px dashed var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx3);font-size:12.5px;cursor:pointer;box-sizing:border-box;width:100%">
+              📎 <span id="dem-f-upload-boleto-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">Escolher arquivo · PDF, JPG ou PNG · máx. 10 MB</span>
+            </div>
+            <input id="dem-f-upload-boleto" type="file" accept=".pdf,.jpg,.jpeg,.png" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden" onchange="demOnFileSelected(this,'dem-f-upload-boleto-name')">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Nota Fiscal / Comprovante (opcional)</label>
+            <div onclick="document.getElementById('dem-f-upload-nf').click()" style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;border:1.5px dashed var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx3);font-size:12.5px;cursor:pointer;box-sizing:border-box;width:100%">
+              📎 <span id="dem-f-upload-nf-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">Escolher arquivo · PDF, JPG ou PNG · máx. 10 MB</span>
+            </div>
+            <input id="dem-f-upload-nf" type="file" accept=".pdf,.jpg,.jpeg,.png" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden" onchange="demOnFileSelected(this,'dem-f-upload-nf-name')">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Observações financeiras</label>
+            <textarea id="dem-f-obs-fin" rows="2" placeholder="Informações adicionais relevantes para o pagamento..." style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;resize:vertical;box-sizing:border-box"></textarea>
+          </div>
+        </div>
+
+        <!-- REEMBOLSO -->
+        <div id="dem-f-reimb-section" style="display:none;flex-direction:column;gap:12px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Nome de quem será reembolsado *</label>
+              <input id="dem-f-reimb-nome" type="text" placeholder="Nome completo" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Valor do reembolso *</label>
+              <input id="dem-f-reimb-valor" type="number" step="0.01" min="0" placeholder="0,00" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+            </div>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Motivo do reembolso</label>
+            <textarea id="dem-f-reimb-motivo" rows="2" placeholder="Descreva o motivo e a finalidade do gasto..." style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;resize:vertical;box-sizing:border-box"></textarea>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Chave Pix</label>
+              <input id="dem-f-reimb-pix" type="text" placeholder="CPF, e-mail, telefone ou chave aleatória" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Ministério / Área</label>
+              <input id="dem-f-reimb-min" type="text" placeholder="Ex: Ação Social" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+            </div>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Nota Fiscal / Comprovante *</label>
+            <div onclick="document.getElementById('dem-f-upload-reimb-nf').click()" style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;border:1.5px dashed var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx3);font-size:12.5px;cursor:pointer;box-sizing:border-box;width:100%">
+              📎 <span id="dem-f-upload-reimb-nf-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">Escolher arquivo · PDF, JPG ou PNG · máx. 10 MB</span>
+            </div>
+            <input id="dem-f-upload-reimb-nf" type="file" accept=".pdf,.jpg,.jpeg,.png" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden" onchange="demOnFileSelected(this,'dem-f-upload-reimb-nf-name')">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Pastor / líder ciente ou aprovador</label>
+            <input id="dem-f-reimb-pastor" type="text" placeholder="Nome do aprovador" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Observações</label>
+            <textarea id="dem-f-reimb-obs" rows="2" placeholder="Informações adicionais..." style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;resize:vertical;box-sizing:border-box"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Data desejada de conclusão</label>
+        <input id="dem-f-venc" type="date" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Solicitante</label>
+          <input id="dem-f-sol" type="text" placeholder="Nome do solicitante" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Responsável</label>
+          <input id="dem-f-resp" type="text" placeholder="Auto-preenchido pela categoria" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
+        </div>
+      </div>
+    </div>
+    <div style="padding:16px 24px 20px;border-top:1px solid var(--bd1);display:flex;gap:10px;justify-content:flex-end">
+      <button onclick="fecharModalNovaDemanda()" style="padding:9px 20px;border-radius:8px;border:1px solid var(--bd2);background:none;color:var(--tx2);font-size:13px;cursor:pointer">Cancelar</button>
+      <button onclick="salvarNovaDemanda()" style="padding:9px 20px;border-radius:8px;border:none;background:var(--rose);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Registrar Demanda</button>
+    </div>
+  </div>
+</div>
