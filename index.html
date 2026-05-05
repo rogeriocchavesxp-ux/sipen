@@ -2515,12 +2515,12 @@ body.dem-admin [data-demanda-admin] { display: block !important; }
     <div class="ct" id="fin-fluxo-content"></div>
   </div>
 
-  <!-- Contas a Pagar -->
+  <!-- Contas a Pagar / Solicitações -->
   <div class="view" id="v-fin-pagar">
     <div class="hero">
       <div class="hero-ic" style="background:rgba(224,85,85,0.12)">📤</div>
-      <div><div class="hero-lbl">Financeiro</div><div class="hero-ttl">Contas a Pagar</div><div class="hero-dsc">Obrigações financeiras — vencimentos, alertas e pagamentos</div></div>
-      <div class="hero-act"><button class="tbt pri" onclick="alert('Formulário de nova conta a pagar — integração em desenvolvimento')">+ Nova Conta</button></div>
+      <div><div class="hero-lbl">Financeiro</div><div class="hero-ttl">Solicitações de Pagamento</div><div class="hero-dsc">Boletos, PIX e reembolsos pendentes de aprovação ou pagamento</div></div>
+      <div class="hero-act"><button class="tbt" onclick="finFiltrarPagar()">↺ Atualizar</button></div>
     </div>
     <div class="inav" style="--mc:var(--gr)">
       <div class="ini" onclick="go('fin-dash')">Dashboard</div>
