@@ -326,15 +326,15 @@
                   onmouseover="this.style.background='var(--bg-hover)'"
                   onmouseout="this.style.background=''">
                 <td style="padding:8px 8px">
-                  <span style="font-size:11px;font-weight:600;color:${t.cor}">${t.icon} ${r.tipo || "—"}</span>
+                  <span style="font-size:11px;font-weight:600;color:${t.cor}">${t.icon} ${escapeHtml(r.tipo || "—")}</span>
                 </td>
                 <td style="padding:8px 8px;color:var(--tx1);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500">
-                  ${r.produto ? `<div style="font-size:11px">${r.produto}</div>` : ""}
-                  <div style="${r.produto ? "color:var(--tx2);font-size:10.5px" : ""}">${r.titulo || "—"}</div>
+                  ${r.produto ? `<div style="font-size:11px">${escapeHtml(r.produto)}</div>` : ""}
+                  <div style="${r.produto ? "color:var(--tx2);font-size:10.5px" : ""}">${escapeHtml(r.titulo || "—")}</div>
                 </td>
-                <td style="padding:8px 8px;color:var(--tx2);white-space:nowrap">${r.fornecedor || "—"}</td>
+                <td style="padding:8px 8px;color:var(--tx2);white-space:nowrap">${escapeHtml(r.fornecedor || "—")}</td>
                 <td style="padding:8px 8px;color:var(--tx1);white-space:nowrap;font-weight:500">${r.valor ? fmtMoney(r.valor) : "—"}</td>
-                <td style="padding:8px 8px;color:var(--tx3);white-space:nowrap">${r.periodicidade || "—"}</td>
+                <td style="padding:8px 8px;color:var(--tx3);white-space:nowrap">${escapeHtml(r.periodicidade || "—")}</td>
                 <td style="padding:8px 8px;color:var(--tx2);white-space:nowrap">${fmtD(r.data_vencimento)}</td>
                 <td style="padding:8px 8px;white-space:nowrap">${diasTxt}</td>
                 <td style="padding:8px 8px">${pillStatus(st)}</td>
@@ -370,26 +370,26 @@
 
     const linhas = [
       ["Tipo", `<span style="color:${t.cor};font-weight:600">${t.icon} ${con.tipo}</span>`],
-      con.produto       ? ["Produto / Sistema", con.produto]                : null,
-      con.fornecedor    ? ["Fornecedor",         con.fornecedor]            : null,
-      con.proprietario  ? ["Proprietário",       con.proprietario]          : null,
-      con.endereco      ? ["Endereço",           con.endereco]              : null,
-      con.num_licencas  ? ["Nº de licenças",     con.num_licencas]          : null,
-      con.tipo_licenca  ? ["Tipo de licença",    con.tipo_licenca]          : null,
-      con.num_apolice   ? ["Nº da apólice",      con.num_apolice]           : null,
-      con.tipo_seguro   ? ["Tipo de seguro",     con.tipo_seguro]           : null,
+      con.produto       ? ["Produto / Sistema", escapeHtml(con.produto)]                : null,
+      con.fornecedor    ? ["Fornecedor",         escapeHtml(con.fornecedor)]            : null,
+      con.proprietario  ? ["Proprietário",       escapeHtml(con.proprietario)]          : null,
+      con.endereco      ? ["Endereço",           escapeHtml(con.endereco)]              : null,
+      con.num_licencas  ? ["Nº de licenças",     escapeHtml(String(con.num_licencas))]  : null,
+      con.tipo_licenca  ? ["Tipo de licença",    escapeHtml(con.tipo_licenca)]          : null,
+      con.num_apolice   ? ["Nº da apólice",      escapeHtml(con.num_apolice)]           : null,
+      con.tipo_seguro   ? ["Tipo de seguro",     escapeHtml(con.tipo_seguro)]           : null,
       con.valor_segurado? ["Valor segurado",     fmtMoney(con.valor_segurado)] : null,
-      con.valor         ? ["Valor contratual",   fmtMoney(con.valor) + (con.periodicidade ? ` / ${con.periodicidade}` : "")] : null,
-      con.indice_reajuste ? ["Índice de reajuste", `${con.indice_reajuste}${con.perc_reajuste ? ` (${con.perc_reajuste}%)` : ""}`] : null,
+      con.valor         ? ["Valor contratual",   fmtMoney(con.valor) + (con.periodicidade ? ` / ${escapeHtml(con.periodicidade)}` : "")] : null,
+      con.indice_reajuste ? ["Índice de reajuste", `${escapeHtml(String(con.indice_reajuste))}${con.perc_reajuste ? ` (${escapeHtml(String(con.perc_reajuste))}%)` : ""}`] : null,
       ["Início",     fmtD(con.data_inicio)],
       ["Vencimento", fmtD(con.data_vencimento)],
       dias !== null ? ["Situação prazo", dias < 0 ? `<span style="color:var(--rose);font-weight:600">Vencido há ${Math.abs(dias)} dias</span>`
         : dias <= 30 ? `<span style="color:var(--amber);font-weight:600">Vence em ${dias} dias</span>`
         : `<span style="color:var(--gr)">${dias} dias restantes</span>`] : null,
       con.renovacao_automatica != null ? ["Renovação automática", con.renovacao_automatica ? "✅ Sim" : "Não"] : null,
-      con.responsavel   ? ["Responsável",        con.responsavel]           : null,
-      con.contato_fornecedor ? ["Contato",        con.contato_fornecedor]   : null,
-      con.forma_pagamento ? ["Forma de pagamento", con.forma_pagamento]     : null,
+      con.responsavel   ? ["Responsável",        escapeHtml(con.responsavel)]           : null,
+      con.contato_fornecedor ? ["Contato",        escapeHtml(con.contato_fornecedor)]   : null,
+      con.forma_pagamento ? ["Forma de pagamento", escapeHtml(con.forma_pagamento)]     : null,
     ].filter(Boolean);
 
     el.innerHTML = `
@@ -397,10 +397,10 @@
         <div class="hero-ic" style="background:${t.corbg};border-color:${t.cor}44;font-size:22px">${t.icon}</div>
         <div>
           <div class="hero-lbl">Contrato · ${t.icon} ${con.tipo}</div>
-          <div class="hero-ttl">${con.produto || con.titulo || "—"}</div>
+          <div class="hero-ttl">${escapeHtml(con.produto || con.titulo || "—")}</div>
           <div class="hero-dsc" style="display:flex;gap:8px;align-items:center;margin-top:4px">
             ${pillStatus(st)}
-            ${con.fornecedor ? `<span style="color:var(--tx3);font-size:11px">${con.fornecedor}</span>` : ""}
+            ${con.fornecedor ? `<span style="color:var(--tx3);font-size:11px">${escapeHtml(con.fornecedor)}</span>` : ""}
           </div>
         </div>
         <div class="hero-act">
@@ -421,10 +421,10 @@
             </table>
             ${con.descricao ? `
               <div class="ctit" style="margin-top:16px">Descrição / Observações</div>
-              <div style="font-size:12px;color:var(--tx1);line-height:1.7;margin-top:6px">${con.descricao}</div>` : ""}
+              <div style="font-size:12px;color:var(--tx1);line-height:1.7;margin-top:6px">${escapeHtml(con.descricao)}</div>` : ""}
             ${con.observacoes ? `
               <div class="ctit" style="margin-top:16px">Observações internas</div>
-              <div style="font-size:12px;color:var(--tx2);line-height:1.7;margin-top:6px">${con.observacoes}</div>` : ""}
+              <div style="font-size:12px;color:var(--tx2);line-height:1.7;margin-top:6px">${escapeHtml(con.observacoes)}</div>` : ""}
           </div>
           <div class="card">
             <div class="ctit">Atualizar Status</div>

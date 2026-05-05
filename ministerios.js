@@ -168,11 +168,11 @@
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
           <div style="width:38px;height:38px;border-radius:10px;background:var(--violetbg);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${ic}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-weight:700;color:var(--tx1);font-size:14px">${m.nome}${inativoTag}</div>
+            <div style="font-weight:700;color:var(--tx1);font-size:14px">${escapeHtml(m.nome)}${inativoTag}</div>
             ${tipoLabel ? `<div style="font-size:11px;color:var(--tx3);margin-top:1px">${tipoLabel}</div>` : ''}
           </div>
         </div>
-        ${nomeSupervisor ? `<div style="font-size:12px;color:var(--tx2);margin-bottom:8px">👤 ${nomeSupervisor}</div>` : ''}
+        ${nomeSupervisor ? `<div style="font-size:12px;color:var(--tx2);margin-bottom:8px">👤 ${escapeHtml(nomeSupervisor)}</div>` : ''}
         <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--bd1);padding-top:8px;margin-top:4px">
           <span style="font-size:12px;color:var(--tx3)">👥 ${qtdMembros} membro${qtdMembros !== 1 ? 's' : ''}</span>
           <span style="font-size:11.5px;color:var(--violet)">Abrir →</span>
@@ -240,7 +240,7 @@
       const _linha = (label, pessoaId) => pessoaId && nomes[pessoaId]
         ? `<div style="display:flex;gap:8px;align-items:baseline;margin-bottom:6px">
              <span style="font-size:11px;color:var(--tx3);min-width:110px">${label}</span>
-             <span style="font-size:13px;font-weight:600;color:var(--tx1)">${nomes[pessoaId]}</span>
+             <span style="font-size:13px;font-weight:600;color:var(--tx1)">${escapeHtml(nomes[pessoaId])}</span>
            </div>`
         : '';
 
@@ -254,13 +254,13 @@
           <div style="width:48px;height:48px;border-radius:12px;background:var(--violetbg);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${ic}</div>
           <div style="flex:1;min-width:180px">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px">
-              <div style="font-size:18px;font-weight:800;color:var(--tx1)">${m.nome}
+              <div style="font-size:18px;font-weight:800;color:var(--tx1)">${escapeHtml(m.nome)}
                 ${m.ativo === false ? '<span style="font-size:11px;padding:2px 8px;background:#fee2e2;color:var(--rose);border-radius:20px;margin-left:4px">Inativo</span>' : ''}
               </div>
               ${btnEditar}
             </div>
             ${tipoLabel ? `<div style="font-size:12px;color:var(--tx3);margin-bottom:8px">${tipoLabel}</div>` : ''}
-            ${m.descricao ? `<div style="font-size:13px;color:var(--tx2);line-height:1.6;margin-bottom:10px">${m.descricao}</div>` : ''}
+            ${m.descricao ? `<div style="font-size:13px;color:var(--tx2);line-height:1.6;margin-bottom:10px">${escapeHtml(m.descricao)}</div>` : ''}
             ${temLideranca ? `
               <div style="border-top:1px solid var(--bd1);padding-top:10px;margin-top:4px">
                 <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Liderança</div>

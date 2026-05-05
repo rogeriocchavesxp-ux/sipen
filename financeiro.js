@@ -510,10 +510,10 @@
                     <td style="padding:7px 6px;min-width:160px">
                       <div style="display:flex;flex-direction:column;gap:3px">
                         ${boleto
-                          ? `<button onclick="finAbrirAnexo('${boleto.storage_path}')" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--blue);cursor:pointer;text-align:left;white-space:nowrap">📎 ${boleto.nome_original}</button>`
+                          ? `<button onclick="finAbrirAnexo('${escapeHtmlAttr(boleto.storage_path)}')" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--blue);cursor:pointer;text-align:left;white-space:nowrap">📎 ${escapeHtml(boleto.nome_original)}</button>`
                           : r.id && !pago ? `<button onclick="finAnexar('${r.id}','boleto')" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px dashed var(--bd2);background:transparent;color:var(--tx3);cursor:pointer;white-space:nowrap">+ Boleto</button>` : ""}
                         ${nf
-                          ? `<button onclick="finAbrirAnexo('${nf.storage_path}')" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--blue);cursor:pointer;text-align:left;white-space:nowrap">📎 ${nf.nome_original}</button>`
+                          ? `<button onclick="finAbrirAnexo('${escapeHtmlAttr(nf.storage_path)}')" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--blue);cursor:pointer;text-align:left;white-space:nowrap">📎 ${escapeHtml(nf.nome_original)}</button>`
                           : r.id && !pago ? `<button onclick="finAnexar('${r.id}','nota_fiscal')" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px dashed var(--bd2);background:transparent;color:var(--tx3);cursor:pointer;white-space:nowrap">+ Nota Fiscal</button>` : ""}
                       </div>
                     </td>

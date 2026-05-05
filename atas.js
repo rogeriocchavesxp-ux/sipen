@@ -231,20 +231,20 @@
           <div style="padding:18px 22px 14px;border-bottom:1px solid var(--bd1);display:flex;align-items:flex-start;justify-content:space-between">
             <div>
               <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Demanda gerada por ata</div>
-              <div style="font-size:16px;font-weight:700;color:var(--tx1)">${d.titulo || "Sem título"}</div>
+              <div style="font-size:16px;font-weight:700;color:var(--tx1)">${escapeHtml(d.titulo || "Sem título")}</div>
               <div style="margin-top:5px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
                 ${pillDem(d.status)}
-                ${d.area ? `<span style="font-size:11px;color:var(--tx3)">${d.area}</span>` : ""}
+                ${d.area ? `<span style="font-size:11px;color:var(--tx3)">${escapeHtml(d.area)}</span>` : ""}
               </div>
             </div>
             <button onclick="document.getElementById('modal-dem-simples').remove()" style="background:none;border:none;font-size:22px;color:var(--tx3);cursor:pointer;padding:4px 8px;border-radius:6px;flex-shrink:0">×</button>
           </div>
           <div style="padding:16px 22px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
             ${[
-              ["Área",         d.area],
-              ["Responsável",  resp !== "—" ? resp : null],
+              ["Área",         d.area ? escapeHtml(d.area) : null],
+              ["Responsável",  resp !== "—" ? escapeHtml(resp) : null],
               ["Prazo",        prazo ? fmtD(prazo) : null],
-              ["Status",       d.status ? (STATUS_DEM_CFG[d.status]?.label || d.status) : null],
+              ["Status",       d.status ? escapeHtml(STATUS_DEM_CFG[d.status]?.label || d.status) : null],
             ].filter(([,v]) => v).map(([lbl, val]) => `
               <div style="background:var(--bg-body);border-radius:8px;padding:8px 12px">
                 <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">${lbl}</div>
@@ -253,7 +253,7 @@
             ${d.descricao ? `
               <div style="background:var(--bg-body);border-radius:8px;padding:8px 12px;grid-column:1/-1">
                 <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Descrição</div>
-                <div style="font-size:13px;color:var(--tx1);line-height:1.5">${d.descricao}</div>
+                <div style="font-size:13px;color:var(--tx1);line-height:1.5">${escapeHtml(d.descricao)}</div>
               </div>` : ""}
           </div>
           <div style="padding:0 22px 18px;display:flex;justify-content:flex-end">
@@ -340,7 +340,7 @@
                   <td class="tdc" style="font-weight:700">${a.numero || "—"}</td>
                   <td style="font-size:11px">${tipoLabel(a.tipo)}</td>
                   <td class="mono" style="font-size:10.5px">${fmtD(a.data)}</td>
-                  <td style="font-size:12px">${a.presidente || "—"}</td>
+                  <td style="font-size:12px">${escapeHtml(a.presidente || "—")}</td>
                   <td>${pillAta(a.status)}</td>
                 </tr>`).join("")}
               </tbody>
@@ -426,9 +426,9 @@
             <td class="tdc" style="font-weight:700">${a.numero || "—"}</td>
             <td style="font-size:11px">${tipoLabel(a.tipo)}</td>
             <td class="mono" style="font-size:10.5px">${fmtD(a.data)}</td>
-            <td style="font-size:12px">${a.presidente || "—"}</td>
-            <td style="font-size:12px">${a.secretario || "—"}</td>
-            <td style="font-size:11px;color:var(--tx2);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.sintese || "—"}</td>
+            <td style="font-size:12px">${escapeHtml(a.presidente || "—")}</td>
+            <td style="font-size:12px">${escapeHtml(a.secretario || "—")}</td>
+            <td style="font-size:11px;color:var(--tx2);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(a.sintese || "—")}</td>
             <td>${pillAta(a.status)}</td>
             <td onclick="event.stopPropagation()" style="text-align:center;white-space:nowrap">
               <button class="tbt" style="padding:3px 7px;font-size:11px;margin-right:2px" onclick="atasVerDetalhes('${a.id}')">Ver</button>
@@ -588,10 +588,10 @@
             <tbody>
               ${delibs.map(d => `
               <tr style="${isAtrasada(d.prazo) && !d.demanda_id ? "background:rgba(224,85,85,.04)" : ""}">
-                <td style="font-size:12px;max-width:200px">${d.descricao || "—"}</td>
+                <td style="font-size:12px;max-width:200px">${escapeHtml(d.descricao || "—")}</td>
                 <td>${pillDelib(d.tipo)}</td>
-                <td style="font-size:11.5px">${d.departamento || "—"}</td>
-                <td style="font-size:11.5px">${d.responsavel || "—"}</td>
+                <td style="font-size:11.5px">${escapeHtml(d.departamento || "—")}</td>
+                <td style="font-size:11.5px">${escapeHtml(d.responsavel || "—")}</td>
                 <td style="font-size:11px;font-family:var(--mono);color:${isAtrasada(d.prazo) ? "var(--rose)" : "var(--tx2)"}">${fmtD(d.prazo)}${isAtrasada(d.prazo) ? " ⚠" : ""}</td>
                 <td>${pillPrio(d.prioridade)}</td>
                 <td>${_celulaDemanda(d)}</td>
@@ -861,10 +861,10 @@
           <tr style="${isAtrasada(d.prazo) && !d.demanda_id ? "background:rgba(224,85,85,.04)" : ""}">
             <td class="tdc" style="cursor:pointer;font-weight:700" onclick="atasVerDetalhes('${d.ata_id}')">${d._ata?.numero || "—"}</td>
             <td class="mono" style="font-size:10.5px">${fmtD(d._ata?.data)}</td>
-            <td style="font-size:12px;max-width:200px">${d.descricao || "—"}</td>
+            <td style="font-size:12px;max-width:200px">${escapeHtml(d.descricao || "—")}</td>
             <td>${pillDelib(d.tipo)}</td>
-            <td style="font-size:11.5px">${d.departamento || "—"}</td>
-            <td style="font-size:11.5px">${d.responsavel || "—"}</td>
+            <td style="font-size:11.5px">${escapeHtml(d.departamento || "—")}</td>
+            <td style="font-size:11.5px">${escapeHtml(d.responsavel || "—")}</td>
             <td style="font-size:11px;font-family:var(--mono);color:${isAtrasada(d.prazo) ? "var(--rose)" : "var(--tx2)"}">${fmtD(d.prazo)}${isAtrasada(d.prazo) ? " ⚠" : ""}</td>
             <td>${pillPrio(d.prioridade)}</td>
             <td>${_celulaDemandaGlobal(d)}</td>
@@ -881,7 +881,7 @@
         <div style="display:flex;flex-direction:column;gap:3px;min-width:120px">
           <span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;background:rgba(58,170,92,.15);color:var(--gr);width:fit-content">✓ Gerada</span>
           ${dem ? `<div>${pillDem(dem.status)}</div>` : ""}
-          ${dem?.titulo ? `<div style="font-size:10.5px;color:var(--tx2);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${dem.titulo}">${dem.titulo}</div>` : ""}
+          ${dem?.titulo ? `<div style="font-size:10.5px;color:var(--tx2);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtmlAttr(dem.titulo)}">${escapeHtml(dem.titulo)}</div>` : ""}
           <button class="tbt" style="font-size:10px;padding:2px 8px;color:var(--sky);border-color:var(--sky);margin-top:2px;width:fit-content"
             onclick="_abrirDemanda('${d.demanda_id}','atas-delib')">Abrir demanda</button>
         </div>`;
@@ -947,10 +947,10 @@
       function _linhaDelibModal(d) {
         return `
           <tr style="${isAtrasada(d.prazo) ? "background:rgba(224,85,85,.04)" : ""}">
-            <td style="font-size:12px;max-width:180px">${d.descricao || "—"}</td>
+            <td style="font-size:12px;max-width:180px">${escapeHtml(d.descricao || "—")}</td>
             <td>${pillDelib(d.tipo)}</td>
-            <td style="font-size:11px">${d.departamento || "—"}</td>
-            <td style="font-size:11px">${d.responsavel || "—"}</td>
+            <td style="font-size:11px">${escapeHtml(d.departamento || "—")}</td>
+            <td style="font-size:11px">${escapeHtml(d.responsavel || "—")}</td>
             <td style="font-size:11px;color:${isAtrasada(d.prazo) ? "var(--rose)" : "var(--tx2)"}">${fmtD(d.prazo)}${isAtrasada(d.prazo) ? " ⚠" : ""}</td>
             <td>${pillPrio(d.prioridade)}</td>
             <td>${_celulaDemandaModal(d)}</td>
@@ -976,8 +976,8 @@
         const prazo = _prazoDem(d);
         return `
           <tr>
-            <td style="font-size:12px;font-weight:600">${d.titulo || "—"}</td>
-            <td style="font-size:11px">${d.area || "—"}</td>
+            <td style="font-size:12px;font-weight:600">${escapeHtml(d.titulo || "—")}</td>
+            <td style="font-size:11px">${escapeHtml(d.area || "—")}</td>
             <td>${pillDem(d.status)}</td>
             <td style="font-size:11px">${_respDem(d)}</td>
             <td style="font-size:11px;color:${isAtrasada(prazo) ? "var(--rose)" : "var(--tx2)"}">${fmtD(prazo)}${isAtrasada(prazo) ? " ⚠" : ""}</td>

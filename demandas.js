@@ -623,11 +623,11 @@
           </div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
-              <span style="font-size:12px;font-weight:600;color:var(--tx1)">${a.automatico ? "Sistema" : (a.usuario_nome || "Usuário")}</span>
+              <span style="font-size:12px;font-weight:600;color:var(--tx1)">${a.automatico ? "Sistema" : escapeHtml(a.usuario_nome || "Usuário")}</span>
               <span style="font-size:10.5px;color:var(--tx3)">${dt}</span>
               ${a.status_demanda ? pillStatus(a.status_demanda) : ""}
             </div>
-            <div style="font-size:12.5px;color:${a.automatico?"var(--tx3)":"var(--tx1)"};line-height:1.5;font-style:${a.automatico?"italic":"normal"}">${a.texto}</div>
+            <div style="font-size:12.5px;color:${a.automatico?"var(--tx3)":"var(--tx1)"};line-height:1.5;font-style:${a.automatico?"italic":"normal"}">${escapeHtml(a.texto)}</div>
           </div>
         </div>`;
       }).join("");
@@ -699,8 +699,8 @@
     const fmtVal  = v => v ? `R$ ${parseFloat(v).toLocaleString("pt-BR", { minimumFractionDigits:2, maximumFractionDigits:2 })}` : "—";
     const fmtAnexo = (meta, rotulo) => {
       if (!meta?.storage_path) return null;
-      const pathEnc = meta.storage_path.replace(/'/g, "\\'");
-      const btn = `<button onclick="demAbrirAnexo('${pathEnc}')" style="padding:4px 14px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--blue);font-size:11.5px;cursor:pointer;font-family:var(--ff)">📎 ${meta.file_name || "Abrir arquivo"}</button>`;
+      const pathEnc = escapeHtmlAttr(meta.storage_path);
+      const btn = `<button onclick="demAbrirAnexo('${pathEnc}')" style="padding:4px 14px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--blue);font-size:11.5px;cursor:pointer;font-family:var(--ff)">📎 ${escapeHtml(meta.file_name || "Abrir arquivo")}</button>`;
       return [rotulo, btn];
     };
 

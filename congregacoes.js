@@ -88,8 +88,8 @@ function renderDashboardGeral(){
     <div onclick="abrirCongView('${c.id}')" style="cursor:pointer;margin-bottom:8px;padding:10px 12px;border-radius:8px;border:1px solid var(--bd1);background:var(--bg2);display:flex;align-items:center;gap:12px;transition:background .15s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'">
       <div style="width:36px;height:36px;border-radius:50%;background:${c.identificacao.cor}22;border:2px solid ${c.identificacao.cor};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${c.identificacao.icon||"⛪"}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:12.5px;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.identificacao.nome}</div>
-        <div style="font-size:10.5px;color:var(--tx3)">${c.identificacao.localizacao||"—"}</div>
+        <div style="font-weight:700;font-size:12.5px;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(c.identificacao.nome)}</div>
+        <div style="font-size:10.5px;color:var(--tx3)">${escapeHtml(c.identificacao.localizacao||"—")}</div>
       </div>
       <div style="text-align:right;flex-shrink:0">
         <div style="font-size:14px;font-weight:700;color:var(--gr)">${c.panorama_membresia.membros_ativos}</div>
@@ -105,7 +105,7 @@ function renderDashboardGeral(){
     <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd1)">
       <div style="font-size:10px;color:var(--tx3);width:68px;flex-shrink:0">${fmtData(cu.data)}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:11.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cu.congNome}</div>
+        <div style="font-size:11.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(cu.congNome)}</div>
         <div style="font-size:10px;color:var(--tx3)">${cu.tipo}</div>
       </div>
       <div style="font-size:12px;font-weight:700;color:var(--gr);flex-shrink:0">${cu.participantes}</div>
@@ -184,11 +184,11 @@ function renderTab_visaoGeral(cong, el){
         <div class="ctit">Identificação</div>
         <table style="width:100%;font-size:11.5px;border-collapse:collapse">
           <tr><td style="color:var(--tx3);padding:5px 0;width:42%">Status</td><td>${statusBadge(cong.identificacao.status)}</td></tr>
-          <tr><td style="color:var(--tx3);padding:5px 0">Localização</td><td style="color:var(--tx1)">${cong.identificacao.localizacao||"—"}</td></tr>
-          <tr><td style="color:var(--tx3);padding:5px 0">Endereço</td><td style="color:var(--tx1)">${cong.identificacao.endereco||"—"}</td></tr>
+          <tr><td style="color:var(--tx3);padding:5px 0">Localização</td><td style="color:var(--tx1)">${escapeHtml(cong.identificacao.localizacao||"—")}</td></tr>
+          <tr><td style="color:var(--tx3);padding:5px 0">Endereço</td><td style="color:var(--tx1)">${escapeHtml(cong.identificacao.endereco||"—")}</td></tr>
           <tr><td style="color:var(--tx3);padding:5px 0">Início</td><td style="color:var(--tx1)">${fmtData(cong.identificacao.data_inicio)}</td></tr>
-          <tr><td style="color:var(--tx3);padding:5px 0">Responsável</td><td style="color:var(--tx1)">${cong.lideranca.pastor_responsavel||"—"}</td></tr>
-          ${cong.identificacao.obs?`<tr><td style="color:var(--tx3);padding:5px 0">Obs.</td><td style="color:var(--tx1)">${cong.identificacao.obs}</td></tr>`:""}
+          <tr><td style="color:var(--tx3);padding:5px 0">Responsável</td><td style="color:var(--tx1)">${escapeHtml(cong.lideranca.pastor_responsavel||"—")}</td></tr>
+          ${cong.identificacao.obs?`<tr><td style="color:var(--tx3);padding:5px 0">Obs.</td><td style="color:var(--tx1)">${escapeHtml(cong.identificacao.obs)}</td></tr>`:""}
         </table>
       </div>
       <div class="card">

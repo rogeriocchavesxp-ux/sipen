@@ -121,7 +121,7 @@
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
           <div>
             <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Rede de Cuidado Pastoral</div>
-            <div style="font-size:20px;font-weight:700;color:var(--tx1)">${nome}</div>
+            <div style="font-size:20px;font-weight:700;color:var(--tx1)">${escapeHtml(nome)}</div>
           </div>
           <div style="text-align:right">
             <div style="font-size:28px;font-weight:800;color:var(--accent)">${vinculos.length}<span style="font-size:14px;color:var(--tx3)">/5</span></div>
@@ -264,7 +264,7 @@
       }
 
       _invalidate();
-      _setOk(container, `${pessoa.nome} adicionado à sua rede.`);
+      _setOk(container, `${escapeHtml(pessoa.nome)} adicionado à sua rede.`);
       await _renderLider(container);
     } catch (e) {
       _setErro(container, e.message);
