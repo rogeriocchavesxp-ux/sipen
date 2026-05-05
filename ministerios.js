@@ -66,6 +66,19 @@
       ).join('');
   }
 
+  async function _restError(res) {
+    try { return await res.json(); }
+    catch (_) { return { message: await res.text().catch(() => res.statusText) }; }
+  }
+
+  function _renderTabelaMinisteriosAusente(el) {
+    if (!el) return;
+    el.innerHTML = `<div style="color:var(--tx3);padding:20px;text-align:center;grid-column:1/-1">
+    Tabela "ministérios" não encontrada no banco de dados.<br>
+    <small>Execute o SQL de criação da tabela para ativar este módulo.</small>
+  </div>`;
+  }
+
   /* ══ LISTA DE MINISTÉRIOS ════════════════════════════════════ */
   async function minMinLoad() {
     document.getElementById('min-min-painel-detalhe').style.display = 'none';
@@ -97,7 +110,16 @@
         _carregarPessoas(),
       ]);
 
-      const lista   = rMin.ok ? await rMin.json() : [];
+      if (!rMin.ok) {
+        const error = await _restError(rMin);
+        if (error?.code === "42P01") {
+          _renderTabelaMinisteriosAusente(grid);
+          return;
+        }
+        throw new Error(error?.message || "Erro ao carregar ministérios.");
+      }
+
+      const lista = await rMin.json();
       const cntRows = rCnt.ok ? await rCnt.json() : [];
 
       // Contagem de membros ativos por ministério
@@ -183,7 +205,16 @@
         _carregarPessoas(),
       ]);
 
-      const dados = rMin.ok ? await rMin.json() : [];
+      if (!rMin.ok) {
+        const error = await _restError(rMin);
+        if (error?.code === "42P01") {
+          header.innerHTML = '<div style="color:var(--tx3);padding:20px;text-align:center">Tabela "ministérios" não encontrada no banco de dados.<br><small>Execute o SQL de criação da tabela para ativar este módulo.</small></div>';
+          return;
+        }
+        throw new Error(error?.message || "Erro ao carregar ministério.");
+      }
+
+      const dados = await rMin.json();
       const m = dados[0];
       if (!m) {
         header.innerHTML = '<div style="color:var(--rose);font-size:13px">Ministério não encontrado.</div>';
