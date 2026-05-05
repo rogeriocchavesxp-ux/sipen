@@ -76,6 +76,7 @@ insert into public.perfis (nome, descricao) values
   ('PASTORAL',             'Módulos pastorais e membresia'),
   ('ADM_OPERACIONAL',      'Administrativo e financeiro'),
   ('LIDER_MINISTERIO',     'Restrito ao ministério e agenda'),
+  ('LIDER_AREA',           'Líder setorial — mesmo escopo do líder de ministério'),
   ('MEMBRO_MINISTERIO',    'Operacional do setor ministerial'),
   ('OPERACIONAL_SERVICOS', 'Infraestrutura e demandas do setor'),
   ('MEMBRO_IGREJA',        'Membro comum sem função ativa')
@@ -199,6 +200,32 @@ cross join (values
   ('CONGREGACOES',     'SEM_ACESSO')
 ) as m(modulo, nivel)
 where p.nome = 'LIDER_MINISTERIO'
+on conflict (perfil_id, modulo) do update set nivel_acesso = excluded.nivel_acesso;
+
+-- LIDER_AREA (mesmo escopo que LIDER_MINISTERIO)
+insert into public.perfis_permissoes (perfil_id, modulo, nivel_acesso)
+select p.id, m.modulo, m.nivel
+from public.perfis p
+cross join (values
+  ('ADMINISTRATIVO',   'SEM_ACESSO'),
+  ('FINANCEIRO',       'SEM_ACESSO'),
+  ('JURIDICO',         'SEM_ACESSO'),
+  ('PASTORAL',         'SEM_ACESSO'),
+  ('CONSELHO',         'SEM_ACESSO'),
+  ('MINISTERIAL',      'COMPLETO'),
+  ('AGENDA',           'COMPLETO'),
+  ('PGS',              'COMPLETO'),
+  ('INFRAESTRUTURA',   'SEM_ACESSO'),
+  ('DEMANDAS',         'LEITURA'),
+  ('RELATORIOS',       'LEITURA'),
+  ('MEMBRESIA',        'LEITURA'),
+  ('ESTOQUE',          'SEM_ACESSO'),
+  ('CONFIGURACOES',    'SEM_ACESSO'),
+  ('AREA_MEMBRO',      'LEITURA'),
+  ('JUNTA_DIACONAL',   'SEM_ACESSO'),
+  ('CONGREGACOES',     'SEM_ACESSO')
+) as m(modulo, nivel)
+where p.nome = 'LIDER_AREA'
 on conflict (perfil_id, modulo) do update set nivel_acesso = excluded.nivel_acesso;
 
 -- MEMBRO_MINISTERIO
