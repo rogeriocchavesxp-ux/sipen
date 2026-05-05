@@ -686,18 +686,23 @@
 
   /* ── AÇÕES: ANEXOS ───────────────────────────────────────── */
 
-  window.finAnexar = function (solicitacaoId, tipo) {
+  window.finAnexar = function(solicitacaoId, tipo) {
     const input = document.createElement("input");
-    input.type    = "file";
-    input.accept  = ".pdf,.jpg,.jpeg,.png";
+    input.type   = "file";
+    input.accept = ".pdf,.jpg,.jpeg,.png";
     input.onchange = async () => {
       const file = input.files[0];
       if (!file) return;
+      // Feedback visual
+      const btnSel = document.querySelector(`[onclick="finAnexar('${solicitacaoId}','${tipo}')"]`);
+      const textoOrig = btnSel ? btnSel.textContent : "";
+      if (btnSel) { btnSel.textContent = "Enviando..."; btnSel.disabled = true; }
       try {
         await _uploadAnexoFin(file, solicitacaoId, tipo);
         _ANEXOS = null;
         await renderPagar();
-      } catch (e) {
+      } catch(e) {
+        if (btnSel) { btnSel.textContent = textoOrig; btnSel.disabled = false; }
         if (typeof T === "function") T("Erro no upload", e.message);
         else alert("Erro: " + e.message);
       }
