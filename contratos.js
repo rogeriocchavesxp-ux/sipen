@@ -396,7 +396,7 @@
       <div class="hero">
         <div class="hero-ic" style="background:${t.corbg};border-color:${t.cor}44;font-size:22px">${t.icon}</div>
         <div>
-          <div class="hero-lbl">Contrato · ${t.icon} ${con.tipo}</div>
+          <div class="hero-lbl">Contrato · ${t.icon} ${escapeHtml(con.tipo)}</div>
           <div class="hero-ttl">${escapeHtml(con.produto || con.titulo || "—")}</div>
           <div class="hero-dsc" style="display:flex;gap:8px;align-items:center;margin-top:4px">
             ${pillStatus(st)}
@@ -527,7 +527,7 @@
         input = `<input type="date" id="con-cf-${c.id}" value="${val || ""}"
           style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg2));color:var(--tx1);font-size:12px;box-sizing:border-box">`;
       } else {
-        input = `<input type="text" id="con-cf-${c.id}" value="${val || ""}" placeholder="${c.label}"
+        input = `<input type="text" id="con-cf-${c.id}" value="${escapeHtmlAttr(val || "")}" placeholder="${escapeHtmlAttr(c.label)}"
           style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg2));color:var(--tx1);font-size:12px;box-sizing:border-box">`;
       }
 
@@ -538,17 +538,17 @@
     }).join("") + `
       <div style="margin-bottom:12px">
         <label style="display:block;font-size:11px;color:var(--tx3);margin-bottom:4px">Responsável interno</label>
-        <input type="text" id="con-cf-responsavel" value="${dados.responsavel || ""}"
+        <input type="text" id="con-cf-responsavel" value="${escapeHtmlAttr(dados.responsavel || "")}"
           placeholder="Digite ou selecione..." list="con-resp-datalist" autocomplete="off"
           style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg2));color:var(--tx1);font-size:12px;box-sizing:border-box">
         <datalist id="con-resp-datalist">
-          ${_responsaveis.map(n => `<option value="${n}">`).join("")}
+          ${_responsaveis.map(n => `<option value="${escapeHtmlAttr(n)}">`).join("")}
         </datalist>
       </div>
       <div style="margin-bottom:12px">
         <label style="display:block;font-size:11px;color:var(--tx3);margin-bottom:4px">Observações</label>
         <textarea id="con-cf-observacoes" rows="3" placeholder="Informações adicionais..."
-          style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg2));color:var(--tx1);font-size:12px;box-sizing:border-box;resize:vertical">${dados.observacoes || ""}</textarea>
+          style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg2));color:var(--tx1);font-size:12px;box-sizing:border-box;resize:vertical">${escapeHtml(dados.observacoes || "")}</textarea>
       </div>`;
   }
 

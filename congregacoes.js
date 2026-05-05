@@ -59,7 +59,7 @@ function buildCongMenu(){
   congs.forEach(c=>{
     const el=document.createElement("div");
     el.className="si si-cong-item";
-    el.innerHTML=`<span style="margin-right:6px;font-size:11px">${c.identificacao.icon||"⛪"}</span>${c.identificacao.nome}`;
+    el.innerHTML=`<span style="margin-right:6px;font-size:11px">${escapeHtml(c.identificacao.icon||"⛪")}</span>${escapeHtml(c.identificacao.nome)}`;
     if(_activeCongId===c.id) el.classList.add("ativo");
     el.onclick=()=>abrirCongView(c.id);
     msub.appendChild(el);
@@ -137,8 +137,8 @@ function renderCongView(cong){
       <div class="hero-ic" style="background:${cong.identificacao.cor}22;border-color:${cong.identificacao.cor}55">${cong.identificacao.icon||"⛪"}</div>
       <div>
         <div class="hero-lbl">Congregações</div>
-        <div class="hero-ttl">${cong.identificacao.nome}</div>
-        <div class="hero-dsc">${cong.identificacao.localizacao||""}${cong.identificacao.localizacao?" — ":""}${statusBadge(cong.identificacao.status)}</div>
+        <div class="hero-ttl">${escapeHtml(cong.identificacao.nome)}</div>
+        <div class="hero-dsc">${escapeHtml(cong.identificacao.localizacao||"")}${cong.identificacao.localizacao?" — ":""}${statusBadge(cong.identificacao.status)}</div>
       </div>
       <div class="hero-act">
         <button class="tbt" onclick="go('cong-dash')">← Dashboard</button>
@@ -207,7 +207,7 @@ function renderTab_visaoGeral(cong, el){
       <div class="ctit">Desafios Ativos</div>
       ${cong.desafios.lista.slice(0,3).map(d=>`
         <div style="display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd1)">
-          <div style="flex:1"><div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${d.titulo}</div><div style="font-size:10px;color:var(--tx3);margin-top:2px">${d.descricao}</div></div>
+          <div style="flex:1"><div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${escapeHtml(d.titulo)}</div><div style="font-size:10px;color:var(--tx3);margin-top:2px">${escapeHtml(d.descricao)}</div></div>
           <div style="display:flex;gap:5px;flex-shrink:0">${prioBadge(d.prioridade)}${statusBadge(d.status)}</div>
         </div>`).join("")}
     </div>`:""}
@@ -568,7 +568,7 @@ window.salvarEdicaoCong=salvarEdicaoCong;
 
 function abrirModalNovoCulto(congId){
   const sel=document.getElementById("culto-cong-select");
-  if(sel) sel.innerHTML=CONG.listCongs().map(c=>`<option value="${c.id}"${c.id===congId?" selected":""}>${c.identificacao.nome}</option>`).join("");
+  if(sel) sel.innerHTML=CONG.listCongs().map(c=>`<option value="${c.id}"${c.id===congId?" selected":""}>${escapeHtml(c.identificacao.nome)}</option>`).join("");
   ["culto-data","culto-pregador","culto-obs"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
   ["culto-participantes","culto-visitantes","culto-decisoes"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value="0"; });
   const m=document.getElementById("modal-novo-culto"); if(m) m.style.display="flex";
@@ -606,7 +606,7 @@ window.salvarNovoCulto=salvarNovoCulto;
 
 function abrirModalNovoEvento(congId){
   const sel=document.getElementById("evento-cong-select");
-  if(sel) sel.innerHTML=CONG.listCongs().map(c=>`<option value="${c.id}"${c.id===congId?" selected":""}>${c.identificacao.nome}</option>`).join("");
+  if(sel) sel.innerHTML=CONG.listCongs().map(c=>`<option value="${c.id}"${c.id===congId?" selected":""}>${escapeHtml(c.identificacao.nome)}</option>`).join("");
   ["evento-titulo","evento-data","evento-desc"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
   const m=document.getElementById("modal-novo-evento"); if(m) m.style.display="flex";
 }
@@ -632,7 +632,7 @@ window.salvarNovoEvento=salvarNovoEvento;
 
 function abrirModalNovaDemandaCong(){
   const sel=document.getElementById("dem-cong-select");
-  if(sel) sel.innerHTML=CONG.listCongs().map(c=>`<option value="${c.id}">${c.identificacao.nome}</option>`).join("");
+  if(sel) sel.innerHTML=CONG.listCongs().map(c=>`<option value="${c.id}">${escapeHtml(c.identificacao.nome)}</option>`).join("");
   const m=document.getElementById("modal-nova-demanda-cong"); if(m) m.style.display="flex";
 }
 window.abrirModalNovaDemandaCong=abrirModalNovaDemandaCong;
