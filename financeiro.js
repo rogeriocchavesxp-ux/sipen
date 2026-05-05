@@ -465,7 +465,7 @@
             <option value="">Todas as categorias</option>
             ${cats.map(c => `<option value="${c}">${c}</option>`).join("")}
           </select>
-          <input id="fin-pagar-fbusca" type="text" placeholder="Buscar fornecedor, finalidade..." oninput="finFiltrarPagar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:6px 10px;outline:none;min-width:200px">
+          <input id="fin-pagar-fbusca" type="text" placeholder="Buscar fornecedor, finalidade..." oninput="finDebouncePagar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:6px 10px;outline:none;min-width:200px">
           <span style="font-size:11px;color:var(--tx3);margin-left:auto">${rows.length} resultado${rows.length !== 1 ? "s" : ""}</span>
         </div>
 
@@ -758,5 +758,11 @@
 
   window.finFiltrarLanc  = renderLancamentos;
   window.finFiltrarPagar = () => renderPagar();
+
+  let _pagarDebTimer = null;
+  window.finDebouncePagar = function() {
+    clearTimeout(_pagarDebTimer);
+    _pagarDebTimer = setTimeout(() => finFiltrarPagar(), 300);
+  };
 
 })();
