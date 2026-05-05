@@ -1,0 +1,16 @@
+{
+  "name": "sipen-tools",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "sync:dry": "node sync-auth-users.js --dry-run",
+    "sync:test": "node sync-auth-users.js --dry-run --limit 10",
+    "sync": "node sync-auth-users.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.0",
+    "dotenv": "^16.4.0",
+    "nodemailer": "^8.0.7"
+  }
+}
