@@ -209,6 +209,11 @@
 
   const TIPO_ICON = { lancamento:"💰", conta_pagar:"📤", conta_receber:"📥", categoria:"🏷" };
 
+  const BANNER_DEMO = `<div style="background:rgba(212,168,67,.12);border:1px solid rgba(212,168,67,.4);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:11.5px;color:var(--gold);display:flex;align-items:center;gap:8px">
+  <span>⚠</span>
+  <span><strong>Dados demonstrativos</strong> — estas informações não refletem o saldo ou movimentações reais da igreja.</span>
+</div>`;
+
   /* ── RENDER: DASHBOARD ───────────────────────────────────── */
 
   async function renderDash() {
@@ -309,6 +314,7 @@
     const totalDesp = rows.filter(l => l.tipo === "despesa").reduce((s, l) => s + l.valor, 0);
 
     el.innerHTML = `
+      ${BANNER_DEMO}
       <div class="kpis c3" style="margin-bottom:14px">
         <div class="kpi"><div class="kpi-ico" style="background:rgba(61,160,85,0.12);color:var(--gr)">↑</div><div class="kpi-body"><div class="kpi-lbl">Receitas filtradas</div><div class="kpi-val">${brl(totalRec)}</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">↓</div><div class="kpi-body"><div class="kpi-lbl">Despesas filtradas</div><div class="kpi-val">${brl(totalDesp)}</div></div></div>
@@ -369,6 +375,7 @@
     const totalDesp = LANCAMENTOS.filter(l => l.tipo === "despesa").reduce((s, l) => s + l.valor, 0);
 
     el.innerHTML = `
+      ${BANNER_DEMO}
       <div class="kpis c3" style="margin-bottom:14px">
         <div class="kpi"><div class="kpi-ico" style="background:rgba(61,160,85,0.12);color:var(--gr)">↑</div><div class="kpi-body"><div class="kpi-lbl">Total entradas</div><div class="kpi-val">${brl(totalRec)}</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">↓</div><div class="kpi-body"><div class="kpi-lbl">Total saídas</div><div class="kpi-val">${brl(totalDesp)}</div></div></div>
@@ -544,6 +551,7 @@
     const vencBreve = pendentes.filter(c => c.venc <= SEMANA).length;
 
     el.innerHTML = `
+      ${BANNER_DEMO}
       <div class="kpis c3" style="margin-bottom:14px">
         <div class="kpi"><div class="kpi-ico" style="background:var(--tealbg);color:var(--teal)">◎</div><div class="kpi-body"><div class="kpi-lbl">Total a receber</div><div class="kpi-val">${brl(totalPend)}</div><div class="kpi-d nu">${pendentes.length} pendentes</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:rgba(61,160,85,0.12);color:var(--gr)">✓</div><div class="kpi-body"><div class="kpi-lbl">Recebidos</div><div class="kpi-val">${recebidas.length}</div><div class="kpi-d up">neste período</div></div></div>
@@ -625,6 +633,7 @@
     const totalDesp = LANCAMENTOS.filter(l => l.tipo === "despesa").reduce((s, l) => s + l.valor, 0);
 
     el.innerHTML = `
+      ${BANNER_DEMO}
       <div class="kpis c3" style="margin-bottom:14px">
         <div class="kpi"><div class="kpi-ico" style="background:rgba(61,160,85,0.12);color:var(--gr)">↑</div><div class="kpi-body"><div class="kpi-lbl">Total receitas</div><div class="kpi-val">${brl(totalRec)}</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">↓</div><div class="kpi-body"><div class="kpi-lbl">Total despesas</div><div class="kpi-val">${brl(totalDesp)}</div></div></div>
@@ -668,6 +677,7 @@
     if (!el) return;
 
     el.innerHTML = `
+      ${BANNER_DEMO}
       <div class="card">
         <div class="ctit">Histórico de ações financeiras <span class="csub">(${AUDITORIA.length} registros — demonstrativo)</span></div>
         ${[...AUDITORIA].sort((a, b) => b.data.localeCompare(a.data)).map(a => `
