@@ -114,13 +114,14 @@ STABLE
 AS $$
   SELECT
     public.is_admin()
-    OR public.has_any_role(ARRAY['admin','tesoureiro'])
     OR EXISTS (
       SELECT 1
-      FROM public.perfis_permissoes pp
-      JOIN public.perfis pf ON pf.id = pp.perfil_id
-      JOIN public.user_profiles up ON up.role = pf.nome
-      WHERE up.id = auth.uid()
+      FROM public.pessoas pe
+      JOIN public.membros m  ON m.pessoa_id  = pe.id
+      JOIN public.perfis pf  ON UPPER(pf.nome) = UPPER(m.funcao)
+      JOIN public.perfis_permissoes pp ON pp.perfil_id = pf.id
+      WHERE pe.auth_user_id = auth.uid()
+        AND m.status = 'ativo'
         AND pp.modulo = 'FINANCEIRO'
         AND pp.nivel_acesso IN ('EDICAO', 'COMPLETO')
     );
