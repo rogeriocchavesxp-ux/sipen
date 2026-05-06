@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    SIPEN — CNAB 240 Bradesco
-   cnab.js · v1.0 · v6.30.15
+   cnab.js · v1.1 · v6.30.17
    Geração de remessas e importação de retornos bancários.
 ═══════════════════════════════════════════════════════ */
 
@@ -291,17 +291,7 @@
           </div>
           <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">
             <thead><tr style="border-bottom:1px solid var(--bd2)">${["","Favorecido","Operação","Valor","Vencimento","Dados bancários"].map(h => `<th style="text-align:left;padding:7px 6px;color:var(--tx3);font-size:10px;text-transform:uppercase">${h}</th>`).join("")}</tr></thead>
-            <tbody>${pagamentos.map(p => {
-              const ok = _pagamentoValido(p);
-              return `<tr style="border-bottom:1px solid var(--bd1)">
-                <td style="padding:7px 6px"><input type="checkbox" class="cnab-pag-check" value="${_ea(p.id)}" ${ok ? "checked" : "disabled"}></td>
-                <td style="padding:7px 6px;color:var(--tx1)">${_eh(p.favorecido_nome || p.fornecedor)}<div style="font-size:10.5px;color:var(--tx3)">${_eh(p.finalidade || "")}</div></td>
-                <td style="padding:7px 6px">${_pill(p.tipo_operacao)}</td>
-                <td style="padding:7px 6px;color:var(--tx1);font-weight:700">${_money(p.valor)}</td>
-                <td style="padding:7px 6px;color:var(--tx2)">${_date(p.vencimento)}</td>
-                <td style="padding:7px 6px;color:${ok ? "var(--gr)" : "var(--rose)"}">${ok ? "ok" : "incompleto"}</td>
-              </tr>`;
-            }).join("")}</tbody>
+            <tbody>${_renderPagamentosRows(pagamentos)}</tbody>
           </table></div>
           <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
             <button class="tbt" onclick="document.getElementById('cnab-modal').remove()">Cancelar</button>
@@ -313,12 +303,47 @@
   }
 
   function _pagamentoValido(p) {
-    if (!p.tipo_operacao || !p.favorecido_nome || !Number(p.valor || 0)) return false;
+    if (!p.tipo_operacao || !(p.favorecido_nome || p.fornecedor) || !Number(p.valor || 0)) return false;
     if (["transferencia", "pix"].includes(p.tipo_operacao) && !p.favorecido_cpf_cnpj) return false;
     if (p.tipo_operacao === "transferencia") return !!(p.favorecido_banco && p.favorecido_agencia && p.favorecido_conta);
     if (p.tipo_operacao === "pix") return !!(p.favorecido_pix_tipo && p.favorecido_pix_chave);
-    if (["boleto", "tributo"].includes(p.tipo_operacao)) return !!(p.codigo_barras || p.codigo_pagamento);
+    if (["boleto", "tributo"].includes(p.tipo_operacao)) return !!p.codigo_barras;
     return true;
+  }
+
+  function _pagamentoFaltando(p) {
+    const falta = [];
+    if (!(p.favorecido_nome || p.fornecedor)) falta.push("nome do favorecido");
+    if (["transferencia", "pix"].includes(p.tipo_operacao) && !p.favorecido_cpf_cnpj) falta.push("CPF/CNPJ");
+    if (p.tipo_operacao === "transferencia") {
+      if (!p.favorecido_banco) falta.push("banco");
+      if (!p.favorecido_agencia) falta.push("agência");
+      if (!p.favorecido_conta) falta.push("conta");
+    }
+    if (p.tipo_operacao === "pix") {
+      if (!p.favorecido_pix_chave) falta.push("chave PIX");
+      if (!p.favorecido_pix_tipo) falta.push("tipo de chave PIX");
+    }
+    if (["boleto", "tributo"].includes(p.tipo_operacao) && !p.codigo_barras) falta.push("código de barras");
+    return falta;
+  }
+
+  function _renderPagamentosRows(pagamentos) {
+    return (pagamentos || []).map(p => {
+      const ok = _pagamentoValido(p);
+      const falta = _pagamentoFaltando(p);
+      const podeEditar = typeof finEditarDadosCnab === "function";
+      return `<tr style="border-bottom:1px solid var(--bd1)">
+        <td style="padding:7px 6px"><input type="checkbox" class="cnab-pag-check" value="${_ea(p.id)}" ${ok ? "checked" : "disabled"}></td>
+        <td style="padding:7px 6px;color:var(--tx1)">${_eh(p.favorecido_nome || p.fornecedor)}<div style="font-size:10.5px;color:var(--tx3)">${_eh(p.finalidade || "")}</div></td>
+        <td style="padding:7px 6px">${_pill(p.tipo_operacao)}</td>
+        <td style="padding:7px 6px;color:var(--tx1);font-weight:700">${_money(p.valor)}</td>
+        <td style="padding:7px 6px;color:var(--tx2)">${_date(p.vencimento)}</td>
+        ${ok
+          ? `<td style="padding:7px 6px;color:var(--gr)">ok</td>`
+          : `<td style="padding:7px 6px"><span style="color:var(--rose);font-size:11px">falta: ${_eh(falta.join(", "))}</span>${podeEditar ? `<button onclick="cnabEditarDadosPagamento('${_ea(p.id)}')" style="margin-left:6px;font-size:10px;padding:2px 7px;border-radius:4px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--blue,#3b82f6);cursor:pointer">Preencher</button>` : ""}</td>`}
+      </tr>`;
+    }).join("");
   }
 
   async function cnabConfirmarRemessa() {
@@ -484,6 +509,28 @@
     } catch (e) { _toast("Erro no retorno", e.message); }
   }
 
+  async function cnabEditarDadosPagamento(id) {
+    if (typeof finEditarDadosCnab !== "function") {
+      _toast("Indisponível", "Acesse Financeiro → Contas a Pagar para preencher os Dados CNAB.");
+      return;
+    }
+    finEditarDadosCnab(id);
+    const check = setInterval(async () => {
+      if (!document.getElementById("fin-cnab-modal")) {
+        clearInterval(check);
+        try {
+          const novos = await _loadPagamentos();
+          window._cnabPagamentosTemp = novos;
+          const tbody = document.querySelector("#cnab-modal tbody");
+          if (tbody) tbody.innerHTML = _renderPagamentosRows(novos);
+        } catch (e) {
+          _toast("Erro ao atualizar", e.message);
+        }
+      }
+    }, 1000);
+    setTimeout(() => clearInterval(check), 60000);
+  }
+
   window.cnabInit = cnabInit;
   window.cnabGerarRemessa = cnabGerarRemessa;
   window.cnabConfirmarRemessa = cnabConfirmarRemessa;
@@ -491,6 +538,7 @@
   window.cnabImportarRetorno = cnabImportarRetorno;
   window.cnabVerDetalhe = cnabVerDetalhe;
   window.cnabProcessarRetorno = cnabProcessarRetorno;
+  window.cnabEditarDadosPagamento = cnabEditarDadosPagamento;
 
   const _goOrig = window.go;
   window.go = function (id, ...args) {
