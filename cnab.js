@@ -522,26 +522,120 @@
   }
 
   async function cnabEditarDadosPagamento(id) {
-    if (typeof finEditarDadosCnab !== "function") {
-      _toast("Indisponível", "Acesse Financeiro → Contas a Pagar para preencher os Dados CNAB.");
-      return;
-    }
-    finEditarDadosCnab(id);
-    const check = setInterval(async () => {
-      if (!document.getElementById("fin-cnab-modal")) {
-        clearInterval(check);
-        try {
-          const novos = await _loadPagamentos();
-          window._cnabPagamentosTemp = novos;
-          const tbody = document.querySelector("#cnab-modal tbody");
-          if (tbody) tbody.innerHTML = _renderPagamentosRows(novos);
-        } catch (e) {
-          _toast("Erro ao atualizar", e.message);
-        }
-      }
-    }, 1000);
-    setTimeout(() => clearInterval(check), 60000);
+    // Busca direto do Supabase — não depende de _SOLICITACOES do módulo financeiro
+    let r;
+    try {
+      const rows = await _fetchJson(`${_api()}/rest/v1/financeiro_solicitacoes?id=eq.${encodeURIComponent(id)}&select=*&limit=1`, { headers: _headers() });
+      r = rows?.[0];
+    } catch(e) { _toast("Erro", e.message); return; }
+    if (!r) { _toast("Erro", "Registro não encontrado."); return; }
+
+    document.getElementById("cnab-preencher-modal")?.remove();
+
+    const tipo = r.tipo_operacao || "";
+    const _cp = (fid, label, val, ph) => `<div>
+      <label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">${label}</label>
+      <input id="${fid}" type="text" value="${_ea(val || "")}" placeholder="${_ea(ph || "")}"
+        style="width:100%;box-sizing:border-box;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:12.5px;outline:none">
+    </div>`;
+
+    const wrap = document.createElement("div");
+    wrap.id = "cnab-preencher-modal";
+    wrap.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px";
+    wrap.onclick = ev => { if (ev.target === wrap) wrap.remove(); };
+    wrap.innerHTML = `
+      <div style="width:min(600px,96vw);max-height:90vh;overflow:auto;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:20px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--tx1)">Dados CNAB — Preencher</div>
+            <div style="font-size:11.5px;color:var(--tx3);margin-top:3px">${_eh(r.fornecedor || r.finalidade || "Solicitação financeira")}</div>
+          </div>
+          <button style="margin-left:auto;background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer" onclick="document.getElementById('cnab-preencher-modal').remove()">✕</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Tipo de operação</label>
+            <select id="cp-tipo" onchange="cnabPreencherTipoChange()" style="width:100%;box-sizing:border-box;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:12.5px;padding:8px 10px;outline:none">
+              <option value="">Sem CNAB</option>
+              <option value="transferencia" ${tipo==="transferencia"?"selected":""}>Transferência TED</option>
+              <option value="pix" ${tipo==="pix"?"selected":""}>PIX</option>
+              <option value="boleto" ${tipo==="boleto"?"selected":""}>Boleto</option>
+              <option value="tributo" ${tipo==="tributo"?"selected":""}>Tributo</option>
+            </select>
+          </div>
+          ${_cp("cp-nome", "Favorecido — nome", r.favorecido_nome || r.fornecedor, "Nome completo / razão social")}
+          ${_cp("cp-doc", "Favorecido — CPF/CNPJ", r.favorecido_cpf_cnpj, "Somente números")}
+        </div>
+        <div id="cp-ted" style="display:${tipo==="transferencia"?"grid":"none"};grid-template-columns:1fr 1fr 80px 1fr 80px;gap:12px;margin-bottom:12px">
+          ${_cp("cp-banco","Banco",r.favorecido_banco,"237")}
+          ${_cp("cp-ag","Agência",r.favorecido_agencia,"0000")}
+          ${_cp("cp-ag-dv","DV",r.favorecido_agencia_dv,"0")}
+          ${_cp("cp-conta","Conta",r.favorecido_conta,"000000")}
+          ${_cp("cp-conta-dv","DV",r.favorecido_conta_dv,"0")}
+        </div>
+        <div id="cp-pix" style="display:${tipo==="pix"?"grid":"none"};grid-template-columns:180px 1fr;gap:12px;margin-bottom:12px">
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Tipo de chave PIX</label>
+            <select id="cp-pix-tipo" style="width:100%;box-sizing:border-box;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:12.5px;padding:8px 10px;outline:none">
+              ${["cpf","cnpj","telefone","email","evp"].map(t=>`<option value="${t}" ${String(r.favorecido_pix_tipo||"")===t?"selected":""}>${t.toUpperCase()}</option>`).join("")}
+            </select>
+          </div>
+          ${_cp("cp-pix-chave","Chave PIX",r.favorecido_pix_chave,"CPF, CNPJ, telefone, e-mail ou EVP")}
+        </div>
+        <div id="cp-codigo" style="display:${["boleto","tributo"].includes(tipo)?"block":"none"};margin-bottom:12px">
+          ${_cp("cp-cod-barras","Código de barras / linha digitável",r.codigo_barras||r.codigo_pagamento,"Linha digitável ou código de barras")}
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;border-top:1px solid var(--bd1);padding-top:14px">
+          <button class="tbt" onclick="document.getElementById('cnab-preencher-modal').remove()">Cancelar</button>
+          <button class="tbt pri" id="cp-save" onclick="cnabSalvarDadosPagamento('${_ea(id)}')">Salvar dados</button>
+        </div>
+      </div>`;
+    document.body.appendChild(wrap);
   }
+
+  window.cnabPreencherTipoChange = function() {
+    const tipo = document.getElementById("cp-tipo")?.value || "";
+    document.getElementById("cp-ted").style.display    = tipo === "transferencia" ? "grid"  : "none";
+    document.getElementById("cp-pix").style.display    = tipo === "pix"           ? "grid"  : "none";
+    document.getElementById("cp-codigo").style.display = ["boleto","tributo"].includes(tipo) ? "block" : "none";
+  };
+
+  window.cnabSalvarDadosPagamento = async function(id) {
+    const btn = document.getElementById("cp-save");
+    const old = btn?.textContent || "";
+    if (btn) { btn.disabled = true; btn.textContent = "Salvando..."; }
+    try {
+      const _v = fid => (document.getElementById(fid)?.value || "").trim();
+      const tipo = _v("cp-tipo");
+      const payload = {
+        tipo_operacao:         tipo || null,
+        favorecido_nome:       _v("cp-nome") || null,
+        favorecido_cpf_cnpj:   _v("cp-doc").replace(/\D/g,"") || null,
+        favorecido_banco:      _v("cp-banco").replace(/\D/g,"") || null,
+        favorecido_agencia:    _v("cp-ag").replace(/\D/g,"") || null,
+        favorecido_agencia_dv: _v("cp-ag-dv") || null,
+        favorecido_conta:      _v("cp-conta").replace(/\D/g,"") || null,
+        favorecido_conta_dv:   _v("cp-conta-dv") || null,
+        favorecido_pix_tipo:   tipo === "pix" ? (_v("cp-pix-tipo") || null) : null,
+        favorecido_pix_chave:  tipo === "pix" ? (_v("cp-pix-chave") || null) : null,
+        codigo_barras:         ["boleto","tributo"].includes(tipo) ? (_v("cp-cod-barras").replace(/\D/g,"") || null) : null,
+        updated_at:            new Date().toISOString()
+      };
+      await _fetchJson(
+        `${_api()}/rest/v1/financeiro_solicitacoes?id=eq.${encodeURIComponent(id)}`,
+        { method:"PATCH", headers:_headers({ "Prefer":"return=minimal" }), body:JSON.stringify(payload) }
+      );
+      document.getElementById("cnab-preencher-modal")?.remove();
+      _toast("Dados salvos", "Pagamento atualizado.");
+      const novos = await _loadPagamentos();
+      window._cnabPagamentosTemp = novos;
+      const tbody = document.querySelector("#cnab-modal tbody");
+      if (tbody) tbody.innerHTML = _renderPagamentosRows(novos);
+    } catch(e) {
+      _toast("Erro ao salvar", e.message);
+      if (btn) { btn.disabled = false; btn.textContent = old; }
+    }
+  };
 
   function _cfgCampo(id, label, value, placeholder) {
     return `<div>
