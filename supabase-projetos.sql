@@ -50,6 +50,26 @@ CREATE TRIGGER trg_projetos_updated_at
 BEFORE UPDATE ON public.projetos
 FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
+-- Função auxiliar: verifica se o usuário logado pode editar projetos
+CREATE OR REPLACE FUNCTION public.pode_editar_projetos()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.pessoas pe
+    JOIN public.membros m   ON m.pessoa_id  = pe.id
+    JOIN public.perfis pf   ON UPPER(pf.nome) = UPPER(m.funcao)
+    JOIN public.perfis_permissoes pp ON pp.perfil_id = pf.id
+    WHERE pe.auth_user_id = auth.uid()
+      AND m.status = 'ativo'
+      AND pp.modulo = 'PROJETOS'
+      AND pp.nivel_acesso IN ('EDICAO', 'COMPLETO')
+  );
+$$;
+
 ALTER TABLE public.projetos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.projeto_etapas ENABLE ROW LEVEL SECURITY;
 
@@ -62,29 +82,38 @@ DROP POLICY IF EXISTS etapa_insert ON public.projeto_etapas;
 DROP POLICY IF EXISTS etapa_update ON public.projeto_etapas;
 DROP POLICY IF EXISTS etapa_delete ON public.projeto_etapas;
 
+-- projetos: leitura aberta a autenticados; escrita restrita por permissão
 CREATE POLICY proj_select ON public.projetos
   FOR SELECT TO authenticated USING (true);
 
 CREATE POLICY proj_insert ON public.projetos
-  FOR INSERT TO authenticated WITH CHECK (true);
+  FOR INSERT TO authenticated
+  WITH CHECK (public.pode_editar_projetos());
 
 CREATE POLICY proj_update ON public.projetos
-  FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+  FOR UPDATE TO authenticated
+  USING  (public.pode_editar_projetos())
+  WITH CHECK (public.pode_editar_projetos());
 
 CREATE POLICY proj_delete ON public.projetos
   FOR DELETE TO authenticated USING (public.is_admin());
 
+-- projeto_etapas: mesma lógica (etapas pertencem ao projeto)
 CREATE POLICY etapa_select ON public.projeto_etapas
   FOR SELECT TO authenticated USING (true);
 
 CREATE POLICY etapa_insert ON public.projeto_etapas
-  FOR INSERT TO authenticated WITH CHECK (true);
+  FOR INSERT TO authenticated
+  WITH CHECK (public.pode_editar_projetos());
 
 CREATE POLICY etapa_update ON public.projeto_etapas
-  FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+  FOR UPDATE TO authenticated
+  USING  (public.pode_editar_projetos())
+  WITH CHECK (public.pode_editar_projetos());
 
 CREATE POLICY etapa_delete ON public.projeto_etapas
-  FOR DELETE TO authenticated USING (true);
+  FOR DELETE TO authenticated
+  USING (public.pode_editar_projetos());
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.projetos TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.projeto_etapas TO authenticated;
