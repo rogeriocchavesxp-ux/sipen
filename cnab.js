@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    SIPEN — CNAB 240 Bradesco
-   cnab.js · v1.1 · v6.30.17
+   cnab.js · v1.2 · v6.30.18
    Geração de remessas e importação de retornos bancários.
 ═══════════════════════════════════════════════════════ */
 
@@ -229,7 +229,15 @@
     const el = document.getElementById("cnab-remessas-body");
     if (!el) return;
     const total = _remessas.reduce((s, r) => s + Number(r.valor_total || 0), 0);
-    el.innerHTML = `
+    const banner = !_config ? `
+      <div class="card" style="border-left:3px solid var(--amber,#ca8a04);background:rgba(234,179,8,.07);padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px">
+        <div style="flex:1">
+          <div style="font-weight:600;color:var(--amber,#ca8a04);font-size:13px">Configuração bancária ausente</div>
+          <div style="font-size:12px;color:var(--tx2);margin-top:2px">Cadastre os dados da conta Bradesco para habilitar a geração de remessas.</div>
+        </div>
+        <button class="tbt" style="color:var(--amber,#ca8a04);border-color:rgba(202,138,4,.35)" onclick="cnabAbrirConfig()">Configurar Agora</button>
+      </div>` : "";
+    el.innerHTML = banner + `
       <div class="kpis c3" style="margin-bottom:14px">
         <div class="kpi"><div class="kpi-ico" style="background:var(--grbg,rgba(61,160,85,.14));color:var(--gr)">◇</div><div class="kpi-body"><div class="kpi-lbl">Remessas</div><div class="kpi-val">${_remessas.length}</div><div class="kpi-d nu">últimas 100</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:var(--bluebg);color:var(--blue)">TXT</div><div class="kpi-body"><div class="kpi-lbl">Valor total</div><div class="kpi-val">${_money(total)}</div><div class="kpi-d nu">gerado no período</div></div></div>
@@ -272,7 +280,7 @@
   async function cnabInit() {
     const el = document.getElementById("cnab-remessas-body");
     if (el) el.innerHTML = `<div class="card" style="padding:28px;color:var(--tx3)">${typeof spinner === "function" ? spinner() : "⏳"} Carregando CNAB...</div>`;
-    try { await _loadBase(); _renderLista(); }
+    try { await Promise.all([_loadBase(), _loadConfig()]); _renderLista(); }
     catch (e) { if (el) el.innerHTML = `<div class="card" style="padding:24px;color:var(--rose)">Erro ao carregar CNAB: ${_eh(e.message)}</div>`; }
   }
 
@@ -280,7 +288,11 @@
     if (!_podeEditar()) return _toast("Acesso negado", "Sem permissão para gerar remessa.");
     try {
       const cfg = await _loadConfig();
-      if (!cfg) return _toast("Configuração ausente", "Cadastre um registro ativo em cnab_config_empresa.");
+      if (!cfg) {
+        _toast("Configuração ausente", "Preencha os dados bancários antes de gerar remessa.");
+        if (_podeEditar()) cnabAbrirConfig();
+        return;
+      }
       const pagamentos = await _loadPagamentos();
       if (!pagamentos.length) return _toast("Sem pagamentos", "Não há solicitações pendentes com tipo de operação CNAB.");
       _openModal(`
@@ -531,6 +543,83 @@
     setTimeout(() => clearInterval(check), 60000);
   }
 
+  function _cfgCampo(id, label, value, placeholder) {
+    return `<div>
+      <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">${label}</label>
+      <input id="${_ea(id)}" type="text" value="${_ea(value)}" placeholder="${_ea(placeholder)}"
+        style="width:100%;box-sizing:border-box;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:12.5px;outline:none">
+    </div>`;
+  }
+
+  async function cnabAbrirConfig() {
+    if (!_podeEditar()) return _toast("Acesso negado", "Sem permissão para configurar.");
+    const cfg = _config || await _loadConfig().catch(() => null);
+    _openModal(`
+      <div style="width:min(520px,96vw);background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:24px">
+        <div class="ctit" style="margin:0 0 18px">Configuração Bancária — Bradesco CNAB 240</div>
+        <div style="display:grid;gap:12px">
+          <div style="display:grid;grid-template-columns:1fr 80px;gap:12px">
+            ${_cfgCampo("cnab-cfg-agencia", "Agência *", cfg?.agencia || "", "0118")}
+            ${_cfgCampo("cnab-cfg-agencia-dv", "DV", cfg?.agencia_dv || "", "0")}
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 80px;gap:12px">
+            ${_cfgCampo("cnab-cfg-conta", "Conta Corrente *", cfg?.conta || "", "208606")}
+            ${_cfgCampo("cnab-cfg-conta-dv", "DV *", cfg?.conta_dv || "", "9")}
+          </div>
+          ${_cfgCampo("cnab-cfg-cnpj", "CNPJ *", cfg?.cnpj || "", "62.946.058/0001-80")}
+          ${_cfgCampo("cnab-cfg-nome", "Nome da Empresa *", cfg?.nome_empresa || "", "IGREJA PRESBITERIANA DA PENHA")}
+          ${_cfgCampo("cnab-cfg-convenio", "Nº Convênio (opcional)", cfg?.convenio || "", "")}
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="checkbox" id="cnab-cfg-ativo" ${cfg?.ativo !== false ? "checked" : ""}>
+            <label for="cnab-cfg-ativo" style="font-size:12.5px;color:var(--tx2);cursor:pointer">Configuração ativa</label>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+            <button class="tbt" onclick="document.getElementById('cnab-modal').remove()">Cancelar</button>
+            <button class="tbt pri" id="cnab-cfg-save-btn" onclick="cnabSalvarConfig()">Salvar</button>
+          </div>
+        </div>
+      </div>`);
+  }
+
+  async function cnabSalvarConfig() {
+    if (!_podeEditar()) return _toast("Acesso negado", "Sem permissão para configurar.");
+    const agencia    = (document.getElementById("cnab-cfg-agencia")?.value || "").replace(/\D/g, "");
+    const agencia_dv = (document.getElementById("cnab-cfg-agencia-dv")?.value || "").trim();
+    const conta      = (document.getElementById("cnab-cfg-conta")?.value || "").replace(/\D/g, "");
+    const conta_dv   = (document.getElementById("cnab-cfg-conta-dv")?.value || "").trim();
+    const cnpj       = (document.getElementById("cnab-cfg-cnpj")?.value || "").replace(/\D/g, "");
+    const nome       = (document.getElementById("cnab-cfg-nome")?.value || "").trim().toUpperCase();
+    const convenio   = (document.getElementById("cnab-cfg-convenio")?.value || "").trim();
+    const ativo      = document.getElementById("cnab-cfg-ativo")?.checked ?? true;
+    if (!agencia || !conta || !conta_dv || !cnpj || !nome) {
+      return _toast("Campos obrigatórios", "Preencha agência, conta, dígito, CNPJ e nome da empresa.");
+    }
+    const payload = { banco:"237", agencia, agencia_dv:agencia_dv||"0", conta, conta_dv, cnpj, nome_empresa:nome, convenio, ativo };
+    const btn = document.getElementById("cnab-cfg-save-btn");
+    if (btn) { btn.disabled = true; btn.textContent = "Salvando..."; }
+    try {
+      let rows;
+      if (_config?.id) {
+        rows = await _fetchJson(`${_api()}/rest/v1/cnab_config_empresa?id=eq.${encodeURIComponent(_config.id)}`, {
+          method:"PATCH", headers:_headers({ "Content-Type":"application/json", "Prefer":"return=representation" }),
+          body:JSON.stringify(payload)
+        });
+      } else {
+        rows = await _fetchJson(`${_api()}/rest/v1/cnab_config_empresa`, {
+          method:"POST", headers:_headers({ "Content-Type":"application/json", "Prefer":"return=representation" }),
+          body:JSON.stringify(payload)
+        });
+      }
+      _config = rows?.[0] || payload;
+      _closeModal();
+      _renderLista();
+      _toast("Configuração salva", "Dados bancários atualizados com sucesso.");
+    } catch (e) {
+      _toast("Erro ao salvar", e.message);
+      if (btn) { btn.disabled = false; btn.textContent = "Salvar"; }
+    }
+  }
+
   window.cnabInit = cnabInit;
   window.cnabGerarRemessa = cnabGerarRemessa;
   window.cnabConfirmarRemessa = cnabConfirmarRemessa;
@@ -539,6 +628,8 @@
   window.cnabVerDetalhe = cnabVerDetalhe;
   window.cnabProcessarRetorno = cnabProcessarRetorno;
   window.cnabEditarDadosPagamento = cnabEditarDadosPagamento;
+  window.cnabAbrirConfig  = cnabAbrirConfig;
+  window.cnabSalvarConfig = cnabSalvarConfig;
 
   const _goOrig = window.go;
   window.go = function (id, ...args) {
