@@ -36,7 +36,8 @@ CREATE INDEX IF NOT EXISTS idx_rede_cuidado_nivel
 ALTER TABLE public.rede_cuidado ENABLE ROW LEVEL SECURITY;
 
 -- Admin vê tudo
-CREATE POLICY IF NOT EXISTS "rede_cuidado_admin_all"
+DROP POLICY IF EXISTS "rede_cuidado_admin_all" ON public.rede_cuidado;
+CREATE POLICY "rede_cuidado_admin_all"
   ON public.rede_cuidado
   FOR ALL
   TO authenticated
@@ -45,7 +46,7 @@ CREATE POLICY IF NOT EXISTS "rede_cuidado_admin_all"
       SELECT 1 FROM public.membros m
       JOIN public.pessoas p ON p.id = m.pessoa_id
       WHERE p.auth_user_id = auth.uid()
-        AND m.funcao IN ('ADMINISTRADOR_GERAL','admin_geral','PASTORAL','pastoral')
+        AND m.funcao IN ('ADMINISTRADOR_GERAL','admin_geral','PASTORAL','pastoral','pastor','PASTOR')
         AND m.status = 'ativo'
         AND m.deleted_at IS NULL
     )
@@ -55,14 +56,15 @@ CREATE POLICY IF NOT EXISTS "rede_cuidado_admin_all"
       SELECT 1 FROM public.membros m
       JOIN public.pessoas p ON p.id = m.pessoa_id
       WHERE p.auth_user_id = auth.uid()
-        AND m.funcao IN ('ADMINISTRADOR_GERAL','admin_geral','PASTORAL','pastoral')
+        AND m.funcao IN ('ADMINISTRADOR_GERAL','admin_geral','PASTORAL','pastoral','pastor','PASTOR')
         AND m.status = 'ativo'
         AND m.deleted_at IS NULL
     )
   );
 
 -- Líder (cuidador) vê apenas seus próprios vínculos
-CREATE POLICY IF NOT EXISTS "rede_cuidado_lider_select"
+DROP POLICY IF EXISTS "rede_cuidado_lider_select" ON public.rede_cuidado;
+CREATE POLICY "rede_cuidado_lider_select"
   ON public.rede_cuidado
   FOR SELECT
   TO authenticated
@@ -75,7 +77,8 @@ CREATE POLICY IF NOT EXISTS "rede_cuidado_lider_select"
   );
 
 -- Pessoa cuidada pode ver quem é seu cuidador
-CREATE POLICY IF NOT EXISTS "rede_cuidado_cuidado_select"
+DROP POLICY IF EXISTS "rede_cuidado_cuidado_select" ON public.rede_cuidado;
+CREATE POLICY "rede_cuidado_cuidado_select"
   ON public.rede_cuidado
   FOR SELECT
   TO authenticated
@@ -88,7 +91,8 @@ CREATE POLICY IF NOT EXISTS "rede_cuidado_cuidado_select"
   );
 
 -- service_role: acesso total (RPCs SECURITY DEFINER)
-CREATE POLICY IF NOT EXISTS "rede_cuidado_service_all"
+DROP POLICY IF EXISTS "rede_cuidado_service_all" ON public.rede_cuidado;
+CREATE POLICY "rede_cuidado_service_all"
   ON public.rede_cuidado
   FOR ALL
   TO service_role
@@ -97,7 +101,7 @@ CREATE POLICY IF NOT EXISTS "rede_cuidado_service_all"
 
 
 -- ── 3. RPC: adicionar_membro_rede_cuidado ─────────────────────────────
--- Executa como service_role para garantir atomicidade.
+-- Executa como SECURITY DEFINER para garantir atomicidade.
 -- Retorna: {"ok": true} ou {"ok": false, "erro": "mensagem"}
 
 CREATE OR REPLACE FUNCTION public.adicionar_membro_rede_cuidado(
@@ -112,8 +116,8 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_count integer;
-  v_existe boolean;
+  v_count   integer;
+  v_existe  boolean;
   v_auth_id uuid;
 BEGIN
   v_auth_id := auth.uid();
@@ -133,7 +137,7 @@ BEGIN
     RETURN jsonb_build_object('ok', false, 'erro', 'Membro a ser cuidado não encontrado.');
   END IF;
 
-  -- 4. Conta vínculos ativos do cuidador
+  -- 4. Conta vínculos ativos do cuidador (limite: 5)
   SELECT COUNT(*) INTO v_count
   FROM public.rede_cuidado
   WHERE cuidador_id = p_cuidador_id
@@ -183,10 +187,10 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_vinculo  public.rede_cuidado%ROWTYPE;
-  v_auth_id  uuid;
+  v_vinculo   public.rede_cuidado%ROWTYPE;
+  v_auth_id   uuid;
   v_pessoa_id uuid;
-  v_is_admin boolean := false;
+  v_is_admin  boolean := false;
 BEGIN
   v_auth_id := auth.uid();
 
@@ -196,11 +200,11 @@ BEGIN
   WHERE p.auth_user_id = v_auth_id AND p.deleted_at IS NULL
   LIMIT 1;
 
-  -- Verifica se é admin
+  -- Verifica se é admin ou pastor
   SELECT EXISTS(
     SELECT 1 FROM public.membros m
     WHERE m.pessoa_id = v_pessoa_id
-      AND m.funcao IN ('ADMINISTRADOR_GERAL','admin_geral','PASTORAL','pastoral')
+      AND m.funcao IN ('ADMINISTRADOR_GERAL','admin_geral','PASTORAL','pastoral','pastor','PASTOR')
       AND m.status = 'ativo'
       AND m.deleted_at IS NULL
   ) INTO v_is_admin;
@@ -221,7 +225,7 @@ BEGIN
 
   -- Soft delete
   UPDATE public.rede_cuidado
-  SET ativo        = false,
+  SET ativo         = false,
       inativado_em  = now(),
       inativado_por = v_auth_id
   WHERE id = p_vinculo_id;
@@ -246,13 +250,10 @@ SELECT
   rc.ativo,
   rc.observacoes,
   rc.criado_em,
-  -- Cuidador
   rc.cuidador_id,
   pc.nome   AS cuidador_nome,
-  -- Cuidado
   rc.cuidado_id,
   pd.nome   AS cuidado_nome,
-  -- Contexto
   rc.inativado_em
 FROM public.rede_cuidado rc
 JOIN public.pessoas pc ON pc.id = rc.cuidador_id
@@ -264,6 +265,14 @@ WHERE pc.deleted_at IS NULL
 
 GRANT SELECT ON public.v_rede_cuidado TO authenticated;
 
--- ══════════════════════════════════════════════════════════════════════
--- FIM — supabase-rede-cuidado.sql
--- ══════════════════════════════════════════════════════════════════════
+-- ── 7. FORÇAR RECARGA DO SCHEMA CACHE (PostgREST) ──────────────────────
+-- Garante que as novas funções aparecem imediatamente via REST API.
+NOTIFY pgrst, 'reload schema';
+
+-- ── 8. VERIFICAÇÃO ─────────────────────────────────────────────────────
+SELECT
+  proname        AS funcao,
+  pg_get_function_arguments(oid) AS parametros
+FROM pg_proc
+WHERE proname IN ('adicionar_membro_rede_cuidado', 'remover_membro_rede_cuidado')
+  AND pronamespace = 'public'::regnamespace;
