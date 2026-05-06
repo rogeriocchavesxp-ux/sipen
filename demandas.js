@@ -836,10 +836,19 @@
         return;
       }
 
+      const chavePix = fd.chave_pix || fd.reimb_pix || null;
+      const formaPgto = fd.forma_pagamento || (chavePix ? "Pix" : null);
+
+      if (!formaPgto) {
+        if (typeof T === "function") T("Dados incompletos", "A demanda não possui forma de pagamento definida. Edite os dados financeiros antes de aprovar.");
+        if (btn) { btn.disabled = false; btn.textContent = txt; }
+        return;
+      }
+
       const payload = {
         fornecedor: fd.beneficiario || fd.reimb_nome || demanda.solicitante || "—",
         valor: Number(fd.valor || 0),
-        forma_pagamento: fd.forma_pagamento || null,
+        forma_pagamento: formaPgto,
         finalidade: demanda.titulo || "",
         categoria: "Financeiro",
         solicitante: demanda.solicitante || "",
@@ -847,14 +856,14 @@
         observacoes: fd.obs || "",
         status: "pendente",
         demanda_id: demanda.id || demanda._row,
-        tipo_operacao: _tipoOperacaoFinanceira(fd.forma_pagamento),
+        tipo_operacao: _tipoOperacaoFinanceira(formaPgto),
         favorecido_nome: fd.beneficiario || fd.reimb_nome || null,
         favorecido_cpf_cnpj: String(fd.cpf_cnpj || "").replace(/\D/g, "") || null,
         favorecido_banco: fd.banco || null,
         favorecido_agencia: fd.agencia || null,
         favorecido_conta: fd.conta || null,
-        favorecido_pix_chave: fd.chave_pix || null,
-        favorecido_pix_tipo: _detectarTipoPix(fd.chave_pix),
+        favorecido_pix_chave: chavePix,
+        favorecido_pix_tipo: _detectarTipoPix(chavePix),
       };
 
       const { data: criada, error: insertError } = await sb
