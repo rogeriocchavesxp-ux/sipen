@@ -169,6 +169,7 @@
       pendente:   '<span class="pill po">pendente</span>',
       cancelado:  '<span class="pill">cancelado</span>',
       atrasado:   '<span class="pill pl">atrasado</span>',
+      em_processamento: '<span class="pill pd">em processamento</span>',
       pago:       '<span class="pill pg">pago</span>',
       recebido:   '<span class="pill pg">recebido</span>',
       aguardando: '<span class="pill po">aguardando</span>',
@@ -480,7 +481,7 @@
           ? '<div style="color:var(--tx3);font-size:11.5px;padding:6px 0">Nenhuma solicitação encontrada.</div>'
           : `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">
               <thead><tr style="border-bottom:1px solid var(--bd2)">
-                ${["Fornecedor","Finalidade","Valor","Forma","Código","Vencimento","Solicitante","Categoria","Status",""].map((h,i) =>
+                ${["Fornecedor","Finalidade","Valor","Forma","Código","CNAB","Vencimento","Solicitante","Categoria","Status","",""].map((h,i) =>
                   `<th style="text-align:${i===2?"right":"left"};padding:7px 6px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`
                 ).join("")}
               </tr></thead>
@@ -503,6 +504,12 @@
                     <td style="padding:7px 6px;text-align:right;font-weight:700;color:var(--rose)">${brl(r.valor)}</td>
                     <td style="padding:7px 6px;color:var(--tx2);white-space:nowrap">${_labelForma(r.forma_pagamento)}</td>
                     <td style="padding:7px 6px;color:var(--tx3);font-size:10px;max-width:160px;word-break:break-all">${escapeHtml(r.codigo_pagamento) || "—"}</td>
+                    <td style="padding:7px 6px;white-space:nowrap">
+                      ${r.tipo_operacao
+                        ? `<span class="pill pd" style="font-size:9.5px;margin-right:4px">${escapeHtml(r.tipo_operacao)}</span>`
+                        : `<span style="font-size:10px;color:var(--tx3);margin-right:4px">pendente</span>`}
+                      ${r.id && !pago ? `<button onclick="finEditarDadosCnab('${escapeHtmlAttr(r.id)}')" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--gr);cursor:pointer;white-space:nowrap">Dados CNAB</button>` : ""}
+                    </td>
                     <td style="padding:7px 6px;color:${st === "atrasado" ? "var(--rose)" : "var(--tx2)"};white-space:nowrap;font-weight:${st === "atrasado" ? "600" : "400"}">${fmtD(r.vencimento)}</td>
                     <td style="padding:7px 6px;color:var(--tx2);white-space:nowrap">${escapeHtml(r.solicitante) || "—"}</td>
                     <td style="padding:7px 6px;color:var(--tx2);white-space:nowrap">${r.categoria || "—"}</td>
@@ -693,6 +700,123 @@
           </div>`).join("")}
       </div>`;
   }
+
+  /* ── AÇÕES: DADOS BANCÁRIOS / CNAB ─────────────────────── */
+
+  function _finCampo(id) {
+    return document.getElementById(id)?.value?.trim() || "";
+  }
+
+  function _finModalCampo(id, label, value, placeholder, extra) {
+    return `
+      <div style="${extra || ""}">
+        <label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">${label}</label>
+        <input id="${id}" value="${escapeHtmlAttr(value || "")}" placeholder="${escapeHtmlAttr(placeholder || "")}" style="width:100%;box-sizing:border-box;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:12.5px;padding:8px 10px;outline:none">
+      </div>`;
+  }
+
+  window.finTipoOperacaoChange = function() {
+    const tipo = _finCampo("fin-cnab-tipo");
+    const ted = document.getElementById("fin-cnab-ted");
+    const pix = document.getElementById("fin-cnab-pix");
+    const cod = document.getElementById("fin-cnab-codigo");
+    if (ted) ted.style.display = tipo === "transferencia" ? "grid" : "none";
+    if (pix) pix.style.display = tipo === "pix" ? "grid" : "none";
+    if (cod) cod.style.display = ["boleto", "tributo"].includes(tipo) ? "block" : "none";
+  };
+
+  window.finEditarDadosCnab = function(id) {
+    const r = (_SOLICITACOES || []).find(x => String(x.id) === String(id));
+    if (!r) return;
+    let modal = document.getElementById("fin-cnab-modal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "fin-cnab-modal";
+      modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:355;display:flex;align-items:center;justify-content:center;padding:18px";
+      modal.onclick = ev => { if (ev.target === modal) modal.remove(); };
+      document.body.appendChild(modal);
+    }
+    const tipo = r.tipo_operacao || "";
+    modal.innerHTML = `
+      <div style="width:min(760px,96vw);max-height:88vh;overflow:auto;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:20px">
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px">
+          <div><div class="ctit" style="margin:0">Dados bancários / CNAB</div><div style="font-size:11.5px;color:var(--tx3);margin-top:3px">${escapeHtml(r.fornecedor || r.finalidade || "Solicitação financeira")}</div></div>
+          <button class="tbt" style="margin-left:auto" onclick="document.getElementById('fin-cnab-modal').remove()">Fechar</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Tipo de operação</label>
+            <select id="fin-cnab-tipo" onchange="finTipoOperacaoChange()" style="width:100%;box-sizing:border-box;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:12.5px;padding:8px 10px;outline:none">
+              <option value="">Sem CNAB</option>
+              <option value="transferencia" ${tipo === "transferencia" ? "selected" : ""}>Transferência TED</option>
+              <option value="pix" ${tipo === "pix" ? "selected" : ""}>PIX</option>
+              <option value="boleto" ${tipo === "boleto" ? "selected" : ""}>Boleto</option>
+              <option value="tributo" ${tipo === "tributo" ? "selected" : ""}>Tributo</option>
+            </select>
+          </div>
+          ${_finModalCampo("fin-cnab-nome", "Favorecido — nome", r.favorecido_nome || r.fornecedor || "", "Nome completo / razão social")}
+          ${_finModalCampo("fin-cnab-doc", "Favorecido — CPF/CNPJ", r.favorecido_cpf_cnpj || "", "Somente números")}
+        </div>
+        <div id="fin-cnab-ted" style="display:${tipo === "transferencia" ? "grid" : "none"};grid-template-columns:1fr 1fr 80px 1fr 80px;gap:12px;margin-bottom:12px">
+          ${_finModalCampo("fin-cnab-banco", "Banco", r.favorecido_banco || "", "237")}
+          ${_finModalCampo("fin-cnab-ag", "Agência", r.favorecido_agencia || "", "0000")}
+          ${_finModalCampo("fin-cnab-ag-dv", "DV", r.favorecido_agencia_dv || "", "0")}
+          ${_finModalCampo("fin-cnab-conta", "Conta", r.favorecido_conta || "", "000000")}
+          ${_finModalCampo("fin-cnab-conta-dv", "DV", r.favorecido_conta_dv || "", "0")}
+        </div>
+        <div id="fin-cnab-pix" style="display:${tipo === "pix" ? "grid" : "none"};grid-template-columns:180px 1fr;gap:12px;margin-bottom:12px">
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Tipo de chave PIX</label>
+            <select id="fin-cnab-pix-tipo" style="width:100%;box-sizing:border-box;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:12.5px;padding:8px 10px;outline:none">
+              ${["cpf","cnpj","telefone","email","evp"].map(t => `<option value="${t}" ${String(r.favorecido_pix_tipo || "") === t ? "selected" : ""}>${t.toUpperCase()}</option>`).join("")}
+            </select>
+          </div>
+          ${_finModalCampo("fin-cnab-pix-chave", "Chave PIX", r.favorecido_pix_chave || "", "CPF, CNPJ, telefone, e-mail ou EVP")}
+        </div>
+        <div id="fin-cnab-codigo" style="display:${["boleto", "tributo"].includes(tipo) ? "block" : "none"};margin-bottom:12px">
+          ${_finModalCampo("fin-cnab-cod-barras", "Código de barras / linha digitável", r.codigo_barras || r.codigo_pagamento || "", "Linha digitável ou código de barras")}
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;border-top:1px solid var(--bd1);padding-top:14px">
+          <button class="tbt" onclick="document.getElementById('fin-cnab-modal').remove()">Cancelar</button>
+          <button class="tbt pri" id="fin-cnab-save" onclick="finSalvarDadosCnab('${escapeHtmlAttr(id)}')">Salvar dados</button>
+        </div>
+      </div>`;
+  };
+
+  window.finSalvarDadosCnab = async function(id) {
+    const btn = document.getElementById("fin-cnab-save");
+    const old = btn?.textContent || "";
+    if (btn) { btn.disabled = true; btn.textContent = "Salvando..."; }
+    try {
+      const tipo = _finCampo("fin-cnab-tipo");
+      const payload = {
+        tipo_operacao: tipo || null,
+        favorecido_nome: _finCampo("fin-cnab-nome") || null,
+        favorecido_cpf_cnpj: _finCampo("fin-cnab-doc").replace(/\D/g, "") || null,
+        favorecido_banco: _finCampo("fin-cnab-banco").replace(/\D/g, "") || null,
+        favorecido_agencia: _finCampo("fin-cnab-ag").replace(/\D/g, "") || null,
+        favorecido_agencia_dv: _finCampo("fin-cnab-ag-dv") || null,
+        favorecido_conta: _finCampo("fin-cnab-conta").replace(/\D/g, "") || null,
+        favorecido_conta_dv: _finCampo("fin-cnab-conta-dv") || null,
+        favorecido_pix_tipo: _finCampo("fin-cnab-pix-tipo") || null,
+        favorecido_pix_chave: _finCampo("fin-cnab-pix-chave") || null,
+        codigo_barras: _finCampo("fin-cnab-cod-barras").replace(/\D/g, "") || null,
+        updated_at: new Date().toISOString()
+      };
+      const sb = _sbClient();
+      const { error } = await sb.from("financeiro_solicitacoes").update(payload).eq("id", id);
+      if (error) throw error;
+      _SOLICITACOES = null;
+      document.getElementById("fin-cnab-modal")?.remove();
+      if (typeof T === "function") T("Dados CNAB salvos", "Solicitação atualizada.");
+      await renderPagar();
+    } catch(e) {
+      if (typeof T === "function") T("Erro ao salvar", e.message);
+      else alert("Erro: " + e.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = old; }
+    }
+  };
 
   /* ── AÇÕES: ANEXOS ───────────────────────────────────────── */
 

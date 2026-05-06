@@ -1324,6 +1324,31 @@
     <div class="ct" id="fin-aud-content"></div>
   </div>
 
+  <!-- CNAB 240 — Remessas Bradesco -->
+  <div class="view" id="v-cnab-remessas">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(61,160,85,0.12);border-color:rgba(61,160,85,0.25);color:var(--gr)">TXT</div>
+      <div><div class="hero-lbl">Financeiro</div><div class="hero-ttl">CNAB 240 — Remessas Bancárias</div><div class="hero-dsc">Geração e controle de remessas e retornos bancários para o Bradesco</div></div>
+      <div class="hero-act" style="display:flex;gap:8px;flex-wrap:wrap"><button class="tbt" onclick="cnabImportarRetorno()">Importar Retorno</button><button class="tbt pri" onclick="cnabGerarRemessa()">Nova Remessa</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--gr)">
+      <div class="ini" onclick="go('fin-dash')">Dashboard</div>
+      <div class="ini" onclick="go('fin-pagar')">A Pagar</div>
+      <div class="ini on">CNAB 240</div>
+      <div class="ini" onclick="go('fin-auditoria')">Auditoria</div>
+    </div>
+    <div class="ct" id="cnab-remessas-body"><div class="card" style="padding:28px;color:var(--tx3)">Carregando remessas...</div></div>
+  </div>
+
+  <div class="view" id="v-cnab-detalhe">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(61,160,85,0.12);border-color:rgba(61,160,85,0.25);color:var(--gr)">TXT</div>
+      <div><div class="hero-lbl">CNAB 240</div><div class="hero-ttl" id="cnab-detalhe-titulo">Detalhe da Remessa</div><div class="hero-dsc">Itens, status bancário e exportação do arquivo de remessa</div></div>
+      <div class="hero-act" style="display:flex;gap:8px;flex-wrap:wrap"><button class="tbt" onclick="go('cnab-remessas')">← Voltar</button><button id="cnab-detalhe-exportar-btn" class="tbt pri" onclick="">Exportar .TXT</button></div>
+    </div>
+    <div class="ct" id="cnab-detalhe-body"><div class="card" style="padding:28px;color:var(--tx3)">Selecione uma remessa.</div></div>
+  </div>
+
   <!-- FINANCEIRO: DEMANDAS FINANCEIRAS (com abas) -->
   <div class="view" id="v-fin-demandas">
     <div class="hero"><div class="hero-ic" style="background:rgba(61,160,85,0.12)">💰</div><div><div class="hero-lbl">Financeiro</div><div class="hero-ttl">Demandas Financeiras</div><div class="hero-dsc">Solicitações e demandas do módulo Financeiro</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
