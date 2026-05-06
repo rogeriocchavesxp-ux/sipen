@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controles do Estacionamento — IPPenha</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0f1117;--bg2:#181c24;--bg3:#1e2330;
+    --bd:#2a2f3d;--tx1:#e8eaf0;--tx2:#9aa4b2;--tx3:#6b7585;
+    --gr:#3aaa5c;--rose:#e05555;--amber:#d4a843;--blue:#4a9cf5;--teal:#2ab5c0;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  }
+  body{background:var(--bg);color:var(--tx1);font-family:var(--sans);min-height:100vh}
+
+  /* ── header ── */
+  .hdr{background:var(--bg2);border-bottom:1px solid var(--bd);padding:14px 20px;
+       display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+  .hdr-logo{font-size:20px}
+  .hdr h1{font-size:15px;font-weight:700;color:var(--tx1)}
+  .hdr-sub{font-size:11px;color:var(--tx3);margin-top:1px}
+  .hdr-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .refresh-btn{background:none;border:1px solid var(--bd);border-radius:6px;
+               color:var(--tx2);font-size:11px;padding:5px 10px;cursor:pointer}
+  .refresh-btn:hover{border-color:var(--teal);color:var(--teal)}
+  .last-upd{font-size:10px;color:var(--tx3)}
+
+  /* ── kpis ── */
+  .kpis{display:flex;gap:10px;padding:16px 20px;overflow-x:auto}
+  .kpi{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;
+       padding:10px 16px;min-width:110px;flex-shrink:0}
+  .kpi-lbl{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em}
+  .kpi-val{font-size:22px;font-weight:700;color:var(--tx1);margin-top:2px}
+
+  /* ── filtros ── */
+  .filters{padding:0 20px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .filters input,.filters select{
+    background:var(--bg2);border:1px solid var(--bd);border-radius:6px;
+    color:var(--tx1);font-size:12px;padding:7px 10px;outline:none;
+  }
+  .filters input{flex:1;min-width:180px}
+  .filters input::placeholder{color:var(--tx3)}
+  .filters select{cursor:pointer}
+
+  /* ── tabela ── */
+  .tbl-wrap{padding:0 20px 32px;overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  thead th{text-align:left;padding:8px 10px;color:var(--tx3);font-size:10px;
+           text-transform:uppercase;letter-spacing:.06em;font-weight:600;
+           border-bottom:1px solid var(--bd);white-space:nowrap}
+  tbody tr{border-bottom:1px solid var(--bg3);transition:background .1s}
+  tbody tr:hover{background:var(--bg2)}
+  td{padding:10px 10px;vertical-align:middle}
+
+  /* ── pills ── */
+  .pill{display:inline-flex;align-items:center;border-radius:999px;
+        padding:3px 9px;font-size:10px;font-weight:700;white-space:nowrap}
+  .s-entregue  {background:rgba(58,170,92,.13); color:#3aaa5c}
+  .s-disponivel{background:rgba(154,164,178,.1);color:#9aa4b2}
+  .s-devolvido {background:rgba(154,164,178,.1);color:#9aa4b2}
+  .s-perdido   {background:rgba(212,168,67,.15);color:#d4a843}
+  .s-bloqueado {background:rgba(208,104,104,.14);color:#d06868}
+  .p-pago    {background:rgba(58,170,92,.13); color:#3aaa5c}
+  .p-pendente{background:rgba(212,168,67,.15);color:#d4a843}
+
+  /* ── vazio / erro / loading ── */
+  .msg{text-align:center;padding:40px 20px;color:var(--tx3);font-size:13px}
+  .msg.err{color:var(--rose)}
+
+  /* ── spinner ── */
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--bd);
+        border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+
+  /* ── rodapé ── */
+  .ft{text-align:center;padding:16px;font-size:10px;color:var(--tx3);
+      border-top:1px solid var(--bd)}
+
+  @media(max-width:600px){
+    .kpis{padding:12px}
+    .filters{padding:0 12px 12px}
+    .tbl-wrap{padding:0 12px 24px}
+    .hdr{padding:12px}
+    td,thead th{padding:8px 6px}
+  }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-logo">🚗</div>
+  <div>
+    <h1>Controles do Estacionamento</h1>
+    <div class="hdr-sub">Igreja Presbiteriana da Penha</div>
+  </div>
+  <div class="hdr-right">
+    <span class="last-upd" id="last-upd"></span>
+    <button class="refresh-btn" onclick="carregar()">↻ Atualizar</button>
+  </div>
+</div>
+
+<div class="kpis">
+  <div class="kpi"><div class="kpi-lbl">Total</div><div class="kpi-val" id="k-total">—</div></div>
+  <div class="kpi"><div class="kpi-lbl">Entregues</div><div class="kpi-val" id="k-entregues" style="color:var(--gr)">—</div></div>
+  <div class="kpi"><div class="kpi-lbl">Disponíveis</div><div class="kpi-val" id="k-disp" style="color:var(--tx2)">—</div></div>
+  <div class="kpi"><div class="kpi-lbl">Pendente pag.</div><div class="kpi-val" id="k-pend" style="color:var(--amber)">—</div></div>
+</div>
+
+<div class="filters">
+  <input id="f-busca" type="text" placeholder="Buscar por nome ou código…" oninput="renderizar()">
+  <select id="f-status" onchange="renderizar()">
+    <option value="">Todos os status</option>
+    <option value="entregue">Entregue</option>
+    <option value="disponivel">Disponível</option>
+    <option value="devolvido">Devolvido</option>
+    <option value="perdido">Perdido</option>
+    <option value="bloqueado">Bloqueado</option>
+  </select>
+  <select id="f-pagamento" onchange="renderizar()">
+    <option value="">Todos os pagamentos</option>
+    <option value="pago">Pago</option>
+    <option value="pendente">Pendente</option>
+  </select>
+</div>
+
+<div class="tbl-wrap">
+  <div id="conteudo" class="msg"><span class="spin"></span> Carregando...</div>
+</div>
+
+<div class="ft">Atualização automática a cada 60 segundos · IPPenha SIPEN</div>
+
+<script>
+  const SUPABASE_URL  = "https://erhwryfzpycahgsohhbh.supabase.co";
+  const ANON_KEY      = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyaHdyeWZ6cHljYWhnc29oaGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg2MTUsImV4cCI6MjA5MTg0NDYxNX0.T0hp90Bmufj6a3oUPq1vYcLiGx9YjyMaZiE38S0e3_8";
+
+  const STATUS_LABEL = {entregue:"Entregue",disponivel:"Disponível",devolvido:"Devolvido",perdido:"Perdido",bloqueado:"Bloqueado"};
+  let _dados = [];
+
+  function _fmtData(v){
+    if(!v) return "—";
+    const [y,m,d] = v.split("-");
+    return `${d}/${m}/${y}`;
+  }
+  function _pill(val, tipo){
+    const cls = tipo === "status" ? `s-${val}` : `p-${val}`;
+    const label = tipo === "status" ? (STATUS_LABEL[val]||val) : (val === "pago" ? "Pago" : "Pendente");
+    return `<span class="pill ${cls}">${label}</span>`;
+  }
+
+  async function carregar(){
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/v_estacionamento_publico?select=*`,
+        { headers:{ "apikey": ANON_KEY, "Authorization": `Bearer ${ANON_KEY}` } }
+      );
+      if(!res.ok){
+        const err = await res.json().catch(()=>({}));
+        throw new Error(err.message || `HTTP ${res.status}`);
+      }
+      _dados = await res.json();
+      const agora = new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+      document.getElementById("last-upd").textContent = `Atualizado às ${agora}`;
+      renderizar();
+    } catch(e){
+      document.getElementById("conteudo").innerHTML =
+        `<div class="msg err">Erro ao carregar dados: ${e.message}</div>`;
+    }
+  }
+
+  function renderizar(){
+    const busca    = (document.getElementById("f-busca")?.value || "").toLowerCase();
+    const fStatus  = document.getElementById("f-status")?.value  || "";
+    const fPagto   = document.getElementById("f-pagamento")?.value || "";
+
+    const filtrados = _dados.filter(r =>
+      (!busca   || (r.membro_nome||"").toLowerCase().includes(busca) ||
+                   (r.codigo_controle||"").toLowerCase().includes(busca)) &&
+      (!fStatus || r.status === fStatus) &&
+      (!fPagto  || (r.status_pagamento||"pendente") === fPagto)
+    );
+
+    // KPIs
+    document.getElementById("k-total").textContent    = _dados.length;
+    document.getElementById("k-entregues").textContent = _dados.filter(r=>r.status==="entregue").length;
+    document.getElementById("k-disp").textContent      = _dados.filter(r=>r.status==="disponivel").length;
+    document.getElementById("k-pend").textContent      = _dados.filter(r=>(r.status_pagamento||"pendente")==="pendente").length;
+
+    if(!filtrados.length){
+      document.getElementById("conteudo").innerHTML =
+        `<div class="msg">Nenhum controle encontrado.</div>`;
+      return;
+    }
+
+    const linhas = filtrados.map(r => `
+      <tr>
+        <td style="font-weight:700;color:var(--teal)">${r.codigo_controle||"—"}</td>
+        <td style="color:var(--tx1)">${r.membro_nome ? r.membro_nome : '<span style="color:var(--tx3)">—</span>'}</td>
+        <td>${_pill(r.status||"disponivel","status")}</td>
+        <td>${_pill(r.status_pagamento||"pendente","pagamento")}</td>
+        <td style="color:var(--tx2)">${r.marca||"—"}</td>
+        <td style="color:var(--tx2)">${_fmtData(r.data_entrega)}</td>
+        <td style="color:var(--tx3);font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.observacoes||""}</td>
+      </tr>`).join("");
+
+    document.getElementById("conteudo").innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Membro</th>
+            <th>Status</th>
+            <th>Pagamento</th>
+            <th>Marca</th>
+            <th>Data entrega</th>
+            <th>Obs.</th>
+          </tr>
+        </thead>
+        <tbody>${linhas}</tbody>
+      </table>`;
+  }
+
+  carregar();
+  setInterval(carregar, 60000);
+</script>
+</body>
+</html>
