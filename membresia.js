@@ -53,18 +53,26 @@
 
   function normalizarTipoIngresso(valor) {
     const mapa = {
-      "profissão de fé": "profissao_de_fe",
-      "Profissão de Fé": "profissao_de_fe",
-      transferencia: "transferencia",
-      transferência: "transferencia",
-      Transferência: "transferencia",
-      batismo: "batismo",
-      restauracao: "restauracao",
-      restauração: "restauracao",
-      outro: "outro"
+      batismo:            "batismo",
+      Batismo:            "batismo",
+      profissao_de_fe:    "profissao_de_fe",
+      "profissão de fé":  "profissao_de_fe",
+      "Profissão de Fé":  "profissao_de_fe",
+      "profissão_de_fé":  "profissao_de_fe",
+      "profissao de fe":  "profissao_de_fe",
+      transferencia:      "transferencia",
+      transferência:      "transferencia",
+      Transferência:      "transferencia",
+      Transferencia:      "transferencia",
+      restauracao:        "restauracao",
+      restauração:        "restauracao",
+      Restauração:        "restauracao",
+      Restauracao:        "restauracao",
+      outro:              "outro",
+      Outro:              "outro",
     };
 
-    return mapa[valor] || valor;
+    return mapa[valor] || valor || null;
   }
 
   function normalizarFuncao(valor) {
@@ -241,6 +249,11 @@
 
   async function _salvar() {
     setErro("");
+
+    const nivel = (window.permissoesUsuario || {})["MEMBRESIA"] || "SEM_ACESSO";
+    const podeEditar = window.USUARIO_ATUAL?.perfil === "ADMINISTRADOR_GERAL" ||
+                       nivel === "COMPLETO" || nivel === "EDICAO";
+    if (!podeEditar) { setErro("Sem permissão para salvar membros."); return; }
 
     const erro = _validar();
     if (erro) {
