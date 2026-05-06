@@ -1,77 +1,44 @@
 -- ══════════════════════════════════════════════════════════════
--- SIPEN — Fix: todas as constraints CHECK da tabela membros
--- Corrige incompatibilidades entre colunas adicionadas via Supabase
--- e os valores enviados pelo frontend.
+-- SIPEN — Fix: constraints CHECK da tabela membros
 -- Execute no SQL Editor do Supabase Dashboard.
 -- ══════════════════════════════════════════════════════════════
 
--- ── 1. AUDITORIA: ver todas as constraints CHECK ativas ─────────────────
+-- ── 1. AUDITORIA: ver TODAS as constraints e o que elas verificam ───────
 SELECT
   tc.constraint_name,
   cc.check_clause
 FROM information_schema.table_constraints tc
 JOIN information_schema.check_constraints cc
   ON tc.constraint_name = cc.constraint_name
+     AND tc.constraint_catalog = cc.constraint_catalog
+     AND tc.constraint_schema  = cc.constraint_schema
 WHERE tc.table_name    = 'membros'
   AND tc.table_schema  = 'public'
   AND tc.constraint_type = 'CHECK'
 ORDER BY tc.constraint_name;
 
--- ── 2. AUDITORIA: ver todas as colunas da tabela membros ───────────────
-SELECT
-  column_name,
-  data_type,
-  is_nullable,
-  column_default
+-- ── 2. AUDITORIA: colunas da tabela (sem referenciar colunas inexistentes)
+SELECT column_name, data_type, is_nullable, column_default
 FROM information_schema.columns
-WHERE table_name   = 'membros'
-  AND table_schema = 'public'
+WHERE table_name = 'membros' AND table_schema = 'public'
 ORDER BY ordinal_position;
 
--- ── 3. AUDITORIA: valores distintos em colunas com constraint ──────────
-SELECT
-  tipo_membro,
-  tipo_ingresso,
-  tipo_propriedade,
-  COUNT(*) AS total
-FROM public.membros
-WHERE deleted_at IS NULL
-GROUP BY tipo_membro, tipo_ingresso, tipo_propriedade
-ORDER BY tipo_membro, tipo_ingresso, tipo_propriedade NULLS FIRST;
-
 -- ══════════════════════════════════════════════════════════════
--- EXECUTE o bloco acima primeiro. Leia os resultados.
--- Depois execute o bloco de CORREÇÃO abaixo.
+-- EXECUTE os dois SELECTs acima e cole os resultados aqui
+-- antes de prosseguir — ou continue diretamente com a correção.
 -- ══════════════════════════════════════════════════════════════
 
--- ── 4. CORREÇÃO: tipo_propriedade ───────────────────────────────────────
--- O frontend não envia tipo_propriedade. Precisamos de um DEFAULT
--- e de tornar a constraint permissiva com NULL.
-
--- 4a. Remover a constraint que bloqueia NULL
+-- ── 3. CORREÇÃO: remover constraint problemática (pelo nome) ────────────
+-- O constraint "membros_tipo_propriedade_check" existe mas a coluna
+-- tipo_propriedade não existe — foi criado com nome manual.
+-- Removemos pelo nome sem precisar saber qual coluna ele checa.
 ALTER TABLE public.membros DROP CONSTRAINT IF EXISTS membros_tipo_propriedade_check;
 
--- 4b. Garantir que a coluna aceita NULL (caso seja NOT NULL)
-ALTER TABLE public.membros ALTER COLUMN tipo_propriedade DROP NOT NULL;
-
--- 4c. Definir DEFAULT para que novos INSERTs sem esse campo não falhem
---     Substitua 'proprio' pelo valor que faz sentido no seu contexto,
---     ou mantenha NULL se o campo for opcional.
-ALTER TABLE public.membros ALTER COLUMN tipo_propriedade SET DEFAULT NULL;
-
--- 4d. Recriar a constraint permitindo NULL (coluna opcional no frontend)
---     Ajuste os valores IN() conforme os valores válidos do seu banco.
---     (descomente e ajuste após ver os resultados do passo 1)
--- ALTER TABLE public.membros
---   ADD CONSTRAINT membros_tipo_propriedade_check
---   CHECK (tipo_propriedade IS NULL OR tipo_propriedade IN ('proprio','alugado','cedido','outro'));
-
--- ── 5. CORREÇÃO: tipo_membro ────────────────────────────────────────────
+-- ── 4. CORREÇÃO: tipo_membro ────────────────────────────────────────────
 ALTER TABLE public.membros DROP CONSTRAINT IF EXISTS membros_tipo_membro_check;
 
--- Normalizar valores capitalizados existentes
 UPDATE public.membros SET tipo_membro = 'comungante'
-WHERE tipo_membro IN ('Comungante','COMUNGANTE','membro_comungante','Membro Comungante')
+WHERE tipo_membro IN ('Comungante','COMUNGANTE','membro_comungante','Membro Comungante','MEMBRO')
   AND deleted_at IS NULL;
 
 UPDATE public.membros SET tipo_membro = 'nao_comungante'
@@ -83,9 +50,9 @@ WHERE tipo_membro IN (
 
 ALTER TABLE public.membros
   ADD CONSTRAINT membros_tipo_membro_check
-  CHECK (tipo_membro IS NULL OR tipo_membro IN ('comungante', 'nao_comungante'));
+  CHECK (tipo_membro IS NULL OR tipo_membro IN ('comungante','nao_comungante'));
 
--- ── 6. CORREÇÃO: tipo_ingresso ──────────────────────────────────────────
+-- ── 5. CORREÇÃO: tipo_ingresso ──────────────────────────────────────────
 ALTER TABLE public.membros DROP CONSTRAINT IF EXISTS membros_tipo_ingresso_check;
 
 UPDATE public.membros SET tipo_ingresso = 'transferencia'
@@ -101,12 +68,14 @@ ALTER TABLE public.membros
   ADD CONSTRAINT membros_tipo_ingresso_check
   CHECK (tipo_ingresso IS NULL OR tipo_ingresso IN ('batismo','profissao_de_fe','transferencia','restauracao','outro'));
 
--- ── 7. VERIFICAÇÃO FINAL ────────────────────────────────────────────────
+-- ── 6. VERIFICAÇÃO FINAL ────────────────────────────────────────────────
 SELECT
   tc.constraint_name,
   cc.check_clause
 FROM information_schema.table_constraints tc
 JOIN information_schema.check_constraints cc
   ON tc.constraint_name = cc.constraint_name
+     AND tc.constraint_catalog = cc.constraint_catalog
+     AND tc.constraint_schema  = cc.constraint_schema
 WHERE tc.table_name = 'membros' AND tc.table_schema = 'public' AND tc.constraint_type = 'CHECK'
 ORDER BY tc.constraint_name;
