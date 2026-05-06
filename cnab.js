@@ -133,13 +133,18 @@
     return { cpf:"01", cnpj:"02", telefone:"03", email:"04", evp:"05" }[String(t || "").toLowerCase()] || "05";
   }
   function _segmentoB(p, lote, seq) {
-    const pix = p.tipo_operacao === "pix";
+    const cabecalho = ["237", _num(lote, 4), "3", _num(seq, 5), "B", " ", "00", _tipoInscricao(p.favorecido_cpf_cnpj), _num(p.favorecido_cpf_cnpj, 14)];
+    if (p.tipo_operacao === "pix") {
+      // PIX: chave ocupa posições 33-77 (45 chars); tipo chave em 78-79; restante brancos
+      return _line([...cabecalho, _pad(p.favorecido_pix_chave || "", 45), _tipoPix(p.favorecido_pix_tipo), _pad("", 161)], "segmento B PIX");
+    }
+    // TED: layout padrão com campos de endereço
     return _line([
-      "237", _num(lote, 4), "3", _num(seq, 5), "B", " ", "00", _tipoInscricao(p.favorecido_cpf_cnpj),
-      _num(p.favorecido_cpf_cnpj, 14), _pad("", 30), _pad("", 5), _pad("", 15), _pad("", 15), _pad("", 20),
-      _pad("", 2), _pad("", 3), _pad("", 5), _pad(pix ? p.favorecido_pix_chave : "", 15), _num(0, 10), _num(0, 10),
-      _num(0, 15), _num(0, 15), _num(0, 15), _num(0, 15), pix ? _tipoPix(p.favorecido_pix_tipo) : _pad("", 2), _pad("", 16)
-    ], "segmento B");
+      ...cabecalho,
+      _pad("", 30), _pad("", 5), _pad("", 15), _pad("", 15), _pad("", 20),
+      _pad("", 2), _pad("", 3), _pad("", 5), _pad("", 15), _num(0, 10), _num(0, 10),
+      _num(0, 15), _num(0, 15), _num(0, 15), _num(0, 15), _pad("", 2), _pad("", 16)
+    ], "segmento B TED");
   }
   function _codigoBarras(v) { return _digits(v).slice(0, 48).padEnd(40, " ").slice(0, 40); }
   function _segmentoJ(p, lote, seq) {
@@ -361,6 +366,7 @@
         headers:_headers({ "Prefer":"return=minimal" }),
         body:JSON.stringify({ status:"em_processamento" })
       })));
+      delete window._cnabPagamentosTemp;
       _closeModal();
       await cnabInit();
       await cnabExportar(remessa.id);
