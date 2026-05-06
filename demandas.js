@@ -54,6 +54,7 @@
     "Aberta":       { bg:"rgba(74,156,245,.12)",  cl:"var(--blue)"  },
     "Em Análise":   { bg:"rgba(212,168,67,.12)",  cl:"var(--gold)"  },
     "Em Andamento": { bg:"rgba(139,111,212,.12)", cl:"var(--violet)"},
+    "Aguardando Pagamento": { bg:"rgba(234,179,8,.12)", cl:"var(--amber)" },
     "Concluída":    { bg:"rgba(58,170,92,.12)",   cl:"var(--gr)"    },
     "Cancelada":    { bg:"rgba(90,96,104,.15)",   cl:"var(--tx3)"   },
     "Pendente":     { bg:"rgba(224,138,42,.12)",  cl:"var(--amber)" },
@@ -119,6 +120,7 @@
     "Aberta":       "ABERTA",
     "Em Análise":   "EM_ANALISE",
     "Em Andamento": "EM_ANDAMENTO",
+    "Aguardando Pagamento": "AGUARDANDO_PAGAMENTO",
     "Pendente":     "PENDENTE",
     "Concluída":    "CONCLUIDA",
     "Cancelada":    "CANCELADA",
@@ -128,6 +130,7 @@
     "ABERTA":       "Aberta",
     "EM_ANALISE":   "Em Análise",
     "EM_ANDAMENTO": "Em Andamento",
+    "AGUARDANDO_PAGAMENTO": "Aguardando Pagamento",
     "PENDENTE":     "Pendente",
     "CONCLUIDA":    "Concluída",
     "CANCELADA":    "Cancelada",
@@ -750,6 +753,146 @@
       </div>`;
   }
 
+  function _temFinancialData(dem) {
+    const fd = dem?.financial_data;
+    return !!(fd && typeof fd === "object" && Object.keys(fd).length > 0);
+  }
+
+  function _podeAprovarPagamento() {
+    try {
+      if (typeof USUARIO_ATUAL !== "undefined" && USUARIO_ATUAL?.perfil === "ADMINISTRADOR_GERAL") return true;
+      const nivel = (typeof permissoesUsuario !== "undefined" ? permissoesUsuario?.FINANCEIRO : null) || "SEM_ACESSO";
+      return nivel === "EDICAO" || nivel === "COMPLETO";
+    } catch(_) { return false; }
+  }
+
+  function _detectarTipoPix(chave) {
+    const raw = String(chave || "").trim();
+    const num = raw.replace(/\D/g, "");
+    if (!raw) return null;
+    if (raw.includes("@")) return "email";
+    if (/^\d{11}$/.test(num)) return "cpf";
+    if (/^\d{14}$/.test(num)) return "cnpj";
+    if (/^\+?\d{10,13}$/.test(raw.replace(/\s/g, ""))) return "telefone";
+    return "evp";
+  }
+
+  function _tipoOperacaoFinanceira(forma) {
+    const FORMA_PARA_TIPO = {
+      "Pix": "pix",
+      "PIX": "pix",
+      "Transferência": "transferencia",
+      "Transferencia": "transferencia",
+      "Ted": "transferencia",
+      "TED": "transferencia",
+      "Boleto": "boleto",
+      "Tributo": "tributo",
+    };
+    return FORMA_PARA_TIPO[forma] || null;
+  }
+
+  function _podeMostrarAprovarPagamento(dem) {
+    return dem?.area === "Financeiro"
+      && _temFinancialData(dem)
+      && _podeAprovarPagamento()
+      && !["Concluída", "Cancelada", "Aguardando Pagamento"].includes(_toLabel(dem.status));
+  }
+
+  window.demAprovarParaPagamento = async function(demandaId) {
+    if (!_podeAprovarPagamento()) {
+      if (typeof T === "function") T("Acesso negado", "Você não tem permissão para aprovar pagamento.");
+      return;
+    }
+    if (!_cache.length) await _load();
+    const demanda = _cache.find(r => String(r.id || r._row) === String(demandaId));
+    if (!demanda) {
+      if (typeof T === "function") T("Erro", "Demanda não encontrada.");
+      return;
+    }
+    const fd = demanda.financial_data;
+    if (!_temFinancialData(demanda)) {
+      if (typeof T === "function") T("Sem dados financeiros", "Esta demanda não possui dados financeiros para pagamento.");
+      return;
+    }
+
+    const btn = document.querySelector(`[data-dem-aprovar-pag="${demandaId}"]`);
+    const txt = btn ? btn.textContent : "";
+    if (btn) { btn.disabled = true; btn.textContent = "Criando solicitação..."; }
+
+    try {
+      const sb = _sbClient();
+      if (!sb) throw new Error("Supabase não disponível.");
+
+      const { data: existente, error: dupError } = await sb
+        .from("financeiro_solicitacoes")
+        .select("id")
+        .eq("demanda_id", demandaId)
+        .is("deleted_at", null)
+        .limit(1);
+      if (dupError) throw dupError;
+      if (existente?.length) {
+        if (typeof T === "function") T("Solicitação já existe", "Esta demanda já foi enviada para Contas a Pagar.");
+        return;
+      }
+
+      const payload = {
+        fornecedor: fd.beneficiario || fd.reimb_nome || demanda.solicitante || "—",
+        valor: Number(fd.valor || 0),
+        forma_pagamento: fd.forma_pagamento || null,
+        finalidade: demanda.titulo || "",
+        categoria: "Financeiro",
+        solicitante: demanda.solicitante || "",
+        vencimento: fd.data_vencimento || null,
+        observacoes: fd.obs || "",
+        status: "pendente",
+        demanda_id: demanda.id || demanda._row,
+        tipo_operacao: _tipoOperacaoFinanceira(fd.forma_pagamento),
+        favorecido_nome: fd.beneficiario || fd.reimb_nome || null,
+        favorecido_cpf_cnpj: String(fd.cpf_cnpj || "").replace(/\D/g, "") || null,
+        favorecido_banco: fd.banco || null,
+        favorecido_agencia: fd.agencia || null,
+        favorecido_conta: fd.conta || null,
+        favorecido_pix_chave: fd.chave_pix || null,
+        favorecido_pix_tipo: _detectarTipoPix(fd.chave_pix),
+      };
+
+      const { data: criada, error: insertError } = await sb
+        .from("financeiro_solicitacoes")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (insertError) throw insertError;
+
+      await apiWrite("update", "DEMANDAS", {
+        _row: demandaId,
+        status: "AGUARDANDO_PAGAMENTO",
+        prioridade: demanda.prioridade || "Média",
+      });
+
+      const novoStatus = "Aguardando Pagamento";
+      const idx = _cache.findIndex(r => String(r.id || r._row) === String(demandaId));
+      if (idx >= 0) Object.assign(_cache[idx], { status: novoStatus });
+      if (_ativo && String(_ativo.id || _ativo._row) === String(demandaId)) {
+        Object.assign(_ativo, { status: novoStatus });
+      }
+
+      await _registrarAndamentoAuto(
+        demandaId,
+        `Aprovado para pagamento. Solicitação financeira criada (ID: ${criada?.id || "—"}).`,
+        novoStatus
+      );
+
+      if (typeof T === "function") T("✅ Enviado para pagamento", "A solicitação já aparece em Contas a Pagar/CNAB.");
+      if (_ativo && String(_ativo.id || _ativo._row) === String(demandaId)) _renderDetalhe(_ativo);
+      _atualizarBadge();
+    } catch(e) {
+      if (typeof T === "function") T("Erro ao aprovar", e.message || "Tente novamente.");
+      console.error("demAprovarParaPagamento:", e);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = txt; }
+    }
+  };
+
   /* ── Detalhe individual ─────────────────────────────── */
 
   window.demAbrirDetalhe = async function(id, origem) {
@@ -770,6 +913,23 @@
     if (!el) return;
     const id = dem.id || dem._row;
     const origem = _origemView;
+    const mostrarAprovarPagamento = _podeMostrarAprovarPagamento(dem);
+    const detailRows = [
+      ["Categoria",     `<span style="color:${catCor(dem.area)};font-weight:600">${catIcon(dem.area)} ${escapeHtml(dem.area)||"—"}</span>`],
+      ["Subcategoria",  escapeHtml(dem.subcategoria)||"—"],
+      ["Solicitante",   escapeHtml(dem.solicitante || dem.solicitante_txt) || "—"],
+      ["Responsável",   escapeHtml(dem.responsavel || dem.responsavel_txt) || "—"],
+      ["Prioridade",    pillPrio(dem.prioridade)],
+      ["Abertura",      fmtD(dem.data_abertura||dem.criado_em)],
+      ["Conclusão prev.",fmtD(dem.data_conclusao)],
+    ];
+    if (_temFinancialData(dem) && _toLabel(dem.status) === "Aguardando Pagamento") {
+      detailRows.push([
+        "Solicitação Financeira",
+        `<span style="color:var(--amber);font-weight:600">Aguardando pagamento via CNAB / Contas a Pagar</span>
+         <button class="tbt" style="margin-left:8px;padding:3px 8px;font-size:10.5px" onclick="go('fin-pagar')">Abrir Contas a Pagar</button>`
+      ]);
+    }
 
     el.innerHTML = `
       <div class="hero">
@@ -784,6 +944,10 @@
         </div>
         <div class="hero-act" style="display:flex;gap:8px;align-items:center">
           <button class="tbt" onclick="window.go('${origem}')">← Voltar</button>
+          ${mostrarAprovarPagamento ? `
+          <button class="tbt" data-dem-aprovar-pag="${escapeHtmlAttr(id)}" style="color:var(--gr);border-color:rgba(58,170,92,.3)" onclick="demAprovarParaPagamento('${escapeHtmlAttr(id)}')">
+            💰 Aprovar para Pagamento
+          </button>` : ""}
           <button class="tbt" style="color:var(--rose);border-color:rgba(224,85,85,.3)" onclick="demExcluirDemanda('${id}')">🗑 Excluir</button>
         </div>
       </div>
@@ -792,15 +956,7 @@
           <div class="card">
             <div class="ctit">Detalhes</div>
             <table style="width:100%;font-size:11.5px;border-collapse:collapse">
-              ${[
-                ["Categoria",     `<span style="color:${catCor(dem.area)};font-weight:600">${catIcon(dem.area)} ${dem.area||"—"}</span>`],
-                ["Subcategoria",  dem.subcategoria||"—"],
-                ["Solicitante",   escapeHtml(dem.solicitante || dem.solicitante_txt) || "—"],
-                ["Responsável",   escapeHtml(dem.responsavel || dem.responsavel_txt) || "—"],
-                ["Prioridade",    pillPrio(dem.prioridade)],
-                ["Abertura",      fmtD(dem.data_abertura||dem.criado_em)],
-                ["Conclusão prev.",fmtD(dem.data_conclusao)],
-              ].map(([lbl, val], i) => `
+              ${detailRows.map(([lbl, val], i) => `
                 <tr style="${i>0?"border-top:1px solid var(--bd1)":""}">
                   <td style="color:var(--tx3);padding:7px 0;width:40%">${lbl}</td>
                   <td style="color:var(--tx1)">${val}</td>
@@ -1210,8 +1366,6 @@
 
     const u = typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL : null;
     const pessoaId = u?.id || u?.pessoa_id || null;
-    console.log("Usuário logado:", u);
-    console.log("Pessoa ID:", pessoaId);
 
     const payload = {
       area:           cat,
@@ -1259,7 +1413,6 @@
     }
 
     try {
-      console.log("PAYLOAD DEMANDA:", { ...payload });
       await apiWrite("create", "DEMANDAS", payload);
       if (typeof T === "function") T("✅ Demanda criada!", `Roteada para: ${payload.responsavel}`);
       window.fecharModalNovaDemanda();

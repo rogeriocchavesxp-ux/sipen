@@ -497,9 +497,14 @@
                     : (r.vencimento && r.vencimento >= H && r.vencimento <= S7 && !pago)
                       ? "background:rgba(212,168,67,.04)"
                       : "";
+                  const demandaBadge = r.demanda_id
+                    ? `<span style="font-size:9.5px;background:rgba(234,179,8,.12);color:var(--amber,#ca8a04);border-radius:4px;padding:1px 6px;margin-left:4px;cursor:pointer;white-space:nowrap"
+                        onclick="window.demAbrirDetalhe && demAbrirDetalhe('${escapeHtmlAttr(r.demanda_id)}','fin-pagar')"
+                        title="Ver demanda de origem">Demanda ↗</span>`
+                    : "";
                   return `
                   <tr style="border-bottom:1px solid var(--bd1);${rowBg}" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='${rowBg ? rowBg.split(":")[1].split(";")[0].trim() : ""}'">
-                    <td style="padding:7px 6px;color:var(--tx1);font-weight:500;white-space:nowrap">${escapeHtml(r.fornecedor) || "—"}</td>
+                    <td style="padding:7px 6px;color:var(--tx1);font-weight:500;white-space:nowrap">${escapeHtml(r.fornecedor) || "—"}${demandaBadge}</td>
                     <td style="padding:7px 6px;color:var(--tx1);max-width:180px">${escapeHtml(r.finalidade) || "—"}</td>
                     <td style="padding:7px 6px;text-align:right;font-weight:700;color:var(--rose)">${brl(r.valor)}</td>
                     <td style="padding:7px 6px;color:var(--tx2);white-space:nowrap">${_labelForma(r.forma_pagamento)}</td>
