@@ -50,15 +50,17 @@ ALTER TABLE dept_administrativos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dept_membros         ENABLE ROW LEVEL SECURITY;
 
 -- Leitura: qualquer usuário autenticado
-CREATE POLICY IF NOT EXISTS "dept_adm_select" ON dept_administrativos
-  FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY IF NOT EXISTS "dept_mem_select" ON dept_membros
-  FOR SELECT TO authenticated USING (true);
-
--- Escrita: usuários autenticados (controle de acesso pelo app)
-CREATE POLICY IF NOT EXISTS "dept_adm_all" ON dept_administrativos
-  FOR ALL TO authenticated USING (true) WITH CHECK (true);
-
-CREATE POLICY IF NOT EXISTS "dept_mem_all" ON dept_membros
-  FOR ALL TO authenticated USING (true) WITH CHECK (true);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname='dept_adm_select' AND tablename='dept_administrativos') THEN
+    CREATE POLICY "dept_adm_select" ON dept_administrativos FOR SELECT TO authenticated USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname='dept_mem_select' AND tablename='dept_membros') THEN
+    CREATE POLICY "dept_mem_select" ON dept_membros FOR SELECT TO authenticated USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname='dept_adm_all' AND tablename='dept_administrativos') THEN
+    CREATE POLICY "dept_adm_all" ON dept_administrativos FOR ALL TO authenticated USING (true) WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname='dept_mem_all' AND tablename='dept_membros') THEN
+    CREATE POLICY "dept_mem_all" ON dept_membros FOR ALL TO authenticated USING (true) WITH CHECK (true);
+  END IF;
+END $$;
