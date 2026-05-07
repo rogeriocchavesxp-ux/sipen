@@ -444,7 +444,7 @@
     var mount = document.getElementById("page");
     if (!mount) return;
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "views/main.html?v=6.30.3", false);
+    xhr.open("GET", "views/main.html?v=6.30.25", false);
     xhr.send(null);
     if (xhr.status >= 200 && xhr.status < 300) mount.innerHTML = xhr.responseText;
     else console.error("Falha ao carregar views/main.html", xhr.status);
