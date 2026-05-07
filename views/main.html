@@ -3443,6 +3443,162 @@
     </div>
   </div>
 
+  <!-- ════ CONFIG WHATSAPP ════════════════════════════════ -->
+  <div class="view" id="v-config-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(37,211,102,0.12)">💬</div>
+      <div>
+        <div class="hero-lbl">Configurações</div>
+        <div class="hero-ttl">WhatsApp — Evolution API</div>
+        <div class="hero-dsc">Status da instância, módulos ativos, histórico e templates de mensagens</div>
+      </div>
+      <div class="hero-act" style="gap:8px">
+        <button class="tbt" onclick="WA_CFG.refresh()">↻ Atualizar</button>
+        <button class="tbt pri" onclick="WA_CFG.openTesteModal()">Enviar Teste</button>
+      </div>
+    </div>
+
+    <div class="ct">
+      <!-- KPIs -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+        <div class="kpi">
+          <div class="kpi-ico" id="wa-kpi-ico-status" style="background:rgba(100,100,100,0.1)">⚪</div>
+          <div class="kpi-body"><div class="kpi-lbl">Conexão</div><div class="kpi-val" id="wa-kpi-status">—</div></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-ico" style="background:rgba(37,211,102,0.12)">📱</div>
+          <div class="kpi-body"><div class="kpi-lbl">Instância</div><div class="kpi-val" id="wa-kpi-instancia" style="font-size:14px">—</div></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-ico" style="background:rgba(74,156,245,0.12)">📨</div>
+          <div class="kpi-body"><div class="kpi-lbl">Enviados hoje</div><div class="kpi-val" id="wa-kpi-hoje">—</div></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-ico" style="background:rgba(224,85,85,0.12)">❌</div>
+          <div class="kpi-body"><div class="kpi-lbl">Erros hoje</div><div class="kpi-val" id="wa-kpi-erros">—</div></div>
+        </div>
+      </div>
+
+      <!-- Módulos + Config instância -->
+      <div class="g2" style="margin-bottom:16px">
+        <div class="card">
+          <div class="ctit">Módulos — Envio via WhatsApp <span class="cact" onclick="WA_CFG.carregarModulos()">↻</span></div>
+          <div id="wa-modulos-list" style="display:flex;flex-direction:column"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        </div>
+        <div class="card">
+          <div class="ctit">Instância Evolution API</div>
+          <div class="fg" style="margin-bottom:8px">
+            <label class="flb">URL da API</label>
+            <input class="fi2" type="url" id="wa-api-url" placeholder="https://evo.seudominio.com.br">
+          </div>
+          <div class="fg" style="margin-bottom:14px">
+            <label class="flb">Nome da Instância</label>
+            <input class="fi2" type="text" id="wa-api-inst" placeholder="ippenha">
+          </div>
+          <button class="btn btn-p" onclick="WA_CFG.salvarConfig()">Salvar Configuração</button>
+        </div>
+      </div>
+
+      <!-- Histórico -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="ctit" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span>Histórico de Mensagens</span>
+          <span class="cact" onclick="WA_CFG.carregarHistorico()">↻ Atualizar</span>
+          <span style="margin-left:auto;display:flex;gap:6px">
+            <select class="fi2" id="wa-hist-modulo" style="font-size:11px;padding:3px 7px;height:auto" onchange="WA_CFG.carregarHistorico()">
+              <option value="">Todos os módulos</option>
+              <option>DEMANDAS</option><option>AGENDA</option><option>MEMBRESIA</option>
+              <option>FINANCEIRO</option><option>PASTORAL</option><option>MINISTERIAL</option><option>COMUNICACAO</option>
+            </select>
+            <select class="fi2" id="wa-hist-status" style="font-size:11px;padding:3px 7px;height:auto" onchange="WA_CFG.carregarHistorico()">
+              <option value="">Todos os status</option>
+              <option>enviado</option><option>pendente</option><option>erro</option>
+            </select>
+          </span>
+        </div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:11.5px">
+            <thead>
+              <tr style="border-bottom:1px solid var(--bd2)">
+                <th style="text-align:left;padding:7px 10px;color:var(--tx3);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap">Data/Hora</th>
+                <th style="text-align:left;padding:7px 10px;color:var(--tx3);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em">Número</th>
+                <th style="text-align:left;padding:7px 10px;color:var(--tx3);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em">Módulo</th>
+                <th style="text-align:left;padding:7px 10px;color:var(--tx3);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em">Mensagem</th>
+                <th style="text-align:center;padding:7px 10px;color:var(--tx3);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em">Status</th>
+              </tr>
+            </thead>
+            <tbody id="wa-hist-body">
+              <tr><td colspan="5" style="padding:16px;text-align:center;color:var(--tx3)">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Templates -->
+      <div class="card">
+        <div class="ctit" style="display:flex;align-items:center;gap:10px">
+          <span>Templates de Mensagem</span>
+          <span class="cact" onclick="WA_CFG.openTemplateModal()">+ Novo</span>
+          <span class="cact" onclick="WA_CFG.carregarTemplates()">↻</span>
+        </div>
+        <div id="wa-templates-list" style="display:flex;flex-direction:column;gap:8px">
+          <div style="color:var(--tx3);font-size:11.5px">Carregando...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: envio de teste -->
+  <div class="mo" id="wa-teste-modal" onclick="if(event.target===this)WA_CFG.closeTesteModal()">
+    <div class="md" style="max-width:480px">
+      <div class="md-t">Enviar Mensagem de Teste</div>
+      <div class="md-s">Verifica a conexão com a Evolution API enviando uma mensagem real</div>
+      <div class="fg" style="margin-bottom:8px">
+        <label class="flb">Número (com DDD, sem +)</label>
+        <input class="fi2" type="tel" id="wa-teste-num" placeholder="11999999999">
+      </div>
+      <div class="fg" style="margin-bottom:14px">
+        <label class="flb">Mensagem</label>
+        <textarea class="fi2" id="wa-teste-msg" rows="3"></textarea>
+      </div>
+      <div class="ma">
+        <button class="btn" onclick="WA_CFG.closeTesteModal()">Cancelar</button>
+        <button class="btn btn-p" onclick="WA_CFG.enviarTeste()">Enviar via WhatsApp</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: template -->
+  <div class="mo" id="wa-tpl-modal" onclick="if(event.target===this)WA_CFG.closeTplModal()">
+    <div class="md" style="max-width:520px">
+      <div class="md-t" id="wa-tpl-modal-titulo">Novo Template</div>
+      <input type="hidden" id="wa-tpl-id">
+      <div class="fg" style="margin-bottom:8px">
+        <label class="flb">Chave (identificador único)</label>
+        <input class="fi2" type="text" id="wa-tpl-chave" placeholder="LEMBRETE_EVENTO">
+      </div>
+      <div class="fg" style="margin-bottom:8px">
+        <label class="flb">Nome legível</label>
+        <input class="fi2" type="text" id="wa-tpl-nome" placeholder="Lembrete de Evento">
+      </div>
+      <div class="fg" style="margin-bottom:8px">
+        <label class="flb">Módulo</label>
+        <select class="fi2" id="wa-tpl-modulo">
+          <option>COMUNICACAO</option><option>AGENDA</option><option>DEMANDAS</option>
+          <option>MEMBRESIA</option><option>FINANCEIRO</option><option>PASTORAL</option><option>MINISTERIAL</option>
+        </select>
+      </div>
+      <div class="fg" style="margin-bottom:14px">
+        <label class="flb">Corpo — use {{variavel}} para substituições dinâmicas</label>
+        <textarea class="fi2" id="wa-tpl-corpo" rows="5" placeholder="Olá {{nome}}, lembrando do evento {{evento}} em {{data}} às {{hora}}."></textarea>
+      </div>
+      <div class="ma">
+        <button class="btn" onclick="WA_CFG.closeTplModal()">Cancelar</button>
+        <button class="btn btn-p" onclick="WA_CFG.salvarTemplate()">Salvar Template</button>
+      </div>
+    </div>
+  </div>
+
   <div class="view" id="v-generic">
     <div class="ct" style="padding-top:56px;text-align:center">
       <div style="font-size:36px;margin-bottom:12px;opacity:.3">🚧</div>

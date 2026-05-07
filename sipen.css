@@ -867,3 +867,11 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 /* Itens de menu de demandas visíveis apenas para admins */
 [data-demanda-admin] { display: none !important; }
 body.dem-admin [data-demanda-admin] { display: block !important; }
+
+/* WhatsApp module toggle switch */
+.wa-toggle{position:relative;display:inline-flex;cursor:pointer;flex-shrink:0}
+.wa-toggle input{opacity:0;width:0;height:0;position:absolute}
+.wa-toggle span{display:block;width:36px;height:20px;background:var(--bd2);border-radius:10px;transition:background .2s;position:relative}
+.wa-toggle input:checked ~ span{background:var(--gr)}
+.wa-toggle span::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.wa-toggle input:checked ~ span::after{transform:translateX(16px)}
