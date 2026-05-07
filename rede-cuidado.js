@@ -43,6 +43,24 @@
     return r.json();
   }
 
+  // Paginação completa — busca todas as páginas de 1000 em 1000
+  async function _getTodos(path) {
+    if (typeof sipenFetchTodos === "function") {
+      return sipenFetchTodos("rest/v1/" + path, _hdr());
+    }
+    const PAGE = 1000;
+    let all = [], from = 0;
+    while(true){
+      const sep = path.includes("?") ? "&" : "?";
+      const data = await _get(`${path}${sep}limit=${PAGE}&offset=${from}`);
+      if(!Array.isArray(data) || !data.length) break;
+      all = all.concat(data);
+      if(data.length < PAGE) break;
+      from += PAGE;
+    }
+    return all;
+  }
+
   async function _rpc(fn, body) {
     const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + fn, {
       method: 'POST',
@@ -311,14 +329,14 @@
       porCuidador[v.cuidador_id].membros.push(v.cuidado_nome);
     });
 
-    // Pessoas sem cuidador (requer query separada)
+    // Pessoas sem cuidador (requer query separada — paginação completa)
     let semCuidador = [];
     try {
       const comCuidador = todos.map(v => v.cuidado_id);
       const qs = comCuidador.length > 0
-        ? `pessoas?deleted_at=is.null&select=id,nome&id=not.in.(${comCuidador.join(',')})&order=nome.asc&limit=200`
-        : `pessoas?deleted_at=is.null&select=id,nome&order=nome.asc&limit=200`;
-      semCuidador = await _get(qs);
+        ? `pessoas?deleted_at=is.null&select=id,nome&id=not.in.(${comCuidador.join(',')})&order=nome.asc`
+        : `pessoas?deleted_at=is.null&select=id,nome&order=nome.asc`;
+      semCuidador = await _getTodos(qs);
     } catch (_) {}
 
     container.innerHTML = `

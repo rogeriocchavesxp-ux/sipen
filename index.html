@@ -1001,6 +1001,30 @@ async function apiPing() {
   throw new Error(lastErr || "Supabase indisponível");
 }
 
+// ── Paginador global ─────────────────────────────────────────────
+// Contorna o db-max-rows=1000 do Supabase buscando todas as páginas.
+// path: string REST sem limit/offset (ex: "rest/v1/pessoas?select=id,nome&order=nome.asc")
+// hdrs: objeto de headers (opcional — usa apiHeaders() se omitido)
+async function sipenFetchTodos(path, hdrs) {
+  const PAGE = 1000;
+  const base = (typeof SUPABASE_URL !== "undefined" ? SUPABASE_URL : "").trim().replace(/\/$/,"");
+  let all = [], from = 0;
+  while(true){
+    const sep = path.includes("?") ? "&" : "?";
+    const res = await fetch(`${base}/${path}${sep}limit=${PAGE}&offset=${from}`, {
+      headers: hdrs || apiHeaders()
+    });
+    if(!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    if(!Array.isArray(data) || !data.length) break;
+    all = all.concat(data);
+    if(data.length < PAGE) break;
+    from += PAGE;
+  }
+  return all;
+}
+window.sipenFetchTodos = sipenFetchTodos;
+
 async function apiRead(sheet, limit = 200) {
   const tbl = tableName(sheet);
   // Membros e visitantes têm bases grandes — busca tudo para filtro local correto
@@ -2871,7 +2895,7 @@ async function carregarUsuarios() {
   try {
     // Busca apenas membros que já têm funcao atribuída (têm acesso ao sistema)
     const res = await fetch(
-      `${apiBaseUrl()}/rest/v1/v_membros?funcao=not.is.null&select=id,nome,email,telefone,funcao,status&order=nome.asc&limit=200`,
+      `${apiBaseUrl()}/rest/v1/v_membros?funcao=not.is.null&select=id,nome,email,telefone,funcao,status&order=nome.asc&limit=1000`,
       { headers: apiHeaders() }
     );
     if (!res.ok) throw new Error(await res.text());

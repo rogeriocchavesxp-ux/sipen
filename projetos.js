@@ -72,8 +72,25 @@
   async function _carregarMembros() {
     if (_membros.length) return _membros;
     try {
-      const url = `${_api()}/rest/v1/v_membros?status=eq.ativo&select=id,nome&order=nome.asc&limit=500`;
-      _membros = await _fetchJson(url, { headers: _headers() }) || [];
+      // Busca paginada completa — sem limite fixo
+      if (typeof sipenFetchTodos === "function") {
+        _membros = await sipenFetchTodos(
+          "rest/v1/v_membros?status=eq.ativo&select=id,nome&order=nome.asc",
+          _headers()
+        );
+      } else {
+        const PAGE = 1000;
+        let all = [], from = 0;
+        while(true){
+          const url = `${_api()}/rest/v1/v_membros?status=eq.ativo&select=id,nome&order=nome.asc&limit=${PAGE}&offset=${from}`;
+          const data = await _fetchJson(url, { headers: _headers() }) || [];
+          if(!data.length) break;
+          all = all.concat(data);
+          if(data.length < PAGE) break;
+          from += PAGE;
+        }
+        _membros = all;
+      }
     } catch (e) {
       console.warn("Projetos: falha ao carregar membros", e.message);
       _membros = [];

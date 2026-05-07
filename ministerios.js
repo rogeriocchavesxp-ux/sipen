@@ -48,11 +48,29 @@
   async function _carregarPessoas() {
     if (_pessoasCache) return _pessoasCache;
     try {
-      const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/pessoas?select=id,nome&order=nome.asc`,
-        { headers: _hdr() }
-      );
-      _pessoasCache = r.ok ? await r.json() : [];
+      // sipenFetchTodos contorna o db-max-rows=1000 do Supabase buscando todas as páginas
+      if (typeof sipenFetchTodos === "function") {
+        _pessoasCache = await sipenFetchTodos(
+          "rest/v1/pessoas?select=id,nome&deleted_at=is.null&order=nome.asc",
+          _hdr()
+        );
+      } else {
+        // Fallback: paginação manual caso sipenFetchTodos não esteja disponível
+        const PAGE = 1000;
+        let all = [], from = 0;
+        while(true){
+          const r = await fetch(
+            `${SUPABASE_URL}/rest/v1/pessoas?select=id,nome&deleted_at=is.null&order=nome.asc&limit=${PAGE}&offset=${from}`,
+            { headers: _hdr() }
+          );
+          const data = r.ok ? await r.json() : [];
+          if(!data.length) break;
+          all = all.concat(data);
+          if(data.length < PAGE) break;
+          from += PAGE;
+        }
+        _pessoasCache = all;
+      }
     } catch (_) {
       _pessoasCache = [];
     }
@@ -62,7 +80,7 @@
   function _optionsPessoa(selecionado) {
     return '<option value="">— Nenhum —</option>' +
       (_pessoasCache || []).map(p =>
-        `<option value="${p.id}"${p.id === selecionado ? ' selected' : ''}>${p.nome}</option>`
+        `<option value="${p.id}"${p.id === selecionado ? ' selected' : ''}>${p.nome.toUpperCase()}</option>`
       ).join('');
   }
 
@@ -135,7 +153,7 @@
           { headers: _hdr() }
         );
         const ps = rSup.ok ? await rSup.json() : [];
-        ps.forEach(p => { nomeSup[p.id] = p.nome; });
+        ps.forEach(p => { nomeSup[p.id] = (p.nome || "").toUpperCase(); });
       }
 
       if (lista.length === 0) {
@@ -230,7 +248,7 @@
           { headers: _hdr() }
         );
         const ps = rp.ok ? await rp.json() : [];
-        ps.forEach(p => { nomes[p.id] = p.nome; });
+        ps.forEach(p => { nomes[p.id] = (p.nome || "").toUpperCase(); });
       }
 
       const ICONES = { MUSICA:'🎵', JOVENS:'🔥', INFANTIL:'👶', INTERCESSAO:'🙏', EVANGELISMO:'✝️', DIACONIA:'🤝', COMUNICACAO:'📢', OUTRO:'⭐' };
@@ -310,7 +328,7 @@
             ${thAcoes}
           </tr></thead>
           <tbody>${lista.map(mb => {
-            const nome   = mb.pessoas?.nome  || '—';
+            const nome   = (mb.pessoas?.nome  || '—').toUpperCase();
             const funcao = mb.funcao          || 'Membro';
             const ativo  = mb.status !== 'inativo';
             const stTag  = ativo
