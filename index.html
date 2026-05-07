@@ -3665,6 +3665,7 @@ window.go = function(id) {
 
   if (id === "config-permissoes")     renderMatrizPermissoes();
   if (id === "config-whatsapp")      { if(typeof WA_CFG!=="undefined") WA_CFG.refresh(); }
+  if (id === "min-adm")              { if(typeof DEPT_ADM!=="undefined") DEPT_ADM.load(); }
   if (id === "geral")                 renderGeralDash();
   if (id === "area-dash")             _areaDashLoad();
   if (id === "min-dash")              _aplicarPermissoesMinisterial();
@@ -5597,6 +5598,9 @@ VIEW_AUTOLOAD["conselho-contratados"] = { fn: () => renderContratados() };
 <!-- ═══ MÓDULO WHATSAPP / EVOLUTION API ══════════════════ -->
 <script src="whatsapp.js?v=6.30.30"></script>
 <script src="config-whatsapp.js?v=6.30.30"></script>
+
+<!-- ═══ DEPARTAMENTOS ADMINISTRATIVOS ════════════════════ -->
+<script src="dept-admin.js?v=6.30.30"></script>
 
 <!-- Modais de contrato/demanda extraídos para views/modals.html -->
 <script>

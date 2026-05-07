@@ -2703,48 +2703,15 @@
       <div class="hero-ic" style="background:var(--violetbg)">🏢</div>
       <div>
         <div class="hero-lbl">Departamentos</div>
-        <div class="hero-ttl">Administração</div>
-        <div class="hero-dsc">Secretaria, Tesouraria, Patrimônio, Comunicação e demais áreas administrativas</div>
+        <div class="hero-ttl" id="dept-adm-titulo">Administração</div>
+        <div class="hero-dsc" id="dept-adm-subtitulo">Secretaria, Tesouraria, Patrimônio, Comunicação e Infraestrutura</div>
       </div>
+      <div class="hero-act" id="dept-adm-hero-act"></div>
     </div>
-    <div class="ct">
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:20px">
-        <div class="card" style="cursor:default">
-          <div style="font-size:24px;margin-bottom:8px">📋</div>
-          <div style="font-size:13px;font-weight:700;color:var(--tx1)">Secretaria</div>
-          <div style="font-size:11px;color:var(--tx3)">Documentação, atas e registros</div>
-        </div>
-        <div class="card" style="cursor:default">
-          <div style="font-size:24px;margin-bottom:8px">💰</div>
-          <div style="font-size:13px;font-weight:700;color:var(--tx1)">Tesouraria</div>
-          <div style="font-size:11px;color:var(--tx3)">Finanças, pagamentos e prestação de contas</div>
-        </div>
-        <div class="card" style="cursor:default">
-          <div style="font-size:24px;margin-bottom:8px">🏗</div>
-          <div style="font-size:13px;font-weight:700;color:var(--tx1)">Patrimônio</div>
-          <div style="font-size:11px;color:var(--tx3)">Bens, imóveis e equipamentos</div>
-        </div>
-        <div class="card" style="cursor:default">
-          <div style="font-size:24px;margin-bottom:8px">📢</div>
-          <div style="font-size:13px;font-weight:700;color:var(--tx1)">Comunicação</div>
-          <div style="font-size:11px;color:var(--tx3)">Mídias, redes sociais e comunicados</div>
-        </div>
-        <div class="card" style="cursor:default">
-          <div style="font-size:24px;margin-bottom:8px">🔧</div>
-          <div style="font-size:13px;font-weight:700;color:var(--tx1)">Infraestrutura</div>
-          <div style="font-size:11px;color:var(--tx3)">Manutenção, conservação e espaços físicos</div>
-        </div>
-        <div class="card" style="cursor:default">
-          <div style="font-size:24px;margin-bottom:8px">🎙</div>
-          <div style="font-size:13px;font-weight:700;color:var(--tx1)">Sonoplastia</div>
-          <div style="font-size:11px;color:var(--tx3)">Áudio, vídeo e multimídia</div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="ctit">Em desenvolvimento</div>
-        <div style="color:var(--tx3);font-size:12px;padding:8px 0">O módulo completo de Departamentos Administrativos — com equipe, responsáveis e detalhamento — está em implementação.</div>
-      </div>
+    <div class="ct" id="dept-adm-lista">
+      <div style="color:var(--tx3);font-size:11.5px">Carregando...</div>
     </div>
+    <div class="ct" id="dept-adm-detalhe" style="display:none"></div>
   </div>
 
   <!-- INFRAESTRUTURA -->
