@@ -3337,6 +3337,112 @@
     <div class="ct" id="pext-lista-content"><div class="card" style="padding:28px;color:var(--tx3)">Carregando...</div></div>
   </div>
 
+  <!-- Cadastro de Pessoas -->
+  <div class="view" id="v-admin-pessoas">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(58,170,92,0.14);border-color:rgba(58,170,92,0.25);color:var(--gr)">👤</div>
+      <div>
+        <div class="hero-lbl">Administrativo</div>
+        <div class="hero-ttl">Cadastro de Pessoas</div>
+        <div class="hero-dsc">Registre qualquer pessoa no sistema — membro, participante externo, responsável ou visitante. O vínculo específico é definido depois do cadastro.</div>
+      </div>
+    </div>
+    <div class="ct">
+      <div class="card" style="max-width:640px">
+        <div class="ctit">Nova Pessoa</div>
+
+        <div id="admin-pessoas-ok"   style="display:none;margin-bottom:14px;padding:10px 14px;background:rgba(58,170,92,.12);border:1px solid rgba(58,170,92,.25);border-radius:6px;font-size:12px;color:var(--gr)"></div>
+        <div id="admin-pessoas-erro" style="display:none;margin-bottom:14px;padding:10px 14px;background:rgba(208,104,104,.12);border:1px solid rgba(208,104,104,.25);border-radius:6px;font-size:12px;color:var(--rose)"></div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+          <!-- Nome -->
+          <div style="grid-column:1/-1">
+            <label class="mem-lbl">Nome completo <span style="color:var(--rose)">*</span></label>
+            <input id="ap-nome" type="text" class="mem-inp" placeholder="Nome completo da pessoa">
+          </div>
+
+          <!-- E-mail / Celular -->
+          <div>
+            <label class="mem-lbl">E-mail</label>
+            <input id="ap-email" type="email" class="mem-inp" placeholder="email@exemplo.com">
+          </div>
+          <div>
+            <label class="mem-lbl">Celular</label>
+            <input id="ap-celular" type="tel" class="mem-inp" placeholder="(11) 99999-9999">
+          </div>
+
+          <!-- CPF / Nascimento -->
+          <div>
+            <label class="mem-lbl">CPF</label>
+            <input id="ap-cpf" type="text" class="mem-inp" placeholder="000.000.000-00">
+          </div>
+          <div>
+            <label class="mem-lbl">Data de nascimento</label>
+            <input id="ap-nasc" type="date" class="mem-inp">
+          </div>
+
+          <!-- Separador -->
+          <div style="grid-column:1/-1;border-top:1px solid var(--bd);margin:4px 0"></div>
+          <div style="grid-column:1/-1;font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:-4px">Endereço (opcional)</div>
+
+          <!-- Endereço -->
+          <div style="grid-column:1/-1">
+            <label class="mem-lbl">Logradouro</label>
+            <input id="ap-end" type="text" class="mem-inp" placeholder="Rua, Avenida, Travessa…">
+          </div>
+          <div>
+            <label class="mem-lbl">Número</label>
+            <input id="ap-num" type="text" class="mem-inp" placeholder="123">
+          </div>
+          <div>
+            <label class="mem-lbl">Complemento</label>
+            <input id="ap-comp" type="text" class="mem-inp" placeholder="Apto, bloco…">
+          </div>
+          <div>
+            <label class="mem-lbl">Bairro</label>
+            <input id="ap-bairro" type="text" class="mem-inp">
+          </div>
+          <div>
+            <label class="mem-lbl">CEP</label>
+            <input id="ap-cep" type="text" class="mem-inp" placeholder="00000-000">
+          </div>
+          <div>
+            <label class="mem-lbl">Cidade</label>
+            <input id="ap-cidade" type="text" class="mem-inp" value="São Paulo">
+          </div>
+          <div>
+            <label class="mem-lbl">Estado</label>
+            <select id="ap-uf" class="mem-inp">
+              <option value="SP" selected>SP</option>
+              <option value="AC">AC</option><option value="AL">AL</option><option value="AM">AM</option>
+              <option value="BA">BA</option><option value="CE">CE</option><option value="DF">DF</option>
+              <option value="ES">ES</option><option value="GO">GO</option><option value="MA">MA</option>
+              <option value="MG">MG</option><option value="MS">MS</option><option value="MT">MT</option>
+              <option value="PA">PA</option><option value="PB">PB</option><option value="PE">PE</option>
+              <option value="PI">PI</option><option value="PR">PR</option><option value="RJ">RJ</option>
+              <option value="RN">RN</option><option value="RO">RO</option><option value="RR">RR</option>
+              <option value="RS">RS</option><option value="SC">SC</option><option value="SE">SE</option>
+              <option value="TO">TO</option>
+            </select>
+          </div>
+
+          <!-- Observações -->
+          <div style="grid-column:1/-1">
+            <label class="mem-lbl">Observações</label>
+            <textarea id="ap-obs" class="mem-inp" rows="2" style="resize:vertical" placeholder="Informações adicionais…"></textarea>
+          </div>
+
+          <!-- Ações -->
+          <div style="grid-column:1/-1;display:flex;gap:10px;justify-content:flex-end;margin-top:4px">
+            <button class="btn-sec" onclick="adminPessoasLimpar()">Limpar</button>
+            <button id="ap-btn-salvar" class="btn-pri" onclick="adminPessoasSalvar()">Salvar Cadastro</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="view" id="v-generic">
     <div class="ct" style="padding-top:56px;text-align:center">
       <div style="font-size:36px;margin-bottom:12px;opacity:.3">🚧</div>

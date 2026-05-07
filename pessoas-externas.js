@@ -295,9 +295,77 @@
     }
   };
 
+  /* ── CADASTRO AVULSO DE PESSOA (view admin-pessoas) ───────────── */
+
+  function _apVal(id)  { return document.getElementById(id)?.value?.trim() || null; }
+  function _apShow(id, msg, type) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = msg ? "block" : "none";
+    el.textContent   = msg || "";
+  }
+
+  window.adminPessoasSalvar = async function () {
+    const nome = _apVal("ap-nome");
+    if (!nome) {
+      _apShow("admin-pessoas-erro", "Nome é obrigatório.");
+      return;
+    }
+    _apShow("admin-pessoas-erro", "");
+    _apShow("admin-pessoas-ok",   "");
+
+    const btn = document.getElementById("ap-btn-salvar");
+    if (btn) { btn.disabled = true; btn.textContent = "Salvando…"; }
+
+    try {
+      const payload = {
+        nome,
+        email:          _apVal("ap-email"),
+        celular:        _apVal("ap-celular"),
+        cpf:            _apVal("ap-cpf"),
+        data_nascimento:_apVal("ap-nasc"),
+        endereco:       _apVal("ap-end"),
+        numero:         _apVal("ap-num"),
+        complemento:    _apVal("ap-comp"),
+        bairro:         _apVal("ap-bairro"),
+        cep:            _apVal("ap-cep"),
+        cidade:         _apVal("ap-cidade") || "São Paulo",
+        estado:         document.getElementById("ap-uf")?.value || "SP",
+        observacoes:    _apVal("ap-obs"),
+      };
+
+      await _fetch("/rest/v1/pessoas", {
+        method:  "POST",
+        headers: _hdrs({ "Content-Type": "application/json", "Prefer": "return=minimal" }),
+        body:    JSON.stringify(payload),
+      });
+
+      _apShow("admin-pessoas-ok", `"${nome}" cadastrado com sucesso.`);
+      window.adminPessoasLimpar();
+      _toast("Cadastro salvo", nome);
+    } catch (e) {
+      _apShow("admin-pessoas-erro", e.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = "Salvar Cadastro"; }
+    }
+  };
+
+  window.adminPessoasLimpar = function () {
+    ["ap-nome","ap-email","ap-celular","ap-cpf","ap-nasc",
+     "ap-end","ap-num","ap-comp","ap-bairro","ap-cep","ap-obs"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    });
+    const cidade = document.getElementById("ap-cidade");
+    if (cidade) cidade.value = "São Paulo";
+    const uf = document.getElementById("ap-uf");
+    if (uf) uf.value = "SP";
+    _apShow("admin-pessoas-erro", "");
+  };
+
   /* ── AUTOLOAD ──────────────────────────────────────────────────── */
   if (typeof VIEW_AUTOLOAD !== "undefined") {
-    VIEW_AUTOLOAD["pext-lista"] = { fn: () => window.pextCarregar() };
+    VIEW_AUTOLOAD["pext-lista"]    = { fn: () => window.pextCarregar() };
   }
 
 })();
