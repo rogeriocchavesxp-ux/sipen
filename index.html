@@ -1706,6 +1706,26 @@ document.head.appendChild(styleEl);
     } catch(e) { console.warn("histórico estacionamento:", e.message); }
   }
 
+  async function _fetchTodasPessoas(sb){
+    // Supabase limita 1000 linhas por request (db-max-rows).
+    // Busca em páginas de 1000 até esgotar para garantir lista completa.
+    const PAGE = 1000;
+    let all = [], from = 0;
+    while(true){
+      const { data, error } = await sb.from("pessoas")
+        .select("id,nome,email,celular,telefone")
+        .is("deleted_at", null)
+        .order("nome", {ascending:true})
+        .range(from, from + PAGE - 1);
+      if(error) throw error;
+      if(!data || !data.length) break;
+      all = all.concat(data);
+      if(data.length < PAGE) break;
+      from += PAGE;
+    }
+    return all;
+  }
+
   async function ceCarregar(){
     const el = document.getElementById("ce-list");
     if(!el) return;
@@ -1716,14 +1736,13 @@ document.head.appendChild(styleEl);
     el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px">${spinner()} Carregando controles...</div>`;
     try {
       const sb = getSupabase();
-      const [rc, rm] = await Promise.all([
+      const [rc, pessoas] = await Promise.all([
         sb.from(TBL).select("*").order("created_at", {ascending:false}),
-        sb.from("pessoas").select("id,nome,email,celular,telefone").is("deleted_at", null).order("nome", {ascending:true}).limit(5000)
+        _fetchTodasPessoas(sb),
       ]);
       if(rc.error) throw rc.error;
-      if(rm.error) throw rm.error;
       _controles = Array.isArray(rc.data) ? rc.data : [];
-      _pessoas = Array.isArray(rm.data) ? rm.data : [];
+      _pessoas = pessoas;
       ceRender();
     } catch(e) {
       console.error("controle estacionamento:", e);
