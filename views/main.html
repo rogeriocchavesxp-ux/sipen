@@ -161,7 +161,7 @@
   <div class="view" id="v-min-dash">
     <div class="hero">
       <div class="hero-ic" style="background:var(--violetbg);border-color:rgba(144,104,200,0.25)">◉</div>
-      <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Ministerial</div><div class="hero-dsc">Ministérios, liderança, escalas, liturgia e voluntários da IPPenha</div></div>
+      <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Departamentos</div><div class="hero-dsc">Ministérios, Sociedades Internas e Departamentos Administrativos da IPPenha</div></div>
       <div class="hero-act" id="min-btn-nova-escala-wrap"><button class="tbt pri" onclick="T('Nova escala','Programação ministerial')">+ Nova Escala</button></div>
     </div>
     <div class="inav" style="--mc:var(--violet)">
@@ -762,7 +762,7 @@
         <div class="card">
           <div class="ctit">Desempenho por módulo — Abril 2026</div>
           <div class="bars" style="gap:10px">
-            <div><div class="bh"><span class="bn">Ministerial</span><span class="bv">94%</span></div><div class="bt"><div class="bf" style="width:94%;background:var(--violet)"></div></div></div>
+            <div><div class="bh"><span class="bn">Departamentos</span><span class="bv">94%</span></div><div class="bt"><div class="bf" style="width:94%;background:var(--violet)"></div></div></div>
             <div><div class="bh"><span class="bn">Membresia</span><span class="bv">88%</span></div><div class="bt"><div class="bf" style="width:88%;background:var(--gbr)"></div></div></div>
             <div><div class="bh"><span class="bn">Administrativo</span><span class="bv">76%</span></div><div class="bt"><div class="bf" style="width:76%;background:var(--gold)"></div></div></div>
             <div><div class="bh"><span class="bn">Pastoral</span><span class="bv">72%</span></div><div class="bt"><div class="bf" style="width:72%;background:var(--teal)"></div></div></div>
@@ -1865,7 +1865,7 @@
 
   <!-- MINISTERIAL / VOLUNTÁRIOS -->
   <div class="view" id="v-min-vol">
-    <div class="hero"><div class="hero-ic" style="background:rgba(139,111,212,0.12)">🙌</div><div><div class="hero-lbl">Ministerial</div><div class="hero-ttl">Voluntários</div><div class="hero-dsc">Cadastro de voluntários e ministérios</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo Voluntário</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:rgba(139,111,212,0.12)">🙌</div><div><div class="hero-lbl">Departamentos</div><div class="hero-ttl">Voluntários</div><div class="hero-dsc">Cadastro de voluntários e ministérios</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo Voluntário</button></div></div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Voluntários <span class="cact" onclick="listarModulo('MEMBROS','vol-list')">↻ Atualizar</span></div>
@@ -2603,7 +2603,7 @@
   <div class="view" id="v-min-min">
     <div class="hero">
       <div class="hero-ic" style="background:var(--violetbg)">⭐</div>
-      <div><div class="hero-lbl">Ministerial</div><div class="hero-ttl">Ministérios</div></div>
+      <div><div class="hero-lbl">Departamentos</div><div class="hero-ttl">Ministérios</div></div>
       <div class="hero-act" id="min-min-hero-act" style="display:none">
         <button class="tbt pri" onclick="minMinNovo()">+ Novo Ministério</button>
       </div>
@@ -2633,23 +2633,118 @@
   </div>
 
   <div class="view" id="v-min-lid">
-    <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">👤</div><div><div class="hero-lbl">Ministerial</div><div class="hero-ttl">Liderança Ministerial</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo Líder</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">👤</div><div><div class="hero-lbl">Departamentos</div><div class="hero-ttl">Liderança Ministerial</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo Líder</button></div></div>
     <div class="ct"><div class="card"><div class="ctit">Líderes <span class="cact" onclick="listarModulo('MEMBROS','min-lid-list')">↻</span></div><div id="min-lid-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-min-esc">
-    <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">📅</div><div><div class="hero-lbl">Ministerial</div><div class="hero-ttl">Escalas</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Nova Escala</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">📅</div><div><div class="hero-lbl">Departamentos</div><div class="hero-ttl">Escalas</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Nova Escala</button></div></div>
     <div class="ct"><div class="card"><div class="ctit">Escalas <span class="cact" onclick="listarModulo('AGENDA','min-esc-list',{organizador:'Min. Música'})">↻</span></div><div id="min-esc-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-min-prog">
-    <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">📋</div><div><div class="hero-lbl">Ministerial</div><div class="hero-ttl">Programações</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Nova Prog.</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">📋</div><div><div class="hero-lbl">Departamentos</div><div class="hero-ttl">Programações</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Nova Prog.</button></div></div>
     <div class="ct"><div class="card"><div class="ctit">Programações <span class="cact" onclick="listarModulo('AGENDA','min-prog-list')">↻</span></div><div id="min-prog-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-min-lit">
-    <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">🎵</div><div><div class="hero-lbl">Ministerial</div><div class="hero-ttl">Liturgia dos Cultos</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Novo Culto</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">🎵</div><div><div class="hero-lbl">Departamentos</div><div class="hero-ttl">Liturgia dos Cultos</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Novo Culto</button></div></div>
     <div class="ct"><div class="card"><div class="ctit">Liturgia <span class="cact" onclick="listarModulo('AGENDA','min-lit-list',{organizador:'Min. Música'})">↻</span></div><div id="min-lit-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <!-- SOCIEDADES INTERNAS -->
+  <div class="view" id="v-min-soc">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--violetbg)">🏛</div>
+      <div>
+        <div class="hero-lbl">Departamentos</div>
+        <div class="hero-ttl">Sociedades Internas</div>
+        <div class="hero-dsc">UPH, SAF, UMP, UPA, UCP — grupos organizados da IPPenha</div>
+      </div>
+    </div>
+    <div class="ct">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:20px">
+        <div class="card" style="cursor:default">
+          <div style="font-size:24px;margin-bottom:8px">👩</div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx1)">UPH</div>
+          <div style="font-size:11px;color:var(--tx3)">União Presbiteriana de Homens</div>
+        </div>
+        <div class="card" style="cursor:default">
+          <div style="font-size:24px;margin-bottom:8px">👩‍👧</div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx1)">SAF</div>
+          <div style="font-size:11px;color:var(--tx3)">Sociedade Auxiliadora Feminina</div>
+        </div>
+        <div class="card" style="cursor:default">
+          <div style="font-size:24px;margin-bottom:8px">🔥</div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx1)">UMP</div>
+          <div style="font-size:11px;color:var(--tx3)">União de Mocidade Presbiteriana</div>
+        </div>
+        <div class="card" style="cursor:default">
+          <div style="font-size:24px;margin-bottom:8px">🌟</div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx1)">UPA</div>
+          <div style="font-size:11px;color:var(--tx3)">União Presbiteriana de Adolescentes</div>
+        </div>
+        <div class="card" style="cursor:default">
+          <div style="font-size:24px;margin-bottom:8px">👶</div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx1)">UCP</div>
+          <div style="font-size:11px;color:var(--tx3)">União de Crianças Presbiterianas</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ctit">Em desenvolvimento</div>
+        <div style="color:var(--tx3);font-size:12px;padding:8px 0">O módulo completo de Sociedades Internas — com diretoria, membros e atividades — está em implementação.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEPARTAMENTOS ADMINISTRATIVOS -->
+  <div class="view" id="v-min-adm">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--violetbg)">🏢</div>
+      <div>
+        <div class="hero-lbl">Departamentos</div>
+        <div class="hero-ttl">Administração</div>
+        <div class="hero-dsc">Secretaria, Tesouraria, Patrimônio, Comunicação e demais áreas administrativas</div>
+      </div>
+    </div>
+    <div class="ct">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:20px">
+        <div class="card" style="cursor:default">
+          <div style="font-size:24px;margin-bottom:8px">📋</div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx1)">Secretaria</div>
+          <div style="font-size:11px;color:var(--tx3)">Documentação, atas e registros</div>
+        </div>
+        <div class="card" style="cursor:default">
+          <div style="font-size:24px;margin-bottom:8px">💰</div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx1)">Tesouraria</div>
+          <div style="font-size:11px;color:var(--tx3)">Finanças, pagamentos e prestação de contas</div>
+        </div>
+        <div class="card" style="cursor:default">
+          <div style="font-size:24px;margin-bottom:8px">🏗</div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx1)">Patrimônio</div>
+          <div style="font-size:11px;color:var(--tx3)">Bens, imóveis e equipamentos</div>
+        </div>
+        <div class="card" style="cursor:default">
+          <div style="font-size:24px;margin-bottom:8px">📢</div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx1)">Comunicação</div>
+          <div style="font-size:11px;color:var(--tx3)">Mídias, redes sociais e comunicados</div>
+        </div>
+        <div class="card" style="cursor:default">
+          <div style="font-size:24px;margin-bottom:8px">🔧</div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx1)">Infraestrutura</div>
+          <div style="font-size:11px;color:var(--tx3)">Manutenção, conservação e espaços físicos</div>
+        </div>
+        <div class="card" style="cursor:default">
+          <div style="font-size:24px;margin-bottom:8px">🎙</div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx1)">Sonoplastia</div>
+          <div style="font-size:11px;color:var(--tx3)">Áudio, vídeo e multimídia</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ctit">Em desenvolvimento</div>
+        <div style="color:var(--tx3);font-size:12px;padding:8px 0">O módulo completo de Departamentos Administrativos — com equipe, responsáveis e detalhamento — está em implementação.</div>
+      </div>
+    </div>
   </div>
 
   <!-- INFRAESTRUTURA -->
