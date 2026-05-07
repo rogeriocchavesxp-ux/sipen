@@ -176,17 +176,17 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
   display:flex;align-items:center;justify-content:center;
   border-radius:var(--r);
   background:var(--bg-card);
-  border:1px solid var(--bd1);flex-shrink:0;
+  border:1px solid var(--bd2);flex-shrink:0;
 }
 .l1.on .l1-ic{background:rgba(58,170,92,0.15);border-color:rgba(58,170,92,0.25);color:var(--gr)}
 
 /* Section label */
 .slbl{
-  padding:14px 14px 4px;font-size:9px;letter-spacing:.15em;
-  text-transform:uppercase;color:var(--tx4);user-select:none;
-  display:flex;align-items:center;gap:8px;font-weight:600;
+  padding:18px 14px 5px;font-size:9.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:#6b7885;user-select:none;
+  display:flex;align-items:center;gap:8px;font-weight:700;
 }
-.slbl::after{content:"";flex:1;height:1px;background:var(--bd1);opacity:.7}
+.slbl::after{content:"";flex:1;height:1px;background:rgba(255,255,255,0.11)}
 
 /* Module wrapper */
 .mwrap{margin:1px 8px;border-radius:var(--rl);overflow:hidden}
@@ -204,10 +204,10 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 .micon{
   width:26px;height:26px;border-radius:var(--r);
   display:flex;align-items:center;justify-content:center;
-  font-size:12px;flex-shrink:0;border:1px solid transparent;
+  font-size:12px;flex-shrink:0;border:1px solid rgba(255,255,255,0.07);
 }
 .mname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.marr{font-size:9px;color:var(--tx4);transition:transform .2s ease;flex-shrink:0}
+.marr{font-size:9px;color:var(--tx3);transition:transform .2s ease;flex-shrink:0}
 .mhdr.open .marr{transform:rotate(90deg)}
 .mbadge{
   font-size:9px;padding:2px 5px;border-radius:10px;
@@ -239,7 +239,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 .si::before{
   content:"";position:absolute;left:32px;top:50%;
   transform:translateY(-50%);width:4px;height:4px;
-  border-radius:50%;background:var(--tx4);transition:background .1s;
+  border-radius:50%;background:rgba(255,255,255,0.22);transition:background .1s;
 }
 .si:hover{color:var(--tx1);background:rgba(255,255,255,0.04)}
 .si:hover::before{background:var(--tx2)}
