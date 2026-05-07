@@ -70,33 +70,40 @@ window.buildCongMenu=buildCongMenu;
 // ── Dashboard Geral ───────────────────────────────────
 function renderDashboardGeral(){
   const congs=CONG.listCongs();
-  const totalMembros =congs.reduce((s,c)=>s+(c.panorama_membresia.membros_ativos||0),0);
-  const totalBatizados=congs.reduce((s,c)=>s+(c.panorama_membresia.batizados_ano||0),0);
-  const totalPGs      =congs.reduce((s,c)=>s+(c.pequenos_grupos.total_grupos||0),0);
-  const ativas        =congs.filter(c=>c.identificacao.status==="ativa").length;
+  const ativas       =congs.filter(c=>c.identificacao.status==="ativa").length;
+  const comSupervisao=congs.filter(c=>(c.lideranca_estruturada||{}).supervisao).length;
+  const comEBD       =congs.filter(c=>((c.lideranca_estruturada||{}).professores_ebd||[]).length>0).length;
+  const totalLideres =congs.reduce((s,c)=>{
+    const le=c.lideranca_estruturada||{};
+    return s + (le.supervisao?1:0) + (le.conselheiro?1:0) + (le.coordenacao?1:0) + (le.tesoureiro?1:0)
+             + (le.equipe||[]).length + (le.mesa_administrativa||[]).length
+             + (le.professores_ebd||[]).length;
+  },0);
 
   const kpisEl=document.getElementById("cong-dash-kpis");
   if(kpisEl) kpisEl.innerHTML=`
     <div class="kpi"><div class="kn">Congregações Ativas</div><div class="kv">${ativas}</div></div>
-    <div class="kpi"><div class="kn">Total de Membros</div><div class="kv">${totalMembros}</div></div>
-    <div class="kpi"><div class="kn">Batizados este Ano</div><div class="kv">${totalBatizados}</div></div>
-    <div class="kpi"><div class="kn">Pequenos Grupos</div><div class="kv">${totalPGs}</div></div>
+    <div class="kpi"><div class="kn">Com Supervisão</div><div class="kv">${comSupervisao}</div></div>
+    <div class="kpi"><div class="kn">Líderes Cadastrados</div><div class="kv">${totalLideres}</div></div>
+    <div class="kpi"><div class="kn">Com EBD</div><div class="kv">${comEBD}</div></div>
   `;
 
   const listaEl=document.getElementById("cong-dash-lista");
-  if(listaEl) listaEl.innerHTML=congs.map(c=>`
+  if(listaEl) listaEl.innerHTML=congs.map(c=>{
+    const le=c.lideranca_estruturada||{};
+    const sub=le.supervisao||le.conselheiro||c.identificacao.localizacao||"—";
+    return `
     <div onclick="abrirCongView('${c.id}')" style="cursor:pointer;margin-bottom:8px;padding:10px 12px;border-radius:8px;border:1px solid var(--bd1);background:var(--bg2);display:flex;align-items:center;gap:12px;transition:background .15s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'">
       <div style="width:36px;height:36px;border-radius:50%;background:${c.identificacao.cor}22;border:2px solid ${c.identificacao.cor};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${c.identificacao.icon||"⛪"}</div>
       <div style="flex:1;min-width:0">
         <div style="font-weight:700;font-size:12.5px;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(c.identificacao.nome)}</div>
-        <div style="font-size:10.5px;color:var(--tx3)">${escapeHtml(c.identificacao.localizacao||"—")}</div>
+        <div style="font-size:10.5px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(sub)}</div>
       </div>
       <div style="text-align:right;flex-shrink:0">
-        <div style="font-size:14px;font-weight:700;color:var(--gr)">${c.panorama_membresia.membros_ativos}</div>
-        <div style="font-size:9.5px;color:var(--tx3)">membros</div>
+        ${statusBadge(c.identificacao.status)}
       </div>
     </div>
-  `).join("")||`<div style="color:var(--tx3);font-size:11px">Nenhuma congregação cadastrada</div>`;
+  `}).join("")||`<div style="color:var(--tx3);font-size:11px">Nenhuma congregação cadastrada</div>`;
 
   const todosOsCultos=congs.flatMap(c=>(c.atividades_igreja.historico_cultos||[]).map(cu=>({...cu,congNome:c.identificacao.nome})));
   todosOsCultos.sort((a,b)=>b.data.localeCompare(a.data));
@@ -187,7 +194,12 @@ function renderTab_visaoGeral(cong, el){
           <tr><td style="color:var(--tx3);padding:5px 0">Localização</td><td style="color:var(--tx1)">${escapeHtml(cong.identificacao.localizacao||"—")}</td></tr>
           <tr><td style="color:var(--tx3);padding:5px 0">Endereço</td><td style="color:var(--tx1)">${escapeHtml(cong.identificacao.endereco||"—")}</td></tr>
           <tr><td style="color:var(--tx3);padding:5px 0">Início</td><td style="color:var(--tx1)">${fmtData(cong.identificacao.data_inicio)}</td></tr>
-          <tr><td style="color:var(--tx3);padding:5px 0">Responsável</td><td style="color:var(--tx1)">${escapeHtml(cong.lideranca.pastor_responsavel||"—")}</td></tr>
+          ${(()=>{const le=cong.lideranca_estruturada||{};return [
+            le.supervisao?`<tr><td style="color:var(--tx3);padding:5px 0">Supervisão</td><td style="color:var(--tx1)">${escapeHtml(le.supervisao)}</td></tr>`:"",
+            le.conselheiro?`<tr><td style="color:var(--tx3);padding:5px 0">Conselheiro</td><td style="color:var(--tx1)">${escapeHtml(le.conselheiro)}</td></tr>`:"",
+            le.coordenacao?`<tr><td style="color:var(--tx3);padding:5px 0">Coordenação</td><td style="color:var(--tx1)">${escapeHtml(le.coordenacao)}</td></tr>`:"",
+            le.tesoureiro?`<tr><td style="color:var(--tx3);padding:5px 0">Tesoureiro</td><td style="color:var(--tx1)">${escapeHtml(le.tesoureiro)}</td></tr>`:""
+          ].join("") || `<tr><td style="color:var(--tx3);padding:5px 0">Responsável</td><td style="color:var(--tx1)">${escapeHtml(cong.lideranca.pastor_responsavel||"—")}</td></tr>`})()}
           ${cong.identificacao.obs?`<tr><td style="color:var(--tx3);padding:5px 0">Obs.</td><td style="color:var(--tx1)">${escapeHtml(cong.identificacao.obs)}</td></tr>`:""}
         </table>
       </div>
@@ -369,28 +381,52 @@ function renderTab_ministerios(cong, el){
 }
 
 // ── Tab 5: Liderança ──────────────────────────────────
+function _leRow(label, valor){
+  if(!valor) return "";
+  return `<div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd1)">
+    <div style="font-size:11px;color:var(--tx3);width:110px;flex-shrink:0">${label}</div>
+    <div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${escapeHtml(valor)}</div>
+  </div>`;
+}
+function _leList(label, arr){
+  if(!arr||arr.length===0) return "";
+  return `<div style="padding:8px 0;border-bottom:1px solid var(--bd1)">
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:5px">${label}</div>
+    ${arr.map(n=>`<div style="font-size:11.5px;color:var(--tx1);padding:2px 0">• ${escapeHtml(n)}</div>`).join("")}
+  </div>`;
+}
+function _leMinisterio(min){
+  const membros=(min.membros||[]).map(m=>`<span style="font-size:10.5px;color:var(--tx2)">${escapeHtml(m.cargo)}: <b style="color:var(--tx1)">${escapeHtml(m.nome)}</b></span>`).join(" &nbsp;|&nbsp; ");
+  return `<div style="padding:8px 0;border-bottom:1px solid var(--bd1)">
+    <div style="font-size:12px;font-weight:700;color:var(--tx1);margin-bottom:4px">${escapeHtml(min.nome)}</div>
+    <div>${membros||"<span style='font-size:11px;color:var(--tx3)'>Sem membros cadastrados</span>"}</div>
+  </div>`;
+}
 function renderTab_lideranca(cong, el){
-  const lid=cong.lideranca;
+  const le=cong.lideranca_estruturada||{};
+  const temEstrutura=le.supervisao||le.conselheiro||le.coordenacao||le.tesoureiro
+    ||(le.equipe||[]).length||(le.mesa_administrativa||[]).length
+    ||(le.professores_ebd||[]).length||(le.ministerios_auxiliares||[]).length;
+
   el.innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;margin-bottom:12px">
-      <div>
-        <div style="font-size:13px;font-weight:700;color:var(--tx1)">Equipe de Liderança</div>
-        <div style="font-size:11px;color:var(--tx3)">Responsável: ${lid.pastor_responsavel||"—"}</div>
+    <div style="margin-top:14px">
+      <div class="card">
+        <div class="ctit">Estrutura de Liderança</div>
+        ${temEstrutura ? [
+          _leRow("Supervisão",  le.supervisao),
+          _leRow("Conselheiro", le.conselheiro),
+          _leRow("Coordenação", le.coordenacao),
+          _leRow("Tesoureiro",  le.tesoureiro),
+          _leList("Equipe", le.equipe),
+          _leList("Mesa Administrativa", le.mesa_administrativa),
+          _leList("Professores EBD", le.professores_ebd),
+          (le.ministerios_auxiliares||[]).length?`
+            <div style="padding:8px 0">
+              <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">Ministérios Auxiliares</div>
+              ${(le.ministerios_auxiliares||[]).map(_leMinisterio).join("")}
+            </div>`:"",
+        ].join("") : `<div style="color:var(--tx3);font-size:11px">Estrutura de liderança não cadastrada</div>`}
       </div>
-      <button class="tbt pri" onclick="abrirModalNovoLider('${cong.id}')">+ Novo Líder</button>
-    </div>
-    <div class="card">
-      ${(lid.lideres||[]).length===0?`<div style="color:var(--tx3);font-size:11px">Nenhum líder cadastrado</div>`:
-        (lid.lideres||[]).map(l=>`
-          <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bd1)">
-            <div style="width:40px;height:40px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--tx1);flex-shrink:0">${iniciais(l.nome)}</div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:12px;font-weight:700;color:var(--tx1)">${l.nome}</div>
-              <div style="font-size:10.5px;color:var(--tx3)">${l.cargo}</div>
-              <div style="font-size:10.5px;color:var(--tx3)">📞 ${l.contato||"—"}</div>
-            </div>
-            <div style="text-align:right;flex-shrink:0;font-size:10px;color:var(--tx3)">Desde<br>${fmtData(l.desde)}</div>
-          </div>`).join("")}
     </div>
   `;
 }

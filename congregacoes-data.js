@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    SIPEN — Congregações: Camada de Dados
-   congregacoes-data.js · v3.0
+   congregacoes-data.js · v4.0
    localStorage (cache) + Supabase (fonte de verdade)
 
    Tabelas necessárias no Supabase:
@@ -10,7 +10,7 @@
 
 // Força re-seed quando a versão do catálogo muda
 (function(){
-  const VER_KEY="sipen_cong_catalog_ver", VER="2026-04-18-v10";
+  const VER_KEY="sipen_cong_catalog_ver", VER="2026-05-06-v11";
   if(localStorage.getItem(VER_KEY)!==VER){
     localStorage.removeItem("sipen_cong_v2");
     localStorage.setItem(VER_KEY, VER);
@@ -64,6 +64,11 @@ const CONG = (function(){
         nome:"Nova Congregação", localizacao:"", endereco:"",
         data_inicio:"", status:"ativa", cor:"#3AAA5C", icon:"⛪", obs:""
       },
+      lideranca_estruturada:{
+        supervisao:"", conselheiro:"", coordenacao:"", tesoureiro:"",
+        equipe:[], mesa_administrativa:[], professores_ebd:[],
+        ministerios_auxiliares:[]
+      },
       panorama_membresia:{
         membros_ativos:0, membros_cooperadores:0,
         criancas:0, jovens:0, adultos:0, idosos:0,
@@ -84,26 +89,125 @@ const CONG = (function(){
     };
   }
 
-  function _empty10(id, nome, cor){
-    const c=emptyCong(id);
-    c.identificacao.nome=nome;
-    c.identificacao.cor=cor;
+  /* ── Helper para criar congregação com liderança ──────── */
+
+  function _mkCong(id, nome, cor, icon, le){
+    const c = emptyCong(id);
+    c.identificacao.nome   = nome;
+    c.identificacao.cor    = cor;
+    c.identificacao.icon   = icon;
+    c.identificacao.status = "ativa";
+    c.lideranca_estruturada = {
+      supervisao:             le.supervisao             || "",
+      conselheiro:            le.conselheiro            || "",
+      coordenacao:            le.coordenacao            || "",
+      tesoureiro:             le.tesoureiro             || "",
+      equipe:                 le.equipe                 || [],
+      mesa_administrativa:    le.mesa_administrativa    || [],
+      professores_ebd:        le.professores_ebd        || [],
+      ministerios_auxiliares: le.ministerios_auxiliares || []
+    };
+    c.lideranca.pastor_responsavel = le.supervisao || le.conselheiro || "";
     return c;
   }
 
+  /* ── Seed com 8 congregações reais da IPPenha ─────────── */
+
   function seed(){
-    if(listCongs().length>0) return;
+    if(listCongs().length > 0) return;
     saveCongs([
-      _empty10("ip-analia-franco",  "IP Anália Franco",       "#3AAA5C"),
-      _empty10("ip-cangaiba",       "IP Cangaíba (Hispana)",  "#E67E22"),
-      _empty10("ip-mueb-carrao",    "IP Mueb Carrão",         "#4A9CF5"),
-      _empty10("ip-penha",          "IP Penha",               "#2ECC71"),
-      _empty10("ip-penha-hispanos", "IP Penha (Hispanos)",    "#E74C3C"),
-      _empty10("ip-jd-primavera",   "IP Jd Primavera",        "#9B59B6"),
-      _empty10("ip-jd-piratininga", "IP Jd Piratininga",      "#1ABC9C"),
-      _empty10("ip-jd-rosaria",     "IP Jd Rosária",          "#D4A843"),
-      _empty10("ip-aprisco",        "IP Aprisco",             "#E84393"),
-      _empty10("ip-vila-uniao",     "IP Vila União",          "#5D6D7E"),
+
+      _mkCong("ip-vila-uniao", "IP Vila União", "#5D6D7E", "⛪", {
+        supervisao:  "Pr. Paulo Erben",
+        coordenacao: "Presb. Percílio",
+        equipe:      ["Joseneide"]
+      }),
+
+      _mkCong("ip-hispana-cangaiba", "IP Hispana (Cangaíba)", "#E67E22", "⛪", {
+        supervisao:  "Rev. Jairo Isaque e Miss. Kênia",
+        conselheiro: "Presb. Percílio",
+        equipe:      ["Miss. Elinalda", "Diác. José Bohorques", "Floraci Bohorques"]
+      }),
+
+      _mkCong("ip-jd-primavera-ita", "IP Jardim Primavera — Itaquaquecetuba", "#9B59B6", "⛪", {
+        supervisao:  "Rev. Adriano Pedrosa e Luciana Pedrosa",
+        conselheiro: "Presb. Marcus Novais"
+      }),
+
+      _mkCong("ip-mueb-carrao", "IP Mueb (Carrão)", "#4A9CF5", "⛪", {
+        supervisao:          "Rev. Filipe Checon",
+        conselheiro:         "Presb. Edson Vieira",
+        tesoureiro:          "Luiz Júnior",
+        mesa_administrativa: [
+          "Alexandre Trevisan",
+          "Edson Vieira (Presb.)",
+          "Joel Ferreira (Presb.)",
+          "Luiz Júnior",
+          "Marcos Pereira",
+          "Washington Palmieri"
+        ]
+      }),
+
+      _mkCong("ip-jd-piratininga", "IP Jardim Piratininga", "#1ABC9C", "⛪", {
+        supervisao:  "Rev. Rogério Castro e Daniela França",
+        conselheiro: "Presb. Laercio Lima",
+        coordenacao: "Sem. Guilherme Athu",
+        tesoureiro:  "Eder Fonseca",
+        equipe: [
+          "Bárbara Gomes", "Cláudia", "David Franco",
+          "Deniel de Castro Flor", "Edson", "João Sobrinho", "Patrícia"
+        ]
+      }),
+
+      _mkCong("ip-analia-franco", "IP Anália Franco", "#3AAA5C", "⛪", {
+        supervisao:          "Rev. Michael Fassheber",
+        tesoureiro:          "Rodrigo Cunha Nascimento",
+        mesa_administrativa: [
+          "André Colette",
+          "Pb Alberto Noguti",
+          "Eli Coelho",
+          "Rafael Cavalcante",
+          "Sergio"
+        ]
+      }),
+
+      _mkCong("ip-aprisco", "IP Aprisco", "#E84393", "⛪", {
+        conselheiro:         "Pr. Rogério Castro",
+        tesoureiro:          "Ismael Gomes de Oliveira",
+        mesa_administrativa: [
+          "Cesar Augusto",
+          "Edson Carvalho",
+          "Eliton Ribeiro",
+          "Ismael Gomes de Oliveira",
+          "Laércio Xavier",
+          "Lucas Johann Cruvinel Carvalho (Sem.)"
+        ],
+        professores_ebd: [
+          "Claudia Carvalho",
+          "Eliton Ribeiro",
+          "Ismael Oliveira",
+          "Lucas Johann Cruvinel Carvalho (Sem.)",
+          "Raquel de Albuquerque",
+          "Suelem Ribeiro"
+        ],
+        ministerios_auxiliares: [
+          {
+            nome: "UMP — Aprisco",
+            membros: [
+              { cargo:"Presidente", nome:"Cesar Augusto" },
+              { cargo:"Vice",       nome:"Maurício" }
+            ]
+          }
+        ]
+      }),
+
+      _mkCong("ip-vila-rosaria", "IP Vila Rosária", "#D4A843", "⛪", {
+        supervisao:          "Rev. Ricardo Riul",
+        conselheiro:         "Presb. Éder Gões",
+        tesoureiro:          "Rubem",
+        mesa_administrativa: ["Em organização"]
+      })
+
     ]);
   }
 
@@ -115,11 +219,7 @@ const CONG = (function(){
       typeof SUPABASE_ANON_KEY !== "undefined" && !!SUPABASE_ANON_KEY
     );
   }
-
-  function _sbBase(){
-    return SUPABASE_URL.trim().replace(/\/$/,"");
-  }
-
+  function _sbBase(){ return SUPABASE_URL.trim().replace(/\/$/,""); }
   function _sbHdrs(extra){
     return Object.assign({
       "apikey":        SUPABASE_ANON_KEY,
@@ -135,6 +235,7 @@ const CONG = (function(){
     const a=cong.atividades_igreja, pg=cong.pequenos_grupos;
     const min=cong.ministerios,   lid=cong.lideranca;
     const f=cong.financeiro,      d=cong.desafios, p=cong.planejamento;
+    const le=cong.lideranca_estruturada || {};
     return {
       id:                   cong.id,
       nome:                 i.nome||"",
@@ -167,7 +268,8 @@ const CONG = (function(){
       grupos:               pg.grupos||[],
       ministerios:          min.lista||[],
       pastor_responsavel:   lid.pastor_responsavel||"",
-      lideres:              lid.lideres||[],
+      // lideres JSONB armazena a estrutura institucional completa
+      lideres:              le,
       receita_media_mensal: f.receita_media_mensal||0,
       despesa_media_mensal: f.despesa_media_mensal||0,
       saldo_atual:          f.saldo_atual||0,
@@ -180,18 +282,30 @@ const CONG = (function(){
     };
   }
 
+  function _emptyLE(){
+    return {
+      supervisao:"", conselheiro:"", coordenacao:"", tesoureiro:"",
+      equipe:[], mesa_administrativa:[], professores_ebd:[], ministerios_auxiliares:[]
+    };
+  }
+
   function _rowToCong(row, cultos){
     const hist = (cultos||[]).map(c=>({
-      data:         c.data,
-      tipo:         c.tipo||"",
-      pregador:     c.pregador||"",
-      tema:         c.tema||"",
-      participantes:c.participantes||0,
-      visitantes:   c.visitantes||0,
-      decisoes:     c.decisoes||0,
-      obs:          c.obs||"",
-      _sbId:        c.id
+      data:          c.data,
+      tipo:          c.tipo||"",
+      pregador:      c.pregador||"",
+      tema:          c.tema||"",
+      participantes: c.participantes||0,
+      visitantes:    c.visitantes||0,
+      decisoes:      c.decisoes||0,
+      obs:           c.obs||"",
+      _sbId:         c.id
     }));
+    // Detecta formato: lideres pode ser objeto (novo) ou array (legado)
+    const leRaw = row.lideres;
+    const le = (leRaw && !Array.isArray(leRaw) && typeof leRaw === "object")
+      ? { ..._emptyLE(), ...leRaw }
+      : _emptyLE();
     return {
       id: row.id,
       identificacao:{
@@ -204,6 +318,7 @@ const CONG = (function(){
         icon:        row.icon||"⛪",
         obs:         row.obs||""
       },
+      lideranca_estruturada: le,
       panorama_membresia:{
         membros_ativos:       row.membros_ativos||0,
         membros_cooperadores: row.membros_cooperadores||0,
@@ -229,7 +344,7 @@ const CONG = (function(){
       },
       pequenos_grupos:{ total_grupos:row.total_grupos||0, grupos:row.grupos||[] },
       ministerios:    { lista:row.ministerios||[] },
-      lideranca:      { pastor_responsavel:row.pastor_responsavel||"", lideres:row.lideres||[] },
+      lideranca:      { pastor_responsavel:row.pastor_responsavel||"", lideres:[] },
       financeiro:{
         receita_media_mensal: row.receita_media_mensal||0,
         despesa_media_mensal: row.despesa_media_mensal||0,
@@ -243,10 +358,6 @@ const CONG = (function(){
 
   /* ── Supabase: operações públicas ────────────────────── */
 
-  /**
-   * Upsert de uma congregação no Supabase.
-   * Usa POST com Prefer: resolution=merge-duplicates (upsert nativo).
-   */
   async function saveToSupabase(cong){
     if(!_sbAvailable()) return;
     const row = _congToRow(cong);
@@ -261,21 +372,18 @@ const CONG = (function(){
     }
   }
 
-  /**
-   * Registra um culto na tabela congregacao_cultos.
-   */
   async function addCultoSupabase(congId, culto){
     if(!_sbAvailable()) return;
     const row = {
-      cong_id:      congId,
-      data:         culto.data,
-      tipo:         culto.tipo||"",
-      pregador:     culto.pregador||"",
-      tema:         culto.tema||"",
-      participantes:culto.participantes||0,
-      visitantes:   culto.visitantes||0,
-      decisoes:     culto.decisoes||0,
-      obs:          culto.obs||""
+      cong_id:       congId,
+      data:          culto.data,
+      tipo:          culto.tipo||"",
+      pregador:      culto.pregador||"",
+      tema:          culto.tema||"",
+      participantes: culto.participantes||0,
+      visitantes:    culto.visitantes||0,
+      decisoes:      culto.decisoes||0,
+      obs:           culto.obs||""
     };
     const res = await fetch(`${_sbBase()}/rest/v1/congregacao_cultos`, {
       method:  "POST",
@@ -288,15 +396,9 @@ const CONG = (function(){
     }
   }
 
-  /**
-   * Carrega todas as congregações do Supabase e salva no localStorage.
-   * Se o Supabase estiver vazio, envia o seed local para lá.
-   * Retorna true se sincronizou com sucesso.
-   */
   async function syncFromSupabase(){
     if(!_sbAvailable()) return false;
 
-    // 1. Busca congregações
     const cRes = await fetch(
       `${_sbBase()}/rest/v1/congregacoes?select=*&order=nome.asc`,
       { method:"GET", headers:_sbHdrs() }
@@ -305,7 +407,6 @@ const CONG = (function(){
     const rows = await cRes.json();
 
     if(!Array.isArray(rows) || rows.length === 0){
-      // Supabase vazio → envia seed local
       const localCongs = listCongs();
       if(localCongs.length > 0){
         for(const cong of localCongs){
@@ -316,21 +417,18 @@ const CONG = (function(){
       return true;
     }
 
-    // 2. Busca cultos
     const cuRes = await fetch(
       `${_sbBase()}/rest/v1/congregacao_cultos?select=*&order=data.desc`,
       { method:"GET", headers:_sbHdrs() }
     );
     const cultos = cuRes.ok ? await cuRes.json() : [];
 
-    // Agrupa cultos por congregação
     const cultosByCong = {};
     (Array.isArray(cultos)?cultos:[]).forEach(cu=>{
       if(!cultosByCong[cu.cong_id]) cultosByCong[cu.cong_id]=[];
       cultosByCong[cu.cong_id].push(cu);
     });
 
-    // 3. Converte e salva no localStorage
     const congs = rows.map(row => _rowToCong(row, cultosByCong[row.id]||[]));
     saveCongs(congs);
     return true;
@@ -341,7 +439,6 @@ const CONG = (function(){
     listCongs, saveCongs, getCong, saveCong, updateSection,
     listCultos, saveCultos, addCulto,
     emptyCong, seed,
-    // Supabase
     saveToSupabase, addCultoSupabase, syncFromSupabase
   };
 })();
