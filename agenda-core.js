@@ -507,14 +507,14 @@ async function carregarSolicitacoesAgenda() {
   if (!el) return;
   el.innerHTML = `<div style="color:var(--tx3);font-size:11px">${spinner()} Carregando...</div>`;
   try {
-    // Busca demandas com área Agenda
-    const res = await fetch(`${apiBaseUrl()}/rest/v1/demandas?area=eq.Agenda&order=criado_em.desc&limit=100`, {
-      headers: apiHeaders()
-    });
-    const rows = res.ok ? await res.json() : [];
+    const res = await fetch(
+      `${apiBaseUrl()}/rest/v1/demandas?area=eq.Agendamentos&order=criado_em.desc&limit=200`,
+      { headers: apiHeaders() }
+    );
+    if (!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
 
-    // KPIs
-    const pend = rows.filter(r => String(r.status||"").toLowerCase().includes("pend")).length;
+    const pend = rows.filter(r => ["Pendente","Em Andamento"].includes(r.status)).length;
     const conc = rows.filter(r => String(r.status||"").toLowerCase().includes("conc")).length;
     const canc = rows.filter(r => String(r.status||"").toLowerCase().includes("canc")).length;
     const sp = document.getElementById("sol-pend"); if(sp) sp.textContent = pend;
@@ -524,46 +524,152 @@ async function carregarSolicitacoesAgenda() {
     if (!rows.length) {
       el.innerHTML = `<div style="text-align:center;padding:28px;color:var(--tx3)">
         <div style="font-size:28px;margin-bottom:8px">📭</div>
-        <div style="font-size:12px">Nenhuma solicitação recebida ainda</div>
-        <div style="font-size:10.5px;margin-top:4px">As solicitações feitas pela página pública aparecerão aqui</div>
+        <div style="font-size:12px">Nenhuma solicitação de agendamento encontrada</div>
+        <div style="font-size:10.5px;margin-top:4px">Crie uma demanda com categoria "Agendamentos" para que apareça aqui</div>
       </div>`;
       return;
     }
 
-    el.innerHTML = `
-      <div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:11.5px">
-        <thead><tr style="border-bottom:1px solid var(--bd2)">
-          <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Evento</th>
+    el.innerHTML = `<div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:11.5px;min-width:760px">
+        <thead><tr style="border-bottom:1px solid var(--bd2);background:var(--bg-surface)">
+          <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Evento / Título</th>
+          <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Subcategoria</th>
           <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Solicitante</th>
-          <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Data</th>
+          <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Abertura</th>
           <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Status</th>
           <th style="text-align:right;padding:7px 10px;font-size:9.5px;color:var(--tx3)">Ações</th>
         </tr></thead>
-        <tbody>
-          ${rows.map(r => {
-            const status = r.status || "Pendente";
-            const cor = status.toLowerCase().includes("pend") ? "var(--gold)"
-              : status.toLowerCase().includes("conc") ? "var(--gr)"
-              : status.toLowerCase().includes("canc") ? "var(--rose)"
-              : "var(--tx2)";
-            return `<tr style="border-bottom:1px solid var(--bd1)" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
-              <td style="padding:8px 10px;color:var(--tx1);font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.titulo||"—")}</td>
-              <td style="padding:8px 10px;color:var(--tx2)">${escapeHtml(r.solicitante||"—")}</td>
-              <td style="padding:8px 10px;color:var(--tx2);white-space:nowrap;font-family:var(--mono);font-size:11px">${r.data_abertura||"—"}</td>
-              <td style="padding:8px 10px">
-                <span style="font-size:9.5px;padding:2px 7px;border-radius:10px;background:${cor}18;color:${cor};border:1px solid ${cor}33">${escapeHtml(status)}</span>
-              </td>
-              <td style="padding:8px 10px;text-align:right;white-space:nowrap">
-                <button onclick='openCrudForm("DEMANDAS",${safeJsonForHtml(r)})' style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:10px;padding:3px 8px;cursor:pointer">✏️ Editar</button>
-              </td>
-            </tr>`;
-          }).join("")}
-        </tbody>
+        <tbody>${rows.map(r => {
+          const status = r.status || "Pendente";
+          const cor = status === "Pendente" ? "var(--gold)"
+            : status === "Em Andamento" ? "var(--blue)"
+            : status.toLowerCase().includes("conc") ? "var(--gr)"
+            : status.toLowerCase().includes("canc") ? "var(--rose)"
+            : "var(--tx2)";
+          const ativa = ["Pendente","Em Andamento"].includes(status);
+          return `<tr style="border-bottom:1px solid var(--bd1)" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+            <td style="padding:8px 10px;color:var(--tx1);font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(r.titulo||'')}">${escapeHtml(r.titulo||"—")}</td>
+            <td style="padding:8px 10px;color:var(--tx2);font-size:11px">${escapeHtml(r.subcategoria||"—")}</td>
+            <td style="padding:8px 10px;color:var(--tx2)">${escapeHtml(r.solicitante||r.solicitante_txt||"—")}</td>
+            <td style="padding:8px 10px;color:var(--tx2);white-space:nowrap;font-family:var(--mono);font-size:11px">${r.data_abertura||"—"}</td>
+            <td style="padding:8px 10px">
+              <span style="font-size:9.5px;padding:2px 8px;border-radius:10px;background:${cor}18;color:${cor};border:1px solid ${cor}33;font-weight:700">${escapeHtml(status)}</span>
+            </td>
+            <td style="padding:8px 10px;text-align:right;white-space:nowrap">
+              ${ativa ? `
+                <button onclick='agEmAnalise("${r.id}")' style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:4px;color:var(--blue);font-size:10px;font-weight:700;padding:3px 7px;cursor:pointer;margin-right:3px">Em análise</button>
+                <button onclick='agAprovarSolicitacao(${safeJsonForHtml(r)})' style="background:rgba(58,170,92,.1);border:1px solid rgba(58,170,92,.35);border-radius:4px;color:var(--gr);font-size:10px;font-weight:700;padding:3px 7px;cursor:pointer;margin-right:3px">✓ Aprovar</button>
+                <button onclick='agRecusarSolicitacao("${r.id}")' style="background:rgba(224,85,85,.08);border:1px solid rgba(224,85,85,.3);border-radius:4px;color:var(--rose);font-size:10px;font-weight:700;padding:3px 7px;cursor:pointer">✕ Recusar</button>
+              ` : `
+                <button onclick='openCrudForm("DEMANDAS",${safeJsonForHtml(r)})' style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:10px;padding:3px 8px;cursor:pointer">Ver</button>
+              `}
+            </td>
+          </tr>`;
+        }).join("")}</tbody>
       </table></div>`;
   } catch(e) {
     el.innerHTML = `<div style="color:var(--rose);font-size:11.5px">Erro: ${escapeHtml(e.message)}</div>`;
   }
+}
+
+async function agEmAnalise(id) {
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/demandas?id=eq.${id}`, {
+      method: "PATCH",
+      headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+      body: JSON.stringify({ status: "Em Andamento" })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    T("Status atualizado", "Demanda marcada como Em Andamento.");
+    carregarSolicitacoesAgenda();
+  } catch(e) { T("Erro", e.message); }
+}
+
+async function agRecusarSolicitacao(id) {
+  if (!confirm("Recusar esta solicitação de agendamento?")) return;
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/demandas?id=eq.${id}`, {
+      method: "PATCH",
+      headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+      body: JSON.stringify({ status: "Cancelado" })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    T("Solicitação recusada", "Status atualizado para Cancelado.");
+    carregarSolicitacoesAgenda();
+  } catch(e) { T("Erro ao recusar", e.message); }
+}
+
+function agAprovarSolicitacao(r) {
+  let modal = document.getElementById("ag-aprov-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "ag-aprov-modal";
+    modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:340;display:flex;align-items:center;justify-content:center";
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `<div style="width:min(600px,94vw);max-height:90vh;overflow:auto;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:24px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+      <div style="font-size:22px">✅</div>
+      <div>
+        <div style="font-size:14px;font-weight:800;color:var(--tx1)">Aprovar e criar evento</div>
+        <div style="font-size:10.5px;color:var(--tx3)">${escapeHtml(r.titulo||"—")}${r.solicitante ? " · " + escapeHtml(r.solicitante) : ""}</div>
+      </div>
+      <button onclick="document.getElementById('ag-aprov-modal')?.remove()" style="margin-left:auto;background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="grid-column:1/-1"><label class="flb">Título do evento *</label><input id="ag-ap-titulo" class="fi2" value="${escapeHtml(r.titulo||'')}" placeholder="Título do evento na agenda"></div>
+      <div><label class="flb">Data *</label><input id="ag-ap-data" type="date" class="fi2"></div>
+      <div><label class="flb">Horário início *</label><input id="ag-ap-hi" type="time" class="fi2" value="08:00"></div>
+      <div><label class="flb">Horário fim</label><input id="ag-ap-hf" type="time" class="fi2" value="10:00"></div>
+      <div><label class="flb">Espaço / Ambiente</label><input id="ag-ap-esp" class="fi2" placeholder="Ex.: Templo, Sala 1, Salão Social"></div>
+      <div style="grid-column:1/-1"><label class="flb">Organizador</label><input id="ag-ap-org" class="fi2" value="${escapeHtml(r.responsavel||r.solicitante||'')}" placeholder="Responsável pelo evento"></div>
+      <div style="grid-column:1/-1"><label class="flb">Descrição</label><textarea id="ag-ap-desc" class="fi2" rows="3" placeholder="Detalhes do evento">${escapeHtml(r.descricao||'')}</textarea></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px">
+      <button class="btn" onclick="document.getElementById('ag-aprov-modal')?.remove()">Cancelar</button>
+      <button class="btn btn-p" onclick="agConfirmarAprovacao('${r.id}')">Confirmar e criar evento</button>
+    </div>
+  </div>`;
+}
+
+async function agConfirmarAprovacao(demandaId) {
+  const titulo = (document.getElementById("ag-ap-titulo")?.value || "").trim();
+  const data   = document.getElementById("ag-ap-data")?.value || "";
+  const hi     = document.getElementById("ag-ap-hi")?.value || "";
+  const hf     = document.getElementById("ag-ap-hf")?.value || null;
+  const esp    = (document.getElementById("ag-ap-esp")?.value || "").trim() || null;
+  const org    = (document.getElementById("ag-ap-org")?.value || "").trim() || null;
+  const desc   = (document.getElementById("ag-ap-desc")?.value || "").trim() || null;
+
+  if (!titulo || !data || !hi) return T("Campos obrigatórios", "Preencha título, data e horário de início.");
+
+  const nomeMeses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const diasSemana = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+  const dt = new Date(data + "T12:00:00");
+  const mes = nomeMeses[dt.getMonth()];
+  const diaSemana = diasSemana[dt.getDay()];
+
+  try {
+    const resAg = await fetch(`${apiBaseUrl()}/rest/v1/agenda`, {
+      method: "POST",
+      headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+      body: JSON.stringify({ titulo, data, hora_inicio: hi, hora_fim: hf, espaco: esp, organizador: org, descricao: desc, status: "confirmado", mes, dia_semana: diaSemana, recorrencia: "Único" })
+    });
+    if (!resAg.ok) throw new Error(await resAg.text());
+
+    const resDem = await fetch(`${apiBaseUrl()}/rest/v1/demandas?id=eq.${demandaId}`, {
+      method: "PATCH",
+      headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+      body: JSON.stringify({ status: "Concluída" })
+    });
+    if (!resDem.ok) throw new Error(await resDem.text());
+
+    document.getElementById("ag-aprov-modal")?.remove();
+    _agendaCache = null;
+    T("Evento criado!", `"${titulo}" adicionado ao calendário como confirmado.`);
+    carregarSolicitacoesAgenda();
+  } catch(e) { T("Erro ao aprovar", e.message); }
 }
 
 async function detectarConflitos() {
@@ -654,3 +760,9 @@ async function carregarConfigAgenda() {
       </div>`).join("");
   } catch(e) { console.warn("Config agenda:", e.message); }
 }
+
+window.carregarSolicitacoesAgenda = carregarSolicitacoesAgenda;
+window.agEmAnalise                = agEmAnalise;
+window.agRecusarSolicitacao       = agRecusarSolicitacao;
+window.agAprovarSolicitacao       = agAprovarSolicitacao;
+window.agConfirmarAprovacao       = agConfirmarAprovacao;
