@@ -1961,6 +1961,92 @@ document.head.appendChild(styleEl);
     } catch(e) { T("Erro ao excluir", _erro(e)); }
   }
 
+  function cePrint(){
+    const rows = _filtrados();
+    const now = new Date();
+    const emissao = now.toLocaleDateString("pt-BR") + " às " + now.toLocaleTimeString("pt-BR", {hour:"2-digit",minute:"2-digit"});
+
+    const busca    = (document.getElementById("ce-f-busca")?.value || "").trim();
+    const codigo   = (document.getElementById("ce-f-codigo")?.value || "").trim();
+    const status   = document.getElementById("ce-f-status")?.value || "";
+    const pagamento = document.getElementById("ce-f-pagamento")?.value || "";
+    const marca    = (document.getElementById("ce-f-marca")?.value || "").trim();
+    const filtros = [
+      busca    && `Nome: "${busca}"`,
+      codigo   && `Código: "${codigo}"`,
+      status   && `Status: ${STATUS[status]?.label || status}`,
+      pagamento && `Pagamento: ${PAGAMENTO[pagamento]?.label || pagamento}`,
+      marca    && `Marca: "${marca}"`,
+    ].filter(Boolean);
+
+    const entregues    = rows.filter(r => r.status === "entregue");
+    const naoEntregues = rows.filter(r => r.status !== "entregue");
+
+    function stLabel(s){ return STATUS[s]?.label || s || "—"; }
+    function pgLabel(s){ return PAGAMENTO[s]?.label || s || "Pendente"; }
+    function fmtDate(v){ return v ? new Date(v+"T12:00:00").toLocaleDateString("pt-BR") : "—"; }
+
+    function renderRows(list){
+      return list.map(r => `
+        <tr>
+          <td>${_dn(_pessoaNome(r.pessoa_id))}</td>
+          <td>${r.codigo_controle || "—"}</td>
+          <td>${r.marca || "—"}</td>
+          <td>${stLabel(r.status)}</td>
+          <td>${pgLabel(r.status_pagamento || "pendente")}</td>
+          <td>${fmtDate(r.data_entrega)}</td>
+          <td>${r.observacoes || ""}</td>
+        </tr>`).join("");
+    }
+
+    let tbody = "";
+    if(entregues.length){
+      tbody += `<tr class="sec-hdr"><td colspan="7">Controles Entregues (${entregues.length})</td></tr>`;
+      tbody += renderRows(entregues);
+    }
+    if(naoEntregues.length){
+      tbody += `<tr class="sec-hdr"><td colspan="7">Demais Controles (${naoEntregues.length})</td></tr>`;
+      tbody += renderRows(naoEntregues);
+    }
+
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<title>Controles do Estacionamento</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:Arial,sans-serif;font-size:11px;color:#111;padding:20px 24px}
+  h1{font-size:15px;font-weight:700;margin-bottom:2px}
+  .org{font-size:10px;color:#555;margin-bottom:12px}
+  .meta{font-size:10px;color:#444;margin-bottom:14px;display:flex;gap:24px;flex-wrap:wrap}
+  .meta span{white-space:nowrap}
+  table{width:100%;border-collapse:collapse;margin-top:4px}
+  th{background:#1a2236;color:#fff;font-size:10px;font-weight:700;padding:6px 7px;text-align:left}
+  td{padding:5px 7px;border-bottom:1px solid #e8eaf0;vertical-align:top}
+  tr:nth-child(even) td{background:#f5f7fb}
+  tr.sec-hdr td{background:#e8eaf0;font-weight:700;font-size:10px;color:#334;padding:4px 7px;border-bottom:1px solid #ccc}
+  .footer{margin-top:16px;font-size:9px;color:#888;text-align:right}
+  @media print{body{padding:10px 14px}button{display:none}}
+</style></head><body>
+<h1>Relação de Controles do Estacionamento</h1>
+<div class="org">IPPenha — Sistema SIPEN</div>
+<div class="meta">
+  <span>Emissão: ${emissao}</span>
+  <span>Total de registros: ${rows.length}</span>
+  ${filtros.length ? `<span>Filtros: ${filtros.join(" | ")}</span>` : ""}
+</div>
+<table>
+  <thead><tr><th>Nome</th><th>Código</th><th>Marca</th><th>Status</th><th>Pagamento</th><th>Data Entrega</th><th>Observações</th></tr></thead>
+  <tbody>${tbody || "<tr><td colspan='7' style='text-align:center;color:#888;padding:12px'>Nenhum registro</td></tr>"}</tbody>
+</table>
+<div class="footer">Documento gerado automaticamente pelo SIPEN</div>
+<script>window.onload=()=>window.print();<\/script>
+</body></html>`;
+
+    const w = window.open("", "_blank");
+    if(!w) return T("Bloqueio de popup", "Permita popups para este site e tente novamente.");
+    w.document.write(html);
+    w.document.close();
+  }
+
   window.ceCarregar = ceCarregar;
   window.ceRender = ceRender;
   window.ceAbrirModal = ceAbrirModal;
@@ -1970,6 +2056,7 @@ document.head.appendChild(styleEl);
   window.ceMudarPagamento = ceMudarPagamento;
   window.ceMudarStatus = ceMudarStatus;
   window.ceExcluir = ceExcluir;
+  window.cePrint = cePrint;
 })();
 
 /* ══════════════════════════════════════════════════════
