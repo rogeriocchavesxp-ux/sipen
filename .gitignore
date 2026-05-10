@@ -14,7 +14,11 @@ Thumbs.db
 
 # Logs
 *.log
+logs/
 
 # Temp
 *.tmp
 *.bak
+.env
+node_modules/
+sync-log-*.json

@@ -5,6 +5,17 @@
 let _membCache = [];    // cache de todos os membros
 let _visCache  = [];    // cache de todos os visitantes
 
+function _podeEditarMembresia() {
+  if (!window.USUARIO_ATUAL) return false;
+  if (USUARIO_ATUAL.perfil === "ADMINISTRADOR_GERAL") return true;
+  const nivel = (window.permissoesUsuario || {})["MEMBRESIA"] || "SEM_ACESSO";
+  return nivel === "COMPLETO" || nivel === "EDICAO";
+}
+
+function _podeExcluirMembresia() {
+  return window.USUARIO_ATUAL?.perfil === "ADMINISTRADOR_GERAL";
+}
+
 /* Cores e labels de status de membro */
 const MEMB_STATUS = {
   ativo:        { bg:"rgba(58,170,92,0.15)",  color:"var(--gr)",    label:"Ativo" },
@@ -82,8 +93,8 @@ function renderMembrosTable(rows, containerId) {
               <td style="padding:8px 10px;color:var(--tx2);font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(row.congregacao || "—")}</td>
               <td style="padding:8px 10px;color:var(--tx2);font-size:11px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(row.funcao || "—")}</td>
               <td style="padding:8px 10px;text-align:right;white-space:nowrap">
-                <button onclick='openCrudForm("MEMBROS",${safeJsonForHtml(row)})' style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:10px;padding:3px 8px;cursor:pointer;margin-right:4px" title="Editar">✏️</button>
-                <button onclick='deletarRegistro("MEMBROS","${escapeHtml(row.id || "")}")' style="background:rgba(224,85,85,0.08);border:1px solid rgba(224,85,85,0.18);border-radius:4px;color:var(--rose);font-size:10px;padding:3px 8px;cursor:pointer" title="Remover">🗑</button>
+                ${_podeEditarMembresia() ? `<button onclick='openCrudForm("MEMBROS",${safeJsonForHtml(row)})' style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:10px;padding:3px 8px;cursor:pointer;margin-right:4px" title="Editar">✏️</button>` : ""}
+                ${_podeExcluirMembresia() ? `<button onclick='deletarRegistro("MEMBROS","${escapeHtml(row.id || "")}")' style="background:rgba(224,85,85,0.08);border:1px solid rgba(224,85,85,0.18);border-radius:4px;color:var(--rose);font-size:10px;padding:3px 8px;cursor:pointer" title="Remover">🗑</button>` : ""}
               </td>
             </tr>`;
           }).join("")}
@@ -130,8 +141,8 @@ function renderVisitantesTable(rows, containerId) {
         <td style="padding:8px 10px;color:var(--tx2);font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(row.origem || "—")}</td>
         <td style="padding:8px 10px;color:var(--tx2);font-size:11px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(row.congregacao || "—")}</td>
         <td style="padding:8px 10px;text-align:right;white-space:nowrap">
-          <button onclick='openCrudForm("VISITANTES",${safeJsonForHtml(row)})' style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:10px;padding:3px 8px;cursor:pointer;margin-right:4px">✏️</button>
-          <button onclick='deletarRegistro("VISITANTES","${escapeHtml(row.id || "")}")' style="background:rgba(224,85,85,0.08);border:1px solid rgba(224,85,85,0.18);border-radius:4px;color:var(--rose);font-size:10px;padding:3px 8px;cursor:pointer">🗑</button>
+          ${_podeEditarMembresia() ? `<button onclick='openCrudForm("VISITANTES",${safeJsonForHtml(row)})' style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:10px;padding:3px 8px;cursor:pointer;margin-right:4px">✏️</button>` : ""}
+          ${_podeExcluirMembresia() ? `<button onclick='deletarRegistro("VISITANTES","${escapeHtml(row.id || "")}")' style="background:rgba(224,85,85,0.08);border:1px solid rgba(224,85,85,0.18);border-radius:4px;color:var(--rose);font-size:10px;padding:3px 8px;cursor:pointer">🗑</button>` : ""}
         </td>
       </tr>`; }).join("")}
     </tbody></table>
@@ -468,6 +479,10 @@ function _invalidarCacheMembresia() {
 
 /* Abrir formulário de novo membro com campos estendidos */
 function openNovoMembro() {
+  if (!_podeEditarMembresia()) {
+    if (typeof T === "function") T("Acesso negado", "Sem permissão para cadastrar membros.");
+    return;
+  }
   openCrudForm("MEMBROS");
 }
 

@@ -1,5 +1,5 @@
 -- ══════════════════════════════════════════════════════════
--- SIPEN — Tabela demanda_andamentos
+-- SIPEN — Tabela demanda_andamentos (idempotente)
 -- Execute no Supabase SQL Editor
 -- ══════════════════════════════════════════════════════════
 
@@ -19,6 +19,10 @@ CREATE INDEX IF NOT EXISTS idx_and_created ON public.demanda_andamentos(created_
 
 -- RLS
 ALTER TABLE public.demanda_andamentos ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "andamentos_select"     ON public.demanda_andamentos;
+DROP POLICY IF EXISTS "andamentos_insert"     ON public.demanda_andamentos;
+DROP POLICY IF EXISTS "service_all_andamentos" ON public.demanda_andamentos;
 
 CREATE POLICY "andamentos_select" ON public.demanda_andamentos
   FOR SELECT TO authenticated USING (true);
