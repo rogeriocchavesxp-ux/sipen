@@ -1,0 +1,219 @@
+const MC={geral:"var(--gmd)",admin:"var(--gold)",fin:"var(--gr)",jur:"var(--blue)",conselho:"var(--sky)",proj:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)",cong:"var(--gr)",diac:"var(--copper)",area:"var(--gr)"};
+const CRUMB={
+  geral:["","Dashboard Geral","/ IPPenha · visão executiva consolidada"],
+  "admin-dash":["Administrativo","Dashboard","/ visão do módulo"],
+  "admin-sec":["Administrativo","Secretaria e Cadastro",""],
+  "admin-fin":["Administrativo","Financeiro",""],
+  "fin-dash":["Financeiro","Dashboard","/ visão consolidada"],
+  "fin-lancamentos":["Financeiro","Lançamentos","/ receitas e despesas"],
+  "fin-fluxo":["Financeiro","Fluxo de Caixa","/ entradas e saídas por período"],
+  "fin-pagar":["Financeiro","Contas a Pagar","/ obrigações financeiras"],
+  "fin-receber":["Financeiro","Contas a Receber","/ receitas pendentes"],
+  "fin-categorias":["Financeiro","Categorias Financeiras","/ classificação de lançamentos"],
+  "fin-relatorios":["Financeiro","Relatórios Financeiros","/ consolidados por período"],
+  "fin-auditoria":["Financeiro","Auditoria Financeira","/ histórico de ações"],
+  "cnab-remessas":["Financeiro","CNAB 240","/ remessas e retornos bancários"],
+  "cnab-detalhe":["Financeiro","CNAB 240","/ detalhe da remessa"],
+  "fin-demandas":["Financeiro","Demandas Financeiras","/ solicitações do módulo"],
+  "admin-con":["Administrativo","Contratos",""],
+  "admin-rh":["Administrativo","RH",""],
+  "jur-dash":["Jurídico","Dashboard","/ contratos, pareceres e riscos"],
+  "jur-demandas":["Jurídico","Processos e Demandas Jurídicas",""],
+  "jur-contratos":["Jurídico","Contratos e Instrumentos",""],
+  "jur-pareceres":["Jurídico","Pareceres",""],
+  "jur-documentos":["Jurídico","Documentos Jurídicos",""],
+  "jur-riscos":["Jurídico","Riscos e Pendências",""],
+  "jur-historico":["Jurídico","Histórico e Auditoria Jurídica",""],
+  "admin-aud":["Administrativo","Auditoria",""],
+  "admin-doc":["Administrativo","Documentos",""],
+  "admin-est":["Administrativo","Controle de Estoque","/ operacional e auditável"],
+  "admin-parking-controls":["Administrativo","Controles do Estacionamento","/ controle de acesso"],
+  "pext-lista":             ["Administrativo","Participantes Externos","/ pessoas sem membresia"],
+  "admin-pessoas":          ["Administrativo","Cadastro de Pessoas","/ registro geral"],
+  "conselho-dash":["Conselho e Governança","Dashboard",""],
+  "conselho-nomeados":["Conselho e Governança","Nomeados","/ funções temporárias"],
+  "conselho-ordenados":["Conselho e Governança","Ordenados","/ ofícios permanentes"],
+  "conselho-hist":["Conselho e Governança","Histórico de Atas e Deliberações",""],
+  "conselho-seminaristas":["Conselho e Governança","Seminaristas","/ formação teológica e estágio"],
+  "conselho-contratados":["Conselho e Governança","Contratados","/ terceirizados e apoio operacional"],
+  "proj-lista":["Projetos","Projetos & Acompanhamento","/ portfólio institucional"],
+  "proj-detalhe":["Projetos","Detalhe do Projeto","/ etapas e progresso"],
+  "proj-form":["Projetos","Cadastro de Projeto","/ criação e edição"],
+  "diac-dash":["Junta Diaconal","Dashboard Diaconal","/ visão geral do serviço"],
+  "diac-diaconos":["Junta Diaconal","Diáconos","/ cadastro e atuação"],
+  "diac-escalas":["Junta Diaconal","Escalas de Serviço","/ cultos e atividades"],
+  "diac-familias":["Junta Diaconal","Famílias Assistidas","/ acompanhamento diaconal"],
+  "diac-social":["Junta Diaconal","Ação Social e Beneficência","/ doações e auxílios"],
+  "diac-visitacao":["Junta Diaconal","Visitação Diaconal","/ visitas domiciliares"],
+  "diac-patrimonio":["Junta Diaconal","Patrimônio e Apoio Operacional",""],
+  "diac-solicitacoes":["Junta Diaconal","Solicitações Diaconais","/ triagem e atendimento"],
+  "diac-relatorios":["Junta Diaconal","Relatórios Diaconais","/ indicadores e exportações"],
+  "diac-historico":["Junta Diaconal","Histórico e Atas","/ reuniões e deliberações"],
+  "pgs-dash":["Pequenos Grupos","Dashboard","/ discipulado e acompanhamento"],
+  "pgs-lista":["Pequenos Grupos","Lista de PGs",""],
+  "pgs-encontros":["Pequenos Grupos","Encontros",""],
+  "pgs-participantes":["Pequenos Grupos","Participantes",""],
+  "pgs-visitantes":["Pequenos Grupos","Visitantes",""],
+  "pgs-estudos":["Pequenos Grupos","Estudos",""],
+  "pgs-relatorios":["Pequenos Grupos","Relatórios",""],
+  "pgs-oracao":["Pequenos Grupos","Pedidos de Oração",""],
+  "pgs-historico":["Pequenos Grupos","Histórico",""],
+  "pastoral-dash":["Pastoral","Dashboard","/ escala e disponibilidade"],
+  "pastoral-preg":["Pastoral","Escala de Pregação","/ programação mensal"],
+  "pastoral-disp":["Pastoral","Disponibilidade Pregação","/ gestão de disponibilidades"],
+  "pastoral-pastores":["Pastoral","Cadastro de Pastores","/ corpo pastoral ativo"],
+  "pastoral-historico":["Pastoral","Histórico de Pregações","/ registro histórico"],
+  "pastoral-relatorios":["Pastoral","Relatórios Pastorais","/ distribuição e análise"],
+  "pastoral-ate":["Pastoral","Atendimentos",""],
+  "pastoral-ora":["Pastoral","Pedidos de Oração",""],
+  "pastoral-aco":["Pastoral","Acompanhamentos",""],
+  "pastoral-reg":["Pastoral","Registros Pastorais",""],
+  "pastoral-pri":["Pastoral","Casos Prioritários",""],
+  "min-dash":["Departamentos","Dashboard","/ visão geral dos departamentos"],
+  "min-min":["Departamentos","Ministérios","/ grupos ministeriais"],
+  "min-soc":["Departamentos","Sociedades Internas","/ UPH, SAF, UMP, UPA, UCP"],
+  "min-adm":["Departamentos","Administração","/ departamentos administrativos"],
+  "min-esc":["Departamentos","Escalas",""],
+  "min-lit":["Departamentos","Liturgia dos Cultos",""],
+  "agenda-dash":["Agenda","Dashboard","/ solicitações, aceite e estatísticas"],
+  "agenda-calendario":["Agenda","Calendário Geral",""],
+  "agenda-solicitacoes":["Agenda","Solicitações de Agendamento",""],
+  "agenda-aprovacoes":["Agenda","Aprovações Pendentes",""],
+  "agenda-confirmados":["Agenda","Eventos Confirmados",""],
+  "agenda-recusados":["Agenda","Eventos Recusados",""],
+  "agenda-reagendamentos":["Agenda","Reagendamentos e Ajustes",""],
+  "agenda-ambientes":["Agenda","Ambientes e Recursos",""],
+  "agenda-conflitos":["Agenda","Conflitos de Agenda",""],
+  "agenda-historico":["Agenda","Histórico de Agendamentos",""],
+  "agenda-config":["Agenda","Configurações da Agenda",""],
+  "infra-dash":["Infraestrutura e Conservação","Dashboard",""],
+  "infra-man":["Infraestrutura e Conservação","Manutenção",""],
+  "infra-lim":["Infraestrutura e Conservação","Limpeza",""],
+  "dem-dash":["Demandas","Dashboard","/ visão geral e métricas"],
+  "dem-todas":["Demandas","Todas as Solicitações","/ lista completa"],
+  "admin-demandas":         ["Administrativo","Demandas Administrativas","/ painel"],
+  "admin-demandas-adm":     ["Administrativo","Demandas Administrativas","/ painel"],
+  "conselho-demandas":      ["Conselho e Governança","Demandas do Conselho","/ todas"],
+  "conselho-demandas-cons": ["Conselho e Governança","Demandas do Conselho","/ filtradas"],
+  "infra-demandas":         ["Infraestrutura e Conservação","Demandas de Infraestrutura","/ todas"],
+  "infra-demandas-infra":   ["Infraestrutura e Conservação","Demandas de Infraestrutura","/ filtradas"],
+  "jur-demandas-tab":       ["Jurídico","Demandas Jurídicas","/ todas"],
+  "jur-demandas-jur":       ["Jurídico","Demandas Jurídicas","/ filtradas"],
+  "pastoral-demandas":      ["Pastoral","Demandas Pastorais","/ todas"],
+  "pastoral-demandas-pas":  ["Pastoral","Demandas Pastorais","/ filtradas"],
+  "dem-analise":["Demandas","Em Análise","/ triagem e classificação"],
+  "dem-and":["Demandas","Em Andamento","/ execução"],
+  "dem-conc":["Demandas","Concluídas","/ finalizadas"],
+  "dem-pri":["Demandas","Alta Prioridade","/ urgentes e críticas"],
+  "dem-hist":["Demandas","Histórico","/ todos os registros"],
+  "dem-detalhe":["Demandas","Detalhe da Solicitação",""],
+  "rel-dash":["Relatórios","Dashboard Gerencial",""],
+  "memb-dash":["Membresia","Dashboard",""],
+  "memb-cad":["Membresia","Cadastro de Membros",""],
+  "memb-bat":["Membresia","Batismos",""],
+  "memb-vis":["Membresia","Visitantes",""],
+  "area-dash": ["Área do Membro","Painel Pessoal","/ bem-vindo"],
+  "area-agenda":["Área do Membro","Agenda","/ próximos compromissos"],
+  "area-min":  ["Área do Membro","Meus Ministérios","/ serviço e escala"],
+  "area-pgs":  ["Área do Membro","Meu PG","/ pequeno grupo"],
+  "area-dem":  ["Área do Membro","Minhas Solicitações","/ pedidos e demandas"],
+};
+const SL={dash:"Dashboard",diaconos:"Diáconos",escalas:"Escalas de Serviço",familias:"Famílias Assistidas",social:"Ação Social e Beneficência",visitacao:"Visitação Diaconal",patrimonio:"Patrimônio e Apoio Operacional",solicitacoes:"Solicitações Diaconais",relatorios:"Relatórios Diaconais",historico:"Histórico e Atas",sec:"Secretaria e Cadastro",rh:"RH / Gestão de Pessoas",doc:"Documentos",aud:"Auditoria",fin:"Financeiro",con:"Contratos",est:"Controle de Estoque",demandas:"Processos e Demandas Jurídicas",contratos:"Contratos e Instrumentos",pareceres:"Pareceres",documentos:"Documentos Jurídicos",riscos:"Riscos e Pendências",historico:"Histórico",rel:"Relatórios Estratégicos",ind:"Indicadores",cong:"Congregações",nomeados:"Nomeados",ordenados:"Ordenados",ate:"Atendimentos",ora:"Pedidos de Oração",aco:"Acompanhamentos",reg:"Registros Pastorais",pri:"Casos Prioritários",min:"Ministérios",soc:"Sociedades Internas",adm:"Administração",lid:"Liderança Ministerial",esc:"Escalas",prog:"Programações",lit:"Liturgia dos Cultos",vol:"Voluntários",calendario:"Calendário Geral",solicitacoes:"Solicitações de Agendamento",aprovacoes:"Aprovações Pendentes",confirmados:"Eventos Confirmados",recusados:"Eventos Recusados",reagendamentos:"Reagendamentos e Ajustes",ambientes:"Ambientes e Recursos",conflitos:"Conflitos de Agenda",config:"Configurações da Agenda",lista:"Lista de PGs",encontros:"Encontros",participantes:"Participantes",visitantes:"Visitantes",estudos:"Estudos",relatorios:"Relatórios",oracao:"Pedidos de Oração",man:"Manutenção",lim:"Limpeza e Conservação",sol:"Solicitações Operacionais",pat:"Patrimônio",pre:"Prestadores",todas:"Todas as Solicitações",pend:"Pendentes",and:"Em Andamento",conc:"Concluídas",hist:"Histórico",mod:"Por Módulo",exp:"Exportações",uni:"Por Congregação",res:"Por Responsável",cad:"Cadastro de Membros",bat:"Batismos",prof:"Profissões de Fé",trans:"Transferências",vis:"Visitantes"};
+const MN={admin:"Administrativo",fin:"Financeiro",jur:"Jurídico",conselho:"Conselho",proj:"Projetos",pastoral:"Pastoral",min:"Departamentos",agenda:"Agenda",pgs:"Pequenos Grupos",infra:"Infraestrutura e Conservação",dem:"Demandas",rel:"Relatórios",memb:"Membresia",cong:"Congregações",diac:"Junta Diaconal",area:"Área do Membro"};
+
+function go(id){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
+  const el=document.getElementById("v-"+id);
+  if(el){el.classList.remove("on");void el.offsetWidth;el.classList.add("on");}
+  else{
+    const p=id.split("-"),m=p[0],s=p.slice(1).join("-");
+    document.getElementById("g-title").textContent=SL[s]||id;
+    document.getElementById("g-sub").textContent=(MN[m]||m)+" — seção em implementação";
+    const gv=document.getElementById("v-generic");
+    gv.classList.remove("on");void gv.offsetWidth;gv.classList.add("on");
+  }
+  const c=CRUMB[id];
+  const cr=document.getElementById("crumb");
+  if(c){
+    if(c[0])cr.innerHTML=`<span class="c-mod">${c[0]}</span><span class="c-sep">/</span><span class="c-pg">${c[1]}</span><span class="c-sub">${c[2]}</span>`;
+    else cr.innerHTML=`<span class="c-pg">${c[1]}</span><span class="c-sub">${c[2]}</span>`;
+  }else{
+    const p=id.split("-"),m=p[0];
+    cr.innerHTML=`<span class="c-mod">${MN[m]||m}</span><span class="c-sep">/</span><span class="c-pg">${SL[p.slice(1).join("-")]||id}</span>`;
+  }
+  const mod=id.split("-")[0];
+  document.getElementById("band").style.setProperty("--mc",MC[mod]||"var(--gmd)");
+  document.querySelectorAll(".l1").forEach(e=>e.classList.remove("on"));
+  if(id==="geral")document.getElementById("l1-geral").classList.add("on");
+  document.querySelectorAll(".si").forEach(e=>{
+    e.classList.remove("on");
+    const fn=e.getAttribute("onclick");
+    if(fn&&fn.includes(`'${id}'`))e.classList.add("on");
+  });
+  document.getElementById("page").scrollTo({top:0,behavior:"smooth"});
+
+  // Auto-load Supabase data for connected views
+  if (SUPABASE_URL && VIEW_AUTOLOAD[id]) {
+    const cfg = VIEW_AUTOLOAD[id];
+    if (cfg && cfg.fn) cfg.fn();
+    else if (cfg) listarModulo(cfg.tab, cfg.id, cfg.filtro || {});
+  }
+
+  // Persistir rota atual para restauração após F5 (sessionStorage = isolado por aba)
+  try { sessionStorage.setItem("sipen_route", id); } catch(_) {}
+  try { history.replaceState(null, "", location.pathname + location.search + "#" + id); } catch(_) {}
+}
+
+function tog(mod){
+  const sub=document.getElementById("ms-"+mod);
+  const hdr=document.querySelector("#mw-"+mod+" .mhdr");
+  const isOpen=sub.classList.contains("open");
+  document.querySelectorAll(".msub").forEach(s=>s.classList.remove("open"));
+  document.querySelectorAll(".mhdr").forEach(h=>h.classList.remove("open"));
+  if(!isOpen){sub.classList.add("open");hdr.classList.add("open");go(mod+"-dash");}
+}
+
+function openModal(){
+  if (typeof window.abrirModalNovaDemanda === "function") {
+    window.abrirModalNovaDemanda();
+    return;
+  }
+  const modal = document.getElementById("modal");
+  if (modal) modal.classList.add("on");
+}
+function closeModal(){document.getElementById("modal").classList.remove("on")}
+function submitTask(){
+  const titulo = document.querySelector(".md .fi2[type=text]")?.value?.trim();
+  const modulo = document.querySelectorAll(".md .fi2")[1]?.value;
+  const prioridade = document.querySelectorAll(".md .fi2")[2]?.value;
+  const responsavel = document.querySelectorAll(".md .fi2")[3]?.value;
+  const data_conclusao = document.querySelectorAll(".md .fi2")[4]?.value;
+  const observacoes = document.querySelectorAll(".md textarea")[0]?.value;
+  if (!titulo) return T("Campo obrigatório","Informe o título da demanda");
+  const _taskPayload = {
+    titulo, area: modulo, prioridade,
+    responsavel: responsavel === "— Roteamento automático —" ? null : responsavel,
+    data_conclusao: data_conclusao || null,
+    descricao: observacoes || null,
+    status: "ABERTA"
+  };
+  apiWrite("create","DEMANDAS",_taskPayload).then(()=>{
+    closeModal();
+    T("✅ Demanda criada!","Registrada no Supabase");
+    loadKPIs();
+  }).catch(e=>T("Erro ao criar",e.message));
+}
+
+let tt;
+function T(t,s){
+  document.getElementById("toast-t").textContent=t;
+  document.getElementById("toast-s").textContent=s||"";
+  const el=document.getElementById("toast");
+  el.classList.add("on");clearTimeout(tt);
+  tt=setTimeout(()=>el.classList.remove("on"),3500);
+}
+
+  // Warning file:// protocol already handled in entrarNoSistema flow
+
+
+
