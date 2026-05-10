@@ -173,47 +173,6 @@ function tog(mod){
   if(!isOpen){sub.classList.add("open");hdr.classList.add("open");go(mod+"-dash");}
 }
 
-function openModal(){
-  if (typeof window.abrirModalNovaDemanda === "function") {
-    window.abrirModalNovaDemanda();
-    return;
-  }
-  const modal = document.getElementById("modal");
-  if (modal) modal.classList.add("on");
-}
-function closeModal(){document.getElementById("modal").classList.remove("on")}
-function submitTask(){
-  const titulo = document.querySelector(".md .fi2[type=text]")?.value?.trim();
-  const modulo = document.querySelectorAll(".md .fi2")[1]?.value;
-  const prioridade = document.querySelectorAll(".md .fi2")[2]?.value;
-  const responsavel = document.querySelectorAll(".md .fi2")[3]?.value;
-  const data_conclusao = document.querySelectorAll(".md .fi2")[4]?.value;
-  const observacoes = document.querySelectorAll(".md textarea")[0]?.value;
-  if (!titulo) return T("Campo obrigatório","Informe o título da demanda");
-  const _taskPayload = {
-    titulo, area: modulo, prioridade,
-    responsavel: responsavel === "— Roteamento automático —" ? null : responsavel,
-    data_conclusao: data_conclusao || null,
-    descricao: observacoes || null,
-    status: "ABERTA"
-  };
-  apiWrite("create","DEMANDAS",_taskPayload).then(()=>{
-    closeModal();
-    T("✅ Demanda criada!","Registrada no Supabase");
-    loadKPIs();
-  }).catch(e=>T("Erro ao criar",e.message));
-}
-
-let tt;
-function T(t,s){
-  document.getElementById("toast-t").textContent=t;
-  document.getElementById("toast-s").textContent=s||"";
-  const el=document.getElementById("toast");
-  el.classList.add("on");clearTimeout(tt);
-  tt=setTimeout(()=>el.classList.remove("on"),3500);
-}
-
   // Warning file:// protocol already handled in entrarNoSistema flow
-
 
 
