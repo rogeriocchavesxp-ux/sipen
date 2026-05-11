@@ -1,4 +1,31 @@
 
+/* ── Shell views síncronas ───────────────── */
+(function() {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "views/login.html", false);
+  xhr.send(null);
+  if (xhr.status >= 200 && xhr.status < 300)
+    document.body.insertAdjacentHTML("afterbegin", xhr.responseText);
+})();
+
+(function() {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "views/sidebar.html", false);
+  xhr.send(null);
+  if (xhr.status >= 200 && xhr.status < 300) {
+    var login = document.getElementById("login-screen");
+    if (login) login.insertAdjacentHTML("afterend", xhr.responseText);
+    else document.body.insertAdjacentHTML("afterbegin", xhr.responseText);
+  }
+})();
+
+(function() {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "views/modals.html?v=6.30.3", false);
+  xhr.send(null);
+  if (xhr.status >= 200 && xhr.status < 300)
+    document.body.insertAdjacentHTML("beforeend", xhr.responseText);
+})();
 
 /* ── Sidebar mobile toggle ───────────────── */
 function sbToggle(){
@@ -471,4 +498,3 @@ async function renderContratados() {
   }
 }
 VIEW_AUTOLOAD["conselho-contratados"] = { fn: () => renderContratados() };
-

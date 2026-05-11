@@ -1,3 +1,31 @@
+<!-- ════ MODAL NOVA TAREFA ════════════════════════════════ -->
+<div class="mo" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="md">
+    <div class="md-t">Nova Tarefa / Demanda</div>
+    <div class="md-s">Roteamento automático + notificação WhatsApp ao responsável</div>
+    <div class="fg"><label class="flb">Título</label><input class="fi2" type="text" placeholder="Descreva a tarefa..."></div>
+    <div class="frow">
+      <div class="fg"><label class="flb">Módulo</label>
+        <select class="fi2"><option>Infraestrutura</option><option>Administrativo</option><option>Jurídico</option><option>Ministerial</option><option>Agenda</option><option>Pastoral</option><option>Membresia</option><option>Demandas</option></select>
+      </div>
+      <div class="fg"><label class="flb">Prioridade</label>
+        <select class="fi2"><option>Alta</option><option selected>Média</option><option>Baixa</option></select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="flb">Responsável</label>
+        <select class="fi2"><option>— Roteamento automático —</option><option>João Costa</option><option>Ana Lima</option><option>Maria Souza</option></select>
+      </div>
+      <div class="fg"><label class="flb">Vencimento</label><input class="fi2" type="date" value="2026-04-20"></div>
+    </div>
+    <div class="fg"><label class="flb">Observações</label><textarea class="fi2" rows="3" placeholder="Detalhes adicionais..."></textarea></div>
+    <div class="ma">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-p" onclick="submitTask()">Criar + Notificar WhatsApp</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ MODAL: NOVO/EDITAR CONTRATO ══════════════════ -->
 <div id="modal-contrato" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)conFecharModal()">
   <div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)">

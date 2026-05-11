@@ -3,9 +3,16 @@
 ══════════════════════════════════════════ */
 let tt;
 function T(t, s) {
+  let el = document.getElementById("toast");
+  if (!el) {
+    el = document.createElement("div");
+    el.className = "toast";
+    el.id = "toast";
+    el.innerHTML = '<div id="toast-t"></div><div class="toast-s" id="toast-s"></div>';
+    document.body.appendChild(el);
+  }
   document.getElementById("toast-t").textContent = t;
   document.getElementById("toast-s").textContent = s || "";
-  const el = document.getElementById("toast");
   el.classList.add("on");
   clearTimeout(tt);
   tt = setTimeout(() => el.classList.remove("on"), 3500);
@@ -233,4 +240,3 @@ async function deletarRegistro(tab, recordId) {
 const styleEl = document.createElement("style");
 styleEl.textContent = "@keyframes spin{to{transform:rotate(360deg)}}";
 document.head.appendChild(styleEl);
-
