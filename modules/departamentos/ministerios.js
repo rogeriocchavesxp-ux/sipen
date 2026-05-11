@@ -24,6 +24,16 @@
     }
     return false;
   }
+  function _isAdminGeral() {
+    return USUARIO_ATUAL?.perfil === 'ADMINISTRADOR_GERAL';
+  }
+  function _isSupervisorDoMinisterio() {
+    return !!(_supervisorDoMinisterioAtual &&
+              _supervisorDoMinisterioAtual === USUARIO_ATUAL?.pessoa_id);
+  }
+  function _podeEditarMinisterio() {
+    return _isAdminGeral() || _isSupervisorDoMinisterio();
+  }
 
   /* ══ ESTADO ══════════════════════════════════════════════════ */
   let _ministerioAtual  = null;
@@ -114,7 +124,7 @@
     _ministerioAtual = null;
 
     const heroAct = document.getElementById('min-min-hero-act');
-    if (heroAct) heroAct.style.display = _isGestor() ? '' : 'none';
+    if (heroAct) heroAct.style.display = _isAdminGeral() ? '' : 'none';
 
     const grid = document.getElementById('min-min-grid');
     grid.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center;grid-column:1/-1">Carregando...</div>';
@@ -274,9 +284,15 @@
         : '';
 
       const temLideranca = m.supervisor || m.conselheiro || m.coordenador;
-      const btnEditar = _isGestor()
+      const btnEditar = _podeEditarMinisterio()
         ? `<button onclick="minMinEditar('${m.id}')" class="tbt" style="font-size:12px;padding:5px 12px">✏️ Editar</button>`
         : '';
+      const _badgePapel = () => {
+        if (_isAdminGeral())             return '<span style="font-size:11px;padding:2px 8px;background:var(--violetbg);color:var(--violet);border-radius:20px;font-weight:600">Admin Geral</span>';
+        if (_isSupervisorDoMinisterio()) return '<span style="font-size:11px;padding:2px 8px;background:rgba(74,156,245,0.12);color:var(--sky,#3a9af5);border-radius:20px;font-weight:600">Supervisor</span>';
+        if (USUARIO_ATUAL?.pessoa_id && USUARIO_ATUAL.pessoa_id === m.coordenador) return '<span style="font-size:11px;padding:2px 8px;background:rgba(58,170,92,0.12);color:var(--gmd);border-radius:20px;font-weight:600">Coordenador</span>';
+        return '';
+      };
 
       header.innerHTML = `
         <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
@@ -286,6 +302,7 @@
               <div style="font-size:18px;font-weight:800;color:var(--tx1)">${escapeHtml(m.nome)}
                 ${m.ativo === false ? '<span style="font-size:11px;padding:2px 8px;background:#fee2e2;color:var(--rose);border-radius:20px;margin-left:4px">Inativo</span>' : ''}
               </div>
+              ${_badgePapel()}
               ${btnEditar}
             </div>
             ${tipoLabel ? `<div style="font-size:12px;color:var(--tx3);margin-bottom:8px">${tipoLabel}</div>` : ''}
@@ -560,7 +577,7 @@
   }
 
   async function minMinNovo() {
-    if (!_isGestor()) return;
+    if (!_isAdminGeral()) return;
     _editandoId = null;
     const modal = _garantirModalMin();
     document.getElementById('min-min-modal-title').textContent = 'Novo Ministério';
@@ -569,12 +586,15 @@
     document.getElementById('mm-tipo').value  = '';
     document.getElementById('mm-ativo').checked = true;
     _showErr('mm-err', '');
+    // Supervisor só editável pelo Admin Geral
+    const supWrap = document.getElementById('mm-supervisor')?.closest('div');
+    if (supWrap) supWrap.style.display = _isAdminGeral() ? '' : 'none';
     modal.style.display = 'flex';
     await _preencherSelectsLideranca(null);
   }
 
   async function minMinEditar(id) {
-    if (!_isGestor()) return;
+    if (!_podeEditarMinisterio()) return;
     _editandoId = id;
     const modal = _garantirModalMin();
     document.getElementById('min-min-modal-title').textContent = 'Editar Ministério';
@@ -592,6 +612,9 @@
     document.getElementById('mm-desc').value    = m.descricao   || '';
     document.getElementById('mm-tipo').value    = m.tipo        || '';
     document.getElementById('mm-ativo').checked = m.ativo !== false;
+    // Supervisor só editável pelo Admin Geral
+    const supWrap = document.getElementById('mm-supervisor')?.closest('div');
+    if (supWrap) supWrap.style.display = _isAdminGeral() ? '' : 'none';
     modal.style.display = 'flex';
     await _preencherSelectsLideranca(m);
   }
@@ -607,11 +630,14 @@
       nome,
       descricao:   (document.getElementById('mm-desc').value || '').trim() || null,
       tipo:        document.getElementById('mm-tipo').value        || null,
-      supervisor:  document.getElementById('mm-supervisor').value  || null,
       conselheiro: document.getElementById('mm-conselheiro').value || null,
       coordenador: document.getElementById('mm-coordenador').value || null,
       ativo:       document.getElementById('mm-ativo').checked,
     };
+    // Supervisor só é enviado no payload se o usuário for Admin Geral
+    if (_isAdminGeral()) {
+      base.supervisor = document.getElementById('mm-supervisor').value || null;
+    }
     // Inclui campos de auditoria apenas no INSERT (não no PATCH)
     const payload = _editandoId ? base : Object.assign({}, base, _auditInsert());
 
