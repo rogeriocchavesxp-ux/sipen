@@ -1,0 +1,159 @@
+  <div class="view" id="v-min-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--violetbg);border-color:rgba(144,104,200,0.25)">◉</div>
+      <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Departamentos</div><div class="hero-dsc">Ministérios, Sociedades Internas e Departamentos Administrativos da IPPenha</div></div>
+      <div class="hero-act" id="min-btn-nova-escala-wrap"><button class="tbt pri" onclick="T('Nova escala','Programação ministerial')">+ Nova Escala</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--violet)">
+      <div class="ini on">Dashboard</div><div class="ini" onclick="go('min-min')">Ministérios</div>
+      <div class="ini" onclick="go('min-esc')">Escalas</div><div class="ini" onclick="go('min-prog')">Programações</div>
+      <div class="ini" onclick="go('min-lit')">Liturgia</div><div class="ini" onclick="go('min-vol')">Voluntários</div>
+    </div>
+    <div class="ct">
+      <!-- KPIs globais: visíveis apenas para gestores (admin, conselho, lider_area) -->
+      <div class="kpis c4" id="min-kpis-globais">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Ministérios ativos</div><div class="kpi-val" id="min-kpi-ativos">—</div><div class="kpi-d up" id="min-kpi-ativos-sub">carregando</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Voluntários</div><div class="kpi-val">342</div><div class="kpi-d up">▲ +14 este mês</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Escalas pendentes</div><div class="kpi-val">1</div><div class="kpi-d wa">Louvor Mai/26</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gmd);">✦</div><div class="kpi-body"><div class="kpi-lbl">Próximo culto</div><div class="kpi-val">Dom 14/04</div><div class="kpi-d nu">9h e 18h</div></div></div>
+      </div>
+      <!-- Grid de ministérios reais, carregado da mesma tabela usada em Ministerial > Ministérios -->
+      <div class="g3" id="min-dash-cards-admin">
+        <div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center;grid-column:1/-1">Carregando ministérios...</div>
+      </div>
+      <!-- Painel personalizado para líderes (oculto por padrão, renderizado por _minDashLider) -->
+      <div id="min-dash-cards-lider" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- ════ INFRAESTRUTURA ═══════════════════ -->
+
+  <div class="view" id="v-min-vol">
+    <div class="hero"><div class="hero-ic" style="background:rgba(139,111,212,0.12)">🙌</div><div><div class="hero-lbl">Departamentos</div><div class="hero-ttl">Voluntários</div><div class="hero-dsc">Cadastro de voluntários e ministérios</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo Voluntário</button></div></div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Voluntários <span class="cact" onclick="listarModulo('MEMBROS','vol-list')">↻ Atualizar</span></div>
+        <div id="vol-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PGS VISITANTES -->
+
+  <div class="view" id="v-min-min">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--violetbg)">⭐</div>
+      <div><div class="hero-lbl">Departamentos</div><div class="hero-ttl">Ministérios</div></div>
+      <div class="hero-act" id="min-min-hero-act" style="display:none">
+        <button class="tbt pri" onclick="minMinNovo()">+ Novo Ministério</button>
+      </div>
+    </div>
+    <!-- Painel: lista de ministérios -->
+    <div class="ct" id="min-min-painel-lista">
+      <div id="min-min-grid" class="g3" style="margin-top:4px">
+        <div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center;grid-column:1/-1">Carregando...</div>
+      </div>
+    </div>
+    <!-- Painel: detalhe do ministério -->
+    <div class="ct" id="min-min-painel-detalhe" style="display:none">
+      <div style="margin-bottom:12px">
+        <button class="tbt" onclick="minMinVoltarLista()">← Todos os Ministérios</button>
+      </div>
+      <div id="min-min-detalhe-header" class="card" style="margin-bottom:16px">
+        <div style="color:var(--tx3);font-size:13px;padding:16px 0">Carregando...</div>
+      </div>
+      <div class="card">
+        <div class="ctit">Membros
+          <span id="min-min-membro-count" style="color:var(--tx3);font-weight:400;font-size:12px"></span>
+          <span class="cact" id="min-min-btn-add-membro" style="display:none" onclick="minMinAdicionarMembro()">+ Adicionar</span>
+        </div>
+        <div id="min-min-membro-list"><div style="color:var(--tx3);font-size:13px;padding:16px 0">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="v-min-lid">
+    <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">👤</div><div><div class="hero-lbl">Departamentos</div><div class="hero-ttl">Liderança Ministerial</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo Líder</button></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Líderes <span class="cact" onclick="listarModulo('MEMBROS','min-lid-list')">↻</span></div><div id="min-lid-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-min-esc">
+    <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">📅</div><div><div class="hero-lbl">Departamentos</div><div class="hero-ttl">Escalas</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Nova Escala</button></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Escalas <span class="cact" onclick="listarModulo('AGENDA','min-esc-list',{organizador:'Min. Música'})">↻</span></div><div id="min-esc-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-min-prog">
+    <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">📋</div><div><div class="hero-lbl">Departamentos</div><div class="hero-ttl">Programações</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Nova Prog.</button></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Programações <span class="cact" onclick="listarModulo('AGENDA','min-prog-list')">↻</span></div><div id="min-prog-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-min-lit">
+    <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">🎵</div><div><div class="hero-lbl">Departamentos</div><div class="hero-ttl">Liturgia dos Cultos</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Novo Culto</button></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Liturgia <span class="cact" onclick="listarModulo('AGENDA','min-lit-list',{organizador:'Min. Música'})">↻</span></div><div id="min-lit-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <!-- SOCIEDADES INTERNAS -->
+
+  <div class="view" id="v-min-soc">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--violetbg)">🏛</div>
+      <div>
+        <div class="hero-lbl">Departamentos</div>
+        <div class="hero-ttl">Sociedades Internas</div>
+        <div class="hero-dsc">UPH, SAF, UMP, UPA, UCP — grupos organizados da IPPenha</div>
+      </div>
+    </div>
+    <div class="ct">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:20px">
+        <div class="card" style="cursor:default">
+          <div style="font-size:24px;margin-bottom:8px">👩</div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx1)">UPH</div>
+          <div style="font-size:11px;color:var(--tx3)">União Presbiteriana de Homens</div>
+        </div>
+        <div class="card" style="cursor:default">
+          <div style="font-size:24px;margin-bottom:8px">👩‍👧</div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx1)">SAF</div>
+          <div style="font-size:11px;color:var(--tx3)">Sociedade Auxiliadora Feminina</div>
+        </div>
+        <div class="card" style="cursor:default">
+          <div style="font-size:24px;margin-bottom:8px">🔥</div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx1)">UMP</div>
+          <div style="font-size:11px;color:var(--tx3)">União de Mocidade Presbiteriana</div>
+        </div>
+        <div class="card" style="cursor:default">
+          <div style="font-size:24px;margin-bottom:8px">🌟</div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx1)">UPA</div>
+          <div style="font-size:11px;color:var(--tx3)">União Presbiteriana de Adolescentes</div>
+        </div>
+        <div class="card" style="cursor:default">
+          <div style="font-size:24px;margin-bottom:8px">👶</div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx1)">UCP</div>
+          <div style="font-size:11px;color:var(--tx3)">União de Crianças Presbiterianas</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ctit">Em desenvolvimento</div>
+        <div style="color:var(--tx3);font-size:12px;padding:8px 0">O módulo completo de Sociedades Internas — com diretoria, membros e atividades — está em implementação.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEPARTAMENTOS ADMINISTRATIVOS -->
+
+  <div class="view" id="v-min-adm">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--violetbg)">🏢</div>
+      <div>
+        <div class="hero-lbl">Departamentos</div>
+        <div class="hero-ttl" id="dept-adm-titulo">Administração</div>
+        <div class="hero-dsc" id="dept-adm-subtitulo">Secretaria, Tesouraria, Patrimônio, Comunicação e Infraestrutura</div>
+      </div>
+      <div class="hero-act" id="dept-adm-hero-act"></div>
+    </div>
+    <div class="ct" id="dept-adm-lista">
+      <div style="color:var(--tx3);font-size:11.5px">Carregando...</div>
+    </div>
+    <div class="ct" id="dept-adm-detalhe" style="display:none"></div>
+  </div>
+
+  <!-- INFRAESTRUTURA -->

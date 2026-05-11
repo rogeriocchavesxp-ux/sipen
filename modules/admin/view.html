@@ -1,0 +1,403 @@
+  <div class="view" id="v-admin-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(201,168,76,0.12);border-color:rgba(201,168,76,0.28)">◆</div>
+      <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Administrativo</div><div class="hero-dsc">Secretaria, finanças, contratos, RH e documentação institucional da IPPenha</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="openModal()">+ Nova Tarefa</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--gold)">
+      <div class="ini on">Dashboard</div><div class="ini" onclick="go('admin-sec')">Secretaria</div>
+      <div class="ini" onclick="go('admin-fin')">Financeiro</div><div class="ini" onclick="go('admin-con')">Contratos</div>
+      <div class="ini" onclick="go('admin-rh')">RH</div>
+      <div class="ini" onclick="go('admin-est')">Estoque</div><div class="ini" onclick="go('admin-aud')">Auditoria</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Saldo financeiro</div><div class="kpi-val">R$ 13.600</div><div class="kpi-d up">▲ positivo</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,85,85,0.15);color:var(--rose);">◻</div><div class="kpi-body"><div class="kpi-lbl">Contratos a vencer</div><div class="kpi-val">3</div><div class="kpi-d wa">⚠ em 30 dias</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal);">◈</div><div class="kpi-body"><div class="kpi-lbl">Documentos (Abr)</div><div class="kpi-val">128</div><div class="kpi-d nu">arquivados</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Colaboradores</div><div class="kpi-val">24</div><div class="kpi-d up">▲ ativos</div></div></div>
+      </div>
+      <div class="alr alr-w"><span class="alr-i">⚠</span><div><strong>3 contratos</strong> vencem em 30 dias — Sonorização (30/04), Internet (15/05) e Seguro (20/05)</div><span class="alr-a" onclick="go('admin-con')">Ver →</span></div>
+      <div class="qa">
+        <div class="qai" onclick="go('admin-fin')"><div class="qi" style="background:rgba(61,160,85,0.14)">◇</div><div><div class="ql">Financeiro</div><div class="qs">lançamentos e fluxo</div></div></div>
+        <div class="qai" onclick="go('admin-con')"><div class="qi" style="background:var(--amberbg)">◈</div><div><div class="ql">Contratos</div><div class="qs">3 a vencer</div></div></div>
+        <div class="qai" onclick="go('admin-sec')"><div class="qi" style="background:var(--skybg)">§</div><div><div class="ql">Secretaria</div><div class="qs">cadastros e docs</div></div></div>
+        <div class="qai" onclick="go('admin-aud')"><div class="qi" style="background:var(--violetbg)">≡</div><div><div class="ql">Auditoria</div><div class="qs">log de ações</div></div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Lançamentos recentes</div>
+          <table class="tbl">
+            <thead><tr><th>Data</th><th>Descrição</th><th>Tipo</th><th>Valor</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="tdc">13/04</td><td class="tdp">Dízimos culto domingo</td><td class="pos">Receita</td><td class="mono pos">+R$ 8.420,00</td><td><span class="pill pd">Confirmado</span></td></tr>
+              <tr><td class="tdc">12/04</td><td class="tdp">Energia elétrica</td><td class="neg">Despesa</td><td class="mono neg">–R$ 1.240,00</td><td><span class="pill pd">Pago</span></td></tr>
+              <tr><td class="tdc">10/04</td><td class="tdp">Ofertas — missões</td><td class="pos">Receita</td><td class="mono pos">+R$ 3.100,00</td><td><span class="pill pd">Confirmado</span></td></tr>
+              <tr><td class="tdc">08/04</td><td class="tdp">Manutenção sonorização</td><td class="neg">Despesa</td><td class="mono neg">–R$ 890,00</td><td><span class="pill pn">Aprovação</span></td></tr>
+              <tr><td class="tdc">05/04</td><td class="tdp">Subsídio pastoral</td><td class="neg">Despesa</td><td class="mono neg">–R$ 4.800,00</td><td><span class="pill pd">Pago</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="ctit">Contratos monitorados</div>
+          <div class="trow"><div class="tdot" style="background:var(--rose)"></div><div class="tbody"><div class="ttitle">Manutenção Sonorização</div><div class="tmeta">AudioTec · R$ 890/mês · vence 30/04</div></div><span class="pill pl">Urgente</span></div>
+          <div class="trow"><div class="tdot" style="background:var(--amber)"></div><div class="tbody"><div class="ttitle">Internet fibra — sede</div><div class="tmeta">Telecom SP · R$ 320/mês · vence 15/05</div></div><span class="pill po">Atenção</span></div>
+          <div class="trow"><div class="tdot" style="background:var(--amber)"></div><div class="tbody"><div class="ttitle">Seguro predial</div><div class="tmeta">Seguradora A · R$ 450/mês · vence 20/05</div></div><span class="pill po">Atenção</span></div>
+          <div class="trow"><div class="tdot" style="background:var(--gmd)"></div><div class="tbody"><div class="ttitle">Aluguel salão</div><div class="tmeta">Imóveis Santos · R$ 2.500/mês · vence 30/08</div></div><span class="pill pg">Vigente</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ════ PROJETOS & ACOMPANHAMENTO ══════════════════════ -->
+
+  <div class="view" id="v-admin-est">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(201,168,76,0.12);border-color:rgba(201,168,76,0.28)">◫</div>
+      <div><div class="hero-lbl">Administrativo</div><div class="hero-ttl">Controle de Estoque</div><div class="hero-dsc">Itens, entradas, saídas, solicitações, inventário, alertas e integração com demandas, financeiro, infraestrutura e áreas ministeriais.</div></div>
+      <div class="hero-act"><button class="tbt" onclick="T('Nova solicitação','Fluxo: solicitação → verificação → aprovação → saída/compra')">+ Solicitação</button><button class="tbt pri" onclick="T('Nova movimentação','Registro de movimentação aberto')">+ Movimentação</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--gold)">
+      <div class="ini on">Visão Geral</div><div class="ini" onclick="T('Itens','Cadastro de itens com estoque mínimo')">Itens</div>
+      <div class="ini" onclick="T('Entradas','Compras e reposições')">Entradas</div><div class="ini" onclick="T('Saídas','Consumo vinculado a solicitações')">Saídas</div>
+      <div class="ini" onclick="T('Inventário','Conferências e ajustes auditáveis')">Inventário</div><div class="ini" onclick="T('Alertas','Itens abaixo do mínimo')">Alertas</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Itens cadastrados</div><div class="kpi-val">213</div><div class="kpi-d nu">12 categorias</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Abaixo do mínimo</div><div class="kpi-val">9</div><div class="kpi-d wa">⚠ requer compra</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Solicitações abertas</div><div class="kpi-val">14</div><div class="kpi-d nu">7 em análise</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gmd);">✦</div><div class="kpi-body"><div class="kpi-lbl">Saídas no mês</div><div class="kpi-val">86</div><div class="kpi-d up">▲ uso ministerial e operacional</div></div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Fluxo operacional obrigatório</div>
+          <div class="feed">
+            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--rose);color:var(--rose)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Solicitação</b> vinculada ao módulo de origem e ao solicitante</div><div class="ftm">rastreável · sem saída silenciosa</div></div></div>
+            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--amber);color:var(--amber)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Verificação de estoque</b> com alerta de estoque mínimo e bloqueio de inconsistência</div><div class="ftm">controle preventivo</div></div></div>
+            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--sky);color:var(--sky)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Aprovação</b> para saída imediata ou compra integrada ao financeiro</div><div class="ftm">documento opcional e centro de custo</div></div></div>
+            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--gmd);color:var(--gmd)"></div></div><div class="fb"><div class="ft"><b>Histórico completo</b> de movimentações, inventários e ajustes</div><div class="ftm">auditoria permanente</div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ctit">Itens críticos</div>
+          <table class="tbl">
+            <thead><tr><th>Item</th><th>Local</th><th>Saldo</th><th>Mínimo</th></tr></thead>
+            <tbody>
+              <tr><td class="tdp">Papel A4</td><td>Secretaria</td><td class="mono neg">3 resmas</td><td class="tdc">10</td></tr>
+              <tr><td class="tdp">Copo descartável</td><td>Copa</td><td class="mono neg">120 un.</td><td class="tdc">500</td></tr>
+              <tr><td class="tdp">Água mineral</td><td>Auditório</td><td class="mono">24 un.</td><td class="tdc">20</td></tr>
+              <tr><td class="tdp">Cabo P10</td><td>Som</td><td class="mono neg">1 un.</td><td class="tdc">3</td></tr>
+              <tr><td class="tdp">Material de limpeza</td><td>Bloco D</td><td class="mono">8 kits</td><td class="tdc">6</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="ctit">Itens em Estoque <span class="cact" onclick="listarModulo('ESTOQUE_ITENS','est-list')">↻ Atualizar</span></div>
+        <div id="est-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ CONSELHO NOMEADOS ═══════════════ -->
+
+  <div class="view" id="v-admin-fin">
+    <div class="hero"><div class="hero-ic" style="background:rgba(61,160,85,0.12)">💰</div><div><div class="hero-lbl">Administrativo</div><div class="hero-ttl">Financeiro</div><div class="hero-dsc">Lançamentos, receitas, despesas e fluxo de caixa</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('FINANCEIRO')">+ Novo Lançamento</button></div></div>
+    <div class="ct">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px" id="fin-kpis">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(61,160,85,0.12)">📈</div><div class="kpi-body"><div class="kpi-lbl">Receitas</div><div class="kpi-val" id="fin-rec">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,85,85,0.12)">📉</div><div class="kpi-body"><div class="kpi-lbl">Despesas</div><div class="kpi-val" id="fin-desp">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.12)">⚖️</div><div class="kpi-body"><div class="kpi-lbl">Saldo</div><div class="kpi-val" id="fin-saldo">—</div></div></div>
+      </div>
+      <div class="card">
+        <div class="ctit">Lançamentos <span class="cact" onclick="listarModulo('FINANCEIRO','fin-list')">↻ Atualizar</span></div>
+        <div id="fin-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ FINANCEIRO — MÓDULO COMPLETO ════════════════════ -->
+
+  <!-- Dashboard Financeiro -->
+
+  <div class="view" id="v-admin-demandas">
+    <div class="hero"><div class="hero-ic" style="background:rgba(224,85,85,0.12)">📋</div><div><div class="hero-lbl">Administrativo</div><div class="hero-ttl">Demandas Administrativas</div><div class="hero-dsc">Demandas do módulo Administrativo e visão geral de todas as demandas</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="ct">
+      <div class="card">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+          <div id="adm-dem-btn-adm" class="sni on" onclick="adminDemSetFiltro('Administrativo')">Secretaria</div>
+          <div class="sni-sep"></div>
+          <div id="adm-dem-btn-fin" class="sni"    onclick="adminDemSetFiltro('Financeiro')">Financeiras</div>
+          <div class="sni-sep"></div>
+          <div id="adm-dem-btn-inf" class="sni"    onclick="adminDemSetFiltro('Infraestrutura e Conservação')">Infraestrutura e Conservação</div>
+          <div class="sni-sep"></div>
+          <div id="adm-dem-btn-tod" class="sni"    onclick="adminDemSetFiltro('')">Todas</div>
+        </div>
+        <div class="ctit">Filtros <span class="cact" onclick="adminDemFiltrar()">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="admin-demandas-content-fstatus" onchange="adminDemFiltrar()" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
+          </select>
+          <select id="admin-demandas-content-fprio" onchange="adminDemFiltrar()" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as prioridades</option>
+            <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
+          </select>
+          <input id="admin-demandas-content-fbusca" type="text" placeholder="Buscar..." oninput="adminDemFiltrar()" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div id="admin-demandas-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- v-admin-demandas-adm: redirecionado para v-admin-demandas via go() override em demandas.js -->
+
+  <!-- ADMIN: CONTROLE DE ACESSO / ESTACIONAMENTO -->
+
+  <div class="view" id="v-admin-parking-controls">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(201,168,76,0.12);border-color:rgba(201,168,76,0.25)">🅿</div>
+      <div>
+        <div class="hero-lbl">Administrativo · Controle de Acesso</div>
+        <div class="hero-ttl">Controles do Estacionamento</div>
+        <div class="hero-dsc">Cadastro, entrega, devolução e bloqueio dos controles remotos Nice</div>
+      </div>
+      <div class="hero-act" style="gap:8px"><button class="tbt" onclick="cePrint()">🖨 Imprimir</button><button class="tbt pri" onclick="ceAbrirModal()">+ Novo Controle</button></div>
+    </div>
+    <div class="ct">
+      <div class="ce-kpis">
+        <div class="kpi ce-kpi"><div class="kpi-ico" style="background:rgba(201,168,76,.15);color:var(--gold)">▣</div><div class="kpi-body"><div class="kpi-lbl">Total</div><div class="kpi-val" id="ce-kpi-total">0</div><div class="kpi-d nu">cadastrados</div></div></div>
+        <div class="kpi ce-kpi"><div class="kpi-ico" style="background:rgba(74,156,245,.15);color:var(--blue)">◆</div><div class="kpi-body"><div class="kpi-lbl">Disponíveis</div><div class="kpi-val" id="ce-kpi-disponiveis">0</div><div class="kpi-d nu">em estoque</div></div></div>
+        <div class="kpi ce-kpi"><div class="kpi-ico" style="background:rgba(58,170,92,.15);color:var(--gr)">✓</div><div class="kpi-body"><div class="kpi-lbl">Entregues</div><div class="kpi-val" id="ce-kpi-entregues">0</div><div class="kpi-d up">com membro</div></div></div>
+        <div class="kpi ce-kpi"><div class="kpi-ico" style="background:rgba(224,85,85,.12);color:var(--rose)">!</div><div class="kpi-body"><div class="kpi-lbl">Alertas</div><div class="kpi-val" id="ce-kpi-alertas">0</div><div class="kpi-d wa">perdidos/bloqueados</div></div></div>
+      </div>
+      <div class="card">
+        <div class="ctit">Filtros <span class="cact" onclick="ceCarregar()">↻ Atualizar</span></div>
+        <div style="display:grid;grid-template-columns:repeat(5,minmax(140px,1fr));gap:8px;margin-top:10px">
+          <input id="ce-f-busca" oninput="ceRender()" placeholder="Buscar por nome..." style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+          <input id="ce-f-codigo" oninput="ceRender()" placeholder="Código do controle..." style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+          <select id="ce-f-status" onchange="ceRender()" style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+            <option value="">Todos os status</option>
+            <option value="disponivel">Disponível</option>
+            <option value="entregue">Entregue</option>
+            <option value="devolvido">Devolvido</option>
+            <option value="perdido">Perdido</option>
+            <option value="bloqueado">Bloqueado</option>
+          </select>
+          <select id="ce-f-pagamento" onchange="ceRender()" style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+            <option value="">Todos os pagamentos</option>
+            <option value="pago">Pago</option>
+            <option value="pendente">Pendente</option>
+          </select>
+          <input id="ce-f-marca" oninput="ceRender()" placeholder="Marca..." style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+        </div>
+      </div>
+      <div class="card">
+        <div id="ce-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PEQUENOS GRUPOS -->
+
+  <div class="view" id="v-admin-aud">
+    <div class="hero"><div class="hero-ic" style="background:rgba(139,111,212,0.12)">🔍</div><div><div class="hero-lbl">Administrativo</div><div class="hero-ttl">Auditoria</div><div class="hero-dsc">Log de ações e histórico do sistema</div></div></div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Log do Sistema <span class="cact" onclick="listarModulo('LOG_AUDITORIA','aud-list')">↻ Atualizar</span></div>
+        <div id="aud-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECRETARIA / MEMBROS -->
+
+  <div class="view" id="v-admin-sec">
+    <div class="hero"><div class="hero-ic" style="background:rgba(88,152,212,0.12)">📁</div><div><div class="hero-lbl">Administrativo</div><div class="hero-ttl">Secretaria e Cadastro</div><div class="hero-dsc">Cadastro geral de membros e documentos</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo Membro</button></div></div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Membros Cadastrados <span class="cact" onclick="listarModulo('MEMBROS','sec-list')">↻ Atualizar</span></div>
+        <div id="sec-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RH -->
+
+  <div class="view" id="v-admin-rh">
+    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">👥</div><div><div class="hero-lbl">Administrativo</div><div class="hero-ttl">RH / Gestão de Pessoas</div><div class="hero-dsc">Colaboradores, funções e equipe</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo Colaborador</button></div></div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Colaboradores <span class="cact" onclick="listarModulo('MEMBROS','rh-list')">↻ Atualizar</span></div>
+        <div id="rh-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MINISTERIAL / VOLUNTÁRIOS -->
+
+  <div class="view" id="v-admin-con">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--goldbg)">📄</div>
+      <div>
+        <div class="hero-lbl">Administrativo</div>
+        <div class="hero-ttl">Contratos</div>
+        <div class="hero-dsc">Contratos vigentes, vencimentos e renovações</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="conAbrirModal()">+ Novo Contrato</button>
+      </div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4" id="con-kpis"></div>
+      <div class="inav" style="--mc:var(--gold);margin-bottom:16px" id="con-tipo-tabs">
+        <div class="ini on" data-tipo="" onclick="conFiltrarTipo('')">Todos</div>
+        <div class="ini" data-tipo="Software" onclick="conFiltrarTipo('Software')">💻 Software</div>
+        <div class="ini" data-tipo="Imóvel" onclick="conFiltrarTipo('Imóvel')">🏢 Imóvel</div>
+        <div class="ini" data-tipo="Serviço" onclick="conFiltrarTipo('Serviço')">🛠 Serviço</div>
+        <div class="ini" data-tipo="Seguro" onclick="conFiltrarTipo('Seguro')">🛡 Seguro</div>
+        <div class="ini" data-tipo="Fornecimento" onclick="conFiltrarTipo('Fornecimento')">📦 Fornecimento</div>
+        <div class="ini" data-tipo="Outro" onclick="conFiltrarTipo('Outro')">📄 Outro</div>
+      </div>
+      <div class="card">
+        <div class="ctit">Contratos <span class="csub" id="con-count"></span><span class="cact" onclick="conRecarregar()">↻ Atualizar</span></div>
+        <div id="con-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTRATOS: view de detalhe -->
+
+  <div class="view" id="v-admin-con-detalhe"></div>
+
+  <div class="view" id="v-admin-doc">
+    <div class="hero"><div class="hero-ic" style="background:var(--goldbg)">🗂</div><div><div class="hero-lbl">Administrativo</div><div class="hero-ttl">Documentos</div><div class="hero-dsc">Documentos institucionais e arquivos</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo Doc.</button></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Documentos <span class="cact" onclick="listarModulo('DEMANDAS','admin-doc-list',{area:'Documentos'})">↻ Atualizar</span></div><div id="admin-doc-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <!-- JURÍDICO -->
+
+  <div class="view" id="v-pext-lista">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.14);border-color:rgba(74,156,245,0.25);color:var(--blue)">◈</div>
+      <div>
+        <div class="hero-lbl">Administrativo</div>
+        <div class="hero-ttl">Participantes Externos</div>
+        <div class="hero-dsc">Cadastro de pessoas que utilizam recursos da igreja sem vínculo de membresia — homeschool, acessos controlados, responsáveis e convidados.</div>
+      </div>
+    </div>
+    <div class="ct" id="pext-lista-content"><div class="card" style="padding:28px;color:var(--tx3)">Carregando...</div></div>
+  </div>
+
+  <!-- Cadastro de Pessoas -->
+
+  <div class="view" id="v-admin-pessoas">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(58,170,92,0.14);border-color:rgba(58,170,92,0.25);color:var(--gr)">👤</div>
+      <div>
+        <div class="hero-lbl">Administrativo</div>
+        <div class="hero-ttl">Cadastro de Pessoas</div>
+        <div class="hero-dsc">Registre qualquer pessoa no sistema — membro, participante externo, responsável ou visitante. O vínculo específico é definido depois do cadastro.</div>
+      </div>
+    </div>
+    <div class="ct">
+      <div class="card" style="max-width:640px">
+        <div class="ctit">Nova Pessoa</div>
+
+        <div id="admin-pessoas-ok"   style="display:none;margin-bottom:14px;padding:10px 14px;background:rgba(58,170,92,.12);border:1px solid rgba(58,170,92,.25);border-radius:6px;font-size:12px;color:var(--gr)"></div>
+        <div id="admin-pessoas-erro" style="display:none;margin-bottom:14px;padding:10px 14px;background:rgba(208,104,104,.12);border:1px solid rgba(208,104,104,.25);border-radius:6px;font-size:12px;color:var(--rose)"></div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+          <!-- Nome -->
+          <div style="grid-column:1/-1">
+            <label class="mem-lbl">Nome completo <span style="color:var(--rose)">*</span></label>
+            <input id="ap-nome" type="text" class="mem-inp" placeholder="Nome completo da pessoa">
+          </div>
+
+          <!-- E-mail / Celular -->
+          <div>
+            <label class="mem-lbl">E-mail</label>
+            <input id="ap-email" type="email" class="mem-inp" placeholder="email@exemplo.com">
+          </div>
+          <div>
+            <label class="mem-lbl">Celular</label>
+            <input id="ap-celular" type="tel" class="mem-inp" placeholder="(11) 99999-9999">
+          </div>
+
+          <!-- CPF / Nascimento -->
+          <div>
+            <label class="mem-lbl">CPF</label>
+            <input id="ap-cpf" type="text" class="mem-inp" placeholder="000.000.000-00">
+          </div>
+          <div>
+            <label class="mem-lbl">Data de nascimento</label>
+            <input id="ap-nasc" type="date" class="mem-inp">
+          </div>
+
+          <!-- Separador -->
+          <div style="grid-column:1/-1;border-top:1px solid var(--bd);margin:4px 0"></div>
+          <div style="grid-column:1/-1;font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:-4px">Endereço (opcional)</div>
+
+          <!-- Endereço -->
+          <div style="grid-column:1/-1">
+            <label class="mem-lbl">Logradouro</label>
+            <input id="ap-end" type="text" class="mem-inp" placeholder="Rua, Avenida, Travessa…">
+          </div>
+          <div>
+            <label class="mem-lbl">Número</label>
+            <input id="ap-num" type="text" class="mem-inp" placeholder="123">
+          </div>
+          <div>
+            <label class="mem-lbl">Complemento</label>
+            <input id="ap-comp" type="text" class="mem-inp" placeholder="Apto, bloco…">
+          </div>
+          <div>
+            <label class="mem-lbl">Bairro</label>
+            <input id="ap-bairro" type="text" class="mem-inp">
+          </div>
+          <div>
+            <label class="mem-lbl">CEP</label>
+            <input id="ap-cep" type="text" class="mem-inp" placeholder="00000-000">
+          </div>
+          <div>
+            <label class="mem-lbl">Cidade</label>
+            <input id="ap-cidade" type="text" class="mem-inp" value="São Paulo">
+          </div>
+          <div>
+            <label class="mem-lbl">Estado</label>
+            <select id="ap-uf" class="mem-inp">
+              <option value="SP" selected>SP</option>
+              <option value="AC">AC</option><option value="AL">AL</option><option value="AM">AM</option>
+              <option value="BA">BA</option><option value="CE">CE</option><option value="DF">DF</option>
+              <option value="ES">ES</option><option value="GO">GO</option><option value="MA">MA</option>
+              <option value="MG">MG</option><option value="MS">MS</option><option value="MT">MT</option>
+              <option value="PA">PA</option><option value="PB">PB</option><option value="PE">PE</option>
+              <option value="PI">PI</option><option value="PR">PR</option><option value="RJ">RJ</option>
+              <option value="RN">RN</option><option value="RO">RO</option><option value="RR">RR</option>
+              <option value="RS">RS</option><option value="SC">SC</option><option value="SE">SE</option>
+              <option value="TO">TO</option>
+            </select>
+          </div>
+
+          <!-- Observações -->
+          <div style="grid-column:1/-1">
+            <label class="mem-lbl">Observações</label>
+            <textarea id="ap-obs" class="mem-inp" rows="2" style="resize:vertical" placeholder="Informações adicionais…"></textarea>
+          </div>
+
+          <!-- Ações -->
+          <div style="grid-column:1/-1;display:flex;gap:10px;justify-content:flex-end;margin-top:4px">
+            <button class="btn-sec" onclick="adminPessoasLimpar()">Limpar</button>
+            <button id="ap-btn-salvar" class="btn-pri" onclick="adminPessoasSalvar()">Salvar Cadastro</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ CONFIG WHATSAPP ════════════════════════════════ -->

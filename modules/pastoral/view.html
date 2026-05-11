@@ -1,0 +1,321 @@
+  <div class="view" id="v-pastoral-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--tealbg);border-color:rgba(58,176,184,0.25)">🎙</div>
+      <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Pastoral</div><div class="hero-dsc">Escala de pregação, disponibilidade dos pastores e distribuição ministerial da IPPenha</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('pastoral-preg')" style="margin-right:6px">Ver Escala →</button><button class="tbt pri" onclick="go('pastoral-disp')">+ Disponibilidade</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--teal)">
+      <div class="ini on">Dashboard</div>
+      <div class="ini" onclick="go('pastoral-preg')">Escala de Pregação</div>
+      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
+      <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
+      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
+      <div class="ini" onclick="go('pastoral-relatorios')">Relatórios</div>
+    </div>
+    <div class="ct">
+      <div id="pd-content"><div style="text-align:center;padding:40px;color:var(--teal);font-size:12px">⏳ Carregando dados pastorais...</div></div>
+    </div>
+  </div>
+
+  <div class="view" id="v-pastoral-preg">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--tealbg);border-color:rgba(58,176,184,0.25)">🎙</div>
+      <div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Escala de Pregação</div><div class="hero-dsc">Planejamento contínuo, distribuição equilibrada e visualização estratégica da escala pastoral</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="ep_novaEscala()">+ Nova Escala</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--teal)">
+      <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
+      <div class="ini on">Escala de Pregação</div>
+      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
+      <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
+      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
+      <div class="ini" onclick="go('pastoral-relatorios')">Relatórios</div>
+    </div>
+    <div class="ct">
+      <!-- Barra de controles -->
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding:12px 14px;background:var(--bg-card);border:1px solid var(--bd1);border-radius:8px">
+        <!-- Seletor de modo -->
+        <div style="display:flex;border:1px solid var(--bd2);border-radius:6px;overflow:hidden;flex-shrink:0">
+          <button id="ep-btn-mensal"      onclick="ep_setModo('mensal')"      style="padding:6px 12px;border:none;cursor:pointer;font-size:11.5px;font-family:var(--sans);transition:all .15s">Mensal</button>
+          <button id="ep-btn-trimestral"  onclick="ep_setModo('trimestral')"  style="padding:6px 12px;border:none;border-left:1px solid var(--bd2);cursor:pointer;font-size:11.5px;font-family:var(--sans);transition:all .15s">3 Meses</button>
+          <button id="ep-btn-semestral"   onclick="ep_setModo('semestral')"   style="padding:6px 12px;border:none;border-left:1px solid var(--bd2);cursor:pointer;font-size:11.5px;font-family:var(--sans);transition:all .15s">Semestral</button>
+          <button id="ep-btn-lista"       onclick="ep_setModo('lista')"       style="padding:6px 12px;border:none;border-left:1px solid var(--bd2);cursor:pointer;font-size:11.5px;font-family:var(--sans);transition:all .15s">☰ Lista</button>
+        </div>
+        <!-- Navegação de mês -->
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <button class="tbt" onclick="ep_mesAnterior()" style="padding:5px 10px">← Anterior</button>
+          <span id="ep-mes-label" style="min-width:160px;text-align:center;font-size:12px;font-weight:600;color:var(--tx1)">carregando...</span>
+          <button class="tbt" onclick="ep_mesProximo()" style="padding:5px 10px">Próximo →</button>
+        </div>
+        <!-- Filtro por pastor -->
+        <select id="ep-pastor-filter" onchange="ep_filtrarPastor()" style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:11.5px;padding:5px 10px;outline:none;height:32px;font-family:var(--sans)">
+          <option value="">Todos os pastores</option>
+        </select>
+        <button class="tbt" onclick="ep_render()" style="margin-left:auto;padding:5px 10px;flex-shrink:0">↻</button>
+      </div>
+      <!-- Legenda de tipos -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx2)"><span style="display:inline-block;width:10px;height:10px;background:#4a9cf5;border-radius:2px"></span>☀️ Domingo Manhã</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx2)"><span style="display:inline-block;width:10px;height:10px;background:#8b6fd4;border-radius:2px"></span>🌙 Domingo Noite</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx2)"><span style="display:inline-block;width:10px;height:10px;background:#2ab5c0;border-radius:2px"></span>🙏 Conexão com Deus</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tx2)"><span style="display:inline-block;width:10px;height:10px;background:#d4a843;border-radius:2px"></span>✝️ Tarde da Esperança</div>
+        <div style="margin-left:auto;font-size:10px;color:var(--tx3)">🟢 hoje · clique no culto para editar</div>
+      </div>
+      <!-- Área principal de conteúdo -->
+      <div id="ep-conteudo"></div>
+      <!-- Indicadores -->
+      <div id="ep-indicadores" style="margin-top:16px"></div>
+      <!-- Modal compartilhado -->
+      <div id="ep-modal" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- ════ MINISTERIAL ══════════════════════ -->
+
+  <div class="view" id="v-pastoral-demandas">
+    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🙏</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Solicitações e Demandas</div><div class="hero-dsc">Todas as demandas e as direcionadas ao módulo Pastoral</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="ct">
+      <div class="card">
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
+          <div class="sni on">Todas</div>
+          <div class="sni-sep"></div>
+          <div class="sni" onclick="go('pastoral-demandas-pas')">Pastoral</div>
+        </div>
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('pastoral-demandas-content')">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="pastoral-demandas-content-fstatus" onchange="demFiltrar('pastoral-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
+          </select>
+          <select id="pastoral-demandas-content-fcat" onchange="demFiltrar('pastoral-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as categorias</option>
+            <option>Conselho</option><option>Agendamentos</option><option>Manutenção</option><option>Limpeza e Organização</option><option>Logística</option><option>Financeiro</option><option>Comunicação e Divulgação</option><option>Secretaria</option><option>Cadastro</option><option>Oração e Aconselhamento</option><option>Visitação</option><option>Apoio ao Culto</option><option>Ensino (EBT)</option><option>Ação Social / Hebron</option><option>Administrativo Geral</option>
+          </select>
+          <select id="pastoral-demandas-content-fprio" onchange="demFiltrar('pastoral-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as prioridades</option>
+            <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
+          </select>
+          <input id="pastoral-demandas-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('pastoral-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div id="pastoral-demandas-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASTORAL: DEMANDAS PASTORAIS (aba filtrada) -->
+
+  <div class="view" id="v-pastoral-demandas-pas">
+    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🙏</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Demandas Pastorais</div><div class="hero-dsc">Demandas direcionadas ao módulo Pastoral</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="ct">
+      <div class="card">
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
+          <div class="sni" onclick="go('pastoral-demandas')">Todas</div>
+          <div class="sni-sep"></div>
+          <div class="sni on">Pastoral</div>
+        </div>
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('pastoral-demandas-pas-content',{area:'Pastoral'})">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="pastoral-demandas-pas-content-fstatus" onchange="demFiltrar('pastoral-demandas-pas-content',{area:'Pastoral'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
+          </select>
+          <select id="pastoral-demandas-pas-content-fprio" onchange="demFiltrar('pastoral-demandas-pas-content',{area:'Pastoral'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as prioridades</option>
+            <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
+          </select>
+          <input id="pastoral-demandas-pas-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('pastoral-demandas-pas-content',{area:'Pastoral'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div id="pastoral-demandas-pas-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JURÍDICO: SOLICITAÇÕES E DEMANDAS (com abas) -->
+
+  <div class="view" id="v-pastoral-ate">
+    <div class="hero"><div class="hero-ic" style="background:var(--tealbg)">🤝</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Atendimentos</div><div class="hero-dsc">Registro de atendimentos pastorais</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo Atendimento</button></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Atendimentos <span class="cact" onclick="listarModulo('DEMANDAS','pastoral-ate-list',{area:'Pastoral'})">↻</span></div><div id="pastoral-ate-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-pastoral-ora">
+    <div class="hero"><div class="hero-ic" style="background:var(--tealbg)">🙏</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Pedidos de Oração</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo Pedido</button></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Pedidos de Oração <span class="cact" onclick="listarModulo('DEMANDAS','pastoral-ora-list',{area:'Pastoral'})">↻</span></div><div id="pastoral-ora-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-pastoral-aco">
+    <div class="hero"><div class="hero-ic" style="background:var(--tealbg)">👣</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Acompanhamentos</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo</button></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Membros em Acompanhamento <span class="cact" onclick="listarModulo('MEMBROS','pastoral-aco-list')">↻</span></div><div id="pastoral-aco-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-pastoral-reg">
+    <div class="hero"><div class="hero-ic" style="background:var(--tealbg)">📓</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Registros Pastorais</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo Registro</button></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Registros <span class="cact" onclick="listarModulo('DEMANDAS','pastoral-reg-list',{area:'Pastoral'})">↻</span></div><div id="pastoral-reg-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-pastoral-pri">
+    <div class="hero"><div class="hero-ic" style="background:var(--rosebg)">🚨</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Casos Prioritários</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo</button></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Prioritários <span class="cact" onclick="listarModulo('DEMANDAS','pastoral-pri-list',{area:'Pastoral',prioridade:'Alta'})">↻</span></div><div id="pastoral-pri-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <!-- DISPONIBILIDADE PREGAÇÃO -->
+
+  <div class="view" id="v-pastoral-disp">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--tealbg);border-color:rgba(58,176,184,0.25)">📅</div>
+      <div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Disponibilidade Pregação</div><div class="hero-dsc">Informe suas datas disponíveis para pregar. A Escala de Pregação usará essas informações para sugerir pastores disponíveis.</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="dp_abrirFormDisp()">+ Informar Disponibilidade</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--teal)">
+      <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
+      <div class="ini" onclick="go('pastoral-preg')">Escala de Pregação</div>
+      <div class="ini on">Disponibilidade</div>
+      <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
+      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
+      <div class="ini" onclick="go('pastoral-relatorios')">Relatórios</div>
+    </div>
+    <div class="ct">
+      <!-- Tabs -->
+      <div style="display:flex;border:1px solid var(--bd2);border-radius:7px;overflow:hidden;margin-bottom:16px;width:fit-content">
+        <button id="dp-tab-btn-minha" onclick="dp_setTab('minha')" style="padding:7px 16px;border:none;cursor:pointer;font-size:11.5px;font-family:var(--sans);background:var(--teal);color:#fff;font-weight:600">Minha Disponibilidade</button>
+        <button id="dp-tab-btn-admin" onclick="dp_setTab('admin')" style="padding:7px 16px;border:none;border-left:1px solid var(--bd2);cursor:pointer;font-size:11.5px;font-family:var(--sans);background:var(--bg-card);color:var(--tx2)">Visão Administrativa</button>
+        <button id="dp-tab-btn-relatorio" onclick="dp_setTab('relatorio')" style="padding:7px 16px;border:none;border-left:1px solid var(--bd2);cursor:pointer;font-size:11.5px;font-family:var(--sans);background:var(--bg-card);color:var(--tx2)">Relatório por Data</button>
+      </div>
+
+      <!-- Tab: Minha Disponibilidade -->
+      <div id="dp-tab-minha">
+        <!-- KPIs rápidos -->
+        <div class="kpis c4" style="margin-bottom:14px">
+          <div class="kpi"><div class="kpi-ico" style="background:rgba(58,176,184,0.15);color:var(--teal)">📅</div><div class="kpi-body"><div class="kpi-lbl">Disponibilidades enviadas</div><div class="kpi-val" id="dp-kpi-enviadas">—</div><div class="kpi-d nu" id="dp-kpi-enviadas-d">este mês</div></div></div>
+          <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gmd)">✅</div><div class="kpi-body"><div class="kpi-lbl">Confirmadas</div><div class="kpi-val" id="dp-kpi-confirmadas">—</div><div class="kpi-d up" id="dp-kpi-confirmadas-d">pela equipe</div></div></div>
+          <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:#4a9cf5">🎙</div><div class="kpi-body"><div class="kpi-lbl">Na Escala</div><div class="kpi-val" id="dp-kpi-escala">—</div><div class="kpi-d nu">próximos 60 dias</div></div></div>
+          <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold)">⏳</div><div class="kpi-body"><div class="kpi-lbl">Pendentes</div><div class="kpi-val" id="dp-kpi-pendentes">—</div><div class="kpi-d wa">sem confirmação</div></div></div>
+        </div>
+        <!-- Seletor de mês -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+          <button class="tbt" onclick="dp_mesAnterior()" style="padding:5px 10px">← Anterior</button>
+          <span id="dp-mes-label" style="min-width:160px;text-align:center;font-size:12px;font-weight:600;color:var(--tx1)">carregando...</span>
+          <button class="tbt" onclick="dp_mesProximo()" style="padding:5px 10px">Próximo →</button>
+          <select id="dp-pastor-sel" onchange="dp_render()" style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:11.5px;padding:5px 10px;outline:none;height:32px;font-family:var(--sans);margin-left:auto"></select>
+        </div>
+        <!-- Grade de disponibilidades -->
+        <div id="dp-grade"></div>
+      </div>
+
+      <!-- Tab: Visão Administrativa -->
+      <div id="dp-tab-admin" style="display:none">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;padding:12px 14px;background:var(--bg-card);border:1px solid var(--bd1);border-radius:8px">
+          <select id="dp-admin-mes" onchange="dp_renderAdmin()" style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:11.5px;padding:5px 10px;outline:none;height:32px;font-family:var(--sans)"></select>
+          <select id="dp-admin-pastor" onchange="dp_renderAdmin()" style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:11.5px;padding:5px 10px;outline:none;height:32px;font-family:var(--sans)"><option value="">Todos os pastores</option></select>
+          <select id="dp-admin-culto" onchange="dp_renderAdmin()" style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:11.5px;padding:5px 10px;outline:none;height:32px;font-family:var(--sans)">
+            <option value="">Todos os cultos</option>
+            <option value="domingo_manha">☀️ Domingo Manhã</option>
+            <option value="domingo_noite">🌙 Domingo Noite</option>
+            <option value="conexao_com_deus">🙏 Conexão com Deus</option>
+            <option value="tarde_da_esperanca">✝️ Tarde da Esperança</option>
+          </select>
+          <button class="tbt" onclick="dp_renderAdmin()" style="padding:5px 10px;margin-left:auto">↻ Atualizar</button>
+          <button class="tbt" onclick="dp_exportar()" style="padding:5px 10px">⬇ Exportar</button>
+        </div>
+        <div id="dp-admin-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+
+      <!-- Tab: Relatório por Data -->
+      <div id="dp-tab-relatorio" style="display:none">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+          <select id="dp-rel-mes" onchange="dp_renderRelatorio()" style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:11.5px;padding:5px 10px;outline:none;height:32px;font-family:var(--sans)"></select>
+          <button class="tbt" onclick="dp_renderRelatorio()" style="padding:5px 10px">↻ Atualizar</button>
+        </div>
+        <div id="dp-rel-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+
+      <!-- Modal -->
+      <div id="dp-modal" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- PASTORAL: CADASTRO DE PASTORES -->
+
+  <div class="view" id="v-pastoral-pastores">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--tealbg);border-color:rgba(58,176,184,0.25)">👥</div>
+      <div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Cadastro de Pastores</div><div class="hero-dsc">Gerenciamento do corpo pastoral — cadastro, ativação e dados dos pregadores</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="ep_novoPastor()">+ Novo Pastor</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--teal)">
+      <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
+      <div class="ini" onclick="go('pastoral-preg')">Escala de Pregação</div>
+      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
+      <div class="ini on">Pastores</div>
+      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
+      <div class="ini" onclick="go('pastoral-relatorios')">Relatórios</div>
+    </div>
+    <div class="ct">
+      <div id="pd-pastores-content"><div style="color:var(--tx3);font-size:11.5px;padding:20px 0">Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- PASTORAL: HISTÓRICO DE PREGAÇÕES -->
+
+  <div class="view" id="v-pastoral-historico">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--tealbg);border-color:rgba(58,176,184,0.25)">📜</div>
+      <div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Histórico de Pregações</div><div class="hero-dsc">Registro histórico de todas as pregações realizadas por data, culto e pastor</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('pastoral-preg')">← Escala</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--teal)">
+      <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
+      <div class="ini" onclick="go('pastoral-preg')">Escala de Pregação</div>
+      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
+      <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
+      <div class="ini on">Histórico</div>
+      <div class="ini" onclick="go('pastoral-relatorios')">Relatórios</div>
+    </div>
+    <div class="ct">
+      <div id="pd-historico-content"><div style="color:var(--tx3);font-size:11.5px;padding:20px 0">Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- PASTORAL: RELATÓRIOS -->
+
+  <div class="view" id="v-pastoral-relatorios">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--tealbg);border-color:rgba(58,176,184,0.25)">📊</div>
+      <div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Relatórios Pastorais</div><div class="hero-dsc">Análise de distribuição, frequência e cobertura das pregações por período</div></div>
+      <div class="hero-act"><button class="tbt" onclick="dp_exportar()">⬇ Exportar CSV</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--teal)">
+      <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
+      <div class="ini" onclick="go('pastoral-preg')">Escala de Pregação</div>
+      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
+      <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
+      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
+      <div class="ini on">Relatórios</div>
+    </div>
+    <div class="ct">
+      <div id="pd-relatorios-content"><div style="color:var(--tx3);font-size:11.5px;padding:20px 0">Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- REDE DE CUIDADO PASTORAL -->
+
+  <div class="view" id="v-pastoral-rede">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--tealbg);border-color:rgba(58,176,184,0.25)">🌿</div>
+      <div>
+        <div class="hero-lbl">Pastoral</div>
+        <div class="hero-ttl">Rede de Cuidado</div>
+        <div class="hero-dsc">Acompanhamento pastoral estruturado em rede — cada líder cuida de até 5 pessoas.</div>
+      </div>
+    </div>
+    <div class="ct">
+      <div id="rc-modulo">
+        <div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Carregando…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MINISTERIAL -->

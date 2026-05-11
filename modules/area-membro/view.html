@@ -1,0 +1,263 @@
+  <div class="view" id="v-area-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(58,170,92,0.12);border-color:rgba(58,170,92,0.25)">⛪</div>
+      <div>
+        <div class="hero-lbl">Área do Membro</div>
+        <div class="hero-ttl" id="area-saudacao">Bem-vindo!</div>
+        <div class="hero-dsc">Suas atividades, escalas, solicitações e avisos</div>
+      </div>
+      <div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Solicitação</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--gr)">
+      <div class="ini on">Início</div>
+      <div class="ini" onclick="go('area-agenda')">Agenda</div>
+      <div class="ini" onclick="go('area-min')">Ministérios</div>
+      <div class="ini" onclick="go('area-pgs')">Meu PG</div>
+      <div class="ini" onclick="go('area-dem')">Solicitações</div>
+      <div class="ini" onclick="go('memb-aniv')">Aniversariantes</div>
+    </div>
+    <div class="ct">
+
+      <!-- 1. MINHA SEMANA -->
+      <div class="sh"><span class="sh-t">Minha Semana</span><span class="sh-s">próximos cultos e eventos</span></div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="ctit">Próximos Eventos <span class="cact" onclick="_areaCarregarSemana()">↻ Atualizar</span></div>
+        <div id="area-dash-semana"><div style="color:var(--tx3);font-size:11.5px;padding:16px 0">Carregando...</div></div>
+      </div>
+
+      <!-- 2. MINHAS ESCALAS -->
+      <div id="area-escalas-secao">
+        <div class="sh"><span class="sh-t">Minhas Escalas</span><span class="sh-s">sua programação de serviço</span></div>
+        <div class="card" style="margin-bottom:20px">
+          <div class="ctit">Escalas de Serviço <span class="cact" onclick="_areaCarregarEscalas()">↻ Atualizar</span></div>
+          <div id="area-dash-escalas"><div style="color:var(--tx3);font-size:11.5px;padding:16px 0">Carregando...</div></div>
+        </div>
+      </div>
+
+      <!-- 3+4. MEUS MINISTÉRIOS + MINHAS SOLICITAÇÕES -->
+      <div class="g2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="ctit">Meus Ministérios <span class="cact" onclick="_areaCarregarMinisterios()">↻ Atualizar</span></div>
+          <div id="area-dash-ministerios"><div style="color:var(--tx3);font-size:11.5px;padding:16px 0">Carregando...</div></div>
+        </div>
+        <div class="card">
+          <div class="ctit">Minhas Solicitações Recentes <span class="cact" onclick="area_dash_load()">↻ Atualizar</span></div>
+          <div id="area-dash-dem"><div style="color:var(--tx3);font-size:11.5px;padding:16px 0">Carregando...</div></div>
+        </div>
+      </div>
+
+      <!-- 5. AVISOS E COMUNICADOS -->
+      <div class="sh"><span class="sh-t">Avisos e Comunicados</span><span class="sh-s">informações da IPPenha</span></div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="ctit">Comunicados <span class="cact" onclick="_areaCarregarAvisos()">↻ Atualizar</span></div>
+        <div id="area-dash-avisos"><div style="color:var(--tx3);font-size:11.5px;padding:16px 0">Carregando...</div></div>
+      </div>
+
+      <!-- 6. ACESSO RÁPIDO (inclui Aniversariantes) -->
+      <div class="sh"><span class="sh-t">Acesso Rápido</span><span class="sh-s">dois cliques para qualquer área</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:22px">
+        <div onclick="go('area-agenda')" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:20px 14px;cursor:pointer;text-align:center;transition:border-color .15s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--bd2)'">
+          <div style="font-size:28px;margin-bottom:8px">🗓</div>
+          <div style="font-size:12px;font-weight:600;color:var(--tx1)">Agenda</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:3px">eventos e cultos</div>
+        </div>
+        <div onclick="go('area-min')" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:20px 14px;cursor:pointer;text-align:center;transition:border-color .15s" onmouseover="this.style.borderColor='var(--violet)'" onmouseout="this.style.borderColor='var(--bd2)'">
+          <div style="font-size:28px;margin-bottom:8px">◉</div>
+          <div style="font-size:12px;font-weight:600;color:var(--tx1)">Ministérios</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:3px">serviço e escala</div>
+        </div>
+        <div onclick="go('area-pgs')" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:20px 14px;cursor:pointer;text-align:center;transition:border-color .15s" onmouseover="this.style.borderColor='var(--gbr)'" onmouseout="this.style.borderColor='var(--bd2)'">
+          <div style="font-size:28px;margin-bottom:8px">⌂</div>
+          <div style="font-size:12px;font-weight:600;color:var(--tx1)">Meu PG</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:3px">encontros e estudos</div>
+        </div>
+        <div onclick="go('area-dem')" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:20px 14px;cursor:pointer;text-align:center;transition:border-color .15s" onmouseover="this.style.borderColor='var(--rose)'" onmouseout="this.style.borderColor='var(--bd2)'">
+          <div style="font-size:28px;margin-bottom:8px">📋</div>
+          <div style="font-size:12px;font-weight:600;color:var(--tx1)">Solicitações</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:3px">pedidos e demandas</div>
+        </div>
+        <div onclick="go('agenda-confirmados')" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:20px 14px;cursor:pointer;text-align:center;transition:border-color .15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--bd2)'">
+          <div style="font-size:28px;margin-bottom:8px">🎶</div>
+          <div style="font-size:12px;font-weight:600;color:var(--tx1)">Cultos</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:3px">programação</div>
+        </div>
+        <div onclick="go('memb-aniv')" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:20px 14px;cursor:pointer;text-align:center;transition:border-color .15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--bd2)'">
+          <div style="font-size:28px;margin-bottom:8px">🎂</div>
+          <div style="font-size:12px;font-weight:600;color:var(--tx1)">Aniversariantes</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:3px">do mês</div>
+        </div>
+      </div>
+
+      <!-- KPIs ocultos mantidos para compatibilidade com demandas.js (_area_kpi_load) -->
+      <div style="display:none">
+        <span id="area-kpi-evento"></span>
+        <span id="area-kpi-evento-data"></span>
+        <span id="area-kpi-pg"></span>
+        <span id="area-kpi-dem"></span>
+        <span id="area-kpi-min"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="v-area-agenda">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(42,181,192,0.12);border-color:rgba(42,181,192,0.25)">🗓</div>
+      <div>
+        <div class="hero-lbl">Área do Membro</div>
+        <div class="hero-ttl">Agenda</div>
+        <div class="hero-dsc">Próximos eventos, cultos e compromissos da IPPenha</div>
+      </div>
+      <div class="hero-act"><button class="tbt" onclick="go('area-dash')">← Voltar</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--gr)">
+      <div class="ini" onclick="go('area-dash')">Início</div>
+      <div class="ini on">Agenda</div>
+      <div class="ini" onclick="go('area-min')">Ministérios</div>
+      <div class="ini" onclick="go('area-pgs')">Meu PG</div>
+      <div class="ini" onclick="go('area-dem')">Solicitações</div>
+    </div>
+    <div class="ct">
+      <div class="alr alr-w"><div class="alr-i">ℹ</div><div>Esta seção exibe os próximos eventos confirmados da igreja. Para solicitar um agendamento ou espaço, use <strong>+ Nova Solicitação</strong> no painel principal.</div></div>
+      <div class="card">
+        <div class="ctit">Próximos Eventos <span class="cact" onclick="go('agenda-confirmados')">ver todos →</span></div>
+        <div id="area-agenda-list"><div style="color:var(--tx3);font-size:11.5px;padding:16px 0">Carregando eventos...</div></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="ctit">Acesso Rápido à Agenda</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+          <button class="tbt" onclick="go('agenda-confirmados')">📅 Eventos Confirmados</button>
+          <button class="tbt" onclick="go('agenda-calendario')">🗓 Calendário Geral</button>
+          <button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Solicitar Agendamento</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="v-area-min">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(139,111,212,0.12);border-color:rgba(139,111,212,0.25)">◉</div>
+      <div>
+        <div class="hero-lbl">Área do Membro</div>
+        <div class="hero-ttl">Meus Ministérios</div>
+        <div class="hero-dsc">Ministérios e escalas de serviço na IPPenha</div>
+      </div>
+      <div class="hero-act"><button class="tbt" onclick="go('area-dash')">← Voltar</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--gr)">
+      <div class="ini" onclick="go('area-dash')">Início</div>
+      <div class="ini" onclick="go('area-agenda')">Agenda</div>
+      <div class="ini on">Ministérios</div>
+      <div class="ini" onclick="go('area-pgs')">Meu PG</div>
+      <div class="ini" onclick="go('area-dem')">Solicitações</div>
+    </div>
+    <div class="ct">
+      <div class="alr alr-w"><div class="alr-i">ℹ</div><div>Veja abaixo os ministérios ativos da IPPenha. Para participar de um ministério, entre em contato com o líder responsável ou solicite via <strong>+ Nova Solicitação</strong>.</div></div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Ministérios Ativos</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+            <div style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:10px 12px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="color:var(--violet)">♪</span><strong style="font-size:12px">Louvor e Adoração</strong></div>
+              <div style="font-size:10.5px;color:var(--tx3)">Líder: Ana Lima · 28 membros · Ensaios: Sáb 19h</div>
+            </div>
+            <div style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:10px 12px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="color:var(--teal)">◈</span><strong style="font-size:12px">O Movimento (UMP)</strong></div>
+              <div style="font-size:10.5px;color:var(--tx3)">Líder: Lucas Ferreira · 89 membros · Sáb 19h30</div>
+            </div>
+            <div style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:10px 12px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="color:var(--rose)">✦</span><strong style="font-size:12px">SAF</strong></div>
+              <div style="font-size:10.5px;color:var(--tx3)">Presidente: Elisa Santos · 54 membros · Qua 16h</div>
+            </div>
+            <div style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:10px 12px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="color:var(--amber)">◉</span><strong style="font-size:12px">SOS (Adolescentes)</strong></div>
+              <div style="font-size:10.5px;color:var(--tx3)">Líder: Marcos Dias · 41 adolescentes · Sex 19h</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ctit">Acesso Rápido</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+            <button class="tbt" onclick="go('min-min')">◉ Ver todos os Ministérios</button>
+            <button class="tbt" onclick="go('min-esc')">📅 Escalas de Serviço</button>
+            <button class="tbt" onclick="go('min-prog')">📋 Programações</button>
+            <button class="tbt" onclick="go('min-vol')">🙌 Voluntários</button>
+            <button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Solicitar inclusão em Ministério</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="v-area-pgs">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(82,196,110,0.12);border-color:rgba(82,196,110,0.25)">⌂</div>
+      <div>
+        <div class="hero-lbl">Área do Membro</div>
+        <div class="hero-ttl">Meu PG</div>
+        <div class="hero-dsc">Informações do seu Pequeno Grupo de discipulado</div>
+      </div>
+      <div class="hero-act"><button class="tbt" onclick="go('area-dash')">← Voltar</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--gr)">
+      <div class="ini" onclick="go('area-dash')">Início</div>
+      <div class="ini" onclick="go('area-agenda')">Agenda</div>
+      <div class="ini" onclick="go('area-min')">Ministérios</div>
+      <div class="ini on">Meu PG</div>
+      <div class="ini" onclick="go('area-dem')">Solicitações</div>
+    </div>
+    <div class="ct">
+      <div class="alr alr-w"><div class="alr-i">ℹ</div><div>Seu PG é definido pelo seu líder de célula. Se ainda não participa de um PG, entre em contato com a secretaria ou faça uma solicitação abaixo.</div></div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Informações do PG</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+            <div class="sr"><span class="sl">Nome do PG</span><span class="sv" id="area-pg-nome">—</span></div>
+            <div class="sr"><span class="sl">Líder</span><span class="sv" id="area-pg-lider">—</span></div>
+            <div class="sr"><span class="sl">Encontros</span><span class="sv" id="area-pg-encontros">—</span></div>
+            <div class="sr"><span class="sl">Local</span><span class="sv" id="area-pg-local">—</span></div>
+            <div class="sr"><span class="sl">Estudo atual</span><span class="sv" id="area-pg-estudo">—</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ctit">Próximos Encontros</div>
+          <div id="area-pg-prox" style="margin-top:10px"><div style="color:var(--tx3);font-size:11.5px">Nenhum encontro agendado</div></div>
+          <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+            <button class="tbt" onclick="go('pgs-lista')">⌂ Ver todos os PGs</button>
+            <button class="tbt" onclick="go('pgs-estudos')">📖 Material de Estudo</button>
+            <button class="tbt" onclick="go('pgs-oracao')">🙏 Pedidos de Oração</button>
+            <button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Solicitar participação em PG</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="v-area-dem">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(224,85,85,0.12);border-color:rgba(224,85,85,0.25)">📋</div>
+      <div>
+        <div class="hero-lbl">Área do Membro</div>
+        <div class="hero-ttl">Minhas Solicitações</div>
+        <div class="hero-dsc">Acompanhe o status das suas solicitações e demandas</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt" onclick="go('area-dash')">← Voltar</button>
+        <button class="tbt pri" onclick="abrirModalNovaDemanda()" style="margin-left:8px">+ Nova Solicitação</button>
+      </div>
+    </div>
+    <div class="inav" style="--mc:var(--gr)">
+      <div class="ini" onclick="go('area-dash')">Início</div>
+      <div class="ini" onclick="go('area-agenda')">Agenda</div>
+      <div class="ini" onclick="go('area-min')">Ministérios</div>
+      <div class="ini" onclick="go('area-pgs')">Meu PG</div>
+      <div class="ini on">Solicitações</div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Todas as Solicitações <span class="cact" onclick="window.demFiltrar('area-dem-content',{})">↻ Atualizar</span></div>
+        <div id="area-dem-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Participantes Externos -->

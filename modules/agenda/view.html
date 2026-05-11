@@ -1,0 +1,305 @@
+  <div class="view" id="v-agenda-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(42,181,192,0.12)">🗓</div>
+      <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Agenda 2026</div><div class="hero-dsc">Calendário completo de atividades da IPPenha</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Novo Evento</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--teal)">
+      <div class="ini on">Dashboard</div>
+      <div class="ini" onclick="go('agenda-calendario')">Calendário</div>
+      <div class="ini" onclick="go('agenda-solicitacoes')">Solicitações</div>
+      <div class="ini" onclick="go('agenda-ambientes')">Por Espaço</div>
+      <div class="ini" onclick="go('agenda-confirmados')">Confirmados</div>
+    </div>
+    <div class="ct">
+      <!-- KPIs linha 1 -->
+      <div class="kpis c4" id="agenda-kpis">
+        <div class="kpi"><div class="kpi-ico" style="background:var(--tealbg);color:var(--teal)">📅</div><div class="kpi-body"><div class="kpi-lbl">Total de Eventos</div><div class="kpi-val" id="ag-total">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--bluebg);color:var(--blue)">🗓</div><div class="kpi-body"><div class="kpi-lbl">Esta Semana</div><div class="kpi-val" id="ag-semana">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--goldbg);color:var(--gold)">📆</div><div class="kpi-body"><div class="kpi-lbl">Próx. 30 dias</div><div class="kpi-val" id="ag-prox30">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(82,196,110,0.12);color:var(--gr)">✅</div><div class="kpi-body"><div class="kpi-lbl">Confirmados</div><div class="kpi-val" id="ag-conf">—</div></div></div>
+      </div>
+      <!-- KPIs linha 2 -->
+      <div class="kpis c4" style="margin-top:0">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.12);color:var(--violet)">🔄</div><div class="kpi-body"><div class="kpi-lbl">Recorrentes</div><div class="kpi-val" id="ag-recorrentes">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--bluebg);color:var(--blue)">📍</div><div class="kpi-body"><div class="kpi-lbl">Espaços Usados</div><div class="kpi-val" id="ag-espacos">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--amberbg);color:var(--amber)">👥</div><div class="kpi-body"><div class="kpi-lbl">Organizadores</div><div class="kpi-val" id="ag-org">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--tealbg);color:var(--teal)">🏛</div><div class="kpi-body"><div class="kpi-lbl">Espaço + Usado</div><div class="kpi-val" id="ag-top-espaco" style="font-size:12px;line-height:1.2">—</div></div></div>
+      </div>
+
+      <!-- Próximos eventos + Mini-calendário -->
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Próximos Eventos <span class="csub" id="ag-prox-count"></span><span class="cact" onclick="carregarAgendaDash()">↻</span></div>
+          <div id="agenda-proximos"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        </div>
+        <div class="card">
+          <div class="ctit" id="ag-cal-titulo">Calendário</div>
+          <div id="ag-mini-cal"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        </div>
+      </div>
+
+      <!-- Eventos por mês — barras clicáveis -->
+      <div class="card">
+        <div class="ctit">Eventos por Mês <span class="csub">· clique na barra para listar os eventos</span></div>
+        <div id="agenda-por-mes"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        <!-- Lista expandida inline -->
+        <div id="ag-mes-expandido" style="display:none;margin-top:16px;border-top:1px solid var(--bd1);padding-top:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div class="ctit" id="ag-mes-exp-titulo" style="margin:0"></div>
+            <button onclick="document.getElementById('ag-mes-expandido').style.display='none';_agMesElAtivo=null" style="background:none;border:none;color:var(--tx3);font-size:13px;cursor:pointer;padding:2px 6px">✕</button>
+          </div>
+          <div id="ag-mes-exp-list"></div>
+        </div>
+      </div>
+
+      <!-- Gráficos secundários linha 1 -->
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Distribuição por Dia da Semana</div>
+          <div id="ag-chart-diasemana"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        </div>
+        <div class="card">
+          <div class="ctit">Frequência por Recorrência</div>
+          <div id="ag-chart-recorrencia"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        </div>
+      </div>
+
+      <!-- Gráficos secundários linha 2 -->
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Top Espaços / Ambientes <span class="cact" onclick="go('agenda-ambientes')">Ver todos →</span></div>
+          <div id="ag-chart-espacos"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        </div>
+        <div class="card">
+          <div class="ctit">Top Organizadores / Ministérios</div>
+          <div id="ag-chart-orgs"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AGENDA CALENDÁRIO (lista completa) -->
+
+  <div class="view" id="v-agenda-calendario">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(42,181,192,0.12)">📅</div>
+      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Calendário Geral</div><div class="hero-dsc">Todos os eventos de 2026</div></div>
+      <div class="hero-act">
+        <select id="ag-filtro-mes" onchange="filtrarAgendaMes()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:7px 10px;outline:none">
+          <option value="">Todos os meses</option>
+          <option value="Janeiro">Janeiro</option>
+          <option value="Fevereiro">Fevereiro</option>
+          <option value="Março">Março</option>
+          <option value="Abril">Abril</option>
+          <option value="Maio">Maio</option>
+          <option value="Junho">Junho</option>
+          <option value="Julho">Julho</option>
+          <option value="Agosto">Agosto</option>
+          <option value="Setembro">Setembro</option>
+          <option value="Outubro">Outubro</option>
+          <option value="Novembro">Novembro</option>
+          <option value="Dezembro">Dezembro</option>
+        </select>
+        <button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Novo Evento</button>
+      </div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Eventos <span class="csub" id="ag-cal-count"></span><span class="cact" onclick="listarModulo('AGENDA','agenda-cal-list')">↻ Atualizar</span></div>
+        <div id="agenda-cal-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AGENDA POR MÊS -->
+
+  <div class="view" id="v-agenda-solicitacoes">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(42,181,192,0.12)">📋</div>
+      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Solicitações de Agendamento</div><div class="hero-dsc">Solicitações recebidas via página pública de agenda</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova Solicitação</button></div>
+    </div>
+    <div class="ct">
+      <div class="kpis c3" style="margin-bottom:16px">
+        <div class="kpi"><div class="kpi-ico" style="background:var(--goldbg)">⏳</div><div class="kpi-body"><div class="kpi-lbl">Pendentes</div><div class="kpi-val" id="sol-pend">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.12)">✅</div><div class="kpi-body"><div class="kpi-lbl">Concluídas</div><div class="kpi-val" id="sol-conc">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg)">❌</div><div class="kpi-body"><div class="kpi-lbl">Canceladas</div><div class="kpi-val" id="sol-canc">—</div></div></div>
+      </div>
+      <div class="card">
+        <div class="ctit">Solicitações de Agendamento <span class="cact" onclick="carregarSolicitacoesAgenda()">↻ Atualizar</span></div>
+        <div id="agenda-sol-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AGENDA POR MÊS (mantido como subview separada) -->
+
+  <div class="view" id="v-agenda-pormes">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(42,181,192,0.12)">🗂</div>
+      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Eventos por Mês</div></div>
+      <div class="hero-act">
+        <select id="ag-mes-sel" onchange="carregarMes()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:7px 10px;outline:none">
+          <option value="Janeiro">Janeiro</option>
+          <option value="Fevereiro">Fevereiro</option>
+          <option value="Março">Março</option>
+          <option value="Abril">Abril</option>
+          <option value="Maio">Maio</option>
+          <option value="Junho">Junho</option>
+          <option value="Julho">Julho</option>
+          <option value="Agosto">Agosto</option>
+          <option value="Setembro">Setembro</option>
+          <option value="Outubro">Outubro</option>
+          <option value="Novembro">Novembro</option>
+          <option value="Dezembro">Dezembro</option>
+        </select>
+      </div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit" id="ag-mes-titulo">Eventos do Mês <span class="cact" onclick="carregarMes()">↻ Atualizar</span></div>
+        <div id="agenda-mes-list"><div style="color:var(--tx3);font-size:11.5px">Selecione um mês acima</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AGENDA POR ESPAÇO -->
+
+  <div class="view" id="v-agenda-ambientes">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(42,181,192,0.12)">🏛</div>
+      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Por Espaço / Ambiente</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Novo Evento</button></div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Uso por Ambiente <span class="cact" onclick="carregarEspacos()">↻ Atualizar</span></div>
+        <div id="agenda-espacos-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AGENDA CONFIRMADOS -->
+
+  <div class="view" id="v-agenda-confirmados">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(58,170,92,0.12)">✅</div>
+      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Eventos Confirmados</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Novo Evento</button></div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Confirmados <span class="cact" onclick="listarModulo('AGENDA','ag-conf-list',{status:'confirmado'})">↻ Atualizar</span></div>
+        <div id="ag-conf-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ════ AGENDA: VISTAS FALTANTES ════ -->
+
+  <!-- APROVAÇÕES PENDENTES -->
+
+  <div class="view" id="v-agenda-aprovacoes">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(212,168,67,0.12)">⏳</div>
+      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Aprovações Pendentes</div><div class="hero-dsc">Eventos aguardando confirmação</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Novo Evento</button></div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Pendentes <span class="cact" onclick="listarModulo('AGENDA','ag-aprov-list',{status:'pendente'})">↻ Atualizar</span></div>
+        <div id="ag-aprov-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECUSADOS -->
+
+  <div class="view" id="v-agenda-recusados">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(224,85,85,0.12)">❌</div>
+      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Eventos Recusados</div><div class="hero-dsc">Eventos cancelados ou recusados</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Novo Evento</button></div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Recusados / Cancelados <span class="cact" onclick="listarModulo('AGENDA','ag-rec-list',{status:'cancelado'})">↻ Atualizar</span></div>
+        <div id="ag-rec-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REAGENDAMENTOS -->
+
+  <div class="view" id="v-agenda-reagendamentos">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.12)">🔄</div>
+      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Reagendamentos e Ajustes</div><div class="hero-dsc">Eventos que foram reagendados</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Novo Evento</button></div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Reagendados <span class="cact" onclick="listarModulo('AGENDA','ag-reag-list',{status:'reagendado'})">↻ Atualizar</span></div>
+        <div id="ag-reag-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFLITOS -->
+
+  <div class="view" id="v-agenda-conflitos">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(224,85,85,0.12)">⚠️</div>
+      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Conflitos de Agenda</div><div class="hero-dsc">Eventos no mesmo espaço e horário</div></div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Conflitos Detectados <span class="cact" onclick="detectarConflitos()">↻ Verificar</span></div>
+        <div id="ag-conflitos-list"><div style="color:var(--tx3);font-size:11.5px">Clique em "Verificar" para detectar conflitos</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO -->
+
+  <div class="view" id="v-agenda-historico">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(139,111,212,0.12)">📜</div>
+      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Histórico de Agendamentos</div><div class="hero-dsc">Todos os eventos passados</div></div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Eventos Passados <span class="cact" onclick="carregarHistorico()">↻ Atualizar</span></div>
+        <div id="ag-hist-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIGURAÇÕES DA AGENDA -->
+
+  <div class="view" id="v-agenda-config">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(139,111,212,0.12)">⚙️</div>
+      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Configurações da Agenda</div><div class="hero-dsc">Espaços, recursos e regras de agendamento</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Novo Evento</button></div>
+    </div>
+    <div class="ct">
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Espaços Cadastrados</div>
+          <div id="ag-config-espacos"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        </div>
+        <div class="card">
+          <div class="ctit">Organizadores Ativos</div>
+          <div id="ag-config-orgs"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- ════ GENÉRICO ════════════════════════ -->
+  <!-- ════ VIEWS CONECTADAS AO SUPABASE v5.3.0 ════ -->
+
+  <!-- MEMBROS / CADASTRO -->

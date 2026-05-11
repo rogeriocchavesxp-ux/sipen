@@ -292,8 +292,6 @@
       data_nascimento: dateOrNull(gv("mem-f-nascimento"))
     };
 
-    console.log("[membresia] INSERT pessoas:", payloadPessoa);
-
     const { data: pessoa, error: errPessoa } = await sb()
       .from("pessoas")
       .insert(payloadPessoa)
@@ -318,8 +316,6 @@
       numero_registro: gv("mem-f-registro") || null,
       batizado: !!dateOrNull(gv("mem-f-batismo"))
     };
-
-    console.log("[membresia] INSERT membros:", payloadMembro);
 
     const { error: errMembro } = await sb()
       .from("membros")

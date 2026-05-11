@@ -428,7 +428,7 @@
   }
 
   async function cnabVerDetalhe(id, tipo) {
-    go("cnab-detalhe");
+    await go("cnab-detalhe");
     const body = document.getElementById("cnab-detalhe-body");
     if (body) body.innerHTML = `<div class="card" style="padding:28px;color:var(--tx3)">Carregando detalhe...</div>`;
     try {
@@ -726,8 +726,8 @@
   window.cnabSalvarConfig = cnabSalvarConfig;
 
   const _goOrig = window.go;
-  window.go = function (id, ...args) {
-    const ret = _goOrig(id, ...args);
+  window.go = async function (id, ...args) {
+    const ret = await _goOrig(id, ...args);
     if (id === "cnab-remessas") cnabInit();
     return ret;
   };

@@ -426,7 +426,7 @@ async function exportarDados(tab, nome) {
 const _newAutoloads = {
   "conselho-ind":    null, // handled by carregarIndicadores
   "rel-ind":         null, // handled by carregarIndicadoresGerais
-  "admin-con":       { tab:"DEMANDAS",       id:"admin-con-list",   filtro:{area:"Contratos"} },
+  "admin-con":       null, // handled by contratos.js
   "admin-doc":       { tab:"DEMANDAS",       id:"admin-doc-list",   filtro:{area:"Documentos"} },
   "admin-parking-controls": { fn: () => ceCarregar() },
   "jur-contratos":   { tab:"DEMANDAS",       id:"jur-con-list",     filtro:{area:"Jurídico"} },

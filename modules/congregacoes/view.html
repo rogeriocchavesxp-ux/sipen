@@ -1,0 +1,139 @@
+  <div class="view" id="v-cong-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(58,170,92,0.12);border-color:rgba(58,170,92,0.28)">⛪</div>
+      <div>
+        <div class="hero-lbl">Módulo</div>
+        <div class="hero-ttl">Congregações</div>
+        <div class="hero-dsc">Gestão de cultos, liderança, demandas e relatórios de cada congregação</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="abrirModalNovaCong()">+ Nova Congregação</button>
+      </div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4" id="cong-dash-kpis"></div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Congregações</div>
+          <div id="cong-dash-lista"></div>
+        </div>
+        <div class="card">
+          <div class="ctit">Cultos Recentes</div>
+          <div id="cong-dash-cultos"></div>
+        </div>
+      </div>
+      <div id="cong-dash-comparativo"></div>
+    </div>
+  </div>
+
+  <!-- ════ CONGREGAÇÃO — VISÃO INDIVIDUAL ════════════ -->
+
+  <div class="view" id="v-cong-ver"></div>
+
+  <!-- ════ MODAIS DO MÓDULO CONGREGAÇÕES ══════════ -->
+  <div class="mo" id="modal-nova-cong" onclick="if(event.target===this)fecharModalNovaCong()">
+    <div class="md" style="width:500px">
+      <div class="md-t">Nova Congregação</div>
+      <div class="md-s">Cadastre uma congregação vinculada à IPPenha</div>
+      <div class="frow">
+        <div class="fg" style="grid-column:1/-1"><label class="flb">Nome da Congregação *</label><input class="fi2" id="nc-nome" placeholder="Ex: Congregação Norte"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Localização</label><input class="fi2" id="nc-local" placeholder="Bairro / Cidade"></div>
+        <div class="fg"><label class="flb">Status</label>
+          <select class="fi2" id="nc-status"><option value="ativa">Ativa</option><option value="inativa">Inativa</option></select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Pastor / Líder Responsável</label><input class="fi2" id="nc-lider" placeholder="Nome do responsável"></div>
+        <div class="fg"><label class="flb">Data de Início</label><input class="fi2" type="date" id="nc-inicio"></div>
+      </div>
+      <div class="fg"><label class="flb">Endereço Completo</label><input class="fi2" id="nc-endereco" placeholder="Rua, número, bairro..."></div>
+      <div class="fg"><label class="flb">Observações</label><textarea class="fi2" id="nc-obs" rows="2" placeholder="Informações adicionais..."></textarea></div>
+      <div class="ma">
+        <button class="btn" onclick="fecharModalNovaCong()">Cancelar</button>
+        <button class="btn btn-p" onclick="salvarNovaCong()">Cadastrar Congregação</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mo" id="modal-novo-culto" onclick="if(event.target===this)fecharModalNovoCulto()">
+    <div class="md" style="width:480px">
+      <div class="md-t">Registrar Culto</div>
+      <div class="md-s">Registre a frequência e ocorrências do culto</div>
+      <div class="fg">
+        <label class="flb">Congregação *</label>
+        <select class="fi2" id="culto-cong-select"></select>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Data do Culto *</label><input class="fi2" type="date" id="culto-data"></div>
+        <div class="fg"><label class="flb">Tipo</label>
+          <select class="fi2" id="culto-tipo">
+            <option>Domingo — manhã</option><option>Domingo — noite</option>
+            <option>Quarta-feira</option><option>Sexta-feira</option>
+            <option>Especial</option><option>Outro</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Participantes *</label><input class="fi2" type="number" id="culto-participantes" placeholder="0" min="0"></div>
+        <div class="fg"><label class="flb">Visitantes</label><input class="fi2" type="number" id="culto-visitantes" placeholder="0" min="0"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Decisões / Profissões de Fé</label><input class="fi2" type="number" id="culto-decisoes" placeholder="0" min="0"></div>
+        <div class="fg"><label class="flb">Pregador</label><input class="fi2" id="culto-pregador" placeholder="Nome do pregador"></div>
+      </div>
+      <div class="fg"><label class="flb">Observações</label><textarea class="fi2" id="culto-obs" rows="2" placeholder="Ocorrências, destaques..."></textarea></div>
+      <div class="ma">
+        <button class="btn" onclick="fecharModalNovoCulto()">Cancelar</button>
+        <button class="btn btn-p" onclick="salvarNovoCulto()">Registrar Culto</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mo" id="modal-novo-evento" onclick="if(event.target===this)fecharModalNovoEvento()">
+    <div class="md" style="width:460px">
+      <div class="md-t">Novo Evento / Planejamento</div>
+      <div class="md-s">Registre um evento ou ação planejada para a congregação</div>
+      <div class="fg"><label class="flb">Congregação</label><select class="fi2" id="evento-cong-select"></select></div>
+      <div class="fg"><label class="flb">Título do Evento *</label><input class="fi2" id="evento-titulo" placeholder="Ex: Culto de Aniversário"></div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Data *</label><input class="fi2" type="date" id="evento-data"></div>
+        <div class="fg"><label class="flb">Tipo</label>
+          <select class="fi2" id="evento-tipo">
+            <option>Culto Especial</option><option>Evangelismo</option>
+            <option>Batismo</option><option>Conferência</option>
+            <option>Ação Social</option><option>Treinamento</option><option>Outro</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label class="flb">Descrição</label><textarea class="fi2" id="evento-desc" rows="2" placeholder="Detalhes do evento..."></textarea></div>
+      <div class="ma">
+        <button class="btn" onclick="fecharModalNovoEvento()">Cancelar</button>
+        <button class="btn btn-p" onclick="salvarNovoEvento()">Salvar Evento</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mo" id="modal-nova-demanda-cong" onclick="if(event.target===this)fecharModalNovaDemandaCong()">
+    <div class="md" style="width:480px">
+      <div class="md-t">Nova Demanda da Congregação</div>
+      <div class="md-s">Registre uma demanda originada em uma congregação</div>
+      <div class="fg"><label class="flb">Congregação *</label><select class="fi2" id="dem-cong-select"></select></div>
+      <div class="fg"><label class="flb">Título da Demanda *</label><input class="fi2" id="dem-titulo" placeholder="Descreva a demanda..."></div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Prioridade</label>
+          <select class="fi2" id="dem-prioridade"><option>Alta</option><option selected>Média</option><option>Baixa</option></select>
+        </div>
+        <div class="fg"><label class="flb">Responsável</label><input class="fi2" id="dem-resp" placeholder="Nome do responsável"></div>
+      </div>
+      <div class="fg"><label class="flb">Vencimento</label><input class="fi2" type="date" id="dem-venc"></div>
+      <div class="fg"><label class="flb">Observações</label><textarea class="fi2" id="dem-obs" rows="2" placeholder="Detalhes..."></textarea></div>
+      <div class="ma">
+        <button class="btn" onclick="fecharModalNovaDemandaCong()">Cancelar</button>
+        <button class="btn btn-p" onclick="salvarNovaDemandaCong()">Criar Demanda</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ ÁREA DO MEMBRO ═══════════════════════════ -->

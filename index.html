@@ -446,19 +446,6 @@
   </div>
   <div class="band" id="band" style="--mc:var(--gmd)"></div>
   <div class="page" id="page">
-
-  <script>
-  (function(){
-    var mount = document.getElementById("page");
-    if (!mount) return;
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", "views/main.html?v=6.30.30", false);
-    xhr.send(null);
-    if (xhr.status >= 200 && xhr.status < 300) mount.innerHTML = xhr.responseText;
-    else console.error("Falha ao carregar views/main.html", xhr.status);
-  })();
-  </script>
-
   </div>
 </main>
 

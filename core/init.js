@@ -40,16 +40,18 @@ function _getModuloForView(id) {
 
 // ── go() final: fecha sidebar mobile + verifica permissão ─────────────
 const _goOrig = window.go;
-window.go = function(id){
+window.go = async function(id){
   const modulo = _getModuloForView(id);
   if (modulo && typeof podeAcessar === "function" && !podeAcessar(modulo)) {
     T("Acesso restrito ✖", "Você não tem permissão para acessar: " + modulo);
     return;
   }
   sbClose();
-  if(_goOrig) _goOrig(id);
+  if(_goOrig) await _goOrig(id);
 };
 document.addEventListener("DOMContentLoaded", () => {
+  _ensureViewLoaded("geral").then(() => go("geral"));
+
   document.querySelectorAll(".bf").forEach(b => {
     const w = b.style.width; b.style.width = "0";
     setTimeout(() => { b.style.width = w; }, 450);
@@ -469,5 +471,4 @@ async function renderContratados() {
   }
 }
 VIEW_AUTOLOAD["conselho-contratados"] = { fn: () => renderContratados() };
-
 

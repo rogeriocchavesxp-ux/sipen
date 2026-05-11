@@ -1,0 +1,404 @@
+  <div class="view" id="v-conselho-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--skybg);border-color:rgba(88,152,212,0.25)">◈</div>
+      <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Conselho e Governança</div><div class="hero-dsc">Visão estratégica, indicadores institucionais e governança da IPPenha</div></div>
+    </div>
+    <div class="inav" style="--mc:var(--sky)">
+      <div class="ini on">Dashboard</div>
+      <div class="ini" onclick="go('conselho-nomeados')">Nomeados</div>
+      <div class="ini" onclick="go('conselho-ordenados')">Ordenados</div>
+      <div class="ini" onclick="go('conselho-seminaristas')">Seminaristas</div>
+      <div class="ini" onclick="go('conselho-contratados')">Contratados</div>
+      <div class="ini" onclick="T('Estratégico','Relatórios macro')">Estratégico</div>
+      <div class="ini" onclick="T('Documentos','Atas e resoluções')">Documentos</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Nomeados ativos</div><div class="kpi-val" id="cdash-kpi-nom">—</div><div class="kpi-d nu" id="cdash-kpi-nom-d">carregando…</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal);">◈</div><div class="kpi-body"><div class="kpi-lbl">Ordenados ativos</div><div class="kpi-val" id="cdash-kpi-ord">—</div><div class="kpi-d nu" id="cdash-kpi-ord-d">carregando…</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Mandatos a vencer</div><div class="kpi-val" id="cdash-kpi-mand">—</div><div class="kpi-d wa" id="cdash-kpi-mand-d">próximos 90 dias</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Contratados ativos</div><div class="kpi-val" id="cdash-kpi-cont">—</div><div class="kpi-d nu" id="cdash-kpi-cont-d">carregando…</div></div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Indicadores institucionais</div>
+          <table class="tbl">
+            <thead><tr><th>Área</th><th>Indicador</th><th>Valor</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="tdp">Membresia</td><td>Crescimento mensal</td><td class="mono pos">+12</td><td><span class="pill pd">Regular</span></td></tr>
+              <tr><td class="tdp">Financeiro</td><td>Saldo do período</td><td class="mono pos">R$ 13.600</td><td><span class="pill pd">Regular</span></td></tr>
+              <tr><td class="tdp">Ministerial</td><td>Escalas completas</td><td class="mono">7 de 8</td><td><span class="pill po">Atenção</span></td></tr>
+              <tr><td class="tdp">Infra. e Conservação</td><td>OS atrasadas</td><td class="mono neg">2</td><td><span class="pill pl">Urgente</span></td></tr>
+              <tr><td class="tdp">Pastoral</td><td>Taxa de resolução</td><td class="mono pos">66%</td><td><span class="pill pd">Regular</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="ctit">Frequência nos cultos</div>
+          <div class="bars" style="gap:9px">
+            <div><div class="bh"><span class="bn">Culto manhã Dom (9h)</span><span class="bv">420</span></div><div class="bt"><div class="bf" style="width:100%;background:var(--gdk)"></div></div></div>
+            <div><div class="bh"><span class="bn">Culto noite Dom (18h)</span><span class="bv">310</span></div><div class="bt"><div class="bf" style="width:74%;background:var(--gmd)"></div></div></div>
+            <div><div class="bh"><span class="bn">Culto 2ª feira</span><span class="bv">180</span></div><div class="bt"><div class="bf" style="width:43%;background:var(--glt)"></div></div></div>
+            <div><div class="bh"><span class="bn">Culto 4ª e 6ª feira</span><span class="bv">220</span></div><div class="bt"><div class="bf" style="width:52%;background:var(--teal)"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ════ ATAS E DELIBERAÇÕES ════════════ -->
+
+  <div class="view" id="v-atas-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)">◈</div>
+      <div>
+        <div class="hero-lbl">Conselho e Governança</div>
+        <div class="hero-ttl">Atas e Deliberações</div>
+        <div class="hero-dsc">Gestão de atas, deliberações e demandas geradas automaticamente pelo banco de dados</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="go('atas-nova')">+ Nova Ata</button>
+      </div>
+    </div>
+    <div class="inav" style="--mc:var(--sky)">
+      <div class="ini on" onclick="go('atas-dash')">Dashboard</div>
+      <div class="ini" onclick="go('atas-todas')">Todas as Atas</div>
+      <div class="ini" onclick="go('atas-nova')">Nova Ata</div>
+      <div class="ini" onclick="go('atas-delib')">Deliberações</div>
+    </div>
+    <div class="ct"><div id="atas-dash-content"><div style="padding:20px;color:var(--tx3);font-size:13px">Carregando...</div></div></div>
+  </div>
+
+  <div class="view" id="v-atas-todas">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)">◈</div>
+      <div>
+        <div class="hero-lbl">Conselho e Governança</div>
+        <div class="hero-ttl">Todas as Atas</div>
+        <div class="hero-dsc">Lista completa de atas com filtros e ações de aprovação</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="go('atas-nova')">+ Nova Ata</button>
+      </div>
+    </div>
+    <div class="inav" style="--mc:var(--sky)">
+      <div class="ini" onclick="go('atas-dash')">Dashboard</div>
+      <div class="ini on" onclick="go('atas-todas')">Todas as Atas</div>
+      <div class="ini" onclick="go('atas-nova')">Nova Ata</div>
+      <div class="ini" onclick="go('atas-delib')">Deliberações</div>
+    </div>
+    <div class="ct"><div id="atas-todas-content"><div style="padding:20px;color:var(--tx3);font-size:13px">Carregando...</div></div></div>
+  </div>
+
+  <div class="view" id="v-atas-nova">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)">◈</div>
+      <div>
+        <div class="hero-lbl">Conselho e Governança</div>
+        <div class="hero-ttl">Nova Ata</div>
+        <div class="hero-dsc">Registre uma nova ata e adicione as deliberações com geração automática de demandas</div>
+      </div>
+    </div>
+    <div class="inav" style="--mc:var(--sky)">
+      <div class="ini" onclick="go('atas-dash')">Dashboard</div>
+      <div class="ini" onclick="go('atas-todas')">Todas as Atas</div>
+      <div class="ini on" onclick="go('atas-nova')">Nova Ata</div>
+      <div class="ini" onclick="go('atas-delib')">Deliberações</div>
+    </div>
+    <div class="ct"><div id="atas-nova-content"><div style="padding:20px;color:var(--tx3);font-size:13px">Carregando...</div></div></div>
+  </div>
+
+  <div class="view" id="v-atas-delib">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)">◈</div>
+      <div>
+        <div class="hero-lbl">Conselho e Governança</div>
+        <div class="hero-ttl">Deliberações</div>
+        <div class="hero-dsc">Todas as deliberações com vínculos às atas e demandas geradas automaticamente</div>
+      </div>
+    </div>
+    <div class="inav" style="--mc:var(--sky)">
+      <div class="ini" onclick="go('atas-dash')">Dashboard</div>
+      <div class="ini" onclick="go('atas-todas')">Todas as Atas</div>
+      <div class="ini" onclick="go('atas-nova')">Nova Ata</div>
+      <div class="ini on" onclick="go('atas-delib')">Deliberações</div>
+    </div>
+    <div class="ct"><div id="atas-delib-content"><div style="padding:20px;color:var(--tx3);font-size:13px">Carregando...</div></div></div>
+  </div>
+
+
+  <!-- ════ ADMIN ESTOQUE ═══════════════════ -->
+
+  <div class="view" id="v-conselho-nomeados">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--skybg);border-color:rgba(88,152,212,0.25)">⌘</div>
+      <div><div class="hero-lbl">Conselho e Governança</div><div class="hero-ttl">Nomeados</div><div class="hero-dsc">Funções designadas e temporárias sempre vinculadas à membresia, com histórico, ata de origem e possibilidade de permissões derivadas.</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="T('Novo nomeado','Registro vinculado à membresia e à ata')">+ Novo Registro</button></div>
+    </div>
+    <div class="secnav">
+      <div class="sni on">Nomeados</div>
+      <div class="sni-sep"></div>
+      <div class="sni" onclick="go('conselho-ordenados')">Ordenados</div>
+      <div class="sni-sep"></div>
+      <div class="sni" onclick="go('conselho-seminaristas')">Seminaristas</div>
+      <div class="sni-sep"></div>
+      <div class="sni" onclick="go('conselho-contratados')">Contratados</div>
+    </div>
+    <div class="inav" style="--mc:var(--sky);margin-top:0" id="nom-inav">
+      <div class="ini on" onclick="switchNomTab('governo')">Governo</div>
+      <div class="ini" onclick="switchNomTab('comissao')">Comissões</div>
+      <div class="ini" onclick="switchNomTab('ministerio')">Ministérios</div>
+      <div class="ini" onclick="switchNomTab('sociedade')">Sociedades</div>
+      <div class="ini" onclick="switchNomTab('grupo')">Grupos</div>
+      <div class="ini" onclick="switchNomTab('congregacao')">Congregações</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Nomeados ativos</div><div class="kpi-val" id="nom-kpi-total">—</div><div class="kpi-d nu" id="nom-kpi-orgaos">carregando…</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Ministérios</div><div class="kpi-val" id="nom-kpi-min">—</div><div class="kpi-d nu">lideranças e apoio</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Governo / Comissões</div><div class="kpi-val" id="nom-kpi-gov">—</div><div class="kpi-d nu">governo e comissões</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Sociedades / Grupos</div><div class="kpi-val" id="nom-kpi-soc">—</div><div class="kpi-d nu">apoio e execução</div></div></div>
+      </div>
+      <div id="nomeados-list-container"><div style="color:var(--tx3);font-size:11px;padding:20px">Carregando…</div></div>
+    </div>
+  </div>
+
+  <!-- ════ CONSELHO ORDENADOS ══════════════ -->
+
+  <div class="view" id="v-conselho-ordenados">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--skybg);border-color:rgba(88,152,212,0.25)">✠</div>
+      <div><div class="hero-lbl">Conselho e Governança</div><div class="hero-ttl">Ordenados</div><div class="hero-dsc">Oficiais ordenados da igreja com tratamento distinto de funções temporárias, histórico de ordenação, situação atual e mandatos.</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="T('Novo oficial','Cadastro restrito para ordenados')">+ Novo Oficial</button></div>
+    </div>
+    <div class="secnav">
+      <div class="sni" onclick="go('conselho-nomeados')">Nomeados</div>
+      <div class="sni-sep"></div>
+      <div class="sni on">Ordenados</div>
+      <div class="sni-sep"></div>
+      <div class="sni" onclick="go('conselho-seminaristas')">Seminaristas</div>
+      <div class="sni-sep"></div>
+      <div class="sni" onclick="go('conselho-contratados')">Contratados</div>
+    </div>
+    <div class="inav" style="--mc:var(--sky);margin-top:0">
+      <div class="ini on">Lista Geral</div>
+      <div class="ini" onclick="T('Pastores','Filtro por tipo de ofício')">Pastores</div>
+      <div class="ini" onclick="T('Presbíteros','Filtro por tipo de ofício')">Presbíteros</div>
+      <div class="ini" onclick="T('Histórico','Mandatos e situação ministerial')">Histórico</div>
+    </div>
+    <div class="ct">
+      <div class="alr alr-w"><div class="alr-i">⚠</div><div><strong>Regra crítica:</strong> Ordenado é ofício permanente. Não se confunde com nomeação temporária. O sistema mantém registros separados para ofício e função designada. Supervisor deve ser sempre um ordenado.</div></div>
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Ordenados ativos</div><div class="kpi-val" id="ord-kpi-total">—</div><div class="kpi-d nu" id="ord-kpi-detalhe">carregando…</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal);">✝</div><div class="kpi-body"><div class="kpi-lbl">Pastores</div><div class="kpi-val" id="ord-kpi-pastores">—</div><div class="kpi-d nu">supervisão e governo</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Presbíteros</div><div class="kpi-val" id="ord-kpi-presbs">—</div><div class="kpi-d nu">atualizado AGE 28/04/2024</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(184,122,86,0.15);color:var(--copper);">✚</div><div class="kpi-body"><div class="kpi-lbl">Diáconos</div><div class="kpi-val" id="ord-kpi-diac">—</div><div class="kpi-d nu" id="ord-kpi-diac-d">quadro oficial</div></div></div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="ctit">Pastores <span class="csub">— ofício permanente · supervisão e governo</span><span class="cact" onclick="renderOficiaisOrdenados()">↻ Atualizar</span></div>
+        <div id="ord-pastores-list"><div style="color:var(--tx3);font-size:11px">Carregando…</div></div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="ctit">Presbíteros <span class="csub">— Quadro oficial · AGE 28/04/2024</span></div>
+        <div id="ord-presbs-list"><div style="color:var(--tx3);font-size:11px">Carregando…</div></div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="ctit">Diáconos <span class="csub">— Quadro oficial · AGE 28/04/2024</span></div>
+        <div id="ord-diac-list"><div style="color:var(--tx3);font-size:11px">Carregando…</div></div>
+      </div>
+      <div class="card">
+        <div class="ctit">Hierarquia funcional</div>
+        <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;padding:4px 0">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 16px;background:var(--bg-surface);border-radius:var(--r);border:1px solid rgba(88,152,212,0.25)"><span style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em">Conselho</span><span style="font-size:12px;font-weight:700;color:var(--tx1)">Governo</span></div>
+          <div style="color:var(--tx4);padding:0 8px;font-size:14px">→</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 16px;background:var(--bg-surface);border-radius:var(--r);border:1px solid rgba(88,152,212,0.2)"><span style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em">Supervisor</span><span style="font-size:12px;font-weight:700;color:var(--tx1)">Ordenado</span></div>
+          <div style="color:var(--tx4);padding:0 8px;font-size:14px">→</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 16px;background:var(--bg-surface);border-radius:var(--r);border:1px solid var(--bd1)"><span style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em">Conselheiro</span><span style="font-size:12px;font-weight:700;color:var(--tx1)">Nomeado</span></div>
+          <div style="color:var(--tx4);padding:0 8px;font-size:14px">→</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 16px;background:var(--bg-surface);border-radius:var(--r);border:1px solid var(--bd1)"><span style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em">Coordenador</span><span style="font-size:12px;font-weight:700;color:var(--tx1)">Nomeado</span></div>
+          <div style="color:var(--tx4);padding:0 8px;font-size:14px">→</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 16px;background:var(--bg-surface);border-radius:var(--r);border:1px solid var(--bd1)"><span style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em">Líder de Área</span><span style="font-size:12px;font-weight:700;color:var(--tx1)">Nomeado</span></div>
+          <div style="color:var(--tx4);padding:0 8px;font-size:14px">→</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 16px;background:var(--bg-surface);border-radius:var(--r);border:1px solid var(--bd1)"><span style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em">Membro</span><span style="font-size:12px;font-weight:700;color:var(--tx1)">Nomeado</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ CONSELHO SEMINARISTAS ══════════ -->
+
+  <div class="view" id="v-conselho-seminaristas">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--skybg);border-color:rgba(88,152,212,0.25)">✦</div>
+      <div><div class="hero-lbl">Conselho e Governança</div><div class="hero-ttl">Seminaristas</div><div class="hero-dsc">Membros em formação teológica vinculados à IPPenha — acompanhamento de estágio, progresso acadêmico e integração ao ministério.</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="T('Novo seminarista','Registro de membro em formação teológica')">+ Novo Seminarista</button></div>
+    </div>
+    <div class="secnav">
+      <div class="sni" onclick="go('conselho-nomeados')">Nomeados</div>
+      <div class="sni-sep"></div>
+      <div class="sni" onclick="go('conselho-ordenados')">Ordenados</div>
+      <div class="sni-sep"></div>
+      <div class="sni on">Seminaristas</div>
+      <div class="sni-sep"></div>
+      <div class="sni" onclick="go('conselho-contratados')">Contratados</div>
+    </div>
+    <div class="inav" style="--mc:var(--sky);margin-top:0">
+      <div class="ini on">Lista Geral</div>
+      <div class="ini" onclick="T('Em Curso','Formação em andamento')">Em Curso</div>
+      <div class="ini" onclick="T('Estágio','Atuação prática na igreja')">Estágio</div>
+      <div class="ini" onclick="T('Concluídos','Formação concluída')">Concluídos</div>
+    </div>
+    <div class="ct">
+      <div class="alr alr-w"><div class="alr-i">ℹ</div><div><strong>Nota:</strong> Seminaristas são membros em formação. Não são ordenados nem nomeados para funções de governo. Sua atuação prática deve ser supervisionada por um pastor ordenado.</div></div>
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">✦</div><div class="kpi-body"><div class="kpi-lbl">Seminaristas ativos</div><div class="kpi-val" id="sem-kpi-total">—</div><div class="kpi-d nu">em formação teológica</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr);">◎</div><div class="kpi-body"><div class="kpi-lbl">Em estágio prático</div><div class="kpi-val" id="sem-kpi-estagio">—</div><div class="kpi-d nu">atuando na IPPenha</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Concluídos</div><div class="kpi-val" id="sem-kpi-concl">—</div><div class="kpi-d nu">aguardando ordenação</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Seminários víncul.</div><div class="kpi-val" id="sem-kpi-semin">—</div><div class="kpi-d nu">instituições parceiras</div></div></div>
+      </div>
+      <div class="card">
+        <div class="ctit">Lista de seminaristas <span class="cact" onclick="renderSeminaristas()">↻ Atualizar</span></div>
+        <div id="seminaristas-list-container"><div style="color:var(--tx3);font-size:11px">Carregando…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ CONSELHO CONTRATADOS ═══════════ -->
+
+  <div class="view" id="v-conselho-contratados">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--skybg);border-color:rgba(88,152,212,0.25)">◫</div>
+      <div><div class="hero-lbl">Conselho e Governança</div><div class="hero-ttl">Contratados</div><div class="hero-dsc">Funcionários terceirizados e contratados que prestam apoio operacional e administrativo à IPPenha. Registro separado de nomeados e ordenados.</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="T('Novo contratado','Cadastro de funcionário ou prestador')">+ Novo Contratado</button></div>
+    </div>
+    <div class="secnav">
+      <div class="sni" onclick="go('conselho-nomeados')">Nomeados</div>
+      <div class="sni-sep"></div>
+      <div class="sni" onclick="go('conselho-ordenados')">Ordenados</div>
+      <div class="sni-sep"></div>
+      <div class="sni" onclick="go('conselho-seminaristas')">Seminaristas</div>
+      <div class="sni-sep"></div>
+      <div class="sni on">Contratados</div>
+    </div>
+    <div class="inav" style="--mc:var(--sky);margin-top:0">
+      <div class="ini on">Lista Geral</div>
+      <div class="ini" onclick="T('Terceirizados','Empresas contratadas')">Terceirizados</div>
+      <div class="ini" onclick="T('Diretos','Contratação direta')">Contratação Direta</div>
+      <div class="ini" onclick="T('Por Categoria','Segurança, Limpeza, Admin, Manutenção')">Por Categoria</div>
+    </div>
+    <div class="ct">
+      <div class="alr alr-w"><div class="alr-i">⚠</div><div><strong>Regra crítica:</strong> Contratados <strong>não são</strong> nomeados nem ordenados. Não aparecem em escalas ministeriais nem recebem permissões de módulo. Seu cadastro é exclusivo desta seção.</div></div>
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◫</div><div class="kpi-body"><div class="kpi-lbl">Contratados ativos</div><div class="kpi-val" id="cont-kpi-total">—</div><div class="kpi-d nu" id="cont-kpi-detalhe">carregando…</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Terceirizados</div><div class="kpi-val" id="cont-kpi-terc">—</div><div class="kpi-d nu">via empresa</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Contratação direta</div><div class="kpi-val" id="cont-kpi-dir">—</div><div class="kpi-d nu">administrativo e manutenção</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr);">✦</div><div class="kpi-body"><div class="kpi-lbl">Contratos vigentes</div><div class="kpi-val" id="cont-kpi-vig">—</div><div class="kpi-d nu">sem pendências</div></div></div>
+      </div>
+      <div class="card">
+        <div class="ctit">Lista geral de contratados <span class="cact" onclick="renderContratados()">↻ Atualizar</span></div>
+        <div id="contratados-list-container"><div style="color:var(--tx3);font-size:11px">Carregando…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ PGS DASHBOARD ═══════════════════ -->
+
+  <div class="view" id="v-conselho-demandas">
+    <div class="hero"><div class="hero-ic" style="background:rgba(88,152,212,0.12)">🏛</div><div><div class="hero-lbl">Conselho e Governança</div><div class="hero-ttl">Solicitações e Demandas</div><div class="hero-dsc">Todas as demandas e as direcionadas ao Conselho e Governança</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="ct">
+      <div class="card">
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
+          <div class="sni on">Todas</div>
+          <div class="sni-sep"></div>
+          <div class="sni" onclick="go('conselho-demandas-cons')">Conselho e Governança</div>
+        </div>
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('conselho-demandas-content')">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="conselho-demandas-content-fstatus" onchange="demFiltrar('conselho-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
+          </select>
+          <select id="conselho-demandas-content-fcat" onchange="demFiltrar('conselho-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as categorias</option>
+            <option>Conselho</option><option>Agendamentos</option><option>Manutenção</option><option>Limpeza e Organização</option><option>Logística</option><option>Financeiro</option><option>Comunicação e Divulgação</option><option>Secretaria</option><option>Cadastro</option><option>Oração e Aconselhamento</option><option>Visitação</option><option>Apoio ao Culto</option><option>Ensino (EBT)</option><option>Ação Social / Hebron</option><option>Administrativo Geral</option>
+          </select>
+          <select id="conselho-demandas-content-fprio" onchange="demFiltrar('conselho-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as prioridades</option>
+            <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
+          </select>
+          <input id="conselho-demandas-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('conselho-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div id="conselho-demandas-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONSELHO: DEMANDAS DO CONSELHO (aba filtrada) -->
+
+  <div class="view" id="v-conselho-demandas-cons">
+    <div class="hero"><div class="hero-ic" style="background:rgba(88,152,212,0.12)">🏛</div><div><div class="hero-lbl">Conselho e Governança</div><div class="hero-ttl">Demandas do Conselho</div><div class="hero-dsc">Demandas direcionadas ao Conselho e Governança</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="ct">
+      <div class="card">
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
+          <div class="sni" onclick="go('conselho-demandas')">Todas</div>
+          <div class="sni-sep"></div>
+          <div class="sni on">Conselho e Governança</div>
+        </div>
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('conselho-demandas-cons-content',{area:'Conselho'})">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="conselho-demandas-cons-content-fstatus" onchange="demFiltrar('conselho-demandas-cons-content',{area:'Conselho'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
+          </select>
+          <select id="conselho-demandas-cons-content-fprio" onchange="demFiltrar('conselho-demandas-cons-content',{area:'Conselho'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as prioridades</option>
+            <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
+          </select>
+          <input id="conselho-demandas-cons-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('conselho-demandas-cons-content',{area:'Conselho'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div id="conselho-demandas-cons-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEMANDAS EM ANÁLISE -->
+
+  <div class="view" id="v-conselho-rel">
+    <div class="hero"><div class="hero-ic" style="background:var(--bluebg)">📊</div><div><div class="hero-lbl">Conselho</div><div class="hero-ttl">Relatórios Estratégicos</div></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Demandas Estratégicas <span class="cact" onclick="listarModulo('DEMANDAS','conselho-rel-list')">↻</span></div><div id="conselho-rel-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-conselho-ind">
+    <div class="hero"><div class="hero-ic" style="background:var(--bluebg)">📈</div><div><div class="hero-lbl">Conselho</div><div class="hero-ttl">Indicadores Institucionais</div></div></div>
+    <div class="ct">
+      <div class="kpis c4" id="conselho-ind-kpis">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.12)">👥</div><div class="kpi-body"><div class="kpi-lbl">Membros</div><div class="kpi-val" id="ci-memb">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--tealbg)">🏠</div><div class="kpi-body"><div class="kpi-lbl">PGs Ativos</div><div class="kpi-val" id="ci-pgs">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--goldbg)">📋</div><div class="kpi-body"><div class="kpi-lbl">Demandas Abertas</div><div class="kpi-val" id="ci-dem">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.12)">🗓</div><div class="kpi-body"><div class="kpi-lbl">Eventos 2026</div><div class="kpi-val" id="ci-ag">—</div></div></div>
+      </div>
+      <div class="card"><div class="ctit">Membros Cadastrados <span class="cact" onclick="carregarIndicadores()">↻ Atualizar</span></div><div id="conselho-ind-list"><div style="color:var(--tx3)">Carregando...</div></div></div>
+    </div>
+  </div>
+
+  <div class="view" id="v-conselho-doc">
+    <div class="hero"><div class="hero-ic" style="background:var(--bluebg)">🗂</div><div><div class="hero-lbl">Conselho</div><div class="hero-ttl">Documentos do Conselho</div></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Documentos <span class="cact" onclick="listarModulo('LOG_AUDITORIA','conselho-doc-list')">↻</span></div><div id="conselho-doc-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-conselho-cong">
+    <div class="hero"><div class="hero-ic" style="background:var(--bluebg)">⛪</div><div><div class="hero-lbl">Conselho</div><div class="hero-ttl">Acompanhamento das Congregações</div></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Membros por Congregação <span class="cact" onclick="listarModulo('MEMBROS','conselho-cong-list')">↻</span></div><div id="conselho-cong-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-conselho-hist">
+    <div class="hero"><div class="hero-ic" style="background:var(--bluebg)">📜</div><div><div class="hero-lbl">Conselho</div><div class="hero-ttl">Histórico de Atas e Deliberações</div></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Histórico <span class="cact" onclick="listarModulo('LOG_AUDITORIA','conselho-hist-list')">↻</span></div><div id="conselho-hist-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <!-- ════ JUNTA DIACONAL ══════════════════════ -->

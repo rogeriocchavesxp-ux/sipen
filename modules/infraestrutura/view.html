@@ -1,0 +1,157 @@
+  <div class="view" id="v-infra-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--amberbg);border-color:rgba(208,144,64,0.25)">🛠</div>
+      <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Infraestrutura e Conservação</div><div class="hero-dsc">Gestão de ordens de serviço, limpeza, patrimônio, prestadores e solicitações operacionais</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova OS</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--amber)">
+      <div class="ini on">Dashboard</div>
+      <div class="ini" onclick="go('infra-man')">Manutenção</div>
+      <div class="ini" onclick="go('infra-lim')">Limpeza</div>
+      <div class="ini" onclick="go('infra-sol')">Solicitações</div>
+      <div class="ini" onclick="go('infra-pat')">Patrimônio</div>
+      <div class="ini" onclick="go('infra-pre')">Prestadores</div>
+      <div class="ini" onclick="go('infra-demandas')">Demandas</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4">
+        <div class="kpi" style="cursor:pointer" onclick="go('infra-demandas-infra')">
+          <div class="kpi-ico" style="background:rgba(224,85,85,0.15);color:var(--rose)">📋</div>
+          <div class="kpi-body"><div class="kpi-lbl">Abertas</div><div class="kpi-val" id="infra-kpi-abertas">—</div><div class="kpi-d nu">demandas em aberto</div></div>
+        </div>
+        <div class="kpi" style="cursor:pointer" onclick="go('infra-demandas-infra')">
+          <div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber)">⚙️</div>
+          <div class="kpi-body"><div class="kpi-lbl">Em Andamento</div><div class="kpi-val" id="infra-kpi-and">—</div><div class="kpi-d nu">em execução</div></div>
+        </div>
+        <div class="kpi" style="cursor:pointer" onclick="go('infra-demandas-infra')">
+          <div class="kpi-ico" style="background:rgba(208,104,104,0.15);color:var(--rose)">⚠️</div>
+          <div class="kpi-body"><div class="kpi-lbl">Alta Prioridade</div><div class="kpi-val" id="infra-kpi-pri">—</div><div class="kpi-d dn">requer atenção</div></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gmd)">✅</div>
+          <div class="kpi-body"><div class="kpi-lbl">Concluídas</div><div class="kpi-val" id="infra-kpi-conc">—</div><div class="kpi-d up">este mês</div></div>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Demandas em aberto <span class="cact" onclick="infra_dash_load()">↻ Atualizar</span></div>
+          <div id="infra-dash-abertas"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        </div>
+        <div class="card">
+          <div class="ctit">Alta prioridade <span class="cact" onclick="infra_dash_load()">↻ Atualizar</span></div>
+          <div id="infra-dash-prioridade"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ctit">Acesso rápido</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+          <button class="tbt" onclick="go('infra-man')">🔧 Manutenção</button>
+          <button class="tbt" onclick="go('infra-lim')">🧹 Limpeza e Conservação</button>
+          <button class="tbt" onclick="go('infra-sol')">📝 Solicitações Operacionais</button>
+          <button class="tbt" onclick="go('infra-pat')">🏛 Patrimônio</button>
+          <button class="tbt" onclick="go('infra-pre')">👷 Prestadores de Serviço</button>
+          <button class="tbt" onclick="go('infra-demandas')">📋 Todas as Demandas</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ DEMANDAS ════════════════════════ -->
+
+  <div class="view" id="v-infra-demandas">
+    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🛠</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Solicitações e Demandas</div><div class="hero-dsc">Todas as demandas e as direcionadas ao módulo Infraestrutura e Conservação</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="ct">
+      <div class="card">
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
+          <div class="sni on">Todas</div>
+          <div class="sni-sep"></div>
+          <div class="sni" onclick="go('infra-demandas-infra')">Infraestrutura</div>
+        </div>
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('infra-demandas-content')">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="infra-demandas-content-fstatus" onchange="demFiltrar('infra-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
+          </select>
+          <select id="infra-demandas-content-fcat" onchange="demFiltrar('infra-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as categorias</option>
+            <option>Conselho</option><option>Agendamentos</option><option>Manutenção</option><option>Limpeza e Organização</option><option>Logística</option><option>Financeiro</option><option>Comunicação e Divulgação</option><option>Secretaria</option><option>Cadastro</option><option>Oração e Aconselhamento</option><option>Visitação</option><option>Apoio ao Culto</option><option>Ensino (EBT)</option><option>Ação Social / Hebron</option><option>Administrativo Geral</option>
+          </select>
+          <select id="infra-demandas-content-fprio" onchange="demFiltrar('infra-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as prioridades</option>
+            <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
+          </select>
+          <input id="infra-demandas-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('infra-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div id="infra-demandas-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFRAESTRUTURA: DEMANDAS DE INFRAESTRUTURA (aba filtrada) -->
+
+  <div class="view" id="v-infra-demandas-infra">
+    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🛠</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Demandas de Infraestrutura</div><div class="hero-dsc">Demandas direcionadas ao módulo Infraestrutura e Conservação</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="ct">
+      <div class="card">
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
+          <div class="sni" onclick="go('infra-demandas')">Todas</div>
+          <div class="sni-sep"></div>
+          <div class="sni on">Infraestrutura</div>
+        </div>
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('infra-demandas-infra-content',{area:'Infraestrutura'})">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="infra-demandas-infra-content-fstatus" onchange="demFiltrar('infra-demandas-infra-content',{area:'Infraestrutura'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
+          </select>
+          <select id="infra-demandas-infra-content-fprio" onchange="demFiltrar('infra-demandas-infra-content',{area:'Infraestrutura'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as prioridades</option>
+            <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
+          </select>
+          <input id="infra-demandas-infra-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('infra-demandas-infra-content',{area:'Infraestrutura'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div id="infra-demandas-infra-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONSELHO: SOLICITAÇÕES E DEMANDAS (com abas) -->
+
+  <div class="view" id="v-infra-man">
+    <div class="hero"><div class="hero-ic" style="background:rgba(224,138,42,0.12)">🔧</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Manutenção</div><div class="hero-dsc">Ordens de serviço e manutenções preventivas</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova OS</button></div></div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Ordens de Serviço <span class="cact" onclick="listarModulo('DEMANDAS','infra-man-list',{area:'Infraestrutura'})">↻ Atualizar</span></div>
+        <div id="infra-man-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUDITORIA / LOGS -->
+
+  <div class="view" id="v-infra-lim">
+    <div class="hero"><div class="hero-ic" style="background:var(--amberbg)">🧹</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Limpeza e Conservação</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova OS</button></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Demandas de Limpeza <span class="cact" onclick="listarModulo('DEMANDAS','infra-lim-list',{area:'Limpeza'})">↻</span></div><div id="infra-lim-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-infra-sol">
+    <div class="hero"><div class="hero-ic" style="background:var(--amberbg)">📝</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Solicitações Operacionais</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova Solicitação</button></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Solicitações <span class="cact" onclick="listarModulo('DEMANDAS','infra-sol-list',{area:'Infraestrutura'})">↻</span></div><div id="infra-sol-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-infra-pat">
+    <div class="hero"><div class="hero-ic" style="background:var(--amberbg)">🏛</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Patrimônio</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('ESTOQUE_ITENS')">+ Novo Item</button></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Itens de Patrimônio <span class="cact" onclick="listarModulo('ESTOQUE_ITENS','infra-pat-list')">↻</span></div><div id="infra-pat-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-infra-pre">
+    <div class="hero"><div class="hero-ic" style="background:var(--amberbg)">👷</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Prestadores de Serviço</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo Prestador</button></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Prestadores <span class="cact" onclick="listarModulo('MEMBROS','infra-pre-list')">↻</span></div><div id="infra-pre-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <!-- DEMANDAS CONCLUÍDAS -->

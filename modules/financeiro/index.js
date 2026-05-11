@@ -885,8 +885,8 @@
   /* ── HOOK INTO go() ──────────────────────────────────────── */
 
   const _origGo = window.go;
-  window.go = function (id) {
-    _origGo(id);
+  window.go = async function (id) {
+    await _origGo(id);
     const MAP = {
       "fin-dash":        () => renderDash(),
       "fin-lancamentos": renderLancamentos,

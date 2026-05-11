@@ -122,15 +122,15 @@ function renderDashboardGeral(){
 window.renderDashboardGeral=renderDashboardGeral;
 
 // ── Abrir congregação individual ──────────────────────
-function abrirCongView(id){
+async function abrirCongView(id){
   _activeCongId=id;
   _activeTab=0;
   buildCongMenu();
   const cong=CONG.getCong(id);
   if(!cong) return;
   if(typeof CRUMB!=="undefined") CRUMB["cong-ver"]=["cong","Congregações",cong.identificacao.nome];
+  if(typeof go==="function") await go("cong-ver");
   renderCongView(cong);
-  if(typeof go==="function") go("cong-ver");
 }
 window.abrirCongView=abrirCongView;
 
@@ -702,7 +702,6 @@ function salvarNovaDemandaCong(){
     data_abertura: new Date().toISOString().split("T")[0],
     data_conclusao: venc,
   };
-  console.log("PAYLOAD DEMANDA:", { ..._payload });
   apiWrite("create", "DEMANDAS", _payload).then(() => {
     if (typeof T === "function") T("✅ Demanda criada!", `Roteada para: ${resp || "Secretaria / Administração"}`);
     fecharModalNovaDemandaCong();
@@ -726,8 +725,8 @@ window.abrirModalNovoDesafio=abrirModalNovoDesafio;
 // ── Hook no go() ──────────────────────────────────────
 (function(){
   const _orig=window.go;
-  window.go=function(id){
-    _orig(id);
+  window.go=async function(id){
+    await _orig(id);
     if(id==="cong-dash") setTimeout(renderDashboardGeral,0);
   };
 })();

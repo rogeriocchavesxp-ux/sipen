@@ -287,7 +287,7 @@
     catch (e) { if (el) el.innerHTML = `<div class="card" style="color:var(--rose);padding:24px">Erro ao carregar projetos: ${_eh(e.message)}</div>`; _toast("Erro", e.message); }
   };
   window.projAbrirDetalhe = async function(id) {
-    go("proj-detalhe");
+    await go("proj-detalhe");
     const el = _view("proj-detalhe-content");
     if (el) el.innerHTML = `<div class="card" style="padding:28px;color:var(--tx3)">${_spin()} Carregando detalhe...</div>`;
     try { await _carregarDetalhe(id); _renderDetalhe(); }
@@ -296,7 +296,7 @@
   window.projAbrirForm = async function(id) {
     if (!_podeEditar()) { _toast("Acesso negado", "Você não tem permissão para editar projetos."); return; }
     _formId = id || null;
-    go("proj-form");
+    await go("proj-form");
     const el = _view("proj-form-content");
     if (el) el.innerHTML = `<div class="card" style="padding:28px;color:var(--tx3)">${_spin()} Preparando formulário...</div>`;
     try {
@@ -319,7 +319,7 @@
           savedId = rows?.[0]?.id;
         }
         _toast("Projeto salvo", "Dados atualizados com sucesso.");
-        if (savedId) await window.projAbrirDetalhe(savedId); else { go("proj-lista"); await window.projInit(); }
+        if (savedId) await window.projAbrirDetalhe(savedId); else { await go("proj-lista"); await window.projInit(); }
       });
     } catch(e) { _toast("Erro", e.message); }
   };
@@ -351,7 +351,7 @@
   window.projExcluir = async function(id) {
     if (!_podeExcluir()) return _toast("Acesso negado", "Somente administrador geral exclui projetos.");
     if (!confirm("Excluir este projeto e suas etapas?")) return;
-    try { await _fetchJson(`${_api()}/rest/v1/projetos?id=eq.${encodeURIComponent(id)}`, { method:"DELETE", headers:_headers() }); _toast("Projeto excluído", "Registro removido."); go("proj-lista"); await window.projInit(); }
+    try { await _fetchJson(`${_api()}/rest/v1/projetos?id=eq.${encodeURIComponent(id)}`, { method:"DELETE", headers:_headers() }); _toast("Projeto excluído", "Registro removido."); await go("proj-lista"); await window.projInit(); }
     catch(e) { _toast("Erro", e.message); }
   };
   window.projFiltrar = function(campo, valor) {
@@ -362,8 +362,8 @@
 
   const _oldGo = window.go;
   if (typeof _oldGo === "function" && !_oldGo.__projWrapped) {
-    const wrapped = function(id) {
-      _oldGo(id);
+    const wrapped = async function(id) {
+      await _oldGo(id);
       if (id === "proj-lista") window.projInit();
     };
     wrapped.__projWrapped = true;

@@ -1079,9 +1079,9 @@
 
   /* ── Editar ata ─────────────────────────────────────── */
 
-  window.atasEditarAta = function (id) {
-    window.go("atas-nova");
-    setTimeout(() => renderNovaAta(id), 60);
+  window.atasEditarAta = async function (id) {
+    await window.go("atas-nova");
+    renderNovaAta(id);
   };
 
   /* ── Expõe _abrirDemanda globalmente ────────────────── */
@@ -1111,8 +1111,8 @@
   ══════════════════════════════════════════════════════ */
 
   const _origGo = window.go;
-  window.go = function (id) {
-    _origGo(id);
+  window.go = async function (id) {
+    await _origGo(id);
     const MAP = {
       "atas-dash":  () => renderDash(),
       "atas-todas": () => renderTodasAtas(),

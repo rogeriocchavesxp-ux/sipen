@@ -1,0 +1,87 @@
+  <div class="view" id="v-rel-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(61,160,85,0.12);border-color:rgba(61,160,85,0.28)">≡</div>
+      <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Relatórios e Painel Gerencial</div><div class="hero-dsc">Indicadores, exportações e visão estratégica consolidada da IPPenha</div></div>
+      <div class="hero-act"><button class="tbt" onclick="T('Exportar','PDF / Excel / CSV disponíveis')">⬇ Exportar</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--gmd)">
+      <div class="ini on">Dashboard</div>
+      <div class="ini" onclick="T('Por Módulo','Filtro por área')">Por Módulo</div>
+      <div class="ini" onclick="T('Indicadores','KPIs detalhados')">Indicadores</div>
+      <div class="ini" onclick="T('Exportações','PDF, Excel, CSV')">Exportações</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c3">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gmd);">✦</div><div class="kpi-body"><div class="kpi-lbl">Taxa de conclusão</div><div class="kpi-val">71%</div><div class="kpi-d up">▲ +4pp vs março</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Tempo médio resolução</div><div class="kpi-val">3,2 dias</div><div class="kpi-d up">▲ melhorou</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Satisfação interna</div><div class="kpi-val">82/100</div><div class="kpi-d up">▲ excelente</div></div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Desempenho por módulo — Abril 2026</div>
+          <div class="bars" style="gap:10px">
+            <div><div class="bh"><span class="bn">Departamentos</span><span class="bv">94%</span></div><div class="bt"><div class="bf" style="width:94%;background:var(--violet)"></div></div></div>
+            <div><div class="bh"><span class="bn">Membresia</span><span class="bv">88%</span></div><div class="bt"><div class="bf" style="width:88%;background:var(--gbr)"></div></div></div>
+            <div><div class="bh"><span class="bn">Administrativo</span><span class="bv">76%</span></div><div class="bt"><div class="bf" style="width:76%;background:var(--gold)"></div></div></div>
+            <div><div class="bh"><span class="bn">Pastoral</span><span class="bv">72%</span></div><div class="bt"><div class="bf" style="width:72%;background:var(--teal)"></div></div></div>
+            <div><div class="bh"><span class="bn">Infraestrutura</span><span class="bv">58%</span></div><div class="bt"><div class="bf" style="width:58%;background:var(--amber)"></div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ctit">KPIs consolidados — IPPenha</div>
+          <div class="sr"><span class="sl">Total de tarefas (Abr)</span><span class="sv">165</span></div>
+          <div class="sr"><span class="sl">Concluídas</span><span class="sv pos">118</span></div>
+          <div class="sr"><span class="sl">Em andamento</span><span class="sv" style="color:var(--sky)">23</span></div>
+          <div class="sr"><span class="sl">Atrasadas</span><span class="sv neg">8</span></div>
+          <div class="sr"><span class="sl">Usuários ativos</span><span class="sv">48</span></div>
+          <div class="sr"><span class="sl">Batismos no período</span><span class="sv pos">38</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ JURÍDICO ════════════════════════ -->
+
+  <div class="view" id="v-rel-mod">
+    <div class="hero"><div class="hero-ic" style="background:rgba(58,170,92,0.12)">📊</div><div><div class="hero-lbl">Relatórios</div><div class="hero-ttl">Por Módulo</div></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Demandas por Área <span class="cact" onclick="listarModulo('DEMANDAS','rel-mod-list')">↻</span></div><div id="rel-mod-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-rel-ind">
+    <div class="hero"><div class="hero-ic" style="background:rgba(58,170,92,0.12)">📈</div><div><div class="hero-lbl">Relatórios</div><div class="hero-ttl">Indicadores</div></div></div>
+    <div class="ct">
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.12)">👥</div><div class="kpi-body"><div class="kpi-lbl">Membros</div><div class="kpi-val" id="ri-memb">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--tealbg)">🙋</div><div class="kpi-body"><div class="kpi-lbl">Visitantes</div><div class="kpi-val" id="ri-vis">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--goldbg)">📋</div><div class="kpi-body"><div class="kpi-lbl">Demandas</div><div class="kpi-val" id="ri-dem">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--bluebg)">🏠</div><div class="kpi-body"><div class="kpi-lbl">PGs</div><div class="kpi-val" id="ri-pgs">—</div></div></div>
+      </div>
+      <div class="card"><div class="ctit">Resumo Geral <span class="cact" onclick="carregarIndicadoresGerais()">↻ Atualizar</span></div><div id="rel-ind-list"><div style="color:var(--tx3)">Clique em Atualizar</div></div></div>
+    </div>
+  </div>
+
+  <div class="view" id="v-rel-uni">
+    <div class="hero"><div class="hero-ic" style="background:rgba(58,170,92,0.12)">⛪</div><div><div class="hero-lbl">Relatórios</div><div class="hero-ttl">Por Congregação</div></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Membros <span class="cact" onclick="listarModulo('MEMBROS','rel-uni-list')">↻</span></div><div id="rel-uni-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-rel-res">
+    <div class="hero"><div class="hero-ic" style="background:rgba(58,170,92,0.12)">👤</div><div><div class="hero-lbl">Relatórios</div><div class="hero-ttl">Por Responsável</div></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Demandas por Responsável <span class="cact" onclick="listarModulo('DEMANDAS','rel-res-list')">↻</span></div><div id="rel-res-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-rel-exp">
+    <div class="hero"><div class="hero-ic" style="background:rgba(58,170,92,0.12)">⬇️</div><div><div class="hero-lbl">Relatórios</div><div class="hero-ttl">Exportações</div></div></div>
+    <div class="ct">
+      <div class="g3">
+        <div class="card" style="cursor:pointer" onclick="exportarDados('MEMBROS','membros')"><div class="ctit">👥 Membros</div><div style="font-size:11px;color:var(--tx3)">Exportar todos os membros em JSON</div><div style="margin-top:10px"><span style="background:var(--gr);color:#fff;border-radius:5px;padding:5px 10px;font-size:11px">⬇ Exportar</span></div></div>
+        <div class="card" style="cursor:pointer" onclick="exportarDados('DEMANDAS','demandas')"><div class="ctit">📋 Demandas</div><div style="font-size:11px;color:var(--tx3)">Exportar todas as demandas em JSON</div><div style="margin-top:10px"><span style="background:var(--gr);color:#fff;border-radius:5px;padding:5px 10px;font-size:11px">⬇ Exportar</span></div></div>
+        <div class="card" style="cursor:pointer" onclick="exportarDados('FINANCEIRO','financeiro')"><div class="ctit">💰 Financeiro</div><div style="font-size:11px;color:var(--tx3)">Exportar lançamentos financeiros em JSON</div><div style="margin-top:10px"><span style="background:var(--gr);color:#fff;border-radius:5px;padding:5px 10px;font-size:11px">⬇ Exportar</span></div></div>
+        <div class="card" style="cursor:pointer" onclick="exportarDados('VISITANTES','visitantes')"><div class="ctit">🙋 Visitantes</div><div style="font-size:11px;color:var(--tx3)">Exportar visitantes em JSON</div><div style="margin-top:10px"><span style="background:var(--gr);color:#fff;border-radius:5px;padding:5px 10px;font-size:11px">⬇ Exportar</span></div></div>
+        <div class="card" style="cursor:pointer" onclick="exportarDados('AGENDA','agenda')"><div class="ctit">🗓 Agenda</div><div style="font-size:11px;color:var(--tx3)">Exportar agenda completa em JSON</div><div style="margin-top:10px"><span style="background:var(--gr);color:#fff;border-radius:5px;padding:5px 10px;font-size:11px">⬇ Exportar</span></div></div>
+        <div class="card" style="cursor:pointer" onclick="exportarDados('PGS','pgs')"><div class="ctit">🏠 PGs</div><div style="font-size:11px;color:var(--tx3)">Exportar pequenos grupos em JSON</div><div style="margin-top:10px"><span style="background:var(--gr);color:#fff;border-radius:5px;padding:5px 10px;font-size:11px">⬇ Exportar</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEMBRESIA -->

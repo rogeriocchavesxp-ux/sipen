@@ -121,11 +121,63 @@ const CRUMB={
 const SL={dash:"Dashboard",diaconos:"Diáconos",escalas:"Escalas de Serviço",familias:"Famílias Assistidas",social:"Ação Social e Beneficência",visitacao:"Visitação Diaconal",patrimonio:"Patrimônio e Apoio Operacional",solicitacoes:"Solicitações Diaconais",relatorios:"Relatórios Diaconais",historico:"Histórico e Atas",sec:"Secretaria e Cadastro",rh:"RH / Gestão de Pessoas",doc:"Documentos",aud:"Auditoria",fin:"Financeiro",con:"Contratos",est:"Controle de Estoque",demandas:"Processos e Demandas Jurídicas",contratos:"Contratos e Instrumentos",pareceres:"Pareceres",documentos:"Documentos Jurídicos",riscos:"Riscos e Pendências",historico:"Histórico",rel:"Relatórios Estratégicos",ind:"Indicadores",cong:"Congregações",nomeados:"Nomeados",ordenados:"Ordenados",ate:"Atendimentos",ora:"Pedidos de Oração",aco:"Acompanhamentos",reg:"Registros Pastorais",pri:"Casos Prioritários",min:"Ministérios",soc:"Sociedades Internas",adm:"Administração",lid:"Liderança Ministerial",esc:"Escalas",prog:"Programações",lit:"Liturgia dos Cultos",vol:"Voluntários",calendario:"Calendário Geral",solicitacoes:"Solicitações de Agendamento",aprovacoes:"Aprovações Pendentes",confirmados:"Eventos Confirmados",recusados:"Eventos Recusados",reagendamentos:"Reagendamentos e Ajustes",ambientes:"Ambientes e Recursos",conflitos:"Conflitos de Agenda",config:"Configurações da Agenda",lista:"Lista de PGs",encontros:"Encontros",participantes:"Participantes",visitantes:"Visitantes",estudos:"Estudos",relatorios:"Relatórios",oracao:"Pedidos de Oração",man:"Manutenção",lim:"Limpeza e Conservação",sol:"Solicitações Operacionais",pat:"Patrimônio",pre:"Prestadores",todas:"Todas as Solicitações",pend:"Pendentes",and:"Em Andamento",conc:"Concluídas",hist:"Histórico",mod:"Por Módulo",exp:"Exportações",uni:"Por Congregação",res:"Por Responsável",cad:"Cadastro de Membros",bat:"Batismos",prof:"Profissões de Fé",trans:"Transferências",vis:"Visitantes"};
 const MN={admin:"Administrativo",fin:"Financeiro",jur:"Jurídico",conselho:"Conselho",proj:"Projetos",pastoral:"Pastoral",min:"Departamentos",agenda:"Agenda",pgs:"Pequenos Grupos",infra:"Infraestrutura e Conservação",dem:"Demandas",rel:"Relatórios",memb:"Membresia",cong:"Congregações",diac:"Junta Diaconal",area:"Área do Membro"};
 
-function go(id){
+const _viewCache = {};
+const _VIEW_MAP = {
+  "geral":       "modules/dashboard/view.html",
+  "admin":       "modules/admin/view.html",
+  "pext":        "modules/admin/view.html",
+  "fin":         "modules/financeiro/view.html",
+  "cnab":        "modules/financeiro/view.html",
+  "jur":         "modules/juridico/view.html",
+  "conselho":    "modules/conselho/view.html",
+  "atas":        "modules/conselho/view.html",
+  "pastoral":    "modules/pastoral/view.html",
+  "min":         "modules/departamentos/view.html",
+  "agenda":      "modules/agenda/view.html",
+  "pgs":         "modules/pgs/view.html",
+  "infra":       "modules/infraestrutura/view.html",
+  "dem":         "modules/demandas/view.html",
+  "rel":         "modules/relatorios/view.html",
+  "memb":        "modules/membresia/view.html",
+  "proj":        "modules/projetos/view.html",
+  "diac":        "modules/diaconal/view.html",
+  "cong":        "modules/congregacoes/view.html",
+  "area":        "modules/area-membro/view.html",
+  "config":      "modules/config/view.html",
+  "generic":     "modules/shared/view.html",
+};
+
+function _getViewFileForRoute(id) {
+  const prefix = String(id || "").split("-")[0];
+  return _VIEW_MAP[prefix] || null;
+}
+
+window.isKnownViewRoute = function(id) {
+  return !!_getViewFileForRoute(id);
+};
+
+async function _ensureViewLoaded(id) {
+  const viewFile = _getViewFileForRoute(id) || _VIEW_MAP["geral"];
+  if (_viewCache[viewFile]) return _viewCache[viewFile];
+  _viewCache[viewFile] = fetch(viewFile).then(r => {
+    if (!r.ok) throw new Error(`Falha ao carregar view: ${viewFile}`);
+    return r.text();
+  }).then(html => {
+    document.getElementById("page").insertAdjacentHTML("beforeend", html);
+  }).catch(err => {
+    delete _viewCache[viewFile];
+    throw err;
+  });
+  return _viewCache[viewFile];
+}
+
+async function go(id){
+  await _ensureViewLoaded(id);
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
   const el=document.getElementById("v-"+id);
   if(el){el.classList.remove("on");void el.offsetWidth;el.classList.add("on");}
   else{
+    await _ensureViewLoaded("generic");
     const p=id.split("-"),m=p[0],s=p.slice(1).join("-");
     document.getElementById("g-title").textContent=SL[s]||id;
     document.getElementById("g-sub").textContent=(MN[m]||m)+" — seção em implementação";
@@ -174,5 +226,3 @@ function tog(mod){
 }
 
   // Warning file:// protocol already handled in entrarNoSistema flow
-
-

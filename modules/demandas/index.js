@@ -914,8 +914,8 @@
       return;
     }
     _ativo = dem;
+    if (typeof window.go === "function") await window.go("dem-detalhe");
     _renderDetalhe(dem);
-    if (typeof window.go === "function") window.go("dem-detalhe");
   };
 
   function _renderDetalhe(dem) {
@@ -1518,8 +1518,8 @@
   };
 
   const _origGo = window.go;
-  window.go = function(id) {
-    _origGo(id);
+  window.go = async function(id) {
+    await _origGo(id);
     if (id && id.startsWith("dem-")) _aplicarMenuDem();
     const MAP = {
       "dem-dash":    () => renderDash(),
@@ -1530,7 +1530,7 @@
       "dem-pri":          () => renderLista("dem-pri-content",              { prioridade:"Alta" }),
       "dem-hist":         () => renderLista("dem-hist-content"),
       "admin-demandas":          () => _admRender(),
-      "admin-demandas-adm":      () => { _admFiltro = "Administrativo"; try { localStorage.setItem(_ADM_KEY, _admFiltro); } catch(_){} go("admin-demandas"); },
+      "admin-demandas-adm":      async () => { _admFiltro = "Administrativo"; try { localStorage.setItem(_ADM_KEY, _admFiltro); } catch(_){} await go("admin-demandas"); },
       "fin-demandas":            () => _finRender(),
       "conselho-demandas":        () => renderLista("conselho-demandas-content"),
       "conselho-demandas-cons":   () => renderLista("conselho-demandas-cons-content",  { area:"Conselho" }),
@@ -1543,7 +1543,7 @@
       "pastoral-demandas-pas":    () => renderLista("pastoral-demandas-pas-content",   { area:"Pastoral" }),
       "area-dem":                 () => renderLista("area-dem-content"),
     };
-    if (MAP[id]) MAP[id]();
+    if (MAP[id]) await MAP[id]();
   };
 
   window.adminDemSetFiltro = _admSetFiltro;

@@ -205,7 +205,6 @@ async function doLogin() {
 
 /* ── CARREGA USUÁRIO DO BANCO APÓS AUTH ──────── */
 async function carregarUsuarioLogado(authUserId) {
-  console.log("Auth user id recebido:", authUserId);
   const sb = getSupabase();
 
   // 1ª consulta: busca pessoa pelo auth_user_id
@@ -214,9 +213,6 @@ async function carregarUsuarioLogado(authUserId) {
     .select("id, nome, email, auth_user_id, status, igreja_id")
     .eq("auth_user_id", authUserId)
     .maybeSingle();
-
-  console.log("Pessoa encontrada:", pessoa);
-  console.log("Erro pessoa:", pessoaError);
 
   if (pessoaError) {
     console.error("Erro ao buscar pessoa:", pessoaError);
@@ -236,9 +232,6 @@ async function carregarUsuarioLogado(authUserId) {
     .eq("status", "ativo")
     .is("deleted_at", null)
     .maybeSingle();
-
-  console.log("Membro encontrado:", membro);
-  console.log("Erro membro:", membroError);
 
   if (membroError) {
     console.error("Erro ao buscar membro:", membroError);
@@ -285,12 +278,11 @@ async function carregarPerfilEPermissoes(nomePerfil) {
 
   permissoesUsuario = {};
   (perms || []).forEach(p => { permissoesUsuario[p.modulo] = p.nivel_acesso; });
-  console.log("Permissões:", permissoesUsuario);
 }
 
 /* ── PRIMEIRO MÓDULO PERMITIDO ───────────────── */
-function abrirPrimeiroModuloPermitido() {
-  if (USUARIO_ATUAL?.perfil === "ADMINISTRADOR_GERAL") { go("geral"); return; }
+async function abrirPrimeiroModuloPermitido() {
+  if (USUARIO_ATUAL?.perfil === "ADMINISTRADOR_GERAL") { await go("geral"); return; }
   const ordem = [
     ["PASTORAL","pastoral-dash"],["MINISTERIAL","min-dash"],["AGENDA","agenda-dash"],
     ["PGS","pgs-dash"],["DEMANDAS","dem-dash"],["AREA_MEMBRO","area-dash"],
@@ -298,7 +290,7 @@ function abrirPrimeiroModuloPermitido() {
     ["CONSELHO","conselho-dash"],["INFRAESTRUTURA","infra-dash"],["JURIDICO","jur-dash"],
   ];
   const primeiro = ordem.find(([mod]) => (permissoesUsuario[mod] || "SEM_ACESSO") !== "SEM_ACESSO");
-  if (primeiro) go(primeiro[1]); else go("geral");
+  if (primeiro) await go(primeiro[1]); else await go("geral");
 }
 
 /* Restaura a rota salva — hash > sessionStorage (isolado por aba).
@@ -318,8 +310,9 @@ function _lerRotaSalva() {
     const local = sessionStorage.getItem("sipen_route") || "";
     const rota  = hash || local;
     if (!rota) return null;
-    // View existe no DOM ou está registrada no CRUMB (views JS-driven)
+    // View existe no DOM, é uma rota modular lazy-loaded ou está registrada no CRUMB.
     if (document.getElementById("v-" + rota)) return rota;
+    if (typeof window.isKnownViewRoute === "function" && window.isKnownViewRoute(rota)) return rota;
     if (typeof CRUMB !== "undefined" && CRUMB[rota])  return rota;
     return null;
   } catch(_) { return null; }
@@ -354,12 +347,12 @@ async function entrarNoSistema() {
   if (rotaSalva) {
     const mod = rotaSalva.split("-")[0];
     if (mod !== "geral") _expandirSidebar(mod);
-    go(rotaSalva);
+    await go(rotaSalva);
   } else if (_isMembroComum() || _isMobile()) {
     _expandirSidebar("area");
-    go("area-dash");
+    await go("area-dash");
   } else {
-    abrirPrimeiroModuloPermitido();
+    await abrirPrimeiroModuloPermitido();
   }
 
   if (typeof window.demAtualizarLabels === "function") window.demAtualizarLabels();
@@ -1293,7 +1286,6 @@ async function obterPerfilUuid(perfilKey) {
   const nomeDisplay = PERFIS[perfilKey]?.nome || perfilKey;
   const nomeBanco   = PERFIL_KEY_TO_DB_NOME[perfilKey] || PERFIS_MAP[nomeDisplay];
   if (!nomeBanco) throw new Error(`Perfil desconhecido: "${perfilKey}"`);
-  console.log("Perfil UI:", nomeDisplay, "→ Perfil DB:", nomeBanco);
   const res = await fetch(
     `${apiBaseUrl()}/rest/v1/perfis?nome=eq.${encodeURIComponent(nomeBanco)}&select=id,nome&limit=1`,
     { headers: apiHeaders() }
@@ -1317,8 +1309,6 @@ async function salvarPermissoesPerfil(containerEl) {
     // Se UUID não veio no botão, tenta buscar agora (fallback)
     if (!perfilUuid) perfilUuid = await obterPerfilUuid(perfilId);
     if (!perfilUuid) throw new Error("UUID do perfil não encontrado. Execute supabase-perfis-permissoes.sql no Supabase.");
-
-    console.log("Perfil:", perfilId, "| UUID:", perfilUuid);
 
     const selects  = containerEl.querySelectorAll("select[data-modulo]");
     const registros = [];
@@ -1667,13 +1657,13 @@ window.area_dash_load = function() { _areaDashLoad(); };
 // Rotas de Membresia que exigem acesso pleno
 const _MEMB_ROTAS_RESTRITAS = ["memb-dash","memb-com","memb-ncom","memb-vis","memb-bat","memb-prof","memb-trans","memb-hist"];
 
-const _goBase = go; // captura a função original
-window.go = function(id) {
+const _goBase = window.go; // captura a função original
+window.go = async function(id) {
   // Guarda de rota: redireciona usuários sem acesso pleno à Membresia
   if (USUARIO_ATUAL && _MEMB_ROTAS_RESTRITAS.includes(id) && !_podeMembresiaPlena()) {
     id = "memb-aniv";
   }
-  _goBase(id);
+  await _goBase(id);
   // Agenda
   if (id === "agenda-dash")           carregarAgendaDash();
   if (id === "agenda-ambientes")      carregarEspacos();
@@ -1725,4 +1715,3 @@ CRUMB["area-agenda"] = ["Área do Membro","Agenda","/ próximos compromissos"];
 CRUMB["area-min"]    = ["Área do Membro","Meus Ministérios","/ serviço e escala"];
 CRUMB["area-pgs"]    = ["Área do Membro","Meu PG","/ pequeno grupo"];
 CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e demandas"];
-

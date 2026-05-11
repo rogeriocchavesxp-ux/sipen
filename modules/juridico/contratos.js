@@ -357,8 +357,8 @@
     if (!_cache.length) await _load();
     const con = _cache.find(r => String(r.id) === String(id));
     if (!con) { if (typeof T === "function") T("Erro", "Contrato não encontrado"); return; }
+    if (typeof go === "function") await go("admin-con-detalhe");
     _renderDetalhe(con);
-    if (typeof go === "function") go("admin-con-detalhe");
   };
 
   function _renderDetalhe(con) {
@@ -620,7 +620,7 @@
       await apiWrite("delete", "CONTRATOS", { _row: id });
       if (typeof T === "function") T("Contrato excluído", "");
       _invalidate();
-      if (typeof go === "function") go("admin-con");
+      if (typeof go === "function") await go("admin-con");
       else await renderContratos();
     } catch (e) {
       if (typeof T === "function") T("Erro", "Não foi possível excluir");
@@ -651,8 +651,8 @@
   /* ── Hook no go() ────────────────────────────────────── */
 
   const _origGo = window.go;
-  window.go = function (id) {
-    _origGo(id);
+  window.go = async function (id) {
+    await _origGo(id);
     if (id === "admin-con") {
       _tipoFiltro = "";
       document.querySelectorAll("#con-tipo-tabs .ini").forEach((el, i) => el.classList.toggle("on", i === 0));

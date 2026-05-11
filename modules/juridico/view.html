@@ -1,0 +1,142 @@
+  <div class="view" id="v-jur-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.12);border-color:rgba(74,156,245,0.28)">⚖</div>
+      <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Jurídico</div><div class="hero-dsc">Gestão de contratos, pareceres, riscos, demandas e auditoria jurídica institucional</div></div>
+      <div class="hero-act"><button class="tbt" onclick="T('Parecer','Nova minuta disponível para revisão')">📄 Parecer</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--blue)">
+      <div class="ini on">Dashboard</div>
+      <div class="ini" onclick="go('jur-demandas')">Demandas</div>
+      <div class="ini" onclick="go('jur-contratos')">Contratos</div>
+      <div class="ini" onclick="go('jur-riscos')">Riscos</div>
+      <div class="ini" onclick="go('jur-historico')">Histórico</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:var(--bluebg);color:var(--blue)">⚖</div><div class="kpi-body"><div class="kpi-lbl">Demandas ativas</div><div class="kpi-val">11</div><div class="kpi-d nu">+3 no mês</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--goldbg);color:var(--gold)">◆</div><div class="kpi-body"><div class="kpi-lbl">Contratos vigentes</div><div class="kpi-val">14</div><div class="kpi-d wa">3 a revisar</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">!</div><div class="kpi-body"><div class="kpi-lbl">Riscos críticos</div><div class="kpi-val">2</div><div class="kpi-d dn">prioridade alta</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--tealbg);color:var(--teal)">◎</div><div class="kpi-body"><div class="kpi-lbl">Pareceres emitidos</div><div class="kpi-val">9</div><div class="kpi-d up">▲ +2 no mês</div></div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Fila jurídica</div>
+          <div class="trow"><div class="tdot" style="background:var(--rose)"></div><div class="tbody"><div class="ttitle">Revisão contratual — Prestador de manutenção</div><div class="tmeta">vence em 9 dias · alta prioridade</div></div><div class="tright"><span class="pill pl">Crítico</span></div></div>
+          <div class="trow"><div class="tdot" style="background:var(--gold)"></div><div class="tbody"><div class="ttitle">Parecer sobre uso de imagem em evento</div><div class="tmeta">solicitado por Comunicação</div></div><div class="tright"><span class="pill po">Em análise</span></div></div>
+          <div class="trow"><div class="tdot" style="background:var(--blue)"></div><div class="tbody"><div class="ttitle">Atualização do repositório de documentos jurídicos</div><div class="tmeta">governança documental</div></div><div class="tright"><span class="pill pp">Aberto</span></div></div>
+        </div>
+        <div class="card">
+          <div class="ctit">Análise rápida</div>
+          <div class="sr"><span class="sl">Tempo médio de resposta</span><span class="sv">2,4 dias</span></div>
+          <div class="sr"><span class="sl">Pendências por contrato</span><span class="sv">5</span></div>
+          <div class="sr"><span class="sl">Documentos com revisão anual</span><span class="sv">18</span></div>
+          <div class="sr"><span class="sl">Última auditoria jurídica</span><span class="sv">08/04/2026</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ AGENDA ═══════════════════════════ -->
+
+  <div class="view" id="v-jur-demandas-tab">
+    <div class="hero"><div class="hero-ic" style="background:rgba(74,156,245,0.12)">⚖️</div><div><div class="hero-lbl">Jurídico</div><div class="hero-ttl">Solicitações e Demandas</div><div class="hero-dsc">Todas as demandas e as direcionadas ao módulo Jurídico</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="ct">
+      <div class="card">
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
+          <div class="sni on">Todas</div>
+          <div class="sni-sep"></div>
+          <div class="sni" onclick="go('jur-demandas-jur')">Jurídico</div>
+        </div>
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('jur-demandas-tab-content')">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="jur-demandas-tab-content-fstatus" onchange="demFiltrar('jur-demandas-tab-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
+          </select>
+          <select id="jur-demandas-tab-content-fcat" onchange="demFiltrar('jur-demandas-tab-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as categorias</option>
+            <option>Conselho</option><option>Agendamentos</option><option>Manutenção</option><option>Limpeza e Organização</option><option>Logística</option><option>Financeiro</option><option>Comunicação e Divulgação</option><option>Secretaria</option><option>Cadastro</option><option>Oração e Aconselhamento</option><option>Visitação</option><option>Apoio ao Culto</option><option>Ensino (EBT)</option><option>Ação Social / Hebron</option><option>Administrativo Geral</option>
+          </select>
+          <select id="jur-demandas-tab-content-fprio" onchange="demFiltrar('jur-demandas-tab-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as prioridades</option>
+            <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
+          </select>
+          <input id="jur-demandas-tab-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('jur-demandas-tab-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div id="jur-demandas-tab-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JURÍDICO: DEMANDAS JURÍDICAS (aba filtrada) -->
+
+  <div class="view" id="v-jur-demandas-jur">
+    <div class="hero"><div class="hero-ic" style="background:rgba(74,156,245,0.12)">⚖️</div><div><div class="hero-lbl">Jurídico</div><div class="hero-ttl">Demandas Jurídicas</div><div class="hero-dsc">Demandas direcionadas ao módulo Jurídico</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="ct">
+      <div class="card">
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
+          <div class="sni" onclick="go('jur-demandas-tab')">Todas</div>
+          <div class="sni-sep"></div>
+          <div class="sni on">Jurídico</div>
+        </div>
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('jur-demandas-jur-content',{area:'Jurídico'})">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="jur-demandas-jur-content-fstatus" onchange="demFiltrar('jur-demandas-jur-content',{area:'Jurídico'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
+          </select>
+          <select id="jur-demandas-jur-content-fprio" onchange="demFiltrar('jur-demandas-jur-content',{area:'Jurídico'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as prioridades</option>
+            <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
+          </select>
+          <input id="jur-demandas-jur-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('jur-demandas-jur-content',{area:'Jurídico'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div id="jur-demandas-jur-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFRAESTRUTURA: SOLICITAÇÕES E DEMANDAS (com abas) -->
+
+  <div class="view" id="v-jur-demandas">
+    <div class="hero"><div class="hero-ic" style="background:rgba(74,156,245,0.12)">⚖️</div><div><div class="hero-lbl">Jurídico</div><div class="hero-ttl">Processos e Demandas Jurídicas</div><div class="hero-dsc">Acompanhamento de processos e solicitações jurídicas</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova Demanda</button></div></div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Demandas Jurídicas <span class="cact" onclick="listarModulo('DEMANDAS','jur-dem-list',{area:'Jurídico'})">↻ Atualizar</span></div>
+        <div id="jur-dem-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFRA MANUTENÇÃO -->
+
+  <div class="view" id="v-jur-contratos">
+    <div class="hero"><div class="hero-ic" style="background:var(--bluebg)">⚖️</div><div><div class="hero-lbl">Jurídico</div><div class="hero-ttl">Contratos e Instrumentos</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo</button></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Contratos Jurídicos <span class="cact" onclick="listarModulo('DEMANDAS','jur-con-list',{area:'Jurídico'})">↻</span></div><div id="jur-con-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-jur-pareceres">
+    <div class="hero"><div class="hero-ic" style="background:var(--bluebg)">📋</div><div><div class="hero-lbl">Jurídico</div><div class="hero-ttl">Pareceres</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo</button></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Pareceres <span class="cact" onclick="listarModulo('DEMANDAS','jur-par-list',{area:'Jurídico'})">↻</span></div><div id="jur-par-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-jur-documentos">
+    <div class="hero"><div class="hero-ic" style="background:var(--bluebg)">🗂</div><div><div class="hero-lbl">Jurídico</div><div class="hero-ttl">Documentos Jurídicos</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo</button></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Documentos <span class="cact" onclick="listarModulo('DEMANDAS','jur-doc-list',{area:'Jurídico'})">↻</span></div><div id="jur-doc-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-jur-riscos">
+    <div class="hero"><div class="hero-ic" style="background:var(--rosebg)">⚠️</div><div><div class="hero-lbl">Jurídico</div><div class="hero-ttl">Riscos e Pendências</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo</button></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Riscos <span class="cact" onclick="listarModulo('DEMANDAS','jur-ris-list',{area:'Jurídico',prioridade:'Alta'})">↻</span></div><div id="jur-ris-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <div class="view" id="v-jur-historico">
+    <div class="hero"><div class="hero-ic" style="background:var(--bluebg)">📜</div><div><div class="hero-lbl">Jurídico</div><div class="hero-ttl">Histórico e Auditoria Jurídica</div></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Histórico <span class="cact" onclick="listarModulo('LOG_AUDITORIA','jur-hist-list',{modulo:'juridico'})">↻</span></div><div id="jur-hist-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <!-- CONSELHO -->
