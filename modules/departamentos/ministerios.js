@@ -16,11 +16,21 @@
     return p === 'LIDER_MINISTERIO' || p === 'LIDER_AREA';
   }
   function _podeEditar() { return _isGestor() || _isLider(); }
+  function _podeEditarSetor() {
+    if (_isGestor()) return true;
+    if (_isLider()) {
+      return _supervisorDoMinisterioAtual &&
+             _supervisorDoMinisterioAtual === USUARIO_ATUAL?.pessoa_id;
+    }
+    return false;
+  }
 
   /* ══ ESTADO ══════════════════════════════════════════════════ */
   let _ministerioAtual  = null;
   let _pessoasCache     = null;
   let _editandoId       = null;
+  let _setorEditandoId  = null;
+  let _supervisorDoMinisterioAtual = null; // pessoa_id do supervisor do ministério aberto
 
   /* ══ SUPABASE HEADERS ════════════════════════════════════════ */
   // Usa o JWT do usuário autenticado (via sipenToken()) para que as
@@ -238,6 +248,7 @@
         header.innerHTML = '<div style="color:var(--rose);font-size:13px">Ministério não encontrado.</div>';
         return;
       }
+      _supervisorDoMinisterioAtual = m.supervisor || null;
 
       // Resolver nomes dos cargos de liderança em um único request
       const pessoaIds = [m.supervisor, m.conselheiro, m.coordenador].filter(Boolean);
@@ -290,6 +301,7 @@
         </div>`;
 
       await _carregarMembros(id);
+      await _carregarSetores(id);
 
     } catch (e) {
       console.error('minMinAbrir:', e);
@@ -357,6 +369,87 @@
     } catch (e) {
       console.error('_carregarMembros:', e);
       el.innerHTML = '<div style="color:var(--rose);font-size:13px;padding:16px 0">Erro ao carregar membros.</div>';
+    }
+  }
+
+  async function _carregarSetores(ministerioId) {
+    const el  = document.getElementById('min-min-setor-list');
+    const cnt = document.getElementById('min-min-setor-count');
+    const btn = document.getElementById('min-min-btn-add-setor');
+    if (!el) return;
+
+    if (btn) btn.style.display = _podeEditarSetor() ? '' : 'none';
+
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/ministerio_setores` +
+        `?ministerio_id=eq.${ministerioId}` +
+        `&select=id,nome,observacoes,ativo,lider_setorial` +
+        `&order=nome.asc`,
+        { headers: _hdr() }
+      );
+      const lista = r.ok ? await r.json() : [];
+      const ativos = lista.filter(s => s.ativo !== false);
+      if (cnt) cnt.textContent = `(${ativos.length})`;
+
+      if (lista.length === 0) {
+        el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:16px 0;text-align:center">Nenhum setor cadastrado neste ministério.</div>';
+        return;
+      }
+
+      // Resolver nomes dos líderes em lote
+      const liderIds = [...new Set(lista.filter(s => s.lider_setorial).map(s => s.lider_setorial))];
+      const nomeLider = {};
+      if (liderIds.length) {
+        const rl = await fetch(
+          `${SUPABASE_URL}/rest/v1/pessoas?id=in.(${liderIds.join(',')})&select=id,nome`,
+          { headers: _hdr() }
+        );
+        const ps = rl.ok ? await rl.json() : [];
+        ps.forEach(p => { nomeLider[p.id] = (p.nome || '').toUpperCase(); });
+      }
+
+      const podeAct = _podeEditarSetor();
+      el.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="border-bottom:2px solid var(--bd1)">
+            <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Setor</th>
+            <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Líder Setorial</th>
+            <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Status</th>
+            ${podeAct ? '<th style="padding:6px 8px;color:var(--tx3);font-weight:600">Ações</th>' : ''}
+          </tr></thead>
+          <tbody>${lista.map(s => {
+            const nome   = escapeHtml(s.nome);
+            const lider  = s.lider_setorial ? escapeHtml(nomeLider[s.lider_setorial] || '—') : '—';
+            const ativo  = s.ativo !== false;
+            const stTag  = ativo
+              ? '<span style="font-size:11px;padding:2px 7px;background:var(--greenbg,#d1fae5);color:var(--green,#059669);border-radius:20px">Ativo</span>'
+              : '<span style="font-size:11px;padding:2px 7px;background:#fee2e2;color:var(--rose);border-radius:20px">Inativo</span>';
+            const tdAcoes = podeAct
+              ? `<td style="padding:7px 8px;white-space:nowrap">
+                   <button onclick="minMinEditarSetor('${s.id}')"
+                     class="tbt" style="font-size:11px;padding:3px 8px;margin-right:4px">Editar</button>
+                   <button onclick="minMinToggleSetorStatus('${s.id}',${!ativo})"
+                     class="tbt" style="font-size:11px;padding:3px 8px;margin-right:4px">
+                     ${ativo ? 'Inativar' : 'Reativar'}
+                   </button>
+                   <button onclick="minMinRemoverSetor('${s.id}')"
+                     class="tbt" style="font-size:11px;padding:3px 8px;color:var(--rose);border-color:var(--rose)">
+                     Remover
+                   </button>
+                 </td>`
+              : '';
+            return `<tr style="border-bottom:1px solid var(--bd1)">
+              <td style="padding:7px 8px;color:var(--tx1);font-weight:500">${nome}</td>
+              <td style="padding:7px 8px;color:var(--tx2)">${lider}</td>
+              <td style="padding:7px 8px">${stTag}</td>
+              ${tdAcoes}
+            </tr>`;
+          }).join('')}</tbody>
+        </table>`;
+    } catch (e) {
+      console.error('_carregarSetores:', e);
+      el.innerHTML = '<div style="color:var(--rose);font-size:13px;padding:16px 0">Erro ao carregar setores.</div>';
     }
   }
 
@@ -576,6 +669,103 @@
     return _modalWrap('min-min-modal-mb', 'Adicionar Membro', 'Ministerial · Membros', corpo, footer);
   }
 
+  function _garantirModalSetor() {
+    let el = document.getElementById('min-setor-modal');
+    if (el) return el;
+
+    const corpo = `
+      ${_fld('mst-nome', 'Nome do Setor', 'text', true)}
+      ${_sel('mst-lider', 'Líder Setorial', '<option value="">Carregando...</option>', false)}
+      <div>
+        <label style="${_LB}">Observações</label>
+        <textarea id="mst-obs" rows="3"
+          style="${_INP};resize:vertical;height:auto;font-family:inherit"></textarea>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="mst-ativo" checked style="width:16px;height:16px;cursor:pointer">
+        <label for="mst-ativo" style="font-size:13px;color:var(--tx2);cursor:pointer">Setor ativo</label>
+      </div>
+      ${_errEl('mst-err')}`;
+
+    const footer = `<button id="mst-btn" onclick="_mstSalvar()"
+      style="padding:9px 24px;border-radius:8px;border:none;background:var(--violet);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Salvar</button>`;
+
+    return _modalWrap('min-setor-modal', 'Novo Setor', 'Ministerial · Setores', corpo, footer);
+  }
+
+  async function minMinNovoSetor() {
+    if (!_podeEditarSetor()) return;
+    _setorEditandoId = null;
+    const modal = _garantirModalSetor();
+    document.getElementById('min-setor-modal-title').textContent = 'Novo Setor';
+    document.getElementById('mst-nome').value  = '';
+    document.getElementById('mst-obs').value   = '';
+    document.getElementById('mst-ativo').checked = true;
+    _showErr('mst-err', '');
+    await _carregarPessoas();
+    document.getElementById('mst-lider').innerHTML = _optionsPessoa('');
+    modal.style.display = 'flex';
+  }
+
+  async function minMinEditarSetor(id) {
+    if (!_podeEditarSetor()) return;
+    _setorEditandoId = id;
+    const modal = _garantirModalSetor();
+    document.getElementById('min-setor-modal-title').textContent = 'Editar Setor';
+    _showErr('mst-err', '');
+
+    const [r] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/ministerio_setores?id=eq.${id}&select=*`, { headers: _hdr() }),
+      _carregarPessoas(),
+    ]);
+    const dados = r.ok ? await r.json() : [];
+    const s = dados[0];
+    if (!s) { alert('Setor não encontrado.'); return; }
+
+    document.getElementById('mst-nome').value    = s.nome        || '';
+    document.getElementById('mst-obs').value     = s.observacoes || '';
+    document.getElementById('mst-ativo').checked = s.ativo !== false;
+    document.getElementById('mst-lider').innerHTML = _optionsPessoa(s.lider_setorial || '');
+    modal.style.display = 'flex';
+  }
+
+  async function _mstSalvar() {
+    const nome = (document.getElementById('mst-nome').value || '').trim();
+    if (!nome) { _showErr('mst-err', 'Nome do setor é obrigatório.'); return; }
+
+    const btn = document.getElementById('mst-btn');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+
+    const base = {
+      nome,
+      lider_setorial: document.getElementById('mst-lider').value || null,
+      observacoes:    (document.getElementById('mst-obs').value || '').trim() || null,
+      ativo:          document.getElementById('mst-ativo').checked,
+    };
+
+    try {
+      let r;
+      if (_setorEditandoId) {
+        r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_setores?id=eq.${_setorEditandoId}`, {
+          method: 'PATCH', headers: _hdrJson(), body: JSON.stringify(base),
+        });
+      } else {
+        const payload = Object.assign({ ministerio_id: _ministerioAtual }, base, _auditInsert());
+        r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_setores`, {
+          method: 'POST', headers: _hdrJson(), body: JSON.stringify(payload),
+        });
+      }
+      if (!r.ok) throw new Error((await r.text()) || r.status);
+
+      document.getElementById('min-setor-modal').style.display = 'none';
+      await _carregarSetores(_ministerioAtual);
+    } catch (e) {
+      _showErr('mst-err', `Erro ao salvar: ${e.message}`);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Salvar';
+    }
+  }
+
   async function minMinAdicionarMembro() {
     if (!_podeEditar() || !_ministerioAtual) return;
     const modal = _garantirModalMembro();
@@ -646,6 +836,31 @@
     }
   }
 
+  async function minMinToggleSetorStatus(id, novoAtivo) {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_setores?id=eq.${id}`, {
+        method: 'PATCH', headers: _hdrJson(), body: JSON.stringify({ ativo: novoAtivo }),
+      });
+      if (!r.ok) throw new Error(r.status);
+      await _carregarSetores(_ministerioAtual);
+    } catch (e) {
+      alert('Erro ao atualizar status: ' + e.message);
+    }
+  }
+
+  async function minMinRemoverSetor(id) {
+    if (!confirm('Remover este setor permanentemente?')) return;
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_setores?id=eq.${id}`, {
+        method: 'DELETE', headers: _hdr(),
+      });
+      if (!r.ok) throw new Error(r.status);
+      await _carregarSetores(_ministerioAtual);
+    } catch (e) {
+      alert('Erro ao remover: ' + e.message);
+    }
+  }
+
   /* ══ EXPORTS ═════════════════════════════════════════════════ */
   window.minMinLoad               = minMinLoad;
   window.minMinAbrir              = minMinAbrir;
@@ -655,8 +870,13 @@
   window.minMinAdicionarMembro    = minMinAdicionarMembro;
   window.minMinToggleMembroStatus = minMinToggleMembroStatus;
   window.minMinRemoverMembro      = minMinRemoverMembro;
+  window.minMinNovoSetor          = minMinNovoSetor;
+  window.minMinEditarSetor        = minMinEditarSetor;
+  window.minMinToggleSetorStatus  = minMinToggleSetorStatus;
+  window.minMinRemoverSetor       = minMinRemoverSetor;
   // Chamados de dentro do HTML gerado dinamicamente
   window._mmSalvar                = _mmSalvar;
   window._mmbSalvar               = _mmbSalvar;
+  window._mstSalvar               = _mstSalvar;
 
 })();
