@@ -165,6 +165,7 @@ let usuarioLogado  = null;  // referência canônica das novas funções de auth
 function normalizarPerfil(funcao) {
   const mapa = {
     admin_geral:"ADMINISTRADOR_GERAL", administrador_geral:"ADMINISTRADOR_GERAL", ADMINISTRADOR_GERAL:"ADMINISTRADOR_GERAL",
+    "ADMINISTRADOR GERAL":"ADMINISTRADOR_GERAL", administrador:"ADMINISTRADOR_GERAL",
     pastoral:"PASTORAL", PASTORAL:"PASTORAL",
     conselho:"CONSELHO", CONSELHO:"CONSELHO",
     adm_operacional:"ADM_OPERACIONAL", ADM_OPERACIONAL:"ADM_OPERACIONAL",
@@ -174,7 +175,8 @@ function normalizarPerfil(funcao) {
     operacional_servicos:"OPERACIONAL_SERVICOS", OPERACIONAL_SERVICOS:"OPERACIONAL_SERVICOS",
     membro_igreja:"MEMBRO_IGREJA", MEMBRO_IGREJA:"MEMBRO_IGREJA",
   };
-  return mapa[funcao] || String(funcao || "").toUpperCase();
+  // Tenta mapa direto → PERFIS_MAP (nomes em linguagem natural do banco) → fallback uppercase
+  return mapa[funcao] || PERFIS_MAP[funcao] || String(funcao || "").toUpperCase();
 }
 
 /* ── LOGIN via Supabase Auth ─────────────────── */

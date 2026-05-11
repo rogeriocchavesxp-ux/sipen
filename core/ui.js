@@ -71,7 +71,7 @@ function submitTask() {
 
 function openCrudForm(tab, preset = null) {
   if (["MEMBROS","VISITANTES"].includes(tab)) {
-    const nivel = (window.permissoesUsuario || {})["MEMBRESIA"] || "SEM_ACESSO";
+    const nivel = (permissoesUsuario || {})["MEMBRESIA"] || "SEM_ACESSO";
     const podeEditar = USUARIO_ATUAL?.perfil === "ADMINISTRADOR_GERAL" ||
                        nivel === "COMPLETO" || nivel === "EDICAO";
     if (!podeEditar) { T("Acesso negado", "Sem permissão para editar membros."); return; }

@@ -250,8 +250,8 @@
   async function _salvar() {
     setErro("");
 
-    const nivel = (window.permissoesUsuario || {})["MEMBRESIA"] || "SEM_ACESSO";
-    const podeEditar = window.USUARIO_ATUAL?.perfil === "ADMINISTRADOR_GERAL" ||
+    const nivel = (permissoesUsuario || {})["MEMBRESIA"] || "SEM_ACESSO";
+    const podeEditar = USUARIO_ATUAL?.perfil === "ADMINISTRADOR_GERAL" ||
                        nivel === "COMPLETO" || nivel === "EDICAO";
     if (!podeEditar) { setErro("Sem permissão para salvar membros."); return; }
 

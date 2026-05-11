@@ -6,14 +6,14 @@ let _membCache = [];    // cache de todos os membros
 let _visCache  = [];    // cache de todos os visitantes
 
 function _podeEditarMembresia() {
-  if (!window.USUARIO_ATUAL) return false;
+  if (!USUARIO_ATUAL) return false;
   if (USUARIO_ATUAL.perfil === "ADMINISTRADOR_GERAL") return true;
-  const nivel = (window.permissoesUsuario || {})["MEMBRESIA"] || "SEM_ACESSO";
+  const nivel = (permissoesUsuario || {})["MEMBRESIA"] || "SEM_ACESSO";
   return nivel === "COMPLETO" || nivel === "EDICAO";
 }
 
 function _podeExcluirMembresia() {
-  return window.USUARIO_ATUAL?.perfil === "ADMINISTRADOR_GERAL";
+  return USUARIO_ATUAL?.perfil === "ADMINISTRADOR_GERAL";
 }
 
 /* Cores e labels de status de membro */
