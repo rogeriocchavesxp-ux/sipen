@@ -1207,7 +1207,7 @@ async function enviarResetSenhaUsuario(email, errEl) {
       console.error("resetPasswordForEmail:", error);
       return;
     }
-    try { registrarLog("usuarios", "reset_senha_email", "pessoas", null, { email, enviado_por: USUARIO_ATUAL?.nome }); } catch(_) {}
+    if (USUARIO_ATUAL) { try { registrarLog("usuarios", "reset_senha_email", "pessoas", null, { email, enviado_por: USUARIO_ATUAL.nome }); } catch(_) {} }
     const ok = `Link enviado para ${email}. Verifique sua caixa de entrada.`;
     if (errEl) { errEl.style.color = "var(--gr)"; errEl.textContent = ok; }
     T("Link enviado!", ok);
