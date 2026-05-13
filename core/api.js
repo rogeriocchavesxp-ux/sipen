@@ -98,7 +98,8 @@ const SCHEMA = {
     OFICIAIS:     "Oficiais",
     NOMEADOS_CARGOS:"Nomeados / Cargos",
     SEMINARISTAS: "Seminaristas",
-    CONTRATADOS:  "Contratados"
+    CONTRATADOS:  "Contratados",
+    COMISSOES:    "Comissões"
   },
   campos: {
     AGENDA:        ["titulo","data","dia_semana","hora_inicio","hora_fim","organizador","responsavel","espaco","recorrencia","mes","observacao","status"],
@@ -112,7 +113,8 @@ const SCHEMA = {
     OFICIAIS:       ["nome","cargo","status","posse","fim_mandato","area","obs"],
     NOMEADOS_CARGOS:["nome","orgao_tipo","orgao","suborgao","cargo","status"],
     SEMINARISTAS:   ["nome","seminario","curso","ano_curso","supervisor","area_estagio","status"],
-    CONTRATADOS:    ["nome","tipo_vinculo","empresa","funcao","categoria","area_atendida","status"]
+    CONTRATADOS:    ["nome","tipo_vinculo","empresa","funcao","categoria","area_atendida","status"],
+    COMISSOES:      ["nome","descricao","relator","status"]
   },
   /* Campos obrigatórios por tabela (NOT NULL sem default) */
   obrigatorios: {
@@ -123,7 +125,8 @@ const SCHEMA = {
     FINANCEIRO: ["tipo","descricao","valor"],
     PGS:        ["nome"],
     ESTOQUE_ITENS: ["nome"],
-    LOG_AUDITORIA: ["modulo","acao"]
+    LOG_AUDITORIA: ["modulo","acao"],
+    COMISSOES:     ["nome"]
   },
   /* Tipos especiais para renderizar inputs corretos */
   tipos: {
@@ -133,7 +136,8 @@ const SCHEMA = {
     DEMANDAS:   { data_abertura: "date", data_conclusao: "date", status: "select:ABERTA=Aberta,EM_ANALISE=Em Análise,EM_ANDAMENTO=Em Andamento,PENDENTE=Pendente,CONCLUIDA=Concluída,CANCELADA=Cancelada", prioridade: "select:Baixa,Média,Alta,Urgente" },
     FINANCEIRO: { valor: "number", data_lancamento: "date", tipo: "select:Receita,Despesa", status: "select:Pendente,Confirmado,Cancelado" },
     PGS:        { ativo: "boolean", dia_semana: "select:Segunda,Terça,Quarta,Quinta,Sexta,Sábado,Domingo" },
-    ESTOQUE_ITENS: { quantidade: "number", ativo: "boolean" }
+    ESTOQUE_ITENS: { quantidade: "number", ativo: "boolean" },
+    COMISSOES:     { status: "select:ativo=Ativa,inativo=Inativa,encerrada=Encerrada" }
   }
 };
 
@@ -238,6 +242,8 @@ const VIEW_AUTOLOAD = {
   "min-vol":       { tab:"MEMBROS",       id:"vol-list" },
   "pgs-visitantes":{ tab:"VISITANTES",    id:"pgs-vis-list" },
   "config-usuarios":{ fn: () => carregarUsuarios() },
+  "min-adm": { fn: () => typeof DEPT_ADM !== "undefined" && DEPT_ADM.load() },
+  "min-com": { fn: () => typeof minComLoad === "function" && minComLoad() },
 };
 
 

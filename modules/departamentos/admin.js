@@ -365,3 +365,90 @@ const DEPT_ADM = (function(){
 })();
 
 window.DEPT_ADM = DEPT_ADM;
+
+/* ═══════════════════════════════════════════════════════
+   COMISSÕES — gestão de comissões institucionais
+═══════════════════════════════════════════════════════ */
+
+const _COR_STATUS = {
+  ativo:     { bg:"rgba(58,170,92,0.12)",  txt:"var(--gmd)",   label:"Ativa" },
+  inativo:   { bg:"rgba(150,150,150,0.12)",txt:"var(--tx3)",   label:"Inativa" },
+  encerrada: { bg:"rgba(208,104,104,0.12)",txt:"var(--rose)",  label:"Encerrada" },
+};
+
+window.minComLoad = async function() {
+  const el = document.getElementById("min-com-list");
+  if (!el) return;
+  if (!SUPABASE_URL) {
+    el.innerHTML = `<div style="color:var(--tx3);font-size:12px;padding:12px 0">Configure a conexão com o Supabase para carregar as comissões.</div>`;
+    return;
+  }
+  el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px">${spinner()}Carregando...</div>`;
+  try {
+    const res = await fetch(
+      `${apiBaseUrl()}/rest/v1/comissoes?select=id,nome,descricao,relator,membros,status&order=nome`,
+      { headers: apiHeaders() }
+    );
+    if (!res.ok) {
+      const txt = await res.text();
+      if (res.status === 400 || res.status === 404 || txt.includes("does not exist") || txt.includes("não existe")) {
+        el.innerHTML = `<div style="color:var(--tx3);font-size:12px;padding:16px 0">
+          Tabela <code style="background:var(--bg-surface);padding:1px 5px;border-radius:4px">comissoes</code> não encontrada no banco de dados.<br>
+          <span style="font-size:11px">Execute a migration <code>comissoes-migration.sql</code> no Supabase para ativar este módulo.</span>
+        </div>`;
+        return;
+      }
+      throw new Error(txt);
+    }
+    const data = await res.json();
+    if (!data.length) {
+      el.innerHTML = `<div style="color:var(--tx3);font-size:12px;padding:16px 0">Nenhuma comissão cadastrada ainda. Clique em <b>+ Nova Comissão</b> para começar.</div>`;
+      return;
+    }
+    el.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="border-bottom:2px solid var(--bd1)">
+            <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);font-weight:600">Nome</th>
+            <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);font-weight:600">Relator</th>
+            <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);font-weight:600">Membros</th>
+            <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);font-weight:600">Status</th>
+            <th style="padding:8px 10px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map(c => {
+            const st = _COR_STATUS[c.status] || _COR_STATUS.inativo;
+            return `<tr style="border-bottom:1px solid var(--bd1)"
+                onmouseover="this.style.background='var(--bg-hover)'"
+                onmouseout="this.style.background=''">
+              <td style="padding:9px 10px">
+                <div style="font-weight:600;color:var(--tx1)">${escapeHtml(c.nome)}</div>
+                ${c.descricao ? `<div style="font-size:11px;color:var(--tx3);margin-top:2px">${escapeHtml(c.descricao)}</div>` : ""}
+              </td>
+              <td style="padding:9px 10px;color:var(--tx2)">${escapeHtml(c.relator || "—")}</td>
+              <td style="padding:9px 10px;color:var(--tx3)">${escapeHtml(c.membros || "—")}</td>
+              <td style="padding:9px 10px">
+                <span style="font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;background:${st.bg};color:${st.txt}">
+                  ${st.label}
+                </span>
+              </td>
+              <td style="padding:9px 10px;text-align:right">
+                <button class="tbt" onclick="minComDetalhe('${escapeHtmlAttr(c.id)}')">Abrir</button>
+              </td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>`;
+  } catch(e) {
+    el.innerHTML = `<div style="color:var(--rose);font-size:12px;padding:12px 0">${escapeHtml(e.message)}</div>`;
+  }
+};
+
+window.minComNova = function() {
+  openCrudForm("COMISSOES");
+};
+
+window.minComDetalhe = function(id) {
+  openCrudForm("COMISSOES", { id });
+};
