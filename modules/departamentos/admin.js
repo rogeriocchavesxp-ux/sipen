@@ -14,7 +14,7 @@ const DEPT_ADM = (function(){
     { slug:'tesouraria',     nome:'Tesouraria',     ico:'💰', cor:'var(--gr)',     desc:'Finanças, pagamentos e prestação de contas' },
     { slug:'patrimonio',     nome:'Patrimônio',     ico:'🏗',  cor:'var(--amber)',  desc:'Gestão de bens, imóveis e equipamentos' },
     { slug:'comunicacao',    nome:'Comunicação',    ico:'📢', cor:'var(--teal)',   desc:'Mídias, redes sociais e comunicados oficiais' },
-    { slug:'infraestrutura', nome:'Infraestrutura', ico:'🔧', cor:'var(--violet)', desc:'Manutenção, conservação e espaços físicos' },
+    { slug:'infraestrutura', nome:'Infraestrutura e Conservação', ico:'🔧', cor:'var(--violet)', desc:'Manutenção, conservação e espaços físicos' },
   ];
 
   const FUNCOES = [
@@ -101,7 +101,7 @@ const DEPT_ADM = (function(){
     if(!lista) return;
 
     if(heroTtl) heroTtl.textContent = "Administração";
-    if(heroDsc) heroDsc.textContent = "Secretaria, Tesouraria, Patrimônio, Comunicação e Infraestrutura";
+    if(heroDsc) heroDsc.textContent = "Secretaria, Tesouraria, Patrimônio, Comunicação, Infraestrutura e Conservação";
     if(heroAct) heroAct.innerHTML = "";
     if(detalhe){ detalhe.style.display="none"; detalhe.innerHTML=""; }
 

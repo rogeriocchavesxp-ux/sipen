@@ -48,7 +48,7 @@ const VIEW_MODULO_PREFIX = {
   "min":      "Departamentos",
   "agenda":   "Agenda",
   "pgs":      "Pequenos Grupos",
-  "infra":    "Infraestrutura",
+  "infra":    "Infraestrutura e Conservação",
   "dem":      "Demandas",
   "rel":      "Relatórios",
   "memb":     "Membresia",

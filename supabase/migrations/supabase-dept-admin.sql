@@ -42,7 +42,7 @@ INSERT INTO dept_administrativos (slug, nome, descricao) VALUES
   ('tesouraria',     'Tesouraria',     'Finanças, pagamentos e prestação de contas'),
   ('patrimonio',     'Patrimônio',     'Gestão de bens, imóveis e equipamentos da Igreja'),
   ('comunicacao',    'Comunicação',    'Mídias, redes sociais e comunicados oficiais'),
-  ('infraestrutura', 'Infraestrutura', 'Manutenção, conservação e espaços físicos')
+  ('infraestrutura', 'Infraestrutura e Conservação', 'Manutenção, conservação e espaços físicos')
 ON CONFLICT (slug) DO NOTHING;
 
 -- 4. RLS

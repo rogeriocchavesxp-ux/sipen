@@ -28,7 +28,7 @@ const PERMISSOES_MATRIZ = {
   "Departamentos":     { admin_geral:"full", conselho:"read",       pastoral:"read",       adm_operacional:"read",       lider_ministerio:"full",      membro_ministerio:"restricted", operacional_servicos:false,        membro_igreja:false },
   "Agenda":            { admin_geral:"full", conselho:"read",       pastoral:"full",       adm_operacional:"full",       lider_ministerio:"full",      membro_ministerio:"restricted", operacional_servicos:false,        membro_igreja:false },
   "Pequenos Grupos":   { admin_geral:"full", conselho:"read",       pastoral:"full",       adm_operacional:"read",       lider_ministerio:"full",      membro_ministerio:"restricted", operacional_servicos:false,        membro_igreja:false },
-  "Infraestrutura":    { admin_geral:"full", conselho:"read",       pastoral:false,        adm_operacional:"full",       lider_ministerio:false,       membro_ministerio:false,       operacional_servicos:"restricted", membro_igreja:false },
+  "Infraestrutura e Conservação":    { admin_geral:"full", conselho:"read",       pastoral:false,        adm_operacional:"full",       lider_ministerio:false,       membro_ministerio:false,       operacional_servicos:"restricted", membro_igreja:false },
   "Demandas":          { admin_geral:"full", conselho:"read",       pastoral:"read",       adm_operacional:"full",       lider_ministerio:"restricted", membro_ministerio:"restricted", operacional_servicos:"restricted", membro_igreja:false },
   "Relatórios":        { admin_geral:"full", conselho:"full",       pastoral:"restricted", adm_operacional:"restricted", lider_ministerio:"restricted", membro_ministerio:false,       operacional_servicos:false,        membro_igreja:false },
   "Projetos":        { admin_geral:"full", conselho:"read",       pastoral:"read",       adm_operacional:"full",       lider_ministerio:"restricted", membro_ministerio:false,       operacional_servicos:false,        membro_igreja:false },
@@ -120,7 +120,7 @@ const MODULO_DISPLAY_TO_DB = {
   "Departamentos":   "MINISTERIAL",
   "Agenda":          "AGENDA",
   "Pequenos Grupos": "PGS",
-  "Infraestrutura":  "INFRAESTRUTURA",
+  "Infraestrutura e Conservação":  "INFRAESTRUTURA",
   "Demandas":        "DEMANDAS",
   "Relatórios":      "RELATORIOS",
   "Projetos":        "PROJETOS",
@@ -145,7 +145,7 @@ const MODULO_SIDEBAR_MAP = {
   "Departamentos":   "min",
   "Agenda":          "agenda",
   "Pequenos Grupos": "pgs",
-  "Infraestrutura":  "infra",
+  "Infraestrutura e Conservação":  "infra",
   "Demandas":        "dem",
   "Relatórios":      "rel",
   "Projetos":        "proj",
@@ -734,15 +734,15 @@ const DASH_MODULOS = [
 
 // ── DASHBOARD GERAL — renderização dinâmica por permissão ──────────
 const _GERAL_FEED = [
-  { mod:"INFRAESTRUTURA", cor:"var(--rose)", txt:"<b>Infraestrutura</b> — OS-042 marcada como <b>atrasada</b>",             time:"hoje · 14:32" },
-  { mod:"INFRAESTRUTURA", cor:"var(--gmd)",  txt:"<b>Infraestrutura</b> — OS de manutenção elétrica concluída",             time:"hoje · 11:15" },
+  { mod:"INFRAESTRUTURA", cor:"var(--rose)", txt:"<b>Infraestrutura e Conservação</b> — OS-042 marcada como <b>atrasada</b>",             time:"hoje · 14:32" },
+  { mod:"INFRAESTRUTURA", cor:"var(--gmd)",  txt:"<b>Infraestrutura e Conservação</b> — OS de manutenção elétrica concluída",             time:"hoje · 11:15" },
   { mod:"ADMINISTRATIVO", cor:"var(--gold)", txt:"<b>Administrativo</b> — <b>Ana Lima</b> nomeada Líder Ministerial",       time:"hoje · 09:48" },
   { mod:"MEMBRESIA",      cor:"var(--teal)", txt:"<b>Membresia</b> — 14 novos membros cadastrados em lote",                 time:"10/04 · 16:20"},
   { mod:"DEMANDAS",       cor:"var(--sky)",  txt:"<b>Demandas</b> — 8 alertas enviados aos responsáveis",                   time:"10/04 · 08:00"},
 ];
 
 const _GERAL_BARRAS = [
-  { mod:"INFRAESTRUTURA", nome:"Infraestrutura", val:23, pct:100, cor:"var(--amber)"  },
+  { mod:"INFRAESTRUTURA", nome:"Infraestrutura e Conservação", val:23, pct:100, cor:"var(--amber)"  },
   { mod:"MINISTERIAL",    nome:"Ministerial",    val:18, pct:78,  cor:"var(--violet)" },
   { mod:"ADMINISTRATIVO", nome:"Administrativo", val:12, pct:52,  cor:"var(--gold)"   },
   { mod:"PASTORAL",       nome:"Pastoral",       val:5,  pct:22,  cor:"var(--teal)"   },

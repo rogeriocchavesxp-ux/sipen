@@ -37,7 +37,7 @@
     { id:9,  tipo:"despesa",  cat:"Utilities",          desc:"Internet e telefone — Abr/26",         valor:180,   data:"2026-04-10", forma:"débito automático",  status:"confirmado", resp:"Administrador", obs:"" },
     { id:10, tipo:"despesa",  cat:"Folha de pagamento", desc:"Salários — Abr/2026",                  valor:4800,  data:"2026-04-15", forma:"transferência",     status:"confirmado", resp:"Administrador", obs:"" },
     { id:11, tipo:"despesa",  cat:"Material",           desc:"Material de escritório Q2",            valor:240,   data:"2026-04-08", forma:"cartão",            status:"confirmado", resp:"Secretaria",    obs:"" },
-    { id:12, tipo:"despesa",  cat:"Manutenção",         desc:"Reparo sistema de som",                valor:650,   data:"2026-04-12", forma:"dinheiro",          status:"confirmado", resp:"Infraestrutura", obs:"" },
+    { id:12, tipo:"despesa",  cat:"Manutenção",         desc:"Reparo sistema de som",                valor:650,   data:"2026-04-12", forma:"dinheiro",          status:"confirmado", resp:"Infraestrutura e Conservação", obs:"" },
     { id:13, tipo:"receita",  cat:"Dízimos",            desc:"Dízimos 1ª semana Mar/26",             valor:3900,  data:"2026-03-03", forma:"transferência",     status:"confirmado", resp:"Tesoureiro",    obs:"" },
     { id:14, tipo:"receita",  cat:"Dízimos",            desc:"Dízimos 2ª semana Mar/26",             valor:4050,  data:"2026-03-10", forma:"transferência",     status:"confirmado", resp:"Tesoureiro",    obs:"" },
     { id:15, tipo:"receita",  cat:"Dízimos",            desc:"Dízimos 3ª semana Mar/26",             valor:3750,  data:"2026-03-17", forma:"transferência",     status:"confirmado", resp:"Tesoureiro",    obs:"" },

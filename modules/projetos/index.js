@@ -30,7 +30,7 @@
   const TIPO_LABEL = {
     obra: "Obra",
     legal: "Legal",
-    infraestrutura: "Infraestrutura",
+    infraestrutura: "Infraestrutura e Conservação",
     administrativo: "Administrativo"
   };
 
