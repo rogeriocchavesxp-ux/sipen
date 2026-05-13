@@ -81,6 +81,7 @@ const TABLE_MAP = {
   "NOMEADOS_CARGOS":       "v_nomeados",
   "SEMINARISTAS":          "v_seminaristas",
   "CONTRATADOS":           "v_contratados",
+  "COMISSOES":             "comissoes",
 };
 
 /* SCHEMA baseado na estrutura real do Supabase */
@@ -114,7 +115,7 @@ const SCHEMA = {
     NOMEADOS_CARGOS:["nome","orgao_tipo","orgao","suborgao","cargo","status"],
     SEMINARISTAS:   ["nome","seminario","curso","ano_curso","supervisor","area_estagio","status"],
     CONTRATADOS:    ["nome","tipo_vinculo","empresa","funcao","categoria","area_atendida","status"],
-    COMISSOES:      ["nome","descricao","relator","status"]
+    COMISSOES:      ["nome","descricao","relator","membros","status"]
   },
   /* Campos obrigatórios por tabela (NOT NULL sem default) */
   obrigatorios: {

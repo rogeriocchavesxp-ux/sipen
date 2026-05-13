@@ -371,10 +371,21 @@ window.DEPT_ADM = DEPT_ADM;
 ═══════════════════════════════════════════════════════ */
 
 const _COR_STATUS = {
-  ativo:     { bg:"rgba(58,170,92,0.12)",  txt:"var(--gmd)",   label:"Ativa" },
-  inativo:   { bg:"rgba(150,150,150,0.12)",txt:"var(--tx3)",   label:"Inativa" },
-  encerrada: { bg:"rgba(208,104,104,0.12)",txt:"var(--rose)",  label:"Encerrada" },
+  ativo:     { bg:"rgba(58,170,92,0.12)",  txt:"var(--gmd)",  label:"Ativa" },
+  inativo:   { bg:"rgba(150,150,150,0.12)",txt:"var(--tx3)",  label:"Inativa" },
+  encerrada: { bg:"rgba(208,104,104,0.12)",txt:"var(--rose)", label:"Encerrada" },
 };
+
+const _COM_STATUS_OPTS = [
+  { v:"ativo",     l:"Ativa" },
+  { v:"inativo",   l:"Inativa" },
+  { v:"encerrada", l:"Encerrada" },
+];
+
+const _inputStyle = "width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;box-sizing:border-box";
+const _labelStyle = "display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px";
+
+/* ── Lista ─────────────────────────────────────────── */
 
 window.minComLoad = async function() {
   const el = document.getElementById("min-com-list");
@@ -393,8 +404,8 @@ window.minComLoad = async function() {
       const txt = await res.text();
       if (res.status === 400 || res.status === 404 || txt.includes("does not exist") || txt.includes("não existe")) {
         el.innerHTML = `<div style="color:var(--tx3);font-size:12px;padding:16px 0">
-          Tabela <code style="background:var(--bg-surface);padding:1px 5px;border-radius:4px">comissoes</code> não encontrada no banco de dados.<br>
-          <span style="font-size:11px">Execute a migration <code>comissoes-migration.sql</code> no Supabase para ativar este módulo.</span>
+          Tabela <code style="background:var(--bg-surface);padding:1px 5px;border-radius:4px">comissoes</code> não encontrada.<br>
+          <span style="font-size:11px">Execute <code>comissoes-migration.sql</code> no Supabase para ativar este módulo.</span>
         </div>`;
         return;
       }
@@ -402,7 +413,7 @@ window.minComLoad = async function() {
     }
     const data = await res.json();
     if (!data.length) {
-      el.innerHTML = `<div style="color:var(--tx3);font-size:12px;padding:16px 0">Nenhuma comissão cadastrada ainda. Clique em <b>+ Nova Comissão</b> para começar.</div>`;
+      el.innerHTML = `<div style="color:var(--tx3);font-size:12px;padding:16px 0">Nenhuma comissão cadastrada. Clique em <b>+ Nova Comissão</b> para começar.</div>`;
       return;
     }
     el.innerHTML = `
@@ -411,7 +422,7 @@ window.minComLoad = async function() {
           <tr style="border-bottom:2px solid var(--bd1)">
             <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);font-weight:600">Nome</th>
             <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);font-weight:600">Relator</th>
-            <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);font-weight:600">Membros</th>
+            <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);font-weight:600;min-width:180px">Membros</th>
             <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);font-weight:600">Status</th>
             <th style="padding:8px 10px"></th>
           </tr>
@@ -419,6 +430,7 @@ window.minComLoad = async function() {
         <tbody>
           ${data.map(c => {
             const st = _COR_STATUS[c.status] || _COR_STATUS.inativo;
+            const membrosCount = c.membros ? c.membros.split(";").filter(m => m.trim()).length : 0;
             return `<tr style="border-bottom:1px solid var(--bd1)"
                 onmouseover="this.style.background='var(--bg-hover)'"
                 onmouseout="this.style.background=''">
@@ -426,12 +438,10 @@ window.minComLoad = async function() {
                 <div style="font-weight:600;color:var(--tx1)">${escapeHtml(c.nome)}</div>
                 ${c.descricao ? `<div style="font-size:11px;color:var(--tx3);margin-top:2px">${escapeHtml(c.descricao)}</div>` : ""}
               </td>
-              <td style="padding:9px 10px;color:var(--tx2)">${escapeHtml(c.relator || "—")}</td>
-              <td style="padding:9px 10px;color:var(--tx3)">${escapeHtml(c.membros || "—")}</td>
+              <td style="padding:9px 10px;color:var(--tx2);font-size:11.5px">${escapeHtml(c.relator || "—")}</td>
+              <td style="padding:9px 10px;color:var(--tx3);font-size:11.5px">${membrosCount ? `${membrosCount} membro${membrosCount > 1 ? "s" : ""}` : "—"}</td>
               <td style="padding:9px 10px">
-                <span style="font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;background:${st.bg};color:${st.txt}">
-                  ${st.label}
-                </span>
+                <span style="font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;background:${st.bg};color:${st.txt}">${st.label}</span>
               </td>
               <td style="padding:9px 10px;text-align:right">
                 <button class="tbt" onclick="minComDetalhe('${escapeHtmlAttr(c.id)}')">Abrir</button>
@@ -445,10 +455,227 @@ window.minComLoad = async function() {
   }
 };
 
+/* ── Nova comissão ─────────────────────────────────── */
+
 window.minComNova = function() {
-  openCrudForm("COMISSOES");
+  _minComAbrirModal(null);
 };
 
-window.minComDetalhe = function(id) {
-  openCrudForm("COMISSOES", { id });
+/* ── Detalhe / edição — busca o registro completo antes de abrir ── */
+
+window.minComDetalhe = async function(id) {
+  if (!SUPABASE_URL) { T("Configuração necessária", "Configure a conexão com o Supabase"); return; }
+  try {
+    const res = await fetch(
+      `${apiBaseUrl()}/rest/v1/comissoes?id=eq.${encodeURIComponent(id)}&select=*&limit=1`,
+      { headers: apiHeaders() }
+    );
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    if (!data.length) { T("Não encontrado", "Comissão não encontrada no banco"); return; }
+    _minComAbrirModal(data[0]);
+  } catch(e) {
+    T("Erro ao carregar", e.message);
+  }
+};
+
+/* ── Modal compartilhado (nova / edição) ───────────── */
+
+function _minComAbrirModal(com) {
+  const isEdit = !!com;
+  const membros = isEdit
+    ? (com.membros || "").split(";").map(m => m.trim()).filter(Boolean)
+    : [];
+
+  let overlay = document.getElementById("min-com-modal");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "min-com-modal";
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:310";
+    overlay.addEventListener("click", e => { if (e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+  }
+
+  overlay._membros = membros;
+
+  overlay.innerHTML = `
+    <div style="width:min(700px,94vw);max-height:90vh;overflow:hidden;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;display:flex;flex-direction:column">
+      <!-- Cabeçalho -->
+      <div style="padding:14px 16px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--tx1)">${isEdit ? "Editar" : "Nova"} Comissão${isEdit ? " · " + escapeHtml(com.nome) : ""}</div>
+          <div style="font-size:10px;color:var(--tx3)">Comissões Permanentes do Conselho</div>
+        </div>
+        <button onclick="document.getElementById('min-com-modal').remove()" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer;line-height:1">✕</button>
+      </div>
+      <!-- Corpo -->
+      <div style="padding:16px;overflow-y:auto;flex:1">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+
+          <div style="grid-column:1/-1">
+            <label style="${_labelStyle}">Nome <span style="color:var(--rose)">*</span></label>
+            <input id="mcd-nome" type="text" value="${escapeHtmlAttr(com?.nome || "")}"
+              style="${_inputStyle}" placeholder="Nome da comissão">
+          </div>
+
+          <div style="grid-column:1/-1">
+            <label style="${_labelStyle}">Descrição</label>
+            <textarea id="mcd-descricao"
+              style="${_inputStyle};min-height:72px;resize:vertical"
+              placeholder="Finalidade ou objetivo da comissão">${escapeHtml(com?.descricao || "")}</textarea>
+          </div>
+
+          <div>
+            <label style="${_labelStyle}">Relator / Responsável</label>
+            <input id="mcd-relator" type="text" value="${escapeHtmlAttr(com?.relator || "")}"
+              style="${_inputStyle}" placeholder="Nome do relator">
+          </div>
+
+          <div>
+            <label style="${_labelStyle}">Status</label>
+            <select id="mcd-status" style="${_inputStyle}">
+              ${_COM_STATUS_OPTS.map(o =>
+                `<option value="${o.v}" ${(com?.status || "ativo") === o.v ? "selected" : ""}>${o.l}</option>`
+              ).join("")}
+            </select>
+          </div>
+
+          <div style="grid-column:1/-1">
+            <label style="${_labelStyle}">Membros</label>
+            <div id="mcd-membros-tags"
+              style="display:flex;flex-wrap:wrap;gap:4px;padding:8px;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;min-height:42px;align-items:center">
+            </div>
+            <div style="display:flex;gap:6px;margin-top:6px">
+              <input id="mcd-novo-membro" type="text" placeholder="Nome do membro — pressione Enter para adicionar"
+                onkeydown="if(event.key==='Enter'){_minComAddMembro();event.preventDefault()}"
+                style="${_inputStyle};flex:1">
+              <button onclick="_minComAddMembro()"
+                style="flex-shrink:0;background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:8px 12px;color:var(--tx2);font-size:12px;cursor:pointer;white-space:nowrap">
+                + Adicionar
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <!-- Rodapé -->
+      <div style="padding:12px 16px;border-top:1px solid var(--bd1);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0">
+        <button onclick="document.getElementById('min-com-modal').remove()"
+          style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:8px 14px;color:var(--tx2);cursor:pointer;font-size:12px">
+          Cancelar
+        </button>
+        <button id="mcd-btn-salvar"
+          onclick="${isEdit ? `_minComSalvar('${escapeHtmlAttr(com.id)}')` : "_minComCriar()"}"
+          style="background:var(--gr);border:none;border-radius:6px;padding:8px 18px;color:#fff;font-weight:600;cursor:pointer;font-size:12px">
+          💾 ${isEdit ? "Salvar alterações" : "Criar comissão"}
+        </button>
+      </div>
+    </div>`;
+
+  _minComRefreshTags();
+}
+
+/* ── Helpers de tags de membros ────────────────────── */
+
+window._minComRemMembro = function(idx) {
+  const overlay = document.getElementById("min-com-modal");
+  if (!overlay) return;
+  overlay._membros.splice(idx, 1);
+  _minComRefreshTags();
+};
+
+window._minComAddMembro = function() {
+  const input = document.getElementById("mcd-novo-membro");
+  if (!input) return;
+  const nome = input.value.trim();
+  if (!nome) return;
+  const overlay = document.getElementById("min-com-modal");
+  if (!overlay) return;
+  overlay._membros.push(nome);
+  _minComRefreshTags();
+  input.value = "";
+  input.focus();
+};
+
+function _minComRefreshTags() {
+  const overlay = document.getElementById("min-com-modal");
+  const el = document.getElementById("mcd-membros-tags");
+  if (!overlay || !el) return;
+  const membros = overlay._membros;
+  el.innerHTML = membros.length
+    ? membros.map((m, i) => `
+        <span style="display:inline-flex;align-items:center;gap:4px;background:var(--bg-surface);border:1px solid var(--bd2);border-radius:20px;padding:3px 10px 3px 8px;font-size:11.5px;color:var(--tx2)">
+          ${escapeHtml(m)}
+          <button onclick="_minComRemMembro(${i})"
+            style="background:none;border:none;color:var(--tx3);cursor:pointer;font-size:13px;padding:0;line-height:1;margin-left:2px"
+            title="Remover">✕</button>
+        </span>`).join("")
+    : `<span style="color:var(--tx3);font-size:11.5px;padding:2px 4px">Nenhum membro adicionado</span>`;
+}
+
+/* ── Persistência ──────────────────────────────────── */
+
+function _minComColetarPayload() {
+  const overlay = document.getElementById("min-com-modal");
+  return {
+    nome:      document.getElementById("mcd-nome")?.value.trim() || "",
+    descricao: document.getElementById("mcd-descricao")?.value.trim() || null,
+    relator:   document.getElementById("mcd-relator")?.value.trim() || null,
+    status:    document.getElementById("mcd-status")?.value || "ativo",
+    membros:   (overlay?._membros || []).join("; ") || null,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+window._minComSalvar = async function(id) {
+  const payload = _minComColetarPayload();
+  if (!payload.nome) { T("Campo obrigatório", "Informe o nome da comissão"); return; }
+
+  const btn = document.getElementById("mcd-btn-salvar");
+  if (btn) { btn.disabled = true; btn.textContent = "Salvando..."; }
+
+  try {
+    const res = await fetch(
+      `${apiBaseUrl()}/rest/v1/comissoes?id=eq.${encodeURIComponent(id)}`,
+      {
+        method: "PATCH",
+        headers: apiHeaders({ "Prefer": "return=minimal" }),
+        body: JSON.stringify(payload),
+      }
+    );
+    if (!res.ok) throw new Error(await res.text());
+    T("✅ Salvo!", "Comissão atualizada");
+    document.getElementById("min-com-modal")?.remove();
+    await minComLoad();
+  } catch(e) {
+    T("Erro ao salvar", e.message);
+    if (btn) { btn.disabled = false; btn.textContent = "💾 Salvar alterações"; }
+  }
+};
+
+window._minComCriar = async function() {
+  const payload = _minComColetarPayload();
+  if (!payload.nome) { T("Campo obrigatório", "Informe o nome da comissão"); return; }
+  delete payload.updated_at;
+
+  const btn = document.getElementById("mcd-btn-salvar");
+  if (btn) { btn.disabled = true; btn.textContent = "Criando..."; }
+
+  try {
+    const res = await fetch(
+      `${apiBaseUrl()}/rest/v1/comissoes`,
+      {
+        method: "POST",
+        headers: apiHeaders({ "Prefer": "return=minimal" }),
+        body: JSON.stringify(payload),
+      }
+    );
+    if (!res.ok) throw new Error(await res.text());
+    T("✅ Criada!", "Nova comissão registrada");
+    document.getElementById("min-com-modal")?.remove();
+    await minComLoad();
+  } catch(e) {
+    T("Erro ao criar", e.message);
+    if (btn) { btn.disabled = false; btn.textContent = "💾 Criar comissão"; }
+  }
 };
