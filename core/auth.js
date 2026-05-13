@@ -1181,28 +1181,41 @@ async function salvarEdicaoUsuario(id) {
 }
 
 async function esqueceuSenha() {
-  let email = (document.getElementById("login-email")?.value || "").trim();
+  const email = (document.getElementById("login-email")?.value || "").trim();
+  const errEl = document.getElementById("login-err");
   if (!email) {
-    email = (prompt("Digite seu e-mail para receber o link de redefinição:") || "").trim();
+    if (errEl) { errEl.style.color = "var(--amber)"; errEl.textContent = "Informe seu e-mail para redefinir a senha."; }
+    document.getElementById("login-email")?.focus();
+    return;
   }
-  if (!email) return;
-  await enviarResetSenhaUsuario(email);
+  await enviarResetSenhaUsuario(email, errEl);
 }
 
-async function enviarResetSenhaUsuario(email) {
+async function enviarResetSenhaUsuario(email, errEl) {
   if (!email) { T("Sem e-mail", "Este usuário não possui e-mail cadastrado."); return; }
+  const btn = document.querySelector("#login-screen button[onclick='esqueceuSenha()']");
+  if (btn) { btn.disabled = true; btn.textContent = "Enviando..."; }
   try {
     const { error } = await getSupabase().auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.href.split("#")[0]
+      redirectTo: window.location.origin + window.location.pathname
     });
+    if (btn) { btn.disabled = false; btn.textContent = "Esqueceu a senha?"; }
     if (error) {
-      console.error("Erro ao enviar redefinição:", error);
-      T("Erro", "Não foi possível enviar o link de redefinição.");
+      const msg = "Não foi possível enviar o link. Verifique o e-mail informado.";
+      if (errEl) { errEl.style.color = "var(--rose)"; errEl.textContent = msg; }
+      else T("Erro", msg);
+      console.error("resetPasswordForEmail:", error);
       return;
     }
-    registrarLog("usuarios", "reset_senha_email", "pessoas", null, { email, enviado_por: USUARIO_ATUAL?.nome });
-    T("Link enviado", `E-mail de redefinição enviado para ${email}`);
-  } catch(e) { T("Erro", e.message); }
+    try { registrarLog("usuarios", "reset_senha_email", "pessoas", null, { email, enviado_por: USUARIO_ATUAL?.nome }); } catch(_) {}
+    const ok = `Link enviado para ${email}. Verifique sua caixa de entrada.`;
+    if (errEl) { errEl.style.color = "var(--gr)"; errEl.textContent = ok; }
+    T("Link enviado!", ok);
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = "Esqueceu a senha?"; }
+    if (errEl) { errEl.style.color = "var(--rose)"; errEl.textContent = e.message; }
+    else T("Erro", e.message);
+  }
 }
 
 async function verPerfil(perfilId, perfilUuid) {
