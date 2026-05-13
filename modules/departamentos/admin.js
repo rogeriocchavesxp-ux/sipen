@@ -387,6 +387,26 @@ const _labelStyle = "display:block;font-size:9.5px;text-transform:uppercase;lett
 
 /* ── Lista ─────────────────────────────────────────── */
 
+function _minComNomesCell(c) {
+  const vinculados = Array.isArray(c.comissao_membros) ? c.comissao_membros : [];
+  if (vinculados.length) {
+    const nomes = vinculados
+      .map(m => m.pessoas?.nome || "")
+      .filter(Boolean)
+      .map(n => n.split(" ")[0].toUpperCase());
+    const visiveis = nomes.slice(0, 3);
+    const resto = nomes.length - visiveis.length;
+    return escapeHtml(visiveis.join(", ")) + (resto > 0 ? ` <span style="color:var(--tx3)">+${resto}</span>` : "");
+  }
+  if (c.membros) {
+    const partes = c.membros.split(";").map(m => m.trim()).filter(Boolean);
+    const visiveis = partes.slice(0, 3);
+    const resto = partes.length - visiveis.length;
+    return escapeHtml(visiveis.join("; ")) + (resto > 0 ? ` <span style="color:var(--tx3)">+${resto}</span>` : "");
+  }
+  return `<span style="color:var(--tx3)">—</span>`;
+}
+
 window.minComLoad = async function() {
   const el = document.getElementById("min-com-list");
   if (!el) return;
@@ -397,7 +417,7 @@ window.minComLoad = async function() {
   el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px">${spinner()}Carregando...</div>`;
   try {
     const res = await fetch(
-      `${apiBaseUrl()}/rest/v1/comissoes?select=id,nome,descricao,relator,status,comissao_membros(id)&order=nome.asc`,
+      `${apiBaseUrl()}/rest/v1/comissoes?select=id,nome,descricao,relator,status,membros,comissao_membros(id,pessoas(id,nome))&order=nome.asc`,
       { headers: apiHeaders() }
     );
     if (!res.ok) {
@@ -422,7 +442,7 @@ window.minComLoad = async function() {
           <tr style="border-bottom:2px solid var(--bd1)">
             <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);font-weight:600">Nome</th>
             <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);font-weight:600">Relator</th>
-            <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);font-weight:600;min-width:90px">Membros</th>
+            <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);font-weight:600;min-width:180px">Membros</th>
             <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);font-weight:600">Status</th>
             <th style="padding:8px 10px"></th>
           </tr>
@@ -430,7 +450,6 @@ window.minComLoad = async function() {
         <tbody>
           ${data.map(c => {
             const st = _COR_STATUS[c.status] || _COR_STATUS.inativo;
-            const n = Array.isArray(c.comissao_membros) ? c.comissao_membros.length : 0;
             return `<tr style="border-bottom:1px solid var(--bd1)"
                 onmouseover="this.style.background='var(--bg-hover)'"
                 onmouseout="this.style.background=''">
@@ -439,7 +458,7 @@ window.minComLoad = async function() {
                 ${c.descricao ? `<div style="font-size:11px;color:var(--tx3);margin-top:2px">${escapeHtml(c.descricao)}</div>` : ""}
               </td>
               <td style="padding:9px 10px;color:var(--tx2);font-size:11.5px">${escapeHtml(c.relator || "—")}</td>
-              <td style="padding:9px 10px;color:var(--tx3);font-size:11.5px">${n ? `${n} membro${n > 1 ? "s" : ""}` : "—"}</td>
+              <td style="padding:9px 10px;font-size:11.5px">${_minComNomesCell(c)}</td>
               <td style="padding:9px 10px">
                 <span style="font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;background:${st.bg};color:${st.txt}">${st.label}</span>
               </td>
