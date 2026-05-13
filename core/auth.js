@@ -1443,7 +1443,7 @@ async function carregarPermissoesDB() {
 
 /* ── LOG DE AUDITORIA ──────────────────────── */
 async function registrarLog(modulo, acao, entidade, entidade_id, detalhes={}) {
-  if (!SUPABASE_URL) return;
+  if (!SUPABASE_URL || !USUARIO_ATUAL) return;
   try {
     const isUUID = v => v && /^[0-9a-f-]{36}$/i.test(String(v));
     await fetch(`${apiBaseUrl()}/rest/v1/logs_sistema`, {
