@@ -1,0 +1,16 @@
+evolution.sipen.com.br {
+    reverse_proxy evolution_api:8080
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+    }
+
+    log {
+        output file /var/log/caddy/evolution.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
