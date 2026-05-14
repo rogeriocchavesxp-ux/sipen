@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════
-   GESTÃO DE ACESSOS — v6.30.32
+   GESTÃO DE ACESSOS — v6.30.33
    Perfis, permissões, login e controle por módulo
 ══════════════════════════════════════════════════════ */
 
