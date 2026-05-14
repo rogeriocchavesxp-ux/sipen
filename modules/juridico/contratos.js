@@ -334,8 +334,19 @@
 
   async function _load() {
     _loadError = null;
-    try { _cache = await apiRead("CONTRATOS"); }
-    catch (e) { console.warn("Contratos load:", e.message); _cache = []; _loadError = e.message; }
+    try {
+      const url = `${apiBaseUrl()}/rest/v1/contratos?select=*&deleted_at=is.null&order=created_at.desc.nullslast&limit=500`;
+      console.log("[Contratos] fetch →", url);
+      const res = await fetch(url, { headers: apiHeaders({ "Prefer": "count=none" }) });
+      if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+      const data = await res.json();
+      console.log(`[Contratos] resultado: ${Array.isArray(data) ? data.length : "inválido"} registro(s)`, data[0] ?? "(vazio)");
+      _cache = Array.isArray(data) ? data.map(r => ({ ...r, _row: r.id })) : [];
+    } catch (e) {
+      console.warn("[Contratos] erro:", e.message);
+      _cache = [];
+      _loadError = e.message;
+    }
     return _cache;
   }
 
