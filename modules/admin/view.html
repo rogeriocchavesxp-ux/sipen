@@ -254,16 +254,36 @@
     </div>
     <div class="ct">
       <div class="kpis c4" id="con-kpis"></div>
+      <div id="con-alertas"></div>
       <div class="inav" style="--mc:var(--gold);margin-bottom:16px" id="con-tipo-tabs">
         <div class="ini on" data-tipo="" onclick="conFiltrarTipo('')">Todos</div>
         <div class="ini" data-tipo="Software" onclick="conFiltrarTipo('Software')">💻 Software</div>
-        <div class="ini" data-tipo="Imóvel" onclick="conFiltrarTipo('Imóvel')">🏢 Imóvel</div>
-        <div class="ini" data-tipo="Serviço" onclick="conFiltrarTipo('Serviço')">🛠 Serviço</div>
+        <div class="ini" data-tipo="Segurança" onclick="conFiltrarTipo('Segurança')">🔒 Segurança</div>
+        <div class="ini" data-tipo="Portaria Remota" onclick="conFiltrarTipo('Portaria Remota')">🚪 Portaria</div>
+        <div class="ini" data-tipo="Locação" onclick="conFiltrarTipo('Locação')">🏢 Locação</div>
+        <div class="ini" data-tipo="Infraestrutura" onclick="conFiltrarTipo('Infraestrutura')">⚙ Infraestrutura</div>
+        <div class="ini" data-tipo="Serviços" onclick="conFiltrarTipo('Serviços')">🛠 Serviços</div>
         <div class="ini" data-tipo="Seguro" onclick="conFiltrarTipo('Seguro')">🛡 Seguro</div>
         <div class="ini" data-tipo="Fornecimento" onclick="conFiltrarTipo('Fornecimento')">📦 Fornecimento</div>
+        <div class="ini" data-tipo="Telefonia" onclick="conFiltrarTipo('Telefonia')">📱 Telefonia</div>
+        <div class="ini" data-tipo="Internet" onclick="conFiltrarTipo('Internet')">🌐 Internet</div>
         <div class="ini" data-tipo="Outro" onclick="conFiltrarTipo('Outro')">📄 Outro</div>
       </div>
       <div class="card">
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+          <input id="con-f-busca" type="text" placeholder="Buscar por título, fornecedor..." oninput="conFiltrar()"
+            style="flex:1;min-width:160px;padding:7px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:11.5px;outline:none">
+          <select id="con-f-status" onchange="conFiltrar()"
+            style="padding:7px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:11.5px;outline:none">
+            <option value="">Todos os status</option>
+            <option value="Ativo">Ativo</option>
+            <option value="A vencer">A vencer</option>
+            <option value="Vencido">Vencido</option>
+            <option value="Em negociação">Em negociação</option>
+            <option value="Cancelado">Cancelado</option>
+            <option value="Encerrado">Encerrado</option>
+          </select>
+        </div>
         <div class="ctit">Contratos <span class="csub" id="con-count"></span><span class="cact" onclick="conRecarregar()">↻ Atualizar</span></div>
         <div id="con-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
       </div>
