@@ -74,7 +74,12 @@
   // beforeinstallprompt nunca dispara no iOS — exibe tutorial de como
   // usar Compartilhar → "Adicionar à Tela de Início"
   if (_isIOS && !_isStandalone) {
-    window.addEventListener('load', _showIOSBanner);
+    // pwa.js está no final do <body> — load já pode ter disparado
+    if (document.readyState === 'complete') {
+      _showIOSBanner();
+    } else {
+      window.addEventListener('load', _showIOSBanner);
+    }
   }
 
   function _showIOSBanner() {
