@@ -4,7 +4,16 @@
 -- Dependência: supabase-contratos.sql (tabela contratos já existe)
 -- ═══════════════════════════════════════════════════════
 
--- 1. Custos detalhados (array JSONB de itens)
+-- 1. Novos tipos no enum tipo_contrato_t
+ALTER TYPE tipo_contrato_t ADD VALUE IF NOT EXISTS 'Segurança';
+ALTER TYPE tipo_contrato_t ADD VALUE IF NOT EXISTS 'Portaria Remota';
+ALTER TYPE tipo_contrato_t ADD VALUE IF NOT EXISTS 'Locação';
+ALTER TYPE tipo_contrato_t ADD VALUE IF NOT EXISTS 'Infraestrutura';
+ALTER TYPE tipo_contrato_t ADD VALUE IF NOT EXISTS 'Serviços';
+ALTER TYPE tipo_contrato_t ADD VALUE IF NOT EXISTS 'Telefonia';
+ALTER TYPE tipo_contrato_t ADD VALUE IF NOT EXISTS 'Internet';
+
+-- 2. Custos detalhados (array JSONB de itens)
 -- Estrutura de cada item: { descricao, valor, periodicidade }
 ALTER TABLE contratos ADD COLUMN IF NOT EXISTS custos JSONB DEFAULT '[]'::jsonb;
 

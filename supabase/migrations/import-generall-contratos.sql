@@ -4,6 +4,11 @@
 -- Executar APÓS contratos-upgrade.sql
 -- ═══════════════════════════════════════════════════════
 
+-- Garante novos valores no enum (instâncias que usam tipo_contrato_t)
+DO $$ BEGIN
+  ALTER TYPE tipo_contrato_t ADD VALUE IF NOT EXISTS 'Portaria Remota';
+EXCEPTION WHEN undefined_object THEN NULL; END $$;
+
 -- Garante colunas que podem não existir em instâncias mais antigas
 ALTER TABLE contratos ADD COLUMN IF NOT EXISTS responsavel text;
 ALTER TABLE contratos ADD COLUMN IF NOT EXISTS custos JSONB DEFAULT '[]'::jsonb;
