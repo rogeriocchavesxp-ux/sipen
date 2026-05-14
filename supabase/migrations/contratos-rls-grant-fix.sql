@@ -18,8 +18,10 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 --    (adicionada por import-generall-contratos.sql para compat. com schema legado)
 ALTER TABLE public.contratos ADD COLUMN IF NOT EXISTS responsavel text;
 
--- 4. Atualiza v_contratos para incluir: custos, responsavel text e responsavel_txt
-CREATE OR REPLACE VIEW public.v_contratos AS
+-- 4. Recria v_contratos incluindo custos, responsavel text e responsavel_txt
+-- (CREATE OR REPLACE não aceita mudança de posição de colunas existentes)
+DROP VIEW IF EXISTS public.v_contratos CASCADE;
+CREATE VIEW public.v_contratos AS
 SELECT
   c.id,
   c.tipo::text                                     AS tipo,
