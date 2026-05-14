@@ -72,16 +72,9 @@
   // beforeinstallprompt nunca dispara no iOS — exibe tutorial de como
   // usar Compartilhar → "Adicionar à Tela de Início"
   if (_isIOS && !_isStandalone) {
-    // Aguarda 3 s para o usuário já ter visto a página
     window.addEventListener('load', () => {
-      setTimeout(_maybeShowIOSBanner, 3000);
+      setTimeout(_showIOSBanner, 3000);
     });
-  }
-
-  function _maybeShowIOSBanner() {
-    const ts = parseInt(localStorage.getItem(DISMISS_KEY) || '0', 10);
-    if (Date.now() - ts < DISMISS_TTL) return;
-    _showIOSBanner();
   }
 
   function _showIOSBanner() {
@@ -106,7 +99,6 @@
   window.pwaDismiss = function () {
     localStorage.setItem(DISMISS_KEY, Date.now().toString());
     _hideInstallBanner();
-    _hideIOSBanner();
   };
 
   window.pwaApplyUpdate = function () {
