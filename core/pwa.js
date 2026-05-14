@@ -13,8 +13,10 @@
   let _swRegistration  = null;
 
   // ── Detecção de plataforma ────────────────────────────────────
-  const _isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  // iPad com iOS 13+ reporta userAgent de Mac — usa maxTouchPoints como fallback
+  const _isIOS =
+    /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+    (/macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 
   const _isStandalone =
     window.matchMedia('(display-mode: standalone)').matches ||
@@ -72,9 +74,7 @@
   // beforeinstallprompt nunca dispara no iOS — exibe tutorial de como
   // usar Compartilhar → "Adicionar à Tela de Início"
   if (_isIOS && !_isStandalone) {
-    window.addEventListener('load', () => {
-      setTimeout(_showIOSBanner, 3000);
-    });
+    window.addEventListener('load', _showIOSBanner);
   }
 
   function _showIOSBanner() {
