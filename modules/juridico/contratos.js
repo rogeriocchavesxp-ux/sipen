@@ -275,8 +275,16 @@
     "Semestral": 1/6, "Anual": 1/12, "Único": 0, "Sob demanda": 0
   };
 
+  function _parseCustos(raw) {
+    if (Array.isArray(raw)) return raw;
+    if (raw && typeof raw === "string") {
+      try { const p = JSON.parse(raw); return Array.isArray(p) ? p : []; } catch { return []; }
+    }
+    return [];
+  }
+
   function _custosMensal(row) {
-    const custos = Array.isArray(row.custos) ? row.custos : [];
+    const custos = _parseCustos(row.custos);
     if (custos.length > 0) {
       return custos.reduce((s, c) => s + (parseFloat(c.valor) || 0) * (_FATOR_MENSAL[c.periodicidade] ?? 0), 0);
     }
@@ -284,7 +292,7 @@
   }
 
   function _custosLabel(row) {
-    const custos = Array.isArray(row.custos) ? row.custos : [];
+    const custos = _parseCustos(row.custos);
     if (custos.length > 0) {
       const mensal = _custosMensal(row);
       if (mensal > 0) return fmtMoney(mensal) + "/mês";
@@ -298,6 +306,7 @@
   /* ── Cache e filtros ────────────────────────────────── */
 
   let _cache = [];
+  let _loadError    = null;
   let _tipoFiltro   = "";
   let _buscaFiltro  = "";
   let _statusFiltro = "";
@@ -324,12 +333,13 @@
   }
 
   async function _load() {
+    _loadError = null;
     try { _cache = await apiRead("CONTRATOS"); }
-    catch (e) { console.warn("Contratos load:", e.message); _cache = []; }
+    catch (e) { console.warn("Contratos load:", e.message); _cache = []; _loadError = e.message; }
     return _cache;
   }
 
-  function _invalidate() { _cache = []; }
+  function _invalidate() { _cache = []; _loadError = null; }
 
   function _filtrarLista(rows) {
     let r = [...rows];
@@ -350,7 +360,15 @@
     if (!el) return;
 
     el.innerHTML = `<div style="padding:12px 0;color:var(--tx3);font-size:11.5px">${_sp()} Carregando...</div>`;
-    if (!_cache.length) await _load();
+    await _load();
+
+    if (_loadError) {
+      el.innerHTML = `<div style="color:var(--rose);font-size:12px;padding:12px 0">
+        Erro ao carregar contratos: ${escapeHtml(_loadError)}<br>
+        <button onclick="conRecarregar()" style="margin-top:8px;padding:5px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--tx2);font-size:11.5px;cursor:pointer">↻ Tentar novamente</button>
+      </div>`;
+      return;
+    }
 
     /* KPIs */
     const kpiEl = document.getElementById("con-kpis");
@@ -519,7 +537,7 @@
     ].filter(Boolean);
 
     /* Custos JSONB */
-    const custos = Array.isArray(con.custos) ? con.custos : [];
+    const custos = _parseCustos(con.custos);
 
     /* HTML das tabs */
     const tabsHtml = `
@@ -778,7 +796,7 @@
       return;
     }
     const t = tipoInfo(tipo);
-    const custosIniciais = Array.isArray(dados.custos) ? dados.custos : [];
+    const custosIniciais = _parseCustos(dados.custos);
 
     el.innerHTML = t.campos.map(c => {
       const val = dados[c.id] !== undefined ? dados[c.id] : "";
@@ -982,6 +1000,7 @@
   window.go = async function (id) {
     await _origGo(id);
     if (id === "admin-con") {
+      _invalidate();
       _tipoFiltro = ""; _buscaFiltro = ""; _statusFiltro = "";
       const busca = document.getElementById("con-f-busca");
       const status = document.getElementById("con-f-status");
