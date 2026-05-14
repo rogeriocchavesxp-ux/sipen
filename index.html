@@ -2,12 +2,42 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SIPEN v6.30.32 — Sistema Integrado da IPPenha</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>SIPEN — IPPenha</title>
+
+<!-- ── PWA ──────────────────────────────────────────── -->
+<link rel="manifest" href="/manifest.json">
+
+<!-- Tema / status bar -->
+<meta name="theme-color" content="#1a1d21">
+
+<!-- iOS Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SIPEN">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+
+<!-- Splash screens iOS — gerados automaticamente pelo Safari com base no
+     manifest background_color + apple-touch-icon. Nenhum arquivo extra necessário. -->
+
+<!-- Favicons -->
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png">
+<link rel="shortcut icon" href="/icons/icon-32.png">
+
+<!-- Windows -->
+<meta name="msapplication-TileColor" content="#3aaa5c">
+<meta name="msapplication-TileImage" content="/icons/icon-192.png">
+
+<!-- SEO / Social -->
+<meta name="description" content="Sistema Integrado da Igreja Presbiteriana de Penha">
+<meta name="application-name" content="SIPEN">
+<!-- ─────────────────────────────────────────────────── -->
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="sipen.css?v=6.30.3">
+<link rel="stylesheet" href="sipen.css?v=6.30.33">
 </head>
 <body>
 
@@ -54,6 +84,28 @@
 <script src="modules/whatsapp/index.js?v=6.30.30"></script>
 <script src="modules/whatsapp/config.js?v=6.30.30"></script>
 <script src="modules/departamentos/admin.js?v=6.30.30"></script>
+<script src="core/pwa.js?v=6.30.33"></script>
+
+<!-- ── PWA: Banner de instalação ──────────────────────────────── -->
+<div class="pwa-install-banner" id="pwa-install-banner" role="banner" aria-label="Instalar aplicativo">
+  <div class="pwa-install-ico">S</div>
+  <div class="pwa-install-txt">
+    <strong>Instalar SIPEN</strong>
+    Use como app no seu dispositivo
+  </div>
+  <button class="pwa-install-btn" onclick="pwaInstall()" aria-label="Instalar">Instalar</button>
+  <button class="pwa-install-dismiss" onclick="pwaDismiss()" aria-label="Dispensar">✕</button>
+</div>
+
+<!-- ── PWA: Banner de atualização ─────────────────────────────── -->
+<div class="pwa-update-banner" id="pwa-update-banner" role="banner" aria-label="Atualização disponível">
+  <div class="pwa-install-txt">
+    <strong>Nova versão disponível</strong>
+    Atualize para continuar usando o SIPEN
+  </div>
+  <button class="pwa-install-btn" onclick="pwaApplyUpdate()">Atualizar</button>
+  <button class="pwa-install-dismiss" onclick="pwaDismissUpdate()">✕</button>
+</div>
 
 </body>
 </html>

@@ -1,0 +1,48 @@
+{
+  "name": "SIPEN — IPPenha",
+  "short_name": "SIPEN",
+  "description": "Sistema Integrado da Igreja Presbiteriana de Penha",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#181b1e",
+  "theme_color": "#1a1d21",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    { "src": "/icons/icon-48.png",       "sizes": "48x48",   "type": "image/png" },
+    { "src": "/icons/icon-72.png",       "sizes": "72x72",   "type": "image/png" },
+    { "src": "/icons/icon-96.png",       "sizes": "96x96",   "type": "image/png" },
+    { "src": "/icons/icon-128.png",      "sizes": "128x128", "type": "image/png" },
+    { "src": "/icons/icon-192.png",      "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png",      "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-192.png",  "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/maskable-512.png",  "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Membros",
+      "short_name": "Membros",
+      "description": "Gestão de membros e membresia",
+      "url": "/#membresia",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Financeiro",
+      "short_name": "Financeiro",
+      "description": "Finanças e contas a pagar",
+      "url": "/#financeiro",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Agenda",
+      "short_name": "Agenda",
+      "description": "Agenda e eventos",
+      "url": "/#agenda",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    }
+  ]
+}

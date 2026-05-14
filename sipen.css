@@ -875,3 +875,154 @@ body.dem-admin [data-demanda-admin] { display: block !important; }
 .wa-toggle input:checked ~ span{background:var(--gr)}
 .wa-toggle span::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .wa-toggle input:checked ~ span::after{transform:translateX(16px)}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   PWA — Banners de instalação e atualização
+   ═══════════════════════════════════════════════════════════════════ */
+
+.pwa-install-banner,
+.pwa-update-banner {
+  display: none;
+  position: fixed;
+  bottom: max(16px, env(safe-area-inset-bottom, 16px));
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-card);
+  border: 1px solid var(--gr);
+  border-radius: var(--rl);
+  padding: 12px 14px;
+  z-index: 998;
+  gap: 10px;
+  align-items: center;
+  max-width: min(400px, calc(100vw - 24px));
+  width: max-content;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  animation: fu .2s ease;
+}
+.pwa-install-banner.visible,
+.pwa-update-banner.visible {
+  display: flex;
+}
+.pwa-install-ico {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: var(--gr);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 900; color: #fff;
+  flex-shrink: 0;
+}
+.pwa-install-txt {
+  font-size: 12px;
+  color: var(--tx2);
+  flex: 1;
+  min-width: 0;
+}
+.pwa-install-txt strong {
+  display: block;
+  font-size: 12.5px;
+  color: var(--tx1);
+  margin-bottom: 1px;
+}
+.pwa-install-btn {
+  background: var(--gr);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--sans);
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background .15s;
+}
+.pwa-install-btn:hover  { background: var(--grl) }
+.pwa-install-btn:active { background: var(--grd) }
+.pwa-install-dismiss {
+  background: none;
+  border: none;
+  color: var(--tx3);
+  cursor: pointer;
+  font-size: 15px;
+  padding: 0 2px;
+  line-height: 1;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.pwa-install-dismiss:hover { color: var(--tx2) }
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   PWA — Modo standalone (instalado como app)
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (display-mode: standalone) {
+  /* Evita rubber-band scroll fora das áreas roláveis */
+  body { overscroll-behavior: none }
+
+  /* Topbar: respira abaixo da Dynamic Island / notch */
+  .topbar {
+    padding-top: max(0px, env(safe-area-inset-top));
+    min-height: calc(var(--th) + env(safe-area-inset-top, 0px));
+    align-items: flex-end;
+    padding-bottom: 10px;
+  }
+
+  /* Sidebar: espaço para notch e gesto home */
+  .sb-logo {
+    padding-top: max(12px, env(safe-area-inset-top, 12px));
+  }
+  .sb-ft {
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
+  }
+
+  /* Lateral segura para iPhone com molduras */
+  .main {
+    padding-left:  env(safe-area-inset-left,  0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+}
+
+/* Atributo injetado pelo pwa.js quando rodando como standalone */
+[data-pwa="standalone"] .pwa-install-banner { display: none !important }
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   PWA — Melhorias mobile adicionais
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  /* Evita scroll no body quando sidebar está aberta */
+  body.sb-locked { overflow: hidden }
+
+  /* Topbar: botão hamburger com área de toque maior */
+  .sb-ham {
+    min-width: 44px; min-height: 44px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Toast: não sobrepõe o banner PWA */
+  .toast { bottom: max(72px, calc(env(safe-area-inset-bottom, 0px) + 72px)) }
+
+  /* Scroll horizontal suave em tabelas */
+  .card { -webkit-overflow-scrolling: touch }
+
+  /* Inputs: font-size >= 16px previne zoom automático iOS */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="tel"],
+  select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Modais: scroll interno no iOS */
+  .md { -webkit-overflow-scrolling: touch }
+
+  /* Botões de ação: área de toque mínima 44px */
+  .btn, .btn-p, .btn-d, .tbt { min-height: 44px }
+}
