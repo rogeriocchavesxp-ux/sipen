@@ -1026,3 +1026,125 @@ body.dem-admin [data-demanda-admin] { display: block !important; }
   /* Botões de ação: área de toque mínima 44px */
   .btn, .btn-p, .btn-d, .tbt { min-height: 44px }
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   PWA — Banner de instruções iOS Safari
+   ═══════════════════════════════════════════════════════════════════ */
+
+.pwa-ios-banner {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0; right: 0;
+  background: var(--bg-card);
+  border-top: 1px solid var(--bd2);
+  border-radius: 18px 18px 0 0;
+  padding: 20px 20px max(20px, env(safe-area-inset-bottom, 20px));
+  z-index: 999;
+  box-shadow: 0 -8px 32px rgba(0,0,0,.5);
+  animation: pwa-slide-up .3s ease;
+}
+.pwa-ios-banner.visible { display: block }
+
+@keyframes pwa-slide-up {
+  from { transform: translateY(100%) }
+  to   { transform: translateY(0) }
+}
+
+.pwa-ios-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.pwa-ios-icon {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  background: var(--gr);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 900; color: #fff;
+  flex-shrink: 0;
+}
+.pwa-ios-title {
+  flex: 1;
+  min-width: 0;
+}
+.pwa-ios-title strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--tx1);
+  margin-bottom: 2px;
+}
+.pwa-ios-title span {
+  font-size: 12px;
+  color: var(--tx3);
+}
+
+.pwa-ios-steps {
+  list-style: none;
+  counter-reset: ios-step;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+  margin-bottom: 4px;
+}
+.pwa-ios-steps li {
+  counter-increment: ios-step;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 13.5px;
+  color: var(--tx2);
+  line-height: 1.5;
+}
+.pwa-ios-steps li::before {
+  content: counter(ios-step);
+  min-width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  border: 1px solid var(--bd2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--gr);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.pwa-ios-steps li strong { color: var(--tx1) }
+
+/* Ícone do botão Compartilhar do Safari */
+.pwa-ios-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--bd2);
+  border-radius: 5px;
+  padding: 1px 7px 1px 5px;
+  font-size: 12px;
+  color: var(--tx1);
+  white-space: nowrap;
+}
+.pwa-ios-share::before {
+  content: "";
+  display: inline-block;
+  width: 13px; height: 16px;
+  background: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l-4 4h3v9h2V6h3L12 2zM5 13v6a1 1 0 001 1h12a1 1 0 001-1v-6h-2v5H7v-5H5z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l-4 4h3v9h2V6h3L12 2zM5 13v6a1 1 0 001 1h12a1 1 0 001-1v-6h-2v5H7v-5H5z'/%3E%3C/svg%3E");
+  -webkit-mask-size: contain; mask-size: contain;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  -webkit-mask-position: center; mask-position: center;
+  flex-shrink: 0;
+}
+
+/* Seta apontando para a barra inferior do Safari */
+.pwa-ios-arrow {
+  width: 20px; height: 20px;
+  border-right: 3px solid var(--gr);
+  border-bottom: 3px solid var(--gr);
+  transform: rotate(45deg);
+  margin: 14px auto 0;
+  opacity: .6;
+}

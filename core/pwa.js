@@ -5,12 +5,25 @@
 (function () {
   'use strict';
 
-  const SW_URL   = '/sw.js';
+  const SW_URL      = '/sw.js';
   const DISMISS_KEY = 'sipen_pwa_dismissed';
   const DISMISS_TTL = 7 * 24 * 60 * 60 * 1000; // 7 dias
 
-  let _deferredPrompt = null;
-  let _swRegistration = null;
+  let _deferredPrompt  = null;
+  let _swRegistration  = null;
+
+  // ── Detecção de plataforma ────────────────────────────────────
+  const _isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  const _isStandalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    navigator.standalone === true;
+
+  // Marca o <html> para CSS saber que está instalado
+  if (_isStandalone) {
+    document.documentElement.setAttribute('data-pwa', 'standalone');
+  }
 
   // ── Registro do Service Worker ────────────────────────────────
   if ('serviceWorker' in navigator) {
@@ -20,67 +33,82 @@
   async function _registerSW() {
     try {
       _swRegistration = await navigator.serviceWorker.register(SW_URL);
-
-      // Detecta novo worker aguardando ativação
       _swRegistration.addEventListener('updatefound', _onUpdateFound);
 
-      // Se um worker já estava ativo e um novo ficou waiting (retorno à página)
-      if (_swRegistration.waiting) {
-        _showUpdateBanner();
-      }
+      if (_swRegistration.waiting) _showUpdateBanner();
 
-      // Ouve mudanças de estado do controller (após skipWaiting)
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         window.location.reload();
       });
-
     } catch (err) {
       console.warn('[PWA] SW não registrado:', err.message);
     }
   }
 
   function _onUpdateFound() {
-    const newWorker = _swRegistration.installing;
-    if (!newWorker) return;
-    newWorker.addEventListener('statechange', () => {
-      if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+    const w = _swRegistration.installing;
+    if (!w) return;
+    w.addEventListener('statechange', () => {
+      if (w.state === 'installed' && navigator.serviceWorker.controller) {
         _showUpdateBanner();
       }
     });
   }
 
-  // ── Install Prompt (Android/Desktop Chrome/Edge) ──────────────
+  // ── Install Prompt — Android / Chrome / Edge ──────────────────
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     _deferredPrompt = e;
-    _showInstallBanner();
+    _showInstallBanner();       // banner padrão com botão "Instalar"
   });
 
   window.addEventListener('appinstalled', () => {
     _deferredPrompt = null;
     _hideInstallBanner();
+    _hideIOSBanner();
   });
+
+  // ── iOS Safari: instrução manual ──────────────────────────────
+  // beforeinstallprompt nunca dispara no iOS — exibe tutorial de como
+  // usar Compartilhar → "Adicionar à Tela de Início"
+  if (_isIOS && !_isStandalone) {
+    // Aguarda 3 s para o usuário já ter visto a página
+    window.addEventListener('load', () => {
+      setTimeout(_maybeShowIOSBanner, 3000);
+    });
+  }
+
+  function _maybeShowIOSBanner() {
+    const ts = parseInt(localStorage.getItem(DISMISS_KEY) || '0', 10);
+    if (Date.now() - ts < DISMISS_TTL) return;
+    _showIOSBanner();
+  }
+
+  function _showIOSBanner() {
+    const el = document.getElementById('pwa-ios-banner');
+    if (el) el.classList.add('visible');
+  }
+
+  function _hideIOSBanner() {
+    const el = document.getElementById('pwa-ios-banner');
+    if (el) el.classList.remove('visible');
+  }
 
   // ── API pública ───────────────────────────────────────────────
 
-  /** Aciona o prompt nativo de instalação */
   window.pwaInstall = async function () {
     if (!_deferredPrompt) return;
     _deferredPrompt.prompt();
     const { outcome } = await _deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      _deferredPrompt = null;
-      _hideInstallBanner();
-    }
+    if (outcome === 'accepted') { _deferredPrompt = null; _hideInstallBanner(); }
   };
 
-  /** Dispensa o banner por 7 dias */
   window.pwaDismiss = function () {
     localStorage.setItem(DISMISS_KEY, Date.now().toString());
     _hideInstallBanner();
+    _hideIOSBanner();
   };
 
-  /** Aplica atualização disponível e recarrega */
   window.pwaApplyUpdate = function () {
     if (_swRegistration?.waiting) {
       _swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -88,22 +116,14 @@
     _hideUpdateBanner();
   };
 
-  /** Dispensa o banner de atualização */
-  window.pwaDismissUpdate = function () {
-    _hideUpdateBanner();
-  };
+  window.pwaDismissUpdate = function () { _hideUpdateBanner(); };
 
-  // ── Banners ───────────────────────────────────────────────────
+  // ── Banners Android/Desktop ───────────────────────────────────
 
   function _showInstallBanner() {
-    // Não mostra se já instalado como PWA
-    if (window.matchMedia('(display-mode: standalone)').matches) return;
-    if (navigator.standalone) return;
-
-    // Não mostra se foi dispensado recentemente
+    if (_isStandalone) return;
     const ts = parseInt(localStorage.getItem(DISMISS_KEY) || '0', 10);
     if (Date.now() - ts < DISMISS_TTL) return;
-
     const el = document.getElementById('pwa-install-banner');
     if (el) el.classList.add('visible');
   }
@@ -115,28 +135,13 @@
 
   function _showUpdateBanner() {
     const el = document.getElementById('pwa-update-banner');
-    if (el) {
-      el.classList.add('visible');
-      return;
-    }
-    // Fallback: usa o Toast se disponível
-    if (typeof T === 'function') {
-      T('Atualização disponível', 'Clique em "Atualizar" para usar a versão mais recente.');
-    }
+    if (el) { el.classList.add('visible'); return; }
+    if (typeof T === 'function') T('Atualização disponível', 'Recarregue para usar a versão mais recente.');
   }
 
   function _hideUpdateBanner() {
     const el = document.getElementById('pwa-update-banner');
     if (el) el.classList.remove('visible');
-  }
-
-  // ── Detecta modo standalone ───────────────────────────────────
-  const isStandalone =
-    window.matchMedia('(display-mode: standalone)').matches ||
-    navigator.standalone === true;
-
-  if (isStandalone) {
-    document.documentElement.setAttribute('data-pwa', 'standalone');
   }
 
 })();
