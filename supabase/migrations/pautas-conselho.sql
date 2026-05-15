@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.conselho_reunioes (
                  CHECK (status IN ('AGENDADA','REALIZADA','CANCELADA')),
   observacoes  TEXT,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
-  created_by   UUID        REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_by   UUID        REFERENCES public.pessoas(id) ON DELETE SET NULL,
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS public.conselho_pautas (
   responsaveis   TEXT,
   prazo          DATE,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
-  created_by     UUID        REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_by     UUID        REFERENCES public.pessoas(id) ON DELETE SET NULL,
   updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS public.conselho_pautas_historico (
   campo        TEXT        NOT NULL,
   valor_antes  TEXT,
   valor_depois TEXT,
-  alterado_por UUID        REFERENCES auth.users(id) ON DELETE SET NULL,
+  alterado_por UUID        REFERENCES public.pessoas(id) ON DELETE SET NULL,
   alterado_em  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
