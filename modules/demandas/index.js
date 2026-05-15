@@ -1539,8 +1539,13 @@
       "infra-demandas-infra":     () => renderLista("infra-demandas-infra-content",    { area:"Infraestrutura" }),
       "jur-demandas-tab":         () => renderLista("jur-demandas-tab-content"),
       "jur-demandas-jur":         () => renderLista("jur-demandas-jur-content",        { area:"Jurídico" }),
-      "pastoral-demandas":        () => renderLista("pastoral-demandas-content"),
-      "pastoral-demandas-pas":    () => renderLista("pastoral-demandas-pas-content",   { area:"Pastoral" }),
+      "pastoral-demandas":        () => renderLista("pastoral-demandas-content",         { area:"Pastoral" }),
+      "pastoral-demandas-pas":    () => renderLista("pastoral-demandas-pas-content",     { area:"Pastoral" }),
+      "pastoral-ate":             () => listarModulo("DEMANDAS", "pastoral-ate-list",   { area:"Pastoral" }),
+      "pastoral-ora":             () => listarModulo("DEMANDAS", "pastoral-ora-list",   { area:"Pastoral" }),
+      "pastoral-reg":             () => listarModulo("DEMANDAS", "pastoral-reg-list",   { area:"Pastoral" }),
+      "pastoral-pri":             () => listarModulo("DEMANDAS", "pastoral-pri-list",   { area:"Pastoral", prioridade:"Alta" }),
+      "pastoral-aco":             () => listarModulo("MEMBROS",  "pastoral-aco-list"),
       "area-dem":                 () => renderLista("area-dem-content"),
     };
     if (MAP[id]) await MAP[id]();
