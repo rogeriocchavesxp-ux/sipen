@@ -96,31 +96,38 @@ ALTER TABLE whatsapp_templates       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE whatsapp_modulo_config   ENABLE ROW LEVEL SECURITY;
 
 -- whatsapp_config: só admins lêem/escrevem
+DROP POLICY IF EXISTS "admin_select_wa_config" ON whatsapp_config;
 CREATE POLICY "admin_select_wa_config" ON whatsapp_config
   FOR SELECT TO authenticated
   USING (auth.jwt() ->> 'role' IN ('admin_geral','ADMINISTRADOR_GERAL'));
 
+DROP POLICY IF EXISTS "admin_update_wa_config" ON whatsapp_config;
 CREATE POLICY "admin_update_wa_config" ON whatsapp_config
   FOR ALL TO authenticated
   USING (auth.jwt() ->> 'role' IN ('admin_geral','ADMINISTRADOR_GERAL'));
 
 -- whatsapp_mensagens: admins lêem, só service role insere (Edge Function)
+DROP POLICY IF EXISTS "admin_select_wa_msg" ON whatsapp_mensagens;
 CREATE POLICY "admin_select_wa_msg" ON whatsapp_mensagens
   FOR SELECT TO authenticated
   USING (auth.jwt() ->> 'role' IN ('admin_geral','ADMINISTRADOR_GERAL','adm_operacional','ADM_OPERACIONAL'));
 
 -- whatsapp_templates: todos autenticados lêem; admins gerenciam
+DROP POLICY IF EXISTS "autenticado_select_templates" ON whatsapp_templates;
 CREATE POLICY "autenticado_select_templates" ON whatsapp_templates
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "admin_manage_templates" ON whatsapp_templates;
 CREATE POLICY "admin_manage_templates" ON whatsapp_templates
   FOR ALL TO authenticated
   USING (auth.jwt() ->> 'role' IN ('admin_geral','ADMINISTRADOR_GERAL'));
 
 -- whatsapp_modulo_config: todos lêem; admins escrevem
+DROP POLICY IF EXISTS "autenticado_select_modulo_config" ON whatsapp_modulo_config;
 CREATE POLICY "autenticado_select_modulo_config" ON whatsapp_modulo_config
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "admin_update_modulo_config" ON whatsapp_modulo_config;
 CREATE POLICY "admin_update_modulo_config" ON whatsapp_modulo_config
   FOR UPDATE TO authenticated
   USING (auth.jwt() ->> 'role' IN ('admin_geral','ADMINISTRADOR_GERAL'));
