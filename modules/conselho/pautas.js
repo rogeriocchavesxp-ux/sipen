@@ -424,36 +424,48 @@
       const podeEd = _podeEditar(p);
       const podeSec = _podeSecretaria();
       const num = idx + 1;
-      return `<div class="card" style="border-left:3px solid ${scfg.cor}">
+      return `<div class="card" style="border-left:3px solid ${scfg.cor};padding:14px 16px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+
           <div style="min-width:0;flex:1">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
-              <span style="background:var(--bg3,#2b2f33);border:1px solid var(--bd2);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--sky);flex-shrink:0">${num}</span>
-              <div class="ctit">${_eh(p.titulo)}</div>
+            <!-- Número + Título -->
+            <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+              <span style="font-size:11px;font-weight:700;color:var(--sky);letter-spacing:.03em;flex-shrink:0">${num}.</span>
+              <span style="font-size:14px;font-weight:600;color:var(--tx1);line-height:1.4">${_eh(p.titulo)}</span>
             </div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <span class="pill pn">${_eh(p.categoria)}</span>
-              <span class="pill ${scfg.cls}">${scfg.label}</span>
-              <span class="pill ${pcfg.cls}">${pcfg.label}</span>
+            <!-- Encaminhamento imediatamente abaixo do título -->
+            ${p.encaminhamento ? `<div style="font-size:12px;color:var(--tx3);margin-bottom:8px;padding-left:20px">Encaminhamento: <span style="color:var(--tx2);font-weight:500">${_eh(p.encaminhamento)}</span></div>` : `<div style="margin-bottom:8px"></div>`}
+            <!-- Pills de contexto -->
+            <div style="display:flex;gap:5px;flex-wrap:wrap;padding-left:20px">
+              <span class="pill pn" style="font-size:10.5px">${_eh(p.categoria)}</span>
+              <span class="pill ${scfg.cls}" style="font-size:10.5px">${scfg.label}</span>
+              <span class="pill ${pcfg.cls}" style="font-size:10.5px">${pcfg.label}</span>
             </div>
           </div>
-          <div style="display:flex;gap:6px;flex-shrink:0">
-            <button class="tbt" onclick="pautasVerDetalhe('${_ea(p.id)}')">Ver</button>
-            ${podeEd ? `<button class="tbt" onclick="pautasEditarPauta('${_ea(p.id)}')">Editar</button>` : ""}
+
+          <!-- Ações -->
+          <div style="display:flex;gap:5px;flex-shrink:0;margin-top:2px">
+            <button class="tbt" style="font-size:12px;padding:5px 10px" onclick="pautasVerDetalhe('${_ea(p.id)}')">Ver</button>
+            ${podeEd ? `<button class="tbt" style="font-size:12px;padding:5px 10px" onclick="pautasEditarPauta('${_ea(p.id)}')">Editar</button>` : ""}
           </div>
         </div>
-        ${p.encaminhamento ? `<div class="sr" style="margin-top:8px"><span class="sl">Encaminhamento</span><span class="sv">${_eh(p.encaminhamento)}</span></div>` : ""}
-        ${p.sintese ? `<div style="font-size:12px;color:var(--tx3);margin-top:6px;line-height:1.5">${_eh(p.sintese.slice(0, 200))}${p.sintese.length > 200 ? "…" : ""}</div>` : ""}
-        ${p.deliberacao ? `<div style="margin-top:8px;padding:8px 10px;background:rgba(58,170,92,.08);border:1px solid rgba(58,170,92,.2);border-radius:6px;font-size:12px;color:var(--tx2)"><strong style="color:var(--gr)">Deliberação:</strong> ${_eh(p.deliberacao)}</div>` : ""}
+
+        <!-- Síntese -->
+        ${p.sintese ? `<div style="font-size:12px;color:var(--tx3);margin-top:10px;padding:8px 10px 8px 12px;border-left:2px solid var(--bd2);line-height:1.6">${_eh(p.sintese.slice(0, 240))}${p.sintese.length > 240 ? "…" : ""}</div>` : ""}
+
+        <!-- Deliberação -->
+        ${p.deliberacao ? `<div style="margin-top:10px;padding:9px 12px;background:rgba(58,170,92,.07);border:1px solid rgba(58,170,92,.18);border-radius:7px;font-size:12px;color:var(--tx2);line-height:1.55"><span style="font-size:10.5px;font-weight:700;color:var(--gr);letter-spacing:.04em;text-transform:uppercase;margin-right:6px">Deliberação</span>${_eh(p.deliberacao)}${p.responsaveis ? `<span style="display:block;font-size:10.5px;color:var(--tx3);margin-top:4px">Responsáveis: ${_eh(p.responsaveis)}</span>` : ""}</div>` : ""}
+
+        <!-- Ações de status -->
         ${podeSec && p.status === "PENDENTE" ? `
-          <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd1);display:flex;gap:5px;flex-wrap:wrap">
             <button class="tbt" style="font-size:11px" onclick="pautasAlterarStatus('${_ea(p.id)}','EM_ANALISE')">Em análise</button>
             <button class="tbt" style="font-size:11px;color:var(--gr)" onclick="pautasAlterarStatus('${_ea(p.id)}','APROVADO')">Aprovar</button>
             <button class="tbt" style="font-size:11px;color:var(--rose)" onclick="pautasAlterarStatus('${_ea(p.id)}','REJEITADO')">Rejeitar</button>
             <button class="tbt" style="font-size:11px;color:var(--amber)" onclick="pautasAlterarStatus('${_ea(p.id)}','ADIADO')">Adiar</button>
           </div>` : ""}
         ${podeSec && (p.status === "EM_ANALISE" || p.status === "APROVADO") && !p.deliberacao ? `
-          <div style="margin-top:8px">
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd1)">
             <button class="tbt pri" style="font-size:11px" onclick="pautasRegistrarDeliberacao('${_ea(p.id)}')">+ Registrar deliberação</button>
           </div>` : ""}
       </div>`;
