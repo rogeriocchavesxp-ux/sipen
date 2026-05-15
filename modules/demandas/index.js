@@ -1544,11 +1544,232 @@
       "pastoral-ate":             () => listarModulo("DEMANDAS", "pastoral-ate-list",   { area:"Pastoral" }),
       "pastoral-ora":             () => listarModulo("DEMANDAS", "pastoral-ora-list",   { area:"Pastoral" }),
       "pastoral-reg":             () => listarModulo("DEMANDAS", "pastoral-reg-list",   { area:"Pastoral" }),
-      "pastoral-pri":             () => listarModulo("DEMANDAS", "pastoral-pri-list",   { area:"Pastoral", prioridade:"Alta" }),
+      "pastoral-pri":             () => _carregarCasosPri(),
       "pastoral-aco":             () => listarModulo("MEMBROS",  "pastoral-aco-list"),
       "area-dem":                 () => renderLista("area-dem-content"),
     };
     if (MAP[id]) await MAP[id]();
+  };
+
+  // ── Casos Prioritários (Pastoral) ─────────────────────────────────────
+  const _CP_LB  = 'display:block;font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px';
+  const _CP_INP = 'width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box';
+  let _cpModalEl = null;
+  let _cpEditId  = null;
+
+  function _garantirModalCasoPri() {
+    if (_cpModalEl) return _cpModalEl;
+    const el = document.createElement('div');
+    el.id = 'modal-caso-pri';
+    el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:16px';
+    el.innerHTML = `
+      <div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+        <div style="padding:20px 24px 16px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg-card);z-index:1">
+          <div>
+            <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Pastoral · Casos Prioritários</div>
+            <div id="cp-modal-title" style="font-size:17px;font-weight:700;color:var(--tx1)">Novo Caso</div>
+          </div>
+          <button onclick="document.getElementById('modal-caso-pri').style.display='none'" style="background:none;border:none;font-size:22px;color:var(--tx3);cursor:pointer;padding:4px 8px;border-radius:6px">×</button>
+        </div>
+        <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px">
+          <div>
+            <label style="${_CP_LB}">Nome da Pessoa <span style="color:var(--rose)">*</span></label>
+            <input type="text" id="cp-solicitante" style="${_CP_INP}" placeholder="Nome da pessoa">
+          </div>
+          <div>
+            <label style="${_CP_LB}">Motivo / Título <span style="color:var(--rose)">*</span></label>
+            <input type="text" id="cp-titulo" style="${_CP_INP}" placeholder="Motivo do caso prioritário">
+          </div>
+          <div>
+            <label style="${_CP_LB}">Situação / Descrição</label>
+            <textarea id="cp-descricao" rows="3" style="${_CP_INP};resize:vertical;height:auto;font-family:inherit" placeholder="Descreva a situação..."></textarea>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label style="${_CP_LB}">Prioridade</label>
+              <select id="cp-prioridade" style="${_CP_INP}">
+                <option value="Urgente">Urgente</option>
+                <option value="Alta">Alta</option>
+                <option value="Média">Média</option>
+                <option value="Baixa">Baixa</option>
+              </select>
+            </div>
+            <div>
+              <label style="${_CP_LB}">Status</label>
+              <select id="cp-status" style="${_CP_INP}">
+                <option value="ABERTA">Aberto</option>
+                <option value="EM_ANDAMENTO">Em Acompanhamento</option>
+                <option value="CONCLUIDA">Resolvido</option>
+                <option value="CANCELADA">Arquivado</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label style="${_CP_LB}">Responsável pelo Acompanhamento</label>
+            <input type="text" id="cp-responsavel" style="${_CP_INP}" placeholder="Nome do responsável">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label style="${_CP_LB}">Data de Abertura</label>
+              <input type="date" id="cp-data-abertura" style="${_CP_INP}">
+            </div>
+            <div>
+              <label style="${_CP_LB}">Data de Conclusão (opcional)</label>
+              <input type="date" id="cp-data-conclusao" style="${_CP_INP}">
+            </div>
+          </div>
+          <div id="cp-err" style="color:var(--rose);font-size:12px;display:none"></div>
+        </div>
+        <div style="padding:16px 24px 20px;border-top:1px solid var(--bd1);display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:var(--bg-card)">
+          <button onclick="document.getElementById('modal-caso-pri').style.display='none'" style="padding:9px 20px;border-radius:8px;border:1px solid var(--bd2);background:none;color:var(--tx2);font-size:13px;cursor:pointer">Cancelar</button>
+          <button id="cp-btn" onclick="_salvarCasoPri()" style="padding:9px 24px;border-radius:8px;border:none;background:var(--rose);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Salvar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(el);
+    _cpModalEl = el;
+    return el;
+  }
+
+  window.abrirModalCasoPri = function(id, dados) {
+    _cpEditId = id || null;
+    const modal = _garantirModalCasoPri();
+    const hoje = new Date().toISOString().slice(0, 10);
+    document.getElementById('cp-modal-title').textContent = id ? 'Editar Caso Prioritário' : 'Novo Caso Prioritário';
+    document.getElementById('cp-err').style.display = 'none';
+    document.getElementById('cp-solicitante').value    = dados?.solicitante    || '';
+    document.getElementById('cp-titulo').value         = dados?.titulo         || '';
+    document.getElementById('cp-descricao').value      = dados?.descricao      || '';
+    document.getElementById('cp-responsavel').value    = dados?.responsavel    || '';
+    document.getElementById('cp-prioridade').value     = dados?.prioridade     || 'Alta';
+    document.getElementById('cp-status').value         = dados?.status         || 'ABERTA';
+    document.getElementById('cp-data-abertura').value  = dados?.data_abertura  ? dados.data_abertura.slice(0,10)  : hoje;
+    document.getElementById('cp-data-conclusao').value = dados?.data_conclusao ? dados.data_conclusao.slice(0,10) : '';
+    modal.style.display = 'flex';
+  };
+
+  window._salvarCasoPri = async function() {
+    const solicitante = (document.getElementById('cp-solicitante').value || '').trim();
+    const titulo      = (document.getElementById('cp-titulo').value      || '').trim();
+    const errEl       = document.getElementById('cp-err');
+    if (!solicitante || !titulo) {
+      errEl.textContent = 'Nome da pessoa e Motivo são obrigatórios.';
+      errEl.style.display = '';
+      return;
+    }
+    const btn = document.getElementById('cp-btn');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    errEl.style.display = 'none';
+
+    const payload = {
+      titulo,
+      solicitante,
+      descricao:      (document.getElementById('cp-descricao').value   || '').trim() || null,
+      responsavel:    (document.getElementById('cp-responsavel').value || '').trim() || null,
+      prioridade:     document.getElementById('cp-prioridade').value   || 'Alta',
+      status:         document.getElementById('cp-status').value       || 'ABERTA',
+      area:           'Pastoral',
+      data_abertura:  document.getElementById('cp-data-abertura').value  || null,
+      data_conclusao: document.getElementById('cp-data-conclusao').value || null,
+    };
+
+    try {
+      const r = _cpEditId
+        ? await fetch(`${SUPABASE_URL}/rest/v1/demandas?id=eq.${_cpEditId}`,
+            { method:'PATCH', headers: apiHeaders({'Prefer':'return=representation'}), body: JSON.stringify(payload) })
+        : await fetch(`${SUPABASE_URL}/rest/v1/demandas`,
+            { method:'POST',  headers: apiHeaders({'Prefer':'return=representation'}), body: JSON.stringify(payload) });
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({}));
+        throw new Error(e?.message || `HTTP ${r.status}`);
+      }
+      document.getElementById('modal-caso-pri').style.display = 'none';
+      await _carregarCasosPri();
+    } catch(e) {
+      console.error('_salvarCasoPri:', e);
+      errEl.textContent = e.message;
+      errEl.style.display = '';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Salvar';
+    }
+  };
+
+  async function _carregarCasosPri() {
+    const el = document.getElementById('pastoral-pri-list');
+    if (!el) return;
+    el.innerHTML = '<div style="color:var(--tx3);font-size:11.5px;padding:8px 0">Carregando...</div>';
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/demandas?area=eq.Pastoral&order=criado_em.desc` +
+        `&select=id,titulo,solicitante,descricao,prioridade,status,responsavel,data_abertura,data_conclusao`,
+        { headers: apiHeaders() }
+      );
+      if (!r.ok) throw new Error(await r.text());
+      const lista = await r.json();
+
+      if (lista.length === 0) {
+        el.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--tx3)">
+          <div style="font-size:28px;margin-bottom:8px">🚨</div>
+          <div style="font-size:12px;margin-bottom:12px">Nenhum caso prioritário registrado.</div>
+          <button onclick="abrirModalCasoPri()" style="background:var(--rose);border:none;border-radius:6px;padding:8px 16px;color:#fff;font-size:11.5px;font-weight:600;cursor:pointer">+ Novo Caso</button>
+        </div>`;
+        return;
+      }
+
+      const PRIO_COR = {Urgente:'#ef4444',Alta:'#e97316',Média:'#d4a843',Baixa:'#2ab5c0'};
+      const ST_LBL   = {ABERTA:'Aberto',EM_ANALISE:'Em Análise',EM_ANDAMENTO:'Em Acompanhamento',PENDENTE:'Pendente',CONCLUIDA:'Resolvido',CANCELADA:'Arquivado'};
+      const ST_BG    = {ABERTA:'rgba(239,68,68,.1)',EM_ANALISE:'rgba(212,168,67,.1)',EM_ANDAMENTO:'rgba(74,156,245,.1)',CONCLUIDA:'rgba(58,170,92,.1)',CANCELADA:'rgba(100,100,100,.1)'};
+      const ST_CL    = {ABERTA:'#ef4444',EM_ANALISE:'#d4a843',EM_ANDAMENTO:'#4a9cf5',CONCLUIDA:'#3aaa5c',CANCELADA:'#888'};
+
+      el.innerHTML = `
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+            <thead><tr style="border-bottom:2px solid var(--bd1)">
+              <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-weight:600;font-size:11px">Pessoa</th>
+              <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-weight:600;font-size:11px">Motivo</th>
+              <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-weight:600;font-size:11px">Prioridade</th>
+              <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-weight:600;font-size:11px">Status</th>
+              <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-weight:600;font-size:11px">Responsável</th>
+              <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-weight:600;font-size:11px">Abertura</th>
+              <th style="padding:8px 10px"></th>
+            </tr></thead>
+            <tbody>${lista.map(c => {
+              const pCor  = PRIO_COR[c.prioridade] || '#888';
+              const stLbl = ST_LBL[c.status]        || c.status || '—';
+              const stBg  = ST_BG[c.status]          || 'rgba(100,100,100,.1)';
+              const stCl  = ST_CL[c.status]          || '#888';
+              const dtAb  = c.data_abertura ? c.data_abertura.slice(0,10) : '—';
+              return `<tr style="border-bottom:1px solid var(--bd1)">
+                <td style="padding:8px 10px;color:var(--tx1);font-weight:500">${escapeHtml(c.solicitante || '—')}</td>
+                <td style="padding:8px 10px;color:var(--tx2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(c.titulo || '')}">${escapeHtml(c.titulo || '—')}</td>
+                <td style="padding:8px 10px"><span style="font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;background:${pCor}20;color:${pCor}">${escapeHtml(c.prioridade || '—')}</span></td>
+                <td style="padding:8px 10px"><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${stBg};color:${stCl}">${escapeHtml(stLbl)}</span></td>
+                <td style="padding:8px 10px;color:var(--tx2)">${escapeHtml(c.responsavel || '—')}</td>
+                <td style="padding:8px 10px;color:var(--tx3);font-size:11px">${dtAb}</td>
+                <td style="padding:8px 10px;text-align:right;white-space:nowrap">
+                  <button onclick='abrirModalCasoPri(${JSON.stringify(c.id)},${safeJsonForHtml(c)})' style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:10px;padding:3px 8px;cursor:pointer;margin-right:4px">✏️</button>
+                  <button onclick='_deletarCasoPri(${JSON.stringify(c.id)})' style="background:rgba(224,85,85,0.08);border:1px solid rgba(224,85,85,0.18);border-radius:4px;color:var(--rose);font-size:10px;padding:3px 8px;cursor:pointer">🗑</button>
+                </td>
+              </tr>`;
+            }).join('')}</tbody>
+          </table>
+        </div>`;
+    } catch(e) {
+      console.error('_carregarCasosPri:', e);
+      el.innerHTML = `<div style="color:var(--rose);font-size:12px;padding:8px 0">Erro: ${escapeHtml(e.message)}</div>`;
+    }
+  }
+
+  window._deletarCasoPri = async function(id) {
+    if (!confirm('Remover este caso prioritário?')) return;
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/demandas?id=eq.${id}`, {
+        method:'DELETE', headers: apiHeaders(),
+      });
+      if (!r.ok) throw new Error(await r.text());
+      _carregarCasosPri();
+    } catch(e) {
+      alert('Erro ao remover: ' + e.message);
+    }
   };
 
   window.adminDemSetFiltro = _admSetFiltro;

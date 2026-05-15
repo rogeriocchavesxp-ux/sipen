@@ -148,8 +148,8 @@
   </div>
 
   <div class="view" id="v-pastoral-pri">
-    <div class="hero"><div class="hero-ic" style="background:var(--rosebg)">🚨</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Casos Prioritários</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo</button></div></div>
-    <div class="ct"><div class="card"><div class="ctit">Prioritários <span class="cact" onclick="listarModulo('DEMANDAS','pastoral-pri-list',{area:'Pastoral',prioridade:'Alta'})">↻</span></div><div id="pastoral-pri-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+    <div class="hero"><div class="hero-ic" style="background:var(--rosebg)">🚨</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Casos Prioritários</div><div class="hero-dsc">Acompanhamento pastoral de situações urgentes e prioritárias</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalCasoPri()">+ Novo Caso</button></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Casos Registrados <span class="cact" onclick="_carregarCasosPri()">↻ Atualizar</span></div><div id="pastoral-pri-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <!-- DISPONIBILIDADE PREGAÇÃO -->
