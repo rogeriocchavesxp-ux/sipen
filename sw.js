@@ -6,7 +6,7 @@
 // ⚠ Ao fazer deploy de uma nova versão, incremente CACHE_VERSION.
 // ════════════════════════════════════════════════════════════════
 
-const CACHE_VERSION = 'sipen-v6.30.38';
+const CACHE_VERSION = 'sipen-v6.30.39';
 const OFFLINE_URL   = '/offline.html';
 
 // Arquivos do app shell — cacheados no install

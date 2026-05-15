@@ -414,16 +414,38 @@
         return;
       }
 
-      // Resolver nomes dos líderes em lote
+      // Resolver nomes dos líderes e membros de cada setor em paralelo
       const liderIds = [...new Set(lista.filter(s => s.lider_setorial).map(s => s.lider_setorial))];
+      const setorIds = lista.map(s => s.id);
       const nomeLider = {};
-      if (liderIds.length) {
-        const rl = await fetch(
-          `${SUPABASE_URL}/rest/v1/pessoas?id=in.(${liderIds.join(',')})&select=id,nome`,
-          { headers: _hdr() }
-        );
+      const membrosPorSetor = {};
+
+      const fetchLideres = liderIds.length
+        ? fetch(`${SUPABASE_URL}/rest/v1/pessoas?id=in.(${liderIds.join(',')})&select=id,nome`, { headers: _hdr() })
+        : Promise.resolve(null);
+
+      const fetchMembros = setorIds.length
+        ? fetch(
+            `${SUPABASE_URL}/rest/v1/ministerio_setor_membros` +
+            `?setor_id=in.(${setorIds.join(',')})&select=setor_id,pessoas(id,nome)&order=criado_em.asc`,
+            { headers: _hdr() }
+          )
+        : Promise.resolve(null);
+
+      const [rl, rm] = await Promise.all([fetchLideres, fetchMembros]);
+
+      if (rl) {
         const ps = rl.ok ? await rl.json() : [];
         ps.forEach(p => { nomeLider[p.id] = (p.nome || '').toUpperCase(); });
+      }
+      if (rm && rm.ok) {
+        const mbs = await rm.json();
+        mbs.forEach(m => {
+          const nome = m.pessoas?.nome;
+          if (!nome) return;
+          if (!membrosPorSetor[m.setor_id]) membrosPorSetor[m.setor_id] = [];
+          membrosPorSetor[m.setor_id].push(nome);
+        });
       }
 
       const podeAct = _podeEditarSetor();
@@ -432,6 +454,7 @@
           <thead><tr style="border-bottom:2px solid var(--bd1)">
             <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Setor</th>
             <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Líder Setorial</th>
+            <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Membros do Setor</th>
             <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Status</th>
             ${podeAct ? '<th style="padding:6px 8px;color:var(--tx3);font-weight:600">Ações</th>' : ''}
           </tr></thead>
@@ -442,6 +465,18 @@
             const stTag  = ativo
               ? '<span style="font-size:11px;padding:2px 7px;background:var(--greenbg,#d1fae5);color:var(--green,#059669);border-radius:20px">Ativo</span>'
               : '<span style="font-size:11px;padding:2px 7px;background:#fee2e2;color:var(--rose);border-radius:20px">Inativo</span>';
+
+            const membros = membrosPorSetor[s.id] || [];
+            let membrosHtml;
+            if (membros.length === 0) {
+              membrosHtml = '<span style="color:var(--tx3)">—</span>';
+            } else if (membros.length <= 4) {
+              membrosHtml = `<div style="font-size:12px;line-height:1.7">${membros.map(n => escapeHtml(n.toUpperCase())).join('<br>')}</div>`;
+            } else {
+              const visiveis = membros.slice(0, 3).map(n => escapeHtml(n.toUpperCase())).join('<br>');
+              membrosHtml = `<div style="font-size:12px;line-height:1.7">${visiveis}<br><span style="color:var(--tx3)">+${membros.length - 3} mais</span></div>`;
+            }
+
             const tdAcoes = podeAct
               ? `<td style="padding:7px 8px;white-space:nowrap">
                    <button onclick="minMinEditarSetor('${s.id}')"
@@ -459,7 +494,8 @@
             return `<tr style="border-bottom:1px solid var(--bd1)">
               <td style="padding:7px 8px;color:var(--tx1);font-weight:500">${nome}</td>
               <td style="padding:7px 8px;color:var(--tx2)">${lider}</td>
-              <td style="padding:7px 8px">${stTag}</td>
+              <td style="padding:7px 8px;vertical-align:top">${membrosHtml}</td>
+              <td style="padding:7px 8px;vertical-align:top">${stTag}</td>
               ${tdAcoes}
             </tr>`;
           }).join('')}</tbody>
@@ -947,6 +983,7 @@
       }
       document.getElementById('mst-add-pessoa').value = '';
       await _carregarSetorMembros(_setorEditandoId);
+      if (_ministerioAtual) _carregarSetores(_ministerioAtual);
     } catch (e) {
       console.error('minMinAdicionarMembroSetor:', e);
       _showErr('mst-membros-err', e.message);
@@ -962,6 +999,7 @@
       });
       if (!r.ok) throw new Error(r.status);
       await _carregarSetorMembros(_setorEditandoId);
+      if (_ministerioAtual) _carregarSetores(_ministerioAtual);
     } catch (e) {
       alert('Erro ao remover: ' + e.message);
     }
