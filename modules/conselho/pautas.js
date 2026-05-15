@@ -15,12 +15,6 @@
     CONCLUIDO:  { label: "Concluído",   cls: "pv", cor: "var(--violet)" },
   };
 
-  const PRIO_CFG = {
-    URGENTE: { label: "Urgente", cls: "pl", cor: "var(--rose)"  },
-    ALTA:    { label: "Alta",    cls: "po", cor: "var(--amber)" },
-    MEDIA:   { label: "Média",   cls: "pn", cor: "var(--blue)"  },
-    BAIXA:   { label: "Baixa",   cls: "pd", cor: "var(--gr)"    },
-  };
 
   const TIPO_REUNIAO = {
     ORDINARIA:          "Ordinária",
@@ -487,7 +481,6 @@
 
     const cards = lista.map((p, idx) => {
       const scfg    = STATUS_CFG[p.status] || { label: p.status, cls: "pz" };
-      const pcfg    = PRIO_CFG[p.prioridade] || { label: p.prioridade, cls: "pz" };
       const podeEd  = _podeEditar(p);
       const podeSec = _podeSecretaria();
       const num     = idx + 1;
@@ -516,7 +509,6 @@
             <div style="display:flex;gap:5px;flex-wrap:wrap;padding-left:20px">
               <span class="pill pn" style="font-size:10.5px">${_eh(p.categoria)}</span>
               <span class="pill ${scfg.cls}" style="font-size:10.5px">${scfg.label}</span>
-              <span class="pill ${pcfg.cls}" style="font-size:10.5px">${pcfg.label}</span>
             </div>
           </div>
 
@@ -576,7 +568,6 @@
   function _abrirModalDetalhe(p) {
     _fecharModal();
     const scfg = STATUS_CFG[p.status] || { label: p.status, cls: "pz" };
-    const pcfg = PRIO_CFG[p.prioridade] || { label: p.prioridade, cls: "pz" };
     const overlay = document.createElement("div");
     overlay.id = "modal-pauta-det";
     overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9800;display:flex;align-items:center;justify-content:center;padding:16px";
@@ -590,7 +581,6 @@
             <strong style="font-size:15px;line-height:1.4">${_eh(p.titulo)}</strong>
             <div style="display:flex;gap:6px;margin-top:8px">
               <span class="pill ${scfg.cls}">${scfg.label}</span>
-              <span class="pill ${pcfg.cls}">${pcfg.label}</span>
             </div>
           </div>
           <button onclick="pautasFecharModal()" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer;flex-shrink:0">✕</button>
@@ -622,9 +612,8 @@
     const overlay = document.createElement("div");
     overlay.id = "modal-pauta";
     overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9800;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto";
-    const catOpts = CATEGORIAS.map(c => `<option value="${c}" ${(pauta?.categoria || "Geral") === c ? "selected" : ""}>${c}</option>`).join("");
+    const catOpts    = CATEGORIAS.map(c => `<option value="${c}" ${(pauta?.categoria || "Geral") === c ? "selected" : ""}>${c}</option>`).join("");
     const statusOpts = Object.entries(STATUS_CFG).map(([k, v]) => `<option value="${k}" ${(pauta?.status || "PENDENTE") === k ? "selected" : ""}>${v.label}</option>`).join("");
-    const prioOpts = Object.entries(PRIO_CFG).map(([k, v]) => `<option value="${k}" ${(pauta?.prioridade || "MEDIA") === k ? "selected" : ""}>${v.label}</option>`).join("");
     overlay.innerHTML = `
       <div style="background:var(--bg2,#212529);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;padding:24px;margin:auto">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
@@ -648,8 +637,8 @@
               <select id="mp-cat" style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px">${catOpts}</select>
             </div>
             <div>
-              <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:4px">Prioridade</label>
-              <select id="mp-prio" style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px">${prioOpts}</select>
+              <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:4px">Status</label>
+              <select id="mp-status" style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px">${statusOpts}</select>
             </div>
           </div>
           <div>
@@ -660,13 +649,6 @@
             <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:4px">Observações</label>
             <textarea id="mp-obs" rows="2" style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px;resize:vertical">${_eh(pauta?.observacoes || "")}</textarea>
           </div>
-          ${_podeSecretaria() ? `
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div>
-              <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:4px">Status</label>
-              <select id="mp-status" style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px">${statusOpts}</select>
-            </div>
-          </div>` : ""}
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px">
           <button onclick="pautasFecharModal()" class="btn">Cancelar</button>
@@ -683,7 +665,6 @@
     const titulo = (_view("mp-titulo")?.value || "").trim();
     const enc    = (_view("mp-enc")?.value || "").trim();
     const cat    = _view("mp-cat")?.value || "Geral";
-    const prio   = _view("mp-prio")?.value || "MEDIA";
     const sint   = (_view("mp-sint")?.value || "").trim();
     const obs    = (_view("mp-obs")?.value || "").trim();
     const status = _view("mp-status")?.value || "PENDENTE";
@@ -692,7 +673,7 @@
 
     const u = _user();
     const payload = {
-      titulo, categoria: cat, prioridade: prio,
+      titulo, categoria: cat,
       encaminhamento: enc || null, sintese: sint || null, observacoes: obs || null,
       status,
     };
@@ -711,7 +692,7 @@
           body: JSON.stringify(payload),
         });
         if (pautaAntes) {
-          for (const campo of ["titulo", "status", "categoria", "prioridade"]) {
+          for (const campo of ["titulo", "status", "categoria"]) {
             if (String(pautaAntes[campo] ?? "") !== String(payload[campo] ?? "")) {
               await _registrarHistorico(id, campo, pautaAntes[campo], payload[campo]);
             }
@@ -769,7 +750,6 @@
         encaminhamento: p.encaminhamento,
         categoria:      p.categoria,
         sintese:        p.sintese,
-        prioridade:     p.prioridade,
         observacoes:    p.observacoes,
         status:         "PENDENTE",
         reuniao_id:     p.reuniao_id,
