@@ -47,6 +47,52 @@
   </div>
 
 
+  <!-- ════ PAUTAS DO CONSELHO ════════════ -->
+
+  <div class="view" id="v-pautas-reunioes">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(58,170,92,0.14);border-color:rgba(58,170,92,0.25);color:var(--gr)">◧</div>
+      <div>
+        <div class="hero-lbl">Conselho e Governança</div>
+        <div class="hero-ttl">Pautas do Conselho</div>
+        <div class="hero-dsc">Reuniões, itens de pauta, deliberações e histórico do Conselho da IPPenha.</div>
+      </div>
+      <div class="hero-act"><button class="tbt pri" onclick="pautasNovaReuniao()">+ Nova Reunião</button></div>
+    </div>
+    <div class="ct" id="pautas-reunioes-content">
+      <div class="card" style="padding:28px;color:var(--tx3)">Carregando reuniões...</div>
+    </div>
+  </div>
+
+  <div class="view" id="v-pautas-lista">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(58,170,92,0.14);border-color:rgba(58,170,92,0.25);color:var(--gr)">◧</div>
+      <div>
+        <div class="hero-lbl">Pautas do Conselho</div>
+        <div class="hero-ttl" id="pautas-lista-reuniao-titulo">Itens da Reunião</div>
+        <div class="hero-dsc">Assuntos, encaminhamentos e deliberações desta reunião.</div>
+      </div>
+      <div class="hero-act"><button class="tbt" onclick="go('pautas-reunioes')">← Voltar</button></div>
+    </div>
+    <div class="ct" id="pautas-lista-content">
+      <div class="card" style="padding:28px;color:var(--tx3)">Carregando pautas...</div>
+    </div>
+  </div>
+
+  <div class="view" id="v-pautas-imprimir">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(58,170,92,0.14);border-color:rgba(58,170,92,0.25);color:var(--gr)">◧</div>
+      <div>
+        <div class="hero-lbl">Pautas do Conselho</div>
+        <div class="hero-ttl">Pauta Oficial</div>
+        <div class="hero-dsc">Documento formatado para impressão e distribuição.</div>
+      </div>
+    </div>
+    <div class="ct" id="pautas-imprimir-content">
+      <div class="card" style="padding:28px;color:var(--tx3)">Preparando documento...</div>
+    </div>
+  </div>
+
   <!-- ════ ATAS E DELIBERAÇÕES ════════════ -->
 
   <div class="view" id="v-atas-dash">
