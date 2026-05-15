@@ -364,7 +364,70 @@
     let url = `${_api()}/rest/v1/conselho_pautas?select=*&order=ordem.asc,created_at.asc&limit=500`;
     if (_reuniaoAtual) url += `&reuniao_id=eq.${encodeURIComponent(_reuniaoAtual.id)}`;
     _pautas = await _fetchJson(url, { headers: _headers() }) || [];
+    _normalizarOrdensLocal();
   }
+
+  function _normalizarOrdensLocal() {
+    const ordens = _pautas.map(p => p.ordem);
+    const unicos = new Set(ordens);
+    if (unicos.size < _pautas.length) {
+      _pautas.forEach((p, i) => { p.ordem = i; });
+    }
+  }
+
+  function _patchOrdem(id, ordem) {
+    return _fetchJson(`${_api()}/rest/v1/conselho_pautas?id=eq.${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      headers: _headers({ "Content-Type": "application/json", Prefer: "return=minimal" }),
+      body: JSON.stringify({ ordem }),
+    }).catch(e => console.warn("[Pautas] Falha ao salvar ordem:", e.message));
+  }
+
+  async function _swapOrdem(idA, idB) {
+    const a = _pautas.find(p => p.id === idA);
+    const b = _pautas.find(p => p.id === idB);
+    if (!a || !b) return;
+
+    const ordens = _pautas.map(p => p.ordem);
+    const temDuplicatas = new Set(ordens).size < _pautas.length;
+
+    if (temDuplicatas) {
+      _pautas.forEach((p, i) => { p.ordem = i; });
+    }
+
+    const tmp = a.ordem;
+    a.ordem = b.ordem;
+    b.ordem = tmp;
+
+    _pautas.sort((x, y) => x.ordem - y.ordem);
+    _renderListaPautas();
+
+    try {
+      if (temDuplicatas) {
+        await Promise.all(_pautas.map(p => _patchOrdem(p.id, p.ordem)));
+      } else {
+        await Promise.all([_patchOrdem(a.id, a.ordem), _patchOrdem(b.id, b.ordem)]);
+      }
+    } catch (e) {
+      _toast("Erro ao salvar ordem", e.message);
+      await _carregarPautas(true);
+      _renderListaPautas();
+    }
+  }
+
+  window.pautasMoverCima = async function (id) {
+    if (!_podeSecretaria()) return;
+    const idx = _pautas.findIndex(p => p.id === id);
+    if (idx <= 0) return;
+    await _swapOrdem(_pautas[idx].id, _pautas[idx - 1].id);
+  };
+
+  window.pautasMoverBaixo = async function (id) {
+    if (!_podeSecretaria()) return;
+    const idx = _pautas.findIndex(p => p.id === id);
+    if (idx < 0 || idx >= _pautas.length - 1) return;
+    await _swapOrdem(_pautas[idx].id, _pautas[idx + 1].id);
+  };
 
   async function renderPautas() {
     const el = _view("pautas-lista-content");
@@ -402,11 +465,15 @@
     const catOpts = `<option value="">Todas as categorias</option>` +
       CATEGORIAS.map(c => `<option value="${c}" ${_filtroCategoria === c ? "selected" : ""}>${c}</option>`).join("");
 
+    const filtroAtivo = !!(_filtroStatus || _filtroCategoria);
+    const podeMover   = _podeSecretaria() && !filtroAtivo;
+
     const filtros = `
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
         <select onchange="pautasFiltrar('status',this.value)" style="background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:7px 10px">${statusOpts}</select>
         <select onchange="pautasFiltrar('categoria',this.value)" style="background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:7px 10px">${catOpts}</select>
         <span style="font-size:11px;color:var(--tx3);margin-left:4px">${lista.length} item${lista.length !== 1 ? "s" : ""}</span>
+        ${_podeSecretaria() && filtroAtivo ? `<span style="font-size:11px;color:var(--amber)">Filtro ativo — desative para reordenar</span>` : ""}
         <div style="flex:1"></div>
         ${_reuniaoAtual && (STATUS_REUNIAO[_reuniaoAtual.status]?.label !== "Cancelada") ?
           `<button class="tbt" onclick="pautasImprimir()">⬛ Imprimir pauta</button>` : ""}
@@ -419,11 +486,21 @@
     }
 
     const cards = lista.map((p, idx) => {
-      const scfg = STATUS_CFG[p.status] || { label: p.status, cls: "pz" };
-      const pcfg = PRIO_CFG[p.prioridade] || { label: p.prioridade, cls: "pz" };
-      const podeEd = _podeEditar(p);
+      const scfg    = STATUS_CFG[p.status] || { label: p.status, cls: "pz" };
+      const pcfg    = PRIO_CFG[p.prioridade] || { label: p.prioridade, cls: "pz" };
+      const podeEd  = _podeEditar(p);
       const podeSec = _podeSecretaria();
-      const num = idx + 1;
+      const num     = idx + 1;
+      const idxFull = _pautas.findIndex(x => x.id === p.id);
+      const primero = idxFull === 0;
+      const ultimo  = idxFull === _pautas.length - 1;
+
+      const btnStyle = (dis) =>
+        `background:var(--bg3,#2b2f33);border:1px solid var(--bd2);border-radius:4px;` +
+        `color:var(--tx2);font-size:11px;width:26px;height:26px;cursor:${dis?"default":"pointer"};` +
+        `display:flex;align-items:center;justify-content:center;opacity:${dis?.35:1};line-height:1;` +
+        `padding:0;font-family:inherit`;
+
       return `<div class="card" style="border-left:3px solid ${scfg.cor};padding:14px 16px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
 
@@ -444,7 +521,12 @@
           </div>
 
           <!-- Ações -->
-          <div style="display:flex;gap:5px;flex-shrink:0;margin-top:2px">
+          <div style="display:flex;gap:5px;flex-shrink:0;margin-top:2px;align-items:flex-start">
+            ${podeMover ? `
+            <div style="display:flex;flex-direction:column;gap:3px;margin-right:2px">
+              <button style="${btnStyle(primero)}" ${primero ? "disabled" : ""} onclick="pautasMoverCima('${_ea(p.id)}')" title="Subir">▲</button>
+              <button style="${btnStyle(ultimo)}"  ${ultimo  ? "disabled" : ""} onclick="pautasMoverBaixo('${_ea(p.id)}')" title="Descer">▼</button>
+            </div>` : ""}
             <button class="tbt" style="font-size:12px;padding:5px 10px" onclick="pautasVerDetalhe('${_ea(p.id)}')">Ver</button>
             ${podeEd ? `<button class="tbt" style="font-size:12px;padding:5px 10px" onclick="pautasEditarPauta('${_ea(p.id)}')">Editar</button>` : ""}
           </div>
@@ -636,7 +718,9 @@
           }
         }
       } else {
-        const ordemAtual = (_pautas || []).length;
+        const ordemAtual = _pautas.length
+          ? Math.max(..._pautas.map(p => p.ordem)) + 1
+          : 0;
         payload.ordem = ordemAtual;
         payload.created_by = u?.id || null;
         if (_reuniaoAtual) payload.reuniao_id = _reuniaoAtual.id;
@@ -667,8 +751,10 @@
         method: "DELETE", headers: _headers(),
       });
       _toast("Excluído", "Item removido.");
-      _pautas = null;
-      await renderPautas();
+      await _carregarPautas(true);
+      _normalizarOrdensLocal();
+      await Promise.all(_pautas.map(p => _patchOrdem(p.id, p.ordem)));
+      _renderListaPautas();
     } catch (e) { _toast("Erro", e.message); }
   };
 
