@@ -477,14 +477,22 @@
     try {
       const r = await fetch(
         `${SUPABASE_URL}/rest/v1/ministerio_setor_membros` +
-        `?setor_id=eq.${setorId}&select=id,pessoas(id,nome)&order=pessoas(nome).asc`,
+        `?setor_id=eq.${setorId}&select=id,pessoas(id,nome)&order=criado_em.asc`,
         { headers: _hdr() }
       );
-      const lista = r.ok ? await r.json() : [];
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        if (err?.code === '42P01') {
+          if (el) el.innerHTML = '<div style="color:var(--rose);font-size:12px;padding:10px 0">Tabela não encontrada. Execute <strong>ministerio-setor-membros.sql</strong> no Supabase Dashboard.</div>';
+          return;
+        }
+        throw new Error(err?.message || `HTTP ${r.status}`);
+      }
+      const lista = await r.json();
       _renderSetorMembros(lista);
     } catch (e) {
       console.error('_carregarSetorMembros:', e);
-      if (el) el.innerHTML = '<div style="color:var(--rose);font-size:13px">Erro ao carregar membros.</div>';
+      if (el) el.innerHTML = `<div style="color:var(--rose);font-size:13px">Erro ao carregar membros: ${escapeHtml(e.message)}</div>`;
     }
   }
 
@@ -934,12 +942,15 @@
       });
       if (!r.ok) {
         if (r.status === 409) throw new Error('Esta pessoa já está vinculada a este setor.');
-        throw new Error((await r.text()) || r.status);
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err?.message || `HTTP ${r.status}`);
       }
       document.getElementById('mst-add-pessoa').value = '';
       await _carregarSetorMembros(_setorEditandoId);
     } catch (e) {
+      console.error('minMinAdicionarMembroSetor:', e);
       _showErr('mst-membros-err', e.message);
+      document.getElementById('mst-membros-err')?.scrollIntoView({ block: 'nearest' });
     }
   }
 
