@@ -347,26 +347,42 @@ function _expandirSidebar(mod) {
 /* ── TELA DE ESCOLHA DE ÁREA ─────────────────── */
 
 function _mostrarTelaEscolha() {
-  const nome = (USUARIO_ATUAL?.nome || "").split(" ")[0];
+  _removerTelaEscolha(); // garante que não haja duplicata
+  const nome = (USUARIO_ATUAL?.nome || "Usuário").split(" ")[0];
+
   const el = document.createElement("div");
   el.id = "area-escolha";
-  el.innerHTML = `
-    <div class="area-escolha-titulo">
-      <div class="ae-saudacao">Bem-vindo, ${escapeHtml(nome)}!</div>
-      <div class="ae-sub">Como você quer acessar o SIPEN agora?</div>
-    </div>
-    <div class="area-cards">
-      <button class="area-card membro" onclick="entrarComoMembro()">
-        <div class="area-card-icon">⛪</div>
-        <div class="area-card-titulo">Área do Membro</div>
-        <div class="area-card-desc">Agenda, escalas, ministérios, solicitações e informações pessoais</div>
-      </button>
-      <button class="area-card gestor" onclick="entrarComoGestor()">
-        <div class="area-card-icon">⚙</div>
-        <div class="area-card-titulo">Área do Gestor</div>
-        <div class="area-card-desc">Módulos administrativos e de gestão conforme suas permissões</div>
-      </button>
-    </div>`;
+
+  const titulo = document.createElement("div");
+  titulo.className = "area-escolha-titulo";
+  titulo.innerHTML = '<div class="ae-saudacao"></div><div class="ae-sub">Como você quer acessar o SIPEN agora?</div>';
+  titulo.querySelector(".ae-saudacao").textContent = "Bem-vindo, " + nome + "!";
+
+  const cards = document.createElement("div");
+  cards.className = "area-cards";
+
+  const OPCOES = [
+    { cls: "membro",   icon: "⛪", titulo: "Área do Membro",    desc: "Agenda, escalas, ministérios e informações pessoais",          fn: "entrarComoMembro" },
+    { cls: "gestor",   icon: "⚙️", titulo: "Área do Gestor",    desc: "Módulos administrativos e de gestão conforme suas permissões", fn: "entrarComoGestor" },
+    { cls: "demandas", icon: "📋", titulo: "Central de Demandas", desc: "Acesso rápido à gestão de demandas e solicitações",           fn: "entrarCentralDemandas" },
+  ];
+
+  OPCOES.forEach(function(op) {
+    const btn = document.createElement("button");
+    btn.className = "area-card " + op.cls;
+    btn.type = "button";
+    btn.innerHTML =
+      '<div class="area-card-icon">' + op.icon + '</div>' +
+      '<div><div class="area-card-titulo">' + op.titulo + '</div>' +
+      '<div class="area-card-desc">' + op.desc + '</div></div>';
+    btn.addEventListener("click", function() {
+      if (typeof window[op.fn] === "function") window[op.fn]();
+    });
+    cards.appendChild(btn);
+  });
+
+  el.appendChild(titulo);
+  el.appendChild(cards);
   document.body.appendChild(el);
 }
 
@@ -378,14 +394,14 @@ function _aplicarModoGestor() {
   document.body.classList.remove("modo-membro");
   document.body.classList.add("modo-gestor");
   const lbl = document.getElementById("btn-trocar-area-label");
-  if (lbl) lbl.textContent = "Área do Membro";
+  if (lbl) lbl.textContent = "Trocar Área";
 }
 
 function _aplicarModoMembro() {
   document.body.classList.remove("modo-gestor");
   document.body.classList.add("modo-membro");
   const lbl = document.getElementById("btn-trocar-area-label");
-  if (lbl) lbl.textContent = "Área do Gestor";
+  if (lbl) lbl.textContent = "Trocar Área";
   // Fechar sidebar mobile se aberta
   document.querySelector(".sb")?.classList.remove("sb-open");
   document.getElementById("sb-backdrop")?.classList.remove("sb-open");
@@ -412,16 +428,30 @@ async function entrarComoGestor() {
     "Você está na Área do Gestor");
 }
 
+async function entrarCentralDemandas() {
+  _removerTelaEscolha();
+  _aplicarModoGestor();
+  if (typeof window.demAtualizarLabels === "function") window.demAtualizarLabels();
+  if (typeof window.aplicarMenuDemandasPorPerfil === "function") window.aplicarMenuDemandasPorPerfil();
+  await go("demandas");
+  T(`Bem-vindo, ${USUARIO_ATUAL.nome.split(" ")[0]}! 📋`,
+    "Central de Demandas");
+}
+
 async function trocarArea() {
-  if (document.body.classList.contains("modo-membro")) {
-    // Estava em modo membro → ir para modo gestor
-    _aplicarModoGestor();
-    await abrirPrimeiroModuloPermitido();
+  if (_isGestor()) {
+    // Gestor: mostra a tela de escolha de área novamente
+    _mostrarTelaEscolha();
   } else {
-    // Estava em modo gestor → ir para modo membro
-    _aplicarModoMembro();
-    _expandirSidebar("area");
-    await go("area-dash");
+    // Não-gestor: toggle simples membro ↔ gestor
+    if (document.body.classList.contains("modo-membro")) {
+      _aplicarModoGestor();
+      await abrirPrimeiroModuloPermitido();
+    } else {
+      _aplicarModoMembro();
+      _expandirSidebar("area");
+      await go("area-dash");
+    }
   }
 }
 
@@ -481,9 +511,10 @@ async function entrarNoSistema() {
     `Perfil: ${PERFIS[USUARIO_ATUAL.perfil]?.nome || USUARIO_ATUAL.perfil}`);
 }
 
-window.entrarComoMembro = entrarComoMembro;
-window.entrarComoGestor = entrarComoGestor;
-window.trocarArea       = trocarArea;
+window.entrarComoMembro      = entrarComoMembro;
+window.entrarComoGestor      = entrarComoGestor;
+window.entrarCentralDemandas = entrarCentralDemandas;
+window.trocarArea            = trocarArea;
 
 /* ── LOGOUT ──────────────────────────────────── */
 async function doLogout() {
