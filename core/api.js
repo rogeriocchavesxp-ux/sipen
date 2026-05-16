@@ -242,6 +242,7 @@ const VIEW_AUTOLOAD = {
   "admin-aud":     { tab:"LOG_AUDITORIA", id:"aud-list" },
   "min-vol":       { tab:"MEMBROS",       id:"vol-list" },
   "pgs-visitantes":{ tab:"VISITANTES",    id:"pgs-vis-list" },
+  "admin-facial":   { fn: () => typeof afCarregar === 'function' && afCarregar() },
   "config-usuarios":{ fn: () => carregarUsuarios() },
   "min-adm": { fn: () => typeof DEPT_ADM !== "undefined" && DEPT_ADM.load() },
   "min-com": { fn: () => typeof minComLoad === "function" && minComLoad() },

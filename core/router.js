@@ -28,6 +28,7 @@ const CRUMB={
   "admin-doc":["Administrativo","Documentos",""],
   "admin-est":["Administrativo","Controle de Estoque","/ operacional e auditável"],
   "admin-parking-controls":["Administrativo","Controles do Estacionamento","/ controle de acesso"],
+  "admin-facial":           ["Administrativo","Acesso Facial","/ controle administrativo de acesso"],
   "pext-lista":             ["Administrativo","Participantes Externos","/ pessoas sem membresia"],
   "admin-pessoas":          ["Administrativo","Cadastro de Pessoas","/ registro geral"],
   "conselho-dash":["Conselho e Governança","Dashboard",""],

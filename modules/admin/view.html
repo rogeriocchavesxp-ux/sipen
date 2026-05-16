@@ -202,7 +202,52 @@
     </div>
   </div>
 
-  <!-- PEQUENOS GRUPOS -->
+  <!-- ACESSO FACIAL -->
+
+  <div class="view" id="v-admin-facial">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(42,181,192,0.12);border-color:rgba(42,181,192,0.25)">⊙</div>
+      <div>
+        <div class="hero-lbl">Administrativo · Controle de Acesso</div>
+        <div class="hero-ttl">Acesso Facial</div>
+        <div class="hero-dsc">Controle administrativo de pessoas com cadastro facial ativo. Nenhum dado biométrico é armazenado.</div>
+      </div>
+      <div class="hero-act" style="gap:8px">
+        <button class="tbt" onclick="afImportar()">↑ Importar Lista</button>
+        <button class="tbt" onclick="afPrint()">🖨 Imprimir</button>
+        <button class="tbt pri" onclick="afAbrirModal()">+ Novo Cadastro</button>
+      </div>
+    </div>
+    <div class="ct">
+      <div class="ce-kpis">
+        <div class="kpi ce-kpi"><div class="kpi-ico" style="background:rgba(42,181,192,.15);color:var(--teal)">⊙</div><div class="kpi-body"><div class="kpi-lbl">Total</div><div class="kpi-val" id="af-kpi-total">0</div><div class="kpi-d nu">cadastrados</div></div></div>
+        <div class="kpi ce-kpi"><div class="kpi-ico" style="background:rgba(58,170,92,.15);color:var(--gr)">✓</div><div class="kpi-body"><div class="kpi-lbl">Ativos</div><div class="kpi-val" id="af-kpi-ativos">0</div><div class="kpi-d up">acesso ativo</div></div></div>
+        <div class="kpi ce-kpi"><div class="kpi-ico" style="background:rgba(208,104,104,.12);color:var(--rose)">✕</div><div class="kpi-body"><div class="kpi-lbl">Inativos</div><div class="kpi-val" id="af-kpi-inativos">0</div><div class="kpi-d nu">sem acesso</div></div></div>
+        <div class="kpi ce-kpi"><div class="kpi-ico" style="background:rgba(212,168,67,.15);color:var(--gold)">!</div><div class="kpi-body"><div class="kpi-lbl">Não vinculados</div><div class="kpi-val" id="af-kpi-nv">0</div><div class="kpi-d wa">revisão pendente</div></div></div>
+      </div>
+      <div class="card">
+        <div class="ctit">Filtros <span class="cact" onclick="afCarregar()">↻ Atualizar</span></div>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(140px,1fr));gap:8px;margin-top:10px">
+          <input id="af-f-busca" oninput="afRender()" placeholder="Buscar por nome..." style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+          <select id="af-f-status" onchange="afRender()" style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+            <option value="">Todos os status</option>
+            <option value="ativo">Ativos</option>
+            <option value="inativo">Inativos</option>
+          </select>
+          <select id="af-f-vinculo" onchange="afRender()" style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+            <option value="">Todos</option>
+            <option value="vinculado">Vinculados ao cadastro</option>
+            <option value="nao_vinculado">Não vinculados</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <div id="af-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUDITORIA -->
 
   <div class="view" id="v-admin-aud">
     <div class="hero"><div class="hero-ic" style="background:rgba(139,111,212,0.12)">🔍</div><div><div class="hero-lbl">Administrativo</div><div class="hero-ttl">Auditoria</div><div class="hero-dsc">Log de ações e histórico do sistema</div></div></div>
