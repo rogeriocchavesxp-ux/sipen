@@ -525,6 +525,7 @@ async function doLogout() {
   USUARIO_ATUAL = null;
   permissoesUsuario = {};
   try { sessionStorage.removeItem("sipen_route"); } catch(_) {}
+  try { history.replaceState(null, "", location.pathname + location.search); } catch(_) {}
   document.body.classList.remove("modo-membro", "modo-gestor");
   _removerTelaEscolha();
   document.getElementById("login-screen").style.display = "flex";
