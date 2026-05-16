@@ -2,6 +2,8 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<script>/* Aplicar tema antes do CSS para evitar flash */
+(function(){var t=localStorage.getItem('sipen-theme')||'dark';if(t==='system')t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';document.documentElement.dataset.theme=t;}());</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>SIPEN — IPPenha</title>
 
@@ -37,7 +39,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="sipen.css?v=6.30.41">
+<link rel="stylesheet" href="sipen.css?v=6.30.42">
 </head>
 <body>
 
@@ -86,6 +88,7 @@
 <script src="modules/whatsapp/config.js?v=6.30.41"></script>
 <script src="modules/departamentos/admin.js?v=6.30.41"></script>
 <script src="core/pwa.js?v=6.30.41"></script>
+<script src="core/theme.js?v=6.30.42"></script>
 
 <!-- ── PWA: Banner de instalação ──────────────────────────────── -->
 <div class="pwa-install-banner" id="pwa-install-banner" role="banner" aria-label="Instalar aplicativo">

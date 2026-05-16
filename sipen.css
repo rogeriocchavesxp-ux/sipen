@@ -1148,3 +1148,103 @@ body.dem-admin [data-demanda-admin] { display: block !important; }
   margin: 14px auto 0;
   opacity: .6;
 }
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TEMA CLARO
+   Ativado via html[data-theme="light"], definido pelo core/theme.js
+   com fallback de inline script no <head> (evita flash).
+══════════════════════════════════════════════════════════════════════════ */
+html[data-theme="light"] {
+  --bg-body:    #f0f2f5;
+  --bg-sidebar: #ffffff;
+  --bg-surface: #eaecef;
+  --bg-card:    #ffffff;
+  --bg-hover:   #f2f4f6;
+  --bg-input:   #f8f9fa;
+
+  --bd1: rgba(0,0,0,0.08);
+  --bd2: rgba(0,0,0,0.13);
+  --bd3: rgba(0,0,0,0.21);
+
+  --tx1: #1a1d21;
+  --tx2: #3e4755;
+  --tx3: #6b7885;
+  --tx4: #bdc5cf;
+}
+
+/* Scrollbar */
+html[data-theme="light"] ::-webkit-scrollbar-thumb { background: #c0c8d4 }
+
+/* Logo: filtro verde-escuro sobre fundo branco */
+html[data-theme="light"] .sb-logo img {
+  filter: brightness(0) sepia(1) saturate(3) hue-rotate(92deg) brightness(0.6);
+  opacity: 1;
+}
+
+/* Sidebar nav — bullets e hover */
+html[data-theme="light"] .si::before          { background: rgba(0,0,0,0.20) }
+html[data-theme="light"] .si:hover::before    { background: var(--tx2) }
+html[data-theme="light"] .si:hover            { background: rgba(0,0,0,0.04) }
+html[data-theme="light"] .slbl::after         { background: rgba(0,0,0,0.10) }
+
+/* Tabelas */
+html[data-theme="light"] .tbl tr:hover td     { background: rgba(0,0,0,0.025) }
+
+/* Task rows */
+html[data-theme="light"] .trow:hover          { background: rgba(0,0,0,0.03); margin:0; padding:8px 0 }
+
+/* Calendário */
+html[data-theme="light"] .dp-cal-cell.is-weekend { background: rgba(0,0,0,0.02) }
+html[data-theme="light"] .dp-cal-empty        { background: var(--bg-body) }
+
+/* Sombras mais suaves no tema claro */
+html[data-theme="light"] .md                  { box-shadow: 0 16px 48px rgba(0,0,0,0.14) }
+html[data-theme="light"] .toast               { box-shadow: 0 8px 20px rgba(0,0,0,0.10) }
+html[data-theme="light"] .pwa-install-banner,
+html[data-theme="light"] .pwa-update-banner,
+html[data-theme="light"] .pwa-ios-banner      { box-shadow: 0 8px 32px rgba(0,0,0,0.12) }
+
+/* Modal backdrop */
+html[data-theme="light"] .mo { background: rgba(0,0,0,0.35) }
+
+/* Login */
+html[data-theme="light"] .login-box { box-shadow: 0 4px 24px rgba(0,0,0,0.08) }
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TOGGLE DE TEMA — barra entre sb-sys e sb-ft
+══════════════════════════════════════════════════════════════════════════ */
+.sb-theme-bar {
+  padding: 7px 10px;
+  border-top: 1px solid var(--bd1);
+  flex-shrink: 0;
+  background: var(--bg-sidebar);
+}
+.theme-seg {
+  display: flex;
+  background: var(--bg-body);
+  border: 1px solid var(--bd1);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.theme-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--tx3);
+  font-size: 10px;
+  font-family: var(--sans);
+  font-weight: 500;
+  padding: 5px 3px;
+  cursor: pointer;
+  transition: all .14s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  white-space: nowrap;
+  line-height: 1;
+}
+.theme-btn:hover  { color: var(--tx1); background: var(--bg-hover) }
+.theme-btn.on     { background: var(--bg-card); color: var(--tx1); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.10) }

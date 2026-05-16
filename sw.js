@@ -6,7 +6,7 @@
 // ⚠ Ao fazer deploy de uma nova versão, incremente CACHE_VERSION.
 // ════════════════════════════════════════════════════════════════
 
-const CACHE_VERSION = 'sipen-v6.30.41';
+const CACHE_VERSION = 'sipen-v6.30.42';
 const OFFLINE_URL   = '/offline.html';
 
 // Arquivos do app shell — cacheados no install
@@ -25,6 +25,7 @@ const APP_SHELL = [
   '/core/init.js',
   '/core/ui.js',
   '/core/pwa.js',
+  '/core/theme.js',
 ];
 
 // Padrões que NUNCA devem ser cacheados (API Supabase)
