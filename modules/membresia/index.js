@@ -37,6 +37,45 @@
     return val && val.trim() ? val.trim() : null;
   }
 
+  function _podeGerenciarAcessoFacial() {
+    const p = String(USUARIO_ATUAL?.perfil || '').toUpperCase();
+    return ['ADMINISTRADOR_GERAL', 'ADM_OPERACIONAL', 'ADMIN_GERAL'].includes(p) || p.includes('ADMIN');
+  }
+
+  async function _carregarStatusFacial(pessoaId) {
+    try {
+      const { data } = await sb().from('acesso_facial').select('status').eq('pessoa_id', pessoaId).maybeSingle();
+      const chk = v('mem-f-acesso-facial');
+      if (chk) chk.checked = data?.status === 'ativo';
+    } catch (e) {
+      console.warn('[membresia] carregarStatusFacial:', e.message);
+    }
+  }
+
+  async function _sincronizarAcessoFacial(pessoaId, liberado) {
+    try {
+      const authId = USUARIO_ATUAL?.auth_user_id || null;
+      const { data: existing } = await sb().from('acesso_facial').select('id,status').eq('pessoa_id', pessoaId).maybeSingle();
+      if (liberado) {
+        if (existing) {
+          if (existing.status !== 'ativo') {
+            await sb().from('acesso_facial').update({ status: 'ativo', updated_by: authId }).eq('id', existing.id);
+          }
+        } else {
+          await sb().from('acesso_facial').insert({
+            pessoa_id: pessoaId, status: 'ativo',
+            data_cadastro_facial: new Date().toISOString().slice(0, 10),
+            created_by: authId
+          });
+        }
+      } else if (existing && existing.status === 'ativo') {
+        await sb().from('acesso_facial').update({ status: 'inativo', updated_by: authId }).eq('id', existing.id);
+      }
+    } catch (e) {
+      console.warn('[membresia] sincronizarAcessoFacial:', e.message);
+    }
+  }
+
   function normalizarTipoMembro(valor) {
     const mapa = {
       COMUNGANTE: "comungante",
@@ -131,6 +170,9 @@
     _limparForm();
     modal.style.display = "flex";
 
+    const sec = v("mem-acesso-section");
+    if (sec) sec.style.display = _podeGerenciarAcessoFacial() ? "block" : "none";
+
     await _carregarCongregacoes();
 
     if (membroId) await _preencherForm(membroId);
@@ -172,6 +214,9 @@
 
     const funcao = v("mem-f-funcao");
     if (funcao) funcao.value = "";
+
+    const chk = v("mem-f-acesso-facial");
+    if (chk) chk.checked = false;
   }
 
   async function _preencherForm(membroId) {
@@ -202,6 +247,12 @@
       set("mem-f-cong", data.congregacao_id);
       set("mem-f-batismo", data.data_batismo);
       set("mem-f-registro", data.numero_registro);
+
+      if (_podeGerenciarAcessoFacial()) {
+        const pessoaId = data.pessoa_id
+          || (await sb().from("membros").select("pessoa_id").eq("id", membroId).single()).data?.pessoa_id;
+        if (pessoaId) await _carregarStatusFacial(pessoaId);
+      }
     } catch (e) {
       console.error("[membresia] preencherForm:", e.message);
       toast("Erro ao carregar dados", e.message);
@@ -334,9 +385,11 @@
       return;
     }
 
+    const acessoFacial = _podeGerenciarAcessoFacial() ? (v("mem-f-acesso-facial")?.checked || false) : null;
     toast("✅ Membro cadastrado!", gv("mem-f-nome"));
     _fecharModal();
     _invalidarCache();
+    if (acessoFacial !== null) await _sincronizarAcessoFacial(pessoa.id, acessoFacial);
   }
 
   async function _atualizar(membroId, email) {
@@ -397,9 +450,11 @@
       return;
     }
 
+    const acessoFacial = _podeGerenciarAcessoFacial() ? (v("mem-f-acesso-facial")?.checked || false) : null;
     toast("✅ Membro atualizado!", gv("mem-f-nome"));
     _fecharModal();
     _invalidarCache();
+    if (acessoFacial !== null) await _sincronizarAcessoFacial(membro.pessoa_id, acessoFacial);
   }
 
   function _invalidarCache() {
@@ -533,6 +588,17 @@
           <label class="mem-lbl">Nº de Registro</label>
           <input id="mem-f-registro" type="text" placeholder="Ex.: 0342" class="mem-inp" />
         </div>
+      </div>
+
+      <div id="mem-acesso-section" style="display:none;background:rgba(42,181,192,.05);border:1px solid rgba(42,181,192,.2);border-radius:8px;padding:14px 16px;margin-top:4px">
+        <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Controle de Acesso</div>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
+          <input type="checkbox" id="mem-f-acesso-facial" style="width:16px;height:16px;accent-color:var(--teal);cursor:pointer;flex-shrink:0">
+          <span>
+            <span style="font-size:13px;font-weight:600;color:var(--tx1)">Acesso facial liberado</span>
+            <span style="display:block;font-size:10.5px;color:var(--tx3);margin-top:1px">Libera o acesso à portaria via reconhecimento facial</span>
+          </span>
+        </label>
       </div>
 
     </div>
