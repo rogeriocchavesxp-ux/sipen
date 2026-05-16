@@ -306,6 +306,16 @@ function _isMembroComum() {
   return p === "MEMBRO_IGREJA" || p === "MEMBRO_MINISTERIO";
 }
 
+/* Retorna true para perfis com acesso a módulos de gestão (nível ≥ lider_area).
+   Esses usuários verão a tela de escolha de área ao entrar. */
+function _isGestor() {
+  const p = USUARIO_ATUAL?.perfil;
+  if (!p) return false;
+  const GESTORES = ["ADMINISTRADOR_GERAL","ADMIN_GERAL","CONSELHO","PASTORAL",
+                    "ADM_OPERACIONAL","LIDER_MINISTERIO","LIDER_AREA"];
+  return GESTORES.includes(p.toUpperCase()) || GESTORES.some(g => p.toUpperCase().includes(g));
+}
+
 function _lerRotaSalva() {
   try {
     const hash  = (window.location.hash || "").replace(/^#/, "").trim();
@@ -334,6 +344,87 @@ function _expandirSidebar(mod) {
   } catch(_) {}
 }
 
+/* ── TELA DE ESCOLHA DE ÁREA ─────────────────── */
+
+function _mostrarTelaEscolha() {
+  const nome = (USUARIO_ATUAL?.nome || "").split(" ")[0];
+  const el = document.createElement("div");
+  el.id = "area-escolha";
+  el.innerHTML = `
+    <div class="area-escolha-titulo">
+      <div class="ae-saudacao">Bem-vindo, ${escapeHtml(nome)}!</div>
+      <div class="ae-sub">Como você quer acessar o SIPEN agora?</div>
+    </div>
+    <div class="area-cards">
+      <button class="area-card membro" onclick="entrarComoMembro()">
+        <div class="area-card-icon">⛪</div>
+        <div class="area-card-titulo">Área do Membro</div>
+        <div class="area-card-desc">Agenda, escalas, ministérios, solicitações e informações pessoais</div>
+      </button>
+      <button class="area-card gestor" onclick="entrarComoGestor()">
+        <div class="area-card-icon">⚙</div>
+        <div class="area-card-titulo">Área do Gestor</div>
+        <div class="area-card-desc">Módulos administrativos e de gestão conforme suas permissões</div>
+      </button>
+    </div>`;
+  document.body.appendChild(el);
+}
+
+function _removerTelaEscolha() {
+  document.getElementById("area-escolha")?.remove();
+}
+
+function _aplicarModoGestor() {
+  document.body.classList.remove("modo-membro");
+  document.body.classList.add("modo-gestor");
+  const lbl = document.getElementById("btn-trocar-area-label");
+  if (lbl) lbl.textContent = "Área do Membro";
+}
+
+function _aplicarModoMembro() {
+  document.body.classList.remove("modo-gestor");
+  document.body.classList.add("modo-membro");
+  const lbl = document.getElementById("btn-trocar-area-label");
+  if (lbl) lbl.textContent = "Área do Gestor";
+  // Fechar sidebar mobile se aberta
+  document.querySelector(".sb")?.classList.remove("sb-open");
+  document.getElementById("sb-backdrop")?.classList.remove("sb-open");
+}
+
+async function entrarComoMembro() {
+  _removerTelaEscolha();
+  _aplicarModoMembro();
+  _expandirSidebar("area");
+  await go("area-dash");
+  if (typeof window.demAtualizarLabels === "function") window.demAtualizarLabels();
+  if (typeof window.aplicarMenuDemandasPorPerfil === "function") window.aplicarMenuDemandasPorPerfil();
+  T(`Bem-vindo, ${USUARIO_ATUAL.nome.split(" ")[0]}! ⛪`,
+    "Você está na Área do Membro");
+}
+
+async function entrarComoGestor() {
+  _removerTelaEscolha();
+  _aplicarModoGestor();
+  await abrirPrimeiroModuloPermitido();
+  if (typeof window.demAtualizarLabels === "function") window.demAtualizarLabels();
+  if (typeof window.aplicarMenuDemandasPorPerfil === "function") window.aplicarMenuDemandasPorPerfil();
+  T(`Bem-vindo, ${USUARIO_ATUAL.nome.split(" ")[0]}! ⚙`,
+    "Você está na Área do Gestor");
+}
+
+async function trocarArea() {
+  if (document.body.classList.contains("modo-membro")) {
+    // Estava em modo membro → ir para modo gestor
+    _aplicarModoGestor();
+    await abrirPrimeiroModuloPermitido();
+  } else {
+    // Estava em modo gestor → ir para modo membro
+    _aplicarModoMembro();
+    _expandirSidebar("area");
+    await go("area-dash");
+  }
+}
+
 /* ── INICIALIZAÇÃO PÓS-LOGIN ─────────────────── */
 async function entrarNoSistema() {
   document.getElementById("login-screen").style.display = "none";
@@ -343,25 +434,56 @@ async function entrarNoSistema() {
   testApiSilently();
   carregarPermissoesDB(); // popula _perfisUuidMap e PERMISSOES_DB em background
 
-  // Restaurar última tela visitada (F5), redirecionar mobile para Área do Membro,
-  // ou abrir o primeiro módulo permitido no desktop.
+  if (typeof window.demAtualizarLabels === "function") window.demAtualizarLabels();
+  if (typeof window.aplicarMenuDemandasPorPerfil === "function") window.aplicarMenuDemandasPorPerfil();
+
   const rotaSalva = _lerRotaSalva();
   if (rotaSalva) {
+    // F5 ou rota salva: restaura sem mostrar a tela de escolha
+    if (_isGestor()) _aplicarModoGestor();
     const mod = rotaSalva.split("-")[0];
     if (mod !== "geral") _expandirSidebar(mod);
     await go(rotaSalva);
-  } else if (_isMembroComum() || _isMobile()) {
-    _expandirSidebar("area");
-    await go("area-dash");
-  } else {
-    await abrirPrimeiroModuloPermitido();
+    T(`Bem-vindo, ${USUARIO_ATUAL.nome.split(" ")[0]}! 👋`,
+      `Perfil: ${PERFIS[USUARIO_ATUAL.perfil]?.nome || USUARIO_ATUAL.perfil}`);
+    return;
   }
 
-  if (typeof window.demAtualizarLabels === "function") window.demAtualizarLabels();
-  if (typeof window.aplicarMenuDemandasPorPerfil === "function") window.aplicarMenuDemandasPorPerfil();
+  if (_isMembroComum()) {
+    // Membro comum: vai direto para Área do Membro
+    _expandirSidebar("area");
+    await go("area-dash");
+    T(`Bem-vindo, ${USUARIO_ATUAL.nome.split(" ")[0]}! 👋`,
+      `Perfil: ${PERFIS[USUARIO_ATUAL.perfil]?.nome || USUARIO_ATUAL.perfil}`);
+    return;
+  }
+
+  if (_isMobile() && !_isGestor()) {
+    // Não-gestor em mobile: área do membro
+    _expandirSidebar("area");
+    await go("area-dash");
+    T(`Bem-vindo, ${USUARIO_ATUAL.nome.split(" ")[0]}! 👋`,
+      `Perfil: ${PERFIS[USUARIO_ATUAL.perfil]?.nome || USUARIO_ATUAL.perfil}`);
+    return;
+  }
+
+  if (_isGestor()) {
+    // Gestor: mostra tela de escolha de área
+    _mostrarTelaEscolha();
+    // Toast após a escolha (feito em entrarComoMembro/entrarComoGestor)
+    return;
+  }
+
+  // Fallback: primeiro módulo permitido
+  _aplicarModoGestor();
+  await abrirPrimeiroModuloPermitido();
   T(`Bem-vindo, ${USUARIO_ATUAL.nome.split(" ")[0]}! 👋`,
     `Perfil: ${PERFIS[USUARIO_ATUAL.perfil]?.nome || USUARIO_ATUAL.perfil}`);
 }
+
+window.entrarComoMembro = entrarComoMembro;
+window.entrarComoGestor = entrarComoGestor;
+window.trocarArea       = trocarArea;
 
 /* ── LOGOUT ──────────────────────────────────── */
 async function doLogout() {
@@ -372,6 +494,8 @@ async function doLogout() {
   USUARIO_ATUAL = null;
   permissoesUsuario = {};
   try { sessionStorage.removeItem("sipen_route"); } catch(_) {}
+  document.body.classList.remove("modo-membro", "modo-gestor");
+  _removerTelaEscolha();
   document.getElementById("login-screen").style.display = "flex";
   document.getElementById("login-password").value = "";
   document.getElementById("login-err").textContent = "";

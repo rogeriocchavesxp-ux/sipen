@@ -1151,6 +1151,84 @@ body.dem-admin [data-demanda-admin] { display: block !important; }
 
 
 /* ══════════════════════════════════════════════════════════════════════════
+   MODO MEMBRO — gestor acessando como membro
+   body.modo-membro: sidebar oculta, conteúdo full-width
+   body.modo-gestor: SIPEN normal, botão de troca visível
+══════════════════════════════════════════════════════════════════════════ */
+body.modo-membro .sb          { display: none }
+body.modo-membro .sb-backdrop { display: none }
+body.modo-membro .sb-ham      { display: none }
+
+/* Botão Trocar Área — oculto para membros comuns, visível para gestores */
+#btn-trocar-area              { display: none }
+body.modo-membro #btn-trocar-area { display: flex }
+body.modo-gestor #btn-trocar-area { display: flex }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TELA DE ESCOLHA DE ÁREA
+══════════════════════════════════════════════════════════════════════════ */
+#area-escolha {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  background: var(--bg-body);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 24px;
+  animation: fu .22s ease;
+}
+.area-escolha-titulo {
+  text-align: center;
+  margin-bottom: 36px;
+}
+.area-escolha-titulo .ae-saudacao {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--tx1);
+  margin-bottom: 6px;
+}
+.area-escolha-titulo .ae-sub {
+  font-size: 13px;
+  color: var(--tx3);
+}
+.area-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  width: min(540px, 92vw);
+}
+.area-card {
+  background: var(--bg-card);
+  border: 2px solid var(--bd2);
+  border-radius: 14px;
+  padding: 32px 20px;
+  cursor: pointer;
+  text-align: center;
+  transition: all .18s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--sans);
+}
+.area-card:hover    { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,.28) }
+.area-card.membro   { border-color: rgba(58,170,92,.35) }
+.area-card.membro:hover { border-color: var(--gr); background: rgba(58,170,92,.04) }
+.area-card.gestor   { border-color: rgba(212,168,67,.35) }
+.area-card.gestor:hover { border-color: var(--gold); background: rgba(212,168,67,.04) }
+.area-card-icon     { font-size: 36px; line-height: 1 }
+.area-card-titulo   { font-size: 15px; font-weight: 800; color: var(--tx1) }
+.area-card-desc     { font-size: 11px; color: var(--tx3); line-height: 1.55 }
+
+@media (max-width: 480px) {
+  .area-cards         { grid-template-columns: 1fr }
+  .area-card          { padding: 24px 16px }
+  .area-escolha-titulo .ae-saudacao { font-size: 18px }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
    TEMA CLARO
    Ativado via html[data-theme="light"], definido pelo core/theme.js
    com fallback de inline script no <head> (evita flash).
