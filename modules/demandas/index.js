@@ -1494,6 +1494,13 @@
     const kpi = document.getElementById("area-kpi-dem");
     if (kpi) kpi.textContent = abertas;
 
+    const badgeEl = document.getElementById("area-badge-solicitacoes");
+    if (badgeEl) {
+      badgeEl.textContent = abertas > 0
+        ? `${abertas} em andamento · ${_cache.length} total`
+        : `${_cache.length} total`;
+    }
+
     const elDem = document.getElementById("area-dash-dem");
     if (!elDem) return;
     const recentes = [..._cache].sort((a,b) => (b.criado_em||"").localeCompare(a.criado_em||"")).slice(0,6);
@@ -1501,20 +1508,34 @@
       elDem.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Nenhuma solicitação registrada.</div>`;
       return;
     }
-    elDem.innerHTML = `<table style="width:100%;border-collapse:collapse">
-      <thead><tr>
-        <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Título</th>
-        <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Status</th>
-        <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Área</th>
-        <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Data</th>
-      </tr></thead>
-      <tbody>${recentes.map(r => `<tr style="border-top:1px solid var(--bd1);cursor:pointer" onclick="window.demAbrirDetalhe('${r.id||r._row}','area-dem')">
-        <td style="padding:8px;font-size:11.5px;color:var(--tx1)"><strong>${escapeHtml(r.titulo) || "—"}</strong></td>
-        <td style="padding:8px">${pillStatus(r.status)}</td>
-        <td style="padding:8px;font-size:11px;color:var(--tx3)">${r.area||"—"}</td>
-        <td style="padding:8px;font-size:10.5px;color:var(--tx3);font-family:var(--mono)">${fmtD(r.criado_em)}</td>
-      </tr>`).join("")}</tbody>
-    </table>`;
+
+    const isMobile = typeof window.matchMedia === "function" && window.matchMedia("(max-width: 768px)").matches;
+    if (isMobile) {
+      elDem.innerHTML = recentes.map(r =>
+        `<div style="padding:10px 0;border-bottom:1px solid var(--bd1);cursor:pointer" onclick="window.demAbrirDetalhe('${r.id||r._row}','area-dem')">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+            <div style="font-size:12px;font-weight:600;color:var(--tx1);line-height:1.4">${escapeHtml(r.titulo||"—")}</div>
+            ${pillStatus(r.status)}
+          </div>
+          <div style="font-size:10.5px;color:var(--tx3);margin-top:3px">${r.area||"—"} · ${fmtD(r.criado_em)}</div>
+        </div>`
+      ).join("") + `<div style="margin-top:10px"><button class="tbt" onclick="go('area-dem')">Ver todas →</button></div>`;
+    } else {
+      elDem.innerHTML = `<table style="width:100%;border-collapse:collapse">
+        <thead><tr>
+          <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Título</th>
+          <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Status</th>
+          <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Área</th>
+          <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Data</th>
+        </tr></thead>
+        <tbody>${recentes.map(r => `<tr style="border-top:1px solid var(--bd1);cursor:pointer" onclick="window.demAbrirDetalhe('${r.id||r._row}','area-dem')">
+          <td style="padding:8px;font-size:11.5px;color:var(--tx1)"><strong>${escapeHtml(r.titulo)||"—"}</strong></td>
+          <td style="padding:8px">${pillStatus(r.status)}</td>
+          <td style="padding:8px;font-size:11px;color:var(--tx3)">${r.area||"—"}</td>
+          <td style="padding:8px;font-size:10.5px;color:var(--tx3);font-family:var(--mono)">${fmtD(r.criado_em)}</td>
+        </tr>`).join("")}</tbody>
+      </table>`;
+    }
   };
 
   const _origGo = window.go;

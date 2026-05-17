@@ -516,6 +516,12 @@ window.entrarComoGestor      = entrarComoGestor;
 window.entrarCentralDemandas = entrarCentralDemandas;
 window.trocarArea            = trocarArea;
 
+window.areaToggle = function(id) {
+  const card = document.getElementById("area-col-" + id);
+  if (!card) return;
+  card.classList.toggle("open");
+};
+
 /* ── LOGOUT ──────────────────────────────────── */
 async function doLogout() {
   if (!confirm("Deseja encerrar a sessão?")) return;
@@ -1730,11 +1736,13 @@ async function _areaCarregarMinisterios() {
   const el = document.getElementById("area-dash-ministerios");
   if (!el) return;
   const mins = USUARIO_ATUAL?.ministerios || [];
+  const badgeEl = document.getElementById("area-badge-ministerios");
   if (!mins.length) {
     el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Você ainda não está vinculado a nenhum ministério.</div>
       <button class="tbt" style="margin-top:10px" onclick="abrirModalNovaDemanda()">Solicitar inclusão em Ministério</button>`;
     const kpiEl = document.getElementById("area-kpi-min");
     if (kpiEl) kpiEl.textContent = "Nenhum";
+    if (badgeEl) badgeEl.textContent = "Nenhum vinculado";
     return;
   }
   try {
@@ -1751,6 +1759,7 @@ async function _areaCarregarMinisterios() {
     }
     const kpiEl = document.getElementById("area-kpi-min");
     if (kpiEl) kpiEl.textContent = rows[0].nome?.split(" ")[0] || "—";
+    if (badgeEl) badgeEl.textContent = rows.length === 1 ? "1 ministério" : `${rows.length} ministérios`;
     el.innerHTML = rows.map(r => {
       const stCls = (r.status||"").toLowerCase() === "ativo" ? "pos" : "wa";
       return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd1)">
@@ -1762,12 +1771,14 @@ async function _areaCarregarMinisterios() {
       </div>`;
     }).join("") + `<div style="margin-top:12px"><button class="tbt" onclick="go('area-min')">Ver detalhes →</button></div>`;
   } catch(e) {
-    // Fallback: lista os IDs de ministério disponíveis via USUARIO_ATUAL
+    const label = `${mins.length} ministério${mins.length !== 1 ? "s" : ""} vinculado${mins.length !== 1 ? "s" : ""}`;
     el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">
-      ${mins.length} ministério${mins.length !== 1 ? "s" : ""} vinculado${mins.length !== 1 ? "s" : ""}.
+      ${label}.
       <br><button class="tbt" style="margin-top:10px" onclick="go('area-min')">Ver detalhes →</button></div>`;
     const kpiEl = document.getElementById("area-kpi-min");
     if (kpiEl) kpiEl.textContent = String(mins.length);
+    const badgeEl2 = document.getElementById("area-badge-ministerios");
+    if (badgeEl2) badgeEl2.textContent = label;
   }
 }
 

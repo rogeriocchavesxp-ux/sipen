@@ -1234,6 +1234,72 @@ body.modo-gestor #btn-trocar-area { display: flex }
   .area-escolha-titulo .ae-saudacao { font-size: 19px }
 }
 
+/* ── Área do Membro: cards colapsáveis ──────────────────────────────────── */
+.area-col-card { overflow: hidden }
+
+.area-col-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+  gap: 8px;
+}
+.area-col-hdr:hover { background: var(--bg-hover) }
+
+.area-col-chev {
+  font-size: 16px;
+  color: var(--tx3);
+  transition: transform .2s;
+  flex-shrink: 0;
+}
+.area-col-card.open .area-col-chev { transform: rotate(180deg) }
+
+.area-col-badge {
+  font-size: 10.5px;
+  color: var(--tx3);
+  margin-top: 2px;
+}
+
+.area-col-body { padding: 0 16px 16px }
+
+/* Mobile: collapsible fecha por padrão; desktop: sempre aberto */
+@media (max-width: 768px) {
+  .area-col-hdr { padding: 12px 14px }
+  .area-col-body { display: none }
+  .area-col-card.open .area-col-body { display: block }
+  .area-col-card.open .area-col-hdr { border-bottom: 1px solid var(--bd1) }
+}
+@media (min-width: 769px) {
+  .area-col-hdr { cursor: default; pointer-events: none }
+  .area-col-chev { display: none }
+  .area-col-body { display: block !important }
+}
+
+/* ── Área do Membro: atalhos rápidos ────────────────────────────────────── */
+.area-atalhos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.area-atalho {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  background: var(--bg-surface);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .15s, transform .15s;
+  text-align: center;
+}
+.area-atalho:hover  { background: var(--bg-hover); transform: translateY(-2px) }
+.area-atalho:active { transform: translateY(0) }
+.area-atalho-ico { font-size: 22px; line-height: 1 }
+.area-atalho-lbl { font-size: 10.5px; font-weight: 600; color: var(--tx2) }
+
 /* ══════════════════════════════════════════════════════════════════════════
    TEMA CLARO
    Ativado via html[data-theme="light"], definido pelo core/theme.js
