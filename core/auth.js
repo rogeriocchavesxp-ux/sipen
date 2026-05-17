@@ -407,14 +407,21 @@ function _removerTelaEscolha() {
 }
 
 function _aplicarModoGestor() {
-  document.body.classList.remove("modo-membro");
+  document.body.classList.remove("modo-membro", "modo-congregacao");
   document.body.classList.add("modo-gestor");
   const lbl = document.getElementById("btn-trocar-area-label");
   if (lbl) lbl.textContent = "Trocar Área";
 }
 
+function _aplicarModoCongregacao() {
+  document.body.classList.remove("modo-membro", "modo-gestor");
+  document.body.classList.add("modo-congregacao");
+  const btn = document.getElementById("btn-trocar-area");
+  if (btn) btn.style.display = "none";
+}
+
 function _aplicarModoMembro() {
-  document.body.classList.remove("modo-gestor");
+  document.body.classList.remove("modo-gestor", "modo-congregacao");
   document.body.classList.add("modo-membro");
   const lbl = document.getElementById("btn-trocar-area-label");
   if (lbl) lbl.textContent = "Trocar Área";
@@ -455,6 +462,10 @@ async function entrarCentralDemandas() {
 }
 
 async function trocarArea() {
+  if (_isCongregacaoUser()) {
+    if (typeof T === "function") T("Ambiente restrito", "Você está no sistema da sua congregação");
+    return;
+  }
   if (_isGestor()) {
     // Gestor: mostra a tela de escolha de área novamente
     _mostrarTelaEscolha();
@@ -495,9 +506,9 @@ async function entrarNoSistema() {
     return;
   }
 
-  // Usuário de congregação: vai direto para a sua congregação
+  // Usuário de congregação: vai direto para a sua congregação (ambiente isolado)
   if (_isCongregacaoUser()) {
-    _aplicarModoGestor();
+    _aplicarModoCongregacao();
     _expandirSidebar("cong");
     await go("cong-dash");
     if (USUARIO_ATUAL.congregacao_id && typeof window.abrirCongView === "function") {
@@ -584,6 +595,30 @@ function atualizarSidebarUsuario() {
 
 function aplicarPermissoes() {
   if (!USUARIO_ATUAL) return;
+
+  // ── Isolamento completo para Líder/Membro de Congregação ──────────
+  if (_isCongregacaoUser()) {
+    // Sidebar: só CONGREGACOES visível
+    document.querySelectorAll(".mwrap[data-modulo]").forEach(mw => {
+      mw.style.display = mw.dataset.modulo === "CONGREGACOES" ? "" : "none";
+    });
+    document.querySelectorAll(".mwrap:not([data-modulo])").forEach(mw => { mw.style.display = "none"; });
+    // Oculta botão "Trocar Área"
+    const btnTrocar = document.getElementById("btn-trocar-area");
+    if (btnTrocar) btnTrocar.style.display = "none";
+    // Garante permissão mínima
+    permissoesUsuario["CONGREGACOES"] = permissoesUsuario["CONGREGACOES"] === "COMPLETO" ? "COMPLETO" : "LEITURA";
+    // Oculta labels de seção vazias
+    document.querySelectorAll(".slbl").forEach(label => {
+      let prox = label.nextElementSibling, temVisivel = false;
+      while (prox && !prox.classList.contains("slbl")) {
+        if (prox.offsetParent !== null) { temVisivel = true; break; }
+        prox = prox.nextElementSibling;
+      }
+      label.style.display = temVisivel ? "" : "none";
+    });
+    return; // NÃO renderiza dashboard global nem processa outros módulos
+  }
 
   const isAdminTotal = USUARIO_ATUAL.perfil === "ADMINISTRADOR_GERAL";
 

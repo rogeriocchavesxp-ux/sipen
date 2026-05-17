@@ -1164,6 +1164,13 @@ window.excluirDeptCong=excluirDeptCong;
 (function(){
   const _orig=window.go;
   window.go=async function(id){
+    // Bloqueio de rota para usuários de congregação
+    const perfil=typeof USUARIO_ATUAL!=="undefined"?USUARIO_ATUAL?.perfil:null;
+    const isCongUser=perfil==="LIDER_CONGREGACAO"||perfil==="MEMBRO_CONGREGACAO";
+    if(isCongUser&&!id.startsWith("cong")){
+      if(typeof T==="function") T("Acesso restrito","Sem permissão para este módulo");
+      return;
+    }
     await _orig(id);
     if(id==="cong-dash") setTimeout(renderDashboardGeral,0);
   };
