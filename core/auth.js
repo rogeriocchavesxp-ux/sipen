@@ -709,8 +709,7 @@ async function _minDashMinisterios(el, opts = {}) {
       lider: nomes[m.supervisor] || "",
       proxima: null,
     })).join("");
-  } catch(e) {
-    console.error("_minDashMinisterios:", e);
+  } catch(_) {
     el.innerHTML = `<div class="alr alr-w" style="grid-column:1/-1"><div class="alr-i">ℹ</div><div>Não foi possível carregar os ministérios agora.</div></div>`;
   }
 }
@@ -1640,8 +1639,9 @@ async function _areaCarregarSemana() {
   if (!target) return;
   try {
     const today = new Date().toISOString().slice(0,10);
+    // tabela agenda usa coluna "data"; data_inicio é coluna legada (nullable)
     const res = await fetch(
-      `${apiBaseUrl()}/rest/v1/agenda?data_inicio=gte.${today}&status=eq.confirmado&order=data_inicio.asc&limit=6&select=titulo,data_inicio,local,tipo`,
+      `${apiBaseUrl()}/rest/v1/agenda?or=(data.gte.${today},data_inicio.gte.${today})&status=eq.confirmado&order=data.asc&limit=6&select=titulo,data,data_inicio,local,tipo`,
       { headers: apiHeaders() }
     );
     if (!res.ok) throw new Error("agenda_" + res.status);
@@ -1652,8 +1652,9 @@ async function _areaCarregarSemana() {
       return;
     }
     const html = rows.map(r => {
-      const d = r.data_inicio
-        ? new Date(r.data_inicio).toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit"})
+      const rawDate = r.data || r.data_inicio;
+      const d = rawDate
+        ? new Date(rawDate).toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit"})
         : "—";
       const tipo = r.tipo
         ? `<span style="font-size:9.5px;background:rgba(58,176,184,0.12);color:var(--teal);border-radius:3px;padding:1px 6px;margin-left:6px">${escapeHtml(r.tipo)}</span>`
@@ -1672,10 +1673,10 @@ async function _areaCarregarSemana() {
     const kpiData = document.getElementById("area-kpi-evento-data");
     if (kpiEl && rows[0]) {
       kpiEl.textContent = rows[0].titulo?.split(" ").slice(0,3).join(" ") || "—";
-      const d = new Date(rows[0].data_inicio).toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"});
+      const d = new Date(rows[0].data || rows[0].data_inicio).toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"});
       if (kpiData) kpiData.textContent = d;
     }
-  } catch(e) {
+  } catch(_) {
     if (target) target.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Nenhum evento confirmado nos próximos dias.</div>`;
   }
 }
@@ -1687,39 +1688,23 @@ async function _areaCarregarEscalas() {
 }
 
 async function _areaCarregarMinisterios() {
-  const el = document.getElementById("area-dash-ministerios");
-  if (!el) return;
-  const mins = USUARIO_ATUAL?.ministerios || [];
+  const el      = document.getElementById("area-dash-ministerios");
   const badgeEl = document.getElementById("area-badge-ministerios");
-  if (!mins.length) {
+  const kpiEl   = document.getElementById("area-kpi-min");
+  if (!el) return;
+
+  function _empty() {
     el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Você ainda não está vinculado a nenhum ministério.</div>
       <button class="tbt" style="margin-top:10px" onclick="abrirModalNovaDemanda()">Solicitar inclusão em Ministério</button>`;
-    const kpiEl = document.getElementById("area-kpi-min");
-    if (kpiEl) kpiEl.textContent = "Nenhum";
+    if (kpiEl)   kpiEl.textContent   = "Nenhum";
     if (badgeEl) badgeEl.textContent = "Nenhum vinculado";
-    return;
   }
-  try {
-    const validIds = mins.filter(id => id != null && String(id).trim() !== "");
-    if (!validIds.length) {
-      el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Você ainda não está vinculado a nenhum ministério.</div>`;
-      if (badgeEl) badgeEl.textContent = "Nenhum vinculado";
-      return;
-    }
-    const inFilter = validIds.join(",");
-    const res = await fetch(
-      `${apiBaseUrl()}/rest/v1/ministerios?id=in.(${inFilter})&select=nome,descricao,ativo&limit=10`,
-      { headers: apiHeaders() }
-    );
-    if (!res.ok) throw new Error("ministerios_" + res.status);
-    const rows = await res.json();
-    if (!Array.isArray(rows) || !rows.length) {
-      el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Nenhum ministério encontrado.</div>`;
-      return;
-    }
-    const kpiEl = document.getElementById("area-kpi-min");
-    if (kpiEl) kpiEl.textContent = rows[0].nome?.split(" ")[0] || "—";
-    if (badgeEl) badgeEl.textContent = rows.length === 1 ? "1 ministério" : `${rows.length} ministérios`;
+
+  function _render(rows) {
+    if (!Array.isArray(rows) || !rows.length) { _empty(); return; }
+    const n = rows.length;
+    if (kpiEl)   kpiEl.textContent   = rows[0].nome?.split(" ")[0] || "—";
+    if (badgeEl) badgeEl.textContent = n === 1 ? "1 ministério" : `${n} ministérios`;
     el.innerHTML = rows.map(r => {
       const ativo = r.ativo !== false;
       return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd1)">
@@ -1730,16 +1715,43 @@ async function _areaCarregarMinisterios() {
         <span class="sv ${ativo ? "pos" : "wa"}" style="font-size:10px;white-space:nowrap">${ativo ? "ativo" : "inativo"}</span>
       </div>`;
     }).join("") + `<div style="margin-top:12px"><button class="tbt" onclick="go('area-min')">Ver detalhes →</button></div>`;
-  } catch(e) {
-    const label = `${mins.length} ministério${mins.length !== 1 ? "s" : ""} vinculado${mins.length !== 1 ? "s" : ""}`;
-    el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">
-      ${label}.
-      <br><button class="tbt" style="margin-top:10px" onclick="go('area-min')">Ver detalhes →</button></div>`;
-    const kpiEl = document.getElementById("area-kpi-min");
-    if (kpiEl) kpiEl.textContent = String(mins.length);
-    const badgeEl2 = document.getElementById("area-badge-ministerios");
-    if (badgeEl2) badgeEl2.textContent = label;
   }
+
+  const pessoaId = USUARIO_ATUAL?.pessoa_id || USUARIO_ATUAL?.id;
+  if (!pessoaId) { _empty(); return; }
+
+  // Estratégia 1: busca via ministerio_membros (join direto pelo pessoa_id — sem depender do array ministerios)
+  try {
+    const res = await fetch(
+      `${apiBaseUrl()}/rest/v1/ministerio_membros?pessoa_id=eq.${encodeURIComponent(pessoaId)}&status=eq.ativo&select=ministerios(id,nome,descricao,ativo)&limit=10`,
+      { headers: apiHeaders() }
+    );
+    if (res.ok) {
+      const rows = await res.json();
+      const ministerios = (Array.isArray(rows) ? rows : [])
+        .map(r => r.ministerios)
+        .filter(Boolean);
+      _render(ministerios);
+      return;
+    }
+  } catch(_) {}
+
+  // Estratégia 2: usa o array ministerios do membro, com validação de UUID
+  const mins = USUARIO_ATUAL?.ministerios || [];
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const validIds = mins.filter(id => id != null && UUID_RE.test(String(id).trim()));
+  if (!validIds.length) { _empty(); return; }
+
+  try {
+    const res = await fetch(
+      `${apiBaseUrl()}/rest/v1/ministerios?id=in.(${validIds.join(",")})&select=nome,descricao,ativo&limit=10`,
+      { headers: apiHeaders() }
+    );
+    if (res.ok) { _render(await res.json()); return; }
+  } catch(_) {}
+
+  // Fallback final: estado vazio sem expor erro no console
+  _empty();
 }
 
 async function _areaCarregarAvisos() {
@@ -1795,6 +1807,7 @@ window.go = async function(id) {
   if (id === "min-adm")              { if(typeof DEPT_ADM!=="undefined") DEPT_ADM.load(); }
   if (id === "geral")                 renderGeralDash();
   if (id === "area-dash")             _areaDashLoad();
+  if (id.startsWith("cong"))          window._congSyncOnNav?.();
   if (id === "min-dash")              _aplicarPermissoesMinisterial();
   if (id === "min-min")               minMinLoad();
   if (id === "pastoral-dash")         { if(typeof ep_render==="function") ep_render(); pd_renderDash(); }

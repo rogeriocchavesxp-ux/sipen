@@ -738,22 +738,25 @@ function _sbSaveCong(cong){
     .catch(e=>{ console.warn("CONG saveToSupabase:", e.message); });
 }
 
-// ── Init com sincronização Supabase ───────────────────
+// ── Init local (sem chamada à API — evita 401 para usuários sem permissão) ─
 buildCongMenu();
 try{
   if(document.getElementById("v-cong-dash")?.classList.contains("on")) renderDashboardGeral();
 }catch(e){}
 
-CONG.syncFromSupabase()
-  .then(ok=>{
-    if(!ok) return;
-    buildCongMenu();
-    if(document.getElementById("v-cong-dash")?.classList.contains("on")) renderDashboardGeral();
-    if(_activeCongId){
-      const c=CONG.getCong(_activeCongId);
-      if(c) renderCongView(c);
-    }
-  })
-  .catch(() => {});
+// Sync remoto: chamado sob demanda ao navegar para a tela (ver go() em auth.js)
+window._congSyncOnNav = function(){
+  CONG.syncFromSupabase()
+    .then(ok=>{
+      if(!ok) return;
+      buildCongMenu();
+      if(document.getElementById("v-cong-dash")?.classList.contains("on")) renderDashboardGeral();
+      if(_activeCongId){
+        const c=CONG.getCong(_activeCongId);
+        if(c) renderCongView(c);
+      }
+    })
+    .catch(()=>{});
+};
 
 })();
