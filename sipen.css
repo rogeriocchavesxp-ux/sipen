@@ -1399,3 +1399,136 @@ html[data-theme="light"] .login-box { box-shadow: 0 4px 24px rgba(0,0,0,0.08) }
 }
 .theme-btn:hover  { color: var(--tx1); background: var(--bg-hover) }
 .theme-btn.on     { background: var(--bg-card); color: var(--tx1); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.10) }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RODAPÉ 70 ANOS — IPPenha
+══════════════════════════════════════════════════════════════════════════ */
+.sipen-footer {
+  background: #2c6b41;
+  flex-shrink: 0;
+  width: 100%;
+  overflow: hidden;
+}
+.sfb-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 14px 28px;
+  max-width: 1100px;
+  margin: 0 auto;
+  min-height: 72px;
+}
+
+/* Badge 70 ANOS */
+.sfb-badge {
+  position: relative;
+  width: 54px;
+  height: 62px;
+  border: 1.5px solid rgba(228,213,168,.52);
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 8px;
+  flex-shrink: 0;
+}
+.sfb-badge::before {
+  content: '';
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid rgba(228,213,168,.28);
+  border-radius: 50%;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.sfb-badge-num {
+  font-size: 27px;
+  font-weight: 300;
+  color: #e4d5a8;
+  line-height: 1;
+  letter-spacing: -.02em;
+  position: relative;
+  z-index: 1;
+}
+.sfb-badge-anos {
+  font-size: 7px;
+  font-weight: 700;
+  color: rgba(228,213,168,.75);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+  margin-top: 2px;
+}
+
+/* Divisor vertical */
+.sfb-sep {
+  width: 1px;
+  height: 44px;
+  background: rgba(228,213,168,.28);
+  flex-shrink: 0;
+}
+
+/* Igreja + Logo */
+.sfb-church {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.sfb-logo {
+  height: 38px;
+  width: auto;
+  filter: brightness(0) invert(1) sepia(.15);
+  opacity: .85;
+  flex-shrink: 0;
+}
+.sfb-names { display: flex; flex-direction: column; line-height: 1.15; }
+.sfb-ig    { font-size: 9px; color: rgba(228,213,168,.65); letter-spacing: .08em; text-transform: uppercase; }
+.sfb-pres  { font-size: 12.5px; font-weight: 700; color: #e4d5a8; letter-spacing: .04em; }
+.sfb-penha { font-size: 11.5px; font-weight: 400; color: rgba(228,213,168,.8); letter-spacing: .04em; }
+
+/* Versículo */
+.sfb-verse {
+  font-size: 11px;
+  color: rgba(228,213,168,.82);
+  line-height: 1.55;
+  max-width: 280px;
+}
+.sfb-verse em { font-style: italic; color: #e4d5a8; }
+
+/* Desde */
+.sfb-desde {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  color: rgba(228,213,168,.75);
+}
+.sfb-desde-lbl { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; }
+.sfb-desde-ano { font-size: 22px; font-weight: 300; color: #e4d5a8; line-height: 1.1; letter-spacing: .02em; }
+
+/* Login footer: posicionado na base da tela de login */
+.sipen-footer-login {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+.sipen-footer-login .sfb-inner { padding: 12px 24px; min-height: 64px; }
+
+/* Responsive */
+@media (max-width: 700px) {
+  .sfb-badge, .sfb-desde, .sfb-badge + .sfb-sep, .sfb-verse + .sfb-sep { display: none }
+  .sfb-inner { gap: 16px; padding: 12px 16px; }
+  .sfb-verse { max-width: none; font-size: 10.5px; }
+}
+@media (max-width: 440px) {
+  .sfb-verse { display: none }
+  .sfb-verse + .sfb-sep { display: none }
+  .sfb-inner { justify-content: center; }
+}
