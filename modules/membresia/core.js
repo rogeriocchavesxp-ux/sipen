@@ -363,7 +363,7 @@ async function carregarAniversariantes() {
       </div>`;
 
   } catch(e) {
-    if (lista) lista.innerHTML = `<div style="color:var(--rose);font-size:11.5px">Erro: ${escapeHtml(e.message)}</div>`;
+    if (lista) lista.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:16px 0;text-align:center">Não foi possível carregar os aniversariantes.<br><button class="tbt" style="margin-top:10px" onclick="carregarAniversariantes()">Tentar novamente</button></div>`;
   }
 }
 

@@ -141,7 +141,6 @@
       if (error) throw error;
       _congregacoes = data || [];
     } catch (e) {
-      console.warn("[membresia] congregacoes:", e.message);
       _congregacoes = [];
     }
 

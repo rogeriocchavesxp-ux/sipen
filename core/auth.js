@@ -1681,47 +1681,9 @@ async function _areaCarregarSemana() {
 }
 
 async function _areaCarregarEscalas() {
-  const el   = document.getElementById("area-dash-escalas");
   const secao = document.getElementById("area-escalas-secao");
-  if (!el) return;
-  const pid = USUARIO_ATUAL?.pessoa_id || USUARIO_ATUAL?.id;
-  if (!pid) {
-    if (secao) secao.style.display = "none";
-    return;
-  }
-  try {
-    const today = new Date().toISOString().slice(0,10);
-    const res = await fetch(
-      `${apiBaseUrl()}/rest/v1/escala_ministerial?pessoa_id=eq.${pid}&data=gte.${today}&order=data.asc&limit=6&select=data,ministerio,funcao,status`,
-      { headers: apiHeaders() }
-    );
-    if (!res.ok) throw new Error("escala_" + res.status);
-    const rows = await res.json();
-    if (!Array.isArray(rows) || !rows.length) {
-      el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Você não possui escalas próximas.</div>`;
-      return;
-    }
-    const cls = { confirmado:"pos", pendente:"wa", cancelado:"dn" };
-    el.innerHTML = rows.map(r => {
-      const d = r.data
-        ? new Date(r.data + "T12:00:00").toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit"})
-        : "—";
-      const sc = cls[(r.status||"").toLowerCase()] || "nu";
-      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd1)">
-        <div>
-          <div style="font-size:12px;font-weight:600;color:var(--tx1)">${escapeHtml(r.ministerio||"—")}</div>
-          <div style="font-size:10.5px;color:var(--tx3)">${escapeHtml(r.funcao||"—")}</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:11px;color:var(--teal);white-space:nowrap">${d}</div>
-          <span class="sv ${sc}" style="font-size:10px">${escapeHtml(r.status||"—")}</span>
-        </div>
-      </div>`;
-    }).join("");
-  } catch(e) {
-    // Tabela ainda não existe: oculta a seção de escalas sem quebrar a página
-    if (secao) secao.style.display = "none";
-  }
+  // Tabela escala_ministerial ainda não existe — seção oculta sem chamar a API
+  if (secao) secao.style.display = "none";
 }
 
 async function _areaCarregarMinisterios() {
@@ -1738,7 +1700,13 @@ async function _areaCarregarMinisterios() {
     return;
   }
   try {
-    const inFilter = mins.join(",");
+    const validIds = mins.filter(id => id != null && String(id).trim() !== "");
+    if (!validIds.length) {
+      el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Você ainda não está vinculado a nenhum ministério.</div>`;
+      if (badgeEl) badgeEl.textContent = "Nenhum vinculado";
+      return;
+    }
+    const inFilter = validIds.join(",");
     const res = await fetch(
       `${apiBaseUrl()}/rest/v1/ministerios?id=in.(${inFilter})&select=nome,descricao,ativo&limit=10`,
       { headers: apiHeaders() }
