@@ -1532,3 +1532,26 @@ html[data-theme="light"] .login-box { box-shadow: 0 4px 24px rgba(0,0,0,0.08) }
   .sfb-verse + .sfb-sep { display: none }
   .sfb-inner { justify-content: center; }
 }
+
+/* ── Redes Sociais ──────────────────────────────────── */
+.social-links-row { display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px; }
+.social-link { display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;text-decoration:none;flex:1;min-width:130px;transition:border-color .15s; }
+.social-link-ico { width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.social-link-ico svg { width:18px;height:18px; }
+.social-yt .social-link-ico { background:rgba(255,0,0,.10);color:#FF0000; }
+.social-ig .social-link-ico { background:rgba(225,48,108,.10);color:#E1306C; }
+.social-fb .social-link-ico { background:rgba(24,119,242,.10);color:#1877F2; }
+.social-yt:hover { border-color:rgba(255,0,0,.35); }
+.social-ig:hover { border-color:rgba(225,48,108,.35); }
+.social-fb:hover { border-color:rgba(24,119,242,.35); }
+.social-link-info { display:flex;flex-direction:column;min-width:0; }
+.social-link-name { font-size:12px;font-weight:600;color:var(--tx1);line-height:1.2; }
+.social-link-handle { font-size:10px;color:var(--tx3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+
+/* Redes Sociais — barra na sidebar */
+.sb-social { display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border-top:1px solid var(--bd1); }
+.sb-social-ic { width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;text-decoration:none;transition:background .15s;color:var(--tx3); }
+.sb-social-ic svg { width:14px;height:14px;fill:currentColor; }
+.sb-social-yt:hover { background:rgba(255,0,0,.12);color:#FF0000; }
+.sb-social-ig:hover { background:rgba(225,48,108,.12);color:#E1306C; }
+.sb-social-fb:hover { background:rgba(24,119,242,.12);color:#1877F2; }
