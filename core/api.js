@@ -20,28 +20,21 @@ if (!localStorage.getItem("sipen_supabase_anon_key") && DEFAULT_SUPABASE_ANON_KE
 let _sbClient = null;
 function getSupabase() {
   if (!_sbClient && window.supabase?.createClient) {
-    // Usa sessionStorage para isolar a sessão por aba.
-    // localStorage (padrão) é compartilhado entre todas as abas do mesmo
-    // navegador, o que causava herança de sessão ao fazer F5.
-    const _tabStorage = {
-      getItem:    (k) => sessionStorage.getItem(k),
-      setItem:    (k, v) => sessionStorage.setItem(k, v),
-      removeItem: (k) => sessionStorage.removeItem(k),
+    const _storage = {
+      getItem:    (k) => localStorage.getItem(k),
+      setItem:    (k, v) => localStorage.setItem(k, v),
+      removeItem: (k) => localStorage.removeItem(k),
     };
     _sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: { persistSession: true, storageKey: "sipen_auth_session", storage: _tabStorage }
+      auth: { persistSession: true, storageKey: "sipen_auth_session", storage: _storage }
     });
   }
   return _sbClient;
 }
 
-/* JWT do usuário autenticado — lê do sessionStorage sem async.
-   Usado pelos módulos JS para montar Authorization: Bearer <token>
-   em vez de usar a anon key, garantindo que as políticas RLS
-   de "authenticated" sejam aplicadas corretamente. */
 function sipenToken() {
   try {
-    const raw = sessionStorage.getItem('sipen_auth_session');
+    const raw = localStorage.getItem('sipen_auth_session');
     if (!raw) return SUPABASE_ANON_KEY;
     return JSON.parse(raw)?.access_token || SUPABASE_ANON_KEY;
   } catch (_) { return SUPABASE_ANON_KEY; }
