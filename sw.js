@@ -6,26 +6,32 @@
 // ⚠ Ao fazer deploy de uma nova versão, incremente CACHE_VERSION.
 // ════════════════════════════════════════════════════════════════
 
-const CACHE_VERSION = 'sipen-v6.30.46';
-const OFFLINE_URL   = '/offline.html';
+const CACHE_VERSION = 'sipen-v6.30.47';
+
+// Base path — detectado automaticamente para funcionar em qualquer subdiretório
+// Ex.: GitHub Pages em /sipen/ → BASE = '/sipen'
+//      Domínio próprio em /  → BASE = ''
+const BASE = self.location.pathname.replace(/\/sw\.js$/, '');
+
+const OFFLINE_URL = BASE + '/offline.html';
 
 // Arquivos do app shell — cacheados no install
 const APP_SHELL = [
-  '/',
-  '/index.html',
-  '/sipen.css',
-  '/offline.html',
-  '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/icons/apple-touch-icon.png',
-  '/core/router.js',
-  '/core/api.js',
-  '/core/auth.js',
-  '/core/init.js',
-  '/core/ui.js',
-  '/core/pwa.js',
-  '/core/theme.js',
+  BASE + '/',
+  BASE + '/index.html',
+  BASE + '/sipen.css',
+  BASE + '/offline.html',
+  BASE + '/manifest.json',
+  BASE + '/icons/icon-192.png',
+  BASE + '/icons/icon-512.png',
+  BASE + '/icons/apple-touch-icon.png',
+  BASE + '/core/router.js',
+  BASE + '/core/api.js',
+  BASE + '/core/auth.js',
+  BASE + '/core/init.js',
+  BASE + '/core/ui.js',
+  BASE + '/core/pwa.js',
+  BASE + '/core/theme.js',
 ];
 
 // Padrões que NUNCA devem ser cacheados (API Supabase)
@@ -74,7 +80,7 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(request)
         .catch(() =>
-          caches.match('/index.html').then(r => r || caches.match(OFFLINE_URL))
+          caches.match(BASE + '/index.html').then(r => r || caches.match(OFFLINE_URL))
         )
     );
     return;

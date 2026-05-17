@@ -6,7 +6,7 @@
 (function () {
   'use strict';
 
-  const SW_URL      = '/sw.js';
+  const SW_URL      = 'sw.js';
   const DISMISS_KEY = 'sipen_pwa_dismissed';
   const DISMISS_TTL = 7 * 24 * 60 * 60 * 1000;
 

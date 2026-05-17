@@ -673,18 +673,15 @@ async function _minDashMinisterios(el, opts = {}) {
       return;
     }
 
-    const filtroIds = mostrarTodos ? "" : `&id=in.(${mins.map(id => encodeURIComponent(id)).join(",")})`;
-    const hoje = new Date().toISOString().slice(0, 10);
-    const [rMin, rMembros, rEscalas] = await Promise.all([
-      fetch(`${apiBaseUrl()}/rest/v1/ministerios?select=id,nome,descricao,tipo,ativo,supervisor,conselheiro,coordenador,updated_at,created_at${filtroIds}&order=nome.asc`, { headers: apiHeaders() }),
+    const filtroIds = mostrarTodos ? "" : `&id=in.(${mins.join(",")})`;
+    const [rMin, rMembros] = await Promise.all([
+      fetch(`${apiBaseUrl()}/rest/v1/ministerios?select=id,nome,descricao,tipo,ativo,supervisor,updated_at,created_at${filtroIds}&order=nome.asc`, { headers: apiHeaders() }),
       fetch(`${apiBaseUrl()}/rest/v1/ministerio_membros?select=ministerio_id&status=eq.ativo`, { headers: apiHeaders() }),
-      fetch(`${apiBaseUrl()}/rest/v1/escala_ministerial?data=gte.${hoje}&order=data.asc&limit=200&select=data,ministerio,funcao,status`, { headers: apiHeaders() }).catch(() => null),
     ]);
     if (!rMin.ok) throw new Error("Não foi possível carregar os ministérios.");
 
     const rows = await rMin.json();
     const membrosRows = rMembros.ok ? await rMembros.json() : [];
-    const escalasRows = rEscalas && rEscalas.ok ? await rEscalas.json() : [];
     const lista = Array.isArray(rows) ? rows : [];
     const totalAtivos = lista.filter(m => m.ativo !== false).length;
     setKpi(lista.length, totalAtivos);
@@ -699,24 +696,18 @@ async function _minDashMinisterios(el, opts = {}) {
       contagem[m.ministerio_id] = (contagem[m.ministerio_id] || 0) + 1;
     });
 
-    const pessoaIds = [...new Set(lista.flatMap(m => [m.supervisor, m.coordenador, m.conselheiro]).filter(Boolean))];
+    const pessoaIds = [...new Set(lista.map(m => m.supervisor).filter(Boolean))];
     const nomes = {};
     if (pessoaIds.length) {
-      const rp = await fetch(`${apiBaseUrl()}/rest/v1/pessoas?id=in.(${pessoaIds.map(id => encodeURIComponent(id)).join(",")})&select=id,nome`, { headers: apiHeaders() });
+      const rp = await fetch(`${apiBaseUrl()}/rest/v1/pessoas?id=in.(${pessoaIds.join(",")})&select=id,nome`, { headers: apiHeaders() });
       const pessoas = rp.ok ? await rp.json() : [];
       pessoas.forEach(p => { nomes[p.id] = p.nome; });
     }
 
-    const proxPorMinisterio = {};
-    (Array.isArray(escalasRows) ? escalasRows : []).forEach(e => {
-      const chave = String(e.ministerio || "").trim().toLowerCase();
-      if (chave && !proxPorMinisterio[chave]) proxPorMinisterio[chave] = e;
-    });
-
     el.innerHTML = lista.map(m => _minDashCard(m, {
       qtdMembros: contagem[m.id] || 0,
-      lider: nomes[m.supervisor] || nomes[m.coordenador] || nomes[m.conselheiro] || "",
-      proxima: proxPorMinisterio[String(m.nome || "").trim().toLowerCase()] || null,
+      lider: nomes[m.supervisor] || "",
+      proxima: null,
     })).join("");
   } catch(e) {
     console.error("_minDashMinisterios:", e);
@@ -1650,9 +1641,10 @@ async function _areaCarregarSemana() {
   try {
     const today = new Date().toISOString().slice(0,10);
     const res = await fetch(
-      `${apiBaseUrl()}/rest/v1/AGENDA?data_inicio=gte.${today}&status=eq.confirmado&order=data_inicio.asc&limit=6&select=titulo,data_inicio,local,tipo`,
+      `${apiBaseUrl()}/rest/v1/agenda?data_inicio=gte.${today}&status=eq.confirmado&order=data_inicio.asc&limit=6&select=titulo,data_inicio,local,tipo`,
       { headers: apiHeaders() }
     );
+    if (!res.ok) throw new Error("agenda_" + res.status);
     const rows = await res.json();
     if (!Array.isArray(rows) || !rows.length) {
       target.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Nenhum evento confirmado nos próximos dias.</div>`;
@@ -1684,7 +1676,7 @@ async function _areaCarregarSemana() {
       if (kpiData) kpiData.textContent = d;
     }
   } catch(e) {
-    if (target) target.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Erro ao carregar agenda.</div>`;
+    if (target) target.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Nenhum evento confirmado nos próximos dias.</div>`;
   }
 }
 
@@ -1700,10 +1692,10 @@ async function _areaCarregarEscalas() {
   try {
     const today = new Date().toISOString().slice(0,10);
     const res = await fetch(
-      `${apiBaseUrl()}/rest/v1/escala_ministerial?pessoa_id=eq.${encodeURIComponent(pid)}&data=gte.${today}&order=data.asc&limit=6&select=data,ministerio,funcao,status`,
+      `${apiBaseUrl()}/rest/v1/escala_ministerial?pessoa_id=eq.${pid}&data=gte.${today}&order=data.asc&limit=6&select=data,ministerio,funcao,status`,
       { headers: apiHeaders() }
     );
-    if (!res.ok) throw new Error("table_not_found");
+    if (!res.ok) throw new Error("escala_" + res.status);
     const rows = await res.json();
     if (!Array.isArray(rows) || !rows.length) {
       el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Você não possui escalas próximas.</div>`;
@@ -1746,12 +1738,12 @@ async function _areaCarregarMinisterios() {
     return;
   }
   try {
-    const inFilter = mins.map(id => encodeURIComponent(id)).join(",");
+    const inFilter = mins.join(",");
     const res = await fetch(
-      `${apiBaseUrl()}/rest/v1/ministerios?id=in.(${inFilter})&select=nome,descricao,status&limit=10`,
+      `${apiBaseUrl()}/rest/v1/ministerios?id=in.(${inFilter})&select=nome,descricao,ativo&limit=10`,
       { headers: apiHeaders() }
     );
-    if (!res.ok) throw new Error("query_fail");
+    if (!res.ok) throw new Error("ministerios_" + res.status);
     const rows = await res.json();
     if (!Array.isArray(rows) || !rows.length) {
       el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Nenhum ministério encontrado.</div>`;
@@ -1761,13 +1753,13 @@ async function _areaCarregarMinisterios() {
     if (kpiEl) kpiEl.textContent = rows[0].nome?.split(" ")[0] || "—";
     if (badgeEl) badgeEl.textContent = rows.length === 1 ? "1 ministério" : `${rows.length} ministérios`;
     el.innerHTML = rows.map(r => {
-      const stCls = (r.status||"").toLowerCase() === "ativo" ? "pos" : "wa";
+      const ativo = r.ativo !== false;
       return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd1)">
         <div>
           <div style="font-size:12px;font-weight:600;color:var(--tx1)">◉ ${escapeHtml(r.nome||"—")}</div>
           ${r.descricao ? `<div style="font-size:10.5px;color:var(--tx3)">${escapeHtml(r.descricao)}</div>` : ""}
         </div>
-        <span class="sv ${stCls}" style="font-size:10px;white-space:nowrap">${escapeHtml(r.status||"")}</span>
+        <span class="sv ${ativo ? "pos" : "wa"}" style="font-size:10px;white-space:nowrap">${ativo ? "ativo" : "inativo"}</span>
       </div>`;
     }).join("") + `<div style="margin-top:12px"><button class="tbt" onclick="go('area-min')">Ver detalhes →</button></div>`;
   } catch(e) {
@@ -1785,46 +1777,15 @@ async function _areaCarregarMinisterios() {
 async function _areaCarregarAvisos() {
   const el = document.getElementById("area-dash-avisos");
   if (!el) return;
-  const mins = USUARIO_ATUAL?.ministerios || [];
-  try {
-    // Tenta tabela 'comunicados' com filtro de público ou ministério do usuário
-    const res = await fetch(
-      `${apiBaseUrl()}/rest/v1/comunicados?or=(publico.eq.true,ministerio_id.in.(${mins.join(",") || "null"}))&order=created_at.desc&limit=5&select=titulo,corpo,created_at,tipo`,
-      { headers: apiHeaders() }
-    );
-    if (!res.ok) throw new Error("table_not_found");
-    const rows = await res.json();
-    if (!Array.isArray(rows) || !rows.length) {
-      el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Nenhum comunicado recente.</div>`;
-      return;
-    }
-    el.innerHTML = rows.map(r => {
-      const d = r.created_at
-        ? new Date(r.created_at).toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})
-        : "";
-      const tipoCls = (r.tipo||"").toLowerCase() === "urgente" ? "dn" : "nu";
-      return `<div style="padding:10px 0;border-bottom:1px solid var(--bd1)">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <div style="font-size:12px;font-weight:600;color:var(--tx1)">${escapeHtml(r.titulo||"Comunicado")}</div>
-          <span style="font-size:10px;color:var(--tx3);white-space:nowrap;margin-left:8px">${d}</span>
-        </div>
-        ${r.corpo ? `<div style="font-size:11px;color:var(--tx2);margin-top:3px">${escapeHtml(r.corpo)}</div>` : ""}
-        ${r.tipo ? `<span class="sv ${tipoCls}" style="font-size:9.5px;margin-top:4px;display:inline-block">${escapeHtml(r.tipo)}</span>` : ""}
-      </div>`;
-    }).join("");
-  } catch(e) {
-    // Tabela ainda não existe: mostra placeholder institucional
-    el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:10px 0">
-      <div style="padding:10px 0;border-bottom:1px solid var(--bd1)">
-        <div style="font-size:12px;font-weight:600;color:var(--tx1)">Bem-vindo à IPPenha!</div>
-        <div style="font-size:11px;color:var(--tx2);margin-top:3px">Acompanhe os avisos e comunicados da sua igreja aqui.</div>
-      </div>
-      <div style="padding:10px 0">
-        <div style="font-size:12px;font-weight:600;color:var(--tx1)">Cultos regulares</div>
-        <div style="font-size:11px;color:var(--tx2);margin-top:3px">Domingos às 9h e 18h · Quarta-feira às 19h30</div>
-      </div>
+  el.innerHTML = `
+    <div style="padding:10px 0;border-bottom:1px solid var(--bd1)">
+      <div style="font-size:12px;font-weight:600;color:var(--tx1)">Bem-vindo à IPPenha!</div>
+      <div style="font-size:11px;color:var(--tx2);margin-top:3px">Acompanhe os avisos e comunicados da sua igreja aqui.</div>
+    </div>
+    <div style="padding:10px 0">
+      <div style="font-size:12px;font-weight:600;color:var(--tx1)">Cultos regulares</div>
+      <div style="font-size:11px;color:var(--tx2);margin-top:3px">Domingos às 9h e 18h · Quarta-feira às 19h30</div>
     </div>`;
-  }
 }
 
 // Mantido para compatibilidade com o módulo de escalas de pregação (pastoral)
