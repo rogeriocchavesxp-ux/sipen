@@ -3511,8 +3511,8 @@
       <div class="hero-ic" style="background:rgba(37,211,102,0.12)">💬</div>
       <div>
         <div class="hero-lbl">Configurações</div>
-        <div class="hero-ttl">WhatsApp — Evolution API</div>
-        <div class="hero-dsc">Status da instância, módulos ativos, histórico e templates de mensagens</div>
+        <div class="hero-ttl">WhatsApp — BotConversa</div>
+        <div class="hero-dsc">Status da integração, módulos ativos, histórico e templates de mensagens</div>
       </div>
       <div class="hero-act" style="gap:8px">
         <button class="tbt" onclick="WA_CFG.refresh()">↻ Atualizar</button>
@@ -3529,7 +3529,7 @@
         </div>
         <div class="kpi">
           <div class="kpi-ico" style="background:rgba(37,211,102,0.12)">📱</div>
-          <div class="kpi-body"><div class="kpi-lbl">Instância</div><div class="kpi-val" id="wa-kpi-instancia" style="font-size:14px">—</div></div>
+          <div class="kpi-body"><div class="kpi-lbl">Provedor</div><div class="kpi-val" id="wa-kpi-instancia" style="font-size:13px">BotConversa</div></div>
         </div>
         <div class="kpi">
           <div class="kpi-ico" style="background:rgba(74,156,245,0.12)">📨</div>
@@ -3548,16 +3548,20 @@
           <div id="wa-modulos-list" style="display:flex;flex-direction:column"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
         </div>
         <div class="card">
-          <div class="ctit">Instância Evolution API</div>
-          <div class="fg" style="margin-bottom:8px">
-            <label class="flb">URL da API</label>
-            <input class="fi2" type="url" id="wa-api-url" placeholder="https://evo.seudominio.com.br">
+          <div class="ctit">BotConversa — Configuração</div>
+          <div style="font-size:11.5px;color:var(--tx2);line-height:1.6;margin-bottom:14px">
+            A chave da API é armazenada com segurança nos secrets do Supabase e nunca exposta ao navegador.<br><br>
+            Para configurar, acesse o painel BotConversa → <strong>Configurações → Integrações</strong> e copie a <strong>Webhook Integration Key</strong>.<br>
+            Em seguida, adicione nos secrets do Supabase:
           </div>
-          <div class="fg" style="margin-bottom:14px">
-            <label class="flb">Nome da Instância</label>
-            <input class="fi2" type="text" id="wa-api-inst" placeholder="ippenha">
+          <div style="background:var(--bg-sidebar);border:1px solid var(--bd2);border-radius:6px;padding:10px 12px;font-family:var(--mono);font-size:11px;color:var(--tx2);margin-bottom:14px;line-height:1.8">
+            Nome: <strong style="color:var(--gr)">BOTCONVERSA_API_KEY</strong><br>
+            Valor: <em style="color:var(--tx3)">sua-chave-aqui</em>
           </div>
-          <button class="btn btn-p" onclick="WA_CFG.salvarConfig()">Salvar Configuração</button>
+          <div style="font-size:10.5px;color:var(--tx3);margin-bottom:12px">
+            Supabase Dashboard → Edge Functions → Secrets → Add new secret
+          </div>
+          <div id="wa-cfg-estado" style="font-size:11px;color:var(--tx3)">Verificando...</div>
         </div>
       </div>
 
@@ -3614,7 +3618,7 @@
   <div class="mo" id="wa-teste-modal" onclick="if(event.target===this)WA_CFG.closeTesteModal()">
     <div class="md" style="max-width:480px">
       <div class="md-t">Enviar Mensagem de Teste</div>
-      <div class="md-s">Verifica a conexão com a Evolution API enviando uma mensagem real</div>
+      <div class="md-s">Verifica a integração com o BotConversa enviando uma mensagem real</div>
       <div class="fg" style="margin-bottom:8px">
         <label class="flb">Número (com DDD, sem +)</label>
         <input class="fi2" type="tel" id="wa-teste-num" placeholder="11999999999">

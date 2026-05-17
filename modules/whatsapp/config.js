@@ -42,24 +42,26 @@ const WA_CFG = (function(){
   /* ── Status da instância ─────────────────────────────── */
 
   async function carregarStatus(){
-    const el   = document.getElementById("wa-kpi-status");
-    const ico  = document.getElementById("wa-kpi-ico-status");
-    const inst = document.getElementById("wa-kpi-instancia");
+    const el  = document.getElementById("wa-kpi-status");
+    const ico = document.getElementById("wa-kpi-ico-status");
     if(!el) return;
 
     el.textContent = "...";
     const s = await WA.status();
 
     if(s.conectado){
-      el.textContent  = "Conectado";
-      el.style.color  = "var(--gr)";
+      el.textContent = "Configurado";
+      el.style.color = "var(--gr)";
       if(ico){ ico.textContent = "🟢"; ico.style.background = "rgba(58,170,92,0.12)"; }
     } else {
-      el.textContent  = s.estado || "Desconectado";
-      el.style.color  = "var(--rose)";
+      const label = s.estado === "sem_chave" ? "Sem chave"
+                  : s.estado === "chave_invalida" ? "Chave inválida"
+                  : s.estado === "erro_conexao"   ? "Sem conexão"
+                  : "Não configurado";
+      el.textContent = label;
+      el.style.color = "var(--rose)";
       if(ico){ ico.textContent = "🔴"; ico.style.background = "rgba(224,85,85,0.12)"; }
     }
-    if(inst) inst.textContent = s.instancia || "—";
   }
 
   async function carregarKpis(){
@@ -111,40 +113,21 @@ const WA_CFG = (function(){
       T(ativo ? "Módulo ativado" : "Módulo pausado", `Envio de WhatsApp ${ativo?"habilitado":"desabilitado"} para ${modulo}`);
   }
 
-  /* ── Config da instância ──────────────────────────────── */
+  /* ── Estado da configuração BotConversa ───────────────── */
 
-  async function carregarConfigInst(){
-    const rows = await _fetch("/rest/v1/whatsapp_config?select=*&ativo=eq.true&limit=1");
-    const cfg = rows && rows[0];
-    if(!cfg) return;
-    const urlEl  = document.getElementById("wa-api-url");
-    const instEl = document.getElementById("wa-api-inst");
-    if(urlEl)  urlEl.value  = cfg.api_url       || "";
-    if(instEl) instEl.value = cfg.instance_name || "";
-  }
-
-  async function salvarConfig(){
-    const apiUrl  = (document.getElementById("wa-api-url")?.value  || "").trim();
-    const instName = (document.getElementById("wa-api-inst")?.value || "").trim();
-    if(!apiUrl || !instName){
-      if(typeof T === "function") T("Campos obrigatórios","Preencha URL e nome da instância");
-      return;
-    }
-
-    const existing = await _fetch("/rest/v1/whatsapp_config?select=id&ativo=eq.true&limit=1");
-    if(existing && existing[0]){
-      await _fetch(`/rest/v1/whatsapp_config?id=eq.${existing[0].id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ api_url: apiUrl, instance_name: instName }),
-      });
+  async function carregarEstadoConfig(){
+    const el = document.getElementById("wa-cfg-estado");
+    if(!el) return;
+    const s = await WA.status();
+    if(s.conectado){
+      el.innerHTML = `<span style="color:var(--gr);font-weight:600">✓ Chave configurada</span> — BotConversa pronto para envio.`;
+    } else if(s.estado === "sem_chave"){
+      el.innerHTML = `<span style="color:var(--rose);font-weight:600">✗ Chave ausente</span> — Adicione <code style="font-size:10.5px">BOTCONVERSA_API_KEY</code> nos secrets do Supabase.`;
+    } else if(s.estado === "chave_invalida"){
+      el.innerHTML = `<span style="color:var(--rose);font-weight:600">✗ Chave inválida</span> — Verifique a chave no painel BotConversa → Configurações → Integrações.`;
     } else {
-      await _fetch("/rest/v1/whatsapp_config", {
-        method: "POST",
-        body: JSON.stringify({ api_url: apiUrl, instance_name: instName, ativo: true }),
-      });
+      el.innerHTML = `<span style="color:var(--gold);font-weight:600">⚠ ${s.estado||"erro"}</span> — Não foi possível verificar o status.`;
     }
-    if(typeof T === "function") T("Configuração salva","Instância Evolution API atualizada");
-    carregarStatus();
   }
 
   /* ── Histórico de mensagens ───────────────────────────── */
@@ -310,11 +293,11 @@ const WA_CFG = (function(){
     if(btn){ btn.disabled = false; btn.textContent = "Enviar via WhatsApp"; }
 
     if(r && r.ok){
-      if(typeof T === "function") T("Mensagem enviada!","WhatsApp entregue com sucesso");
+      if(typeof T === "function") T("Mensagem enviada!","WhatsApp entregue com sucesso via BotConversa");
       closeTesteModal();
       setTimeout(carregarHistorico, 800);
     } else {
-      if(typeof T === "function") T("Falha no envio", r?.error || r?.status || "Verifique a conexão com a Evolution API");
+      if(typeof T === "function") T("Falha no envio", r?.error || r?.status || "Verifique se BOTCONVERSA_API_KEY está configurado nos secrets do Supabase");
     }
   }
 
@@ -327,7 +310,7 @@ const WA_CFG = (function(){
       carregarModulos(),
       carregarHistorico(),
       carregarTemplates(),
-      carregarConfigInst(),
+      carregarEstadoConfig(),
     ]);
   }
 
@@ -336,7 +319,7 @@ const WA_CFG = (function(){
     refresh,
     carregarStatus, carregarKpis,
     carregarModulos, toggleModulo,
-    carregarConfigInst, salvarConfig,
+    carregarEstadoConfig,
     carregarHistorico,
     carregarTemplates, openTemplateModal, closeTplModal, _editTpl, toggleTemplate, salvarTemplate,
     openTesteModal, closeTesteModal, enviarTeste,
