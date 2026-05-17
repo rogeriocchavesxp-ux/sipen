@@ -5,7 +5,7 @@
 
 -- 1. Tabela principal de congregações
 CREATE TABLE IF NOT EXISTS congregacoes (
-  id                   text PRIMARY KEY,
+  id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   -- Identificação
   nome                 text NOT NULL,
   localizacao          text,
@@ -59,9 +59,11 @@ CREATE TABLE IF NOT EXISTS congregacoes (
 );
 
 -- 2. Tabela de cultos (registros frequentes — tabela separada)
-CREATE TABLE IF NOT EXISTS congregacao_cultos (
+-- DROP + CREATE garante schema correto mesmo em re-execuções
+DROP TABLE IF EXISTS congregacao_cultos CASCADE;
+CREATE TABLE congregacao_cultos (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  cong_id       text NOT NULL REFERENCES congregacoes(id) ON DELETE CASCADE,
+  cong_id       uuid NOT NULL REFERENCES congregacoes(id) ON DELETE CASCADE,
   data          date NOT NULL,
   tipo          text,
   pregador      text,
@@ -93,6 +95,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_congregacoes_atualizado_em ON congregacoes;
 CREATE TRIGGER trg_congregacoes_atualizado_em
   BEFORE UPDATE ON congregacoes
   FOR EACH ROW EXECUTE FUNCTION update_atualizado_em();

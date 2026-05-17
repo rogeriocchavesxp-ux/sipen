@@ -85,7 +85,8 @@ const CONG = (function(){
       lideranca:{ pastor_responsavel:"", lideres:[] },
       financeiro:{ receita_media_mensal:0, despesa_media_mensal:0, saldo_atual:0, historico:[] },
       desafios:{ lista:[] },
-      planejamento:{ metas_ano:"", eventos:[], acoes:[] }
+      planejamento:{ metas_ano:"", eventos:[], acoes:[] },
+      departamentos:{ lista:[] }
     };
   }
 
@@ -278,6 +279,7 @@ const CONG = (function(){
       metas_ano:            p.metas_ano||"",
       eventos:              p.eventos||[],
       acoes:                p.acoes||[],
+      departamentos:        (cong.departamentos?.lista)||[],
       atualizado_em:        new Date().toISOString()
     };
   }
@@ -351,8 +353,9 @@ const CONG = (function(){
         saldo_atual:          row.saldo_atual||0,
         historico:            row.financeiro_historico||[]
       },
-      desafios:    { lista:row.desafios||[] },
-      planejamento:{ metas_ano:row.metas_ano||"", eventos:row.eventos||[], acoes:row.acoes||[] }
+      desafios:     { lista:row.desafios||[] },
+      planejamento: { metas_ano:row.metas_ano||"", eventos:row.eventos||[], acoes:row.acoes||[] },
+      departamentos:{ lista:row.departamentos||[] }
     };
   }
 

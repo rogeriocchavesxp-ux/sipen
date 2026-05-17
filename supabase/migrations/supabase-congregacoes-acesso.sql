@@ -5,7 +5,7 @@
 
 -- ── 1. Vincula membros a congregações ────────────────────────────
 ALTER TABLE public.membros
-  ADD COLUMN IF NOT EXISTS congregacao_id text
+  ADD COLUMN IF NOT EXISTS congregacao_id uuid
     REFERENCES public.congregacoes(id) ON DELETE SET NULL;
 
 CREATE INDEX IF NOT EXISTS idx_membros_congregacao_id
@@ -14,7 +14,7 @@ CREATE INDEX IF NOT EXISTS idx_membros_congregacao_id
 -- ── 2. Lançamentos financeiros por congregação ───────────────────
 CREATE TABLE IF NOT EXISTS public.congregacao_lancamentos (
   id              uuid          PRIMARY KEY DEFAULT gen_random_uuid(),
-  congregacao_id  text          NOT NULL REFERENCES public.congregacoes(id) ON DELETE CASCADE,
+  congregacao_id  uuid          NOT NULL REFERENCES public.congregacoes(id) ON DELETE CASCADE,
   data            date          NOT NULL,
   tipo            text          NOT NULL CHECK (tipo IN ('receita','despesa')),
   categoria       text,
@@ -33,16 +33,19 @@ CREATE INDEX IF NOT EXISTS idx_cong_lanc_tipo    ON public.congregacao_lancament
 ALTER TABLE public.congregacao_lancamentos ENABLE ROW LEVEL SECURITY;
 
 -- Leitura: qualquer autenticado (RLS de congregação controlada no app)
-CREATE POLICY IF NOT EXISTS "cong_lanc_select"
+DROP POLICY IF EXISTS "cong_lanc_select" ON public.congregacao_lancamentos;
+CREATE POLICY "cong_lanc_select"
   ON public.congregacao_lancamentos FOR SELECT
   USING (deleted_at IS NULL);
 
 -- Escrita: apenas autenticados
-CREATE POLICY IF NOT EXISTS "cong_lanc_insert"
+DROP POLICY IF EXISTS "cong_lanc_insert" ON public.congregacao_lancamentos;
+CREATE POLICY "cong_lanc_insert"
   ON public.congregacao_lancamentos FOR INSERT
   WITH CHECK (auth.role() = 'authenticated');
 
-CREATE POLICY IF NOT EXISTS "cong_lanc_update"
+DROP POLICY IF EXISTS "cong_lanc_update" ON public.congregacao_lancamentos;
+CREATE POLICY "cong_lanc_update"
   ON public.congregacao_lancamentos FOR UPDATE
   USING (auth.role() = 'authenticated');
 

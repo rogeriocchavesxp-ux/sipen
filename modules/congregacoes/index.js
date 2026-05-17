@@ -46,6 +46,16 @@ function prioBadge(p){
   return badge(p,{Alta:"#E74C3C",Média:"#E67E22",Baixa:"#3AAA5C"}[p]||"#888");
 }
 
+// ── Permissões ────────────────────────────────────────
+function _podeEditar(congId){
+  if(typeof USUARIO_ATUAL==="undefined"||!USUARIO_ATUAL) return false;
+  const p=USUARIO_ATUAL?.perfil||"";
+  if(["ADMINISTRADOR_GERAL","GESTOR"].includes(p)) return true;
+  if(p==="LIDER_CONGREGACAO") return String(USUARIO_ATUAL.congregacao_id)===String(congId);
+  return false;
+}
+function _isLiderCong(){ return typeof USUARIO_ATUAL!=="undefined"&&USUARIO_ATUAL?.perfil==="LIDER_CONGREGACAO"; }
+
 // ── Sidebar dinâmica ──────────────────────────────────
 function buildCongMenu(){
   const msub=document.getElementById("ms-cong");
@@ -138,7 +148,7 @@ function renderCongView(cong){
   const el=document.getElementById("v-cong-ver");
   if(!el) return;
   const id=cong.id;
-  const tabs=["Visão Geral","Membresia","Cultos e Oração","Pequenos Grupos","Ministérios","Liderança","Financeiro","Desafios","Planejamento"];
+  const tabs=["Visão Geral","Membresia","Cultos e Oração","Pequenos Grupos","Ministérios","Liderança","Financeiro","Desafios","Planejamento","Agenda","Departamentos"];
   el.innerHTML=`
     <div class="hero">
       <div class="hero-ic" style="background:${cong.identificacao.cor}22;border-color:${cong.identificacao.cor}55">${cong.identificacao.icon||"⛪"}</div>
@@ -148,8 +158,8 @@ function renderCongView(cong){
         <div class="hero-dsc">${escapeHtml(cong.identificacao.localizacao||"")}${cong.identificacao.localizacao?" — ":""}${statusBadge(cong.identificacao.status)}</div>
       </div>
       <div class="hero-act">
-        <button class="tbt" onclick="go('cong-dash')">← Dashboard</button>
-        <button class="tbt pri" onclick="abrirModalEditarCong('${id}')">Editar</button>
+        ${!_isLiderCong()?`<button class="tbt" onclick="go('cong-dash')">← Dashboard</button>`:""}
+        ${_podeEditar(id)?`<button class="tbt pri" onclick="abrirModalEditarCong('${id}')">Editar</button>`:""}
       </div>
     </div>
     <div class="ct" style="padding-top:0">
@@ -176,10 +186,12 @@ function renderCongTab(i, cong){
   const renderers=[
     renderTab_visaoGeral, renderTab_membresia, renderTab_cultos,
     renderTab_pgs, renderTab_ministerios, renderTab_lideranca,
-    renderTab_financeiro, renderTab_desafios, renderTab_planejamento
+    renderTab_financeiro, renderTab_desafios, renderTab_planejamento,
+    renderTab_agenda, renderTab_departamentos
   ];
   el.innerHTML="";
-  if(renderers[i]) renderers[i](cong,el);
+  const r=renderers[i];
+  if(r){ const p=r(cong,el); if(p instanceof Promise) p.catch(e=>console.warn("cong-tab",i,e)); }
 }
 
 // ── Tab 0: Visão Geral ────────────────────────────────
@@ -227,15 +239,37 @@ function renderTab_visaoGeral(cong, el){
 }
 
 // ── Tab 1: Membresia ──────────────────────────────────
-function renderTab_membresia(cong, el){
+async function _membrosLoad(congId){
+  if(!congId) return [];
+  try{
+    const url=`${apiBaseUrl()}/rest/v1/membros?congregacao_id=eq.${encodeURIComponent(congId)}&select=id,funcao,status,pessoa_id,pessoas(nome,email)&order=pessoas(nome).asc&limit=300`;
+    const r=await fetch(url,{headers:apiHeaders()});
+    if(!r.ok) return [];
+    return await r.json();
+  }catch(e){ return []; }
+}
+
+async function renderTab_membresia(cong, el){
   const m=cong.panorama_membresia;
   const total=m.membros_ativos+(m.membros_cooperadores||0)||1;
+  const podeEd=_podeEditar(cong.id);
+
   el.innerHTML=`
     <div class="kpis c4" style="margin-top:14px">
       <div class="kpi"><div class="kn">Membros Ativos</div><div class="kv">${m.membros_ativos}</div></div>
       <div class="kpi"><div class="kn">Cooperadores</div><div class="kv">${m.membros_cooperadores||0}</div></div>
       <div class="kpi"><div class="kn">Batizados/Ano</div><div class="kv" style="color:var(--gr)">${m.batizados_ano}</div></div>
       <div class="kpi"><div class="kn">Meta ${new Date().getFullYear()}</div><div class="kv">${m.meta_membros||"—"}</div></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="ctit" style="display:flex;justify-content:space-between;align-items:center">
+        Membros Vinculados
+        <div style="display:flex;gap:8px">
+          <span id="cong-mbr-count" style="font-size:11px;color:var(--tx3);font-weight:400"></span>
+          ${podeEd?`<button class="tbt" style="font-size:10px;padding:4px 9px" onclick="abrirModalVincularMembro('${cong.id}')">+ Vincular Membro</button>`:""}
+        </div>
+      </div>
+      <div id="cong-mbr-lista" style="min-height:40px"><div style="color:var(--tx3);font-size:11px;padding:8px 0">Carregando...</div></div>
     </div>
     <div class="g2" style="margin-top:12px">
       <div class="card">
@@ -270,6 +304,27 @@ function renderTab_membresia(cong, el){
       </div>
     </div>
   `;
+
+  const membros=await _membrosLoad(cong.id);
+  const listaEl=document.getElementById("cong-mbr-lista");
+  const countEl=document.getElementById("cong-mbr-count");
+  if(!listaEl) return;
+  if(countEl) countEl.textContent=`${membros.length} cadastrado(s)`;
+  listaEl.innerHTML=membros.length===0
+    ?`<div style="color:var(--tx3);font-size:11px;padding:8px 0">Nenhum membro vinculado a esta congregação ainda.</div>`
+    :membros.map(mb=>{
+      const nome=mb.pessoas?.nome||`Membro #${mb.pessoa_id?.slice(0,6)}`;
+      const email=mb.pessoas?.email||"";
+      return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd1)">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gr);flex-shrink:0">${iniciais(nome)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:11.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(nome)}</div>
+          ${email?`<div style="font-size:10px;color:var(--tx3)">${escapeHtml(email)}</div>`:""}
+        </div>
+        <div style="flex-shrink:0">${statusBadge(mb.status||"ativo")}</div>
+        ${mb.funcao?`<div style="font-size:10px;color:var(--tx3);flex-shrink:0">${escapeHtml(mb.funcao)}</div>`:""}
+      </div>`;
+    }).join("");
 }
 
 // ── Tab 2: Cultos e Oração ────────────────────────────
@@ -573,7 +628,12 @@ window.salvarEdicaoCong=salvarEdicaoCong;
 
 function abrirModalNovoCulto(congId){
   const sel=document.getElementById("culto-cong-select");
-  if(sel) sel.innerHTML=CONG.listCongs().map(c=>`<option value="${c.id}"${c.id===congId?" selected":""}>${escapeHtml(c.identificacao.nome)}</option>`).join("");
+  if(sel){
+    const lista=_isLiderCong()
+      ? CONG.listCongs().filter(c=>String(c.id)===String(USUARIO_ATUAL?.congregacao_id))
+      : CONG.listCongs();
+    sel.innerHTML=lista.map(c=>`<option value="${c.id}"${c.id===congId?" selected":""}>${escapeHtml(c.identificacao.nome)}</option>`).join("");
+  }
   ["culto-data","culto-pregador","culto-obs"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
   ["culto-participantes","culto-visitantes","culto-decisoes"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value="0"; });
   const m=document.getElementById("modal-novo-culto"); if(m) m.style.display="flex";
@@ -611,7 +671,12 @@ window.salvarNovoCulto=salvarNovoCulto;
 
 function abrirModalNovoEvento(congId){
   const sel=document.getElementById("evento-cong-select");
-  if(sel) sel.innerHTML=CONG.listCongs().map(c=>`<option value="${c.id}"${c.id===congId?" selected":""}>${escapeHtml(c.identificacao.nome)}</option>`).join("");
+  if(sel){
+    const lista=_isLiderCong()
+      ? CONG.listCongs().filter(c=>String(c.id)===String(USUARIO_ATUAL?.congregacao_id))
+      : CONG.listCongs();
+    sel.innerHTML=lista.map(c=>`<option value="${c.id}"${c.id===congId?" selected":""}>${escapeHtml(c.identificacao.nome)}</option>`).join("");
+  }
   ["evento-titulo","evento-data","evento-desc"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
   const m=document.getElementById("modal-novo-evento"); if(m) m.style.display="flex";
 }
@@ -682,14 +747,100 @@ function salvarNovaDemandaCong(){
 }
 window.salvarNovaDemandaCong=salvarNovaDemandaCong;
 
-function abrirModalNovoPG(){ if(typeof T==="function") T("Em desenvolvimento","Módulo de PGs em implementação"); }
+// ── Pequenos Grupos ────────────────────────────────────────────
+function abrirModalNovoPG(congId){
+  _pgCongId=congId||_activeCongId;
+  ["pg-nome","pg-lider","pg-dia","pg-horario","pg-local"].forEach(id=>{const e=document.getElementById(id);if(e)e.value="";});
+  const m=document.getElementById("pg-membros");if(m)m.value="0";
+  const s=document.getElementById("pg-status");if(s)s.value="ativo";
+  const modal=document.getElementById("modal-novo-pg");if(modal)modal.style.display="flex";
+}
 window.abrirModalNovoPG=abrirModalNovoPG;
-function abrirModalNovoMinisterio(){ if(typeof T==="function") T("Em desenvolvimento","Módulo de ministérios em implementação"); }
+function fecharModalNovoPG(){ const m=document.getElementById("modal-novo-pg");if(m)m.style.display="none"; }
+window.fecharModalNovoPG=fecharModalNovoPG;
+function salvarNovoPG(){
+  const nome=document.getElementById("pg-nome")?.value?.trim();
+  const lider=document.getElementById("pg-lider")?.value?.trim();
+  if(!nome||!lider){ if(typeof T==="function") T("Campos obrigatórios","Informe nome e líder do grupo"); return; }
+  const cong=CONG.getCong(_pgCongId);
+  if(!cong) return;
+  cong.pequenos_grupos.grupos.push({
+    nome, lider,
+    dia:    document.getElementById("pg-dia")?.value||"",
+    horario:document.getElementById("pg-horario")?.value||"",
+    local:  document.getElementById("pg-local")?.value||"",
+    membros:parseInt(document.getElementById("pg-membros")?.value)||0,
+    status: document.getElementById("pg-status")?.value||"ativo"
+  });
+  cong.pequenos_grupos.total_grupos=cong.pequenos_grupos.grupos.length;
+  CONG.saveCong(cong); _sbSaveCong(cong);
+  fecharModalNovoPG();
+  if(typeof T==="function") T("Grupo criado",nome);
+  abrirCongView(_pgCongId);
+}
+window.salvarNovoPG=salvarNovoPG;
+
+// ── Ministérios ───────────────────────────────────────────────
+function abrirModalNovoMinisterio(congId){
+  _minCongId=congId||_activeCongId;
+  ["min-cong-nome","min-cong-lider"].forEach(id=>{const e=document.getElementById(id);if(e)e.value="";});
+  const m=document.getElementById("min-cong-membros");if(m)m.value="0";
+  const s=document.getElementById("min-cong-status");if(s)s.value="ativo";
+  const modal=document.getElementById("modal-novo-ministerio-cong");if(modal)modal.style.display="flex";
+}
 window.abrirModalNovoMinisterio=abrirModalNovoMinisterio;
-function abrirModalNovoLider(){ if(typeof T==="function") T("Em desenvolvimento","Cadastro de líderes em implementação"); }
+function fecharModalNovoMinistrioCong(){ const m=document.getElementById("modal-novo-ministerio-cong");if(m)m.style.display="none"; }
+window.fecharModalNovoMinistrioCong=fecharModalNovoMinistrioCong;
+function salvarNovoMinistrioCong(){
+  const nome=document.getElementById("min-cong-nome")?.value?.trim();
+  if(!nome){ if(typeof T==="function") T("Campo obrigatório","Informe o nome do ministério"); return; }
+  const cong=CONG.getCong(_minCongId);
+  if(!cong) return;
+  cong.ministerios.lista.push({
+    nome,
+    lider:  document.getElementById("min-cong-lider")?.value?.trim()||"",
+    membros:parseInt(document.getElementById("min-cong-membros")?.value)||0,
+    status: document.getElementById("min-cong-status")?.value||"ativo"
+  });
+  CONG.saveCong(cong); _sbSaveCong(cong);
+  fecharModalNovoMinistrioCong();
+  if(typeof T==="function") T("Ministério criado",nome);
+  abrirCongView(_minCongId);
+}
+window.salvarNovoMinistrioCong=salvarNovoMinistrioCong;
+
+// ── Liderança ─────────────────────────────────────────────────
+function abrirModalNovoLider(){ if(typeof T==="function") T("Em desenvolvimento","Edição de liderança em breve"); }
 window.abrirModalNovoLider=abrirModalNovoLider;
-function abrirModalNovoDesafio(){ if(typeof T==="function") T("Em desenvolvimento","Mapeamento de desafios em implementação"); }
+
+// ── Desafios ──────────────────────────────────────────────────
+function abrirModalNovoDesafio(congId){
+  _desCongId=congId||_activeCongId;
+  ["des-titulo","des-descricao"].forEach(id=>{const e=document.getElementById(id);if(e)e.value="";});
+  const p=document.getElementById("des-prioridade");if(p)p.value="Média";
+  const s=document.getElementById("des-status");if(s)s.value="identificado";
+  const modal=document.getElementById("modal-novo-desafio");if(modal)modal.style.display="flex";
+}
 window.abrirModalNovoDesafio=abrirModalNovoDesafio;
+function fecharModalNovoDesafio(){ const m=document.getElementById("modal-novo-desafio");if(m)m.style.display="none"; }
+window.fecharModalNovoDesafio=fecharModalNovoDesafio;
+function salvarNovoDesafio(){
+  const titulo=document.getElementById("des-titulo")?.value?.trim();
+  if(!titulo){ if(typeof T==="function") T("Campo obrigatório","Informe o título do desafio"); return; }
+  const cong=CONG.getCong(_desCongId);
+  if(!cong) return;
+  cong.desafios.lista.push({
+    titulo,
+    descricao: document.getElementById("des-descricao")?.value?.trim()||"",
+    prioridade:document.getElementById("des-prioridade")?.value||"Média",
+    status:    document.getElementById("des-status")?.value||"identificado"
+  });
+  CONG.saveCong(cong); _sbSaveCong(cong);
+  fecharModalNovoDesafio();
+  if(typeof T==="function") T("Desafio registrado",titulo);
+  abrirCongView(_desCongId);
+}
+window.salvarNovoDesafio=salvarNovoDesafio;
 
 // ── Financeiro: lançamentos por congregação ────────────────────
 let _lancTipo = "receita";
@@ -830,6 +981,184 @@ async function salvarNovoLancamento() {
   }
 }
 window.salvarNovoLancamento = salvarNovoLancamento;
+
+// ── Estado dos novos contextos ────────────────────────
+let _pgCongId=null, _minCongId=null, _desCongId=null;
+
+// ── Vincular Membro ────────────────────────────────────────────
+function abrirModalVincularMembro(congId){
+  if(typeof T==="function") T("Em breve","Vinculação de membros em implementação");
+}
+window.abrirModalVincularMembro=abrirModalVincularMembro;
+
+// ── Tab 9: Agenda ─────────────────────────────────────
+async function _agendaLoad(congId){
+  if(!congId) return [];
+  try{
+    const url=`${apiBaseUrl()}/rest/v1/congregacao_agenda?congregacao_id=eq.${encodeURIComponent(congId)}&deleted_at=is.null&order=data.asc&limit=200`;
+    const r=await fetch(url,{headers:apiHeaders()});
+    if(!r.ok) return [];
+    return await r.json();
+  }catch(e){ return []; }
+}
+
+async function renderTab_agenda(cong, el){
+  const podeEd=_podeEditar(cong.id);
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;margin-bottom:12px">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--tx1)">Agenda da Congregação</div>
+        <div style="font-size:11px;color:var(--tx3)">Próximos eventos e programações</div>
+      </div>
+      ${podeEd?`<button class="tbt pri" onclick="abrirModalNovoAgendaCong('${cong.id}')">+ Novo Evento</button>`:""}
+    </div>
+    <div class="card" id="cong-agenda-lista"><div style="color:var(--tx3);font-size:11px;padding:8px 0">Carregando...</div></div>
+  `;
+  const items=await _agendaLoad(cong.id);
+  const listaEl=document.getElementById("cong-agenda-lista");
+  if(!listaEl) return;
+  const hoje=new Date().toISOString().slice(0,10);
+  const proximos=items.filter(i=>i.data>=hoje).slice(0,30);
+  const passados =items.filter(i=>i.data<hoje).slice(0,10);
+  const renderItem=(item,passado)=>`
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:9px 0;border-bottom:1px solid var(--bd1);${passado?"opacity:.55":""}">
+      <div style="width:48px;text-align:center;flex-shrink:0">
+        <div style="font-size:12px;font-weight:700;color:var(--gr)">${fmtData(item.data).split(" ").slice(0,2).join(" ")}</div>
+        <div style="font-size:9px;color:var(--tx3)">${fmtData(item.data).split(" ")[2]||""}</div>
+        ${item.hora?`<div style="font-size:10px;color:var(--tx3)">${item.hora.slice(0,5)}</div>`:""}
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11.5px;font-weight:700;color:var(--tx1)">${escapeHtml(item.titulo)}</div>
+        <div style="font-size:10px;color:var(--tx3)">${escapeHtml(item.tipo||"")}${item.descricao?" — "+escapeHtml(item.descricao.slice(0,80)):""}</div>
+      </div>
+      ${podeEd&&!passado?`<button class="tbt" style="font-size:9px;padding:3px 7px;color:var(--rose)" onclick="excluirAgendaCong('${item.id}','${cong.id}')">Remover</button>`:""}
+    </div>`;
+  listaEl.innerHTML=(proximos.length===0&&passados.length===0)
+    ?`<div style="color:var(--tx3);font-size:11px;padding:8px 0">Nenhum evento na agenda</div>`
+    :[
+      proximos.length?proximos.map(i=>renderItem(i,false)).join(""):"",
+      passados.length?`<div style="font-size:10px;font-weight:700;color:var(--tx3);padding:10px 0 4px">Passados</div>`+passados.map(i=>renderItem(i,true)).join(""):""
+    ].join("");
+}
+
+let _agCongId=null;
+function abrirModalNovoAgendaCong(congId){
+  _agCongId=congId||_activeCongId;
+  ["ag-titulo","ag-descricao"].forEach(id=>{const e=document.getElementById(id);if(e)e.value="";});
+  const d=document.getElementById("ag-data");if(d)d.value=new Date().toISOString().slice(0,10);
+  const h=document.getElementById("ag-hora");if(h)h.value="";
+  const t=document.getElementById("ag-tipo");if(t)t.value="Culto";
+  const m=document.getElementById("modal-novo-agenda-cong");if(m)m.style.display="flex";
+}
+window.abrirModalNovoAgendaCong=abrirModalNovoAgendaCong;
+function fecharModalNovoAgendaCong(){ const m=document.getElementById("modal-novo-agenda-cong");if(m)m.style.display="none"; }
+window.fecharModalNovoAgendaCong=fecharModalNovoAgendaCong;
+async function salvarNovoAgendaCong(){
+  const titulo=document.getElementById("ag-titulo")?.value?.trim();
+  const data=document.getElementById("ag-data")?.value;
+  if(!titulo||!data){ if(typeof T==="function") T("Campos obrigatórios","Informe título e data"); return; }
+  const payload={
+    congregacao_id: _agCongId,
+    titulo, data,
+    hora:     document.getElementById("ag-hora")?.value||null,
+    tipo:     document.getElementById("ag-tipo")?.value||"Evento",
+    descricao:document.getElementById("ag-descricao")?.value?.trim()||""
+  };
+  try{
+    const r=await fetch(`${apiBaseUrl()}/rest/v1/congregacao_agenda`,{
+      method:"POST", headers:apiHeaders({"Prefer":"return=minimal"}), body:JSON.stringify(payload)
+    });
+    if(!r.ok) throw new Error(await r.text());
+    fecharModalNovoAgendaCong();
+    if(typeof T==="function") T("Evento adicionado",titulo);
+    const cong=CONG.getCong(_agCongId);
+    if(cong) renderTab_agenda(cong,document.getElementById("cong-tab-content"));
+  }catch(e){ if(typeof T==="function") T("Erro ao salvar",e.message); }
+}
+window.salvarNovoAgendaCong=salvarNovoAgendaCong;
+async function excluirAgendaCong(itemId, congId){
+  if(!confirm("Remover este evento da agenda?")) return;
+  try{
+    const r=await fetch(`${apiBaseUrl()}/rest/v1/congregacao_agenda?id=eq.${itemId}`,{
+      method:"PATCH", headers:apiHeaders({"Prefer":"return=minimal"}),
+      body:JSON.stringify({deleted_at:new Date().toISOString()})
+    });
+    if(!r.ok) throw new Error(await r.text());
+    if(typeof T==="function") T("Removido","Evento excluído da agenda");
+    const cong=CONG.getCong(congId);
+    if(cong) renderTab_agenda(cong,document.getElementById("cong-tab-content"));
+  }catch(e){ if(typeof T==="function") T("Erro",e.message); }
+}
+window.excluirAgendaCong=excluirAgendaCong;
+
+// ── Tab 10: Departamentos ─────────────────────────────
+function renderTab_departamentos(cong, el){
+  const lista=cong.departamentos?.lista||[];
+  const podeEd=_podeEditar(cong.id);
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;margin-bottom:12px">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--tx1)">${lista.length} Departamento(s)</div>
+        <div style="font-size:11px;color:var(--tx3)">${lista.filter(d=>d.status==="ativo").length} ativo(s)</div>
+      </div>
+      ${podeEd?`<button class="tbt pri" onclick="abrirModalNovoDeptCong('${cong.id}')">+ Novo Departamento</button>`:""}
+    </div>
+    <div class="card">
+      ${lista.length===0?`<div style="color:var(--tx3);font-size:11px">Nenhum departamento cadastrado</div>`:
+        lista.map((d,i)=>`
+          <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--bd1)">
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--acc);flex-shrink:0">${iniciais(d.lider||d.nome)}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:700;color:var(--tx1)">${escapeHtml(d.nome)}</div>
+              ${d.lider?`<div style="font-size:10.5px;color:var(--tx3)">Responsável: ${escapeHtml(d.lider)}</div>`:""}
+              ${d.desc?`<div style="font-size:10px;color:var(--tx3);margin-top:2px">${escapeHtml(d.desc.slice(0,100))}</div>`:""}
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+              ${statusBadge(d.status||"ativo")}
+              ${podeEd?`<button class="tbt" style="font-size:9px;padding:3px 7px;color:var(--rose)" onclick="excluirDeptCong(${i},'${cong.id}')">Remover</button>`:""}
+            </div>
+          </div>`).join("")}
+    </div>
+  `;
+}
+
+let _deptCongId=null;
+function abrirModalNovoDeptCong(congId){
+  _deptCongId=congId||_activeCongId;
+  ["dept-nome","dept-lider","dept-desc"].forEach(id=>{const e=document.getElementById(id);if(e)e.value="";});
+  const s=document.getElementById("dept-status");if(s)s.value="ativo";
+  const m=document.getElementById("modal-novo-dept-cong");if(m)m.style.display="flex";
+}
+window.abrirModalNovoDeptCong=abrirModalNovoDeptCong;
+function fecharModalNovoDeptCong(){ const m=document.getElementById("modal-novo-dept-cong");if(m)m.style.display="none"; }
+window.fecharModalNovoDeptCong=fecharModalNovoDeptCong;
+function salvarNovoDeptCong(){
+  const nome=document.getElementById("dept-nome")?.value?.trim();
+  if(!nome){ if(typeof T==="function") T("Campo obrigatório","Informe o nome do departamento"); return; }
+  const cong=CONG.getCong(_deptCongId);
+  if(!cong) return;
+  if(!cong.departamentos) cong.departamentos={lista:[]};
+  cong.departamentos.lista.push({
+    nome,
+    lider: document.getElementById("dept-lider")?.value?.trim()||"",
+    desc:  document.getElementById("dept-desc")?.value?.trim()||"",
+    status:document.getElementById("dept-status")?.value||"ativo"
+  });
+  CONG.saveCong(cong); _sbSaveCong(cong);
+  fecharModalNovoDeptCong();
+  if(typeof T==="function") T("Departamento criado",nome);
+  abrirCongView(_deptCongId);
+}
+window.salvarNovoDeptCong=salvarNovoDeptCong;
+function excluirDeptCong(idx, congId){
+  if(!confirm("Remover este departamento?")) return;
+  const cong=CONG.getCong(congId);
+  if(!cong) return;
+  cong.departamentos.lista.splice(idx,1);
+  CONG.saveCong(cong); _sbSaveCong(cong);
+  abrirCongView(congId);
+}
+window.excluirDeptCong=excluirDeptCong;
 
 // ── Hook no go() ──────────────────────────────────────
 (function(){

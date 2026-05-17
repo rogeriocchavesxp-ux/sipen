@@ -157,4 +157,115 @@
     </div>
   </div>
 
+  <!-- ════ MODAIS OPERACIONAIS DO LÍDER ═══════════════════════════ -->
+
+  <div class="mo" id="modal-novo-pg" onclick="if(event.target===this)fecharModalNovoPG()">
+    <div class="md" style="width:460px">
+      <div class="md-t">Novo Pequeno Grupo</div>
+      <div class="md-s">Cadastre um pequeno grupo da congregação</div>
+      <div class="fg"><label class="flb">Nome do Grupo *</label><input class="fi2" id="pg-nome" placeholder="Ex: PG Norte"></div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Líder *</label><input class="fi2" id="pg-lider" placeholder="Nome do líder"></div>
+        <div class="fg"><label class="flb">Dia da Semana</label><input class="fi2" id="pg-dia" placeholder="Ex: Quinta-feira"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Horário</label><input class="fi2" id="pg-horario" placeholder="Ex: 19h30"></div>
+        <div class="fg"><label class="flb">Local</label><input class="fi2" id="pg-local" placeholder="Endereço ou nome do local"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Participantes</label><input class="fi2" type="number" id="pg-membros" placeholder="0" min="0"></div>
+        <div class="fg"><label class="flb">Status</label>
+          <select class="fi2" id="pg-status"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select>
+        </div>
+      </div>
+      <div class="ma">
+        <button class="btn" onclick="fecharModalNovoPG()">Cancelar</button>
+        <button class="btn btn-p" onclick="salvarNovoPG()">Cadastrar Grupo</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mo" id="modal-novo-ministerio-cong" onclick="if(event.target===this)fecharModalNovoMinistrioCong()">
+    <div class="md" style="width:440px">
+      <div class="md-t">Novo Ministério</div>
+      <div class="md-s">Ministério local da congregação</div>
+      <div class="fg"><label class="flb">Nome do Ministério *</label><input class="fi2" id="min-cong-nome" placeholder="Ex: Ministério de Louvor"></div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Líder</label><input class="fi2" id="min-cong-lider" placeholder="Nome do líder"></div>
+        <div class="fg"><label class="flb">Membros</label><input class="fi2" type="number" id="min-cong-membros" placeholder="0" min="0"></div>
+      </div>
+      <div class="fg"><label class="flb">Status</label>
+        <select class="fi2" id="min-cong-status"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select>
+      </div>
+      <div class="ma">
+        <button class="btn" onclick="fecharModalNovoMinistrioCong()">Cancelar</button>
+        <button class="btn btn-p" onclick="salvarNovoMinistrioCong()">Cadastrar Ministério</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mo" id="modal-novo-desafio" onclick="if(event.target===this)fecharModalNovoDesafio()">
+    <div class="md" style="width:460px">
+      <div class="md-t">Novo Desafio</div>
+      <div class="md-s">Mapeie um desafio ou necessidade da congregação</div>
+      <div class="fg"><label class="flb">Título *</label><input class="fi2" id="des-titulo" placeholder="Descreva o desafio"></div>
+      <div class="fg"><label class="flb">Descrição</label><textarea class="fi2" id="des-descricao" rows="2" placeholder="Detalhes..."></textarea></div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Prioridade</label>
+          <select class="fi2" id="des-prioridade"><option>Alta</option><option selected>Média</option><option>Baixa</option></select>
+        </div>
+        <div class="fg"><label class="flb">Status</label>
+          <select class="fi2" id="des-status">
+            <option value="identificado">Identificado</option><option value="em análise">Em análise</option>
+            <option value="em andamento">Em andamento</option><option value="planejado">Planejado</option>
+          </select>
+        </div>
+      </div>
+      <div class="ma">
+        <button class="btn" onclick="fecharModalNovoDesafio()">Cancelar</button>
+        <button class="btn btn-p" onclick="salvarNovoDesafio()">Salvar Desafio</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mo" id="modal-novo-agenda-cong" onclick="if(event.target===this)fecharModalNovoAgendaCong()">
+    <div class="md" style="width:460px">
+      <div class="md-t">Novo Evento na Agenda</div>
+      <div class="md-s">Adicione um evento à agenda da congregação</div>
+      <div class="fg"><label class="flb">Título *</label><input class="fi2" id="ag-titulo" placeholder="Ex: Culto de Louvor"></div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Data *</label><input class="fi2" type="date" id="ag-data"></div>
+        <div class="fg"><label class="flb">Horário</label><input class="fi2" type="time" id="ag-hora"></div>
+      </div>
+      <div class="fg"><label class="flb">Tipo</label>
+        <select class="fi2" id="ag-tipo">
+          <option>Culto</option><option>Reunião</option><option>Evento Especial</option>
+          <option>Evangelismo</option><option>Treinamento</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="fg"><label class="flb">Descrição</label><textarea class="fi2" id="ag-descricao" rows="2" placeholder="Detalhes do evento..."></textarea></div>
+      <div class="ma">
+        <button class="btn" onclick="fecharModalNovoAgendaCong()">Cancelar</button>
+        <button class="btn btn-p" onclick="salvarNovoAgendaCong()">Salvar na Agenda</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mo" id="modal-novo-dept-cong" onclick="if(event.target===this)fecharModalNovoDeptCong()">
+    <div class="md" style="width:440px">
+      <div class="md-t">Novo Departamento</div>
+      <div class="md-s">Departamento ou grupo local da congregação</div>
+      <div class="fg"><label class="flb">Nome *</label><input class="fi2" id="dept-nome" placeholder="Ex: Departamento Infantil"></div>
+      <div class="fg"><label class="flb">Responsável</label><input class="fi2" id="dept-lider" placeholder="Nome do responsável"></div>
+      <div class="fg"><label class="flb">Descrição</label><textarea class="fi2" id="dept-desc" rows="2" placeholder="Função ou atividades..."></textarea></div>
+      <div class="fg"><label class="flb">Status</label>
+        <select class="fi2" id="dept-status"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select>
+      </div>
+      <div class="ma">
+        <button class="btn" onclick="fecharModalNovoDeptCong()">Cancelar</button>
+        <button class="btn btn-p" onclick="salvarNovoDeptCong()">Cadastrar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ════ ÁREA DO MEMBRO ═══════════════════════════ -->
