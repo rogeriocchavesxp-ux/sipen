@@ -403,7 +403,7 @@ const CONG = (function(){
       `${_sbBase()}/rest/v1/congregacoes?select=*&order=nome.asc`,
       { method:"GET", headers:_sbHdrs() }
     );
-    if(!cRes.ok) throw new Error(`Congregações: HTTP ${cRes.status}`);
+    if(!cRes.ok) return false; // sem permissão ou tabela inexistente — não loga
     const rows = await cRes.json();
 
     if(!Array.isArray(rows) || rows.length === 0){

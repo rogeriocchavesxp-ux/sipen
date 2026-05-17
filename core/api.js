@@ -429,11 +429,10 @@ async function testApiSilently() {
 async function loadKPIs() {
   if (!SUPABASE_URL) return;
   try {
-    const [membros, demandas, financeiro, pgs] = await Promise.all([
+    const [membros, demandas, financeiro] = await Promise.all([
       apiRead("MEMBROS").catch(()=>[]),
       apiRead("DEMANDAS").catch(()=>[]),
       apiRead("FINANCEIRO").catch(()=>[]),
-      apiRead("PGS").catch(()=>[])
     ]);
 
     const membrosAtivos   = membros.filter(r => String(r.status || "").toLowerCase() === "ativo").length || membros.length;
@@ -441,7 +440,7 @@ async function loadKPIs() {
     const comungantes     = membrosAtivosArr.filter(r => (r.tipo_membro || "COMUNGANTE") === "COMUNGANTE").length;
     const naoComungantes  = membrosAtivosArr.filter(r => r.tipo_membro === "NAO_COMUNGANTE").length;
     const demandasAbertas = demandas.filter(r => !["concluído","concluido","fechado","cancelado"].includes(String(r.status||"").toLowerCase())).length;
-    const pgsAtivos = pgs.filter(r => String(r.status || "").toLowerCase() === "ativo").length || pgs.length;
+    const pgsAtivos = 0; // tabela pgs sujeita a permissões — KPI omitido
     const saldo = financeiro.reduce((acc, row) => {
       const valor = Number(String(row.valor ?? 0).replace(/\./g, "").replace(",", ".")) || 0;
       const tipo = String(row.tipo || "").toLowerCase();

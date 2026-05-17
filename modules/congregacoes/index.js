@@ -754,6 +754,6 @@ CONG.syncFromSupabase()
       if(c) renderCongView(c);
     }
   })
-  .catch(e=>console.warn("CONG syncFromSupabase:", e.message));
+  .catch(() => {});
 
 })();
