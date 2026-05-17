@@ -222,9 +222,10 @@ const CONG = (function(){
   }
   function _sbBase(){ return SUPABASE_URL.trim().replace(/\/$/,""); }
   function _sbHdrs(extra){
+    const tok = (typeof sipenToken === "function" && sipenToken()) ? sipenToken() : SUPABASE_ANON_KEY;
     return Object.assign({
       "apikey":        SUPABASE_ANON_KEY,
-      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+      "Authorization": `Bearer ${tok}`,
       "Content-Type":  "application/json"
     }, extra||{});
   }

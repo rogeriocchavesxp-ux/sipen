@@ -140,10 +140,22 @@ async function abrirCongView(id){
   _activeCongId=id;
   _activeTab=0;
   buildCongMenu();
-  const cong=CONG.getCong(id);
-  if(!cong) return;
-  if(typeof CRUMB!=="undefined") CRUMB["cong-ver"]=["cong","Congregações",cong.identificacao.nome];
+  let cong=CONG.getCong(id);
+  if(!cong){
+    try{ await CONG.syncFromSupabase(); }catch(e){}
+    cong=CONG.getCong(id);
+  }
   if(typeof go==="function") await go("cong-ver");
+  if(!cong){
+    const el=document.getElementById("v-cong-ver");
+    if(el) el.innerHTML=`<div class="ct" style="text-align:center;padding:60px;color:var(--tx3)">
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--tx1)">Não foi possível carregar a congregação</div>
+      <div style="font-size:11px;margin-bottom:16px">Verifique sua conexão ou contate o administrador.</div>
+      <button class="tbt pri" onclick="abrirCongView('${id}')">Tentar novamente</button>
+    </div>`;
+    return;
+  }
+  if(typeof CRUMB!=="undefined") CRUMB["cong-ver"]=["cong","Congregações",cong.identificacao.nome];
   renderCongView(cong);
 }
 window.abrirCongView=abrirCongView;
