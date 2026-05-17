@@ -202,6 +202,17 @@ async function go(id){
   document.getElementById("band").style.setProperty("--mc",MC[mod]||"var(--gmd)");
   document.querySelectorAll(".l1").forEach(e=>e.classList.remove("on"));
   if(id==="geral")document.getElementById("l1-geral").classList.add("on");
+  // Jurídico agora está dentro de Departamentos — garante que ms-min está aberto
+  if(mod==="jur"){
+    const minSub=document.getElementById("ms-min");
+    const minHdr=document.querySelector("#mw-min .mhdr");
+    if(minSub&&!minSub.classList.contains("open")){
+      document.querySelectorAll(".msub").forEach(s=>s.classList.remove("open"));
+      document.querySelectorAll(".mhdr").forEach(h=>h.classList.remove("open"));
+      minSub.classList.add("open");
+      if(minHdr)minHdr.classList.add("open");
+    }
+  }
   document.querySelectorAll(".si").forEach(e=>{
     e.classList.remove("on");
     const fn=e.getAttribute("onclick");
