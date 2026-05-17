@@ -135,7 +135,8 @@
     try {
       const { data, error } = await sb()
         .from("congregacoes")
-        .select("id, nome")
+        .select("id, nome, status")
+        .in("status", ["ativa", "plantio"])
         .order("nome");
 
       if (error) throw error;
@@ -148,9 +149,9 @@
     if (!sel) return;
 
     sel.innerHTML =
-      '<option value="">Selecione…</option>' +
+      '<option value="">IPPenha — Sede (sem congregação)</option>' +
       _congregacoes
-        .map(c => `<option value="${c.id}">${c.nome}</option>`)
+        .map(c => `<option value="${c.id}">${escapeHtml(c.nome)}</option>`)
         .join("");
   }
 

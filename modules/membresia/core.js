@@ -172,8 +172,6 @@ async function listarMembros(containerId, countId, filtroFixo = {}, somenteInati
     const cnt = document.getElementById(countId);
     if (cnt) cnt.textContent = `· ${rows.length}`;
     renderMembrosTable(rows, containerId);
-    // popular dropdown de congregações (se existir no contexto)
-    _popularSelectCongregacoes(rows);
     return rows;
   } catch(e) {
     const el2 = document.getElementById(containerId);
