@@ -418,6 +418,8 @@ function _aplicarModoCongregacao() {
   document.body.classList.add("modo-congregacao");
   const btn = document.getElementById("btn-trocar-area");
   if (btn) btn.style.display = "none";
+  const btnNovaCong = document.getElementById("btn-nova-cong");
+  if (btnNovaCong) btnNovaCong.style.display = "none";
 }
 
 function _aplicarModoMembro() {
@@ -494,6 +496,25 @@ async function entrarNoSistema() {
   if (typeof window.demAtualizarLabels === "function") window.demAtualizarLabels();
   if (typeof window.aplicarMenuDemandasPorPerfil === "function") window.aplicarMenuDemandasPorPerfil();
 
+  // Usuário de congregação: ambiente totalmente isolado — nunca passa pelo rotaSalva nem pelo dashboard geral
+  if (_isCongregacaoUser()) {
+    _aplicarModoCongregacao();
+    _expandirSidebar("cong");
+    await go("cong-ver");
+    const congId = USUARIO_ATUAL.congregacao_id;
+    if (congId) {
+      try { if (typeof CONG !== "undefined") await CONG.syncFromSupabase(); } catch(e) {}
+      if (typeof window.buildCongMenu === "function") window.buildCongMenu();
+      if (typeof window.abrirCongView === "function") window.abrirCongView(congId);
+    } else {
+      const el = document.getElementById("v-cong-ver");
+      if (el) el.innerHTML = `<div class="ct" style="text-align:center;padding:60px;color:var(--tx3);font-size:13px">Congregação não vinculada ao seu perfil.<br><span style="font-size:11px">Contate o administrador.</span></div>`;
+    }
+    T(`Bem-vindo, ${USUARIO_ATUAL.nome.split(" ")[0]}! ⛪`,
+      `${PERFIS[USUARIO_ATUAL.perfil]?.nome || "Congregação"}`);
+    return;
+  }
+
   const rotaSalva = _lerRotaSalva();
   if (rotaSalva) {
     // F5 ou rota salva: restaura sem mostrar a tela de escolha
@@ -503,19 +524,6 @@ async function entrarNoSistema() {
     await go(rotaSalva);
     T(`Bem-vindo, ${USUARIO_ATUAL.nome.split(" ")[0]}! 👋`,
       `Perfil: ${PERFIS[USUARIO_ATUAL.perfil]?.nome || USUARIO_ATUAL.perfil}`);
-    return;
-  }
-
-  // Usuário de congregação: vai direto para a sua congregação (ambiente isolado)
-  if (_isCongregacaoUser()) {
-    _aplicarModoCongregacao();
-    _expandirSidebar("cong");
-    await go("cong-dash");
-    if (USUARIO_ATUAL.congregacao_id && typeof window.abrirCongView === "function") {
-      window.abrirCongView(USUARIO_ATUAL.congregacao_id);
-    }
-    T(`Bem-vindo, ${USUARIO_ATUAL.nome.split(" ")[0]}! ⛪`,
-      `${PERFIS[USUARIO_ATUAL.perfil]?.nome || "Congregação"}`);
     return;
   }
 

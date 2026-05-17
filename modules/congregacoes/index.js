@@ -61,7 +61,11 @@ function buildCongMenu(){
   const msub=document.getElementById("ms-cong");
   if(!msub) return;
   msub.querySelectorAll(".si-cong-item,.sdiv-cong").forEach(el=>el.remove());
-  const congs=CONG.listCongs();
+  const allCongs=CONG.listCongs();
+  // LIDER_CONGREGACAO enxerga apenas a própria congregação
+  const congs=_isLiderCong()
+    ?allCongs.filter(c=>String(c.id)===String(USUARIO_ATUAL?.congregacao_id))
+    :allCongs;
   if(congs.length===0) return;
   const divider=document.createElement("div");
   divider.className="sdiv sdiv-cong";
@@ -1164,15 +1168,24 @@ window.excluirDeptCong=excluirDeptCong;
 (function(){
   const _orig=window.go;
   window.go=async function(id){
-    // Bloqueio de rota para usuários de congregação
     const perfil=typeof USUARIO_ATUAL!=="undefined"?USUARIO_ATUAL?.perfil:null;
     const isCongUser=perfil==="LIDER_CONGREGACAO"||perfil==="MEMBRO_CONGREGACAO";
-    if(isCongUser&&!id.startsWith("cong")){
-      if(typeof T==="function") T("Acesso restrito","Sem permissão para este módulo");
-      return;
+    if(isCongUser){
+      if(id==="cong-dash"){
+        // Nunca mostrar o dashboard geral — redireciona para a própria congregação
+        const congId=USUARIO_ATUAL?.congregacao_id;
+        if(congId) _activeCongId=congId;
+        await _orig("cong-ver");
+        return;
+      }
+      if(!id.startsWith("cong")){
+        if(typeof T==="function") T("Acesso restrito","Sem permissão para este módulo");
+        return;
+      }
     }
     await _orig(id);
-    if(id==="cong-dash") setTimeout(renderDashboardGeral,0);
+    // dashboard geral: apenas para não-congregation users
+    if(id==="cong-dash"&&!isCongUser) setTimeout(renderDashboardGeral,0);
   };
 })();
 
@@ -1186,7 +1199,8 @@ function _sbSaveCong(cong){
 // ── Init local (sem chamada à API — evita 401 para usuários sem permissão) ─
 buildCongMenu();
 try{
-  if(document.getElementById("v-cong-dash")?.classList.contains("on")) renderDashboardGeral();
+  // Dashboard geral: apenas para perfis administrativos
+  if(!_isLiderCong() && document.getElementById("v-cong-dash")?.classList.contains("on")) renderDashboardGeral();
 }catch(e){}
 
 // Sync remoto: chamado sob demanda ao navegar para a tela (ver go() em auth.js)
@@ -1195,7 +1209,8 @@ window._congSyncOnNav = function(){
     .then(ok=>{
       if(!ok) return;
       buildCongMenu();
-      if(document.getElementById("v-cong-dash")?.classList.contains("on")) renderDashboardGeral();
+      // Dashboard geral: apenas para perfis administrativos
+      if(!_isLiderCong() && document.getElementById("v-cong-dash")?.classList.contains("on")) renderDashboardGeral();
       if(_activeCongId){
         const c=CONG.getCong(_activeCongId);
         if(c) renderCongView(c);
