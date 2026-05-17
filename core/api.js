@@ -236,7 +236,8 @@ const VIEW_AUTOLOAD = {
   "min-vol":       { tab:"MEMBROS",       id:"vol-list" },
   "pgs-visitantes":{ tab:"VISITANTES",    id:"pgs-vis-list" },
   "admin-facial":   { fn: () => typeof afCarregar === 'function' && afCarregar() },
-  "config-usuarios":{ fn: () => carregarUsuarios() },
+  "config-usuarios":  { fn: () => carregarUsuarios() },
+  "config-whatsapp":  { fn: () => typeof WA_CFG !== "undefined" && WA_CFG.refresh() },
   "min-adm": { fn: () => typeof DEPT_ADM !== "undefined" && DEPT_ADM.load() },
   "min-com": { fn: () => typeof minComLoad === "function" && minComLoad() },
 };

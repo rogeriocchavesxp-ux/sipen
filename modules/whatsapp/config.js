@@ -203,7 +203,7 @@ const WA_CFG = (function(){
       <div style="background:var(--bg2);border:1px solid var(--bd2);border-radius:8px;padding:12px">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
           <div style="flex:1;min-width:0">
-            <div style="font-size:12.5px;font-weight:700;color:var(--tx1);margin-bottom:4px">${_esc(r.nome||r.chave)}</div>
+            <div style="font-size:12.5px;font-weight:700;color:var(--tx1);margin-bottom:4px">${_esc(r.titulo||r.nome||r.chave)}</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
               <span style="font-size:10px;background:var(--bd2);padding:1px 6px;border-radius:4px;color:var(--tx3);font-family:var(--mono)">${_esc(r.chave)}</span>
               <span style="font-size:10px;background:var(--bd2);padding:1px 6px;border-radius:4px;color:var(--tx3)">${_esc(r.modulo||"GERAL")}</span>
@@ -236,7 +236,7 @@ const WA_CFG = (function(){
     document.getElementById("wa-tpl-modal-titulo").textContent = tpl ? "Editar Template" : "Novo Template";
     document.getElementById("wa-tpl-id").value    = tpl?.id    || "";
     document.getElementById("wa-tpl-chave").value = tpl?.chave || "";
-    document.getElementById("wa-tpl-nome").value  = tpl?.nome  || "";
+    document.getElementById("wa-tpl-nome").value  = tpl?.titulo || tpl?.nome || "";
     document.getElementById("wa-tpl-corpo").value = tpl?.corpo || "";
     const sel = document.getElementById("wa-tpl-modulo");
     if(sel && tpl?.modulo) sel.value = tpl.modulo;
@@ -256,7 +256,7 @@ const WA_CFG = (function(){
   async function salvarTemplate(){
     const id     = document.getElementById("wa-tpl-id")?.value    || "";
     const chave  = (document.getElementById("wa-tpl-chave")?.value || "").trim().toUpperCase().replace(/\s+/g,"_");
-    const nome   = (document.getElementById("wa-tpl-nome")?.value  || "").trim();
+    const titulo = (document.getElementById("wa-tpl-nome")?.value  || "").trim();
     const corpo  = (document.getElementById("wa-tpl-corpo")?.value || "").trim();
     const modulo = document.getElementById("wa-tpl-modulo")?.value || "COMUNICACAO";
 
@@ -268,12 +268,12 @@ const WA_CFG = (function(){
     if(id){
       await _fetch(`/rest/v1/whatsapp_templates?id=eq.${encodeURIComponent(id)}`, {
         method: "PATCH",
-        body: JSON.stringify({ chave, nome, corpo, modulo }),
+        body: JSON.stringify({ chave, titulo, corpo, modulo }),
       });
     } else {
       await _fetch("/rest/v1/whatsapp_templates", {
         method: "POST",
-        body: JSON.stringify({ chave, nome, corpo, modulo, ativo: true }),
+        body: JSON.stringify({ chave, titulo, corpo, modulo, ativo: true }),
       });
     }
 

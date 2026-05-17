@@ -12,12 +12,13 @@ const WA = (function(){
   /* ── Helpers internos ──────────────────────────────── */
 
   function _jwt(){
-    // Reutiliza o token da sessão Supabase ativa
+    if(typeof sipenToken === "function"){
+      const t = sipenToken();
+      return (t && t !== (typeof SUPABASE_ANON_KEY !== "undefined" ? SUPABASE_ANON_KEY : "")) ? t : null;
+    }
     try{
-      const key = Object.keys(localStorage).find(k => k.includes("supabase.auth.token") || k.includes("sb-"));
-      if(!key) return null;
-      const s = JSON.parse(localStorage.getItem(key) || "{}");
-      return s?.access_token || s?.currentSession?.access_token || null;
+      const raw = localStorage.getItem("sipen_auth_session");
+      return raw ? (JSON.parse(raw)?.access_token || null) : null;
     }catch{ return null; }
   }
 
