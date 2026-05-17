@@ -60,7 +60,7 @@
 .login-logo {
   text-align:center;margin-bottom:24px;
 }
-.login-logo .ls { font-size:22px;font-weight:800;color:var(--tx1);letter-spacing:.06em }
+.login-logo-img { height:52px;width:auto;filter:brightness(1.4);display:block;margin:0 auto 6px }
 .login-logo .lc { font-size:10px;color:var(--tx3);margin-top:3px;letter-spacing:.04em }
 .login-field { margin-bottom:14px }
 .login-field label { display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);margin-bottom:5px;font-weight:600 }
@@ -133,10 +133,9 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
   border-bottom:1px solid var(--bd1);
 }
 .sb-logo img{
-  width:28px;height:28px;
+  height:28px;width:auto;
   object-fit:contain;
-  filter:brightness(0) invert(1) sepia(1) saturate(3) hue-rotate(90deg) brightness(0.95);
-  opacity:0.88;
+  filter:brightness(1.4);
   flex-shrink:0;
 }
 .sb-brand{display:flex;flex-direction:column;min-width:0}
@@ -1326,10 +1325,12 @@ html[data-theme="light"] {
 /* Scrollbar */
 html[data-theme="light"] ::-webkit-scrollbar-thumb { background: #c0c8d4 }
 
-/* Logo: filtro verde-escuro sobre fundo branco */
+/* Logo IPPenha: cores naturais no tema claro */
 html[data-theme="light"] .sb-logo img {
-  filter: brightness(0) sepia(1) saturate(3) hue-rotate(92deg) brightness(0.6);
-  opacity: 1;
+  filter: none;
+}
+html[data-theme="light"] .login-logo-img {
+  filter: none;
 }
 
 /* Sidebar nav — bullets e hover */
