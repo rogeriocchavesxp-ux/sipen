@@ -3132,7 +3132,6 @@
         <div class="hero-ttl" id="area-saudacao">Bem-vindo!</div>
         <div class="hero-dsc">Suas atividades, escalas, solicitações e avisos</div>
       </div>
-      <div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Solicitação</button></div>
     </div>
     <div class="inav" style="--mc:var(--gr)">
       <div class="ini on">Início</div>
@@ -3167,7 +3166,12 @@
           <div id="area-dash-ministerios"><div style="color:var(--tx3);font-size:11.5px;padding:16px 0">Carregando...</div></div>
         </div>
         <div class="card">
-          <div class="ctit">Minhas Solicitações Recentes <span class="cact" onclick="area_dash_load()">↻ Atualizar</span></div>
+          <div class="ctit">Minhas Solicitações
+            <span style="margin-left:auto;display:flex;align-items:center;gap:12px">
+              <span class="cact" onclick="abrirModalNovaDemanda()" style="margin-left:0">+ Nova</span>
+              <span style="font-size:10.5px;color:var(--tx3);cursor:pointer" onclick="area_dash_load()" title="Atualizar">↻</span>
+            </span>
+          </div>
           <div id="area-dash-dem"><div style="color:var(--tx3);font-size:11.5px;padding:16px 0">Carregando...</div></div>
         </div>
       </div>
