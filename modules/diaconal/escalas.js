@@ -184,7 +184,7 @@
     const podeExc = _podeExcluir();
 
     if (!lista.length) {
-      const cols = podeEd ? 9 : 8;
+      const cols = podeEd ? 8 : 7;
       el.innerHTML = `<tr><td colspan="${cols}" style="text-align:center;padding:28px;color:var(--tx3)">Nenhum lançamento encontrado para este mês/filtro.</td></tr>`;
       return;
     }
@@ -198,7 +198,6 @@
         <td class="tdc" style="white-space:nowrap">${_eh(i.posto)}</td>
         <td class="tdc mono">${_fmtHora(i.horario_chegada)}</td>
         <td class="tdc" style="max-width:140px;white-space:normal;font-size:11px">${i.troca_obs ? `<span style="color:var(--amber)">${_eh(i.troca_obs)}</span>` : `<span style="color:var(--tx3)">—</span>`}</td>
-        <td class="tdc" style="color:var(--tx3);font-size:11px;letter-spacing:1px">___________</td>
         <td class="tdc" style="max-width:140px;white-space:normal;font-size:11px;color:var(--tx3)">${_eh(i.obs || "")}</td>
         ${podeEd ? `<td class="tdc" style="white-space:nowrap">
           <button class="tbt" style="padding:3px 8px;font-size:11px" onclick="diacEscalaEditar('${_ea(i.id)}')">✎</button>
@@ -260,12 +259,11 @@
               <th style="min-width:140px">Posto</th>
               <th style="min-width:72px">Chegada</th>
               <th style="min-width:130px">Troca / Pagamento</th>
-              <th style="min-width:110px">Assinatura</th>
               <th style="min-width:110px">Obs</th>
               ${podeEd ? `<th style="min-width:60px"></th>` : ""}
             </tr></thead>
             <tbody id="diac-esc-tbody">
-              <tr><td colspan="${podeEd ? 9 : 8}" style="text-align:center;padding:28px;color:var(--tx3)">Carregando...</td></tr>
+              <tr><td colspan="${podeEd ? 8 : 7}" style="text-align:center;padding:28px;color:var(--tx3)">Carregando...</td></tr>
             </tbody>
           </table>
         </div>
@@ -469,11 +467,10 @@
             <td>${i.posto}</td>
             <td style="text-align:center">${_fmtHora(i.horario_chegada)}</td>
             <td>${i.troca_obs || ""}</td>
-            <td style="text-align:center;letter-spacing:2px;color:#aaa">________</td>
             <td style="font-size:8.5pt;color:#555">${i.obs || ""}</td>
           </tr>`;
         }).join("")
-      : `<tr><td colspan="8" style="text-align:center;padding:20px;color:#999">Nenhum lançamento para o período.</td></tr>`;
+      : `<tr><td colspan="7" style="text-align:center;padding:20px;color:#999">Nenhum lançamento para o período.</td></tr>`;
 
     const html = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -519,7 +516,6 @@
         <th style="width:140px">Posto</th>
         <th style="width:66px; text-align:center">Chegada</th>
         <th style="width:130px">Troca / Pagamento</th>
-        <th style="width:100px; text-align:center">Assinatura</th>
         <th>Observações</th>
       </tr>
     </thead>
