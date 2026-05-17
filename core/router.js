@@ -1,4 +1,4 @@
-const MC={geral:"var(--gmd)",admin:"var(--gold)",fin:"var(--gr)",jur:"var(--blue)",conselho:"var(--sky)",proj:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)",cong:"var(--gr)",diac:"var(--copper)",area:"var(--gr)"};
+const MC={geral:"var(--gmd)",admin:"var(--gold)",fin:"var(--gr)",jur:"var(--blue)",conselho:"var(--sky)",proj:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)",cong:"var(--gr)",diac:"var(--copper)",area:"var(--gr)",config:"var(--violet)"};
 const CRUMB={
   geral:["","Dashboard Geral","/ IPPenha · visão executiva consolidada"],
   "admin-dash":["Administrativo","Dashboard","/ visão do módulo"],
@@ -202,7 +202,7 @@ async function go(id){
   document.getElementById("band").style.setProperty("--mc",MC[mod]||"var(--gmd)");
   document.querySelectorAll(".l1").forEach(e=>e.classList.remove("on"));
   if(id==="geral")document.getElementById("l1-geral").classList.add("on");
-  // Jurídico agora está dentro de Departamentos — garante que ms-min está aberto
+  // Jurídico está dentro de Departamentos — garante que ms-min está aberto
   if(mod==="jur"){
     const minSub=document.getElementById("ms-min");
     const minHdr=document.querySelector("#mw-min .mhdr");
@@ -211,6 +211,17 @@ async function go(id){
       document.querySelectorAll(".mhdr").forEach(h=>h.classList.remove("open"));
       minSub.classList.add("open");
       if(minHdr)minHdr.classList.add("open");
+    }
+  }
+  // config-* está dentro de Sistema — garante que ms-sys está aberto
+  if(mod==="config"){
+    const sysSub=document.getElementById("ms-sys");
+    const sysHdr=document.querySelector("#mw-sys .mhdr");
+    if(sysSub&&!sysSub.classList.contains("open")){
+      document.querySelectorAll(".msub").forEach(s=>s.classList.remove("open"));
+      document.querySelectorAll(".mhdr").forEach(h=>h.classList.remove("open"));
+      sysSub.classList.add("open");
+      if(sysHdr)sysHdr.classList.add("open");
     }
   }
   document.querySelectorAll(".si").forEach(e=>{
@@ -237,13 +248,13 @@ async function go(id){
   try { history.replaceState(null, "", location.pathname + location.search + "#" + id); } catch(_) {}
 }
 
-function tog(mod){
+function tog(mod,defaultRoute){
   const sub=document.getElementById("ms-"+mod);
   const hdr=document.querySelector("#mw-"+mod+" .mhdr");
   const isOpen=sub.classList.contains("open");
   document.querySelectorAll(".msub").forEach(s=>s.classList.remove("open"));
   document.querySelectorAll(".mhdr").forEach(h=>h.classList.remove("open"));
-  if(!isOpen){sub.classList.add("open");hdr.classList.add("open");go(mod+"-dash");}
+  if(!isOpen){sub.classList.add("open");hdr.classList.add("open");go(defaultRoute||mod+"-dash");}
 }
 
   // Warning file:// protocol already handled in entrarNoSistema flow

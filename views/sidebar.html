@@ -349,22 +349,18 @@
   </nav>
 
   <div class="sb-sys" id="sb-sys">
-    <div class="slbl">Sistema</div>
-    <div class="l1" onclick="go('config-usuarios')">
-      <div class="l1-ic" style="background:rgba(139,111,212,0.14);border-color:rgba(139,111,212,0.25);color:var(--violet)">⊛</div>
-      Usuários e Acessos
-    </div>
-    <div class="l1" onclick="go('config-permissoes')">
-      <div class="l1-ic" style="background:rgba(139,111,212,0.1);border-color:rgba(139,111,212,0.2);color:var(--violet)">🔒</div>
-      Permissões
-    </div>
-    <div class="l1" onclick="go('config-auditoria')">
-      <div class="l1-ic" style="background:rgba(139,111,212,0.1);border-color:rgba(139,111,212,0.2);color:var(--violet)">📋</div>
-      Auditoria
-    </div>
-    <div class="l1" onclick="go('config-whatsapp')">
-      <div class="l1-ic" style="background:rgba(37,211,102,0.12);border-color:rgba(37,211,102,0.25);color:#25d366">💬</div>
-      WhatsApp
+    <div class="mwrap" id="mw-sys" style="margin:4px 8px 2px">
+      <div class="mhdr" onclick="tog('sys','config-usuarios')">
+        <div class="micon" style="background:rgba(139,111,212,0.14);border-color:rgba(139,111,212,0.25);color:var(--violet)">⚙</div>
+        <span class="mname">Sistema</span>
+        <span class="marr">▶</span>
+      </div>
+      <div class="msub" id="ms-sys">
+        <div class="si" onclick="go('config-usuarios')">Usuários e Acessos</div>
+        <div class="si" onclick="go('config-permissoes')">Permissões</div>
+        <div class="si" onclick="go('config-auditoria')">Auditoria</div>
+        <div class="si" onclick="go('config-whatsapp')">WhatsApp</div>
+      </div>
     </div>
   </div>
 
