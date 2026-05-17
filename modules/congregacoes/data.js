@@ -130,7 +130,7 @@ const CONG = (function(){
         equipe:      ["Miss. Elinalda", "Diác. José Bohorques", "Floraci Bohorques"]
       }),
 
-      _mkCong("ip-jd-primavera-ita", "IP Jardim Primavera — Itaquaquecetuba", "#9B59B6", "⛪", {
+      _mkCong("ip-jd-primavera", "IP Jardim Primavera", "#9B59B6", "⛪", {
         supervisao:  "Rev. Adriano Pedrosa e Luciana Pedrosa",
         conselheiro: "Presb. Marcus Novais"
       }),
@@ -403,7 +403,7 @@ const CONG = (function(){
     if(!_sbAvailable()) return false;
 
     const cRes = await fetch(
-      `${_sbBase()}/rest/v1/congregacoes?select=*&order=nome.asc`,
+      `${_sbBase()}/rest/v1/congregacoes?deleted_at=is.null&select=*&order=nome.asc`,
       { method:"GET", headers:_sbHdrs() }
     );
     if(!cRes.ok) return false; // sem permissão ou tabela inexistente — não loga
