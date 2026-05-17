@@ -432,37 +432,6 @@ function renderTab_lideranca(cong, el){
 }
 
 // ── Tab 6: Financeiro ─────────────────────────────────
-function renderTab_financeiro(cong, el){
-  const f=cong.financeiro;
-  el.innerHTML=`
-    <div class="kpis c3" style="margin-top:14px">
-      <div class="kpi"><div class="kn">Receita Média/Mês</div><div class="kv" style="font-size:18px">R$ ${f.receita_media_mensal.toLocaleString("pt-BR")}</div></div>
-      <div class="kpi"><div class="kn">Despesa Média/Mês</div><div class="kv" style="font-size:18px">R$ ${f.despesa_media_mensal.toLocaleString("pt-BR")}</div></div>
-      <div class="kpi"><div class="kn">Saldo Atual</div><div class="kv" style="font-size:18px;color:${f.saldo_atual>=0?"var(--gr)":"var(--rose)"}">R$ ${f.saldo_atual.toLocaleString("pt-BR")}</div></div>
-    </div>
-    <div class="card" style="margin-top:12px">
-      <div class="ctit">Histórico Financeiro</div>
-      ${(f.historico||[]).length===0?`<div style="color:var(--tx3);font-size:11px">Nenhum registro histórico</div>`:`
-        <table style="width:100%;font-size:11.5px;border-collapse:collapse">
-          <thead><tr style="border-bottom:1px solid var(--bd1)">
-            <th style="text-align:left;padding:6px 0;color:var(--tx3);font-weight:600">Mês</th>
-            <th style="text-align:right;padding:6px 0;color:var(--tx3);font-weight:600">Receita</th>
-            <th style="text-align:right;padding:6px 0;color:var(--tx3);font-weight:600">Despesa</th>
-            <th style="text-align:right;padding:6px 0;color:var(--tx3);font-weight:600">Saldo</th>
-          </tr></thead>
-          <tbody>${(f.historico||[]).map(h=>{
-            const saldo=h.receita-h.despesa;
-            return `<tr style="border-bottom:1px solid var(--bd1)">
-              <td style="padding:7px 0;color:var(--tx2)">${fmtMes(h.mes)}</td>
-              <td style="padding:7px 0;text-align:right;color:var(--gr)">R$ ${h.receita.toLocaleString("pt-BR")}</td>
-              <td style="padding:7px 0;text-align:right;color:var(--rose)">R$ ${h.despesa.toLocaleString("pt-BR")}</td>
-              <td style="padding:7px 0;text-align:right;font-weight:700;color:${saldo>=0?"var(--gr)":"var(--rose)"}">R$ ${saldo.toLocaleString("pt-BR")}</td>
-            </tr>${h.obs?`<tr><td colspan="4" style="padding:2px 0 6px;font-size:10px;color:var(--tx3);font-style:italic">${h.obs}</td></tr>`:""}`;
-          }).join("")}</tbody>
-        </table>`}
-    </div>
-  `;
-}
 
 // ── Tab 7: Desafios ───────────────────────────────────
 function renderTab_desafios(cong, el){
@@ -713,14 +682,154 @@ function salvarNovaDemandaCong(){
 }
 window.salvarNovaDemandaCong=salvarNovaDemandaCong;
 
-function abrirModalNovoPG(){ alert("Em implementação"); }
+function abrirModalNovoPG(){ if(typeof T==="function") T("Em desenvolvimento","Módulo de PGs em implementação"); }
 window.abrirModalNovoPG=abrirModalNovoPG;
-function abrirModalNovoMinisterio(){ alert("Em implementação"); }
+function abrirModalNovoMinisterio(){ if(typeof T==="function") T("Em desenvolvimento","Módulo de ministérios em implementação"); }
 window.abrirModalNovoMinisterio=abrirModalNovoMinisterio;
-function abrirModalNovoLider(){ alert("Em implementação"); }
+function abrirModalNovoLider(){ if(typeof T==="function") T("Em desenvolvimento","Cadastro de líderes em implementação"); }
 window.abrirModalNovoLider=abrirModalNovoLider;
-function abrirModalNovoDesafio(){ alert("Em implementação"); }
+function abrirModalNovoDesafio(){ if(typeof T==="function") T("Em desenvolvimento","Mapeamento de desafios em implementação"); }
 window.abrirModalNovoDesafio=abrirModalNovoDesafio;
+
+// ── Financeiro: lançamentos por congregação ────────────────────
+let _lancTipo = "receita";
+let _lancCongId = null;
+
+async function _lancamentosLoad(congId) {
+  if (!SUPABASE_URL || !congId) return [];
+  try {
+    const url = `${apiBaseUrl()}/rest/v1/congregacao_lancamentos?congregacao_id=eq.${encodeURIComponent(congId)}&deleted_at=is.null&order=data.desc&limit=200`;
+    const r = await fetch(url, { headers: apiHeaders() });
+    if (!r.ok) return [];
+    return await r.json();
+  } catch(e) { return []; }
+}
+
+async function renderTab_financeiro(cong, el) {
+  const f = cong.financeiro;
+  el.innerHTML = `<div style="padding:24px;text-align:center;color:var(--tx3);font-size:12px">Carregando lançamentos...</div>`;
+
+  const lancs = await _lancamentosLoad(cong.id);
+  const receitas = lancs.filter(l => l.tipo === "receita");
+  const despesas = lancs.filter(l => l.tipo === "despesa");
+  const totalR = receitas.reduce((s,l) => s + Number(l.valor), 0);
+  const totalD = despesas.reduce((s,l) => s + Number(l.valor), 0);
+  const saldoR = totalR - totalD;
+
+  const podeEditar = typeof USUARIO_ATUAL !== "undefined" &&
+    (USUARIO_ATUAL?.perfil === "ADMINISTRADOR_GERAL" || USUARIO_ATUAL?.perfil === "LIDER_CONGREGACAO");
+
+  const btnNovos = podeEditar ? `
+    <div style="display:flex;gap:8px">
+      <button class="tbt" style="background:rgba(58,170,92,0.1);border-color:rgba(58,170,92,0.3);color:var(--gr)"
+        onclick="abrirModalNovoLancamento('${cong.id}','receita')">+ Nova Entrada</button>
+      <button class="tbt" style="background:rgba(208,104,104,0.1);border-color:rgba(208,104,104,0.3);color:var(--rose)"
+        onclick="abrirModalNovoLancamento('${cong.id}','despesa')">+ Nova Despesa</button>
+    </div>` : "";
+
+  const linhas = lancs.length === 0
+    ? `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--tx3)">Nenhum lançamento registrado</td></tr>`
+    : lancs.map(l => `
+      <tr style="border-bottom:1px solid var(--bd1)">
+        <td style="padding:7px 0;color:var(--tx3);font-size:11px">${l.data}</td>
+        <td style="padding:7px 0">
+          <span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;
+            background:${l.tipo==="receita"?"rgba(58,170,92,0.12)":"rgba(208,104,104,0.12)"};
+            color:${l.tipo==="receita"?"var(--gr)":"var(--rose)"}">
+            ${l.tipo === "receita" ? "Entrada" : "Despesa"}
+          </span>
+        </td>
+        <td style="padding:7px 8px;font-size:11.5px;color:var(--tx2)">${escapeHtml(l.descricao || l.categoria || "—")}</td>
+        <td style="padding:7px 0;text-align:right;font-weight:700;
+          color:${l.tipo==="receita"?"var(--gr)":"var(--rose)"}">
+          ${l.tipo==="receita"?"+":"-"} R$ ${Number(l.valor).toLocaleString("pt-BR",{minimumFractionDigits:2})}
+        </td>
+        <td style="padding:7px 0 7px 8px;font-size:10px;color:var(--tx3)">${escapeHtml(l.categoria||"")}</td>
+      </tr>`).join("");
+
+  el.innerHTML = `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-top:14px;margin-bottom:12px;flex-wrap:wrap">
+      <div class="kpis c3" style="flex:1;margin:0">
+        <div class="kpi"><div class="kn">Entradas</div>
+          <div class="kv" style="color:var(--gr)">R$ ${totalR.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
+        <div class="kpi"><div class="kn">Despesas</div>
+          <div class="kv" style="color:var(--rose)">R$ ${totalD.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
+        <div class="kpi"><div class="kn">Saldo</div>
+          <div class="kv" style="color:${saldoR>=0?"var(--gr)":"var(--rose)"}">R$ ${saldoR.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
+      </div>
+      ${btnNovos}
+    </div>
+    <div class="card">
+      <div class="ctit">Lançamentos <span style="font-weight:400;color:var(--tx3);font-size:11px">(${lancs.length} registros)</span></div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;font-size:11.5px;border-collapse:collapse">
+          <thead><tr style="border-bottom:1px solid var(--bd1)">
+            <th style="text-align:left;padding:6px 0;color:var(--tx3);font-weight:600;min-width:80px">Data</th>
+            <th style="text-align:left;padding:6px 0;color:var(--tx3);font-weight:600">Tipo</th>
+            <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Descrição</th>
+            <th style="text-align:right;padding:6px 0;color:var(--tx3);font-weight:600">Valor</th>
+            <th style="text-align:left;padding:6px 0 6px 8px;color:var(--tx3);font-weight:600">Categoria</th>
+          </tr></thead>
+          <tbody>${linhas}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function abrirModalNovoLancamento(congId, tipo) {
+  _lancCongId = congId;
+  _lancTipo   = tipo || "receita";
+  const tituloEl = document.getElementById("lanc-tipo-titulo");
+  if (tituloEl) tituloEl.textContent = tipo === "receita" ? "Nova Entrada" : "Nova Despesa";
+  const tipoEl = document.getElementById("lanc-tipo-hidden");
+  if (tipoEl) tipoEl.value = _lancTipo;
+  ["lanc-data","lanc-valor","lanc-categoria","lanc-descricao","lanc-obs"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = id === "lanc-data" ? new Date().toISOString().slice(0,10) : "";
+  });
+  const m = document.getElementById("modal-novo-lancamento");
+  if (m) m.style.display = "flex";
+}
+window.abrirModalNovoLancamento = abrirModalNovoLancamento;
+
+function fecharModalNovoLancamento() {
+  const m = document.getElementById("modal-novo-lancamento");
+  if (m) m.style.display = "none";
+}
+window.fecharModalNovoLancamento = fecharModalNovoLancamento;
+
+async function salvarNovoLancamento() {
+  const data      = document.getElementById("lanc-data")?.value;
+  const valor     = parseFloat(document.getElementById("lanc-valor")?.value);
+  const categoria = document.getElementById("lanc-categoria")?.value?.trim() || "";
+  const descricao = document.getElementById("lanc-descricao")?.value?.trim() || "";
+  const obs       = document.getElementById("lanc-obs")?.value?.trim() || "";
+
+  if (!data || !valor || valor <= 0) {
+    if (typeof T === "function") T("Campos obrigatórios", "Informe data e valor");
+    return;
+  }
+  if (!_lancCongId) return;
+
+  const payload = { congregacao_id: _lancCongId, data, tipo: _lancTipo, categoria, descricao, valor, obs };
+  try {
+    const url = `${apiBaseUrl()}/rest/v1/congregacao_lancamentos`;
+    const r = await fetch(url, {
+      method: "POST",
+      headers: apiHeaders({ "Prefer": "return=minimal" }),
+      body: JSON.stringify(payload)
+    });
+    if (!r.ok) throw new Error(await r.text());
+    fecharModalNovoLancamento();
+    if (typeof T === "function") T("Lançamento salvo", `${_lancTipo === "receita" ? "Entrada" : "Despesa"} registrada`);
+    const cong = CONG.getCong(_lancCongId);
+    if (cong) renderTab_financeiro(cong, document.getElementById("cong-tab-content"));
+  } catch(e) {
+    if (typeof T === "function") T("Erro ao salvar", e.message || "Tente novamente");
+  }
+}
+window.salvarNovoLancamento = salvarNovoLancamento;
 
 // ── Hook no go() ──────────────────────────────────────
 (function(){

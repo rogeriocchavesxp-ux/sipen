@@ -14,6 +14,8 @@ const PERFIS = {
   membro_ministerio:    { nome:"Membro de Ministério (Sacerdote)",       icon:"🙌", cor:"var(--gr)",     nivel:2 },
   operacional_servicos: { nome:"Operacional Serviços (Contratados)",     icon:"🔧", cor:"var(--tx2)",    nivel:1 },
   membro_igreja:        { nome:"Membro da Igreja",                       icon:"⛪", cor:"var(--sky)",    nivel:0 },
+  lider_congregacao:    { nome:"Líder de Congregação",                   icon:"⛪", cor:"var(--gr)",     nivel:2 },
+  membro_congregacao:   { nome:"Membro de Congregação",                  icon:"⛪", cor:"var(--sky)",    nivel:1 },
 };
 
 /* Matriz de permissões por módulo e perfil
@@ -89,6 +91,8 @@ const PERFIL_KEY_TO_DB_NOME = {
   membro_ministerio:    "MEMBRO_MINISTERIO",
   operacional_servicos: "OPERACIONAL_SERVICOS",
   membro_igreja:        "MEMBRO_IGREJA",
+  lider_congregacao:    "LIDER_CONGREGACAO",
+  membro_congregacao:   "MEMBRO_CONGREGACAO",
 };
 
 /* Mapeamento nome visual (UI) ↔ nome exato no banco — usado no fallback de UUID */
@@ -108,6 +112,10 @@ const PERFIS_MAP = {
   "Operacional Serviços":                 "OPERACIONAL_SERVICOS",
   "Membro da Igreja":                     "MEMBRO_IGREJA",
   "Membro Igreja":                        "MEMBRO_IGREJA",
+  "Líder de Congregação":                 "LIDER_CONGREGACAO",
+  "Líder Congregação":                    "LIDER_CONGREGACAO",
+  "Membro de Congregação":                "MEMBRO_CONGREGACAO",
+  "Membro Congregação":                   "MEMBRO_CONGREGACAO",
 };
 
 /* Mapeamento módulo display ↔ módulo DB */
@@ -174,6 +182,8 @@ function normalizarPerfil(funcao) {
     membro_ministerio:"MEMBRO_MINISTERIO", MEMBRO_MINISTERIO:"MEMBRO_MINISTERIO",
     operacional_servicos:"OPERACIONAL_SERVICOS", OPERACIONAL_SERVICOS:"OPERACIONAL_SERVICOS",
     membro_igreja:"MEMBRO_IGREJA", MEMBRO_IGREJA:"MEMBRO_IGREJA",
+    lider_congregacao:"LIDER_CONGREGACAO", LIDER_CONGREGACAO:"LIDER_CONGREGACAO",
+    membro_congregacao:"MEMBRO_CONGREGACAO", MEMBRO_CONGREGACAO:"MEMBRO_CONGREGACAO",
   };
   // Tenta mapa direto → PERFIS_MAP (nomes em linguagem natural do banco) → fallback uppercase
   return mapa[funcao] || PERFIS_MAP[funcao] || String(funcao || "").toUpperCase();
@@ -229,7 +239,7 @@ async function carregarUsuarioLogado(authUserId) {
   // 2ª consulta: busca membro ativo vinculado à pessoa
   const { data: membro, error: membroError } = await sb
     .from("membros")
-    .select("id, pessoa_id, funcao, status, ministerios")
+    .select("id, pessoa_id, funcao, status, ministerios, congregacao_id")
     .eq("pessoa_id", pessoa.id)
     .eq("status", "ativo")
     .is("deleted_at", null)
@@ -252,9 +262,10 @@ async function carregarUsuarioLogado(authUserId) {
     membro_id:    membro.id,
     nome:         pessoa.nome,
     email:        pessoa.email,
-    perfil:       normalizarPerfil(membro.funcao),
-    ministerios:  Array.isArray(membro.ministerios) ? membro.ministerios : [],
-    igreja_id:    pessoa.igreja_id || null,
+    perfil:          normalizarPerfil(membro.funcao),
+    ministerios:     Array.isArray(membro.ministerios) ? membro.ministerios : [],
+    igreja_id:       pessoa.igreja_id || null,
+    congregacao_id:  membro.congregacao_id || null,
   };
   USUARIO_ATUAL = usuarioLogado;
 
@@ -304,6 +315,11 @@ function _isMobile() {
 function _isMembroComum() {
   const p = USUARIO_ATUAL?.perfil;
   return p === "MEMBRO_IGREJA" || p === "MEMBRO_MINISTERIO";
+}
+
+function _isCongregacaoUser() {
+  const p = USUARIO_ATUAL?.perfil;
+  return p === "LIDER_CONGREGACAO" || p === "MEMBRO_CONGREGACAO";
 }
 
 /* Retorna true para perfis com acesso a módulos de gestão (nível ≥ lider_area).
@@ -479,6 +495,19 @@ async function entrarNoSistema() {
     return;
   }
 
+  // Usuário de congregação: vai direto para a sua congregação
+  if (_isCongregacaoUser()) {
+    _aplicarModoGestor();
+    _expandirSidebar("cong");
+    await go("cong-dash");
+    if (USUARIO_ATUAL.congregacao_id && typeof window.abrirCongView === "function") {
+      window.abrirCongView(USUARIO_ATUAL.congregacao_id);
+    }
+    T(`Bem-vindo, ${USUARIO_ATUAL.nome.split(" ")[0]}! ⛪`,
+      `${PERFIS[USUARIO_ATUAL.perfil]?.nome || "Congregação"}`);
+    return;
+  }
+
   if (_isMembroComum()) {
     // Membro comum: vai direto para Área do Membro
     _expandirSidebar("area");
@@ -569,7 +598,9 @@ function aplicarPermissoes() {
     "LIDER_MINISTERIO":     "MINISTERIAL",
     "LIDER_AREA":           "MINISTERIAL",
     "MEMBRO_MINISTERIO":    "MINISTERIAL",
-    "OPERACIONAL_SERVICOS": "INFRAESTRUTURA",
+    "OPERACIONAL_SERVICOS":  "INFRAESTRUTURA",
+    "LIDER_CONGREGACAO":     "CONGREGACOES",
+    "MEMBRO_CONGREGACAO":    "CONGREGACOES",
   };
   const _moduloNativo = _PERFIL_MODULO_NATIVO[USUARIO_ATUAL.perfil];
   if (_moduloNativo && (!permissoesUsuario[_moduloNativo] || permissoesUsuario[_moduloNativo] === "SEM_ACESSO")) {

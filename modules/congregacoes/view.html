@@ -136,4 +136,25 @@
     </div>
   </div>
 
+  <div class="mo" id="modal-novo-lancamento" onclick="if(event.target===this)fecharModalNovoLancamento()">
+    <div class="md" style="width:460px">
+      <div class="md-t" id="lanc-tipo-titulo">Novo Lançamento</div>
+      <div class="md-s">Registre uma entrada ou despesa da congregação</div>
+      <input type="hidden" id="lanc-tipo-hidden">
+      <div class="frow">
+        <div class="fg"><label class="flb">Data *</label><input class="fi2" type="date" id="lanc-data"></div>
+        <div class="fg"><label class="flb">Valor (R$) *</label><input class="fi2" type="number" id="lanc-valor" step="0.01" min="0.01" placeholder="0,00"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flb">Categoria</label><input class="fi2" id="lanc-categoria" placeholder="Ex: Dízimos, Aluguel, Utensílios..."></div>
+        <div class="fg"><label class="flb">Descrição</label><input class="fi2" id="lanc-descricao" placeholder="Resumo do lançamento"></div>
+      </div>
+      <div class="fg"><label class="flb">Observações</label><textarea class="fi2" id="lanc-obs" rows="2" placeholder="Detalhes adicionais..."></textarea></div>
+      <div class="ma">
+        <button class="btn" onclick="fecharModalNovoLancamento()">Cancelar</button>
+        <button class="btn btn-p" onclick="salvarNovoLancamento()">Salvar Lançamento</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ════ ÁREA DO MEMBRO ═══════════════════════════ -->
