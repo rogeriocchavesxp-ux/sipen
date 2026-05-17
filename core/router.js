@@ -168,7 +168,7 @@ async function _ensureViewLoaded(id) {
     if (!r.ok) throw new Error(`Falha ao carregar view: ${viewFile}`);
     return r.text();
   }).then(html => {
-    document.getElementById("page").insertAdjacentHTML("beforeend", html);
+    document.getElementById("page").insertAdjacentHTML("afterbegin", html);
   }).catch(err => {
     delete _viewCache[viewFile];
     throw err;

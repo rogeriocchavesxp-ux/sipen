@@ -1405,9 +1405,9 @@ html[data-theme="light"] .login-box { box-shadow: 0 4px 24px rgba(0,0,0,0.08) }
 ══════════════════════════════════════════════════════════════════════════ */
 .sipen-footer {
   background: #2c6b41;
-  flex-shrink: 0;
   width: 100%;
   overflow: hidden;
+  margin-top: 8px;
 }
 .sfb-inner {
   display: flex;
