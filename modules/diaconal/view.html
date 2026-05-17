@@ -69,33 +69,18 @@
   <div class="view" id="v-diac-escalas">
     <div class="hero">
       <div class="hero-ic" style="background:var(--copperbg);border-color:rgba(184,122,86,0.28)">📋</div>
-      <div><div class="hero-lbl">Junta Diaconal</div><div class="hero-ttl">Escalas de Serviço</div><div class="hero-dsc">Programação dos diáconos por culto, evento ou atividade diaconal</div></div>
-      <div class="hero-act"><button class="tbt pri" onclick="T('Nova Escala','Programação de escala diaconal')">+ Nova Escala</button></div>
+      <div><div class="hero-lbl">Junta Diaconal</div><div class="hero-ttl">Escalas de Serviço</div><div class="hero-dsc">Programação dos diáconos por culto, evento e posto de serviço — IPPenha</div></div>
     </div>
     <div class="inav" style="--mc:var(--copper)">
-      <div class="ini on">Visão Geral</div>
-      <div class="ini" onclick="T('Por Culto','Escala por culto semanal')">Por Culto</div>
-      <div class="ini" onclick="T('Por Evento','Escala para eventos especiais')">Por Evento</div>
-      <div class="ini" onclick="T('Histórico','Escalas anteriores')">Histórico</div>
+      <div class="ini" onclick="go('diac-dash')">Dashboard</div>
+      <div class="ini" onclick="go('diac-diaconos')">Diáconos</div>
+      <div class="ini" onclick="go('diac-escalas')">Escalas</div>
+      <div class="ini" onclick="go('diac-familias')">Famílias</div>
+      <div class="ini" onclick="go('diac-social')">Ação Social</div>
+      <div class="ini" onclick="go('diac-solicitacoes')">Solicitações</div>
     </div>
-    <div class="ct">
-      <div class="kpis c3">
-        <div class="kpi"><div class="kpi-ico" style="background:var(--copperbg);color:var(--copper);">📋</div><div class="kpi-body"><div class="kpi-lbl">Escalas do mês</div><div class="kpi-val">8</div><div class="kpi-d nu">cultos e atividades</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr);">✦</div><div class="kpi-body"><div class="kpi-lbl">Confirmadas</div><div class="kpi-val">6</div><div class="kpi-d up">▲ 75% confirmação</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Pendentes</div><div class="kpi-val">2</div><div class="kpi-d wa">⚠ aguardando confirmação</div></div></div>
-      </div>
-      <div class="card">
-        <div class="ctit">Escalas de Abril/2026</div>
-        <table class="tbl">
-          <thead><tr><th>Data</th><th>Culto / Atividade</th><th>Responsável</th><th>Auxiliares</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr><td class="tdc mono">20/04</td><td class="tdp">Culto Manhã (9h)</td><td>Diác. Marcos Alves</td><td class="tdc">Diác. Carlos, Diác. José</td><td><span class="pill pd">Confirmado</span></td></tr>
-            <tr><td class="tdc mono">20/04</td><td class="tdp">Culto Noite (18h)</td><td>Diác. Antônio Costa</td><td class="tdc">Diác. Marcos</td><td><span class="pill pd">Confirmado</span></td></tr>
-            <tr><td class="tdc mono">23/04</td><td class="tdp">Culto 4ª feira</td><td>Diác. Carlos Silva</td><td class="tdc">—</td><td><span class="pill po">Pendente</span></td></tr>
-            <tr><td class="tdc mono">27/04</td><td class="tdp">Culto Manhã (9h)</td><td>Diác. José Santos</td><td class="tdc">Diác. Antônio</td><td><span class="pill po">Pendente</span></td></tr>
-          </tbody>
-        </table>
-      </div>
+    <div class="ct" id="diac-esc-content">
+      <div style="padding:32px;color:var(--tx3);text-align:center;font-size:13px">Carregando escala...</div>
     </div>
   </div>
 
