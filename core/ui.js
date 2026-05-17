@@ -117,6 +117,9 @@ function openCrudForm(tab, preset = null) {
     if (tipo === "date") {
       return `<div>${label}<input type="date" data-field="${escapeHtmlAttr(f)}" value="${escapeHtmlAttr(String(val))}" style="${inputStyle}"></div>`;
     }
+    if (tipo === "time") {
+      return `<div>${label}<input type="time" data-field="${escapeHtmlAttr(f)}" value="${escapeHtmlAttr(String(val))}" style="${inputStyle}"></div>`;
+    }
     if (isLong) {
       return `<div style="grid-column:1 / -1">${label}<textarea data-field="${escapeHtmlAttr(f)}" style="${inputStyle};min-height:84px;resize:vertical">${escapeHtml(String(val))}</textarea></div>`;
     }
