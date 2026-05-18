@@ -65,7 +65,7 @@ function buildCongMenu(){
   msub.querySelectorAll(".si-cong-item,.sdiv-cong,.si-cong-sub").forEach(el=>el.remove());
 
   const dashLink=document.getElementById("sb-cong-dash-link");
-  if(dashLink) dashLink.style.display=_isLiderCong()?"none":"";
+  if(dashLink) dashLink.style.display=_isLiderCong()?"none":"block";
 
   // Para LIDER: header não é retrátil
   const mhdr=document.querySelector("#mw-cong .mhdr");
