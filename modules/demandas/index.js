@@ -14,7 +14,14 @@
     { id:"agendamentos",nome:"Agendamentos",            icon:"📅",  cor:"var(--teal)",   resp:"Secretaria / Administração",
       subcats:["Solicitação de uso de sala","Agendamento de culto/evento","Reserva de espaço","Inclusão em calendário oficial","Cancelamento/alteração de agenda"] },
     { id:"manutencao",  nome:"Manutenção",              icon:"🛠",  cor:"var(--amber)",  resp:"Departamento de Manutenção",
-      subcats:["Elétrica","Hidráulica","Estrutural","Equipamentos","Pequenos reparos"] },
+      subcats:[
+        { grupo:"Infraestrutura Civil",     itens:["Elétrica","Hidráulica","Estrutural","Civil","Pintura","Marcenaria","Vidraçaria","Manutenção predial","Chaveiro","Elevador/Plataforma"] },
+        { grupo:"Tecnologia",               itens:["Internet","Telefonia","Rede/Wi-Fi","Informática","Computadores","Impressoras"] },
+        { grupo:"Audiovisual",              itens:["Som","Projeção","Streaming/Transmissão","Equipamentos musicais"] },
+        { grupo:"Climatização e Segurança", itens:["Ar-condicionado","Câmeras","Alarmes","Portão eletrônico","Controle de acesso"] },
+        { grupo:"Conservação",              itens:["Iluminação","Jardinagem","Limpeza","Dedetização"] },
+        { grupo:"Geral",                    itens:["Equipamentos","Pequenos reparos"] },
+      ] },
     { id:"limpeza",     nome:"Limpeza e Organização",   icon:"🧹",  cor:"var(--teal)",   resp:"Equipe de Limpeza / Zeladoria",
       subcats:["Limpeza geral","Limpeza pós-evento","Organização de espaços","Solicitação de materiais de limpeza"] },
     { id:"logistica",   nome:"Logística",               icon:"🚚",  cor:"var(--amber)",  resp:"Logística / Apoio ao Culto",
@@ -1390,9 +1397,18 @@
     const respEl  = document.getElementById("dem-f-resp");
     const cat     = CATS.find(c => c.nome === catNome);
     if (!subEl) return;
-    subEl.innerHTML = cat
-      ? cat.subcats.map(s => `<option value="${s}">${s}</option>`).join("")
-      : `<option value="">Selecione a categoria primeiro</option>`;
+    if (cat) {
+      const primeiro = cat.subcats[0];
+      if (primeiro && typeof primeiro === "object" && primeiro.grupo) {
+        subEl.innerHTML = cat.subcats.map(g =>
+          `<optgroup label="${g.grupo}">${g.itens.map(s => `<option value="${s}">${s}</option>`).join("")}</optgroup>`
+        ).join("");
+      } else {
+        subEl.innerHTML = cat.subcats.map(s => `<option value="${s}">${s}</option>`).join("");
+      }
+    } else {
+      subEl.innerHTML = `<option value="">Selecione a categoria primeiro</option>`;
+    }
     if (respEl && cat) respEl.value = cat.resp;
     _toggleFinanceiroSection();
   };
