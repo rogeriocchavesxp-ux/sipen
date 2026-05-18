@@ -195,7 +195,10 @@ function renderDashboardGeral(){
         <div style="font-size:11.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(cu.congNome)}</div>
         <div style="font-size:10px;color:var(--tx3)">${cu.tipo}</div>
       </div>
-      <div style="font-size:12px;font-weight:700;color:var(--gr);flex-shrink:0">${cu.participantes}</div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:12px;font-weight:700;color:var(--gr)">${cu.participantes}</div>
+        ${cu.criancas>0?`<div style="font-size:9.5px;color:var(--sky)">${cu.criancas} cr.</div>`:""}
+      </div>
     </div>
   `).join("")||`<div style="color:var(--tx3);font-size:11px">Nenhum culto registrado</div>`;
 }
@@ -482,7 +485,7 @@ function renderTab_cultos(cong, el){
                   <div style="font-size:9.5px;color:var(--tx3)">presentes</div>
                 </div>
               </div>
-              ${cu.visitantes>0||cu.decisoes>0?`<div style="font-size:10px;color:var(--tx3);margin-top:3px">Visitantes: <b style="color:var(--tx1)">${cu.visitantes}</b> &nbsp;|&nbsp; Decisões: <b style="color:var(--gr)">${cu.decisoes}</b></div>`:""}
+              ${cu.visitantes>0||cu.criancas>0||cu.decisoes>0?`<div style="font-size:10px;color:var(--tx3);margin-top:3px">${cu.visitantes>0?`Visitantes: <b style="color:var(--tx1)">${cu.visitantes}</b> &nbsp;|&nbsp; `:""}${cu.criancas>0?`Crianças: <b style="color:var(--sky)">${cu.criancas}</b> &nbsp;|&nbsp; `:""}Decisões: <b style="color:var(--gr)">${cu.decisoes}</b></div>`:""}
               ${cu.obs?`<div style="font-size:10px;color:var(--tx3);font-style:italic;margin-top:2px">${cu.obs}</div>`:""}
             </div>`).join("")}
       </div>
@@ -752,7 +755,7 @@ function abrirModalNovoCulto(congId){
     sel.innerHTML=lista.map(c=>`<option value="${c.id}"${c.id===congId?" selected":""}>${escapeHtml(c.identificacao.nome)}</option>`).join("");
   }
   ["culto-data","culto-pregador","culto-obs"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
-  ["culto-participantes","culto-visitantes","culto-decisoes"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value="0"; });
+  ["culto-participantes","culto-visitantes","culto-criancas","culto-decisoes"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value="0"; });
   const m=document.getElementById("modal-novo-culto"); if(m) m.style.display="flex";
 }
 window.abrirModalNovoCulto=abrirModalNovoCulto;
@@ -770,6 +773,7 @@ function salvarNovoCulto(){
     data, tipo:document.getElementById("culto-tipo")?.value||"",
     participantes:parseInt(document.getElementById("culto-participantes")?.value)||0,
     visitantes:parseInt(document.getElementById("culto-visitantes")?.value)||0,
+    criancas:parseInt(document.getElementById("culto-criancas")?.value)||0,
     decisoes:parseInt(document.getElementById("culto-decisoes")?.value)||0,
     pregador:document.getElementById("culto-pregador")?.value||"",
     obs:document.getElementById("culto-obs")?.value||""
