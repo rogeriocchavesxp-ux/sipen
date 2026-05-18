@@ -280,8 +280,7 @@ const CONG = (function(){
       metas_ano:            p.metas_ano||"",
       eventos:              p.eventos||[],
       acoes:                p.acoes||[],
-      departamentos:        (cong.departamentos?.lista)||[],
-      atualizado_em:        new Date().toISOString()
+      departamentos:        (cong.departamentos?.lista)||[]
     };
   }
 

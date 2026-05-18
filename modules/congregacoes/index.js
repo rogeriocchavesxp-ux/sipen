@@ -425,7 +425,7 @@ function renderTab_cultos(cong, el){
       <div class="card">
         <div class="ctit" style="display:flex;justify-content:space-between;align-items:center">
           Programação
-          <button class="tbt" style="font-size:10px;padding:4px 9px" onclick="abrirModalNovoCulto('${cong.id}')">+ Registrar Culto</button>
+          ${_podeEditar(cong.id)?`<button class="tbt" style="font-size:10px;padding:4px 9px" onclick="abrirModalNovoCulto('${cong.id}')">+ Registrar Culto</button>`:""}
         </div>
         <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">${a.cultos_por_semana} culto(s)/semana &nbsp;|&nbsp; Freq. média: <b style="color:var(--tx1)">${a.frequencia_media}</b></div>
         ${(a.horarios||[]).map(h=>`<div style="padding:5px 0;border-bottom:1px solid var(--bd1);font-size:11.5px;color:var(--tx1)">🕐 ${h}</div>`).join("")||`<div style="color:var(--tx3);font-size:11px">Sem horários cadastrados</div>`}
@@ -467,7 +467,7 @@ function renderTab_pgs(cong, el){
         <div style="font-size:13px;font-weight:700;color:var(--tx1)">${pg.total_grupos} Pequenos Grupos</div>
         <div style="font-size:11px;color:var(--tx3)">${totalPart} participantes no total</div>
       </div>
-      <button class="tbt pri" onclick="abrirModalNovoPG('${cong.id}')">+ Novo Grupo</button>
+      ${_podeEditar(cong.id)?`<button class="tbt pri" onclick="abrirModalNovoPG('${cong.id}')">+ Novo Grupo</button>`:""}
     </div>
     <div class="card">
       ${(pg.grupos||[]).length===0?`<div style="color:var(--tx3);font-size:11px">Nenhum grupo cadastrado</div>`:
@@ -498,7 +498,7 @@ function renderTab_ministerios(cong, el){
         <div style="font-size:13px;font-weight:700;color:var(--tx1)">${lista.length} Ministérios</div>
         <div style="font-size:11px;color:var(--tx3)">${lista.filter(m=>m.status==="ativo").length} ativos</div>
       </div>
-      <button class="tbt pri" onclick="abrirModalNovoMinisterio('${cong.id}')">+ Novo Ministério</button>
+      ${_podeEditar(cong.id)?`<button class="tbt pri" onclick="abrirModalNovoMinisterio('${cong.id}')">+ Novo Ministério</button>`:""}
     </div>
     <div class="card">
       ${lista.length===0?`<div style="color:var(--tx3);font-size:11px">Nenhum ministério cadastrado</div>`:
@@ -581,7 +581,7 @@ function renderTab_desafios(cong, el){
         <div style="font-size:13px;font-weight:700;color:var(--tx1)">${lista.length} Desafio(s) Mapeado(s)</div>
         <div style="font-size:11px;color:var(--tx3)">${lista.filter(d=>d.prioridade==="Alta").length} de alta prioridade</div>
       </div>
-      <button class="tbt pri" onclick="abrirModalNovoDesafio('${cong.id}')">+ Novo Desafio</button>
+      ${_podeEditar(cong.id)?`<button class="tbt pri" onclick="abrirModalNovoDesafio('${cong.id}')">+ Novo Desafio</button>`:""}
     </div>
     <div class="card">
       ${lista.length===0?`<div style="color:var(--tx3);font-size:11px">Nenhum desafio mapeado</div>`:
@@ -611,7 +611,7 @@ function renderTab_planejamento(cong, el){
       <div class="card">
         <div class="ctit" style="display:flex;justify-content:space-between;align-items:center">
           Eventos Planejados
-          <button class="tbt" style="font-size:10px;padding:4px 9px" onclick="abrirModalNovoEvento('${cong.id}')">+ Evento</button>
+          ${_podeEditar(cong.id)?`<button class="tbt" style="font-size:10px;padding:4px 9px" onclick="abrirModalNovoEvento('${cong.id}')">+ Evento</button>`:""}
         </div>
         ${eventos.length===0?`<div style="color:var(--tx3);font-size:11px">Nenhum evento planejado</div>`:
           eventos.map(e=>`
@@ -786,7 +786,12 @@ window.salvarNovoEvento=salvarNovoEvento;
 
 function abrirModalNovaDemandaCong(){
   const sel=document.getElementById("dem-cong-select");
-  if(sel) sel.innerHTML=CONG.listCongs().map(c=>`<option value="${c.id}">${escapeHtml(c.identificacao.nome)}</option>`).join("");
+  if(sel){
+    const lista=_isLiderCong()
+      ? CONG.listCongs().filter(c=>String(c.id)===String(USUARIO_ATUAL?.congregacao_id))
+      : CONG.listCongs();
+    sel.innerHTML=lista.map(c=>`<option value="${c.id}">${escapeHtml(c.identificacao.nome)}</option>`).join("");
+  }
   const m=document.getElementById("modal-nova-demanda-cong"); if(m) m.style.display="flex";
 }
 window.abrirModalNovaDemandaCong=abrirModalNovaDemandaCong;
