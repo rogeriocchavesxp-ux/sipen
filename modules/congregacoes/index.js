@@ -329,7 +329,7 @@ function renderTab_visaoGeral(cong, el){
 async function _membrosLoad(congId){
   if(!congId) return [];
   try{
-    const url=`${apiBaseUrl()}/rest/v1/membros?congregacao_id=eq.${encodeURIComponent(congId)}&select=id,funcao,status,pessoa_id,pessoas(nome,email)&order=pessoas(nome).asc&limit=300`;
+    const url=`${apiBaseUrl()}/rest/v1/membros?congregacao_id=eq.${encodeURIComponent(congId)}&deleted_at=is.null&select=id,funcao,status,pessoa_id,pessoas(nome,email,telefone)&order=pessoas(nome).asc&limit=300`;
     const r=await fetch(url,{headers:apiHeaders()});
     if(!r.ok) return [];
     return await r.json();
@@ -402,14 +402,19 @@ async function renderTab_membresia(cong, el){
     :membros.map(mb=>{
       const nome=mb.pessoas?.nome||`Membro #${mb.pessoa_id?.slice(0,6)}`;
       const email=mb.pessoas?.email||"";
-      return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd1)">
+      const tel=mb.pessoas?.telefone||"";
+      const sub=[email,tel].filter(Boolean).join(" · ");
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd1)">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gr);flex-shrink:0">${iniciais(nome)}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:11.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(nome)}</div>
-          ${email?`<div style="font-size:10px;color:var(--tx3)">${escapeHtml(email)}</div>`:""}
+          ${sub?`<div style="font-size:10px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(sub)}</div>`:""}
+          ${mb.funcao?`<div style="font-size:10px;color:var(--tx3)">${escapeHtml(mb.funcao)}</div>`:""}
         </div>
-        <div style="flex-shrink:0">${statusBadge(mb.status||"ativo")}</div>
-        ${mb.funcao?`<div style="font-size:10px;color:var(--tx3);flex-shrink:0">${escapeHtml(mb.funcao)}</div>`:""}
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          ${statusBadge(mb.status||"ativo")}
+          ${podeEd?`<button class="tbt" style="font-size:9px;padding:2px 6px;color:var(--rose)" onclick="desvincularMembroCong('${mb.id}','${cong.id}')">Remover</button>`:""}
+        </div>
       </div>`;
     }).join("");
 }
@@ -1078,10 +1083,151 @@ window.salvarNovoLancamento = salvarNovoLancamento;
 let _pgCongId=null, _minCongId=null, _desCongId=null;
 
 // ── Vincular Membro ────────────────────────────────────────────
+let _vmCongId=null, _vmTimer=null;
+
 function abrirModalVincularMembro(congId){
-  if(typeof T==="function") T("Em breve","Vinculação de membros em implementação");
+  _vmCongId=congId||_activeCongId;
+  const input=document.getElementById("vm-busca");
+  if(input) input.value="";
+  const res=document.getElementById("vm-resultados");
+  if(res) res.innerHTML=`<div style="color:var(--tx3);font-size:11px;padding:20px 0;text-align:center">Digite para buscar</div>`;
+  const m=document.getElementById("modal-vincular-membro");
+  if(m) m.style.display="flex";
+  setTimeout(()=>input?.focus(),80);
 }
 window.abrirModalVincularMembro=abrirModalVincularMembro;
+
+function fecharModalVincularMembro(){
+  const m=document.getElementById("modal-vincular-membro");
+  if(m) m.style.display="none";
+}
+window.fecharModalVincularMembro=fecharModalVincularMembro;
+
+function _vmBuscaDebounce(){
+  clearTimeout(_vmTimer);
+  _vmTimer=setTimeout(_vmBuscar,350);
+}
+window._vmBuscaDebounce=_vmBuscaDebounce;
+
+async function _vmBuscar(){
+  const q=(document.getElementById("vm-busca")?.value||"").trim();
+  const res=document.getElementById("vm-resultados");
+  if(!res) return;
+  if(q.length<2){
+    res.innerHTML=`<div style="color:var(--tx3);font-size:11px;padding:20px 0;text-align:center">Digite ao menos 2 caracteres</div>`;
+    return;
+  }
+  res.innerHTML=`<div style="color:var(--tx3);font-size:11px;padding:20px 0;text-align:center">Buscando...</div>`;
+  try{
+    const pUrl=`${apiBaseUrl()}/rest/v1/pessoas?nome=ilike.*${encodeURIComponent(q)}*&select=id,nome,email,telefone,data_nascimento&order=nome.asc&limit=30`;
+    const pRes=await fetch(pUrl,{headers:apiHeaders()});
+    if(!pRes.ok){ res.innerHTML=`<div style="color:var(--rose);font-size:11px;padding:20px 0;text-align:center">Erro ao buscar membros</div>`; return; }
+    const pessoas=await pRes.json();
+    if(pessoas.length===0){
+      res.innerHTML=`<div style="color:var(--tx3);font-size:11px;padding:20px 0;text-align:center">Nenhum cadastro encontrado para "${escapeHtml(q)}"</div>`;
+      return;
+    }
+    // Busca vínculos existentes para essas pessoas
+    const ids=pessoas.map(p=>`"${p.id}"`).join(",");
+    const mUrl=`${apiBaseUrl()}/rest/v1/membros?pessoa_id=in.(${ids})&deleted_at=is.null&select=id,pessoa_id,congregacao_id,status`;
+    const mRes=await fetch(mUrl,{headers:apiHeaders()});
+    const membros=mRes.ok?await mRes.json():[];
+    const mbrMap={};
+    membros.forEach(mb=>{ mbrMap[mb.pessoa_id]=mb; });
+    // Monta nomes das congregações para membros já vinculados a outra
+    const congs=CONG.listCongs();
+    const _congNome=id=>{ const c=congs.find(c=>String(c.id)===String(id)); return c?c.identificacao.nome:`Congregação #${String(id).slice(0,6)}`; };
+    res.innerHTML=pessoas.map(p=>{
+      const mb=mbrMap[p.id];
+      const jaVinculado=mb&&String(mb.congregacao_id)===String(_vmCongId);
+      const outraCong=mb&&mb.congregacao_id&&String(mb.congregacao_id)!==String(_vmCongId);
+      const nomeCong=outraCong?_congNome(mb.congregacao_id):"";
+      const idade=p.data_nascimento?`${Math.floor((Date.now()-new Date(p.data_nascimento))/(365.25*864e5))} anos`:"";
+      const sub=[p.email,idade].filter(Boolean).join(" · ");
+      const mbIdSafe=mb?mb.id:"";
+      return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd1)">
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gr);flex-shrink:0">${iniciais(p.nome)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:11.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(p.nome)}</div>
+          <div style="font-size:10px;color:var(--tx3)">
+            ${sub?escapeHtml(sub):""}
+            ${outraCong?`<span style="color:var(--rose)"> · ${escapeHtml(nomeCong)}</span>`:""}
+            ${jaVinculado?`<span style="color:var(--gr)"> · Já vinculado</span>`:""}
+          </div>
+        </div>
+        <div style="flex-shrink:0">
+          ${jaVinculado
+            ?`<span style="font-size:10px;color:var(--gr);font-weight:600">Vinculado</span>`
+            :outraCong
+              ?`<button class="tbt" style="font-size:10px;padding:3px 8px;color:var(--rose)" onclick="_vmTransferir('${p.id}','${escapeHtml(p.nome).replace(/'/g,"\\'")}','${mbIdSafe}','${escapeHtml(nomeCong).replace(/'/g,"\\'")}')">Transferir</button>`
+              :`<button class="tbt pri" style="font-size:10px;padding:3px 8px" onclick="_vmVincular('${p.id}','${escapeHtml(p.nome).replace(/'/g,"\\'")}','${mbIdSafe}')">Vincular</button>`
+          }
+        </div>
+      </div>`;
+    }).join("");
+  }catch(e){
+    res.innerHTML=`<div style="color:var(--rose);font-size:11px;padding:20px 0;text-align:center">Erro: ${escapeHtml(e.message)}</div>`;
+  }
+}
+window._vmBuscar=_vmBuscar;
+
+async function _vmVincular(pessoaId, nome, membroId){
+  try{
+    let ok, errText="";
+    if(membroId){
+      const r=await fetch(`${apiBaseUrl()}/rest/v1/membros?id=eq.${encodeURIComponent(membroId)}`,{
+        method:"PATCH",
+        headers:{...apiHeaders(),"Prefer":"return=minimal"},
+        body:JSON.stringify({congregacao_id:_vmCongId})
+      });
+      ok=r.ok; if(!ok) errText=await r.text();
+    }else{
+      const r=await fetch(`${apiBaseUrl()}/rest/v1/membros`,{
+        method:"POST",
+        headers:{...apiHeaders(),"Prefer":"return=minimal"},
+        body:JSON.stringify({pessoa_id:pessoaId,congregacao_id:_vmCongId,status:"ativo"})
+      });
+      ok=r.ok; if(!ok) errText=await r.text();
+    }
+    if(ok){
+      if(typeof T==="function") T("Membro vinculado",nome);
+      fecharModalVincularMembro();
+      _activeCongId=_vmCongId; irParaSecaoCong(1);
+    }else{
+      if(typeof T==="function") T("Erro ao vincular",errText||"Verifique as permissões");
+    }
+  }catch(e){
+    if(typeof T==="function") T("Erro",e.message);
+  }
+}
+window._vmVincular=_vmVincular;
+
+async function _vmTransferir(pessoaId, nome, membroId, congAtual){
+  if(!confirm(`"${nome}" está vinculado à "${congAtual}".\nDeseja transferir para esta congregação?`)) return;
+  await _vmVincular(pessoaId,nome,membroId);
+}
+window._vmTransferir=_vmTransferir;
+
+async function desvincularMembroCong(membroId, congId){
+  if(!confirm("Remover vínculo deste membro com a congregação?")) return;
+  try{
+    const r=await fetch(`${apiBaseUrl()}/rest/v1/membros?id=eq.${encodeURIComponent(membroId)}`,{
+      method:"PATCH",
+      headers:{...apiHeaders(),"Prefer":"return=minimal"},
+      body:JSON.stringify({congregacao_id:null})
+    });
+    if(r.ok){
+      if(typeof T==="function") T("Vínculo removido","");
+      _activeCongId=congId; irParaSecaoCong(1);
+    }else{
+      const err=await r.text();
+      if(typeof T==="function") T("Erro ao remover",err||"Verifique as permissões");
+    }
+  }catch(e){
+    if(typeof T==="function") T("Erro",e.message);
+  }
+}
+window.desvincularMembroCong=desvincularMembroCong;
 
 // ── Tab 9: Agenda ─────────────────────────────────────
 async function _agendaLoad(congId){

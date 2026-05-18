@@ -268,4 +268,22 @@
     </div>
   </div>
 
+  <!-- ════ MODAL: VINCULAR MEMBRO ══════════════════ -->
+  <div class="mo" id="modal-vincular-membro" onclick="if(event.target===this)fecharModalVincularMembro()">
+    <div class="md" style="width:540px;max-height:90vh;display:flex;flex-direction:column">
+      <div class="md-t">Vincular Membro</div>
+      <div class="md-s">Busque um cadastro existente e vincule à congregação</div>
+      <div class="fg" style="flex-shrink:0">
+        <label class="flb">Buscar por nome</label>
+        <input class="fi2" id="vm-busca" placeholder="Digite ao menos 2 caracteres..." oninput="_vmBuscaDebounce()" autocomplete="off">
+      </div>
+      <div id="vm-resultados" style="flex:1;overflow-y:auto;min-height:80px;max-height:360px;margin-top:4px">
+        <div style="color:var(--tx3);font-size:11px;padding:20px 0;text-align:center">Digite para buscar</div>
+      </div>
+      <div class="ma" style="flex-shrink:0;margin-top:12px">
+        <button class="btn" onclick="fecharModalVincularMembro()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ════ ÁREA DO MEMBRO ═══════════════════════════ -->
