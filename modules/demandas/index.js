@@ -1022,6 +1022,19 @@
               <input id="dem-edit-venc" type="date" value="${dem.data_conclusao||''}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>
           </div>
+          ${_podeEditarPrioridade() ? `
+          <div style="margin-top:12px">
+            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Solicitante</label>
+            <div style="position:relative">
+              <input id="dem-edit-sol-nome" type="text" value="${escapeHtmlAttr(dem.solicitante||dem.solicitante_txt||"")}"
+                placeholder="Digite ao menos 2 caracteres para buscar..."
+                oninput="document.getElementById('dem-edit-sol-id').value='';window._demSolBuscar(this.value)"
+                onblur="setTimeout(()=>window._demSolFecharDd(),200)"
+                style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box" autocomplete="off">
+              <input id="dem-edit-sol-id" type="hidden" value="${escapeHtmlAttr(String(dem.solicitante_id||""))}">
+              <div id="dem-edit-sol-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-card);border:1px solid var(--bd2);border-radius:0 0 7px 7px;z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
+            </div>
+          </div>` : ""}
           <div style="margin-top:12px">
             <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Descrição</label>
             <textarea id="dem-edit-desc" rows="3" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;resize:vertical;box-sizing:border-box">${escapeHtml(dem.descricao || '')}</textarea>
@@ -1134,6 +1147,14 @@
     try {
       const payload = { titulo, descricao: desc || "", responsavel: resp || "", data_conclusao: venc };
       if (prioEl && _podeEditarPrioridade()) payload.prioridade = prioEl.value;
+      if (_podeEditarPrioridade()) {
+        const solNome = document.getElementById("dem-edit-sol-nome")?.value?.trim();
+        const solId   = document.getElementById("dem-edit-sol-id")?.value || null;
+        if (solNome) {
+          payload.solicitante    = solNome;
+          payload.solicitante_id = solId || null;
+        }
+      }
       if (_isFinEdicao) {
         const existFd  = (_ativo?.financial_data && typeof _ativo.financial_data === "object") ? _ativo.financial_data : {};
         const novoFd   = { ...existFd };
@@ -1179,6 +1200,57 @@
       if (typeof T === "function") T("Erro ao excluir", e.message || "Tente novamente");
       console.error("demExcluirDemanda:", e);
     }
+  };
+
+  /* ── Autocomplete solicitante (edição) ─────────────── */
+
+  window._demSolBuscar = function(q) {
+    clearTimeout(_demSolTimer);
+    const dd = document.getElementById("dem-edit-sol-dd");
+    if (!dd) return;
+    if (!q || q.trim().length < 2) { dd.style.display = "none"; return; }
+    _demSolTimer = setTimeout(async () => {
+      try {
+        const base = typeof apiBaseUrl === "function" ? apiBaseUrl() : "";
+        const hdrs = typeof apiHeaders  === "function" ? apiHeaders()  : {};
+        if (!base) return;
+        const res = await fetch(
+          `${base}/rest/v1/pessoas?nome=ilike.*${encodeURIComponent(q.trim())}*&deleted_at=is.null&select=id,nome&order=nome.asc&limit=8`,
+          { headers: hdrs }
+        );
+        if (!res.ok) { dd.style.display = "none"; return; }
+        const rows = await res.json();
+        if (!rows.length) {
+          dd.innerHTML = `<div style="padding:8px 12px;color:var(--tx3);font-size:11.5px">Nenhuma pessoa encontrada</div>`;
+          dd.style.display = "block";
+          return;
+        }
+        dd.innerHTML = rows.map(p =>
+          `<div onclick="window._demSolSelecionar('${escapeHtmlAttr(String(p.id))}','${escapeHtmlAttr(p.nome)}')"
+            style="padding:8px 12px;cursor:pointer;font-size:12px;color:var(--tx1);border-bottom:1px solid var(--bd1)"
+            onmouseover="this.style.background='var(--bg-hover)'"
+            onmouseout="this.style.background=''">${escapeHtml(p.nome)}</div>`
+        ).join("");
+        dd.style.display = "block";
+      } catch (_) {
+        const dd2 = document.getElementById("dem-edit-sol-dd");
+        if (dd2) dd2.style.display = "none";
+      }
+    }, 280);
+  };
+
+  window._demSolSelecionar = function(id, nome) {
+    const inp = document.getElementById("dem-edit-sol-nome");
+    const hid = document.getElementById("dem-edit-sol-id");
+    const dd  = document.getElementById("dem-edit-sol-dd");
+    if (inp) inp.value = nome;
+    if (hid) hid.value = id;
+    if (dd)  dd.style.display = "none";
+  };
+
+  window._demSolFecharDd = function() {
+    const dd = document.getElementById("dem-edit-sol-dd");
+    if (dd) dd.style.display = "none";
   };
 
   /* ── Modal: Nova Demanda ────────────────────────────── */
@@ -1852,6 +1924,8 @@
   window.adminDemFiltrar   = function() { _admRender(); };
 
   /* ── Seleção e impressão: Demandas Financeiras ─────── */
+
+  let _demSolTimer = null;
 
   const _finSel = new Set();
   let _finRowsAtual = [];
