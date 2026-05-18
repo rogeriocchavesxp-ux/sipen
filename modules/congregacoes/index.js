@@ -329,12 +329,14 @@ function renderTab_visaoGeral(cong, el){
 async function _membrosLoad(congId){
   if(!congId) return [];
   try{
-    const url=`${apiBaseUrl()}/rest/v1/membros?congregacao_id=eq.${encodeURIComponent(congId)}&deleted_at=is.null&select=id,funcao,status,pessoa_id,pessoas(nome,email,telefone)&limit=300`;
-    const r=await fetch(url,{headers:apiHeaders()});
-    if(!r.ok){ console.warn("_membrosLoad erro",r.status,await r.text()); return []; }
-    const rows=await r.json();
-    return rows.sort((a,b)=>(a.pessoas?.nome||"").localeCompare(b.pessoas?.nome||"","pt"));
-  }catch(e){ return []; }
+    const r=await fetch(`${apiBaseUrl()}/rest/v1/rpc/listar_membros_congregacao`,{
+      method:"POST",
+      headers:apiHeaders(),
+      body:JSON.stringify({p_congregacao_id:congId})
+    });
+    if(!r.ok){ console.warn("listar_membros_congregacao erro",r.status,await r.text()); return []; }
+    return await r.json();
+  }catch(e){ console.error("_membrosLoad:",e); return []; }
 }
 
 async function renderTab_membresia(cong, el){
@@ -401,10 +403,8 @@ async function renderTab_membresia(cong, el){
   listaEl.innerHTML=membros.length===0
     ?`<div style="color:var(--tx3);font-size:11px;padding:8px 0">Nenhum membro vinculado a esta congregação ainda.</div>`
     :membros.map(mb=>{
-      const nome=mb.pessoas?.nome||`Membro #${mb.pessoa_id?.slice(0,6)}`;
-      const email=mb.pessoas?.email||"";
-      const tel=mb.pessoas?.telefone||"";
-      const sub=[email,tel].filter(Boolean).join(" · ");
+      const nome=mb.nome||`Membro #${mb.pessoa_id?.slice(0,6)}`;
+      const sub=[mb.email,mb.telefone].filter(Boolean).join(" · ");
       return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd1)">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gr);flex-shrink:0">${iniciais(nome)}</div>
         <div style="flex:1;min-width:0">
