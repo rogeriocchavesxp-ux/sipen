@@ -500,13 +500,15 @@ async function entrarNoSistema() {
   if (_isCongregacaoUser()) {
     _aplicarModoCongregacao();
     _expandirSidebar("cong");
-    await go("cong-ver");
     const congId = USUARIO_ATUAL.congregacao_id;
     if (congId) {
+      // Sincroniza o cache ANTES de navegar para que getCong(UUID) funcione imediatamente
       try { if (typeof CONG !== "undefined") await CONG.syncFromSupabase(); } catch(e) {}
+      // abrirCongView faz o go("cong-ver") + renderiza; aguardamos para garantir a ordem
+      if (typeof window.abrirCongView === "function") await window.abrirCongView(congId);
       if (typeof window.buildCongMenu === "function") window.buildCongMenu();
-      if (typeof window.abrirCongView === "function") window.abrirCongView(congId);
     } else {
+      await go("cong-ver");
       const el = document.getElementById("v-cong-ver");
       if (el) el.innerHTML = `<div class="ct" style="text-align:center;padding:60px;color:var(--tx3);font-size:13px">Congregação não vinculada ao seu perfil.<br><span style="font-size:11px">Contate o administrador.</span></div>`;
     }

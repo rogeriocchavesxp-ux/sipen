@@ -443,6 +443,7 @@ const CONG = (function(){
     listCongs, saveCongs, getCong, saveCong, updateSection,
     listCultos, saveCultos, addCulto,
     emptyCong, seed,
+    rowToCong: _rowToCong,
     saveToSupabase, addCultoSupabase, syncFromSupabase
   };
 })();

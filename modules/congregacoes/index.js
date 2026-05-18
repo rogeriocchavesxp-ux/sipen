@@ -140,12 +140,34 @@ async function abrirCongView(id){
   _activeCongId=id;
   _activeTab=0;
   buildCongMenu();
+
   let cong=CONG.getCong(id);
+
+  // Cache miss: tenta resync (caso seja chamado independente do fluxo de login)
   if(!cong){
     try{ await CONG.syncFromSupabase(); }catch(e){}
     cong=CONG.getCong(id);
+    buildCongMenu();
   }
+
+  // Último recurso: busca direta por UUID, converte para formato JS e salva no cache
+  if(!cong){
+    try{
+      const r=await fetch(`${apiBaseUrl()}/rest/v1/congregacoes?id=eq.${encodeURIComponent(id)}&deleted_at=is.null&select=*`,{headers:apiHeaders()});
+      if(r.ok){
+        const rows=await r.json();
+        if(Array.isArray(rows)&&rows.length>0){
+          const converted=CONG.rowToCong(rows[0],[]);
+          CONG.saveCong(converted);
+          cong=CONG.getCong(id);
+        }
+      }
+    }catch(e){}
+  }
+
+  // Navega para a view (necessário quando chamado a partir da sidebar)
   if(typeof go==="function") await go("cong-ver");
+
   if(!cong){
     const el=document.getElementById("v-cong-ver");
     if(el) el.innerHTML=`<div class="ct" style="text-align:center;padding:60px;color:var(--tx3)">
@@ -155,6 +177,7 @@ async function abrirCongView(id){
     </div>`;
     return;
   }
+
   if(typeof CRUMB!=="undefined") CRUMB["cong-ver"]=["cong","Congregações",cong.identificacao.nome];
   renderCongView(cong);
 }
