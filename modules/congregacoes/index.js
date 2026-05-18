@@ -448,22 +448,59 @@ async function renderTab_membresia(cong, el){
 }
 
 // ── Tab 2: Cultos e Oração ────────────────────────────
+function _calcFreqMedia(hist){
+  if(!hist||!hist.length) return 0;
+  return Math.round(hist.reduce((s,c)=>s+(c.participantes||0),0)/hist.length);
+}
+
 function renderTab_cultos(cong, el){
   const a=cong.atividades_igreja;
   const hist=a.historico_cultos||[];
+  const podeEd=_podeEditar(cong.id);
+  const freqMedia=_calcFreqMedia(hist);
   const atividades=[
     ["Escola Dominical",a.escola_dominical],["Culto de Jovens",a.culto_jovens],
     ["Culto de Mulheres",a.culto_mulheres],["Culto de Homens",a.culto_homens],
     ["Culto de Crianças",a.culto_criancas]
   ];
+
+  const linhasCultos = hist.length===0
+    ? `<div style="color:var(--tx3);font-size:11px">Nenhum culto registrado</div>`
+    : hist.map((cu,idx)=>`
+        <div style="padding:9px 0;border-bottom:1px solid var(--bd1)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${fmtData(cu.data)} — ${escapeHtml(cu.tipo)}</div>
+              <div style="font-size:10px;color:var(--tx3);margin-top:1px">Pregador: ${escapeHtml(cu.pregador||"—")}</div>
+              ${cu.visitantes>0||cu.criancas>0||cu.decisoes>0?`
+                <div style="font-size:10px;color:var(--tx3);margin-top:2px">
+                  ${cu.visitantes>0?`Visitantes: <b style="color:var(--tx1)">${cu.visitantes}</b>&nbsp; `:""}
+                  ${cu.criancas>0?`Crianças: <b style="color:var(--sky)">${cu.criancas}</b>&nbsp; `:""}
+                  ${cu.decisoes>0?`Decisões: <b style="color:var(--gr)">${cu.decisoes}</b>`:""}
+                </div>`:""}
+              ${cu.obs?`<div style="font-size:10px;color:var(--tx3);font-style:italic;margin-top:2px">${escapeHtml(cu.obs)}</div>`:""}
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+              <div style="text-align:right">
+                <div style="font-size:14px;font-weight:700;color:var(--gr)">${cu.participantes}</div>
+                <div style="font-size:9.5px;color:var(--tx3)">presentes</div>
+              </div>
+              ${podeEd?`<div style="display:flex;gap:4px">
+                <button class="tbt" style="font-size:9px;padding:2px 7px" onclick="abrirModalEditarCulto('${cong.id}',${idx})">Editar</button>
+                <button class="tbt" style="font-size:9px;padding:2px 7px;color:var(--rose)" onclick="excluirCulto('${cong.id}',${idx})">Excluir</button>
+              </div>`:""}
+            </div>
+          </div>
+        </div>`).join("");
+
   el.innerHTML=`
     <div class="g2" style="margin-top:14px">
       <div class="card">
         <div class="ctit" style="display:flex;justify-content:space-between;align-items:center">
           Programação
-          ${_podeEditar(cong.id)?`<button class="tbt" style="font-size:10px;padding:4px 9px" onclick="abrirModalNovoCulto('${cong.id}')">+ Registrar Culto</button>`:""}
+          ${podeEd?`<button class="tbt" style="font-size:10px;padding:4px 9px" onclick="abrirModalNovoCulto('${cong.id}')">+ Registrar Culto</button>`:""}
         </div>
-        <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">${a.cultos_por_semana} culto(s)/semana &nbsp;|&nbsp; Freq. média: <b style="color:var(--tx1)">${a.frequencia_media}</b></div>
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">${a.cultos_por_semana} culto(s)/semana &nbsp;|&nbsp; Freq. média: <b style="color:var(--tx1)">${freqMedia}</b></div>
         ${(a.horarios||[]).map(h=>`<div style="padding:5px 0;border-bottom:1px solid var(--bd1);font-size:11.5px;color:var(--tx1)">🕐 ${h}</div>`).join("")||`<div style="color:var(--tx3);font-size:11px">Sem horários cadastrados</div>`}
         <div style="margin-top:14px">
           <div class="ctit" style="margin-bottom:6px">Atividades</div>
@@ -471,23 +508,8 @@ function renderTab_cultos(cong, el){
         </div>
       </div>
       <div class="card">
-        <div class="ctit">Histórico de Cultos</div>
-        ${hist.length===0?`<div style="color:var(--tx3);font-size:11px">Nenhum culto registrado</div>`:
-          hist.slice(0,8).map(cu=>`
-            <div style="padding:9px 0;border-bottom:1px solid var(--bd1)">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start">
-                <div>
-                  <div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${fmtData(cu.data)} — ${cu.tipo}</div>
-                  <div style="font-size:10px;color:var(--tx3);margin-top:1px">Pregador: ${cu.pregador||"—"}</div>
-                </div>
-                <div style="text-align:right;flex-shrink:0">
-                  <div style="font-size:14px;font-weight:700;color:var(--gr)">${cu.participantes}</div>
-                  <div style="font-size:9.5px;color:var(--tx3)">presentes</div>
-                </div>
-              </div>
-              ${cu.visitantes>0||cu.criancas>0||cu.decisoes>0?`<div style="font-size:10px;color:var(--tx3);margin-top:3px">${cu.visitantes>0?`Visitantes: <b style="color:var(--tx1)">${cu.visitantes}</b> &nbsp;|&nbsp; `:""}${cu.criancas>0?`Crianças: <b style="color:var(--sky)">${cu.criancas}</b> &nbsp;|&nbsp; `:""}Decisões: <b style="color:var(--gr)">${cu.decisoes}</b></div>`:""}
-              ${cu.obs?`<div style="font-size:10px;color:var(--tx3);font-style:italic;margin-top:2px">${cu.obs}</div>`:""}
-            </div>`).join("")}
+        <div class="ctit">Histórico de Cultos <span style="font-weight:400;color:var(--tx3);font-size:11px">${hist.length} registro${hist.length!==1?"s":""}</span></div>
+        ${linhasCultos}
       </div>
     </div>
   `;
@@ -746,7 +768,11 @@ function salvarEdicaoCong(id){
 }
 window.salvarEdicaoCong=salvarEdicaoCong;
 
-function abrirModalNovoCulto(congId){
+// _cultoEditIdx >= 0 → modo edição; -1 → novo
+let _cultoEditIdx = -1;
+let _cultoEditSbId = null;
+
+function _abrirModalCulto(congId, culto){
   const sel=document.getElementById("culto-cong-select");
   if(sel){
     const lista=_isLiderCong()
@@ -754,37 +780,88 @@ function abrirModalNovoCulto(congId){
       : CONG.listCongs();
     sel.innerHTML=lista.map(c=>`<option value="${c.id}"${c.id===congId?" selected":""}>${escapeHtml(c.identificacao.nome)}</option>`).join("");
   }
-  ["culto-data","culto-pregador","culto-obs"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
-  ["culto-participantes","culto-visitantes","culto-criancas","culto-decisoes"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value="0"; });
+  const g=v=>document.getElementById(v);
+  if(culto){
+    if(g("culto-data"))         g("culto-data").value=culto.data||"";
+    if(g("culto-tipo"))         g("culto-tipo").value=culto.tipo||"Domingo — manhã";
+    if(g("culto-participantes"))g("culto-participantes").value=culto.participantes||0;
+    if(g("culto-visitantes"))   g("culto-visitantes").value=culto.visitantes||0;
+    if(g("culto-criancas"))     g("culto-criancas").value=culto.criancas||0;
+    if(g("culto-decisoes"))     g("culto-decisoes").value=culto.decisoes||0;
+    if(g("culto-pregador"))     g("culto-pregador").value=culto.pregador||"";
+    if(g("culto-obs"))          g("culto-obs").value=culto.obs||"";
+  } else {
+    if(g("culto-data")) g("culto-data").value=new Date().toISOString().slice(0,10);
+    ["culto-pregador","culto-obs"].forEach(id=>{if(g(id)) g(id).value="";});
+    ["culto-participantes","culto-visitantes","culto-criancas","culto-decisoes"].forEach(id=>{if(g(id)) g(id).value="0";});
+  }
+  const titulo=document.getElementById("culto-modal-titulo");
+  if(titulo) titulo.textContent=culto?"Editar Culto":"Registrar Culto";
   const m=document.getElementById("modal-novo-culto"); if(m) m.style.display="flex";
+}
+
+function abrirModalNovoCulto(congId){
+  _cultoEditIdx=-1; _cultoEditSbId=null;
+  _abrirModalCulto(congId, null);
 }
 window.abrirModalNovoCulto=abrirModalNovoCulto;
 
-function fecharModalNovoCulto(){ const m=document.getElementById("modal-novo-culto"); if(m) m.style.display="none"; }
+function abrirModalEditarCulto(congId, idx){
+  const cong=CONG.getCong(congId); if(!cong) return;
+  const culto=(cong.atividades_igreja.historico_cultos||[])[idx];
+  if(!culto) return;
+  _cultoEditIdx=idx; _cultoEditSbId=culto._sbId||null;
+  _abrirModalCulto(congId, culto);
+}
+window.abrirModalEditarCulto=abrirModalEditarCulto;
+
+function fecharModalNovoCulto(){
+  const m=document.getElementById("modal-novo-culto"); if(m) m.style.display="none";
+  _cultoEditIdx=-1; _cultoEditSbId=null;
+}
 window.fecharModalNovoCulto=fecharModalNovoCulto;
 
 function salvarNovoCulto(){
   const congId=document.getElementById("culto-cong-select")?.value;
   const data=document.getElementById("culto-data")?.value;
-  if(!congId||!data){ alert("Preencha os campos obrigatórios"); return; }
-  const cong=CONG.getCong(congId);
-  if(!cong) return;
+  if(!congId||!data){ if(typeof T==="function") T("Campos obrigatórios","Informe data e congregação"); return; }
+  const cong=CONG.getCong(congId); if(!cong) return;
   const culto={
-    data, tipo:document.getElementById("culto-tipo")?.value||"",
-    participantes:parseInt(document.getElementById("culto-participantes")?.value)||0,
-    visitantes:parseInt(document.getElementById("culto-visitantes")?.value)||0,
-    criancas:parseInt(document.getElementById("culto-criancas")?.value)||0,
-    decisoes:parseInt(document.getElementById("culto-decisoes")?.value)||0,
-    pregador:document.getElementById("culto-pregador")?.value||"",
-    obs:document.getElementById("culto-obs")?.value||""
+    data,
+    tipo:          document.getElementById("culto-tipo")?.value||"",
+    participantes: parseInt(document.getElementById("culto-participantes")?.value)||0,
+    visitantes:    parseInt(document.getElementById("culto-visitantes")?.value)||0,
+    criancas:      parseInt(document.getElementById("culto-criancas")?.value)||0,
+    decisoes:      parseInt(document.getElementById("culto-decisoes")?.value)||0,
+    pregador:      document.getElementById("culto-pregador")?.value||"",
+    obs:           document.getElementById("culto-obs")?.value||""
   };
+
   if(!cong.atividades_igreja.historico_cultos) cong.atividades_igreja.historico_cultos=[];
-  cong.atividades_igreja.historico_cultos.unshift(culto);
+  const hist=cong.atividades_igreja.historico_cultos;
+
+  if(_cultoEditIdx>=0 && _cultoEditIdx<hist.length){
+    // modo edição — preserva _sbId
+    culto._sbId=hist[_cultoEditIdx]._sbId||_cultoEditSbId||null;
+    hist[_cultoEditIdx]=culto;
+    if(culto._sbId){
+      CONG.updateCultoSupabase(culto._sbId, culto)
+        .catch(e=>console.warn("updateCultoSupabase:", e.message));
+    }
+  } else {
+    // novo culto
+    hist.unshift(culto);
+    CONG.addCultoSupabase(congId, culto)
+      .catch(e=>console.warn("addCultoSupabase:", e.message));
+  }
+
+  // Atualiza frequência média calculada
+  cong.atividades_igreja.frequencia_media=_calcFreqMedia(hist);
   CONG.saveCong(cong);
-  CONG.addCultoSupabase(congId, culto)
-    .catch(e=>console.warn("CONG addCultoSupabase:", e.message));
+  _sbSaveCong(cong);
+
   fecharModalNovoCulto();
-  if(typeof T==="function") T("Culto registrado","Adicionado ao histórico");
+  if(typeof T==="function") T(_cultoEditIdx>=0?"Culto atualizado":"Culto registrado","");
   if(_activeCongId===congId){
     irParaSecaoCong(2);
   } else if(document.getElementById("v-cong-dash")?.classList.contains("on")){
@@ -792,6 +869,21 @@ function salvarNovoCulto(){
   }
 }
 window.salvarNovoCulto=salvarNovoCulto;
+
+function excluirCulto(congId, idx){
+  if(!confirm("Remover este culto do histórico?")) return;
+  const cong=CONG.getCong(congId); if(!cong) return;
+  const hist=cong.atividades_igreja.historico_cultos||[];
+  const sbId=hist[idx]?._sbId||null;
+  hist.splice(idx,1);
+  cong.atividades_igreja.frequencia_media=_calcFreqMedia(hist);
+  CONG.saveCong(cong);
+  _sbSaveCong(cong);
+  if(sbId) CONG.deleteCultoSupabase(sbId).catch(e=>console.warn("deleteCultoSupabase:", e.message));
+  if(typeof T==="function") T("Culto removido","");
+  _activeCongId=congId; irParaSecaoCong(2);
+}
+window.excluirCulto=excluirCulto;
 
 function abrirModalNovoEvento(congId){
   const sel=document.getElementById("evento-cong-select");

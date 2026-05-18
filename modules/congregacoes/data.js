@@ -405,6 +405,34 @@ const CONG = (function(){
     }
   }
 
+  async function updateCultoSupabase(sbId, culto){
+    if(!_sbAvailable()||!sbId) return;
+    const row={
+      data:          culto.data,
+      tipo:          culto.tipo||"",
+      pregador:      culto.pregador||"",
+      participantes: culto.participantes||0,
+      visitantes:    culto.visitantes||0,
+      criancas:      culto.criancas||0,
+      decisoes:      culto.decisoes||0,
+      obs:           culto.obs||""
+    };
+    const res=await fetch(
+      `${_sbBase()}/rest/v1/congregacao_cultos?id=eq.${encodeURIComponent(sbId)}`,
+      { method:"PATCH", headers:_sbHdrs({"Prefer":"return=minimal"}), body:JSON.stringify(row) }
+    );
+    if(!res.ok){ const err=await res.text(); throw new Error(err||`HTTP ${res.status}`); }
+  }
+
+  async function deleteCultoSupabase(sbId){
+    if(!_sbAvailable()||!sbId) return;
+    const res=await fetch(
+      `${_sbBase()}/rest/v1/congregacao_cultos?id=eq.${encodeURIComponent(sbId)}`,
+      { method:"DELETE", headers:_sbHdrs({"Prefer":"return=minimal"}) }
+    );
+    if(!res.ok){ const err=await res.text(); throw new Error(err||`HTTP ${res.status}`); }
+  }
+
   async function syncFromSupabase(){
     if(!_sbAvailable()) return false;
 
@@ -449,6 +477,6 @@ const CONG = (function(){
     listCultos, saveCultos, addCulto,
     emptyCong, seed,
     rowToCong: _rowToCong,
-    saveToSupabase, addCultoSupabase, syncFromSupabase
+    saveToSupabase, addCultoSupabase, updateCultoSupabase, deleteCultoSupabase, syncFromSupabase
   };
 })();
