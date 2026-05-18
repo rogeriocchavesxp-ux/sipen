@@ -696,9 +696,10 @@
   /* ── Dados financeiros: renderização no detalhe ─────── */
 
   function _renderFinancialData(dem) {
-    const fd  = dem.financial_data;
-    const sub = dem.subcategoria || "";
-    if (!fd || typeof fd !== "object" || Object.keys(fd).length === 0) return "";
+    const sub      = dem.subcategoria || "";
+    const _isFin   = sub === "Solicitação de pagamento" || sub === "Reembolso";
+    const fd       = (dem.financial_data && typeof dem.financial_data === "object") ? dem.financial_data : {};
+    if (!_isFin && Object.keys(fd).length === 0) return "";
 
     const fmtVal  = v => v ? `R$ ${parseFloat(v).toLocaleString("pt-BR", { minimumFractionDigits:2, maximumFractionDigits:2 })}` : "—";
     const fmtAnexo = (meta, rotulo) => {
@@ -730,8 +731,8 @@
       rows = [
         ["Reembolsado",       fd.reimb_nome || "—"],
         ["Valor",             fmtVal(fd.valor)],
-        fd.motivo            ? ["Motivo",            fd.motivo]            : null,
-        fd.forma_pagamento   ? ["Forma de pagamento", fd.forma_pagamento]  : null,
+        fd.motivo            ? ["Motivo",            fd.motivo]           : null,
+        ["Forma de pagamento", fd.forma_pagamento || "—"],
         fd.chave_pix         ? ["Chave Pix",          fd.chave_pix]        : null,
         fd.ministerio    ? ["Ministério",         fd.ministerio]    : null,
         fmtAnexo(fd.nota_fiscal, "Comprovante"),
@@ -942,6 +943,9 @@
       ]);
     }
 
+    const _demFd       = (dem.financial_data && typeof dem.financial_data === "object") ? dem.financial_data : {};
+    const _isFinSolPag = dem.area === "Financeiro" && dem.subcategoria === "Solicitação de pagamento";
+    const _isFinReemb  = dem.area === "Financeiro" && dem.subcategoria === "Reembolso";
     el.innerHTML = `
       <div class="hero">
         <div class="hero-ic" style="background:${catCor(dem.area)}18;border-color:${catCor(dem.area)}44;font-size:22px">${catIcon(dem.area)}</div>
@@ -1022,13 +1026,38 @@
             <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Descrição</label>
             <textarea id="dem-edit-desc" rows="3" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;resize:vertical;box-sizing:border-box">${escapeHtml(dem.descricao || '')}</textarea>
           </div>
-          ${_temFinancialData(dem) ? `
-          <div style="margin-top:12px">
-            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Forma de pagamento</label>
-            <select id="dem-edit-forma-pgto" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px">
-              <option value="">Selecione</option>
-              ${["PIX","Boleto","Cartão de Crédito","Cartão de Débito","Dinheiro","Transferência Bancária","Débito em Conta","Cheque","Reembolso","Outro"].map(f => `<option${f===(dem.financial_data?.forma_pagamento||"")?' selected':''}>${f}</option>`).join("")}
-            </select>
+          ${(_isFinSolPag || _isFinReemb) ? `
+          <div style="margin-top:16px;border:1px solid rgba(61,160,85,.3);border-radius:9px;padding:14px;background:rgba(61,160,85,.03)">
+            <div style="font-size:11px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px">💰 Dados Financeiros</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              ${_isFinSolPag ? `
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Tipo</label>
+                <select id="dem-edit-tipo" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px">
+                  ${["Pagamento","Reembolso","Adiantamento"].map(t => `<option${t===(_demFd.tipo||"Pagamento")?" selected":""}>${t}</option>`).join("")}
+                </select>
+              </div>` : `
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Reembolsado</label>
+                <input id="dem-edit-reimb-nome" type="text" value="${escapeHtmlAttr(_demFd.reimb_nome||"")}" placeholder="Nome de quem será reembolsado" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
+              </div>`}
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Valor (R$)</label>
+                <input id="dem-edit-valor" type="number" step="0.01" min="0" value="${_demFd.valor||""}" placeholder="0,00" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
+              </div>
+              ${_isFinSolPag ? `
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Beneficiário / Favorecido</label>
+                <input id="dem-edit-beneficiario" type="text" value="${escapeHtmlAttr(_demFd.beneficiario||"")}" placeholder="Nome completo" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
+              </div>` : ""}
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Forma de pagamento</label>
+                <select id="dem-edit-forma-pgto" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px">
+                  <option value="">Selecione</option>
+                  ${["PIX","Boleto","Cartão de Crédito","Cartão de Débito","Dinheiro","Transferência Bancária","Débito em Conta","Cheque","Reembolso","Outro"].map(f => `<option${f===(_demFd.forma_pagamento||"")?" selected":""}>${f}</option>`).join("")}
+                </select>
+              </div>
+            </div>
           </div>` : ""}
           <div style="margin-top:12px;display:flex;justify-content:flex-end">
             <button onclick="demSalvarEdicao('${id}')" style="padding:8px 20px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer">Salvar alterações</button>
@@ -1090,12 +1119,12 @@
   /* ── Salvar edição ──────────────────────────────────── */
 
   window.demSalvarEdicao = async function(id) {
-    const titulo   = document.getElementById("dem-edit-titulo")?.value?.trim();
-    const desc     = document.getElementById("dem-edit-desc")?.value?.trim();
-    const prioEl   = document.getElementById("dem-edit-prio");
-    const resp     = document.getElementById("dem-edit-resp")?.value?.trim();
-    const venc     = document.getElementById("dem-edit-venc")?.value || null;
-    const formaEl  = document.getElementById("dem-edit-forma-pgto");
+    const titulo          = document.getElementById("dem-edit-titulo")?.value?.trim();
+    const desc            = document.getElementById("dem-edit-desc")?.value?.trim();
+    const prioEl          = document.getElementById("dem-edit-prio");
+    const resp            = document.getElementById("dem-edit-resp")?.value?.trim();
+    const venc            = document.getElementById("dem-edit-venc")?.value || null;
+    const _isFinEdicao    = _ativo?.area === "Financeiro";
 
     if (!titulo) {
       if (typeof T === "function") T("Campo obrigatório", "Informe o título");
@@ -1105,8 +1134,20 @@
     try {
       const payload = { titulo, descricao: desc || "", responsavel: resp || "", data_conclusao: venc };
       if (prioEl && _podeEditarPrioridade()) payload.prioridade = prioEl.value;
-      if (formaEl && _ativo?.financial_data) {
-        payload.financial_data = { ..._ativo.financial_data, forma_pagamento: formaEl.value };
+      if (_isFinEdicao) {
+        const existFd  = (_ativo?.financial_data && typeof _ativo.financial_data === "object") ? _ativo.financial_data : {};
+        const novoFd   = { ...existFd };
+        const valorEl  = document.getElementById("dem-edit-valor");
+        const formaEl  = document.getElementById("dem-edit-forma-pgto");
+        const tipoEl   = document.getElementById("dem-edit-tipo");
+        const benefEl  = document.getElementById("dem-edit-beneficiario");
+        const reimbEl  = document.getElementById("dem-edit-reimb-nome");
+        if (valorEl)  { const v = parseFloat(valorEl.value || "0"); if (!isNaN(v) && v >= 0) novoFd.valor = v; }
+        if (formaEl)  novoFd.forma_pagamento = formaEl.value;
+        if (tipoEl)   novoFd.tipo = tipoEl.value;
+        if (benefEl)  novoFd.beneficiario = benefEl.value.trim();
+        if (reimbEl)  novoFd.reimb_nome = reimbEl.value.trim();
+        payload.financial_data = novoFd;
       }
       await apiWrite("update", "DEMANDAS", { _row: id, ...payload });
       if (typeof T === "function") T("✅ Demanda atualizada!", "");
