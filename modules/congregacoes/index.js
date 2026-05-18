@@ -943,11 +943,18 @@ window.salvarNovoDesafio=salvarNovoDesafio;
 // ── Financeiro: lançamentos por congregação ────────────────────
 let _lancTipo = "receita";
 let _lancCongId = null;
+let _finMes = new Date().getMonth();
+let _finAno = new Date().getFullYear();
+let _finAllLancs = null;
+let _finCongId = null;
+
+const _MESES_PT = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+                   "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
 async function _lancamentosLoad(congId) {
   if (!SUPABASE_URL || !congId) return [];
   try {
-    const url = `${apiBaseUrl()}/rest/v1/congregacao_lancamentos?congregacao_id=eq.${encodeURIComponent(congId)}&deleted_at=is.null&order=data.desc&limit=200`;
+    const url = `${apiBaseUrl()}/rest/v1/congregacao_lancamentos?congregacao_id=eq.${encodeURIComponent(congId)}&deleted_at=is.null&order=data.desc&limit=500`;
     const r = await fetch(url, { headers: apiHeaders() });
     if (!r.ok) return [];
     return await r.json();
@@ -955,69 +962,108 @@ async function _lancamentosLoad(congId) {
 }
 
 async function renderTab_financeiro(cong, el) {
-  const f = cong.financeiro;
+  if (_finCongId !== cong.id) {
+    _finCongId = cong.id;
+    _finAllLancs = null;
+    _finMes = new Date().getMonth();
+    _finAno = new Date().getFullYear();
+  }
   el.innerHTML = `<div style="padding:24px;text-align:center;color:var(--tx3);font-size:12px">Carregando lançamentos...</div>`;
+  if (!_finAllLancs) {
+    _finAllLancs = await _lancamentosLoad(cong.id);
+  }
+  _renderFinanceiroPorMes(cong, el);
+}
 
-  const lancs = await _lancamentosLoad(cong.id);
-  const receitas = lancs.filter(l => l.tipo === "receita");
-  const despesas = lancs.filter(l => l.tipo === "despesa");
-  const totalR = receitas.reduce((s,l) => s + Number(l.valor), 0);
-  const totalD = despesas.reduce((s,l) => s + Number(l.valor), 0);
-  const saldoR = totalR - totalD;
-
+function _renderFinanceiroPorMes(cong, el) {
   const podeEditar = typeof USUARIO_ATUAL !== "undefined" &&
     (USUARIO_ATUAL?.perfil === "ADMINISTRADOR_GERAL" || USUARIO_ATUAL?.perfil === "LIDER_CONGREGACAO");
 
+  const lancs = _finAllLancs || [];
+  const fmt = v => `R$ ${Number(v).toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+
+  const lancsDoMes = lancs.filter(l => {
+    if (!l.data) return false;
+    const d = new Date(l.data + "T00:00:00");
+    return d.getMonth() === _finMes && d.getFullYear() === _finAno;
+  });
+
+  const totalR = lancsDoMes.filter(l => l.tipo === "receita").reduce((s,l) => s + Number(l.valor), 0);
+  const totalD = lancsDoMes.filter(l => l.tipo === "despesa").reduce((s,l) => s + Number(l.valor), 0);
+  const saldoMes = totalR - totalD;
+
+  const saldoAcum = lancs.filter(l => {
+    if (!l.data) return false;
+    const d = new Date(l.data + "T00:00:00");
+    const y = d.getFullYear(), m = d.getMonth();
+    return y < _finAno || (y === _finAno && m <= _finMes);
+  }).reduce((s,l) => s + (l.tipo === "receita" ? Number(l.valor) : -Number(l.valor)), 0);
+
   const btnNovos = podeEditar ? `
-    <div style="display:flex;gap:8px">
+    <div style="display:flex;gap:8px;flex-shrink:0">
       <button class="tbt" style="background:rgba(58,170,92,0.1);border-color:rgba(58,170,92,0.3);color:var(--gr)"
-        onclick="abrirModalNovoLancamento('${cong.id}','receita')">+ Nova Entrada</button>
+        onclick="abrirModalNovoLancamento('${cong.id}','receita')">+ Entrada</button>
       <button class="tbt" style="background:rgba(208,104,104,0.1);border-color:rgba(208,104,104,0.3);color:var(--rose)"
-        onclick="abrirModalNovoLancamento('${cong.id}','despesa')">+ Nova Despesa</button>
+        onclick="abrirModalNovoLancamento('${cong.id}','despesa')">+ Despesa</button>
     </div>` : "";
 
-  const linhas = lancs.length === 0
-    ? `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--tx3)">Nenhum lançamento registrado</td></tr>`
-    : lancs.map(l => `
-      <tr style="border-bottom:1px solid var(--bd1)">
-        <td style="padding:7px 0;color:var(--tx3);font-size:11px">${l.data}</td>
-        <td style="padding:7px 0">
-          <span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;
-            background:${l.tipo==="receita"?"rgba(58,170,92,0.12)":"rgba(208,104,104,0.12)"};
-            color:${l.tipo==="receita"?"var(--gr)":"var(--rose)"}">
-            ${l.tipo === "receita" ? "Entrada" : "Despesa"}
-          </span>
-        </td>
-        <td style="padding:7px 8px;font-size:11.5px;color:var(--tx2)">${escapeHtml(l.descricao || l.categoria || "—")}</td>
-        <td style="padding:7px 0;text-align:right;font-weight:700;
-          color:${l.tipo==="receita"?"var(--gr)":"var(--rose)"}">
-          ${l.tipo==="receita"?"+":"-"} R$ ${Number(l.valor).toLocaleString("pt-BR",{minimumFractionDigits:2})}
-        </td>
-        <td style="padding:7px 0 7px 8px;font-size:10px;color:var(--tx3)">${escapeHtml(l.categoria||"")}</td>
-      </tr>`).join("");
+  const linhas = lancsDoMes.length === 0
+    ? `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--tx3)">Nenhum lançamento neste mês</td></tr>`
+    : lancsDoMes.map(l => {
+        const isR = l.tipo === "receita";
+        const dataFmt = l.data ? new Date(l.data + "T00:00:00").toLocaleDateString("pt-BR") : "—";
+        return `<tr style="border-bottom:1px solid var(--bd1)">
+          <td style="padding:7px 8px 7px 0;color:var(--tx3);font-size:11px;white-space:nowrap">${dataFmt}</td>
+          <td style="padding:7px 0">
+            <span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;
+              background:${isR?"rgba(58,170,92,0.12)":"rgba(208,104,104,0.12)"};
+              color:${isR?"var(--gr)":"var(--rose)"}">
+              ${isR ? "Entrada" : "Despesa"}
+            </span>
+          </td>
+          <td style="padding:7px 8px;font-size:11.5px;color:var(--tx2);max-width:160px">${escapeHtml(l.descricao||"—")}</td>
+          <td style="padding:7px 8px;font-size:11px;color:var(--tx3)">${escapeHtml(l.categoria||"—")}</td>
+          <td style="padding:7px 8px;font-size:11px;color:var(--tx3)">${escapeHtml(l.responsavel||"—")}</td>
+          <td style="padding:7px 0;text-align:right;font-weight:700;white-space:nowrap;color:${isR?"var(--gr)":"var(--rose)"}">
+            ${isR?"+":"-"} ${fmt(l.valor)}
+          </td>
+          <td style="padding:7px 0 7px 8px;font-size:10px;color:var(--tx3);max-width:120px">${escapeHtml(l.obs||"—")}</td>
+        </tr>`;
+      }).join("");
 
   el.innerHTML = `
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-top:14px;margin-bottom:12px;flex-wrap:wrap">
-      <div class="kpis c3" style="flex:1;margin:0">
-        <div class="kpi"><div class="kn">Entradas</div>
-          <div class="kv" style="color:var(--gr)">R$ ${totalR.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
-        <div class="kpi"><div class="kn">Despesas</div>
-          <div class="kv" style="color:var(--rose)">R$ ${totalD.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
-        <div class="kpi"><div class="kn">Saldo</div>
-          <div class="kv" style="color:${saldoR>=0?"var(--gr)":"var(--rose)"}">R$ ${saldoR.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;margin-bottom:14px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="tbt" onclick="navegarFinMes(-1)" style="padding:5px 12px;font-size:15px;line-height:1">&#8592;</button>
+        <span style="font-weight:700;font-size:14px;min-width:148px;text-align:center">${_MESES_PT[_finMes]} ${_finAno}</span>
+        <button class="tbt" onclick="navegarFinMes(1)" style="padding:5px 12px;font-size:15px;line-height:1">&#8594;</button>
       </div>
       ${btnNovos}
     </div>
+    <div class="kpis c4" style="margin-bottom:16px">
+      <div class="kpi"><div class="kn">Entradas do Mês</div>
+        <div class="kv" style="color:var(--gr)">${fmt(totalR)}</div></div>
+      <div class="kpi"><div class="kn">Despesas do Mês</div>
+        <div class="kv" style="color:var(--rose)">${fmt(totalD)}</div></div>
+      <div class="kpi"><div class="kn">Saldo do Mês</div>
+        <div class="kv" style="color:${saldoMes>=0?"var(--gr)":"var(--rose)"}">${fmt(saldoMes)}</div></div>
+      <div class="kpi"><div class="kn">Saldo Acumulado</div>
+        <div class="kv" style="color:${saldoAcum>=0?"var(--gr)":"var(--rose)"}">${fmt(saldoAcum)}</div></div>
+    </div>
     <div class="card">
-      <div class="ctit">Lançamentos <span style="font-weight:400;color:var(--tx3);font-size:11px">(${lancs.length} registros)</span></div>
+      <div class="ctit">${_MESES_PT[_finMes]} ${_finAno}
+        <span style="font-weight:400;color:var(--tx3);font-size:11px">${lancsDoMes.length} lançamento${lancsDoMes.length!==1?"s":""}</span>
+      </div>
       <div style="overflow-x:auto">
         <table style="width:100%;font-size:11.5px;border-collapse:collapse">
           <thead><tr style="border-bottom:1px solid var(--bd1)">
-            <th style="text-align:left;padding:6px 0;color:var(--tx3);font-weight:600;min-width:80px">Data</th>
+            <th style="text-align:left;padding:6px 8px 6px 0;color:var(--tx3);font-weight:600;white-space:nowrap">Data</th>
             <th style="text-align:left;padding:6px 0;color:var(--tx3);font-weight:600">Tipo</th>
             <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Descrição</th>
+            <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Categoria</th>
+            <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Responsável</th>
             <th style="text-align:right;padding:6px 0;color:var(--tx3);font-weight:600">Valor</th>
-            <th style="text-align:left;padding:6px 0 6px 8px;color:var(--tx3);font-weight:600">Categoria</th>
+            <th style="text-align:left;padding:6px 0 6px 8px;color:var(--tx3);font-weight:600">Obs</th>
           </tr></thead>
           <tbody>${linhas}</tbody>
         </table>
@@ -1026,6 +1072,16 @@ async function renderTab_financeiro(cong, el) {
   `;
 }
 
+function navegarFinMes(delta) {
+  _finMes += delta;
+  if (_finMes < 0)  { _finMes = 11; _finAno--; }
+  if (_finMes > 11) { _finMes = 0;  _finAno++; }
+  const el  = document.getElementById("cong-tab-content");
+  const cong = CONG.getCong(_finCongId);
+  if (el && cong) _renderFinanceiroPorMes(cong, el);
+}
+window.navegarFinMes = navegarFinMes;
+
 function abrirModalNovoLancamento(congId, tipo) {
   _lancCongId = congId;
   _lancTipo   = tipo || "receita";
@@ -1033,7 +1089,7 @@ function abrirModalNovoLancamento(congId, tipo) {
   if (tituloEl) tituloEl.textContent = tipo === "receita" ? "Nova Entrada" : "Nova Despesa";
   const tipoEl = document.getElementById("lanc-tipo-hidden");
   if (tipoEl) tipoEl.value = _lancTipo;
-  ["lanc-data","lanc-valor","lanc-categoria","lanc-descricao","lanc-obs"].forEach(id => {
+  ["lanc-data","lanc-valor","lanc-categoria","lanc-descricao","lanc-responsavel","lanc-obs"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = id === "lanc-data" ? new Date().toISOString().slice(0,10) : "";
   });
@@ -1049,11 +1105,12 @@ function fecharModalNovoLancamento() {
 window.fecharModalNovoLancamento = fecharModalNovoLancamento;
 
 async function salvarNovoLancamento() {
-  const data      = document.getElementById("lanc-data")?.value;
-  const valor     = parseFloat(document.getElementById("lanc-valor")?.value);
-  const categoria = document.getElementById("lanc-categoria")?.value?.trim() || "";
-  const descricao = document.getElementById("lanc-descricao")?.value?.trim() || "";
-  const obs       = document.getElementById("lanc-obs")?.value?.trim() || "";
+  const data        = document.getElementById("lanc-data")?.value;
+  const valor       = parseFloat(document.getElementById("lanc-valor")?.value);
+  const categoria   = document.getElementById("lanc-categoria")?.value?.trim() || "";
+  const descricao   = document.getElementById("lanc-descricao")?.value?.trim() || "";
+  const responsavel = document.getElementById("lanc-responsavel")?.value?.trim() || "";
+  const obs         = document.getElementById("lanc-obs")?.value?.trim() || "";
 
   if (!data || !valor || valor <= 0) {
     if (typeof T === "function") T("Campos obrigatórios", "Informe data e valor");
@@ -1061,7 +1118,7 @@ async function salvarNovoLancamento() {
   }
   if (!_lancCongId) return;
 
-  const payload = { congregacao_id: _lancCongId, data, tipo: _lancTipo, categoria, descricao, valor, obs };
+  const payload = { congregacao_id: _lancCongId, data, tipo: _lancTipo, categoria, descricao, responsavel, valor, obs };
   try {
     const url = `${apiBaseUrl()}/rest/v1/congregacao_lancamentos`;
     const r = await fetch(url, {
@@ -1072,6 +1129,11 @@ async function salvarNovoLancamento() {
     if (!r.ok) throw new Error(await r.text());
     fecharModalNovoLancamento();
     if (typeof T === "function") T("Lançamento salvo", `${_lancTipo === "receita" ? "Entrada" : "Despesa"} registrada`);
+    // Sync selected month to match saved lancamento's date
+    const savedDate = new Date(data + "T00:00:00");
+    _finMes = savedDate.getMonth();
+    _finAno = savedDate.getFullYear();
+    _finAllLancs = null; // force reload from DB
     const cong = CONG.getCong(_lancCongId);
     if (cong) renderTab_financeiro(cong, document.getElementById("cong-tab-content"));
   } catch(e) {
