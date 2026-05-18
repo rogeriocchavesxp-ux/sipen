@@ -115,6 +115,9 @@ function irParaSecaoCong(i){
   document.querySelectorAll("#ms-cong .si-cong-sub").forEach((sub,idx)=>{
     sub.classList.toggle("ativo",idx===i);
   });
+  document.querySelectorAll("#cong-tabs-bar .citab").forEach((tab,idx)=>{
+    tab.classList.toggle("on",idx===i);
+  });
   const cong=CONG.getCong(_activeCongId);
   if(cong) renderCongTab(i,cong);
 }
@@ -780,7 +783,7 @@ function salvarNovoEvento(){
   CONG.saveCong(cong);
   _sbSaveCong(cong);
   fecharModalNovoEvento();
-  if(_activeCongId===congId) abrirCongView(congId);
+  if(_activeCongId===congId) irParaSecaoCong(8);
 }
 window.salvarNovoEvento=salvarNovoEvento;
 
@@ -865,7 +868,7 @@ function salvarNovoPG(){
   CONG.saveCong(cong); _sbSaveCong(cong);
   fecharModalNovoPG();
   if(typeof T==="function") T("Grupo criado",nome);
-  abrirCongView(_pgCongId);
+  _activeCongId=_pgCongId; irParaSecaoCong(3);
 }
 window.salvarNovoPG=salvarNovoPG;
 
@@ -894,7 +897,7 @@ function salvarNovoMinistrioCong(){
   CONG.saveCong(cong); _sbSaveCong(cong);
   fecharModalNovoMinistrioCong();
   if(typeof T==="function") T("Ministério criado",nome);
-  abrirCongView(_minCongId);
+  _activeCongId=_minCongId; irParaSecaoCong(4);
 }
 window.salvarNovoMinistrioCong=salvarNovoMinistrioCong;
 
@@ -927,7 +930,7 @@ function salvarNovoDesafio(){
   CONG.saveCong(cong); _sbSaveCong(cong);
   fecharModalNovoDesafio();
   if(typeof T==="function") T("Desafio registrado",titulo);
-  abrirCongView(_desCongId);
+  _activeCongId=_desCongId; irParaSecaoCong(7);
 }
 window.salvarNovoDesafio=salvarNovoDesafio;
 
@@ -1236,7 +1239,7 @@ function salvarNovoDeptCong(){
   CONG.saveCong(cong); _sbSaveCong(cong);
   fecharModalNovoDeptCong();
   if(typeof T==="function") T("Departamento criado",nome);
-  abrirCongView(_deptCongId);
+  _activeCongId=_deptCongId; irParaSecaoCong(10);
 }
 window.salvarNovoDeptCong=salvarNovoDeptCong;
 function excluirDeptCong(idx, congId){
@@ -1245,7 +1248,7 @@ function excluirDeptCong(idx, congId){
   if(!cong) return;
   cong.departamentos.lista.splice(idx,1);
   CONG.saveCong(cong); _sbSaveCong(cong);
-  abrirCongView(congId);
+  _activeCongId=congId; irParaSecaoCong(10);
 }
 window.excluirDeptCong=excluirDeptCong;
 
