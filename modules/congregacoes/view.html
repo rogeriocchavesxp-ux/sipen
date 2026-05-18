@@ -76,12 +76,17 @@
         </div>
       </div>
       <div class="frow">
-        <div class="fg"><label class="flb">Participantes *</label><input class="fi2" type="number" id="culto-participantes" placeholder="0" min="0"></div>
+        <div class="fg"><label class="flb">Adultos *</label><input class="fi2" type="number" id="culto-adultos" placeholder="0" min="0" oninput="_cultoCalcTotal()"></div>
         <div class="fg"><label class="flb">Visitantes</label><input class="fi2" type="number" id="culto-visitantes" placeholder="0" min="0"></div>
       </div>
       <div class="frow">
-        <div class="fg"><label class="flb">Crianças</label><input class="fi2" type="number" id="culto-criancas" placeholder="0" min="0"></div>
+        <div class="fg"><label class="flb">Crianças</label><input class="fi2" type="number" id="culto-criancas" placeholder="0" min="0" oninput="_cultoCalcTotal()"></div>
         <div class="fg"><label class="flb">Decisões / Profissões de Fé</label><input class="fi2" type="number" id="culto-decisoes" placeholder="0" min="0"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:6px 2px 2px">
+        <span style="font-size:11.5px;color:var(--tx3)">Total de Presentes:</span>
+        <span id="culto-total-display" style="font-size:16px;font-weight:700;color:var(--gr)">0</span>
+        <span style="font-size:10px;color:var(--tx3)">(adultos + crianças)</span>
       </div>
       <div class="frow">
         <div class="fg"><label class="flb">Pregador</label><input class="fi2" id="culto-pregador" placeholder="Nome do pregador"></div>

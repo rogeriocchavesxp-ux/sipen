@@ -292,18 +292,24 @@ const CONG = (function(){
   }
 
   function _rowToCong(row, cultos){
-    const hist = (cultos||[]).map(c=>({
-      data:          c.data,
-      tipo:          c.tipo||"",
-      pregador:      c.pregador||"",
-      tema:          c.tema||"",
-      participantes: c.participantes||0,
-      visitantes:    c.visitantes||0,
-      criancas:      c.criancas||0,
-      decisoes:      c.decisoes||0,
-      obs:           c.obs||"",
-      _sbId:         c.id
-    }));
+    const hist = (cultos||[]).map(c=>{
+      const criancas  = c.criancas||0;
+      const total     = c.participantes||0;
+      const adultos   = (c.adultos != null) ? (c.adultos||0) : Math.max(0, total - criancas);
+      return {
+        data:          c.data,
+        tipo:          c.tipo||"",
+        pregador:      c.pregador||"",
+        tema:          c.tema||"",
+        adultos,
+        participantes: adultos + criancas,
+        visitantes:    c.visitantes||0,
+        criancas,
+        decisoes:      c.decisoes||0,
+        obs:           c.obs||"",
+        _sbId:         c.id
+      };
+    });
     // Detecta formato: lideres pode ser objeto (novo) ou array (legado)
     const leRaw = row.lideres;
     const le = (leRaw && !Array.isArray(leRaw) && typeof leRaw === "object")
@@ -404,6 +410,7 @@ const CONG = (function(){
       tipo:          culto.tipo||"",
       pregador:      culto.pregador||"",
       tema:          culto.tema||"",
+      adultos:       culto.adultos||0,
       participantes: culto.participantes||0,
       visitantes:    culto.visitantes||0,
       criancas:      culto.criancas||0,
@@ -429,6 +436,7 @@ const CONG = (function(){
       data:          culto.data,
       tipo:          culto.tipo||"",
       pregador:      culto.pregador||"",
+      adultos:       culto.adultos||0,
       participantes: culto.participantes||0,
       visitantes:    culto.visitantes||0,
       criancas:      culto.criancas||0,

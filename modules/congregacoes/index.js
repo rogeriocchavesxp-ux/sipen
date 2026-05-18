@@ -207,19 +207,21 @@ function renderDashboardGeral(){
   const todosOsCultos=congs.flatMap(c=>(c.atividades_igreja.historico_cultos||[]).map(cu=>({...cu,congNome:c.identificacao.nome})));
   todosOsCultos.sort((a,b)=>b.data.localeCompare(a.data));
   const cultosEl=document.getElementById("cong-dash-cultos");
-  if(cultosEl) cultosEl.innerHTML=todosOsCultos.slice(0,6).map(cu=>`
+  if(cultosEl) cultosEl.innerHTML=todosOsCultos.slice(0,6).map(cu=>{
+    const tot=cu.participantes||(cu.adultos||0)+(cu.criancas||0);
+    return `
     <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd1)">
       <div style="font-size:10px;color:var(--tx3);width:68px;flex-shrink:0">${fmtData(cu.data)}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:11.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(cu.congNome)}</div>
-        <div style="font-size:10px;color:var(--tx3)">${cu.tipo}</div>
+        <div style="font-size:10px;color:var(--tx3)">${cu.tipo} · Ad: ${cu.adultos||0} Cr: ${cu.criancas||0}</div>
       </div>
       <div style="text-align:right;flex-shrink:0">
-        <div style="font-size:12px;font-weight:700;color:var(--gr)">${cu.participantes}</div>
-        ${cu.criancas>0?`<div style="font-size:9.5px;color:var(--sky)">${cu.criancas} cr.</div>`:""}
+        <div style="font-size:12px;font-weight:700;color:var(--gr)">${tot}</div>
+        <div style="font-size:9px;color:var(--tx3)">total</div>
       </div>
     </div>
-  `).join("")||`<div style="color:var(--tx3);font-size:11px">Nenhum culto registrado</div>`;
+  `}).join("")||`<div style="color:var(--tx3);font-size:11px">Nenhum culto registrado</div>`;
 }
 window.renderDashboardGeral=renderDashboardGeral;
 
@@ -232,12 +234,13 @@ async function renderDashboardCongregacao(cong){
   const pgsAtivos=(cong.pequenos_grupos?.lista||[]).filter(g=>g.status==="ativo");
   const minsAtivos=(cong.ministerios?.lista||[]).filter(mn=>mn.status==="ativo");
   const depsAtivos=(cong.departamentos?.lista||[]).filter(d=>d.status==="ativo");
-  const freqMedia=cultos.length>0
-    ?Math.round(cultos.slice(0,8).reduce((s,c)=>s+(c.participantes||0),0)/Math.min(cultos.length,8))
-    :a.frequencia_media||0;
-  const totalCriancas=cultos.slice(0,4).reduce((s,c)=>s+(c.criancas||0),0);
+  const n=Math.min(cultos.length,8)||1;
+  const freqMedia   =cultos.length>0?Math.round(cultos.slice(0,8).reduce((s,c)=>s+(c.participantes||0),0)/n):a.frequencia_media||0;
+  const freqAdultos =cultos.length>0?Math.round(cultos.slice(0,8).reduce((s,c)=>s+(c.adultos||0),0)/n):0;
+  const freqCriancas=cultos.length>0?Math.round(cultos.slice(0,8).reduce((s,c)=>s+(c.criancas||0),0)/n):0;
+  const totalCriancas  =cultos.slice(0,4).reduce((s,c)=>s+(c.criancas||0),0);
   const totalVisitantes=cultos.slice(0,4).reduce((s,c)=>s+(c.visitantes||0),0);
-  const totalDecisoes=cultos.slice(0,4).reduce((s,c)=>s+(c.decisoes||0),0);
+  const totalDecisoes  =cultos.slice(0,4).reduce((s,c)=>s+(c.decisoes||0),0);
 
   el.innerHTML=`
     <div class="hero">
@@ -254,9 +257,9 @@ async function renderDashboardCongregacao(cong){
     <div class="ct">
       <div class="kpis c4" style="margin-bottom:16px">
         <div class="kpi"><div class="kn">Membros Ativos</div><div class="kv">${m.membros_ativos}</div></div>
-        <div class="kpi"><div class="kn">Freq. Média</div><div class="kv">${freqMedia}</div></div>
-        <div class="kpi"><div class="kn">Pequenos Grupos</div><div class="kv">${pgsAtivos.length}</div></div>
-        <div class="kpi"><div class="kn">Ministérios</div><div class="kv">${minsAtivos.length}</div></div>
+        <div class="kpi"><div class="kn">Média Total</div><div class="kv" style="color:var(--gr)">${freqMedia}</div></div>
+        <div class="kpi"><div class="kn">Média Adultos</div><div class="kv">${freqAdultos}</div></div>
+        <div class="kpi"><div class="kn">Média Crianças</div><div class="kv" style="color:var(--sky)">${freqCriancas}</div></div>
       </div>
       <div class="g2" style="margin-bottom:16px">
         <div class="card">
@@ -266,18 +269,22 @@ async function renderDashboardCongregacao(cong){
           </div>
           ${cultos.length===0
             ?`<div style="color:var(--tx3);font-size:11px;padding:8px 0">Nenhum culto registrado</div>`
-            :cultos.slice(0,5).map(cu=>`
+            :cultos.slice(0,5).map(cu=>{
+              const tot=cu.participantes||(cu.adultos||0)+(cu.criancas||0);
+              return `
               <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd1)">
                 <div style="font-size:10px;color:var(--tx3);width:68px;flex-shrink:0">${fmtData(cu.data)}</div>
                 <div style="flex:1;min-width:0">
                   <div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${escapeHtml(cu.tipo||"Culto")}</div>
-                  <div style="font-size:10px;color:var(--tx3)">${cu.pregador?escapeHtml(cu.pregador):""}</div>
+                  <div style="font-size:10px;color:var(--tx3)">${cu.pregador?escapeHtml(cu.pregador):""}${cu.visitantes>0?` · <span style="color:var(--amber)">${cu.visitantes} vis.</span>`:""}</div>
+                  <div style="font-size:10px;color:var(--tx3)">Ad: <b>${cu.adultos||0}</b> &nbsp; Cr: <b style="color:var(--sky)">${cu.criancas||0}</b></div>
                 </div>
                 <div style="text-align:right;flex-shrink:0">
-                  <div style="font-size:12px;font-weight:700;color:var(--gr)">${cu.participantes}</div>
-                  ${cu.criancas>0?`<div style="font-size:9.5px;color:var(--sky)">${cu.criancas} cr.</div>`:""}
+                  <div style="font-size:13px;font-weight:700;color:var(--gr)">${tot}</div>
+                  <div style="font-size:9px;color:var(--tx3)">total</div>
                 </div>
-              </div>`).join("")
+              </div>`;
+            }).join("")
           }
           ${cultos.length>0?`
           <div style="display:flex;gap:16px;padding:10px 0 2px;border-top:1px solid var(--bd1);margin-top:4px">
@@ -637,12 +644,28 @@ function _calcFreqMedia(hist){
   if(!hist||!hist.length) return 0;
   return Math.round(hist.reduce((s,c)=>s+(c.participantes||0),0)/hist.length);
 }
+function _calcFreqMediaAdultos(hist){
+  if(!hist||!hist.length) return 0;
+  return Math.round(hist.reduce((s,c)=>s+(c.adultos||0),0)/hist.length);
+}
+function _calcFreqMediaCriancas(hist){
+  if(!hist||!hist.length) return 0;
+  return Math.round(hist.reduce((s,c)=>s+(c.criancas||0),0)/hist.length);
+}
 
 function renderTab_cultos(cong, el){
   const a=cong.atividades_igreja;
   const hist=a.historico_cultos||[];
   const podeEd=_podeEditar(cong.id);
-  const freqMedia=_calcFreqMedia(hist);
+
+  const freqTotal   = _calcFreqMedia(hist);
+  const freqAdultos = _calcFreqMediaAdultos(hist);
+  const freqCriancas= _calcFreqMediaCriancas(hist);
+
+  const mesAtual = new Date().toISOString().slice(0,7);
+  const histMes  = hist.filter(c=>c.data && c.data.slice(0,7)===mesAtual);
+  const totalMes = histMes.reduce((s,c)=>s+(c.participantes||0),0);
+
   const atividades=[
     ["Escola Dominical",a.escola_dominical],["Culto de Jovens",a.culto_jovens],
     ["Culto de Mulheres",a.culto_mulheres],["Culto de Homens",a.culto_homens],
@@ -651,23 +674,26 @@ function renderTab_cultos(cong, el){
 
   const linhasCultos = hist.length===0
     ? `<div style="color:var(--tx3);font-size:11px">Nenhum culto registrado</div>`
-    : hist.map((cu,idx)=>`
+    : hist.map((cu,idx)=>{
+        const total=cu.participantes||(cu.adultos||0)+(cu.criancas||0);
+        return `
         <div style="padding:9px 0;border-bottom:1px solid var(--bd1)">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
             <div style="flex:1;min-width:0">
               <div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${fmtData(cu.data)} — ${escapeHtml(cu.tipo)}</div>
-              <div style="font-size:10px;color:var(--tx3);margin-top:1px">Pregador: ${escapeHtml(cu.pregador||"—")}</div>
-              ${cu.visitantes>0||cu.criancas>0||cu.decisoes>0?`
-                <div style="font-size:10px;color:var(--tx3);margin-top:2px">
-                  ${cu.visitantes>0?`Visitantes: <b style="color:var(--tx1)">${cu.visitantes}</b>&nbsp; `:""}
-                  ${cu.criancas>0?`Crianças: <b style="color:var(--sky)">${cu.criancas}</b>&nbsp; `:""}
-                  ${cu.decisoes>0?`Decisões: <b style="color:var(--gr)">${cu.decisoes}</b>`:""}
-                </div>`:""}
+              <div style="font-size:10px;color:var(--tx3);margin-top:1px">Pregador: <b style="color:var(--tx2)">${escapeHtml(cu.pregador||"—")}</b></div>
+              <div style="font-size:10px;color:var(--tx3);margin-top:2px">
+                Adultos: <b style="color:var(--tx1)">${cu.adultos||0}</b>&nbsp;
+                Crianças: <b style="color:var(--sky)">${cu.criancas||0}</b>&nbsp;
+                Total: <b style="color:var(--gr)">${total}</b>
+                ${cu.visitantes>0?`&nbsp; Visitantes: <b style="color:var(--amber)">${cu.visitantes}</b>`:""}
+                ${cu.decisoes>0?`&nbsp; Decisões: <b style="color:var(--gr)">${cu.decisoes}</b>`:""}
+              </div>
               ${cu.obs?`<div style="font-size:10px;color:var(--tx3);font-style:italic;margin-top:2px">${escapeHtml(cu.obs)}</div>`:""}
             </div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
               <div style="text-align:right">
-                <div style="font-size:14px;font-weight:700;color:var(--gr)">${cu.participantes}</div>
+                <div style="font-size:14px;font-weight:700;color:var(--gr)">${total}</div>
                 <div style="font-size:9.5px;color:var(--tx3)">presentes</div>
               </div>
               ${podeEd?`<div style="display:flex;gap:4px">
@@ -676,7 +702,8 @@ function renderTab_cultos(cong, el){
               </div>`:""}
             </div>
           </div>
-        </div>`).join("");
+        </div>`;
+      }).join("");
 
   el.innerHTML=`
     <div class="g2" style="margin-top:14px">
@@ -685,8 +712,19 @@ function renderTab_cultos(cong, el){
           Programação
           ${podeEd?`<button class="tbt" style="font-size:10px;padding:4px 9px" onclick="abrirModalNovoCulto('${cong.id}')">+ Registrar Culto</button>`:""}
         </div>
-        <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">${a.cultos_por_semana} culto(s)/semana &nbsp;|&nbsp; Freq. média: <b style="color:var(--tx1)">${freqMedia}</b></div>
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">${a.cultos_por_semana} culto(s)/semana</div>
         ${(a.horarios||[]).map(h=>`<div style="padding:5px 0;border-bottom:1px solid var(--bd1);font-size:11.5px;color:var(--tx1)">🕐 ${h}</div>`).join("")||`<div style="color:var(--tx3);font-size:11px">Sem horários cadastrados</div>`}
+        <div style="margin-top:14px">
+          <div class="ctit" style="margin-bottom:8px">Indicadores</div>
+          <div class="kpis c2" style="margin:0 0 8px">
+            <div class="kpi" style="padding:8px"><div class="kn">Média Adultos</div><div class="kv" style="font-size:20px">${freqAdultos}</div></div>
+            <div class="kpi" style="padding:8px"><div class="kn">Média Crianças</div><div class="kv" style="font-size:20px;color:var(--sky)">${freqCriancas}</div></div>
+          </div>
+          <div class="kpis c2" style="margin:0">
+            <div class="kpi" style="padding:8px"><div class="kn">Média Total</div><div class="kv" style="font-size:20px;color:var(--gr)">${freqTotal}</div></div>
+            <div class="kpi" style="padding:8px"><div class="kn">Presentes no Mês</div><div class="kv" style="font-size:20px">${totalMes}</div></div>
+          </div>
+        </div>
         <div style="margin-top:14px">
           <div class="ctit" style="margin-bottom:6px">Atividades</div>
           ${atividades.map(([nome,ativo])=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:11.5px"><span style="color:${ativo?"var(--gr)":"var(--tx3)"}">${ativo?"✓":"○"}</span><span style="color:${ativo?"var(--tx1)":"var(--tx3)"}">${nome}</span></div>`).join("")}
@@ -957,6 +995,14 @@ window.salvarEdicaoCong=salvarEdicaoCong;
 let _cultoEditIdx = -1;
 let _cultoEditSbId = null;
 
+function _cultoCalcTotal(){
+  const a=parseInt(document.getElementById("culto-adultos")?.value)||0;
+  const c=parseInt(document.getElementById("culto-criancas")?.value)||0;
+  const el=document.getElementById("culto-total-display");
+  if(el) el.textContent=a+c;
+}
+window._cultoCalcTotal=_cultoCalcTotal;
+
 function _abrirModalCulto(congId, culto){
   const sel=document.getElementById("culto-cong-select");
   if(sel){
@@ -967,19 +1013,21 @@ function _abrirModalCulto(congId, culto){
   }
   const g=v=>document.getElementById(v);
   if(culto){
-    if(g("culto-data"))         g("culto-data").value=culto.data||"";
-    if(g("culto-tipo"))         g("culto-tipo").value=culto.tipo||"Domingo — manhã";
-    if(g("culto-participantes"))g("culto-participantes").value=culto.participantes||0;
-    if(g("culto-visitantes"))   g("culto-visitantes").value=culto.visitantes||0;
-    if(g("culto-criancas"))     g("culto-criancas").value=culto.criancas||0;
-    if(g("culto-decisoes"))     g("culto-decisoes").value=culto.decisoes||0;
-    if(g("culto-pregador"))     g("culto-pregador").value=culto.pregador||"";
-    if(g("culto-obs"))          g("culto-obs").value=culto.obs||"";
+    if(g("culto-data"))    g("culto-data").value=culto.data||"";
+    if(g("culto-tipo"))    g("culto-tipo").value=culto.tipo||"Domingo — manhã";
+    const adultos = culto.adultos != null ? culto.adultos : Math.max(0,(culto.participantes||0)-(culto.criancas||0));
+    if(g("culto-adultos")) g("culto-adultos").value=adultos;
+    if(g("culto-visitantes"))g("culto-visitantes").value=culto.visitantes||0;
+    if(g("culto-criancas")) g("culto-criancas").value=culto.criancas||0;
+    if(g("culto-decisoes")) g("culto-decisoes").value=culto.decisoes||0;
+    if(g("culto-pregador")) g("culto-pregador").value=culto.pregador||"";
+    if(g("culto-obs"))      g("culto-obs").value=culto.obs||"";
   } else {
     if(g("culto-data")) g("culto-data").value=new Date().toISOString().slice(0,10);
     ["culto-pregador","culto-obs"].forEach(id=>{if(g(id)) g(id).value="";});
-    ["culto-participantes","culto-visitantes","culto-criancas","culto-decisoes"].forEach(id=>{if(g(id)) g(id).value="0";});
+    ["culto-adultos","culto-visitantes","culto-criancas","culto-decisoes"].forEach(id=>{if(g(id)) g(id).value="0";});
   }
+  _cultoCalcTotal();
   const titulo=document.getElementById("culto-modal-titulo");
   if(titulo) titulo.textContent=culto?"Editar Culto":"Registrar Culto";
   const m=document.getElementById("modal-novo-culto"); if(m) m.style.display="flex";
@@ -1011,12 +1059,15 @@ function salvarNovoCulto(){
   const data=document.getElementById("culto-data")?.value;
   if(!congId||!data){ if(typeof T==="function") T("Campos obrigatórios","Informe data e congregação"); return; }
   const cong=CONG.getCong(congId); if(!cong) return;
+  const adultos  = parseInt(document.getElementById("culto-adultos")?.value)||0;
+  const criancas = parseInt(document.getElementById("culto-criancas")?.value)||0;
   const culto={
     data,
     tipo:          document.getElementById("culto-tipo")?.value||"",
-    participantes: parseInt(document.getElementById("culto-participantes")?.value)||0,
+    adultos,
+    criancas,
+    participantes: adultos + criancas,
     visitantes:    parseInt(document.getElementById("culto-visitantes")?.value)||0,
-    criancas:      parseInt(document.getElementById("culto-criancas")?.value)||0,
     decisoes:      parseInt(document.getElementById("culto-decisoes")?.value)||0,
     pregador:      document.getElementById("culto-pregador")?.value||"",
     obs:           document.getElementById("culto-obs")?.value||""
