@@ -362,13 +362,18 @@ const CONG = (function(){
 
   /* ── Supabase: operações públicas ────────────────────── */
 
+  // Lock duplo: _savePending bloqueia sync durante PATCH em voo;
+  // _lastSaveTime detecta o caso onde o PATCH terminou mas o sync
+  // já tinha buscado dados velhos do Supabase antes do PATCH.
   let _savePending = false;
+  let _lastSaveTime = 0;
 
   async function saveToSupabase(cong){
     if(!_sbAvailable()) return;
     const row = _congToRow(cong);
     delete row.id;
     _savePending = true;
+    _lastSaveTime = Date.now();
     try {
       const res = await fetch(
         `${_sbBase()}/rest/v1/congregacoes?id=eq.${encodeURIComponent(cong.id)}`,
@@ -392,7 +397,7 @@ const CONG = (function(){
   }
 
   async function addCultoSupabase(congId, culto){
-    if(!_sbAvailable()) return;
+    if(!_sbAvailable()) return null;
     const row = {
       cong_id:       congId,
       data:          culto.data,
@@ -407,13 +412,15 @@ const CONG = (function(){
     };
     const res = await fetch(`${_sbBase()}/rest/v1/congregacao_cultos`, {
       method:  "POST",
-      headers: _sbHdrs({ "Prefer": "return=minimal" }),
+      headers: _sbHdrs({ "Prefer": "return=representation", "Accept": "application/json" }),
       body:    JSON.stringify(row)
     });
     if(!res.ok){
       const err = await res.text();
       throw new Error(err || `HTTP ${res.status}`);
     }
+    const inserted = await res.json();
+    return Array.isArray(inserted) && inserted.length > 0 ? inserted[0].id : null;
   }
 
   async function updateCultoSupabase(sbId, culto){
@@ -447,6 +454,11 @@ const CONG = (function(){
   async function syncFromSupabase(){
     if(!_sbAvailable()) return false;
 
+    // Captura o timestamp antes dos awaits; se _lastSaveTime mudar
+    // durante os fetches, um PATCH ocorreu enquanto buscávamos dados
+    // velhos — descartamos o resultado para não sobrescrever o localStorage.
+    const syncSaveTime = _lastSaveTime;
+
     const cRes = await fetch(
       `${_sbBase()}/rest/v1/congregacoes?deleted_at=is.null&select=*&order=nome.asc`,
       { method:"GET", headers:_sbHdrs() }
@@ -478,7 +490,9 @@ const CONG = (function(){
     });
 
     const congs = rows.map(row => _rowToCong(row, cultosByCong[row.id]||[]));
-    if(!_savePending) saveCongs(congs);
+    // Só escreve se: não há PATCH em voo E nenhum PATCH foi iniciado
+    // enquanto este sync estava buscando dados (evita sobrescrever com stale data)
+    if(!_savePending && _lastSaveTime === syncSaveTime) saveCongs(congs);
     return true;
   }
 

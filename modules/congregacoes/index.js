@@ -852,7 +852,19 @@ function salvarNovoCulto(){
     // novo culto
     hist.unshift(culto);
     CONG.addCultoSupabase(congId, culto)
-      .catch(e=>console.warn("addCultoSupabase:", e.message));
+      .then(sbId => {
+        if(!sbId) return;
+        // Guarda o UUID gerado pelo Supabase no culto em localStorage
+        const updCong = CONG.getCong(congId);
+        if(updCong && updCong.atividades_igreja.historico_cultos.length > 0){
+          updCong.atividades_igreja.historico_cultos[0]._sbId = sbId;
+          CONG.saveCong(updCong);
+        }
+      })
+      .catch(e => {
+        console.error("addCultoSupabase:", e.message);
+        if(typeof T==="function") T("Erro ao salvar culto no servidor", e.message||"Verifique as permissões RLS");
+      });
   }
 
   // Atualiza frequência média calculada
