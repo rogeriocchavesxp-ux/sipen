@@ -67,7 +67,12 @@ function buildCongMenu(){
   const dashLink=document.getElementById("sb-cong-dash-link");
   if(dashLink){
     const perfilDefinido=typeof USUARIO_ATUAL!=="undefined"&&USUARIO_ATUAL?.perfil;
-    dashLink.style.display=(perfilDefinido&&!_isLiderCong())?"block":"none";
+    if(perfilDefinido){
+      dashLink.style.display="block";
+      dashLink.textContent=_isLiderCong()?"Dashboard da Congregação":"Dashboard Geral";
+    } else {
+      dashLink.style.display="none";
+    }
   }
 
   // Para LIDER: header não é retrátil e mostra o nome da congregação
@@ -139,6 +144,14 @@ function irParaSecaoCong(i){
   document.querySelectorAll("#ms-cong .si-cong-sub").forEach((sub,idx)=>{
     sub.classList.toggle("ativo",idx===i);
   });
+  const onDash=document.getElementById("v-cong-dash")?.classList.contains("on");
+  if(onDash && _activeCongId && window._congOrigGo){
+    window._congOrigGo("cong-ver").then(()=>{
+      const cong=CONG.getCong(_activeCongId);
+      if(cong) renderCongView(cong);
+    });
+    return;
+  }
   document.querySelectorAll("#cong-tabs-bar .citab").forEach((tab,idx)=>{
     tab.classList.toggle("on",idx===i);
   });
@@ -149,6 +162,12 @@ window.irParaSecaoCong=irParaSecaoCong;
 
 // ── Dashboard Geral ───────────────────────────────────
 function renderDashboardGeral(){
+  if(_isLiderCong()){
+    const congId=USUARIO_ATUAL?.congregacao_id;
+    const cong=CONG.listCongs().find(c=>String(c.id)===String(congId));
+    if(cong) renderDashboardCongregacao(cong);
+    return;
+  }
   const congs=CONG.listCongs();
   const ativas       =congs.filter(c=>c.identificacao.status==="ativa").length;
   const comSupervisao=congs.filter(c=>(c.lideranca_estruturada||{}).supervisao).length;
@@ -203,6 +222,172 @@ function renderDashboardGeral(){
   `).join("")||`<div style="color:var(--tx3);font-size:11px">Nenhum culto registrado</div>`;
 }
 window.renderDashboardGeral=renderDashboardGeral;
+
+// ── Dashboard da Congregação (LIDER_CONGREGACAO) ──────
+async function renderDashboardCongregacao(cong){
+  const el=document.getElementById("v-cong-dash");
+  if(!el) return;
+  const m=cong.panorama_membresia, a=cong.atividades_igreja, f=cong.financeiro;
+  const cultos=a.historico_cultos||[];
+  const pgsAtivos=(cong.pequenos_grupos?.lista||[]).filter(g=>g.status==="ativo");
+  const minsAtivos=(cong.ministerios?.lista||[]).filter(mn=>mn.status==="ativo");
+  const depsAtivos=(cong.departamentos?.lista||[]).filter(d=>d.status==="ativo");
+  const freqMedia=cultos.length>0
+    ?Math.round(cultos.slice(0,8).reduce((s,c)=>s+(c.participantes||0),0)/Math.min(cultos.length,8))
+    :a.frequencia_media||0;
+  const totalCriancas=cultos.slice(0,4).reduce((s,c)=>s+(c.criancas||0),0);
+  const totalVisitantes=cultos.slice(0,4).reduce((s,c)=>s+(c.visitantes||0),0);
+  const totalDecisoes=cultos.slice(0,4).reduce((s,c)=>s+(c.decisoes||0),0);
+
+  el.innerHTML=`
+    <div class="hero">
+      <div class="hero-ic" style="background:${cong.identificacao.cor}22;border-color:${cong.identificacao.cor}55">${cong.identificacao.icon||"⛪"}</div>
+      <div>
+        <div class="hero-lbl">Dashboard da Congregação</div>
+        <div class="hero-ttl">${escapeHtml(cong.identificacao.nome)}</div>
+        <div class="hero-dsc">${escapeHtml(cong.identificacao.localizacao||"")}${cong.identificacao.localizacao?" — ":""}${statusBadge(cong.identificacao.status)}</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="irParaSecaoCong(2)">+ Registrar Culto</button>
+      </div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4" style="margin-bottom:16px">
+        <div class="kpi"><div class="kn">Membros Ativos</div><div class="kv">${m.membros_ativos}</div></div>
+        <div class="kpi"><div class="kn">Freq. Média</div><div class="kv">${freqMedia}</div></div>
+        <div class="kpi"><div class="kn">Pequenos Grupos</div><div class="kv">${pgsAtivos.length}</div></div>
+        <div class="kpi"><div class="kn">Ministérios</div><div class="kv">${minsAtivos.length}</div></div>
+      </div>
+      <div class="g2" style="margin-bottom:16px">
+        <div class="card">
+          <div class="ctit" style="display:flex;justify-content:space-between;align-items:center">
+            Cultos Recentes
+            <button class="tbt" style="font-size:10px;padding:3px 8px" onclick="irParaSecaoCong(2)">Ver todos</button>
+          </div>
+          ${cultos.length===0
+            ?`<div style="color:var(--tx3);font-size:11px;padding:8px 0">Nenhum culto registrado</div>`
+            :cultos.slice(0,5).map(cu=>`
+              <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd1)">
+                <div style="font-size:10px;color:var(--tx3);width:68px;flex-shrink:0">${fmtData(cu.data)}</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${escapeHtml(cu.tipo||"Culto")}</div>
+                  <div style="font-size:10px;color:var(--tx3)">${cu.pregador?escapeHtml(cu.pregador):""}</div>
+                </div>
+                <div style="text-align:right;flex-shrink:0">
+                  <div style="font-size:12px;font-weight:700;color:var(--gr)">${cu.participantes}</div>
+                  ${cu.criancas>0?`<div style="font-size:9.5px;color:var(--sky)">${cu.criancas} cr.</div>`:""}
+                </div>
+              </div>`).join("")
+          }
+          ${cultos.length>0?`
+          <div style="display:flex;gap:16px;padding:10px 0 2px;border-top:1px solid var(--bd1);margin-top:4px">
+            <div style="text-align:center;flex:1"><div style="font-size:18px;font-weight:700;color:var(--sky)">${totalCriancas}</div><div style="font-size:10px;color:var(--tx3)">Crianças (4 cultos)</div></div>
+            <div style="text-align:center;flex:1"><div style="font-size:18px;font-weight:700;color:var(--amber)">${totalVisitantes}</div><div style="font-size:10px;color:var(--tx3)">Visitantes</div></div>
+            <div style="text-align:center;flex:1"><div style="font-size:18px;font-weight:700;color:var(--gr)">${totalDecisoes}</div><div style="font-size:10px;color:var(--tx3)">Decisões de Fé</div></div>
+          </div>`:""}
+        </div>
+        <div class="card">
+          <div class="ctit" style="display:flex;justify-content:space-between;align-items:center">
+            Agenda Local
+            <button class="tbt" style="font-size:10px;padding:3px 8px" onclick="irParaSecaoCong(9)">Ver agenda</button>
+          </div>
+          <div id="cong-dash-agenda-lider"><div style="color:var(--tx3);font-size:11px;padding:8px 0">Carregando...</div></div>
+        </div>
+      </div>
+      <div class="g2" style="margin-bottom:16px">
+        <div class="card">
+          <div class="ctit" style="display:flex;justify-content:space-between;align-items:center">
+            Pequenos Grupos
+            <button class="tbt" style="font-size:10px;padding:3px 8px" onclick="irParaSecaoCong(3)">Gerenciar</button>
+          </div>
+          ${pgsAtivos.length===0
+            ?`<div style="color:var(--tx3);font-size:11px;padding:8px 0">Nenhum grupo ativo</div>`
+            :pgsAtivos.slice(0,5).map(pg=>`
+              <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--bd1)">
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${escapeHtml(pg.nome)}</div>
+                  <div style="font-size:10px;color:var(--tx3)">${pg.lider?escapeHtml(pg.lider):""}${pg.dia?" · "+escapeHtml(pg.dia):""}</div>
+                </div>
+                <div style="font-size:12px;font-weight:700;color:var(--gr)">${pg.membros||0}</div>
+              </div>`).join("")
+          }
+          ${pgsAtivos.length>5?`<div style="font-size:10px;color:var(--tx3);padding:6px 0">+${pgsAtivos.length-5} grupos</div>`:""}
+        </div>
+        <div class="card">
+          <div class="ctit" style="display:flex;justify-content:space-between;align-items:center">
+            Ministérios
+            <button class="tbt" style="font-size:10px;padding:3px 8px" onclick="irParaSecaoCong(4)">Gerenciar</button>
+          </div>
+          ${minsAtivos.length===0
+            ?`<div style="color:var(--tx3);font-size:11px;padding:8px 0">Nenhum ministério ativo</div>`
+            :minsAtivos.slice(0,5).map(mn=>`
+              <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--bd1)">
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${escapeHtml(mn.nome)}</div>
+                  <div style="font-size:10px;color:var(--tx3)">${mn.lider?escapeHtml(mn.lider):""}</div>
+                </div>
+                <div style="font-size:12px;font-weight:700;color:var(--sky)">${mn.membros||0}</div>
+              </div>`).join("")
+          }
+          ${minsAtivos.length>5?`<div style="font-size:10px;color:var(--tx3);padding:6px 0">+${minsAtivos.length-5} ministérios</div>`:""}
+        </div>
+      </div>
+      <div class="g2" style="margin-bottom:16px">
+        <div class="card">
+          <div class="ctit" style="display:flex;justify-content:space-between;align-items:center">
+            Financeiro
+            <button class="tbt" style="font-size:10px;padding:3px 8px" onclick="irParaSecaoCong(6)">Ver lançamentos</button>
+          </div>
+          <div class="kpis c2" style="margin:0">
+            <div class="kpi" style="padding:10px"><div class="kn">Receita Média/Mês</div><div class="kv" style="font-size:20px">R$ ${f.receita_media_mensal.toLocaleString("pt-BR")}</div></div>
+            <div class="kpi" style="padding:10px"><div class="kn">Saldo Atual</div><div class="kv" style="font-size:20px;color:${f.saldo_atual>=0?"var(--gr)":"var(--rose)"}">R$ ${f.saldo_atual.toLocaleString("pt-BR")}</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ctit" style="display:flex;justify-content:space-between;align-items:center">
+            Departamentos
+            <button class="tbt" style="font-size:10px;padding:3px 8px" onclick="irParaSecaoCong(10)">Gerenciar</button>
+          </div>
+          ${depsAtivos.length===0
+            ?`<div style="color:var(--tx3);font-size:11px;padding:8px 0">Nenhum departamento ativo</div>`
+            :depsAtivos.slice(0,5).map(d=>`
+              <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--bd1)">
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${escapeHtml(d.nome)}</div>
+                  <div style="font-size:10px;color:var(--tx3)">${d.lider?escapeHtml(d.lider):""}</div>
+                </div>
+              </div>`).join("")
+          }
+        </div>
+      </div>
+    </div>
+  `;
+
+  _agendaLoad(cong.id).then(items=>{
+    const agEl=document.getElementById("cong-dash-agenda-lider");
+    if(!agEl) return;
+    const hoje=new Date().toISOString().slice(0,10);
+    const proximos=items.filter(i=>i.data>=hoje).slice(0,5);
+    if(proximos.length===0){
+      agEl.innerHTML=`<div style="color:var(--tx3);font-size:11px;padding:8px 0">Nenhum evento próximo</div>`;
+      return;
+    }
+    agEl.innerHTML=proximos.map(item=>`
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd1)">
+        <div style="width:44px;text-align:center;flex-shrink:0">
+          <div style="font-size:12px;font-weight:700;color:var(--gr)">${fmtData(item.data).split(" ").slice(0,2).join(" ")}</div>
+          ${item.hora?`<div style="font-size:9px;color:var(--tx3)">${item.hora.slice(0,5)}</div>`:""}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${escapeHtml(item.titulo)}</div>
+          <div style="font-size:10px;color:var(--tx3)">${escapeHtml(item.tipo||"")}</div>
+        </div>
+      </div>`).join("");
+  }).catch(()=>{
+    const agEl=document.getElementById("cong-dash-agenda-lider");
+    if(agEl) agEl.innerHTML=`<div style="color:var(--tx3);font-size:11px;padding:8px 0">—</div>`;
+  });
+}
 
 // ── Abrir congregação individual ──────────────────────
 async function abrirCongView(id){
@@ -1597,18 +1782,19 @@ window.excluirDeptCong=excluirDeptCong;
 // ── Hook no go() ──────────────────────────────────────
 (function(){
   const _orig=window.go;
+  window._congOrigGo=_orig;
   window.go=async function(id){
     const perfil=typeof USUARIO_ATUAL!=="undefined"?USUARIO_ATUAL?.perfil:null;
     const isCongUser=perfil==="LIDER_CONGREGACAO"||perfil==="MEMBRO_CONGREGACAO";
     if(isCongUser){
       if(id==="cong-dash"){
-        // Nunca mostrar o dashboard geral — redireciona para a própria congregação
         const congId=USUARIO_ATUAL?.congregacao_id;
-        if(congId && typeof abrirCongView==="function"){
-          await abrirCongView(congId);
-        } else {
-          if(congId) _activeCongId=congId;
-          await _orig("cong-ver");
+        await _orig("cong-dash");
+        if(congId){
+          _activeCongId=congId;
+          let cong=CONG.getCong(congId)||CONG.listCongs().find(c=>String(c.id)===String(congId));
+          if(!cong){ await CONG.syncFromSupabase().catch(()=>{}); cong=CONG.listCongs().find(c=>String(c.id)===String(congId)); }
+          if(cong) renderDashboardCongregacao(cong);
         }
         return;
       }
@@ -1618,7 +1804,6 @@ window.excluirDeptCong=excluirDeptCong;
       }
     }
     await _orig(id);
-    // dashboard geral: apenas para não-congregation users
     if(id==="cong-dash"&&!isCongUser) setTimeout(renderDashboardGeral,0);
   };
 })();
@@ -1645,9 +1830,16 @@ window._congSyncOnNav = function(){
     .then(ok=>{
       if(!ok) return;
       buildCongMenu();
-      // Dashboard geral: apenas para perfis administrativos
-      if(!_isLiderCong() && document.getElementById("v-cong-dash")?.classList.contains("on")) renderDashboardGeral();
-      if(_activeCongId){
+      const onDash=document.getElementById("v-cong-dash")?.classList.contains("on");
+      if(onDash){
+        if(_isLiderCong()){
+          const congId=USUARIO_ATUAL?.congregacao_id;
+          const cong=CONG.listCongs().find(c=>String(c.id)===String(congId));
+          if(cong){ _activeCongId=congId; renderDashboardCongregacao(cong); }
+        } else {
+          renderDashboardGeral();
+        }
+      } else if(_activeCongId){
         const c=CONG.getCong(_activeCongId);
         if(c) renderCongView(c);
       }
