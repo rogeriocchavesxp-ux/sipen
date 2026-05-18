@@ -365,18 +365,22 @@ const CONG = (function(){
   async function saveToSupabase(cong){
     if(!_sbAvailable()) return;
     const row = _congToRow(cong);
-    delete row.id; // id vai na query string, não no body
+    delete row.id;
     const res = await fetch(
       `${_sbBase()}/rest/v1/congregacoes?id=eq.${encodeURIComponent(cong.id)}`,
       {
         method:  "PATCH",
-        headers: _sbHdrs({ "Prefer": "return=minimal" }),
+        headers: _sbHdrs({ "Prefer": "return=representation", "Accept": "application/json" }),
         body:    JSON.stringify(row)
       }
     );
     if(!res.ok){
       const err = await res.text();
       throw new Error(err || `HTTP ${res.status}`);
+    }
+    const updated = await res.json();
+    if(!Array.isArray(updated) || updated.length === 0){
+      throw new Error("RLS bloqueou o UPDATE — execute a migration de permissão do Líder");
     }
   }
 
