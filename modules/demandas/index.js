@@ -247,7 +247,7 @@
     _finAtualizarAbas();
     const area  = _FIN_FILTROS[_finFiltro] ?? null;
     const fixos = area ? { area } : undefined;
-    renderLista("fin-demandas-content", fixos);
+    _finRenderLista(fixos);
   }
 
   async function _load() {
@@ -1795,6 +1795,227 @@
 
   window.adminDemSetFiltro = _admSetFiltro;
   window.adminDemFiltrar   = function() { _admRender(); };
+
+  /* ── Seleção e impressão: Demandas Financeiras ─────── */
+
+  const _finSel = new Set();
+  let _finRowsAtual = [];
+
+  async function _finRenderLista(filtrosFixos) {
+    const elId = "fin-demandas-content";
+    const el   = document.getElementById(elId);
+    if (!el) return;
+    el.innerHTML = `<div style="padding:8px 0;color:var(--tx3);font-size:11.5px">${_sp()} Carregando...</div>`;
+
+    if (!_cache.length) await _load();
+
+    let rows = [..._cache];
+
+    if (filtrosFixos) {
+      Object.entries(filtrosFixos).forEach(([k, v]) => {
+        if (!v) return;
+        if (k === "prioridade" && v === "Alta") {
+          rows = rows.filter(r => ["Alta","Urgente"].includes(r.prioridade));
+        } else if (k === "status") {
+          rows = rows.filter(r => _toDb(String(r[k]||"")) === _toDb(String(v)));
+        } else if (Array.isArray(v)) {
+          rows = rows.filter(r => v.includes(String(r[k]||"")));
+        } else {
+          rows = rows.filter(r => String(r[k]||"") === String(v));
+        }
+      });
+    }
+
+    const fStatus = document.getElementById(elId+"-fstatus")?.value || "";
+    const fPrio   = document.getElementById(elId+"-fprio")?.value   || "";
+    const fBusca  = (document.getElementById(elId+"-fbusca")?.value || "").toLowerCase();
+
+    if (fStatus) rows = rows.filter(r => _toDb(r.status) === _toDb(fStatus));
+    if (fPrio)   rows = rows.filter(r => r.prioridade === fPrio);
+    if (fBusca)  rows = rows.filter(r =>
+      (r.titulo||"").toLowerCase().includes(fBusca) ||
+      (r.solicitante||"").toLowerCase().includes(fBusca) ||
+      (r.responsavel||"").toLowerCase().includes(fBusca) ||
+      (r.area||"").toLowerCase().includes(fBusca) ||
+      (r.subcategoria||"").toLowerCase().includes(fBusca)
+    );
+
+    rows.sort((a,b) => (b.criado_em||"").localeCompare(a.criado_em||""));
+    _finRowsAtual = rows;
+
+    if (rows.length === 0) {
+      el.innerHTML = '<div style="color:var(--tx3);font-size:11.5px;padding:8px 0">Nenhuma demanda encontrada.</div>';
+      _finAtualizarToolbar();
+      return;
+    }
+
+    const allIds   = rows.map(r => String(r.id||r._row));
+    const todosSel = allIds.length > 0 && allIds.every(id => _finSel.has(id));
+    const nSel     = allIds.filter(id => _finSel.has(id)).length;
+
+    el.innerHTML = `
+      <div id="fin-dem-toolbar" style="display:${nSel>0?"flex":"none"};align-items:center;gap:10px;padding:4px 0 12px;flex-wrap:wrap">
+        <span id="fin-dem-contador" style="font-size:11.5px;color:var(--tx3);font-weight:600">${nSel} demanda${nSel!==1?"s":""} selecionada${nSel!==1?"s":""}</span>
+        <button class="tbt" style="font-size:10.5px;padding:4px 10px" onclick="window._finLimparSel()">Limpar seleção</button>
+        <button class="tbt" style="font-size:10.5px;padding:4px 12px;background:rgba(58,170,92,.1);border-color:rgba(58,170,92,.3);color:var(--gr);font-weight:700" onclick="window._finImprimir()">⎙ Imprimir Selecionadas</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="border-bottom:1px solid var(--bd2)">
+              <th style="padding:8px 2px;width:36px;vertical-align:middle;text-align:center">
+                <input type="checkbox" id="fin-dem-chk-all" ${todosSel?"checked":""} onchange="window._finToggleTodos(this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--gr)">
+              </th>
+              ${["Categoria","Subcategoria","Título","Solicitante","Responsável","Valor","Prior.","Status","Abertura","Conclusão"].map((h,i) =>
+                `<th style="text-align:${i===5?"right":"left"};padding:8px 6px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`
+              ).join("")}
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(r => {
+              const rid = String(r.id||r._row);
+              const sel = _finSel.has(rid);
+              return `
+              <tr id="fin-dem-row-${rid}" style="border-bottom:1px solid var(--bd1);background:${sel?"rgba(58,170,92,.06)":""}"
+                  onmouseover="if(!document.getElementById('fin-dem-chk-${rid}')?.checked)this.style.background='var(--bg-hover)'"
+                  onmouseout="this.style.background=document.getElementById('fin-dem-chk-${rid}')?.checked?'rgba(58,170,92,.06)':''">
+                <td style="padding:8px 2px;vertical-align:middle;text-align:center" onclick="event.stopPropagation()">
+                  <input type="checkbox" id="fin-dem-chk-${rid}" ${sel?"checked":""} onchange="window._finToggleSel('${rid}',this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--gr)">
+                </td>
+                <td style="padding:8px 6px;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">
+                  <span style="font-size:11px;font-weight:600;color:${catCor(r.area)}">${catIcon(r.area)} ${r.area||"—"}</span>
+                </td>
+                <td style="padding:8px 6px;color:var(--tx2);font-size:11px;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${r.subcategoria||"—"}</td>
+                <td style="padding:8px 6px;color:var(--tx1);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${escapeHtml(r.titulo)||"—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${escapeHtml(r.solicitante||r.solicitante_txt)||"—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${escapeHtml(r.responsavel||r.responsavel_txt)||"—"}</td>
+                <td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--tx1);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${r.financial_data?.valor!=null?`R$ ${parseFloat(r.financial_data.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}`:"—"}</td>
+                <td style="padding:8px 6px;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${pillPrio(r.prioridade)}</td>
+                <td style="padding:8px 6px;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${pillStatus(r.status)}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${fmtD(r.data_abertura||r.criado_em)}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${fmtD(r.data_conclusao)}</td>
+              </tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>`;
+    _finAtualizarToolbar();
+  }
+
+  function _finAtualizarToolbar() {
+    const toolbar  = document.getElementById("fin-dem-toolbar");
+    const contador = document.getElementById("fin-dem-contador");
+    if (!toolbar) return;
+    const n = _finSel.size;
+    toolbar.style.display = n > 0 ? "flex" : "none";
+    if (contador) contador.textContent = `${n} demanda${n!==1?"s":""} selecionada${n!==1?"s":""}`;
+  }
+
+  window._finToggleSel = function(id, checked) {
+    if (checked) _finSel.add(id); else _finSel.delete(id);
+    const row = document.getElementById(`fin-dem-row-${id}`);
+    if (row) row.style.background = checked ? "rgba(58,170,92,.06)" : "";
+    const allIds = _finRowsAtual.map(r => String(r.id||r._row));
+    const chkAll = document.getElementById("fin-dem-chk-all");
+    if (chkAll) chkAll.checked = allIds.length > 0 && allIds.every(i => _finSel.has(i));
+    _finAtualizarToolbar();
+  };
+
+  window._finToggleTodos = function(checked) {
+    _finRowsAtual.forEach(r => {
+      const id  = String(r.id||r._row);
+      const chk = document.getElementById(`fin-dem-chk-${id}`);
+      const row = document.getElementById(`fin-dem-row-${id}`);
+      if (checked) _finSel.add(id); else _finSel.delete(id);
+      if (chk) chk.checked = checked;
+      if (row) row.style.background = checked ? "rgba(58,170,92,.06)" : "";
+    });
+    _finAtualizarToolbar();
+  };
+
+  window._finLimparSel = function() {
+    _finRowsAtual.forEach(r => {
+      const id  = String(r.id||r._row);
+      _finSel.delete(id);
+      const chk = document.getElementById(`fin-dem-chk-${id}`);
+      const row = document.getElementById(`fin-dem-row-${id}`);
+      if (chk) chk.checked = false;
+      if (row) row.style.background = "";
+    });
+    const chkAll = document.getElementById("fin-dem-chk-all");
+    if (chkAll) chkAll.checked = false;
+    _finAtualizarToolbar();
+  };
+
+  window._finImprimir = function() {
+    const sel  = [..._finSel];
+    const rows = _finRowsAtual.filter(r => sel.includes(String(r.id||r._row)));
+    if (!rows.length) {
+      if (typeof T==="function") T("Nenhuma demanda selecionada","Marque ao menos uma demanda para imprimir");
+      return;
+    }
+
+    const now      = new Date();
+    const emissao  = `${now.toLocaleDateString("pt-BR")} às ${now.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}`;
+    const abaLabel = {"Financeiro":"Financeiras","Administrativo":"Secretaria","Infraestrutura e Conservação":"Infraestrutura","":"Todas"}[_finFiltro] ?? (_finFiltro||"Todas");
+    const fmtVal   = v => v?.valor!=null ? `R$ ${parseFloat(v.valor).toLocaleString("pt-BR",{minimumFractionDigits:2})}` : "—";
+
+    const ST_COR  = {"Aberta":"#1565c0","Em Análise":"#f57f17","Em Andamento":"#6a1b9a","Concluída":"#2e7d32","Cancelada":"#555","Pendente":"#e65100","Aguardando Pagamento":"#f57f17"};
+    const PR_COR  = {"Urgente":"#c62828","Alta":"#c62828","Média":"#f57f17","Baixa":"#2e7d32"};
+
+    const linhas = rows.map((r, i) => {
+      const label = _toLabel(r.status||"");
+      const stC   = ST_COR[label]       || "#555";
+      const prC   = PR_COR[r.prioridade]|| "#555";
+      const sep   = i < rows.length-1 ? "border-bottom:1.5px solid #ddd;margin-bottom:24px;padding-bottom:24px" : "";
+      return `
+      <div style="${sep}">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+          <span style="font-size:9.5px;color:#888;font-weight:600;background:#f0f0f0;padding:2px 7px;border-radius:4px">#${r.id||r._row||"—"}</span>
+          <span style="font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px;background:${stC}18;color:${stC}">${label}</span>
+          ${r.prioridade?`<span style="font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px;background:${prC}18;color:${prC}">${r.prioridade}</span>`:""}
+        </div>
+        <div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:11px">${escapeHtml(r.titulo)||"Sem título"}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px 28px">
+          <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Categoria</div><div style="font-size:11.5px;color:#1a1a1a">${r.area||"—"}</div></div>
+          <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Subcategoria</div><div style="font-size:11.5px;color:#1a1a1a">${r.subcategoria||"—"}</div></div>
+          <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Solicitante</div><div style="font-size:11.5px;color:#1a1a1a">${escapeHtml(r.solicitante||r.solicitante_txt||"—")}</div></div>
+          <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Responsável</div><div style="font-size:11.5px;color:#1a1a1a">${escapeHtml(r.responsavel||r.responsavel_txt||"—")}</div></div>
+          <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Valor</div><div style="font-size:12px;font-weight:700;color:#1a1a1a">${fmtVal(r.financial_data)}</div></div>
+          <div></div>
+          <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Data de Abertura</div><div style="font-size:11.5px;color:#1a1a1a">${fmtD(r.data_abertura||r.criado_em)}</div></div>
+          <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Data de Conclusão</div><div style="font-size:11.5px;color:#1a1a1a">${fmtD(r.data_conclusao)}</div></div>
+          ${r.descricao||r.observacoes?`<div style="grid-column:1/-1"><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Observações</div><div style="font-size:11.5px;color:#1a1a1a;white-space:pre-wrap">${escapeHtml(r.descricao||r.observacoes)}</div></div>`:""}
+        </div>
+      </div>`;
+    }).join("");
+
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<title>Demandas Financeiras — ${emissao}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#1a1a1a;background:#fff;padding:18mm 20mm 20mm}
+@page{size:A4;margin:0}
+@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head><body>
+<div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #1a1a1a;padding-bottom:10px;margin-bottom:20px">
+  <div>
+    <div style="font-size:20px;font-weight:700">Demandas Financeiras</div>
+    <div style="font-size:11px;color:#555;margin-top:3px">Aba: <b>${abaLabel}</b> · <b>${rows.length}</b> demanda${rows.length!==1?"s":""} selecionada${rows.length!==1?"s":""}</div>
+  </div>
+  <div style="text-align:right;font-size:10px;color:#555;line-height:1.7">IPPenha — SIPEN<br>Emitido em ${emissao}</div>
+</div>
+${linhas}
+</body></html>`;
+
+    const w = window.open("","_blank","width=900,height=700");
+    if (!w) { if (typeof T==="function") T("Pop-up bloqueado","Permita pop-ups para este site"); return; }
+    w.document.write(html);
+    w.document.close();
+    if (w.document.readyState === "complete") { w.focus(); w.print(); }
+    else w.onload = () => { w.focus(); w.print(); };
+  };
 
   window.finDemSetFiltro = _finSetFiltro;
   window.finDemFiltrar   = function() { _finRender(); };
