@@ -57,6 +57,7 @@ const VIEW_MODULO_PREFIX = {
   "diac":     "Junta Diaconal",
   "cong":     "Congregações",
   "com":      "Comunicação",
+  "eve":      "Eventos",
 };
 
 function _getModuloForView(id) {

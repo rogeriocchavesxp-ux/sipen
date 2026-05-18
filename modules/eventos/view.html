@@ -1,0 +1,323 @@
+  <!-- ════ EVENTOS — Navegação compartilhada (injetada via JS) ════ -->
+
+  <!-- ════ EVENTOS — Dashboard ════════════════════════════════ -->
+  <div class="view" id="v-eve-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.14);border-color:rgba(74,156,245,0.25);color:var(--sky)">🎪</div>
+      <div>
+        <div class="hero-lbl">Módulo</div>
+        <div class="hero-ttl">Eventos</div>
+        <div class="hero-dsc">Criação, inscrições, pagamentos e acompanhamento de eventos da igreja.</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="eveAbrirNovo()">+ Novo Evento</button>
+        <button class="tbt" onclick="go('eve-todos')">Ver todos</button>
+      </div>
+    </div>
+    <div id="eve-dash-nav"></div>
+
+    <!-- KPIs -->
+    <div class="ct" style="grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:0">
+      <div class="card" style="padding:16px 18px;cursor:pointer" onclick="go('eve-todos')">
+        <div style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Total de Eventos</div>
+        <div id="eve-kpi-total" style="font-size:28px;font-weight:800;color:var(--tx1);line-height:1">—</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:4px">cadastrados</div>
+      </div>
+      <div class="card" style="padding:16px 18px;cursor:pointer" onclick="eveGoFiltro('inscricoes_abertas')">
+        <div style="font-size:9.5px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Inscrições Abertas</div>
+        <div id="eve-kpi-abertos" style="font-size:28px;font-weight:800;color:var(--gr);line-height:1">—</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:4px">eventos ativos</div>
+      </div>
+      <div class="card" style="padding:16px 18px;cursor:pointer" onclick="eveGoFiltro('publicado')">
+        <div style="font-size:9.5px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Publicados</div>
+        <div id="eve-kpi-pub" style="font-size:28px;font-weight:800;color:var(--blue);line-height:1">—</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:4px">visíveis</div>
+      </div>
+      <div class="card" style="padding:16px 18px;cursor:pointer" onclick="eveGoFiltro('concluido')">
+        <div style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Concluídos</div>
+        <div id="eve-kpi-conc" style="font-size:28px;font-weight:800;color:var(--tx3);line-height:1">—</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:4px">realizados</div>
+      </div>
+    </div>
+
+    <div class="ct" style="grid-template-columns:2fr 1fr;gap:12px">
+      <div class="card">
+        <div class="ctit">Próximos Eventos <span class="cact" onclick="eveRecarregar()">↻</span></div>
+        <div id="eve-dash-proximos"><div style="color:var(--tx3);font-size:12px;padding:8px">Carregando...</div></div>
+        <div style="margin-top:12px;text-align:right">
+          <button onclick="go('eve-todos')" style="padding:6px 14px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--sky);font-size:12px;cursor:pointer;font-weight:600">Ver todos →</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ctit">Por Status</div>
+        <div id="eve-dash-status"><div style="color:var(--tx3);font-size:12px;padding:8px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ EVENTOS — Lista ══════════════════════════════════════ -->
+  <div class="view" id="v-eve-todos">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.14);border-color:rgba(74,156,245,0.25);color:var(--sky)">📋</div>
+      <div>
+        <div class="hero-lbl">Eventos</div>
+        <div class="hero-ttl">Todos os Eventos</div>
+        <div class="hero-dsc">Lista completa de eventos cadastrados.</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="eveAbrirNovo()">+ Novo Evento</button>
+      </div>
+    </div>
+    <div id="eve-todos-nav"></div>
+
+    <div class="ct" style="margin-bottom:0">
+      <div class="card" style="padding:12px 16px">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+          <input id="eve-f-busca" type="text" placeholder="Buscar evento..." oninput="eveFiltrar()" style="font-size:11.5px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:200px;flex:1">
+          <select id="eve-f-status" onchange="eveFiltrar()" style="font-size:11.5px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option value="rascunho">Rascunho</option>
+            <option value="publicado">Publicado</option>
+            <option value="inscricoes_abertas">Inscrições Abertas</option>
+            <option value="inscricoes_encerradas">Inscrições Encerradas</option>
+            <option value="em_andamento">Em Andamento</option>
+            <option value="concluido">Concluído</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+          <select id="eve-f-tipo" onchange="eveFiltrar()" style="font-size:11.5px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Gratuito e Pago</option>
+            <option value="gratuito">Gratuito</option>
+            <option value="pago">Pago</option>
+          </select>
+          <button onclick="eveLimparFiltros()" style="font-size:11px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx3);cursor:pointer">Limpar</button>
+          <button onclick="eveRecarregar()" style="font-size:11px;padding:6px 10px;border-radius:7px;border:1px solid rgba(74,156,245,.3);background:rgba(74,156,245,.08);color:var(--sky);cursor:pointer;font-weight:600">↻ Atualizar</button>
+        </div>
+      </div>
+    </div>
+    <div class="ct" style="margin-top:0">
+      <div id="eve-lista-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px">
+        <div style="padding:28px;text-align:center;color:var(--tx3)">Carregando...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ EVENTOS — Detalhe ════════════════════════════════════ -->
+  <div class="view" id="v-eve-detalhe">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.14);border-color:rgba(74,156,245,0.25);color:var(--sky)">🎪</div>
+      <div>
+        <div class="hero-lbl">Eventos</div>
+        <div class="hero-ttl" id="eve-det-titulo">Detalhe do Evento</div>
+        <div class="hero-dsc">Informações, inscrições e pagamentos do evento.</div>
+      </div>
+    </div>
+    <div id="eve-detalhe-content"><div class="card" style="padding:28px;color:var(--tx3)">Selecione um evento.</div></div>
+  </div>
+
+  <!-- ════ EVENTOS — Inscrições Globais ════════════════════════ -->
+  <div class="view" id="v-eve-inscricoes">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.14);border-color:rgba(74,156,245,0.25);color:var(--sky)">📝</div>
+      <div>
+        <div class="hero-lbl">Eventos</div>
+        <div class="hero-ttl">Inscrições</div>
+        <div class="hero-dsc">Todas as inscrições dos eventos.</div>
+      </div>
+    </div>
+    <div id="eve-inscricoes-nav"></div>
+
+    <div class="ct" style="margin-bottom:0">
+      <div class="card" style="padding:12px 16px">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+          <input id="eve-gi-busca" type="text" placeholder="Buscar por nome, e-mail..." oninput="eveFiltrarInscricoes()" style="font-size:11.5px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:200px;flex:1">
+          <select id="eve-gi-evento" onchange="eveFiltrarInscricoes()" style="font-size:11.5px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);max-width:220px">
+            <option value="">Todos os eventos</option>
+          </select>
+          <select id="eve-gi-status" onchange="eveFiltrarInscricoes()" style="font-size:11.5px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option value="pendente">Pendente</option>
+            <option value="confirmada">Confirmada</option>
+            <option value="presente">Presente</option>
+            <option value="ausente">Ausente</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+          <button onclick="eveLimparFiltrosInscricoes()" style="font-size:11px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx3);cursor:pointer">Limpar</button>
+        </div>
+      </div>
+    </div>
+    <div class="ct" style="margin-top:0">
+      <div class="card" style="padding:0;overflow:hidden">
+        <div id="eve-gi-lista"><div style="padding:28px;text-align:center;color:var(--tx3)">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ EVENTOS — Pagamentos ════════════════════════════════ -->
+  <div class="view" id="v-eve-pagamentos">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.14);border-color:rgba(74,156,245,0.25);color:var(--sky)">💳</div>
+      <div>
+        <div class="hero-lbl">Eventos</div>
+        <div class="hero-ttl">Pagamentos</div>
+        <div class="hero-dsc">Controle de pagamentos dos eventos pagos.</div>
+      </div>
+    </div>
+    <div id="eve-pagamentos-nav"></div>
+
+    <div class="ct" style="grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:0">
+      <div class="card" style="padding:16px 18px">
+        <div style="font-size:9.5px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Recebidos</div>
+        <div id="eve-pag-recebido" style="font-size:24px;font-weight:800;color:var(--gr);line-height:1">—</div>
+      </div>
+      <div class="card" style="padding:16px 18px">
+        <div style="font-size:9.5px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Pendentes</div>
+        <div id="eve-pag-pendente" style="font-size:24px;font-weight:800;color:var(--amber);line-height:1">—</div>
+      </div>
+      <div class="card" style="padding:16px 18px">
+        <div style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Total esperado</div>
+        <div id="eve-pag-total" style="font-size:24px;font-weight:800;color:var(--tx1);line-height:1">—</div>
+      </div>
+    </div>
+    <div class="ct" style="margin-top:0">
+      <div class="card" style="padding:12px 16px;margin-bottom:0">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <select id="eve-pag-evento" onchange="eveCarregarPagamentos()" style="font-size:11.5px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);flex:1;max-width:280px">
+            <option value="">Todos os eventos pagos</option>
+          </select>
+          <select id="eve-pag-status" onchange="eveCarregarPagamentos()" style="font-size:11.5px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos</option>
+            <option value="pago">Pago</option>
+            <option value="pendente">Pendente</option>
+          </select>
+        </div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;margin-top:0">
+        <div id="eve-pag-lista"><div style="padding:28px;text-align:center;color:var(--tx3)">Selecione um evento ou carregue todos.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ EVENTOS — Credenciamento ════════════════════════════ -->
+  <div class="view" id="v-eve-credenciamento">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.14);border-color:rgba(74,156,245,0.25);color:var(--sky)">✅</div>
+      <div>
+        <div class="hero-lbl">Eventos</div>
+        <div class="hero-ttl">Credenciamento</div>
+        <div class="hero-dsc">Check-in e confirmação de presença no evento.</div>
+      </div>
+    </div>
+    <div id="eve-cred-nav"></div>
+
+    <div class="ct" style="max-width:560px">
+      <div class="card">
+        <div class="ctit">Selecionar Evento</div>
+        <select id="eve-cred-evento" onchange="eveCarregarCredenciamento()" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input);color:var(--tx1);font-size:13px;outline:none;margin-bottom:0">
+          <option value="">Selecione o evento...</option>
+        </select>
+      </div>
+      <div class="card" id="eve-cred-busca-card" style="display:none">
+        <div class="ctit">Buscar Inscrito</div>
+        <div style="display:flex;gap:8px">
+          <input id="eve-cred-busca" type="text" placeholder="Nome ou e-mail..." oninput="eveBuscarCredenciamento()" style="flex:1;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input);color:var(--tx1);font-size:13px;outline:none">
+        </div>
+        <div id="eve-cred-resultado" style="margin-top:12px"></div>
+      </div>
+      <div class="card" id="eve-cred-stats" style="display:none">
+        <div class="ctit">Status do Evento</div>
+        <div id="eve-cred-stats-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ EVENTOS — Lista de Presença ═════════════════════════ -->
+  <div class="view" id="v-eve-presenca">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.14);border-color:rgba(74,156,245,0.25);color:var(--sky)">👥</div>
+      <div>
+        <div class="hero-lbl">Eventos</div>
+        <div class="hero-ttl">Lista de Presença</div>
+        <div class="hero-dsc">Lista de inscritos para impressão e controle de presença.</div>
+      </div>
+    </div>
+    <div id="eve-presenca-nav"></div>
+
+    <div class="ct">
+      <div class="card" style="padding:12px 16px">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <select id="eve-pres-evento" onchange="eveCarregarPresenca()" style="font-size:11.5px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);flex:1;max-width:300px">
+            <option value="">Selecione o evento...</option>
+          </select>
+          <button onclick="eveImprimirPresenca()" style="padding:6px 14px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx1);font-size:12px;cursor:pointer">🖨 Imprimir</button>
+        </div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div id="eve-presenca-lista"><div style="padding:28px;text-align:center;color:var(--tx3)">Selecione um evento.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ EVENTOS — Relatórios ════════════════════════════════ -->
+  <div class="view" id="v-eve-relatorios">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.14);border-color:rgba(74,156,245,0.25);color:var(--sky)">📊</div>
+      <div>
+        <div class="hero-lbl">Eventos</div>
+        <div class="hero-ttl">Relatórios</div>
+        <div class="hero-dsc">Indicadores, resumos e exportações por evento.</div>
+      </div>
+    </div>
+    <div id="eve-rel-nav"></div>
+
+    <div class="ct">
+      <div class="card" style="padding:12px 16px;margin-bottom:0">
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="eve-rel-evento" onchange="eveCarregarRelatorio()" style="font-size:11.5px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);flex:1;max-width:300px">
+            <option value="">Selecione um evento...</option>
+          </select>
+        </div>
+      </div>
+      <div id="eve-rel-content"><div style="padding:28px;text-align:center;color:var(--tx3)">Selecione um evento para ver o relatório.</div></div>
+    </div>
+  </div>
+
+  <!-- ════ EVENTOS — Configurações ═════════════════════════════ -->
+  <div class="view" id="v-eve-config">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.14);border-color:rgba(74,156,245,0.25);color:var(--sky)">⚙</div>
+      <div>
+        <div class="hero-lbl">Eventos</div>
+        <div class="hero-ttl">Configurações</div>
+        <div class="hero-dsc">Configurações gerais do módulo de eventos.</div>
+      </div>
+    </div>
+    <div id="eve-config-nav"></div>
+
+    <div class="ct" style="max-width:560px">
+      <div class="card">
+        <div class="ctit">Integrações Futuras</div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:12.5px;color:var(--tx2)">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--bd1)">
+            <span style="font-size:16px">💳</span>
+            <div><div style="font-weight:600;color:var(--tx1)">InfinitePay</div><div style="font-size:11px;color:var(--tx3)">Pix, cartão e link de pagamento — em desenvolvimento</div></div>
+            <span class="pill pz" style="margin-left:auto">Em breve</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--bd1)">
+            <span style="font-size:16px">📅</span>
+            <div><div style="font-weight:600;color:var(--tx1)">Agenda</div><div style="font-size:11px;color:var(--tx3)">Sincronizar eventos com o calendário — em desenvolvimento</div></div>
+            <span class="pill pz" style="margin-left:auto">Em breve</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--bd1)">
+            <span style="font-size:16px">📢</span>
+            <div><div style="font-weight:600;color:var(--tx1)">Comunicação</div><div style="font-size:11px;color:var(--tx3)">Gerar solicitação de arte automaticamente — em desenvolvimento</div></div>
+            <span class="pill pz" style="margin-left:auto">Em breve</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--bd1)">
+            <span style="font-size:16px">💬</span>
+            <div><div style="font-weight:600;color:var(--tx1)">WhatsApp</div><div style="font-size:11px;color:var(--tx3)">Confirmação de inscrição e lembretes — em desenvolvimento</div></div>
+            <span class="pill pz" style="margin-left:auto">Em breve</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
