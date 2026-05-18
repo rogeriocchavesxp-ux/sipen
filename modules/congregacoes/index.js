@@ -65,7 +65,10 @@ function buildCongMenu(){
   msub.querySelectorAll(".si-cong-item,.sdiv-cong,.si-cong-sub").forEach(el=>el.remove());
 
   const dashLink=document.getElementById("sb-cong-dash-link");
-  if(dashLink) dashLink.style.display=_isLiderCong()?"none":"block";
+  if(dashLink){
+    const perfilDefinido=typeof USUARIO_ATUAL!=="undefined"&&USUARIO_ATUAL?.perfil;
+    dashLink.style.display=(perfilDefinido&&!_isLiderCong())?"block":"none";
+  }
 
   // Para LIDER: header não é retrátil e mostra o nome da congregação
   const mhdr=document.querySelector("#mw-cong .mhdr");
@@ -1492,8 +1495,12 @@ window.excluirDeptCong=excluirDeptCong;
       if(id==="cong-dash"){
         // Nunca mostrar o dashboard geral — redireciona para a própria congregação
         const congId=USUARIO_ATUAL?.congregacao_id;
-        if(congId) _activeCongId=congId;
-        await _orig("cong-ver");
+        if(congId && typeof abrirCongView==="function"){
+          await abrirCongView(congId);
+        } else {
+          if(congId) _activeCongId=congId;
+          await _orig("cong-ver");
+        }
         return;
       }
       if(!id.startsWith("cong")){
