@@ -782,11 +782,14 @@ function salvarNovoCulto(){
   cong.atividades_igreja.historico_cultos.unshift(culto);
   CONG.saveCong(cong);
   CONG.addCultoSupabase(congId, culto)
-    .then(()=>{ if(typeof T==="function") T("☁ Sincronizado","Culto salvo no Supabase"); })
     .catch(e=>console.warn("CONG addCultoSupabase:", e.message));
   fecharModalNovoCulto();
-  if(_activeCongId===congId) abrirCongView(congId);
-  else if(document.getElementById("v-cong-dash")?.classList.contains("on")) renderDashboardGeral();
+  if(typeof T==="function") T("Culto registrado","Adicionado ao histórico");
+  if(_activeCongId===congId){
+    irParaSecaoCong(2);
+  } else if(document.getElementById("v-cong-dash")?.classList.contains("on")){
+    renderDashboardGeral();
+  }
 }
 window.salvarNovoCulto=salvarNovoCulto;
 

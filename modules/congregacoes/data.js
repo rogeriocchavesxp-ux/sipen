@@ -299,6 +299,7 @@ const CONG = (function(){
       tema:          c.tema||"",
       participantes: c.participantes||0,
       visitantes:    c.visitantes||0,
+      criancas:      c.criancas||0,
       decisoes:      c.decisoes||0,
       obs:           c.obs||"",
       _sbId:         c.id
@@ -385,6 +386,7 @@ const CONG = (function(){
       tema:          culto.tema||"",
       participantes: culto.participantes||0,
       visitantes:    culto.visitantes||0,
+      criancas:      culto.criancas||0,
       decisoes:      culto.decisoes||0,
       obs:           culto.obs||""
     };
