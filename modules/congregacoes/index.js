@@ -67,21 +67,25 @@ function buildCongMenu(){
   const dashLink=document.getElementById("sb-cong-dash-link");
   if(dashLink) dashLink.style.display=_isLiderCong()?"none":"block";
 
-  // Para LIDER: header não é retrátil
+  // Para LIDER: header não é retrátil e mostra o nome da congregação
   const mhdr=document.querySelector("#mw-cong .mhdr");
   if(mhdr){
+    const mname=mhdr.querySelector(".mname");
     if(_isLiderCong()){
       mhdr.onclick=null;
       mhdr.style.pointerEvents="none";
       mhdr.style.cursor="default";
       const marr=mhdr.querySelector(".marr");
       if(marr) marr.style.display="none";
+      const congNome=CONG.listCongs().find(c=>String(c.id)===String(USUARIO_ATUAL?.congregacao_id))?.identificacao?.nome;
+      if(mname && congNome) mname.textContent=congNome;
     } else {
       mhdr.onclick=()=>tog("cong");
       mhdr.style.pointerEvents="";
       mhdr.style.cursor="";
       const marr=mhdr.querySelector(".marr");
       if(marr) marr.style.display="";
+      if(mname) mname.textContent="Congregações";
     }
   }
 
