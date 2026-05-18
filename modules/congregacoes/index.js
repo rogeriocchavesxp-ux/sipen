@@ -1174,30 +1174,27 @@ window._vmBuscar=_vmBuscar;
 
 async function _vmVincular(pessoaId, nome, membroId){
   try{
-    let ok, errText="";
-    if(membroId){
-      const r=await fetch(`${apiBaseUrl()}/rest/v1/membros?id=eq.${encodeURIComponent(membroId)}`,{
-        method:"PATCH",
-        headers:{...apiHeaders(),"Prefer":"return=minimal"},
-        body:JSON.stringify({congregacao_id:_vmCongId})
-      });
-      ok=r.ok; if(!ok) errText=await r.text();
-    }else{
-      const r=await fetch(`${apiBaseUrl()}/rest/v1/membros`,{
-        method:"POST",
-        headers:{...apiHeaders(),"Prefer":"return=minimal"},
-        body:JSON.stringify({pessoa_id:pessoaId,congregacao_id:_vmCongId,status:"ativo"})
-      });
-      ok=r.ok; if(!ok) errText=await r.text();
-    }
-    if(ok){
+    const r=await fetch(`${apiBaseUrl()}/rest/v1/rpc/vincular_membro_congregacao`,{
+      method:"POST",
+      headers:apiHeaders(),
+      body:JSON.stringify({
+        p_membro_id:     membroId||null,
+        p_congregacao_id:_vmCongId,
+        p_pessoa_id:     pessoaId
+      })
+    });
+    const result=r.ok?await r.json():null;
+    if(result?.ok){
       if(typeof T==="function") T("Membro vinculado",nome);
       fecharModalVincularMembro();
       _activeCongId=_vmCongId; irParaSecaoCong(1);
     }else{
-      if(typeof T==="function") T("Erro ao vincular",errText||"Verifique as permissões");
+      const msg=result?.erro||(r.ok?"Erro desconhecido":await r.text().catch(()=>""));
+      console.error("vincular_membro_congregacao:",msg);
+      if(typeof T==="function") T("Erro ao vincular",msg||"Verifique as permissões");
     }
   }catch(e){
+    console.error("_vmVincular:",e);
     if(typeof T==="function") T("Erro",e.message);
   }
 }
@@ -1212,19 +1209,22 @@ window._vmTransferir=_vmTransferir;
 async function desvincularMembroCong(membroId, congId){
   if(!confirm("Remover vínculo deste membro com a congregação?")) return;
   try{
-    const r=await fetch(`${apiBaseUrl()}/rest/v1/membros?id=eq.${encodeURIComponent(membroId)}`,{
-      method:"PATCH",
-      headers:{...apiHeaders(),"Prefer":"return=minimal"},
-      body:JSON.stringify({congregacao_id:null})
+    const r=await fetch(`${apiBaseUrl()}/rest/v1/rpc/desvincular_membro_congregacao`,{
+      method:"POST",
+      headers:apiHeaders(),
+      body:JSON.stringify({p_membro_id:membroId, p_congregacao_id:congId})
     });
-    if(r.ok){
+    const result=r.ok?await r.json():null;
+    if(result?.ok){
       if(typeof T==="function") T("Vínculo removido","");
       _activeCongId=congId; irParaSecaoCong(1);
     }else{
-      const err=await r.text();
-      if(typeof T==="function") T("Erro ao remover",err||"Verifique as permissões");
+      const msg=result?.erro||(r.ok?"Erro desconhecido":await r.text().catch(()=>""));
+      console.error("desvincular_membro_congregacao:",msg);
+      if(typeof T==="function") T("Erro ao remover",msg||"Verifique as permissões");
     }
   }catch(e){
+    console.error("desvincularMembroCong:",e);
     if(typeof T==="function") T("Erro",e.message);
   }
 }
