@@ -67,6 +67,7 @@
   function _hdrs(extra) { return typeof apiHeaders === "function" ? apiHeaders(extra || {}) : {}; }
   function _user()      { return typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL : null; }
   function _userId()    { return _user()?.id || null; }
+  function _authUserId(){ return _user()?.auth_user_id || null; }
   function _userName()  { return _user()?.nome || _user()?.email || "Sistema"; }
 
   function _fmtD(d) {
@@ -596,7 +597,7 @@
 
     const isNew = !editId || editId === "null";
     if (isNew) {
-      payload.criado_por      = _userId();
+      payload.criado_por      = _authUserId();
       payload.criado_por_nome = _userName();
       payload.criado_em       = new Date().toISOString();
     }
@@ -748,7 +749,7 @@
 
     const isNew = !editId || editId === "null";
     if (isNew) {
-      payload.criado_por      = _userId();
+      payload.criado_por      = _authUserId();
       payload.criado_por_nome = _userName();
       payload.criado_em       = new Date().toISOString();
     }
