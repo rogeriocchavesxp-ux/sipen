@@ -329,10 +329,11 @@ function renderTab_visaoGeral(cong, el){
 async function _membrosLoad(congId){
   if(!congId) return [];
   try{
-    const url=`${apiBaseUrl()}/rest/v1/membros?congregacao_id=eq.${encodeURIComponent(congId)}&deleted_at=is.null&select=id,funcao,status,pessoa_id,pessoas(nome,email,telefone)&order=pessoas(nome).asc&limit=300`;
+    const url=`${apiBaseUrl()}/rest/v1/membros?congregacao_id=eq.${encodeURIComponent(congId)}&deleted_at=is.null&select=id,funcao,status,pessoa_id,pessoas(nome,email,telefone)&limit=300`;
     const r=await fetch(url,{headers:apiHeaders()});
-    if(!r.ok) return [];
-    return await r.json();
+    if(!r.ok){ console.warn("_membrosLoad erro",r.status,await r.text()); return []; }
+    const rows=await r.json();
+    return rows.sort((a,b)=>(a.pessoas?.nome||"").localeCompare(b.pessoas?.nome||"","pt"));
   }catch(e){ return []; }
 }
 
@@ -1128,7 +1129,7 @@ async function _vmBuscar(){
       return;
     }
     // Busca vínculos existentes para essas pessoas
-    const ids=pessoas.map(p=>`"${p.id}"`).join(",");
+    const ids=pessoas.map(p=>p.id).join(",");
     const mUrl=`${apiBaseUrl()}/rest/v1/membros?pessoa_id=in.(${ids})&deleted_at=is.null&select=id,pessoa_id,congregacao_id,status`;
     const mRes=await fetch(mUrl,{headers:apiHeaders()});
     const membros=mRes.ok?await mRes.json():[];
