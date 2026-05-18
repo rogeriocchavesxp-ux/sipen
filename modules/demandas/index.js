@@ -897,9 +897,90 @@
       if (typeof T === "function") T("✅ Enviado para pagamento", "A solicitação já aparece em Contas a Pagar/CNAB.");
       if (_ativo && String(_ativo.id || _ativo._row) === String(demandaId)) _renderDetalhe(_ativo);
       _atualizarBadge();
+
+      /* Notifica Tesouraria por e-mail (não-bloqueante) */
+      _notificarTesouraria(demandaId).then(res => {
+        if (res?.ok) {
+          _registrarAndamentoAuto(
+            demandaId,
+            `E-mail de notificação enviado para a Tesouraria (${res.destinatarios || 0} destinatário${res.destinatarios !== 1 ? "s" : ""}).`,
+            novoStatus
+          );
+        } else if (res?.status && res.status !== "duplicado") {
+          _registrarAndamentoAuto(
+            demandaId,
+            `Tentativa de notificação por e-mail: ${res.mensagem || res.error || res.status}.`,
+            novoStatus
+          );
+        }
+      }).catch(e => console.warn("_notificarTesouraria:", e.message));
+
     } catch(e) {
       if (typeof T === "function") T("Erro ao aprovar", e.message || "Tente novamente.");
       console.error("demAprovarParaPagamento:", e);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = txt; }
+    }
+  };
+
+  /* ── Notificação e-mail Tesouraria ──────────────────── */
+
+  async function _notificarTesouraria(demandaId, forceResend = false) {
+    const url = (typeof SUPABASE_URL !== "undefined" && SUPABASE_URL)
+      ? SUPABASE_URL.trim().replace(/\/$/, "") + "/functions/v1/email-send"
+      : null;
+    if (!url) return { ok: false, status: "nao_configurado" };
+
+    let jwt = null;
+    if (typeof sipenToken === "function") {
+      jwt = sipenToken();
+      if (jwt === (typeof SUPABASE_ANON_KEY !== "undefined" ? SUPABASE_ANON_KEY : "")) jwt = null;
+    }
+    if (!jwt) {
+      try {
+        const raw = localStorage.getItem("sipen_auth_session");
+        jwt = raw ? (JSON.parse(raw)?.access_token || null) : null;
+      } catch (_) { /* ignore */ }
+    }
+    if (!jwt) return { ok: false, status: "nao_autenticado" };
+
+    try {
+      const res = await fetch(url, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${jwt}` },
+        body: JSON.stringify({
+          demanda_id:      String(demandaId),
+          idempotency_key: `demanda-aprovacao-${demandaId}`,
+          force_resend:    forceResend,
+        }),
+      });
+      return await res.json();
+    } catch (e) {
+      console.error("[email-send] rede:", e.message);
+      return { ok: false, status: "erro_rede", error: e.message };
+    }
+  }
+
+  window.demReenviarEmail = async function(demandaId) {
+    const btn = document.querySelector(`[data-dem-reenviar="${demandaId}"]`);
+    const txt = btn?.textContent || "";
+    if (btn) { btn.disabled = true; btn.textContent = "Enviando..."; }
+    try {
+      const res = await _notificarTesouraria(demandaId, true);
+      if (res?.ok) {
+        if (typeof T === "function") T("✅ E-mail enviado", `Notificação enviada para ${res.destinatarios || 1} membro(s) da Tesouraria.`);
+        const demanda = _cache.find(r => String(r.id||r._row) === String(demandaId));
+        const status  = demanda ? _toLabel(demanda.status) : "Aguardando Pagamento";
+        _registrarAndamentoAuto(demandaId, `E-mail de notificação reenviado para a Tesouraria.`, status);
+      } else if (res?.status === "sem_destinatarios") {
+        if (typeof T === "function") T("Sem destinatários", res.mensagem || "Nenhum membro da Tesouraria com e-mail cadastrado.");
+      } else if (res?.status === "nao_configurado") {
+        if (typeof T === "function") T("Serviço não configurado", "Configure RESEND_API_KEY nos secrets do Supabase.");
+      } else {
+        if (typeof T === "function") T("Erro ao enviar e-mail", res?.error || res?.mensagem || "Tente novamente.");
+      }
+    } catch (e) {
+      if (typeof T === "function") T("Erro ao enviar e-mail", e.message || "Tente novamente.");
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = txt; }
     }
@@ -957,11 +1038,15 @@
             <span style="color:var(--tx3);font-size:11px">${catIcon(dem.area)} ${dem.area||"—"} → ${dem.subcategoria||"—"}</span>
           </div>
         </div>
-        <div class="hero-act" style="display:flex;gap:8px;align-items:center">
+        <div class="hero-act" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <button class="tbt" onclick="window.go('${origem}')">← Voltar</button>
           ${mostrarAprovarPagamento ? `
           <button class="tbt" data-dem-aprovar-pag="${escapeHtmlAttr(id)}" style="color:var(--gr);border-color:rgba(58,170,92,.3)" onclick="demAprovarParaPagamento('${escapeHtmlAttr(id)}')">
             💰 Aprovar para Pagamento
+          </button>` : ""}
+          ${_podeAprovarPagamento() && _toLabel(dem.status) === "Aguardando Pagamento" ? `
+          <button class="tbt" data-dem-reenviar="${escapeHtmlAttr(id)}" style="color:var(--blue,#2563eb);border-color:rgba(37,99,235,.3)" onclick="demReenviarEmail('${escapeHtmlAttr(id)}')">
+            ✉ Reenviar notificação
           </button>` : ""}
           <button class="tbt" style="color:var(--rose);border-color:rgba(224,85,85,.3)" onclick="demExcluirDemanda('${id}')">🗑 Excluir</button>
         </div>
