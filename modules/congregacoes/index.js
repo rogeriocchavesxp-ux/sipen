@@ -64,9 +64,26 @@ function buildCongMenu(){
   if(!msub) return;
   msub.querySelectorAll(".si-cong-item,.sdiv-cong,.si-cong-sub").forEach(el=>el.remove());
 
-  // Exibe ou oculta o link "Dashboard Geral" conforme o perfil
   const dashLink=document.getElementById("sb-cong-dash-link");
   if(dashLink) dashLink.style.display=_isLiderCong()?"none":"";
+
+  // Para LIDER: header não é retrátil
+  const mhdr=document.querySelector("#mw-cong .mhdr");
+  if(mhdr){
+    if(_isLiderCong()){
+      mhdr.onclick=null;
+      mhdr.style.pointerEvents="none";
+      mhdr.style.cursor="default";
+      const marr=mhdr.querySelector(".marr");
+      if(marr) marr.style.display="none";
+    } else {
+      mhdr.onclick=()=>tog("cong");
+      mhdr.style.pointerEvents="";
+      mhdr.style.cursor="";
+      const marr=mhdr.querySelector(".marr");
+      if(marr) marr.style.display="";
+    }
+  }
 
   const allCongs=CONG.listCongs();
   const congs=_isLiderCong()
@@ -79,28 +96,28 @@ function buildCongMenu(){
   msub.appendChild(divider);
 
   congs.forEach(c=>{
-    const el=document.createElement("div");
-    el.className="si si-cong-item";
-    el.innerHTML=`<span style="margin-right:6px;font-size:11px">${escapeHtml(c.identificacao.icon||"⛪")}</span>${escapeHtml(c.identificacao.nome)}`;
-
     if(_isLiderCong()){
-      // Nome da congregação como cabeçalho — clique vai para Visão Geral
-      el.style.fontWeight="700";
-      el.onclick=()=>irParaSecaoCong(0);
-      msub.appendChild(el);
+      // Nome da congregação como rótulo estático (não clicável)
+      const label=document.createElement("div");
+      label.className="si-cong-item";
+      label.style.cssText="padding:8px 12px 4px;font-size:10.5px;font-weight:700;color:var(--tx3);letter-spacing:.04em;text-transform:uppercase;cursor:default";
+      label.textContent=c.identificacao.nome;
+      msub.appendChild(label);
 
-      // Sub-itens de seção no menu lateral
+      // Itens de cada aba como entradas planas no menu
       _CONG_TAB_NOMES.forEach((nome,idx)=>{
         const sub=document.createElement("div");
         sub.className="si si-cong-sub";
         sub.setAttribute("data-cong-tab",idx);
-        sub.style.paddingLeft="32px";
-        sub.innerHTML=`<span style="margin-right:5px;opacity:.35;font-size:10px">›</span>${escapeHtml(nome)}`;
         if(idx===_activeTab) sub.classList.add("ativo");
+        sub.textContent=nome;
         sub.onclick=()=>irParaSecaoCong(idx);
         msub.appendChild(sub);
       });
     } else {
+      const el=document.createElement("div");
+      el.className="si si-cong-item";
+      el.innerHTML=`<span style="margin-right:6px;font-size:11px">${escapeHtml(c.identificacao.icon||"⛪")}</span>${escapeHtml(c.identificacao.nome)}`;
       if(_activeCongId===c.id) el.classList.add("ativo");
       el.onclick=()=>abrirCongView(c.id);
       msub.appendChild(el);
