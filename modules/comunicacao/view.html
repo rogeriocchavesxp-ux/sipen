@@ -1,0 +1,137 @@
+  <!-- ════ COMUNICAÇÃO — Dashboard ════════════════════════════ -->
+  <div class="view" id="v-com-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(139,111,212,0.14);border-color:rgba(139,111,212,0.25);color:var(--violet)">📢</div>
+      <div>
+        <div class="hero-lbl">Módulo</div>
+        <div class="hero-ttl">Central de Comunicação</div>
+        <div class="hero-dsc">Solicitações de arte, campanhas, transmissões e divulgações do Ministério de Comunicação.</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="comAbrirNova()">+ Nova Solicitação</button>
+        <button class="tbt" onclick="go('com-solicitacoes')">Ver todas</button>
+      </div>
+    </div>
+
+    <div class="inav" style="--mc:var(--violet)">
+      <div class="ini on" onclick="go('com-dash')">Dashboard</div>
+      <div class="ini" onclick="go('com-solicitacoes')">Solicitações de Arte</div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="ct" style="grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:0">
+      <div class="card" style="padding:16px 18px;cursor:pointer" onclick="go('com-solicitacoes')">
+        <div style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Total</div>
+        <div id="com-kpi-total" style="font-size:26px;font-weight:800;color:var(--tx1);line-height:1">—</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:4px">solicitações</div>
+      </div>
+      <div class="card" style="padding:16px 18px;cursor:pointer" onclick="go('com-solicitacoes')">
+        <div style="font-size:9.5px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Recebidas</div>
+        <div id="com-kpi-receb" style="font-size:26px;font-weight:800;color:var(--blue);line-height:1">—</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:4px">aguardando análise</div>
+      </div>
+      <div class="card" style="padding:16px 18px;cursor:pointer" onclick="go('com-solicitacoes')">
+        <div style="font-size:9.5px;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Em Produção</div>
+        <div id="com-kpi-prod" style="font-size:26px;font-weight:800;color:var(--violet);line-height:1">—</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:4px">sendo executadas</div>
+      </div>
+      <div class="card" style="padding:16px 18px;cursor:pointer" onclick="go('com-solicitacoes')">
+        <div style="font-size:9.5px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Concluídas</div>
+        <div id="com-kpi-conc" style="font-size:26px;font-weight:800;color:var(--gr);line-height:1">—</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:4px">finalizadas</div>
+      </div>
+      <div class="card" style="padding:16px 18px;cursor:pointer" onclick="go('com-solicitacoes')">
+        <div style="font-size:9.5px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Pendentes</div>
+        <div id="com-kpi-pend" style="font-size:26px;font-weight:800;color:var(--amber);line-height:1">—</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:4px">em aberto</div>
+      </div>
+    </div>
+
+    <!-- Recentes + Distribuição -->
+    <div class="ct" style="grid-template-columns:2fr 1fr;gap:12px">
+      <div class="card">
+        <div class="ctit">Solicitações Recentes <span class="cact" onclick="comCarregarDash()">↻</span></div>
+        <div id="com-dash-recentes"><div style="color:var(--tx3);font-size:12px;padding:8px">Carregando...</div></div>
+        <div style="margin-top:12px;text-align:right">
+          <button onclick="go('com-solicitacoes')" style="padding:6px 14px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--violet);font-size:12px;cursor:pointer;font-weight:600">Ver todas →</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ctit">Por Status</div>
+        <div id="com-dash-status"><div style="color:var(--tx3);font-size:12px;padding:8px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ COMUNICAÇÃO — Lista de Solicitações ═════════════════ -->
+  <div class="view" id="v-com-solicitacoes">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(139,111,212,0.14);border-color:rgba(139,111,212,0.25);color:var(--violet)">🎨</div>
+      <div>
+        <div class="hero-lbl">Comunicação</div>
+        <div class="hero-ttl">Solicitações de Arte</div>
+        <div class="hero-dsc">Solicitações de artes, campanhas, transmissões e divulgações.</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="comAbrirNova()">+ Nova Solicitação</button>
+      </div>
+    </div>
+
+    <div class="inav" style="--mc:var(--violet)">
+      <div class="ini" onclick="go('com-dash')">Dashboard</div>
+      <div class="ini on" onclick="go('com-solicitacoes')">Solicitações de Arte</div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="ct" style="margin-bottom:0">
+      <div class="card" style="padding:12px 16px">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+          <input id="com-f-busca" type="text" placeholder="Buscar por descrição, ministério, responsável..." oninput="comFiltrar()" style="font-size:11.5px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:240px;flex:1">
+          <select id="com-f-status" onchange="comFiltrar()" style="font-size:11.5px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option>Recebida</option>
+            <option>Em análise</option>
+            <option>Em produção</option>
+            <option>Aguardando aprovação</option>
+            <option>Concluída</option>
+            <option>Cancelada</option>
+          </select>
+          <select id="com-f-ministerio-fil" onchange="comFiltrar()" style="font-size:11.5px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os ministérios</option>
+            <option>UPA (SOS)</option>
+            <option>UMP (Movimento)</option>
+            <option>SAF</option>
+            <option>UPH</option>
+            <option>GAM</option>
+            <option>Casais (Lar Cristão)</option>
+            <option>Coral Jovem</option>
+            <option>Coral João Calvino</option>
+            <option>Música</option>
+            <option>Outro</option>
+          </select>
+          <button onclick="comLimparFiltros()" style="font-size:11px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx3);cursor:pointer">Limpar</button>
+          <button onclick="comCarregarDash()" style="font-size:11px;padding:6px 10px;border-radius:7px;border:1px solid rgba(139,111,212,.3);background:rgba(139,111,212,.08);color:var(--violet);cursor:pointer;font-weight:600">↻ Atualizar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista -->
+    <div class="ct" style="margin-top:0">
+      <div class="card" style="padding:0;overflow:hidden">
+        <div id="com-sol-lista" style="overflow-x:auto"><div style="padding:28px;text-align:center;color:var(--tx3)">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ COMUNICAÇÃO — Detalhe ═══════════════════════════════ -->
+  <div class="view" id="v-com-detalhe">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(139,111,212,0.14);border-color:rgba(139,111,212,0.25);color:var(--violet)">📋</div>
+      <div>
+        <div class="hero-lbl">Comunicação</div>
+        <div class="hero-ttl">Detalhe da Solicitação</div>
+        <div class="hero-dsc">Visualização, edição e acompanhamento da solicitação de arte.</div>
+      </div>
+    </div>
+    <div id="com-detalhe-content"><div class="card" style="padding:28px;color:var(--tx3)">Selecione uma solicitação.</div></div>
+  </div>

@@ -56,6 +56,7 @@ const VIEW_MODULO_PREFIX = {
   "area":     "Área do Membro",
   "diac":     "Junta Diaconal",
   "cong":     "Congregações",
+  "com":      "Comunicação",
 };
 
 function _getModuloForView(id) {
