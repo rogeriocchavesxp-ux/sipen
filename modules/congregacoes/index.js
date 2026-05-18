@@ -1524,8 +1524,10 @@ window.excluirDeptCong=excluirDeptCong;
 // ── Supabase sync helper ──────────────────────────────
 function _sbSaveCong(cong){
   CONG.saveToSupabase(cong)
-    .then(()=>{ if(typeof T==="function") T("☁ Sincronizado","Congregação salva no Supabase"); })
-    .catch(e=>{ console.warn("CONG saveToSupabase:", e.message); });
+    .catch(e=>{
+      console.error("CONG saveToSupabase:", e.message);
+      if(typeof T==="function") T("Erro ao sincronizar", e.message||"Verifique as permissões");
+    });
 }
 
 // ── Init local (sem chamada à API — evita 401 para usuários sem permissão) ─

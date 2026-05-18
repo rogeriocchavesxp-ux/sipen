@@ -365,11 +365,15 @@ const CONG = (function(){
   async function saveToSupabase(cong){
     if(!_sbAvailable()) return;
     const row = _congToRow(cong);
-    const res = await fetch(`${_sbBase()}/rest/v1/congregacoes`, {
-      method:  "POST",
-      headers: _sbHdrs({ "Prefer": "resolution=merge-duplicates,return=minimal" }),
-      body:    JSON.stringify(row)
-    });
+    delete row.id; // id vai na query string, não no body
+    const res = await fetch(
+      `${_sbBase()}/rest/v1/congregacoes?id=eq.${encodeURIComponent(cong.id)}`,
+      {
+        method:  "PATCH",
+        headers: _sbHdrs({ "Prefer": "return=minimal" }),
+        body:    JSON.stringify(row)
+      }
+    );
     if(!res.ok){
       const err = await res.text();
       throw new Error(err || `HTTP ${res.status}`);
