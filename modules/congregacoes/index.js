@@ -858,7 +858,6 @@ function salvarNovoCulto(){
   // Atualiza frequência média calculada
   cong.atividades_igreja.frequencia_media=_calcFreqMedia(hist);
   CONG.saveCong(cong);
-  _sbSaveCong(cong);
 
   fecharModalNovoCulto();
   if(typeof T==="function") T(_cultoEditIdx>=0?"Culto atualizado":"Culto registrado","");
@@ -878,7 +877,6 @@ function excluirCulto(congId, idx){
   hist.splice(idx,1);
   cong.atividades_igreja.frequencia_media=_calcFreqMedia(hist);
   CONG.saveCong(cong);
-  _sbSaveCong(cong);
   if(sbId) CONG.deleteCultoSupabase(sbId).catch(e=>console.warn("deleteCultoSupabase:", e.message));
   if(typeof T==="function") T("Culto removido","");
   _activeCongId=congId; irParaSecaoCong(2);

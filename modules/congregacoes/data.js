@@ -362,25 +362,32 @@ const CONG = (function(){
 
   /* ── Supabase: operações públicas ────────────────────── */
 
+  let _savePending = false;
+
   async function saveToSupabase(cong){
     if(!_sbAvailable()) return;
     const row = _congToRow(cong);
     delete row.id;
-    const res = await fetch(
-      `${_sbBase()}/rest/v1/congregacoes?id=eq.${encodeURIComponent(cong.id)}`,
-      {
-        method:  "PATCH",
-        headers: _sbHdrs({ "Prefer": "return=representation", "Accept": "application/json" }),
-        body:    JSON.stringify(row)
+    _savePending = true;
+    try {
+      const res = await fetch(
+        `${_sbBase()}/rest/v1/congregacoes?id=eq.${encodeURIComponent(cong.id)}`,
+        {
+          method:  "PATCH",
+          headers: _sbHdrs({ "Prefer": "return=representation", "Accept": "application/json" }),
+          body:    JSON.stringify(row)
+        }
+      );
+      if(!res.ok){
+        const err = await res.text();
+        throw new Error(err || `HTTP ${res.status}`);
       }
-    );
-    if(!res.ok){
-      const err = await res.text();
-      throw new Error(err || `HTTP ${res.status}`);
-    }
-    const updated = await res.json();
-    if(!Array.isArray(updated) || updated.length === 0){
-      throw new Error("RLS bloqueou o UPDATE — execute a migration de permissão do Líder");
+      const updated = await res.json();
+      if(!Array.isArray(updated) || updated.length === 0){
+        throw new Error("RLS bloqueou o UPDATE — execute a migration de permissão do Líder");
+      }
+    } finally {
+      _savePending = false;
     }
   }
 
@@ -471,7 +478,7 @@ const CONG = (function(){
     });
 
     const congs = rows.map(row => _rowToCong(row, cultosByCong[row.id]||[]));
-    saveCongs(congs);
+    if(!_savePending) saveCongs(congs);
     return true;
   }
 
