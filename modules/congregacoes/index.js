@@ -18,6 +18,8 @@ if(typeof CRUMB!=="undefined"){
 let _activeCongId=null;
 let _activeTab=0;
 
+const _CONG_TAB_NOMES=["Visão Geral","Membresia","Cultos e Oração","Pequenos Grupos","Ministérios","Liderança","Financeiro","Desafios","Planejamento","Agenda","Departamentos"];
+
 // ── Utilitários ───────────────────────────────────────
 function fmtData(iso){
   if(!iso) return "—";
@@ -60,26 +62,63 @@ function _isLiderCong(){ return typeof USUARIO_ATUAL!=="undefined"&&USUARIO_ATUA
 function buildCongMenu(){
   const msub=document.getElementById("ms-cong");
   if(!msub) return;
-  msub.querySelectorAll(".si-cong-item,.sdiv-cong").forEach(el=>el.remove());
+  msub.querySelectorAll(".si-cong-item,.sdiv-cong,.si-cong-sub").forEach(el=>el.remove());
+
+  // Exibe ou oculta o link "Dashboard Geral" conforme o perfil
+  const dashLink=document.getElementById("sb-cong-dash-link");
+  if(dashLink) dashLink.style.display=_isLiderCong()?"none":"";
+
   const allCongs=CONG.listCongs();
-  // LIDER_CONGREGACAO enxerga apenas a própria congregação
   const congs=_isLiderCong()
     ?allCongs.filter(c=>String(c.id)===String(USUARIO_ATUAL?.congregacao_id))
     :allCongs;
   if(congs.length===0) return;
+
   const divider=document.createElement("div");
   divider.className="sdiv sdiv-cong";
   msub.appendChild(divider);
+
   congs.forEach(c=>{
     const el=document.createElement("div");
     el.className="si si-cong-item";
     el.innerHTML=`<span style="margin-right:6px;font-size:11px">${escapeHtml(c.identificacao.icon||"⛪")}</span>${escapeHtml(c.identificacao.nome)}`;
-    if(_activeCongId===c.id) el.classList.add("ativo");
-    el.onclick=()=>abrirCongView(c.id);
-    msub.appendChild(el);
+
+    if(_isLiderCong()){
+      // Nome da congregação como cabeçalho — clique vai para Visão Geral
+      el.style.fontWeight="700";
+      el.onclick=()=>irParaSecaoCong(0);
+      msub.appendChild(el);
+
+      // Sub-itens de seção no menu lateral
+      _CONG_TAB_NOMES.forEach((nome,idx)=>{
+        const sub=document.createElement("div");
+        sub.className="si si-cong-sub";
+        sub.setAttribute("data-cong-tab",idx);
+        sub.style.paddingLeft="32px";
+        sub.innerHTML=`<span style="margin-right:5px;opacity:.35;font-size:10px">›</span>${escapeHtml(nome)}`;
+        if(idx===_activeTab) sub.classList.add("ativo");
+        sub.onclick=()=>irParaSecaoCong(idx);
+        msub.appendChild(sub);
+      });
+    } else {
+      if(_activeCongId===c.id) el.classList.add("ativo");
+      el.onclick=()=>abrirCongView(c.id);
+      msub.appendChild(el);
+    }
   });
 }
 window.buildCongMenu=buildCongMenu;
+
+// ── Navega entre seções no menu lateral (LIDER_CONGREGACAO) ──
+function irParaSecaoCong(i){
+  _activeTab=i;
+  document.querySelectorAll("#ms-cong .si-cong-sub").forEach((sub,idx)=>{
+    sub.classList.toggle("ativo",idx===i);
+  });
+  const cong=CONG.getCong(_activeCongId);
+  if(cong) renderCongTab(i,cong);
+}
+window.irParaSecaoCong=irParaSecaoCong;
 
 // ── Dashboard Geral ───────────────────────────────────
 function renderDashboardGeral(){
@@ -187,8 +226,7 @@ function renderCongView(cong){
   const el=document.getElementById("v-cong-ver");
   if(!el) return;
   const id=cong.id;
-  const tabs=["Visão Geral","Membresia","Cultos e Oração","Pequenos Grupos","Ministérios","Liderança","Financeiro","Desafios","Planejamento","Agenda","Departamentos"];
-  el.innerHTML=`
+  const hero=`
     <div class="hero">
       <div class="hero-ic" style="background:${cong.identificacao.cor}22;border-color:${cong.identificacao.cor}55">${cong.identificacao.icon||"⛪"}</div>
       <div>
@@ -200,15 +238,22 @@ function renderCongView(cong){
         ${!_isLiderCong()?`<button class="tbt" onclick="go('cong-dash')">← Dashboard</button>`:""}
         ${_podeEditar(id)?`<button class="tbt pri" onclick="abrirModalEditarCong('${id}')">Editar</button>`:""}
       </div>
-    </div>
+    </div>`;
+
+  if(_isLiderCong()){
+    // Sem barra de abas no conteúdo — navegação está no menu lateral
+    el.innerHTML=`${hero}<div class="ct" style="padding-top:0"><div id="cong-tab-content" style="padding-top:2px"></div></div>`;
+  } else {
+    // Com barra de abas para perfis administrativos
+    el.innerHTML=`${hero}
     <div class="ct" style="padding-top:0">
       <div class="citabs" id="cong-tabs-bar">
-        ${tabs.map((t,i)=>`<div class="citab${i===_activeTab?" on":""}" onclick="switchCongTab(${i})">${t}</div>`).join("")}
+        ${_CONG_TAB_NOMES.map((t,i)=>`<div class="citab${i===_activeTab?" on":""}" onclick="switchCongTab(${i})">${t}</div>`).join("")}
       </div>
       <div id="cong-tab-content" style="padding-top:2px"></div>
-    </div>
-  `;
-  renderCongTab(_activeTab, cong);
+    </div>`;
+  }
+  renderCongTab(_activeTab,cong);
 }
 
 function switchCongTab(i){
