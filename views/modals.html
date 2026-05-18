@@ -139,10 +139,15 @@
             <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Forma de pagamento *</label>
             <select id="dem-f-forma-pag" onchange="demOnFormaPagChange()" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px">
               <option value="">Selecione</option>
-              <option value="Pix">Pix</option>
+              <option value="PIX">PIX</option>
               <option value="Boleto">Boleto</option>
-              <option value="Transferência">Transferência</option>
-              <option value="Cartão">Cartão</option>
+              <option value="Cartão de Crédito">Cartão de Crédito</option>
+              <option value="Cartão de Débito">Cartão de Débito</option>
+              <option value="Dinheiro">Dinheiro</option>
+              <option value="Transferência Bancária">Transferência Bancária</option>
+              <option value="Débito em Conta">Débito em Conta</option>
+              <option value="Cheque">Cheque</option>
+              <option value="Reembolso">Reembolso</option>
               <option value="Outro">Outro</option>
             </select>
           </div>
@@ -199,6 +204,22 @@
           <div>
             <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Motivo do reembolso</label>
             <textarea id="dem-f-reimb-motivo" rows="2" placeholder="Descreva o motivo e a finalidade do gasto..." style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;resize:vertical;box-sizing:border-box"></textarea>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Forma de pagamento *</label>
+            <select id="dem-f-reimb-forma-pag" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px">
+              <option value="">Selecione</option>
+              <option value="PIX">PIX</option>
+              <option value="Boleto">Boleto</option>
+              <option value="Cartão de Crédito">Cartão de Crédito</option>
+              <option value="Cartão de Débito">Cartão de Débito</option>
+              <option value="Dinheiro">Dinheiro</option>
+              <option value="Transferência Bancária">Transferência Bancária</option>
+              <option value="Débito em Conta">Débito em Conta</option>
+              <option value="Cheque">Cheque</option>
+              <option value="Reembolso">Reembolso</option>
+              <option value="Outro">Outro</option>
+            </select>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div>

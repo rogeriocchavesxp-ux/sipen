@@ -730,8 +730,9 @@
       rows = [
         ["Reembolsado",       fd.reimb_nome || "—"],
         ["Valor",             fmtVal(fd.valor)],
-        fd.motivo        ? ["Motivo",            fd.motivo]        : null,
-        fd.chave_pix     ? ["Chave Pix",         fd.chave_pix]     : null,
+        fd.motivo            ? ["Motivo",            fd.motivo]            : null,
+        fd.forma_pagamento   ? ["Forma de pagamento", fd.forma_pagamento]  : null,
+        fd.chave_pix         ? ["Chave Pix",          fd.chave_pix]        : null,
         fd.ministerio    ? ["Ministério",         fd.ministerio]    : null,
         fmtAnexo(fd.nota_fiscal, "Comprovante"),
         fd.pastor_ciente ? ["Pastor / Aprovador", fd.pastor_ciente] : null,
@@ -1021,6 +1022,14 @@
             <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Descrição</label>
             <textarea id="dem-edit-desc" rows="3" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;resize:vertical;box-sizing:border-box">${escapeHtml(dem.descricao || '')}</textarea>
           </div>
+          ${_temFinancialData(dem) ? `
+          <div style="margin-top:12px">
+            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Forma de pagamento</label>
+            <select id="dem-edit-forma-pgto" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px">
+              <option value="">Selecione</option>
+              ${["PIX","Boleto","Cartão de Crédito","Cartão de Débito","Dinheiro","Transferência Bancária","Débito em Conta","Cheque","Reembolso","Outro"].map(f => `<option${f===(dem.financial_data?.forma_pagamento||"")?' selected':''}>${f}</option>`).join("")}
+            </select>
+          </div>` : ""}
           <div style="margin-top:12px;display:flex;justify-content:flex-end">
             <button onclick="demSalvarEdicao('${id}')" style="padding:8px 20px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer">Salvar alterações</button>
           </div>
@@ -1081,11 +1090,12 @@
   /* ── Salvar edição ──────────────────────────────────── */
 
   window.demSalvarEdicao = async function(id) {
-    const titulo  = document.getElementById("dem-edit-titulo")?.value?.trim();
-    const desc    = document.getElementById("dem-edit-desc")?.value?.trim();
-    const prioEl  = document.getElementById("dem-edit-prio");
-    const resp    = document.getElementById("dem-edit-resp")?.value?.trim();
-    const venc    = document.getElementById("dem-edit-venc")?.value || null;
+    const titulo   = document.getElementById("dem-edit-titulo")?.value?.trim();
+    const desc     = document.getElementById("dem-edit-desc")?.value?.trim();
+    const prioEl   = document.getElementById("dem-edit-prio");
+    const resp     = document.getElementById("dem-edit-resp")?.value?.trim();
+    const venc     = document.getElementById("dem-edit-venc")?.value || null;
+    const formaEl  = document.getElementById("dem-edit-forma-pgto");
 
     if (!titulo) {
       if (typeof T === "function") T("Campo obrigatório", "Informe o título");
@@ -1095,6 +1105,9 @@
     try {
       const payload = { titulo, descricao: desc || "", responsavel: resp || "", data_conclusao: venc };
       if (prioEl && _podeEditarPrioridade()) payload.prioridade = prioEl.value;
+      if (formaEl && _ativo?.financial_data) {
+        payload.financial_data = { ..._ativo.financial_data, forma_pagamento: formaEl.value };
+      }
       await apiWrite("update", "DEMANDAS", { _row: id, ...payload });
       if (typeof T === "function") T("✅ Demanda atualizada!", "");
 
@@ -1151,7 +1164,7 @@
     ["dem-f-tipo-sol","dem-f-valor","dem-f-data-venc","dem-f-beneficiario","dem-f-cpf-cnpj",
      "dem-f-centro","dem-f-forma-pag","dem-f-chave-pix","dem-f-banco","dem-f-agencia",
      "dem-f-conta","dem-f-obs-fin","dem-f-reimb-nome","dem-f-reimb-valor",
-     "dem-f-reimb-motivo","dem-f-reimb-pix","dem-f-reimb-min",
+     "dem-f-reimb-motivo","dem-f-reimb-forma-pag","dem-f-reimb-pix","dem-f-reimb-min",
      "dem-f-reimb-pastor","dem-f-reimb-obs"].forEach(id => {
       const el = m.querySelector("#" + id);
       if (el) el.value = "";
@@ -1205,9 +1218,9 @@
     const pixSec    = document.getElementById("dem-f-pix-section");
     const bankSec   = document.getElementById("dem-f-bank-section");
     const boletoSec = document.getElementById("dem-f-boleto-section");
-    if (pixSec)    pixSec.style.display    = forma === "Pix"           ? ""     : "none";
-    if (bankSec)   bankSec.style.display   = forma === "Transferência" ? "grid" : "none";
-    if (boletoSec) boletoSec.style.display = forma === "Boleto"        ? ""     : "none";
+    if (pixSec)    pixSec.style.display    = forma === "PIX"                    ? ""     : "none";
+    if (bankSec)   bankSec.style.display   = forma === "Transferência Bancária" ? "grid" : "none";
+    if (boletoSec) boletoSec.style.display = forma === "Boleto"                 ? ""     : "none";
   }
 
   window.demOnSubChange      = _toggleFinanceiroSection;
@@ -1312,7 +1325,7 @@
         if (typeof T === "function") T("Campo obrigatório", "Selecione a forma de pagamento");
         return;
       }
-      if (forma === "Pix" && !chave_pix) {
+      if (forma === "PIX" && !chave_pix) {
         if (typeof T === "function") T("Campo obrigatório", "Informe a chave Pix");
         return;
       }
@@ -1325,7 +1338,7 @@
         const bErr = _validarArquivo(bFile);
         if (bErr) { if (typeof T === "function") T("Arquivo inválido", bErr); return; }
       }
-      if (forma === "Transferência" && (!banco || !agencia || !conta)) {
+      if (forma === "Transferência Bancária" && (!banco || !agencia || !conta)) {
         if (typeof T === "function") T("Campo obrigatório", "Informe banco, agência e conta para transferência");
         return;
       }
@@ -1364,13 +1377,14 @@
       const nfErr = _validarArquivo(nfFile);
       if (nfErr) { if (typeof T === "function") T("Arquivo inválido", nfErr); return; }
       financial_data = {
-        reimb_nome:    nome,
+        reimb_nome:      nome,
         valor,
-        motivo:        document.getElementById("dem-f-reimb-motivo")?.value?.trim() || "",
-        chave_pix:     document.getElementById("dem-f-reimb-pix")?.value?.trim() || "",
-        ministerio:    document.getElementById("dem-f-reimb-min")?.value?.trim() || "",
-        pastor_ciente: document.getElementById("dem-f-reimb-pastor")?.value?.trim() || "",
-        obs:           document.getElementById("dem-f-reimb-obs")?.value?.trim() || "",
+        motivo:          document.getElementById("dem-f-reimb-motivo")?.value?.trim() || "",
+        forma_pagamento: document.getElementById("dem-f-reimb-forma-pag")?.value || "",
+        chave_pix:       document.getElementById("dem-f-reimb-pix")?.value?.trim() || "",
+        ministerio:      document.getElementById("dem-f-reimb-min")?.value?.trim() || "",
+        pastor_ciente:   document.getElementById("dem-f-reimb-pastor")?.value?.trim() || "",
+        obs:             document.getElementById("dem-f-reimb-obs")?.value?.trim() || "",
       };
     }
 
@@ -1866,7 +1880,7 @@
               <th style="padding:8px 2px;width:36px;vertical-align:middle;text-align:center">
                 <input type="checkbox" id="fin-dem-chk-all" ${todosSel?"checked":""} onchange="window._finToggleTodos(this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--gr)">
               </th>
-              ${["Categoria","Subcategoria","Título","Solicitante","Responsável","Valor","Prior.","Status","Abertura","Conclusão"].map((h,i) =>
+              ${["Categoria","Subcategoria","Título","Solicitante","Responsável","Valor","Forma Pgto.","Prior.","Status","Abertura","Conclusão"].map((h,i) =>
                 `<th style="text-align:${i===5?"right":"left"};padding:8px 6px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`
               ).join("")}
             </tr>
@@ -1890,6 +1904,7 @@
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${escapeHtml(r.solicitante||r.solicitante_txt)||"—"}</td>
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${escapeHtml(r.responsavel||r.responsavel_txt)||"—"}</td>
                 <td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--tx1);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${r.financial_data?.valor!=null?`R$ ${parseFloat(r.financial_data.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}`:"—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);font-size:11px;white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${escapeHtml(r.financial_data?.forma_pagamento||"—")}</td>
                 <td style="padding:8px 6px;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${pillPrio(r.prioridade)}</td>
                 <td style="padding:8px 6px;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${pillStatus(r.status)}</td>
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${fmtD(r.data_abertura||r.criado_em)}</td>
@@ -1982,7 +1997,7 @@
           <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Solicitante</div><div style="font-size:11.5px;color:#1a1a1a">${escapeHtml(r.solicitante||r.solicitante_txt||"—")}</div></div>
           <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Responsável</div><div style="font-size:11.5px;color:#1a1a1a">${escapeHtml(r.responsavel||r.responsavel_txt||"—")}</div></div>
           <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Valor</div><div style="font-size:12px;font-weight:700;color:#1a1a1a">${fmtVal(r.financial_data)}</div></div>
-          <div></div>
+          <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Forma de Pagamento</div><div style="font-size:11.5px;color:#1a1a1a">${escapeHtml(r.financial_data?.forma_pagamento||"—")}</div></div>
           <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Data de Abertura</div><div style="font-size:11.5px;color:#1a1a1a">${fmtD(r.data_abertura||r.criado_em)}</div></div>
           <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Data de Conclusão</div><div style="font-size:11.5px;color:#1a1a1a">${fmtD(r.data_conclusao)}</div></div>
           ${r.descricao||r.observacoes?`<div style="grid-column:1/-1"><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Observações</div><div style="font-size:11.5px;color:#1a1a1a;white-space:pre-wrap">${escapeHtml(r.descricao||r.observacoes)}</div></div>`:""}
