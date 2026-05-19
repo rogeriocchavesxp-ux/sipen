@@ -54,16 +54,17 @@ WHERE schemaname = 'public'
 ORDER BY viewname;
 
     ── 0B. Policies com auth.uid() direto (candidatas ao fix de perf) ──
+    NOTA: pg_policies.qual/with_check são text — usar diretamente, sem pg_get_expr()
 
 SELECT tablename, policyname, cmd,
-       pg_get_expr(qual, 0)  AS using_expr,
-       pg_get_expr(with_check, 0) AS with_check_expr
+       qual         AS using_expr,
+       with_check   AS with_check_expr
 FROM pg_policies
 WHERE schemaname = 'public'
-  AND (pg_get_expr(qual, 0) ILIKE '%auth.uid()%'
-    OR pg_get_expr(with_check, 0) ILIKE '%auth.uid()%'
-    OR pg_get_expr(qual, 0) ILIKE '%auth.jwt()%'
-    OR pg_get_expr(with_check, 0) ILIKE '%auth.jwt()%')
+  AND (qual       ILIKE '%auth.uid()%'
+    OR with_check ILIKE '%auth.uid()%'
+    OR qual       ILIKE '%auth.jwt()%'
+    OR with_check ILIKE '%auth.jwt()%')
 ORDER BY tablename, policyname;
 
     ── 0C. Grants para anon em tabelas/views ──────────────────────────
@@ -763,16 +764,17 @@ ORDER BY table_name;
 
 -- ── 7C. Policies que ainda usam auth.uid() sem init-plan ────────────
 -- ESPERADO: zero linhas (todas as occurrências devem ter sido corrigidas)
+-- NOTA: pg_policies.qual/with_check já são text — não usar pg_get_expr()
 SELECT tablename, policyname,
-       pg_get_expr(qual, 0)         AS using_expr,
-       pg_get_expr(with_check, 0)   AS with_check_expr
+       qual         AS using_expr,
+       with_check   AS with_check_expr
 FROM pg_policies
 WHERE schemaname = 'public'
   AND (
-    pg_get_expr(qual, 0)       ~ 'auth\.uid\(\)'
-    OR pg_get_expr(with_check, 0) ~ 'auth\.uid\(\)'
-    OR pg_get_expr(qual, 0)       ~ 'auth\.jwt\(\)'
-    OR pg_get_expr(with_check, 0) ~ 'auth\.jwt\(\)'
+    qual       ~ 'auth\.uid\(\)'
+    OR with_check ~ 'auth\.uid\(\)'
+    OR qual       ~ 'auth\.jwt\(\)'
+    OR with_check ~ 'auth\.jwt\(\)'
   )
 ORDER BY tablename;
 
