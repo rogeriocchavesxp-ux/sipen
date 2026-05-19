@@ -432,25 +432,25 @@ $$;
 -- Função auxiliar de normalização de texto — recriada se existir.
 DO $$ BEGIN
   EXECUTE $fn$
-    CREATE OR REPLACE FUNCTION public.norm_txt(t text)
+    CREATE OR REPLACE FUNCTION public.norm_txt(v text)
     RETURNS text
     LANGUAGE sql
     IMMUTABLE PARALLEL SAFE
     SET search_path = public, extensions
     AS $body$
-      SELECT lower(unaccent(trim(t)))
+      SELECT lower(unaccent(trim(v)))
     $body$
   $fn$;
 EXCEPTION WHEN undefined_function THEN
   -- unaccent pode não estar disponível; cria versão simples
   EXECUTE $fn$
-    CREATE OR REPLACE FUNCTION public.norm_txt(t text)
+    CREATE OR REPLACE FUNCTION public.norm_txt(v text)
     RETURNS text
     LANGUAGE sql
     IMMUTABLE PARALLEL SAFE
     SET search_path = public
     AS $body$
-      SELECT lower(trim(t))
+      SELECT lower(trim(v))
     $body$
   $fn$;
 END $$;
