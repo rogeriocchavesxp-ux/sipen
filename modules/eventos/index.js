@@ -305,10 +305,17 @@
     el.innerHTML = `<div style="padding:24px;text-align:center;color:var(--tx3)">Carregando inscrições...</div>`;
 
     let inscricoes = [];
+    let agendaEntry = null;
     try {
       const data = await _fetch(`${_api()}/rest/v1/evento_inscricoes?evento_id=eq.${evt.id}&select=*&order=criado_em.asc&limit=500`);
       inscricoes = data || [];
     } catch (_) {}
+    if (evt.agenda_id) {
+      try {
+        const ag = await _fetch(`${_api()}/rest/v1/agenda?id=eq.${evt.agenda_id}&select=id,status,aprovado_por_nome,aprovado_em,motivo_rejeicao&limit=1`);
+        agendaEntry = Array.isArray(ag) ? ag[0] : ag;
+      } catch (_) {}
+    }
 
     const isAdmin = _isAdmin();
     const lbl = t => `<div style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">${t}</div>`;
@@ -362,6 +369,40 @@
           ${evt.descricao ? `<div style="margin-top:12px">${lbl("Descrição")}<div style="font-size:12.5px;color:var(--tx2);white-space:pre-wrap">${_eh(evt.descricao)}</div></div>` : ""}
           ${evt.observacoes ? `<div style="margin-top:12px">${lbl("Observações")}<div style="font-size:12px;color:var(--tx3);white-space:pre-wrap">${_eh(evt.observacoes)}</div></div>` : ""}
         </div>
+
+        <!-- Status na Agenda -->
+        ${(() => {
+          if (evt.status === "rascunho") return "";
+          if (!evt.agenda_id) return `
+            <div class="card" style="border-color:rgba(208,144,64,.3)">
+              <div class="ctit">Agenda</div>
+              <div style="font-size:12px;color:var(--amber)">⚠ Não sincronizado com a Agenda ainda. Salve o evento novamente para enviar.</div>
+            </div>`;
+          const AG_CFG = {
+            pendente:   { cor: "var(--amber)", lbl: "Aguardando aprovação" },
+            confirmado: { cor: "var(--gr)",    lbl: "Aprovado na Agenda"   },
+            cancelado:  { cor: "var(--rose)",  lbl: "Rejeitado pela Agenda"},
+          };
+          const ag = agendaEntry;
+          if (!ag) return `
+            <div class="card">
+              <div class="ctit">Agenda</div>
+              <div style="font-size:12px;color:var(--tx3)">Sincronizado com a Agenda.</div>
+            </div>`;
+          const cfg = AG_CFG[ag.status] || { cor: "var(--tx3)", lbl: ag.status };
+          return `
+            <div class="card" style="border-color:${cfg.cor}40">
+              <div class="ctit">Status na Agenda</div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <span style="padding:4px 12px;border-radius:20px;font-size:11.5px;font-weight:700;background:${cfg.cor}18;color:${cfg.cor};border:1px solid ${cfg.cor}40">${cfg.lbl}</span>
+                ${ag.aprovado_por_nome ? `<span style="font-size:11px;color:var(--tx3)">por ${_eh(ag.aprovado_por_nome)} · ${_fmtD(ag.aprovado_em)}</span>` : ""}
+              </div>
+              ${ag.status === "cancelado" && ag.motivo_rejeicao ? `
+                <div style="margin-top:10px;padding:9px 12px;background:rgba(224,85,85,.08);border-radius:7px;border:1px solid rgba(224,85,85,.2);font-size:11.5px;color:var(--rose)">
+                  <strong>Motivo:</strong> ${_eh(ag.motivo_rejeicao)}
+                </div>` : ""}
+            </div>`;
+        })()}
 
         <!-- Resumo inscrições -->
         <div class="card">
@@ -612,6 +653,10 @@
         _T("Evento atualizado!");
         eveFecharFormEvento();
         await _recarregarTudo();
+        try {
+          const evtAtualizado = _eventos.find(e => e.id === editId);
+          if (evtAtualizado) await _sincronizarAgenda(evtAtualizado);
+        } catch (_) {}
         eveAbrirDetalhe(editId);
       } else {
         const res = await _fetch(`${_api()}/rest/v1/eventos`, {
@@ -623,8 +668,10 @@
         _T("Evento criado!", titulo);
         eveFecharFormEvento();
         await _recarregarTudo();
-        if (novo?.id) eveAbrirDetalhe(novo.id);
-        else go("eve-todos");
+        if (novo?.id) {
+          try { await _sincronizarAgenda(novo); } catch (_) {}
+          eveAbrirDetalhe(novo.id);
+        } else go("eve-todos");
       }
     } catch (e) { _T("Erro ao salvar", e.message); }
   };
@@ -1226,6 +1273,86 @@
     _renderDashProximos();
     _renderDashStatus();
     _populateEventoSelects();
+  }
+
+  /* ── Sincronização com a Agenda ─────────────────────── */
+
+  async function _sincronizarAgenda(evt) {
+    if (evt.status === "rascunho") return;
+
+    const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+                   "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    const DIAS  = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira",
+                   "Quinta-feira","Sexta-feira","Sábado"];
+    const dt = new Date((evt.data_inicio || "") + "T12:00:00");
+    const mes       = MESES[dt.getMonth()] || "";
+    const diaSemana = DIAS[dt.getDay()] || "";
+
+    const agBase = {
+      titulo:      evt.titulo,
+      descricao:   evt.descricao || null,
+      data:        evt.data_inicio,
+      hora_inicio: evt.hora_inicio ? String(evt.hora_inicio).slice(0, 5) : null,
+      hora_fim:    evt.hora_fim    ? String(evt.hora_fim).slice(0, 5)    : null,
+      espaco:      evt.local_nome  || null,
+      organizador: evt.ministerio_organizador || evt.criado_por_nome || null,
+      observacao:  evt.observacoes || null,
+      mes,
+      dia_semana:  diaSemana,
+      recorrencia: "Único",
+      origem:      "evento",
+      evento_id:   evt.id,
+    };
+
+    if (evt.status === "cancelado") {
+      if (evt.agenda_id) {
+        await _fetch(`${_api()}/rest/v1/agenda?id=eq.${evt.agenda_id}`, {
+          method: "PATCH",
+          headers: _hdrs({ "Content-Type": "application/json", "Prefer": "return=minimal" }),
+          body: JSON.stringify({ status: "cancelado" }),
+        });
+      }
+      return;
+    }
+
+    if (evt.agenda_id) {
+      let statusAtual = "pendente";
+      try {
+        const ag = await _fetch(`${_api()}/rest/v1/agenda?id=eq.${evt.agenda_id}&select=status&limit=1`);
+        statusAtual = (Array.isArray(ag) ? ag[0]?.status : ag?.status) || "pendente";
+      } catch (_) {}
+
+      const resetAprov = statusAtual === "confirmado"
+        ? { status: "pendente", aprovado_por_nome: null, aprovado_em: null, motivo_rejeicao: null }
+        : {};
+
+      await _fetch(`${_api()}/rest/v1/agenda?id=eq.${evt.agenda_id}`, {
+        method: "PATCH",
+        headers: _hdrs({ "Content-Type": "application/json", "Prefer": "return=minimal" }),
+        body: JSON.stringify({ ...agBase, ...resetAprov }),
+      });
+
+      if (statusAtual === "confirmado") {
+        _T("Evento reenviado para aprovação", "Alterações detectadas — aguarda nova aprovação da Agenda.");
+      }
+    } else {
+      const res = await _fetch(`${_api()}/rest/v1/agenda`, {
+        method: "POST",
+        headers: _hdrs({ "Content-Type": "application/json", "Prefer": "return=representation" }),
+        body: JSON.stringify({ ...agBase, status: "pendente" }),
+      });
+      const novaAg = Array.isArray(res) ? res[0] : res;
+      if (novaAg?.id) {
+        await _fetch(`${_api()}/rest/v1/eventos?id=eq.${evt.id}`, {
+          method: "PATCH",
+          headers: _hdrs({ "Content-Type": "application/json", "Prefer": "return=minimal" }),
+          body: JSON.stringify({ agenda_id: novaAg.id }),
+        });
+        const idx = _eventos.findIndex(e => e.id === evt.id);
+        if (idx >= 0) _eventos[idx] = { ..._eventos[idx], agenda_id: novaAg.id };
+        _T("Enviado para Agenda!", "Aguardando aprovação para aparecer publicamente.");
+      }
+    }
   }
 
   /* ── Autoload ───────────────────────────────────────── */

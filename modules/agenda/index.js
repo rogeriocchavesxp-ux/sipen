@@ -3,7 +3,7 @@
 VIEW_AUTOLOAD["agenda-dash"]          = null;
 VIEW_AUTOLOAD["agenda-calendario"]    = { tab:"AGENDA", id:"agenda-cal-list" };
 VIEW_AUTOLOAD["agenda-confirmados"]   = { tab:"AGENDA", id:"ag-conf-list",   filtro:{status:"confirmado"} };
-VIEW_AUTOLOAD["agenda-aprovacoes"]    = { tab:"AGENDA", id:"ag-aprov-list",  filtro:{status:"pendente"} };
+VIEW_AUTOLOAD["agenda-aprovacoes"]    = { fn: () => agCarregarAprovacoes() };
 VIEW_AUTOLOAD["agenda-recusados"]     = { tab:"AGENDA", id:"ag-rec-list",    filtro:{status:"cancelado"} };
 VIEW_AUTOLOAD["agenda-reagendamentos"]= { tab:"AGENDA", id:"ag-reag-list",   filtro:{status:"reagendado"} };
 VIEW_AUTOLOAD["agenda-ambientes"]     = null;
@@ -766,3 +766,152 @@ window.agEmAnalise                = agEmAnalise;
 window.agRecusarSolicitacao       = agRecusarSolicitacao;
 window.agAprovarSolicitacao       = agAprovarSolicitacao;
 window.agConfirmarAprovacao       = agConfirmarAprovacao;
+
+/* ── Aprovações com suporte a entradas do módulo Eventos ──── */
+
+async function agCarregarAprovacoes() {
+  const el = document.getElementById("ag-aprov-list");
+  if (!el) return;
+  el.innerHTML = `<div style="color:var(--tx3);font-size:11px">${spinner()} Carregando...</div>`;
+  try {
+    const res = await fetch(
+      `${apiBaseUrl()}/rest/v1/agenda?status=eq.pendente&select=*&order=created_at.desc&limit=200`,
+      { headers: apiHeaders() }
+    );
+    if (!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+
+    if (!rows.length) {
+      el.innerHTML = `<div style="text-align:center;padding:36px;color:var(--tx3)">
+        <div style="font-size:28px;margin-bottom:8px">✅</div>
+        <div style="font-size:12px;font-weight:600">Nenhuma aprovação pendente</div>
+      </div>`;
+      return;
+    }
+
+    const fmtD = d => {
+      if (!d) return "—";
+      const [y, m, dia] = String(d).slice(0, 10).split("-");
+      return `${dia}/${m}/${y}`;
+    };
+
+    const deEvento = rows.filter(r => r.origem === "evento");
+    const manuais  = rows.filter(r => r.origem !== "evento");
+
+    let html = "";
+
+    if (deEvento.length) {
+      html += `<div style="font-size:10px;font-weight:700;color:var(--sky);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Do Módulo Eventos — ${deEvento.length} pendente${deEvento.length !== 1 ? "s" : ""}</div>`;
+      html += deEvento.map(r => `
+        <div style="background:var(--bg-card);border:1px solid rgba(74,156,245,.25);border-radius:10px;padding:16px 18px;margin-bottom:10px">
+          <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+            <div style="flex:1;min-width:200px">
+              <div style="font-size:13.5px;font-weight:700;color:var(--tx1)">${escapeHtml(r.titulo || "—")}</div>
+              <div style="font-size:11px;color:var(--tx3);margin-top:5px;display:flex;gap:10px;flex-wrap:wrap">
+                <span>📅 ${fmtD(r.data)}${r.hora_inicio ? " · " + String(r.hora_inicio).slice(0,5) : ""}</span>
+                ${r.espaco ? `<span>📍 ${escapeHtml(r.espaco)}</span>` : ""}
+                ${r.organizador ? `<span>🏛 ${escapeHtml(r.organizador)}</span>` : ""}
+              </div>
+              ${r.descricao ? `<div style="font-size:11px;color:var(--tx2);margin-top:6px;white-space:pre-wrap">${escapeHtml(r.descricao.slice(0, 140))}${r.descricao.length > 140 ? "…" : ""}</div>` : ""}
+            </div>
+            <div style="display:flex;gap:6px;align-self:flex-start;flex-shrink:0">
+              <button onclick="agAprovarEntrada('${r.id}','${r.evento_id || ''}')" style="padding:7px 16px;border-radius:7px;border:1px solid rgba(58,170,92,.35);background:rgba(58,170,92,.12);color:var(--gr);font-size:12px;font-weight:700;cursor:pointer">✓ Aprovar</button>
+              <button onclick="agRejeitarEntrada('${r.id}','${r.evento_id || ''}')" style="padding:7px 14px;border-radius:7px;border:1px solid rgba(224,85,85,.3);background:rgba(224,85,85,.08);color:var(--rose);font-size:12px;font-weight:700;cursor:pointer">✕ Rejeitar</button>
+            </div>
+          </div>
+        </div>`).join("");
+    }
+
+    if (manuais.length) {
+      if (deEvento.length) html += `<div style="margin-top:20px;margin-bottom:10px;border-top:1px solid var(--bd2);padding-top:16px"></div>`;
+      html += `<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Solicitações Manuais — ${manuais.length}</div>`;
+      html += `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px">
+        <thead><tr style="border-bottom:1px solid var(--bd2);background:var(--bg-surface)">
+          <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Título</th>
+          <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Data</th>
+          <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Espaço</th>
+          <th style="text-align:right;padding:7px 10px"></th>
+        </tr></thead>
+        <tbody>${manuais.map(r => `<tr style="border-bottom:1px solid var(--bd1)">
+          <td style="padding:8px 10px;color:var(--tx1);font-weight:600">${escapeHtml(r.titulo || "—")}</td>
+          <td style="padding:8px 10px;color:var(--tx2);white-space:nowrap">${fmtD(r.data)}</td>
+          <td style="padding:8px 10px;color:var(--tx2)">${escapeHtml(r.espaco || "—")}</td>
+          <td style="padding:8px 10px;text-align:right">
+            <button onclick='agAprovarSolicitacao(${safeJsonForHtml(r)})' style="background:rgba(58,170,92,.1);border:1px solid rgba(58,170,92,.35);border-radius:4px;color:var(--gr);font-size:10px;font-weight:700;padding:3px 7px;cursor:pointer;margin-right:3px">✓ Aprovar</button>
+            <button onclick='agRecusarSolicitacao("${r.id}")' style="background:rgba(224,85,85,.08);border:1px solid rgba(224,85,85,.3);border-radius:4px;color:var(--rose);font-size:10px;font-weight:700;padding:3px 7px;cursor:pointer">✕ Recusar</button>
+          </td>
+        </tr>`).join("")}</tbody>
+      </table></div>`;
+    }
+
+    el.innerHTML = html;
+  } catch (e) {
+    el.innerHTML = `<div style="color:var(--rose);font-size:11.5px">Erro: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+async function agAprovarEntrada(agendaId, eventoId) {
+  const nome = typeof USUARIO_ATUAL !== "undefined" ? (USUARIO_ATUAL?.nome || "Sistema") : "Sistema";
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${agendaId}`, {
+      method: "PATCH",
+      headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+      body: JSON.stringify({
+        status:             "confirmado",
+        aprovado_por_nome:  nome,
+        aprovado_em:        new Date().toISOString(),
+        motivo_rejeicao:    null,
+      }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    _agendaCache = null;
+    T("Evento aprovado!", "Aparecerá na Agenda geral para todos os usuários.");
+    agCarregarAprovacoes();
+  } catch (e) { T("Erro ao aprovar", e.message); }
+}
+
+function agRejeitarEntrada(agendaId, eventoId) {
+  let modal = document.getElementById("ag-rejeitar-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "ag-rejeitar-modal";
+    modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:340;display:flex;align-items:center;justify-content:center";
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `
+    <div style="width:min(440px,94vw);background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="font-size:15px;font-weight:700;color:var(--tx1);margin-bottom:16px">Rejeitar solicitação</div>
+      <label style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em">Motivo da rejeição</label>
+      <textarea id="ag-rejeitar-motivo" rows="3" placeholder="Descreva o motivo para o organizador do evento..." style="width:100%;margin-top:6px;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-input);color:var(--tx1);font-size:12.5px;font-family:inherit;resize:vertical;outline:none;box-sizing:border-box"></textarea>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+        <button onclick="document.getElementById('ag-rejeitar-modal')?.remove()" style="padding:8px 16px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:12.5px;cursor:pointer">Cancelar</button>
+        <button onclick="agConfirmarRejeicao('${agendaId}','${eventoId}')" style="padding:8px 18px;border-radius:7px;border:none;background:var(--rose);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer">Rejeitar</button>
+      </div>
+    </div>`;
+}
+
+async function agConfirmarRejeicao(agendaId, eventoId) {
+  const motivo = document.getElementById("ag-rejeitar-motivo")?.value?.trim() || null;
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${agendaId}`, {
+      method: "PATCH",
+      headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+      body: JSON.stringify({
+        status:            "cancelado",
+        motivo_rejeicao:   motivo,
+        aprovado_por_nome: null,
+        aprovado_em:       null,
+      }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    document.getElementById("ag-rejeitar-modal")?.remove();
+    _agendaCache = null;
+    T("Solicitação rejeitada.", motivo ? `Motivo registrado.` : "Sem motivo registrado.");
+    agCarregarAprovacoes();
+  } catch (e) { T("Erro ao rejeitar", e.message); }
+}
+
+window.agCarregarAprovacoes = agCarregarAprovacoes;
+window.agAprovarEntrada     = agAprovarEntrada;
+window.agRejeitarEntrada    = agRejeitarEntrada;
+window.agConfirmarRejeicao  = agConfirmarRejeicao;
