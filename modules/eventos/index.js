@@ -86,6 +86,11 @@
     return "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
   }
 
+  function _gerarLinkPublico(eventoId) {
+    const base = "https://rogeriocchavesxp-ux.github.io/sipen/inscricao.html";
+    return `${base}?id=${eventoId}`;
+  }
+
   /* ── Permissões ─────────────────────────────────────── */
 
   function _isAdmin() {
@@ -404,6 +409,23 @@
             </div>`;
         })()}
 
+        <!-- Link público de inscrição -->
+        ${evt.status !== "rascunho" ? (() => {
+          const link = _gerarLinkPublico(evt.id);
+          const disponivel = ["publicado","inscricoes_abertas"].includes(evt.status);
+          return `
+            <div class="card" style="border-color:rgba(74,156,245,.3)">
+              <div class="ctit">Link de Inscrição Pública</div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+                <input id="eve-link-pub-${_ea(evt.id)}" type="text" readonly value="${_ea(link)}"
+                  style="flex:1;min-width:200px;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:11.5px;font-family:monospace;outline:none;cursor:text">
+                <button onclick="eveCopiarLink('${_ea(evt.id)}')" style="padding:7px 14px;border-radius:7px;border:none;background:var(--sky);color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Copiar</button>
+                ${disponivel ? `<a href="https://wa.me/?text=${encodeURIComponent("Inscreva-se no evento: " + link)}" target="_blank" rel="noopener" style="padding:7px 14px;border-radius:7px;border:1px solid rgba(37,211,102,.4);background:rgba(37,211,102,.1);color:#25d366;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap">WhatsApp</a>` : ""}
+              </div>
+              ${!disponivel ? `<div style="font-size:11px;color:var(--amber)">⚠ Inscrições disponíveis apenas quando status for "Publicado" ou "Inscrições Abertas".</div>` : ""}
+            </div>`;
+        })() : ""}
+
         <!-- Resumo inscrições -->
         <div class="card">
           <div class="ctit">Resumo das Inscrições</div>
@@ -593,6 +615,17 @@
   window.eveFecharFormEvento = function () {
     const el = document.getElementById("eve-form-modal");
     if (el) el.style.display = "none";
+  };
+
+  window.eveCopiarLink = function (eventoId) {
+    const input = document.getElementById(`eve-link-pub-${eventoId}`);
+    const link = input ? input.value : _gerarLinkPublico(eventoId);
+    navigator.clipboard.writeText(link).then(() => {
+      _T("Link copiado!", link);
+    }).catch(() => {
+      if (input) { input.select(); document.execCommand("copy"); }
+      _T("Link copiado!");
+    });
   };
 
   window.eveToogleGratuito = function (val) {
