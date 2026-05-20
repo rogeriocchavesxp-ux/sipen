@@ -301,6 +301,62 @@ const WA_CFG = (function(){
     }
   }
 
+  /* ── IA Log (demandas recebidas via WhatsApp) ────────── */
+
+  async function carregarIaLog(){
+    const tbody = document.getElementById("wa-ia-log-body");
+    if(!tbody) return;
+    tbody.innerHTML = `<tr><td colspan="5" style="padding:16px;text-align:center;color:var(--tx3)">Carregando...</td></tr>`;
+
+    const rows = await _fetch("/rest/v1/whatsapp_ia_log?select=*&order=criado_em.desc&limit=100");
+    if(!rows || !rows.length){
+      tbody.innerHTML = `<tr><td colspan="5" style="padding:16px;text-align:center;color:var(--tx3)">Nenhuma mensagem recebida via WhatsApp ainda</td></tr>`;
+      return;
+    }
+
+    const SC = {
+      recebido:        "var(--tx3)",
+      classificado:    "var(--blue)",
+      demanda_criada:  "var(--gr)",
+      nao_classificado:"var(--gold)",
+      erro:            "var(--rose)",
+    };
+    const SL = {
+      recebido:        "Recebido",
+      classificado:    "Classificado",
+      demanda_criada:  "Demanda criada",
+      nao_classificado:"Não classificado",
+      erro:            "Erro",
+    };
+
+    tbody.innerHTML = rows.map(r => {
+      const ia  = r.ia_resultado || {};
+      const raw = (r.mensagem_raw || "—").slice(0, 120);
+      return `
+        <tr style="border-bottom:1px solid var(--bd2)">
+          <td style="padding:8px 10px;color:var(--tx3);font-size:11px;white-space:nowrap">${_dt(r.criado_em)}</td>
+          <td style="padding:8px 10px">
+            <div style="font-size:11.5px;font-family:var(--mono)">${_esc(r.phone||"—")}</div>
+            ${r.nome_remetente ? `<div style="font-size:10.5px;color:var(--tx3)">${_esc(r.nome_remetente)}</div>` : ""}
+          </td>
+          <td style="padding:8px 10px;max-width:220px">
+            ${r.protocolo ? `<div style="font-size:10.5px;font-weight:700;color:var(--blue);margin-bottom:3px">${_esc(r.protocolo)}</div>` : ""}
+            <div style="font-size:11px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${_esc(r.mensagem_raw||"")}">${_esc(raw)}</div>
+          </td>
+          <td style="padding:8px 10px;font-size:11px;color:var(--tx2)">
+            ${ia.area_nome ? `<div style="font-weight:600">${_esc(ia.area_nome)}</div>` : ""}
+            ${ia.subcategoria ? `<div style="color:var(--tx3)">${_esc(ia.subcategoria)}</div>` : ""}
+            ${ia.confidence != null ? `<div style="font-size:10px;color:var(--tx3)">confiança: ${Math.round((ia.confidence||0)*100)}%</div>` : ""}
+          </td>
+          <td style="padding:8px 10px;text-align:center">
+            <span style="font-size:10.5px;font-weight:700;color:${SC[r.status]||"var(--tx3)"}">${SL[r.status]||_esc(r.status||"—")}</span>
+            ${r.erro_msg ? `<div style="font-size:9.5px;color:var(--rose);margin-top:2px" title="${_esc(r.erro_msg)}">⚠ erro</div>` : ""}
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+
   /* ── Refresh geral ────────────────────────────────────── */
 
   async function refresh(){
@@ -311,6 +367,7 @@ const WA_CFG = (function(){
       carregarHistorico(),
       carregarTemplates(),
       carregarEstadoConfig(),
+      carregarIaLog(),
     ]);
   }
 
@@ -323,6 +380,7 @@ const WA_CFG = (function(){
     carregarHistorico,
     carregarTemplates, openTemplateModal, closeTplModal, _editTpl, toggleTemplate, salvarTemplate,
     openTesteModal, closeTesteModal, enviarTeste,
+    carregarIaLog,
   };
 })();
 

@@ -3640,6 +3640,33 @@
           <div style="color:var(--tx3);font-size:11.5px">Carregando...</div>
         </div>
       </div>
+
+      <!-- Demandas recebidas via WhatsApp (IA) -->
+      <div class="card">
+        <div class="ctit" style="display:flex;align-items:center;gap:10px">
+          <span>Demandas recebidas via WhatsApp</span>
+          <span class="cact" onclick="WA_CFG.carregarIaLog()">↻ Atualizar</span>
+        </div>
+        <p style="font-size:11px;color:var(--tx3);margin:0 0 10px">
+          Mensagens recebidas pelo webhook do BotConversa e processadas pela IA.
+        </p>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr style="border-bottom:2px solid var(--bd2)">
+                <th style="text-align:left;padding:7px 10px;color:var(--tx3);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em">Data</th>
+                <th style="text-align:left;padding:7px 10px;color:var(--tx3);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em">Remetente</th>
+                <th style="text-align:left;padding:7px 10px;color:var(--tx3);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em">Protocolo / Mensagem</th>
+                <th style="text-align:left;padding:7px 10px;color:var(--tx3);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em">Classificação IA</th>
+                <th style="text-align:center;padding:7px 10px;color:var(--tx3);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em">Status</th>
+              </tr>
+            </thead>
+            <tbody id="wa-ia-log-body">
+              <tr><td colspan="5" style="padding:16px;text-align:center;color:var(--tx3)">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
