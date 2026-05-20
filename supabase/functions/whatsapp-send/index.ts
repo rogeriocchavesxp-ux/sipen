@@ -3,20 +3,15 @@
 // Proxy seguro para o BotConversa. A API key nunca vai ao frontend.
 //
 // Secrets obrigatórios (supabase secrets set):
-//   BOTCONVERSA_API_KEY  → chave de integração do painel BotConversa
-//                          (Configurações → Integrações → Webhook Integration Key)
+//   BOTCONVERSA_API_KEY  → Configurações → Integrações → API → Chave API
 //
 // Secret opcional:
-//   BOTCONVERSA_API_URL  → URL base da API (padrão: https://backend.botconversa.com.br/api/v1/webhooks/send-message/)
-//                          Verifique o endpoint correto no Swagger do BotConversa após criar sua conta.
+//   BOTCONVERSA_BASE_URL → padrão: https://backend.botconversa.com.br/api/v1
 //
-// Body esperado (POST JSON):
-//   para_numero      string   número com DDI (ex: 5511999999999)
-//   mensagem         string   texto da mensagem
-//   modulo           string   módulo de origem (ex: 'AGENDA')
-//   referencia_tipo  string?  tipo do registro (ex: 'evento')
-//   referencia_id    string?  UUID do registro de origem
-//   idempotency_key  string?  chave única para evitar duplo envio
+// Fluxo:
+//   1. GET  /subscriber/get_by_phone/{phone}/ → busca contato existente
+//   2. POST /subscriber/                       → cria contato se não existir
+//   3. POST /subscriber/{id}/send_message/     → envia a mensagem
 // ═══════════════════════════════════════════════════════════════
 
 import { serve }        from "https://deno.land/std@0.177.0/http/server.ts";
@@ -27,7 +22,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const DEFAULT_API_URL = "https://backend.botconversa.com.br/api/v1/webhooks/send-message/";
+const DEFAULT_BASE_URL = "https://backend.botconversa.com.br/api/v1";
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -36,11 +31,54 @@ function json(data: unknown, status = 200) {
   });
 }
 
+// ── Helpers BotConversa ──────────────────────────────────────
+async function bcGet(baseUrl: string, apiKey: string, path: string) {
+  const res = await fetch(`${baseUrl}${path}`, {
+    headers: { "api-key": apiKey, "Content-Type": "application/json" },
+  });
+  return { status: res.status, body: await res.json().catch(() => null) };
+}
+
+async function bcPost(baseUrl: string, apiKey: string, path: string, payload: unknown) {
+  const res = await fetch(`${baseUrl}${path}`, {
+    method:  "POST",
+    headers: { "api-key": apiKey, "Content-Type": "application/json" },
+    body:    JSON.stringify(payload),
+  });
+  return { status: res.status, body: await res.json().catch(() => null) };
+}
+
+// Retorna subscriber_id, criando o contato se necessário
+async function resolverSubscriber(
+  baseUrl: string,
+  apiKey: string,
+  phone: string,
+  name: string
+): Promise<{ id: number | null; error?: string }> {
+  // 1. Busca por telefone
+  const get = await bcGet(baseUrl, apiKey, `/subscriber/get_by_phone/${phone}/`);
+  if (get.status === 200 && get.body?.id) {
+    return { id: get.body.id };
+  }
+
+  // 2. Cria o contato
+  const create = await bcPost(baseUrl, apiKey, "/subscriber/", {
+    phone,
+    name: name || phone,
+  });
+  if ((create.status === 200 || create.status === 201) && create.body?.id) {
+    return { id: create.body.id };
+  }
+
+  return { id: null, error: `Não foi possível resolver subscriber: ${JSON.stringify(create.body)}` };
+}
+
+// ── Handler principal ────────────────────────────────────────
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
   if (req.method !== "POST")    return json({ error: "Método não permitido" }, 405);
 
-  // ── 1. Valida JWT do usuário logado ─────────────────────────
+  // ── 1. Valida JWT ────────────────────────────────────────────
   const authHeader = req.headers.get("Authorization") ?? "";
   if (!authHeader.startsWith("Bearer ")) return json({ error: "Não autenticado" }, 401);
 
@@ -54,36 +92,37 @@ serve(async (req) => {
 
   // ── 2. Parse do body ─────────────────────────────────────────
   let body: {
-    para_numero: string;
-    mensagem: string;
-    modulo: string;
+    para_numero:     string;
+    para_nome?:      string;
+    mensagem:        string;
+    modulo:          string;
     referencia_tipo?: string;
-    referencia_id?: string;
+    referencia_id?:  string;
     idempotency_key?: string;
   };
   try { body = await req.json(); }
   catch { return json({ error: "Body JSON inválido" }, 400); }
 
-  const { para_numero, mensagem, modulo, referencia_tipo, referencia_id, idempotency_key } = body;
+  const { para_numero, para_nome, mensagem, modulo, referencia_tipo, referencia_id, idempotency_key } = body;
 
   if (!para_numero || !mensagem || !modulo) {
     return json({ error: "para_numero, mensagem e modulo são obrigatórios" }, 400);
   }
 
-  // Normaliza: remove não-dígitos, garante prefixo 55 (Brasil)
+  // Normaliza número → somente dígitos com DDI 55
   const numero = para_numero.replace(/\D/g, "");
   if (numero.length < 10 || numero.length > 13) {
     return json({ error: "Número de telefone inválido" }, 400);
   }
   const numeroFinal = numero.startsWith("55") ? numero : "55" + numero;
 
-  // ── 3. Service role para operações sem restrição de RLS ──────
+  // ── 3. Service role ──────────────────────────────────────────
   const sb = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  // ── 4. Verifica se o módulo está ativo ───────────────────────
+  // ── 4. Verifica módulo ativo ─────────────────────────────────
   const { data: modConfig } = await sb
     .from("whatsapp_modulo_config")
     .select("ativo")
@@ -91,10 +130,10 @@ serve(async (req) => {
     .single();
 
   if (modConfig && !modConfig.ativo) {
-    return json({ ok: false, status: "modulo_inativo", mensagem: "Módulo com envio desativado" });
+    return json({ ok: false, status: "modulo_inativo" });
   }
 
-  // ── 5. Verifica idempotência ─────────────────────────────────
+  // ── 5. Idempotência ──────────────────────────────────────────
   if (idempotency_key) {
     const { data: existing } = await sb
       .from("whatsapp_mensagens")
@@ -103,26 +142,23 @@ serve(async (req) => {
       .single();
 
     if (existing) {
-      return json({ ok: false, status: "duplicado", id: existing.id, mensagem: "Mensagem já enviada" });
+      return json({ ok: false, status: "duplicado", id: existing.id });
     }
   }
 
   // ── 6. Verifica API key ──────────────────────────────────────
   const BC_KEY = Deno.env.get("BOTCONVERSA_API_KEY");
   if (!BC_KEY) {
-    return json({
-      error: "BotConversa não configurado. Adicione BOTCONVERSA_API_KEY nos secrets do Supabase.",
-      ajuda: "Acesse: Supabase Dashboard → Edge Functions → Secrets → Add BOTCONVERSA_API_KEY"
-    }, 503);
+    return json({ error: "BOTCONVERSA_API_KEY não configurada nos secrets do Supabase" }, 503);
   }
+  const BC_BASE = (Deno.env.get("BOTCONVERSA_BASE_URL") || DEFAULT_BASE_URL).replace(/\/$/, "");
 
-  const BC_URL = Deno.env.get("BOTCONVERSA_API_URL") || DEFAULT_API_URL;
-
-  // ── 7. Insere registro pendente no log ───────────────────────
+  // ── 7. Registra no log como pendente ─────────────────────────
   const { data: logRow, error: logErr } = await sb
     .from("whatsapp_mensagens")
     .insert({
       para_numero:     numeroFinal,
+      para_nome:       para_nome || null,
       mensagem,
       modulo,
       referencia_tipo: referencia_tipo ?? null,
@@ -135,42 +171,42 @@ serve(async (req) => {
     .single();
 
   if (logErr) {
-    console.error("[whatsapp-send] insert log:", logErr.message);
     return json({ error: "Erro ao registrar mensagem: " + logErr.message }, 500);
   }
-
   const logId = logRow.id;
 
-  // ── 8. Chama a BotConversa API ───────────────────────────────
+  // ── 8. Resolve subscriber (busca ou cria contato) ────────────
   let bcOk  = false;
   let errMsg = "";
 
   try {
-    const bcRes = await fetch(BC_URL, {
-      method:  "POST",
-      headers: {
-        "api-key":      BC_KEY,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        phone:   numeroFinal,
-        message: mensagem,
-      }),
-    });
+    const { id: subscriberId, error: subErr } = await resolverSubscriber(
+      BC_BASE, BC_KEY, numeroFinal, para_nome || ""
+    );
 
-    if (bcRes.ok) {
-      bcOk = true;
+    if (!subscriberId) {
+      errMsg = subErr || "Subscriber não encontrado e não foi possível criar";
     } else {
-      const errBody = await bcRes.text();
-      errMsg = `HTTP ${bcRes.status}: ${errBody}`;
-      console.error("[whatsapp-send] BotConversa:", errMsg);
+      // ── 9. Envia a mensagem ────────────────────────────────
+      const send = await bcPost(
+        BC_BASE, BC_KEY,
+        `/subscriber/${subscriberId}/send_message/`,
+        { message: mensagem }
+      );
+
+      if (send.status === 200 || send.status === 201) {
+        bcOk = true;
+      } else {
+        errMsg = `HTTP ${send.status}: ${JSON.stringify(send.body)}`;
+        console.error("[whatsapp-send] BotConversa send:", errMsg);
+      }
     }
   } catch (e) {
     errMsg = e instanceof Error ? e.message : String(e);
-    console.error("[whatsapp-send] fetch:", errMsg);
+    console.error("[whatsapp-send] erro:", errMsg);
   }
 
-  // ── 9. Atualiza log com resultado ────────────────────────────
+  // ── 10. Atualiza log ─────────────────────────────────────────
   await sb.from("whatsapp_mensagens").update(
     bcOk
       ? { status: "enviado", enviado_em: new Date().toISOString(), erro_msg: null }

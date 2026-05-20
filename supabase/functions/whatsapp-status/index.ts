@@ -1,12 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
 // SIPEN — Edge Function: whatsapp-status
-// Verifica se o BotConversa está configurado e operacional.
+// Verifica se o BotConversa está configurado e acessível.
 //
 // GET /functions/v1/whatsapp-status
 // Requer Authorization: Bearer <jwt>
-//
-// Resposta:
-//   { conectado: boolean, estado: string, provedor: "BotConversa" }
 // ═══════════════════════════════════════════════════════════════
 
 import { serve }        from "https://deno.land/std@0.177.0/http/server.ts";
@@ -17,7 +14,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const DEFAULT_API_URL = "https://backend.botconversa.com.br/api/v1/webhooks/send-message/";
+const DEFAULT_BASE_URL = "https://backend.botconversa.com.br/api/v1";
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -42,7 +39,7 @@ serve(async (req) => {
   const { data: { user }, error: authErr } = await sbUser.auth.getUser();
   if (authErr || !user) return json({ error: "Token inválido" }, 401);
 
-  // ── 2. Verifica se o secret está configurado ─────────────────
+  // ── 2. Verifica secret ───────────────────────────────────────
   const BC_KEY = Deno.env.get("BOTCONVERSA_API_KEY");
   if (!BC_KEY) {
     return json({
@@ -53,40 +50,44 @@ serve(async (req) => {
     });
   }
 
-  // ── 3. Verifica a URL configurada ────────────────────────────
-  const BC_URL = Deno.env.get("BOTCONVERSA_API_URL") || DEFAULT_API_URL;
+  const BC_BASE = (Deno.env.get("BOTCONVERSA_BASE_URL") || DEFAULT_BASE_URL).replace(/\/$/, "");
 
-  // ── 4. Tenta validar a chave com um OPTIONS request ──────────
-  // BotConversa não expõe endpoint de status público; usamos um
-  // request leve para checar se a chave é reconhecida.
+  // ── 3. Verifica conectividade: GET /subscribers/ ─────────────
   try {
-    const probe = await fetch(BC_URL, {
-      method:  "OPTIONS",
+    const res = await fetch(`${BC_BASE}/subscribers/`, {
       headers: { "api-key": BC_KEY },
     });
 
-    // 401/403 → chave inválida. 2xx/405 → servidor acessível.
-    if (probe.status === 401 || probe.status === 403) {
+    if (res.status === 401 || res.status === 403) {
       return json({
         conectado: false,
         estado:    "chave_invalida",
         provedor:  "BotConversa",
-        ajuda:     "A BOTCONVERSA_API_KEY pode estar errada. Verifique em Configurações → Integrações no painel BotConversa.",
+        ajuda:     "Verifique a chave em Configurações → Integrações → API no painel BotConversa.",
       });
     }
+
+    if (res.status === 200 || res.status === 404) {
+      // 200 = ok, 404 pode ocorrer mas significa que o servidor respondeu
+      return json({
+        conectado: true,
+        estado:    "configurado",
+        provedor:  "BotConversa",
+        api_url:   BC_BASE,
+      });
+    }
+
+    return json({
+      conectado: false,
+      estado:    "erro_conexao",
+      provedor:  "BotConversa",
+      detalhe:   `HTTP ${res.status}`,
+    });
   } catch (_) {
-    // Rede inacessível
     return json({
       conectado: false,
       estado:    "erro_conexao",
       provedor:  "BotConversa",
     });
   }
-
-  return json({
-    conectado: true,
-    estado:    "configurado",
-    provedor:  "BotConversa",
-    api_url:   BC_URL,
-  });
 });
