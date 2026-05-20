@@ -14,7 +14,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const DEFAULT_BASE_URL = "https://backend.botconversa.com.br/api/v1";
+const DEFAULT_BASE_URL = "https://backend.botconversa.com.br/api/v1/webhook";
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {

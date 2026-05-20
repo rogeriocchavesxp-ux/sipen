@@ -22,7 +22,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const DEFAULT_BASE_URL = "https://backend.botconversa.com.br/api/v1";
+const DEFAULT_BASE_URL = "https://backend.botconversa.com.br/api/v1/webhook";
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -191,7 +191,7 @@ serve(async (req) => {
       const send = await bcPost(
         BC_BASE, BC_KEY,
         `/subscriber/${subscriberId}/send_message/`,
-        { message: mensagem }
+        { type: "text", value: mensagem }
       );
 
       if (send.status === 200 || send.status === 201) {
