@@ -410,9 +410,10 @@
         })()}
 
         <!-- Link público de inscrição -->
-        ${evt.status !== "rascunho" ? (() => {
+        ${(() => {
           const link = _gerarLinkPublico(evt.id);
           const disponivel = ["publicado","inscricoes_abertas"].includes(evt.status);
+          const erascunho = evt.status === "rascunho";
           return `
             <div class="card" style="border-color:rgba(74,156,245,.3)">
               <div class="ctit">Link de Inscrição Pública</div>
@@ -422,9 +423,9 @@
                 <button onclick="eveCopiarLink('${_ea(evt.id)}')" style="padding:7px 14px;border-radius:7px;border:none;background:var(--sky);color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Copiar</button>
                 ${disponivel ? `<a href="https://wa.me/?text=${encodeURIComponent("Inscreva-se no evento: " + link)}" target="_blank" rel="noopener" style="padding:7px 14px;border-radius:7px;border:1px solid rgba(37,211,102,.4);background:rgba(37,211,102,.1);color:#25d366;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap">WhatsApp</a>` : ""}
               </div>
-              ${!disponivel ? `<div style="font-size:11px;color:var(--amber)">⚠ Inscrições disponíveis apenas quando status for "Publicado" ou "Inscrições Abertas".</div>` : ""}
+              ${erascunho ? `<div style="font-size:11px;color:var(--tx3)">Evento em rascunho — publique para liberar as inscrições.</div>` : !disponivel ? `<div style="font-size:11px;color:var(--amber)">⚠ Inscrições disponíveis apenas quando status for "Publicado" ou "Inscrições Abertas".</div>` : ""}
             </div>`;
-        })() : ""}
+        })()}
 
         <!-- Resumo inscrições -->
         <div class="card">
