@@ -62,9 +62,11 @@ async function resolverSubscriber(
   }
 
   // 2. Cria o contato
+  const parts = (name || "").trim().split(/\s+/);
   const create = await bcPost(baseUrl, apiKey, "/subscriber/", {
     phone,
-    name: name || phone,
+    first_name: parts[0] || phone,
+    last_name:  parts.slice(1).join(" ") || ".",
   });
   if ((create.status === 200 || create.status === 201) && create.body?.id) {
     return { id: create.body.id };
