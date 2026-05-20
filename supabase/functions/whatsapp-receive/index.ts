@@ -100,6 +100,7 @@ async function enviarWA(baseUrl: string, apiKey: string, phone: string, name: st
 // ── Classificação via Claude ─────────────────────────────────
 interface IaResult {
   confidence:     number;
+  tipo?:          "demanda" | "saudacao" | "agradecimento" | "outro";
   area_id?:       string;
   area_nome?:     string;
   subcategoria?:  string;
@@ -118,28 +119,35 @@ async function classificarComIA(mensagem: string, remetente: string): Promise<Ia
   ).join("\n");
 
   const systemPrompt = `Você é um assistente de triagem de demandas para uma organização eclesiástica (SIPEN).
-Analise a mensagem do WhatsApp e extraia dados estruturados para criação de uma demanda.
+Analise a mensagem do WhatsApp e classifique o tipo, extraindo dados estruturados quando for uma demanda.
 
-CATEGORIAS DISPONÍVEIS:
+CATEGORIAS DE DEMANDA DISPONÍVEIS:
 ${catsDesc}
 
+TIPOS DE MENSAGEM:
+- "demanda": solicitação clara de serviço, manutenção, pagamento, agendamento, etc.
+- "saudacao": oi, olá, bom dia, boa tarde, como vai, tudo bem, etc.
+- "agradecimento": obrigado, valeu, ok, entendido, perfeito, pode deixar, etc.
+- "outro": dúvida genérica, conversa, pergunta, comentário, ou qualquer coisa não relacionada
+
 REGRAS:
-1. Só crie demanda se a mensagem for claramente uma solicitação/pedido de serviço.
-2. Se for saudação, pergunta genérica, agradecimento ou não relacionado → confidence: 0
-3. Escolha a subcategoria mais específica disponível.
-4. Para área "financeiro", tente extrair valor (número) e data_vencimento (YYYY-MM-DD) se mencionados.
-5. O título deve ser conciso (máximo 80 caracteres).
-6. A descrição deve reproduzir fielmente o pedido, sem inventar informações.
+1. Se "tipo" = "demanda": preencha todos os campos e defina confidence entre 0.65 e 1.0
+2. Se "tipo" != "demanda": defina confidence = 0 e deixe os demais campos nulos
+3. Para área "financeiro", tente extrair valor (número) e data_vencimento (YYYY-MM-DD) se mencionados
+4. O título deve ser conciso (máximo 80 caracteres)
+5. A descrição deve reproduzir fielmente o pedido, sem inventar informações
+6. Uma mensagem pode ser saudação + demanda ao mesmo tempo — nesse caso classifique como "demanda"
 
 Responda APENAS com JSON válido, sem explicações:
 {
+  "tipo": "demanda|saudacao|agradecimento|outro",
   "confidence": 0.0-1.0,
-  "area_id": "id da categoria",
-  "area_nome": "nome da categoria",
-  "subcategoria": "subcategoria escolhida",
-  "titulo": "título conciso",
-  "descricao": "descrição completa",
-  "solicitante": "nome extraído ou vazio",
+  "area_id": "id da categoria ou null",
+  "area_nome": "nome da categoria ou null",
+  "subcategoria": "subcategoria escolhida ou null",
+  "titulo": "título conciso ou null",
+  "descricao": "descrição completa ou null",
+  "solicitante": "nome extraído ou null",
   "financial_data": { "valor": null, "data_vencimento": null }
 }`;
 
@@ -300,39 +308,64 @@ serve(async (req) => {
     .single();
 
   const logId = logRow?.id;
+  const primeiroNome = name ? name.trim().split(" ")[0] : "";
 
-  // ── Acuse de recebimento ─────────────────────────────────────
-  if (BC_KEY) {
-    await enviarWA(BC_BASE, BC_KEY, numeroFinal, name,
-      `Olá${name ? `, *${name.split(" ")[0]}*` : ""}! 👋\n\nRecebi sua mensagem e estou analisando. Aguarde um instante...`
-    );
-  }
-
-  // ── Classifica com IA ───────────────────────────────────────
+  // ── Classifica com IA (antes de responder) ──────────────────
   const ia = await classificarComIA(texto, name);
+  const ehDemanda = ia.confidence >= 0.65 && !!ia.area_id && !!ia.titulo;
 
   // ── Atualiza log com resultado da IA ────────────────────────
   if (logId) {
     await sb.from("whatsapp_ia_log").update({
       ia_resultado:  ia,
-      status:        ia.confidence >= 0.65 ? "classificado" : "nao_classificado",
+      status:        ehDemanda ? "classificado" : "nao_classificado",
       processado_em: new Date().toISOString(),
     }).eq("id", logId);
   }
 
   // ── Ramo: mensagem não é uma demanda ────────────────────────
-  if (ia.confidence < 0.65 || !ia.area_id || !ia.titulo) {
+  if (!ehDemanda) {
     if (BC_KEY) {
-      await enviarWA(BC_BASE, BC_KEY, numeroFinal, name,
-        `Não consegui identificar uma solicitação na sua mensagem. 🤔\n\n` +
-        `Para registrar uma demanda, descreva:\n` +
-        `• *O que* precisa ser feito\n` +
-        `• *Onde* (local/departamento)\n` +
-        `• *Urgência* (se houver)\n\n` +
-        `Ou acesse o SIPEN diretamente:\n${SIPEN_URL}`
-      );
+      const tipo = ia.tipo ?? "outro";
+      let resposta: string;
+
+      if (tipo === "saudacao") {
+        resposta = [
+          `Olá${primeiroNome ? `, *${primeiroNome}*` : ""}! 👋`,
+          ``,
+          `Sou o assistente de demandas da *IPPenha*. Posso registrar solicitações automaticamente pelo WhatsApp.`,
+          ``,
+          `Para criar uma demanda, basta me descrever o que precisa. Exemplos:`,
+          `• _"Preciso de manutenção elétrica no salão"_`,
+          `• _"Solicitar pagamento de R$ 200 de material"_`,
+          `• _"Agendar uso da sala 3 para sábado"_`,
+        ].join("\n");
+      } else if (tipo === "agradecimento") {
+        resposta = `De nada${primeiroNome ? `, *${primeiroNome}*` : ""}! 😊 Se precisar registrar alguma demanda, é só me avisar.`;
+      } else {
+        // "outro" — pergunta genérica, comentário, etc.
+        resposta = [
+          `Não consegui identificar uma solicitação na sua mensagem.`,
+          ``,
+          `Este canal é destinado ao registro de demandas da IPPenha. Para criar uma, descreva:`,
+          `• *O que* precisa ser feito`,
+          `• *Onde* (local ou departamento)`,
+          `• *Urgência*, se houver`,
+          ``,
+          `Ou acesse o SIPEN: ${SIPEN_URL}`,
+        ].join("\n");
+      }
+
+      await enviarWA(BC_BASE, BC_KEY, numeroFinal, name, resposta);
     }
-    return new Response(JSON.stringify({ ok: true, status: "nao_classificado" }), { status: 200 });
+    return new Response(JSON.stringify({ ok: true, status: "nao_classificado", tipo: ia.tipo }), { status: 200 });
+  }
+
+  // ── Demanda confirmada: avisa que está processando ───────────
+  if (BC_KEY) {
+    await enviarWA(BC_BASE, BC_KEY, numeroFinal, name,
+      `Recebi${primeiroNome ? `, *${primeiroNome}*` : ""}! ⏳ Registrando sua demanda, aguarde...`
+    );
   }
 
   // ── Cria a demanda ──────────────────────────────────────────
