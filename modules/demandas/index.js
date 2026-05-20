@@ -1651,7 +1651,8 @@
     }
 
     try {
-      await apiWrite("create", "DEMANDAS", payload);
+      const result = await apiWrite("create", "DEMANDAS", payload);
+      const nova = Array.isArray(result) ? result[0] : result;
       if (typeof T === "function") T("✅ Demanda criada!", `Roteada para: ${payload.responsavel}`);
       window.fecharModalNovaDemanda();
       _invalidate();
@@ -1661,11 +1662,77 @@
       if (view?.id === "v-admin-demandas") _admRender();
       if (view?.id === "v-fin-demandas")   _finRender();
       _atualizarBadge();
+      if (nova?.id) _notificarResponsaveisWA({ ...payload, id: nova.id }).catch(() => {});
     } catch(e) {
       if (typeof T === "function") T("Erro ao criar", e.message || "Tente novamente");
       console.error("salvarNovaDemanda:", e);
     }
   };
+
+  /* ── Notificação WhatsApp ao criar demanda ───────────── */
+
+  function _montarMsgWA(dem) {
+    const link = "https://rogeriocchavesxp-ux.github.io/sipen/";
+    return [
+      `📋 *Nova demanda registrada*`,
+      ``,
+      `*Título:* ${dem.titulo}`,
+      `*Departamento:* ${dem.area || "—"}`,
+      dem.subcategoria ? `*Subcategoria:* ${dem.subcategoria}` : null,
+      `*Solicitante:* ${dem.solicitante || "—"}`,
+      `*Status:* Aberta`,
+      dem.descricao ? `\n*Descrição:*\n${dem.descricao.slice(0, 300)}${dem.descricao.length > 300 ? "…" : ""}` : null,
+      ``,
+      `🔗 Acesse no SIPEN:\n${link}`,
+    ].filter(l => l !== null).join("\n");
+  }
+
+  async function _notificarResponsaveisWA(dem) {
+    if (typeof WA === "undefined") return;
+    const base = typeof SUPABASE_URL !== "undefined" ? SUPABASE_URL.trim().replace(/\/$/, "") : "";
+    const hdrs = typeof apiHeaders === "function" ? apiHeaders() : {};
+
+    let rows = [];
+    try {
+      const res = await fetch(
+        `${base}/rest/v1/demanda_responsaveis?area=eq.${encodeURIComponent(dem.area)}&ativo=eq.true` +
+        `&select=pessoa_id,pessoas(id,nome,telefone,celular)`,
+        { headers: hdrs }
+      );
+      rows = res.ok ? await res.json() : [];
+    } catch (_) {}
+
+    // Fallback: notifica admins se área sem responsável configurado
+    if (!rows.length) {
+      try {
+        const res = await fetch(
+          `${base}/rest/v1/user_profiles?role=eq.admin&ativo=eq.true` +
+          `&select=pessoa_id,pessoas(id,nome,telefone,celular)`,
+          { headers: hdrs }
+        );
+        rows = res.ok ? await res.json() : [];
+      } catch (_) {}
+    }
+
+    if (!rows.length) return;
+
+    const msg = _montarMsgWA(dem);
+    for (const row of rows) {
+      const p = row.pessoas;
+      if (!p) continue;
+      const tel = p.celular || p.telefone;
+      if (!tel) continue;
+      WA.send({
+        para:        tel,
+        nome:        p.nome,
+        mensagem:    msg,
+        modulo:      "DEMANDAS",
+        referenciaT: "demanda",
+        referenciaId: dem.id,
+        chave:       `DEM_NOVA_${dem.id}_${row.pessoa_id}`,
+      }).catch(() => {});
+    }
+  }
 
   /* ── Expor filtrar para views ────────────────────────── */
   window.demFiltrar = function(elId, filtros) { renderLista(elId, filtros); };
