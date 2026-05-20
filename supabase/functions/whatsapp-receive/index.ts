@@ -147,7 +147,7 @@ Responda APENAS com JSON válido, sem explicações:
   const fullPrompt = `${systemPrompt}\n\n---\n${userMsg}`;
 
   try {
-    const model = "gemini-2.0-flash";
+    const model = "gemini-2.5-flash-lite";
     const url   = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_KEY}`;
 
     const res = await fetch(url, {
