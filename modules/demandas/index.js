@@ -1673,14 +1673,25 @@
 
   function _montarMsgWA(dem) {
     const link = "https://rogeriocchavesxp-ux.github.io/sipen/";
+    const fd   = (dem.financial_data && typeof dem.financial_data === "object") ? dem.financial_data : null;
+    const fmtValor = v => v != null && !isNaN(v)
+      ? "R$ " + parseFloat(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 })
+      : null;
+    const fmtData = d => {
+      if (!d) return null;
+      const [y, m, dia] = String(d).slice(0, 10).split("-");
+      return `${dia}/${m}/${y}`;
+    };
     return [
       `📋 *Nova demanda registrada*`,
       ``,
       `*Título:* ${dem.titulo}`,
       `*Departamento:* ${dem.area || "—"}`,
-      dem.subcategoria ? `*Subcategoria:* ${dem.subcategoria}` : null,
+      dem.subcategoria                     ? `*Subcategoria:* ${dem.subcategoria}`                 : null,
       `*Solicitante:* ${dem.solicitante || "—"}`,
       `*Status:* Aberta`,
+      fd && fmtValor(fd.valor)             ? `*Valor:* ${fmtValor(fd.valor)}`                     : null,
+      fd && fmtData(fd.data_vencimento)    ? `*Vencimento:* ${fmtData(fd.data_vencimento)}`       : null,
       dem.descricao ? `\n*Descrição:*\n${dem.descricao.slice(0, 300)}${dem.descricao.length > 300 ? "…" : ""}` : null,
       ``,
       `🔗 Acesse no SIPEN:\n${link}`,
