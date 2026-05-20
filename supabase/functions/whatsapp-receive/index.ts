@@ -99,14 +99,15 @@ async function enviarWA(baseUrl: string, apiKey: string, phone: string, name: st
 
 // ── Classificação via Claude ─────────────────────────────────
 interface IaResult {
-  confidence:     number;
-  tipo?:          "demanda" | "saudacao" | "agradecimento" | "outro";
-  area_id?:       string;
-  area_nome?:     string;
-  subcategoria?:  string;
-  titulo?:        string;
-  descricao?:     string;
-  solicitante?:   string;
+  confidence:      number;
+  tipo?:           "demanda" | "saudacao" | "agradecimento" | "informacao" | "outro";
+  resposta?:       string;
+  area_id?:        string;
+  area_nome?:      string;
+  subcategoria?:   string;
+  titulo?:         string;
+  descricao?:      string;
+  solicitante?:    string;
   financial_data?: { valor?: number; data_vencimento?: string };
 }
 
@@ -118,35 +119,67 @@ async function classificarComIA(mensagem: string, remetente: string): Promise<Ia
     `- id="${c.id}" nome="${c.nome}"\n  subcategorias: ${c.sub.slice(0,6).join(" | ")}${c.sub.length > 6 ? " | ..." : ""}`
   ).join("\n");
 
-  const systemPrompt = `Você é um assistente de triagem de demandas para uma organização eclesiástica (SIPEN).
-Analise a mensagem do WhatsApp e classifique o tipo, extraindo dados estruturados quando for uma demanda.
+  const systemPrompt = `Você é o assistente virtual da *Igreja Presbiteriana da Penha (IPPenha)*, em São Paulo.
+Responda sempre em português, de forma cordial e breve.
 
-CATEGORIAS DE DEMANDA DISPONÍVEIS:
+══ INFORMAÇÕES DA IGREJA ══
+
+Nome: Igreja Presbiteriana da Penha — IPPenha
+Endereço: Rua Major Rudge, 145 — Vila São Geraldo / Penha de França, São Paulo, SP 03607-010
+Telefone: (11) 2641-7654
+E-mail: ippenha2016@gmail.com
+Site: https://ippenha.org.br
+Instagram: @ippenha | YouTube: @ippenha
+
+CULTOS:
+• Domingo: 9h (culto principal) | 11h (culto em espanhol) | 18h (culto noturno)
+• Segunda, Quarta e Sexta: cultos semanais (confirmar horário pelo telefone)
+• Escola Bíblica Dominical (EBD): domingo às 9h30
+
+MINISTÉRIOS:
+• PenhaKids — crianças
+• O Movimento — jovens (encontros sábado às 19h30)
+• SOS — adolescentes
+• Lar Cristão — casais
+• SAF (Sociedade Auxiliadora Feminina) — mulheres
+• Escola de Teologia — formação teológica (Pastor Amauri e outros)
+
+PASTOR PRINCIPAL: Pastor Amauri
+
+══ TIPOS DE MENSAGEM ══
+
+Classifique cada mensagem em um destes tipos:
+
+"saudacao"    → oi, olá, bom dia, boa tarde, como vai, tudo bem…
+"agradecimento" → obrigado, valeu, ok, entendido, perfeito, pode deixar…
+"informacao"  → qualquer pergunta sobre a igreja: horários, endereço, eventos, ministérios, pastores, como se cadastrar, dízimo, etc.
+"demanda"     → solicitação interna de serviço: manutenção, pagamento, agendamento de espaço, comunicação, cadastro de membro, pedido de oração, etc. — algo que precisa de ação de um departamento interno
+"outro"       → assunto completamente fora do contexto da igreja
+
+══ REGRAS ══
+
+1. Para "informacao": preencha "resposta" com a resposta correta e amigável usando as informações acima. Confidence = 0. Não preencha campos de demanda.
+2. Para "saudacao" e "agradecimento": deixe "resposta" em branco. Confidence = 0.
+3. Para "demanda": preencha todos os campos de demanda (confidence 0.65–1.0). Não preencha "resposta".
+4. Para "outro": deixe "resposta" em branco. Confidence = 0.
+5. Se a mensagem misturar saudação com demanda, classifique como "demanda".
+6. Para área "financeiro": extraia valor (número) e data_vencimento (YYYY-MM-DD) se mencionados.
+7. Título da demanda: máximo 80 caracteres.
+8. Descrição da demanda: reproduza fielmente o pedido, sem inventar.
+
+CATEGORIAS DE DEMANDA:
 ${catsDesc}
 
-TIPOS DE MENSAGEM:
-- "demanda": solicitação clara de serviço, manutenção, pagamento, agendamento, etc.
-- "saudacao": oi, olá, bom dia, boa tarde, como vai, tudo bem, etc.
-- "agradecimento": obrigado, valeu, ok, entendido, perfeito, pode deixar, etc.
-- "outro": dúvida genérica, conversa, pergunta, comentário, ou qualquer coisa não relacionada
-
-REGRAS:
-1. Se "tipo" = "demanda": preencha todos os campos e defina confidence entre 0.65 e 1.0
-2. Se "tipo" != "demanda": defina confidence = 0 e deixe os demais campos nulos
-3. Para área "financeiro", tente extrair valor (número) e data_vencimento (YYYY-MM-DD) se mencionados
-4. O título deve ser conciso (máximo 80 caracteres)
-5. A descrição deve reproduzir fielmente o pedido, sem inventar informações
-6. Uma mensagem pode ser saudação + demanda ao mesmo tempo — nesse caso classifique como "demanda"
-
-Responda APENAS com JSON válido, sem explicações:
+Responda APENAS com JSON válido, sem texto extra:
 {
-  "tipo": "demanda|saudacao|agradecimento|outro",
+  "tipo": "demanda|saudacao|agradecimento|informacao|outro",
   "confidence": 0.0-1.0,
-  "area_id": "id da categoria ou null",
-  "area_nome": "nome da categoria ou null",
-  "subcategoria": "subcategoria escolhida ou null",
-  "titulo": "título conciso ou null",
-  "descricao": "descrição completa ou null",
+  "resposta": "texto da resposta para informacao (ou null)",
+  "area_id": "id ou null",
+  "area_nome": "nome ou null",
+  "subcategoria": "subcategoria ou null",
+  "titulo": "título ou null",
+  "descricao": "descrição ou null",
   "solicitante": "nome extraído ou null",
   "financial_data": { "valor": null, "data_vencimento": null }
 }`;
@@ -331,28 +364,24 @@ serve(async (req) => {
 
       if (tipo === "saudacao") {
         resposta = [
-          `Olá${primeiroNome ? `, *${primeiroNome}*` : ""}! 👋`,
+          `Olá${primeiroNome ? `, *${primeiroNome}*` : ""}! 👋 Bem-vindo à *IPPenha*.`,
           ``,
-          `Sou o assistente de demandas da *IPPenha*. Posso registrar solicitações automaticamente pelo WhatsApp.`,
+          `Posso te ajudar com informações sobre nossa igreja ou registrar solicitações internas.`,
           ``,
-          `Para criar uma demanda, basta me descrever o que precisa. Exemplos:`,
-          `• _"Preciso de manutenção elétrica no salão"_`,
-          `• _"Solicitar pagamento de R$ 200 de material"_`,
-          `• _"Agendar uso da sala 3 para sábado"_`,
+          `Pergunte sobre horários, endereço, ministérios, eventos… ou me diga o que precisa!`,
         ].join("\n");
       } else if (tipo === "agradecimento") {
-        resposta = `De nada${primeiroNome ? `, *${primeiroNome}*` : ""}! 😊 Se precisar registrar alguma demanda, é só me avisar.`;
+        resposta = `De nada${primeiroNome ? `, *${primeiroNome}*` : ""}! 😊 Qualquer dúvida ou solicitação, estou por aqui.`;
+      } else if (tipo === "informacao" && ia.resposta) {
+        resposta = ia.resposta;
       } else {
-        // "outro" — pergunta genérica, comentário, etc.
+        // "outro" — fora do contexto
         resposta = [
-          `Não consegui identificar uma solicitação na sua mensagem.`,
+          `Não consegui entender sua mensagem.`,
           ``,
-          `Este canal é destinado ao registro de demandas da IPPenha. Para criar uma, descreva:`,
-          `• *O que* precisa ser feito`,
-          `• *Onde* (local ou departamento)`,
-          `• *Urgência*, se houver`,
+          `Posso ajudar com informações sobre a *IPPenha* (horários, endereço, ministérios) ou registrar solicitações internas.`,
           ``,
-          `Ou acesse o SIPEN: ${SIPEN_URL}`,
+          `Fale com a secretaria pelo *(11) 2641-7654* ou acesse *ippenha.org.br*`,
         ].join("\n");
       }
 
