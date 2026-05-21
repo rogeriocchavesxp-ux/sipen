@@ -220,23 +220,57 @@ Responda APENAS com JSON válido, sem texto extra:
   }
 }
 
+// ── Mapeamento área de demanda → módulo WhatsApp ────────────
+const AREA_MODULO: Record<string, string> = {
+  conselho:     "CONSELHO",
+  agendamentos: "AGENDA",
+  manutencao:   "INFRAESTRUTURA",
+  limpeza:      "INFRAESTRUTURA",
+  logistica:    "INFRAESTRUTURA",
+  financeiro:   "FINANCEIRO",
+  comunicacao:  "MINISTERIAL",
+  secretaria:   "CONSELHO",
+  cadastro:     "MEMBRESIA",
+  oracao:       "PASTORAL",
+  visitacao:    "JUNTA_DIACONAL",
+  culto:        "MINISTERIAL",
+  ensino:       "MINISTERIAL",
+  social:       "MINISTERIAL",
+  admin_geral:  "DEMANDAS",
+};
+
 // ── Notifica responsáveis da área ───────────────────────────
 async function notificarResponsaveis(
   sb:        ReturnType<typeof createClient>,
   bcBase:    string,
   bcKey:     string,
-  demanda:   { id: string; area: string; titulo: string; protocolo: string },
+  demanda:   { id: string; area: string; area_id?: string; titulo: string; protocolo: string },
   msg:       string,
 ) {
-  const { data: rows } = await sb
-    .from("demanda_responsaveis")
-    .select("pessoa_id, pessoas(id, nome, celular, telefone)")
-    .eq("area", demanda.area)
-    .eq("ativo", true);
+  let lista: unknown[] = [];
 
-  const lista = rows ?? [];
+  // Prefer module-level responsáveis (whatsapp_modulo_responsaveis)
+  const modulo = demanda.area_id ? AREA_MODULO[demanda.area_id] : undefined;
+  if (modulo) {
+    const { data: modRows } = await sb
+      .from("whatsapp_modulo_responsaveis")
+      .select("pessoa_id, pessoas(id, nome, celular, telefone)")
+      .eq("modulo", modulo)
+      .eq("ativo", true);
+    lista = modRows ?? [];
+  }
 
-  // Fallback: admins se nenhum responsável mapeado
+  // Fallback: demanda_responsaveis by area string
+  if (!lista.length) {
+    const { data: rows } = await sb
+      .from("demanda_responsaveis")
+      .select("pessoa_id, pessoas(id, nome, celular, telefone)")
+      .eq("area", demanda.area)
+      .eq("ativo", true);
+    lista = rows ?? [];
+  }
+
+  // Final fallback: admins
   if (!lista.length) {
     const { data: admins } = await sb
       .from("user_profiles")
@@ -466,7 +500,7 @@ serve(async (req) => {
       ].join("\n");
       await enviarWA(BC_BASE, BC_KEY, numeroFinal, name, confirmacaoGpt);
       await notificarResponsaveis(sb, BC_BASE, BC_KEY,
-        { id: demRowGpt.id, area: demPayloadGpt.area as string, titulo, protocolo: protocoloGpt },
+        { id: demRowGpt.id, area: demPayloadGpt.area as string, area_id: gptArea, titulo, protocolo: protocoloGpt },
         gptMsg || texto,
       );
     }
@@ -602,7 +636,7 @@ serve(async (req) => {
   if (BC_KEY) {
     await notificarResponsaveis(
       sb, BC_BASE, BC_KEY,
-      { id: demRow.id, area: demPayload.area as string, titulo: ia.titulo!, protocolo },
+      { id: demRow.id, area: demPayload.area as string, area_id: ia.area_id, titulo: ia.titulo!, protocolo },
       texto,
     );
   }

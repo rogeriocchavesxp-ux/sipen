@@ -82,17 +82,21 @@ const WA_CFG = (function(){
   /* ── Módulos ──────────────────────────────────────────── */
 
   const MODULO_META = {
-    DEMANDAS:    { ic:"📋", bg:"rgba(224,85,85,0.12)",    cor:"var(--rose)",   cat:"Administrativo",  eventos:["Nova demanda","Mudança de status","Atribuição"] },
-    FINANCEIRO:  { ic:"💰", bg:"rgba(58,170,92,0.12)",    cor:"var(--gr)",     cat:"Administrativo",  eventos:["Pix confirmado","Aprovação","Solicitação financeira"] },
-    AGENDA:      { ic:"📅", bg:"rgba(74,156,245,0.12)",   cor:"var(--sky)",    cat:"Administrativo",  eventos:["Novo agendamento","Lembrete","Cancelamento"] },
-    SECRETARIA:  { ic:"🗂", bg:"rgba(208,144,64,0.12)",   cor:"var(--amber)",  cat:"Administrativo",  eventos:["Novo documento","Protocolo gerado"] },
-    COMUNICACAO: { ic:"📢", bg:"rgba(139,111,212,0.12)",  cor:"var(--violet)", cat:"Comunicação",     eventos:["Novo aviso","Transmissão","Publicação"] },
-    PASTORAL:    { ic:"✝️", bg:"rgba(208,144,64,0.12)",   cor:"var(--amber)",  cat:"Pastoral",        eventos:["Pedido de oração","Visita pastoral","Aconselhamento"] },
-    MINISTERIAL: { ic:"🎵", bg:"rgba(139,111,212,0.12)",  cor:"var(--violet)", cat:"Pastoral",        eventos:["Escala publicada","Convocação"] },
-    MEMBRESIA:   { ic:"👥", bg:"rgba(74,156,245,0.12)",   cor:"var(--sky)",    cat:"Membresia",       eventos:["Novo membro","Transferência","Atualização"] },
-    CULTO:       { ic:"🙏", bg:"rgba(208,144,64,0.12)",   cor:"var(--amber)",  cat:"Pastoral",        eventos:["Programação","Escala de culto"] },
-    ENSINO:      { ic:"📖", bg:"rgba(74,156,245,0.12)",   cor:"var(--sky)",    cat:"Membresia",       eventos:["Material EBT","Convocação de aula"] },
-    SOCIAL:      { ic:"🤝", bg:"rgba(58,170,92,0.12)",    cor:"var(--gr)",     cat:"Pastoral",        eventos:["Ação social","Distribuição","Cadastro"] },
+    DEMANDAS:      { ic:"📋", bg:"rgba(224,85,85,0.12)",    cor:"var(--rose)",   cat:"Administrativo",  eventos:["Nova demanda","Mudança de status","Atribuição"] },
+    FINANCEIRO:    { ic:"💰", bg:"rgba(58,170,92,0.12)",    cor:"var(--gr)",     cat:"Administrativo",  eventos:["Pix confirmado","Aprovação","Solicitação financeira"] },
+    AGENDA:        { ic:"📅", bg:"rgba(74,156,245,0.12)",   cor:"var(--sky)",    cat:"Administrativo",  eventos:["Novo agendamento","Lembrete","Cancelamento"] },
+    SECRETARIA:    { ic:"🗂", bg:"rgba(208,144,64,0.12)",   cor:"var(--amber)",  cat:"Administrativo",  eventos:["Novo documento","Protocolo gerado"] },
+    COMUNICACAO:   { ic:"📢", bg:"rgba(139,111,212,0.12)",  cor:"var(--violet)", cat:"Comunicação",     eventos:["Novo aviso","Transmissão","Publicação"] },
+    PASTORAL:      { ic:"✝️", bg:"rgba(208,144,64,0.12)",   cor:"var(--amber)",  cat:"Pastoral",        eventos:["Pedido de oração","Visita pastoral","Aconselhamento"] },
+    MINISTERIAL:   { ic:"🎵", bg:"rgba(139,111,212,0.12)",  cor:"var(--violet)", cat:"Pastoral",        eventos:["Escala publicada","Convocação"] },
+    MEMBRESIA:     { ic:"👥", bg:"rgba(74,156,245,0.12)",   cor:"var(--sky)",    cat:"Membresia",       eventos:["Novo membro","Transferência","Atualização"] },
+    CONSELHO:      { ic:"🏛", bg:"rgba(74,156,245,0.12)",   cor:"var(--sky)",    cat:"Governança",      eventos:["Decisão do Conselho","Documento aprovado","Reunião"] },
+    JUNTA_DIACONAL:{ ic:"🤝", bg:"rgba(184,122,86,0.12)",   cor:"var(--copper)", cat:"Governança",      eventos:["Solicitação diaconal","Visita","Atendimento social"] },
+    INFRAESTRUTURA:{ ic:"🔧", bg:"rgba(208,144,64,0.12)",   cor:"var(--amber)",  cat:"Operacional",     eventos:["Nova manutenção","Conclusão","Urgência"] },
+    JURIDICO:      { ic:"⚖", bg:"rgba(74,156,245,0.12)",   cor:"var(--blue)",   cat:"Governança",      eventos:["Novo processo","Prazo","Documento jurídico"] },
+    CULTO:         { ic:"🙏", bg:"rgba(208,144,64,0.12)",   cor:"var(--amber)",  cat:"Pastoral",        eventos:["Programação","Escala de culto"] },
+    ENSINO:        { ic:"📖", bg:"rgba(74,156,245,0.12)",   cor:"var(--sky)",    cat:"Membresia",       eventos:["Material EBT","Convocação de aula"] },
+    SOCIAL:        { ic:"🤝", bg:"rgba(58,170,92,0.12)",    cor:"var(--gr)",     cat:"Pastoral",        eventos:["Ação social","Distribuição","Cadastro"] },
   };
 
   const CAT_ORDER = ["Administrativo","Comunicação","Pastoral","Membresia"];
@@ -332,6 +336,13 @@ const WA_CFG = (function(){
     });
     if(typeof T === "function")
       T(ativo ? "Módulo ativado" : "Módulo pausado", `Envio de WhatsApp ${ativo?"habilitado":"desabilitado"} para ${modulo}`);
+  }
+
+  /* ── Salvar configuração de instância (informativo) ──────── */
+
+  function salvarConfig(){
+    if(typeof T === "function")
+      T("Configuração via Supabase", "URL e instância devem ser definidas como secrets BOTCONVERSA_API_KEY e BOTCONVERSA_BASE_URL no Supabase Dashboard → Settings → Secrets.");
   }
 
   /* ── Estado da configuração BotConversa ───────────────── */
@@ -599,6 +610,7 @@ const WA_CFG = (function(){
     carregarModulos, toggleModulo,
     abrirResponsaveisModal, fecharResponsaveisModal,
     buscarPessoasParaAdicionar, adicionarResponsavel, removerResponsavel,
+    salvarConfig,
     carregarEstadoConfig,
     carregarHistorico,
     carregarTemplates, openTemplateModal, closeTplModal, _editTpl, toggleTemplate, salvarTemplate,
