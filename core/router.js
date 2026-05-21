@@ -160,7 +160,7 @@ const _VIEW_MAP = {
   "diac":        "modules/diaconal/view.html",
   "cong":        "modules/congregacoes/view.html",
   "com":         "modules/comunicacao/view.html?v=6.30.61",
-  "eve":         "modules/eventos/view.html",
+  "eve":         "modules/eventos/view.html?v=6.30.62",
   "area":        "modules/area-membro/view.html",
   "config":      "modules/config/view.html",
   "generic":     "modules/shared/view.html",

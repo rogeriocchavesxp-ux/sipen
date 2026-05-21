@@ -35,12 +35,13 @@
     { id: "eve-presenca",      label: "Presença"    },
     { id: "eve-relatorios",    label: "Relatórios"  },
     { id: "eve-config",        label: "Config"      },
+    { id: "eve-whatsapp",     label: "WhatsApp"    },
   ];
 
   const NAV_TARGETS = [
     "eve-dash-nav","eve-todos-nav","eve-inscricoes-nav",
     "eve-pagamentos-nav","eve-cred-nav","eve-presenca-nav",
-    "eve-rel-nav","eve-config-nav",
+    "eve-rel-nav","eve-config-nav","eve-whatsapp-nav",
   ];
 
   /* ── Estado ─────────────────────────────────────────── */
@@ -1252,6 +1253,13 @@
     _injectNav("eve-config");
   }
 
+  /* ── WhatsApp ───────────────────────────────────────── */
+
+  function _carregarWhatsappTab() {
+    _injectNav("eve-whatsapp");
+    if (typeof WA_TAB !== "undefined") WA_TAB.load("EVENTOS");
+  }
+
   /* ── Populate selects ───────────────────────────────── */
 
   function _populateEventoSelects() {
@@ -1399,5 +1407,6 @@
   VIEW_AUTOLOAD["eve-presenca"]      = { fn: () => _carregarPresencaTab() };
   VIEW_AUTOLOAD["eve-relatorios"]    = { fn: () => _carregarRelatoriosTab() };
   VIEW_AUTOLOAD["eve-config"]        = { fn: () => _carregarConfigTab() };
+  VIEW_AUTOLOAD["eve-whatsapp"]      = { fn: () => _carregarWhatsappTab() };
 
 })();
