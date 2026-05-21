@@ -322,6 +322,41 @@
     </div>
   </div>
 
+  <!-- ════ EVENTOS — Demandas ═════════════════════════════════ -->
+  <div class="view" id="v-eve-demandas">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.14);border-color:rgba(74,156,245,0.25);color:var(--sky)">🎪</div>
+      <div>
+        <div class="hero-lbl">Eventos</div>
+        <div class="hero-ttl">Demandas de Eventos</div>
+        <div class="hero-dsc">Demandas relacionadas ao módulo de Eventos</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button>
+      </div>
+    </div>
+    <div id="eve-demandas-nav"></div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('eve-demandas-content',{area:'Eventos'})">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="eve-demandas-content-fstatus" onchange="demFiltrar('eve-demandas-content',{area:'Eventos'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
+          </select>
+          <select id="eve-demandas-content-fprio" onchange="demFiltrar('eve-demandas-content',{area:'Eventos'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as prioridades</option>
+            <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
+          </select>
+          <input id="eve-demandas-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('eve-demandas-content',{area:'Eventos'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div id="eve-demandas-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ════ EVENTOS — WhatsApp ══════════════════════════════════ -->
   <div class="view" id="v-eve-whatsapp">
     <div class="hero">

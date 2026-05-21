@@ -46,6 +46,8 @@
       subcats:["Solicitação de ajuda","Projetos sociais","Distribuição de recursos","Cadastro em programas sociais"] },
     { id:"admin_geral", nome:"Administrativo Geral",    icon:"🧾",  cor:"var(--gold)",   resp:"Administração Geral",
       subcats:["Demandas gerais","Apoio administrativo","Solicitações internas","Processos institucionais"] },
+    { id:"eventos",     nome:"Eventos",                 icon:"🎪",  cor:"var(--sky)",    resp:"Equipe de Eventos",
+      subcats:["Organização de evento","Inscrições e credenciamento","Logística do evento","Divulgação","Pós-evento"] },
   ];
 
   function getCat(area) {
