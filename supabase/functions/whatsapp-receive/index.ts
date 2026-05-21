@@ -293,36 +293,105 @@ serve(async (req) => {
   }
 
   // ── Parse do body ───────────────────────────────────────────
-  let body: Record<string, unknown>;
-  try { body = await req.json(); }
-  catch { return new Response("Bad Request", { status: 400 }); }
+  let body: Record<string, unknown> = {};
+  let rawText = "";
+  try {
+    rawText = await req.text();
+    if (rawText.trim().startsWith("{")) body = JSON.parse(rawText);
+  } catch { /* body remains {} */ }
 
-  // Extrai phone, name e texto do payload BotConversa
-  const subscriber = (body.subscriber ?? body) as Record<string, unknown>;
+  console.log("[whatsapp-receive] url params:", url.searchParams.toString());
+  console.log("[whatsapp-receive] raw body:", rawText.slice(0, 1000));
+
+  // ── Extrai phone, name, texto ────────────────────────────────
+  // Ordem de prioridade: URL params → body subscriber obj → body flat fields
+
+  // Phone: BotConversa pode usar {{phone}}, {{subscriber_phone}}, {{telefone}}
+  // Testa no URL e no body, remove não-dígitos
+  const rawPhone =
+    url.searchParams.get("phone")   ||
+    url.searchParams.get("tel")     ||
+    (body.subscriber as any)?.phone ||
+    (body.subscriber as any)?.telefone ||
+    body.phone as string            ||
+    body.telefone as string         ||
+    body.subscriber_phone as string ||
+    "";
+
+  // Name: preferência para URL → body
+  const rawFirst =
+    url.searchParams.get("first_name") ||
+    url.searchParams.get("nome")       ||
+    (body.subscriber as any)?.first_name ||
+    (body.subscriber as any)?.nome     ||
+    body.first_name as string          ||
+    body.nome as string                ||
+    "";
+  const rawLast =
+    url.searchParams.get("last_name")  ||
+    (body.subscriber as any)?.last_name ||
+    body.last_name as string           ||
+    "";
+
+  const name = `${rawFirst} ${rawLast}`.trim() || (body.name as string) || "";
+
+  // Mensagem: BotConversa pode usar {{last_message}}, {{input}}, {{last_input}}, {{mensagem}}
   const messageObj = (body.message ?? body.last_message ?? {}) as Record<string, unknown>;
 
-  const phone = (subscriber.phone ?? body.phone ?? "") as string;
-  const name  = (
-    subscriber.name ??
-    `${subscriber.first_name ?? ""} ${subscriber.last_name ?? ""}`.trim() ??
-    ""
-  ) as string;
+  let texto =
+    url.searchParams.get("msg")         ||
+    url.searchParams.get("mensagem")    ||
+    url.searchParams.get("input")       ||
+    "";
 
-  let texto = "";
-  if (messageObj.type === "text") {
-    texto = (messageObj.value ?? messageObj.message ?? "") as string;
-  } else if (typeof body.text === "string") {
-    texto = body.text;
-  } else if (typeof body.message === "string") {
-    texto = body.message;
+  if (!texto) {
+    if (messageObj.type === "text") {
+      texto = (messageObj.value ?? messageObj.message ?? "") as string;
+    } else if (typeof body.text === "string") {
+      texto = body.text;
+    } else if (typeof body.input === "string") {
+      texto = body.input;
+    } else if (typeof body.last_input === "string") {
+      texto = body.last_input;
+    } else if (typeof body.mensagem === "string") {
+      texto = body.mensagem;
+    } else if (typeof body.message === "string") {
+      texto = body.message;
+    } else if (typeof body.last_message === "string") {
+      texto = body.last_message;
+    }
   }
 
+  // Filtra variáveis não substituídas: {{var}} ou {var}
+  const isUnsubstituted = (s: string) => /^\{+[^{}]+\}+$/.test((s ?? "").trim());
+
+  // Campos pre-classificados pelo Assistente GPT (Campos Personalizados)
+  const gptArea  = typeof body.area  === "string" && !isUnsubstituted(body.area)  ? (body.area  as string).trim() : "";
+  const gptMsg   = typeof body.msg   === "string" && !isUnsubstituted(body.msg)   ? (body.msg   as string).trim() : "";
+  const gptPhone = typeof body.phone === "string" && !isUnsubstituted(body.phone) ? (body.phone as string).trim() : "";
+
+  const phone = isUnsubstituted(rawPhone) ? (gptPhone || "") : (rawPhone || gptPhone);
+  if (isUnsubstituted(texto)) texto = gptMsg;
+  if (!texto) texto = gptMsg;
+
+  console.log("[whatsapp-receive] extracted → phone:", phone, "| gptArea:", gptArea, "| texto:", texto.slice(0, 100));
+
   if (!phone || !texto.trim()) {
-    // Webhook válido mas sem conteúdo processável — retorna 200 para evitar retries
-    return new Response(JSON.stringify({ ok: true, status: "ignored" }), { status: 200 });
+    // Salva entrada para diagnóstico (sem phone/texto não conseguimos processar)
+    await createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    ).from("whatsapp_ia_log").insert({
+      phone: rawPhone || "VAZIO",
+      nome_remetente: name || null,
+      mensagem_raw: rawText.slice(0, 500) || "VAZIO",
+      status: "ignorado_sem_dados",
+    });
+    return new Response(JSON.stringify({ ok: true, status: "ignored", debug: { phone, texto: texto.slice(0,50), raw: rawText.slice(0,200) } }), { status: 200 });
   }
 
   const numeroFinal = phone.replace(/\D/g, "").replace(/^(?!55)/, "55");
+  console.log("[whatsapp-receive] numeroFinal:", numeroFinal);
 
   // ── Clients ─────────────────────────────────────────────────
   const BC_KEY  = Deno.env.get("BOTCONVERSA_API_KEY") ?? "";
@@ -336,18 +405,79 @@ serve(async (req) => {
   // ── Insere log inicial ──────────────────────────────────────
   const { data: logRow } = await sb
     .from("whatsapp_ia_log")
-    .insert({ phone: numeroFinal, nome_remetente: name || null, mensagem_raw: texto, status: "recebido" })
+    .insert({ phone: numeroFinal, nome_remetente: name || null, mensagem_raw: texto || rawText.slice(0, 500), status: "recebido" })
     .select("id")
     .single();
 
   const logId = logRow?.id;
   const primeiroNome = name ? name.trim().split(" ")[0] : "";
 
-  // ── Classifica com IA (antes de responder) ──────────────────
+  // ── Ramo GPT: área já classificada pelo Assistente GPT ──────
+  if (gptArea) {
+    const cat = CATS.find(c => c.id === gptArea);
+    const resp = cat?.resp ?? "Administração Geral";
+    const hoje = new Date().toISOString().split("T")[0];
+    const titulo = (gptMsg || texto).slice(0, 80) || `Solicitação via WhatsApp`;
+
+    if (logId) {
+      await sb.from("whatsapp_ia_log").update({
+        ia_resultado:  { tipo: "demanda", area_id: gptArea, fonte: "gpt" },
+        status:        "classificado",
+        processado_em: new Date().toISOString(),
+      }).eq("id", logId);
+    }
+
+    const demPayloadGpt: Record<string, unknown> = {
+      area:          cat?.nome ?? gptArea,
+      titulo,
+      descricao:     `[via WhatsApp GPT${name ? ` — ${name}` : ""}]\n\n${gptMsg || texto}`,
+      prioridade:    "Média",
+      status:        "ABERTA",
+      solicitante:   name || `WhatsApp ${numeroFinal}`,
+      responsavel:   resp,
+      data_abertura: hoje,
+    };
+
+    const { data: demRowGpt, error: demErrGpt } = await sb
+      .from("demandas").insert(demPayloadGpt).select("id").single();
+
+    if (demErrGpt || !demRowGpt?.id) {
+      if (logId) await sb.from("whatsapp_ia_log").update({ status: "erro", erro_msg: demErrGpt?.message }).eq("id", logId);
+      return new Response(JSON.stringify({ ok: false, error: demErrGpt?.message }), { status: 500 });
+    }
+
+    const { data: protoRowGpt } = await sb.rpc("gerar_protocolo_wa");
+    const protocoloGpt = (protoRowGpt as string | null) ?? `WA-${hoje.slice(0,4)}-????`;
+
+    if (logId) {
+      await sb.from("whatsapp_ia_log").update({
+        demanda_id: demRowGpt.id, protocolo: protocoloGpt, status: "demanda_criada",
+      }).eq("id", logId);
+    }
+
+    if (BC_KEY) {
+      const confirmacaoGpt = [
+        `✅ *Demanda registrada!*`,
+        ``,
+        `*Protocolo:* ${protocoloGpt}`,
+        `*Área:* ${demPayloadGpt.area}`,
+        ``,
+        `Um responsável de *${resp}* entrará em contato em breve.`,
+      ].join("\n");
+      await enviarWA(BC_BASE, BC_KEY, numeroFinal, name, confirmacaoGpt);
+      await notificarResponsaveis(sb, BC_BASE, BC_KEY,
+        { id: demRowGpt.id, area: demPayloadGpt.area as string, titulo, protocolo: protocoloGpt },
+        gptMsg || texto,
+      );
+    }
+
+    return new Response(JSON.stringify({ ok: true, status: "demanda_criada", protocolo: protocoloGpt, fonte: "gpt" }), { status: 200 });
+  }
+
+  // ── Classifica com IA Gemini (fluxo sem GPT) ─────────────────
   const ia = await classificarComIA(texto, name);
   const ehDemanda = ia.confidence >= 0.65 && !!ia.area_id && !!ia.titulo;
 
-  // ── Atualiza log com resultado da IA ────────────────────────
   if (logId) {
     await sb.from("whatsapp_ia_log").update({
       ia_resultado:  ia,
@@ -356,7 +486,6 @@ serve(async (req) => {
     }).eq("id", logId);
   }
 
-  // ── Ramo: mensagem não é uma demanda ────────────────────────
   if (!ehDemanda) {
     if (BC_KEY) {
       const tipo = ia.tipo ?? "outro";
@@ -375,7 +504,6 @@ serve(async (req) => {
       } else if (tipo === "informacao" && ia.resposta) {
         resposta = ia.resposta;
       } else {
-        // "outro" — fora do contexto
         resposta = [
           `Não consegui entender sua mensagem.`,
           ``,
@@ -390,14 +518,13 @@ serve(async (req) => {
     return new Response(JSON.stringify({ ok: true, status: "nao_classificado", tipo: ia.tipo }), { status: 200 });
   }
 
-  // ── Demanda confirmada: avisa que está processando ───────────
   if (BC_KEY) {
     await enviarWA(BC_BASE, BC_KEY, numeroFinal, name,
       `Recebi${primeiroNome ? `, *${primeiroNome}*` : ""}! ⏳ Registrando sua demanda, aguarde...`
     );
   }
 
-  // ── Cria a demanda ──────────────────────────────────────────
+  // ── Cria a demanda (fluxo Gemini) ───────────────────────────
   const cat = CATS.find(c => c.id === ia.area_id);
   const resp = cat?.resp ?? "Administração Geral";
   const hoje = new Date().toISOString().split("T")[0];
