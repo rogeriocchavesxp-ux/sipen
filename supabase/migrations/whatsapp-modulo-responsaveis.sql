@@ -16,12 +16,15 @@ CREATE INDEX IF NOT EXISTS idx_wamr_modulo ON public.whatsapp_modulo_responsavei
 
 ALTER TABLE public.whatsapp_modulo_responsaveis ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "wamr_auth_select" ON public.whatsapp_modulo_responsaveis;
 CREATE POLICY "wamr_auth_select" ON public.whatsapp_modulo_responsaveis
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "wamr_admin_all" ON public.whatsapp_modulo_responsaveis;
 CREATE POLICY "wamr_admin_all" ON public.whatsapp_modulo_responsaveis
   FOR ALL TO authenticated
   USING (public.is_admin()) WITH CHECK (public.is_admin());
 
+DROP POLICY IF EXISTS "wamr_service_all" ON public.whatsapp_modulo_responsaveis;
 CREATE POLICY "wamr_service_all" ON public.whatsapp_modulo_responsaveis
   FOR ALL TO service_role USING (true) WITH CHECK (true);
