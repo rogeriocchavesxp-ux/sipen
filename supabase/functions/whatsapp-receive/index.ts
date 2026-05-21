@@ -220,7 +220,8 @@ Responda APENAS com JSON válido, sem texto extra:
   }
 }
 
-// ── Mapeamento área de demanda → módulo WhatsApp ────────────
+// ── Mapeamento área_id → módulo WhatsApp ────────────────────
+// MANTER EM SINCRONIA com _AREA_MODULO_WA em modules/demandas/index.js
 const AREA_MODULO: Record<string, string> = {
   conselho:     "CONSELHO",
   agendamentos: "AGENDA",
@@ -247,10 +248,20 @@ async function notificarResponsaveis(
   demanda:   { id: string; area: string; area_id?: string; titulo: string; protocolo: string },
   msg:       string,
 ) {
-  let lista: unknown[] = [];
-
-  // Prefer module-level responsáveis (whatsapp_modulo_responsaveis)
   const modulo = demanda.area_id ? AREA_MODULO[demanda.area_id] : undefined;
+
+  // Verifica se o módulo está ativo — se pausado, não envia
+  if (modulo) {
+    const { data: cfg } = await sb
+      .from("whatsapp_modulo_config")
+      .select("ativo")
+      .eq("modulo", modulo)
+      .maybeSingle();
+    if (cfg !== null && !cfg.ativo) return;
+  }
+
+  // Responsáveis configurados por módulo (fonte única — demanda_responsaveis descontinuado)
+  let lista: unknown[] = [];
   if (modulo) {
     const { data: modRows } = await sb
       .from("whatsapp_modulo_responsaveis")
@@ -260,17 +271,7 @@ async function notificarResponsaveis(
     lista = modRows ?? [];
   }
 
-  // Fallback: demanda_responsaveis by area string
-  if (!lista.length) {
-    const { data: rows } = await sb
-      .from("demanda_responsaveis")
-      .select("pessoa_id, pessoas(id, nome, celular, telefone)")
-      .eq("area", demanda.area)
-      .eq("ativo", true);
-    lista = rows ?? [];
-  }
-
-  // Final fallback: admins
+  // Fallback final: admins
   if (!lista.length) {
     const { data: admins } = await sb
       .from("user_profiles")
@@ -285,6 +286,9 @@ async function notificarResponsaveis(
     const tel = p?.celular || p?.telefone;
     if (!tel) continue;
 
+    const numero = tel.replace(/\D/g, "").replace(/^(?!55)/, "55");
+    const iKey   = `WA_RECV_${demanda.id}_${(row as any).pessoa_id || numero}`;
+
     const notif = [
       `📲 *Demanda via WhatsApp*`,
       ``,
@@ -298,7 +302,39 @@ async function notificarResponsaveis(
       `🔗 ${SIPEN_URL}`,
     ].join("\n");
 
-    await enviarWA(bcBase, bcKey, tel.replace(/\D/g, "").replace(/^(?!55)/, "55"), p.nome, notif);
+    // Insere log com idempotência antes de enviar
+    const { data: msgLog, error: msgErr } = await sb
+      .from("whatsapp_mensagens")
+      .insert({
+        para_numero:     numero,
+        para_nome:       p.nome ?? null,
+        mensagem:        notif,
+        modulo:          modulo ?? "DEMANDAS",
+        referencia_tipo: "demanda",
+        referencia_id:   demanda.id,
+        status:          "pendente",
+        idempotency_key: iKey,
+      })
+      .select("id")
+      .maybeSingle();
+
+    // Chave duplicada (23505) = já enviado anteriormente
+    if (msgErr?.code === "23505") continue;
+
+    try {
+      await enviarWA(bcBase, bcKey, numero, p.nome, notif);
+      if (msgLog?.id) {
+        await sb.from("whatsapp_mensagens")
+          .update({ status: "enviado", enviado_em: new Date().toISOString() })
+          .eq("id", msgLog.id);
+      }
+    } catch (e) {
+      if (msgLog?.id) {
+        await sb.from("whatsapp_mensagens")
+          .update({ status: "erro", erro_msg: String(e) })
+          .eq("id", msgLog.id);
+      }
+    }
   }
 }
 
@@ -577,8 +613,22 @@ serve(async (req) => {
 
   if (ia.area_id === "financeiro" && ia.financial_data) {
     const fd: Record<string, unknown> = {};
-    if (ia.financial_data.valor != null)          fd.valor = ia.financial_data.valor;
-    if (ia.financial_data.data_vencimento)        fd.data_vencimento = ia.financial_data.data_vencimento;
+
+    // Garante que valor é número positivo (Gemini pode retornar texto)
+    const rawValor = ia.financial_data.valor;
+    if (rawValor != null) {
+      const num = typeof rawValor === "number"
+        ? rawValor
+        : parseFloat(String(rawValor).replace(/[^\d,.]/g, "").replace(",", "."));
+      if (!isNaN(num) && num > 0) fd.valor = num;
+    }
+
+    // Garante que data_vencimento é YYYY-MM-DD
+    const rawDate = ia.financial_data.data_vencimento;
+    if (rawDate && /^\d{4}-\d{2}-\d{2}$/.test(String(rawDate))) {
+      fd.data_vencimento = rawDate;
+    }
+
     if (Object.keys(fd).length) demPayload.financial_data = fd;
   }
 

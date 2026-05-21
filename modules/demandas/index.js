@@ -1698,6 +1698,8 @@
     ].filter(l => l !== null).join("\n");
   }
 
+  // MANTER EM SINCRONIA com AREA_MODULO em supabase/functions/whatsapp-receive/index.ts
+  // Aqui a chave é o nome da área (dem.area); lá é o area_id (ia.area_id)
   const _AREA_MODULO_WA = {
     "Conselho":                "CONSELHO",
     "Agendamentos":            "AGENDA",
@@ -1723,7 +1725,7 @@
 
     let rows = [];
 
-    // Prioridade 1: responsáveis configurados por módulo WhatsApp
+    // Responsáveis configurados por módulo WhatsApp (fonte única — demanda_responsaveis descontinuado)
     const modulo = _AREA_MODULO_WA[dem.area];
     if (modulo) {
       try {
@@ -1736,19 +1738,7 @@
       } catch (_) {}
     }
 
-    // Prioridade 2: demanda_responsaveis por área
-    if (!rows.length) {
-      try {
-        const res = await fetch(
-          `${base}/rest/v1/demanda_responsaveis?area=eq.${encodeURIComponent(dem.area)}&ativo=eq.true` +
-          `&select=pessoa_id,pessoas(id,nome,telefone,celular)`,
-          { headers: hdrs }
-        );
-        rows = res.ok ? await res.json() : [];
-      } catch (_) {}
-    }
-
-    // Prioridade 3: admins
+    // Fallback: admins (demanda_responsaveis descontinuado)
     if (!rows.length) {
       try {
         const res = await fetch(
