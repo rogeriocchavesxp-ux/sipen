@@ -151,7 +151,7 @@ const _VIEW_MAP = {
   "pastoral":    "modules/pastoral/view.html?v=6.30.60",
   "min":         "modules/departamentos/view.html",
   "agenda":      "modules/agenda/view.html?v=6.30.59",
-  "pgs":         "modules/pgs/view.html?v=6.30.63",
+  "pgs":         "modules/pgs/view.html?v=6.30.64",
   "infra":       "modules/infraestrutura/view.html",
   "dem":         "modules/demandas/view.html",
   "rel":         "modules/relatorios/view.html",
