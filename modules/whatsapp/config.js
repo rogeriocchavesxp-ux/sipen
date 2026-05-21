@@ -228,8 +228,8 @@ const WA_CFG = (function(){
     document.getElementById("wa-resp-modal-titulo").textContent = `Responsáveis — ${modulo}`;
     document.getElementById("wa-resp-busca").value = "";
     document.getElementById("wa-resp-resultados").innerHTML = "";
-    await _carregarListaResponsaveis();
     modal.classList.add("on");
+    await _carregarListaResponsaveis();
   }
 
   function fecharResponsaveisModal(){
