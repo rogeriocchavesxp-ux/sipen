@@ -1133,7 +1133,7 @@
             <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Descrição</label>
             <textarea id="dem-edit-desc" rows="3" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;resize:vertical;box-sizing:border-box">${escapeHtml(dem.descricao || '')}</textarea>
           </div>
-          ${(_isFinSolPag || _isFinReemb) ? `
+          ${(dem.area === "Financeiro") ? `
           <div style="margin-top:16px;border:1px solid rgba(61,160,85,.3);border-radius:9px;padding:14px;background:rgba(61,160,85,.03)">
             <div style="font-size:11px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px">💰 Dados Financeiros</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
