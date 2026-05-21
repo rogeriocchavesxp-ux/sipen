@@ -15,4 +15,6 @@ INSERT INTO public.whatsapp_modulo_config (modulo, ativo, descricao) VALUES
   ('JUNTA_DIACONAL',true,  'Atendimentos e solicitações da Junta Diaconal'),
   ('INFRAESTRUTURA',true,  'Abertura e conclusão de ordens de manutenção'),
   ('JURIDICO',      true,  'Processos, prazos e documentos jurídicos')
-ON CONFLICT (modulo) DO NOTHING;
+ON CONFLICT (modulo) DO UPDATE
+  SET ativo     = EXCLUDED.ativo,
+      descricao = EXCLUDED.descricao;
