@@ -16,6 +16,7 @@
     <div class="inav" style="--mc:var(--violet)">
       <div class="ini on" onclick="go('com-dash')">Dashboard</div>
       <div class="ini" onclick="go('com-solicitacoes')">Solicitações de Arte</div>
+      <div class="ini" onclick="go('com-whatsapp')">WhatsApp</div>
     </div>
 
     <!-- KPIs -->
@@ -80,6 +81,7 @@
     <div class="inav" style="--mc:var(--violet)">
       <div class="ini" onclick="go('com-dash')">Dashboard</div>
       <div class="ini on" onclick="go('com-solicitacoes')">Solicitações de Arte</div>
+      <div class="ini" onclick="go('com-whatsapp')">WhatsApp</div>
     </div>
 
     <!-- Filtros -->
@@ -134,4 +136,26 @@
       </div>
     </div>
     <div id="com-detalhe-content"><div class="card" style="padding:28px;color:var(--tx3)">Selecione uma solicitação.</div></div>
+  </div>
+
+  <!-- ════ COMUNICAÇÃO — WhatsApp ════════════════════════════ -->
+  <div class="view" id="v-com-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(139,111,212,0.14);border-color:rgba(139,111,212,0.25);color:var(--violet)">💬</div>
+      <div>
+        <div class="hero-lbl">Comunicação</div>
+        <div class="hero-ttl">WhatsApp — Comunicação</div>
+        <div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt" onclick="go('com-dash')">← Voltar</button>
+        <button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('COMUNICACAO')">↻ Atualizar</button>
+      </div>
+    </div>
+    <div class="inav" style="--mc:var(--violet)">
+      <div class="ini" onclick="go('com-dash')">Dashboard</div>
+      <div class="ini" onclick="go('com-solicitacoes')">Solicitações de Arte</div>
+      <div class="ini on">WhatsApp</div>
+    </div>
+    <div class="ct" id="wa-tab-COMUNICACAO"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
   </div>

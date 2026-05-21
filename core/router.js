@@ -159,7 +159,7 @@ const _VIEW_MAP = {
   "proj":        "modules/projetos/view.html",
   "diac":        "modules/diaconal/view.html",
   "cong":        "modules/congregacoes/view.html",
-  "com":         "modules/comunicacao/view.html",
+  "com":         "modules/comunicacao/view.html?v=6.30.61",
   "eve":         "modules/eventos/view.html",
   "area":        "modules/area-membro/view.html",
   "config":      "modules/config/view.html",
