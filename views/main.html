@@ -3551,46 +3551,64 @@
 
     <div class="ct">
       <!-- KPIs -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+      <div class="kpis c4" style="margin-bottom:16px">
         <div class="kpi">
           <div class="kpi-ico" id="wa-kpi-ico-status" style="background:rgba(100,100,100,0.1)">⚪</div>
-          <div class="kpi-body"><div class="kpi-lbl">Conexão</div><div class="kpi-val" id="wa-kpi-status">—</div></div>
+          <div class="kpi-body"><div class="kpi-lbl">Conexão API</div><div class="kpi-val" id="wa-kpi-status">—</div></div>
         </div>
         <div class="kpi">
           <div class="kpi-ico" style="background:rgba(37,211,102,0.12)">📱</div>
-          <div class="kpi-body"><div class="kpi-lbl">Provedor</div><div class="kpi-val" id="wa-kpi-instancia" style="font-size:13px">BotConversa</div></div>
+          <div class="kpi-body"><div class="kpi-lbl">Provedor</div><div class="kpi-val" style="font-size:13px">BotConversa</div></div>
         </div>
         <div class="kpi">
           <div class="kpi-ico" style="background:rgba(74,156,245,0.12)">📨</div>
           <div class="kpi-body"><div class="kpi-lbl">Enviados hoje</div><div class="kpi-val" id="wa-kpi-hoje">—</div></div>
         </div>
         <div class="kpi">
-          <div class="kpi-ico" style="background:rgba(224,85,85,0.12)">❌</div>
+          <div class="kpi-ico" style="background:rgba(224,85,85,0.12)">⚠</div>
           <div class="kpi-body"><div class="kpi-lbl">Erros hoje</div><div class="kpi-val" id="wa-kpi-erros">—</div></div>
         </div>
       </div>
 
-      <!-- Módulos + Config instância -->
+      <!-- Central de Módulos -->
+      <div style="margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx1)">Central de Comunicação WhatsApp</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:2px">Módulos ativos, responsáveis e status de envio por departamento</div>
+        </div>
+        <span class="cact" onclick="WA_CFG.carregarModulos()">↻ Atualizar</span>
+      </div>
+      <div class="g3" id="wa-modulos-list" style="margin-bottom:16px">
+        <div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center;grid-column:1/-1">Carregando módulos...</div>
+      </div>
+
+      <!-- Config API -->
       <div class="g2" style="margin-bottom:16px">
         <div class="card">
-          <div class="ctit">Módulos — Envio via WhatsApp <span class="cact" onclick="WA_CFG.carregarModulos()">↻</span></div>
-          <div id="wa-modulos-list" style="display:flex;flex-direction:column"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
-        </div>
-        <div class="card">
-          <div class="ctit">BotConversa — Configuração</div>
+          <div class="ctit">BotConversa — Configuração da API</div>
           <div style="font-size:11.5px;color:var(--tx2);line-height:1.6;margin-bottom:14px">
             A chave da API é armazenada com segurança nos secrets do Supabase e nunca exposta ao navegador.<br><br>
-            Para configurar, acesse o painel BotConversa → <strong>Configurações → Integrações</strong> e copie a <strong>Webhook Integration Key</strong>.<br>
-            Em seguida, adicione nos secrets do Supabase:
+            Acesse o painel BotConversa → <strong>Configurações → Integrações</strong> → copie a <strong>Webhook Integration Key</strong> e adicione nos secrets do Supabase:
           </div>
           <div style="background:var(--bg-sidebar);border:1px solid var(--bd2);border-radius:6px;padding:10px 12px;font-family:var(--mono);font-size:11px;color:var(--tx2);margin-bottom:14px;line-height:1.8">
             Nome: <strong style="color:var(--gr)">BOTCONVERSA_API_KEY</strong><br>
             Valor: <em style="color:var(--tx3)">sua-chave-aqui</em>
           </div>
-          <div style="font-size:10.5px;color:var(--tx3);margin-bottom:12px">
-            Supabase Dashboard → Edge Functions → Secrets → Add new secret
-          </div>
+          <div style="font-size:10px;color:var(--tx3);margin-bottom:12px">Supabase Dashboard → Edge Functions → Secrets → Add new secret</div>
           <div id="wa-cfg-estado" style="font-size:11px;color:var(--tx3)">Verificando...</div>
+        </div>
+        <div class="card">
+          <div class="ctit">Webhook de Entrada — IA</div>
+          <div style="font-size:11.5px;color:var(--tx2);line-height:1.6;margin-bottom:12px">
+            Mensagens recebidas pelo WhatsApp são processadas pela IA e transformadas em demandas automaticamente.
+          </div>
+          <div style="background:var(--bg-sidebar);border:1px solid var(--bd2);border-radius:6px;padding:10px 12px;font-family:var(--mono);font-size:10px;color:var(--tx2);margin-bottom:12px;word-break:break-all;line-height:1.8">
+            https://erhwryfzpycahgsohhbh.supabase.co/functions/v1/whatsapp-receive
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span style="font-size:10.5px;background:rgba(58,170,92,0.1);color:var(--gr);padding:3px 10px;border-radius:20px;font-weight:600">Gemini 2.5 Flash Lite</span>
+            <span style="font-size:10.5px;background:rgba(74,156,245,0.1);color:var(--sky);padding:3px 10px;border-radius:20px;font-weight:600">BotConversa</span>
+          </div>
         </div>
       </div>
 
