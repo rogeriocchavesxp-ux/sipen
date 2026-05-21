@@ -83,6 +83,46 @@
   function _user()  { return typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL : null; }
   function _view(id) { return document.getElementById(id); }
 
+  async function _notificarConselhoWA(mensagem, tipo, referenciaId) {
+    if (typeof WA === "undefined") return;
+    const base = typeof SUPABASE_URL !== "undefined" ? SUPABASE_URL.trim().replace(/\/$/, "") : "";
+    const hdrs = typeof apiHeaders === "function" ? apiHeaders() : {};
+    let rows = [];
+    try {
+      const res = await fetch(
+        `${base}/rest/v1/whatsapp_modulo_responsaveis?modulo=eq.CONSELHO&ativo=eq.true` +
+        `&select=pessoa_id,pessoas(id,nome,telefone,celular)`,
+        { headers: hdrs }
+      );
+      rows = res.ok ? await res.json() : [];
+    } catch (_) {}
+    if (!rows.length) {
+      try {
+        const res = await fetch(
+          `${base}/rest/v1/user_profiles?role=eq.admin&ativo=eq.true` +
+          `&select=pessoa_id,pessoas(id,nome,telefone,celular)`,
+          { headers: hdrs }
+        );
+        rows = res.ok ? await res.json() : [];
+      } catch (_) {}
+    }
+    for (const row of rows) {
+      const p = row.pessoas;
+      if (!p) continue;
+      const tel = p.celular || p.telefone;
+      if (!tel) continue;
+      WA.send({
+        para:        tel,
+        nome:        p.nome,
+        mensagem,
+        modulo:      "CONSELHO",
+        referenciaT: tipo,
+        referenciaId,
+        chave:       `CONSELHO_${tipo.toUpperCase()}_${referenciaId}_${row.pessoa_id}`,
+      }).catch(() => {});
+    }
+  }
+
   function _fmtData(d) {
     if (!d) return "—";
     const [y, m, day] = String(d).slice(0, 10).split("-");
@@ -321,11 +361,25 @@
         });
       } else {
         payload.created_by = u?.id || null;
-        await _fetchJson(`${_api()}/rest/v1/conselho_reunioes`, {
+        const [nova] = await _fetchJson(`${_api()}/rest/v1/conselho_reunioes`, {
           method: "POST",
           headers: _headers({ "Content-Type": "application/json", Prefer: "return=representation" }),
           body: JSON.stringify(payload),
         });
+        if (nova?.id) {
+          const dataFmt = _fmtData(payload.data_reuniao);
+          const tipoLabel = TIPO_REUNIAO[payload.tipo] || payload.tipo;
+          const msg = [
+            `📋 *Nova Reunião do Conselho*`,
+            ``,
+            `*Título:* ${payload.titulo}`,
+            `*Tipo:* ${tipoLabel}`,
+            `*Data:* ${dataFmt}`,
+            payload.horario ? `*Horário:* ${payload.horario}` : null,
+            payload.local   ? `*Local:* ${payload.local}`     : null,
+          ].filter(l => l !== null).join("\n");
+          _notificarConselhoWA(msg, "reuniao", nova.id).catch(() => {});
+        }
       }
       _fecharModal();
       _toast("Salvo", id ? "Reunião atualizada." : "Reunião criada com sucesso.");
@@ -705,12 +759,24 @@
         payload.ordem = ordemAtual;
         payload.created_by = u?.id || null;
         if (_reuniaoAtual) payload.reuniao_id = _reuniaoAtual.id;
-        await _fetchJson(`${_api()}/rest/v1/conselho_pautas`, {
+        const [novaPauta] = await _fetchJson(`${_api()}/rest/v1/conselho_pautas`, {
           method: "POST",
           headers: _headers({ "Content-Type": "application/json", Prefer: "return=representation" }),
           body: JSON.stringify(payload),
         });
         await _registrarHistorico(null, "criacao", null, titulo);
+        if (novaPauta?.id) {
+          const reuniaoTitulo = _reuniaoAtual?.titulo || "";
+          const msg = [
+            `📋 *Nova Pauta do Conselho*`,
+            ``,
+            `*Assunto:* ${titulo}`,
+            `*Categoria:* ${cat}`,
+            reuniaoTitulo ? `*Reunião:* ${reuniaoTitulo}` : null,
+            enc ? `*Encaminhamento:* ${enc}` : null,
+          ].filter(l => l !== null).join("\n");
+          _notificarConselhoWA(msg, "pauta", novaPauta.id).catch(() => {});
+        }
       }
 
       _fecharModal();
