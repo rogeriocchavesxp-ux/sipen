@@ -19,7 +19,7 @@ import { serve }        from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const DEFAULT_BC_BASE = "https://backend.botconversa.com.br/api/v1/webhook";
-const SIPEN_URL       = "https://rogeriocchavesxp-ux.github.io/sipen/";
+const SIPEN_URL       = "https://sipen.com.br";
 
 // ── Categorias (espelho do frontend) ────────────────────────
 const CATS = [

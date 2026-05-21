@@ -1674,7 +1674,7 @@
   /* ── Notificação WhatsApp ao criar demanda ───────────── */
 
   function _montarMsgWA(dem) {
-    const link = "https://rogeriocchavesxp-ux.github.io/sipen/";
+    const link = "https://sipen.com.br";
     const fd   = (dem.financial_data && typeof dem.financial_data === "object") ? dem.financial_data : null;
     const fmtValor = v => v != null && !isNaN(v)
       ? "R$ " + parseFloat(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 })
