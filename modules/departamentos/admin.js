@@ -101,7 +101,7 @@ const DEPT_ADM = (function(){
     if(!lista) return;
 
     if(heroTtl) heroTtl.textContent = "Administração";
-    if(heroDsc) heroDsc.textContent = "Secretaria, Tesouraria, Patrimônio, Comunicação, Infraestrutura e Conservação";
+    if(heroDsc) heroDsc.textContent = "Secretaria, Tesouraria, Patrimônio, Comunicação, Infraestrutura e Conservação, Jurídico";
     if(heroAct) heroAct.innerHTML = "";
     if(detalhe){ detalhe.style.display="none"; detalhe.innerHTML=""; }
 
@@ -135,6 +135,22 @@ const DEPT_ADM = (function(){
               </div>
             </div>`;
         }).join("")}
+        <div class="card" style="cursor:pointer;transition:box-shadow .15s"
+          onmouseenter="this.style.boxShadow='0 4px 18px rgba(0,0,0,.14)'"
+          onmouseleave="this.style.boxShadow=''"
+          onclick="go('jur-dash')">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+            <div style="width:40px;height:40px;border-radius:10px;background:var(--bg2);border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">⚖</div>
+            <div>
+              <div style="font-size:13.5px;font-weight:700;color:var(--tx1)">Jurídico</div>
+              <div style="font-size:10.5px;color:var(--tx3);margin-top:2px">Contratos, processos, pareceres e documentos jurídicos</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:10px;font-weight:700;color:var(--blue);background:var(--bd2);padding:2px 8px;border-radius:20px">Ativo</span>
+            <span style="font-size:11px;color:var(--tx3)">Ver área →</span>
+          </div>
+        </div>
       </div>`;
   }
 
