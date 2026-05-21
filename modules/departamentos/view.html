@@ -8,7 +8,6 @@
       <div class="ini on" onclick="go('min-dash')">Dashboard</div>
       <div class="ini" onclick="go('min-min')">Ministérios</div>
       <div class="ini" onclick="go('min-adm')">Administração</div>
-      <div class="ini" onclick="go('min-com')">Comissões</div>
       <div class="ini" onclick="go('min-esc')">Escalas</div>
       <div class="ini" onclick="go('min-prog')">Programações</div>
       <div class="ini" onclick="go('min-lit')">Liturgia</div>
@@ -172,30 +171,6 @@
     <div class="ct" id="dept-adm-detalhe" style="display:none"></div>
   </div>
 
-  <!-- COMISSÕES -->
-
-  <div class="view" id="v-min-com">
-    <div class="hero">
-      <div class="hero-ic" style="background:var(--violetbg)">⚖</div>
-      <div>
-        <div class="hero-lbl">Departamentos</div>
-        <div class="hero-ttl">Comissões</div>
-        <div class="hero-dsc">Comissões institucionais — formação, pautas e deliberações</div>
-      </div>
-      <div class="hero-act">
-        <button class="tbt pri" onclick="minComNova()">+ Nova Comissão</button>
-      </div>
-    </div>
-    <div class="ct">
-      <div class="card">
-        <div class="ctit">
-          Comissões Institucionais
-          <span class="cact" onclick="minComLoad()">↻ Atualizar</span>
-        </div>
-        <div id="min-com-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
-      </div>
-    </div>
-  </div>
 
   <!-- DEPARTAMENTOS: WHATSAPP -->
   <div class="view" id="v-min-whatsapp">

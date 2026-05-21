@@ -251,7 +251,7 @@ const VIEW_AUTOLOAD = {
   "config-usuarios":  { fn: () => carregarUsuarios() },
   "config-whatsapp":  { fn: () => typeof WA_CFG !== "undefined" && WA_CFG.refresh() },
   "min-adm":      { fn: () => typeof DEPT_ADM          !== "undefined" && DEPT_ADM.load() },
-  "min-com":      { fn: () => typeof minComLoad         === "function"  && minComLoad() },
+  "conselho-com": { fn: () => typeof minComLoad         === "function"  && minComLoad() },
   "diac-escalas": { fn: () => typeof diacEscalaLoad     === "function"  && diacEscalaLoad() },
 };
 
