@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    SIPEN — WhatsApp Admin Panel
-   config-whatsapp.js · v1.0
+   config-whatsapp.js · v2.0
 
    Painel administrativo: status, módulos, histórico, templates.
    Depende de: whatsapp.js (WA), supabase globals (SUPABASE_URL, SUPABASE_ANON_KEY, sipenToken)
