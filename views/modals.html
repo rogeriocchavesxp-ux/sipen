@@ -270,3 +270,21 @@
     </div>
   </div>
 </div>
+
+<!-- ════ MODAL WHATSAPP: RESPONSÁVEIS POR MÓDULO ═══════════ -->
+<div class="mo" id="wa-resp-modal" onclick="if(event.target===this)WA_CFG.fecharResponsaveisModal()">
+  <div class="md" style="max-width:480px">
+    <div class="md-t" id="wa-resp-modal-titulo">Responsáveis</div>
+    <div class="md-s">Pessoas que receberão mensagens automáticas deste módulo</div>
+    <div id="wa-resp-lista" style="max-height:240px;overflow-y:auto;margin-bottom:16px"></div>
+    <div style="border-top:1px solid var(--bd2);padding-top:14px">
+      <label class="flb">Adicionar pessoa</label>
+      <input class="fi2" id="wa-resp-busca" type="text" placeholder="Digite o nome para buscar..."
+             oninput="WA_CFG.buscarPessoasParaAdicionar()" autocomplete="off" style="margin-bottom:6px">
+      <div id="wa-resp-resultados" style="max-height:200px;overflow-y:auto"></div>
+    </div>
+    <div class="ma" style="margin-top:14px">
+      <button class="btn-s" onclick="WA_CFG.fecharResponsaveisModal()">Fechar</button>
+    </div>
+  </div>
+</div>
