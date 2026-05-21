@@ -6,10 +6,16 @@
     </div>
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini on">Dashboard</div>
-      <div class="ini" onclick="go('pastoral-preg')">Escala de Pregação</div>
+      <div class="ini" onclick="go('pastoral-preg')">Escala</div>
       <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
       <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
       <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
+      <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
+      <div class="ini" onclick="go('pastoral-ora')">Oração</div>
+      <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
+      <div class="ini" onclick="go('pastoral-pri')">Prioritários</div>
+      <div class="ini" onclick="go('pastoral-rede')">Rede de Cuidado</div>
+      <div class="ini" onclick="go('pastoral-demandas')">Demandas</div>
       <div class="ini" onclick="go('pastoral-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
@@ -25,10 +31,17 @@
     </div>
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
-      <div class="ini on">Escala de Pregação</div>
+      <div class="ini on">Escala</div>
       <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
       <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
       <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
+      <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
+      <div class="ini" onclick="go('pastoral-ora')">Oração</div>
+      <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
+      <div class="ini" onclick="go('pastoral-pri')">Prioritários</div>
+      <div class="ini" onclick="go('pastoral-rede')">Rede de Cuidado</div>
+      <div class="ini" onclick="go('pastoral-demandas')">Demandas</div>
+      <div class="ini" onclick="go('pastoral-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
       <!-- Barra de controles -->
@@ -73,6 +86,20 @@
 
   <div class="view" id="v-pastoral-demandas">
     <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🙏</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Demandas Pastorais</div><div class="hero-dsc">Demandas direcionadas ao módulo Pastoral</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="inav" style="--mc:var(--teal)">
+      <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
+      <div class="ini" onclick="go('pastoral-preg')">Escala</div>
+      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
+      <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
+      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
+      <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
+      <div class="ini" onclick="go('pastoral-ora')">Oração</div>
+      <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
+      <div class="ini" onclick="go('pastoral-pri')">Prioritários</div>
+      <div class="ini" onclick="go('pastoral-rede')">Rede de Cuidado</div>
+      <div class="ini on">Demandas</div>
+      <div class="ini" onclick="go('pastoral-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('pastoral-demandas-content',{area:'Pastoral'})">↻ Atualizar</span></div>
@@ -128,16 +155,58 @@
 
   <div class="view" id="v-pastoral-ate">
     <div class="hero"><div class="hero-ic" style="background:var(--tealbg)">🤝</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Atendimentos</div><div class="hero-dsc">Registro de atendimentos pastorais</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo Atendimento</button></div></div>
+    <div class="inav" style="--mc:var(--teal)">
+      <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
+      <div class="ini" onclick="go('pastoral-preg')">Escala</div>
+      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
+      <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
+      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
+      <div class="ini on">Atendimentos</div>
+      <div class="ini" onclick="go('pastoral-ora')">Oração</div>
+      <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
+      <div class="ini" onclick="go('pastoral-pri')">Prioritários</div>
+      <div class="ini" onclick="go('pastoral-rede')">Rede de Cuidado</div>
+      <div class="ini" onclick="go('pastoral-demandas')">Demandas</div>
+      <div class="ini" onclick="go('pastoral-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Atendimentos <span class="cact" onclick="listarModulo('DEMANDAS','pastoral-ate-list',{area:'Pastoral'})">↻</span></div><div id="pastoral-ate-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-pastoral-ora">
     <div class="hero"><div class="hero-ic" style="background:var(--tealbg)">🙏</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Pedidos de Oração</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo Pedido</button></div></div>
+    <div class="inav" style="--mc:var(--teal)">
+      <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
+      <div class="ini" onclick="go('pastoral-preg')">Escala</div>
+      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
+      <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
+      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
+      <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
+      <div class="ini on">Oração</div>
+      <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
+      <div class="ini" onclick="go('pastoral-pri')">Prioritários</div>
+      <div class="ini" onclick="go('pastoral-rede')">Rede de Cuidado</div>
+      <div class="ini" onclick="go('pastoral-demandas')">Demandas</div>
+      <div class="ini" onclick="go('pastoral-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Pedidos de Oração <span class="cact" onclick="listarModulo('DEMANDAS','pastoral-ora-list',{area:'Pastoral'})">↻</span></div><div id="pastoral-ora-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-pastoral-aco">
     <div class="hero"><div class="hero-ic" style="background:var(--tealbg)">👣</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Acompanhamentos</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo</button></div></div>
+    <div class="inav" style="--mc:var(--teal)">
+      <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
+      <div class="ini" onclick="go('pastoral-preg')">Escala</div>
+      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
+      <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
+      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
+      <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
+      <div class="ini" onclick="go('pastoral-ora')">Oração</div>
+      <div class="ini on">Acompanhamentos</div>
+      <div class="ini" onclick="go('pastoral-pri')">Prioritários</div>
+      <div class="ini" onclick="go('pastoral-rede')">Rede de Cuidado</div>
+      <div class="ini" onclick="go('pastoral-demandas')">Demandas</div>
+      <div class="ini" onclick="go('pastoral-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Membros em Acompanhamento <span class="cact" onclick="listarModulo('MEMBROS','pastoral-aco-list')">↻</span></div><div id="pastoral-aco-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
@@ -148,6 +217,20 @@
 
   <div class="view" id="v-pastoral-pri">
     <div class="hero"><div class="hero-ic" style="background:var(--rosebg)">🚨</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Casos Prioritários</div><div class="hero-dsc">Acompanhamento pastoral de situações urgentes e prioritárias</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalCasoPri()">+ Novo Caso</button></div></div>
+    <div class="inav" style="--mc:var(--teal)">
+      <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
+      <div class="ini" onclick="go('pastoral-preg')">Escala</div>
+      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
+      <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
+      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
+      <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
+      <div class="ini" onclick="go('pastoral-ora')">Oração</div>
+      <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
+      <div class="ini on">Prioritários</div>
+      <div class="ini" onclick="go('pastoral-rede')">Rede de Cuidado</div>
+      <div class="ini" onclick="go('pastoral-demandas')">Demandas</div>
+      <div class="ini" onclick="go('pastoral-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Casos Registrados <span class="cact" onclick="_carregarCasosPri()">↻ Atualizar</span></div><div id="pastoral-pri-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
@@ -161,10 +244,17 @@
     </div>
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
-      <div class="ini" onclick="go('pastoral-preg')">Escala de Pregação</div>
+      <div class="ini" onclick="go('pastoral-preg')">Escala</div>
       <div class="ini on">Disponibilidade</div>
       <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
       <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
+      <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
+      <div class="ini" onclick="go('pastoral-ora')">Oração</div>
+      <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
+      <div class="ini" onclick="go('pastoral-pri')">Prioritários</div>
+      <div class="ini" onclick="go('pastoral-rede')">Rede de Cuidado</div>
+      <div class="ini" onclick="go('pastoral-demandas')">Demandas</div>
+      <div class="ini" onclick="go('pastoral-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
       <!-- Tabs -->
@@ -236,10 +326,17 @@
     </div>
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
-      <div class="ini" onclick="go('pastoral-preg')">Escala de Pregação</div>
+      <div class="ini" onclick="go('pastoral-preg')">Escala</div>
       <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
       <div class="ini on">Pastores</div>
       <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
+      <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
+      <div class="ini" onclick="go('pastoral-ora')">Oração</div>
+      <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
+      <div class="ini" onclick="go('pastoral-pri')">Prioritários</div>
+      <div class="ini" onclick="go('pastoral-rede')">Rede de Cuidado</div>
+      <div class="ini" onclick="go('pastoral-demandas')">Demandas</div>
+      <div class="ini" onclick="go('pastoral-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
       <div id="pd-pastores-content"><div style="color:var(--tx3);font-size:11.5px;padding:20px 0">Carregando...</div></div>
@@ -256,10 +353,17 @@
     </div>
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
-      <div class="ini" onclick="go('pastoral-preg')">Escala de Pregação</div>
+      <div class="ini" onclick="go('pastoral-preg')">Escala</div>
       <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
       <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
       <div class="ini on">Histórico</div>
+      <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
+      <div class="ini" onclick="go('pastoral-ora')">Oração</div>
+      <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
+      <div class="ini" onclick="go('pastoral-pri')">Prioritários</div>
+      <div class="ini" onclick="go('pastoral-rede')">Rede de Cuidado</div>
+      <div class="ini" onclick="go('pastoral-demandas')">Demandas</div>
+      <div class="ini" onclick="go('pastoral-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
       <div id="pd-historico-content"><div style="color:var(--tx3);font-size:11.5px;padding:20px 0">Carregando...</div></div>
@@ -298,6 +402,20 @@
         <div class="hero-dsc">Acompanhamento pastoral estruturado em rede — cada líder cuida de até 5 pessoas.</div>
       </div>
     </div>
+    <div class="inav" style="--mc:var(--teal)">
+      <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
+      <div class="ini" onclick="go('pastoral-preg')">Escala</div>
+      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
+      <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
+      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
+      <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
+      <div class="ini" onclick="go('pastoral-ora')">Oração</div>
+      <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
+      <div class="ini" onclick="go('pastoral-pri')">Prioritários</div>
+      <div class="ini on">Rede de Cuidado</div>
+      <div class="ini" onclick="go('pastoral-demandas')">Demandas</div>
+      <div class="ini" onclick="go('pastoral-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div id="rc-modulo">
         <div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Carregando…</div>
@@ -311,6 +429,20 @@
       <div class="hero-ic" style="background:var(--tealbg)">💬</div>
       <div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">WhatsApp — Pastoral</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
       <div class="hero-act"><button class="tbt" onclick="go('pastoral-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('PASTORAL')">↻ Atualizar</button></div>
+    </div>
+    <div class="inav" style="--mc:var(--teal)">
+      <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
+      <div class="ini" onclick="go('pastoral-preg')">Escala</div>
+      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
+      <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
+      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
+      <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
+      <div class="ini" onclick="go('pastoral-ora')">Oração</div>
+      <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
+      <div class="ini" onclick="go('pastoral-pri')">Prioritários</div>
+      <div class="ini" onclick="go('pastoral-rede')">Rede de Cuidado</div>
+      <div class="ini" onclick="go('pastoral-demandas')">Demandas</div>
+      <div class="ini on">WhatsApp</div>
     </div>
     <div class="ct" id="wa-tab-PASTORAL"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
   </div>
