@@ -4,8 +4,8 @@
   "description": "Sistema Integrado da Igreja Presbiteriana de Penha",
   "lang": "pt-BR",
   "dir": "ltr",
-  "start_url": "/sipen/",
-  "scope": "/sipen/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#181b1e",
@@ -27,21 +27,21 @@
       "name": "Membros",
       "short_name": "Membros",
       "description": "Gestão de membros e membresia",
-      "url": "/sipen/#membresia",
+      "url": "/#membresia",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Financeiro",
       "short_name": "Financeiro",
       "description": "Finanças e contas a pagar",
-      "url": "/sipen/#financeiro",
+      "url": "/#financeiro",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Agenda",
       "short_name": "Agenda",
       "description": "Agenda e eventos",
-      "url": "/sipen/#agenda",
+      "url": "/#agenda",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     }
   ]
