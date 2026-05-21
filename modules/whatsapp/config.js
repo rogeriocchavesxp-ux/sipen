@@ -104,7 +104,7 @@ const WA_CFG = (function(){
 
     const [modulos, responsaveis] = await Promise.all([
       _fetch("/rest/v1/whatsapp_modulo_config?select=*&order=modulo"),
-      _fetch("/rest/v1/demanda_responsaveis?select=area,ativo,pessoas(nome,celular,telefone)&order=area"),
+      _fetch("/rest/v1/whatsapp_modulo_responsaveis?select=id,modulo,ativo,pessoas(nome,celular,whatsapp,telefone)&order=modulo"),
     ]);
 
     if(!modulos){
@@ -116,24 +116,23 @@ const WA_CFG = (function(){
       return;
     }
 
-    const respByArea = {};
+    const respByModulo = {};
     (responsaveis || []).forEach(r => {
-      const area = r.area || "Geral";
-      if(!respByArea[area]) respByArea[area] = [];
-      respByArea[area].push(r);
+      const m = (r.modulo || "").toUpperCase();
+      if(!respByModulo[m]) respByModulo[m] = [];
+      respByModulo[m].push(r);
     });
 
-    const totalAptos = Object.values(respByArea).flat()
-      .filter(p => p.ativo && (p.pessoas?.celular || p.pessoas?.telefone)).length;
-    const totalResp  = Object.values(respByArea).flat().length;
-
-    el.innerHTML = modulos.map(mod => _cardModulo(mod, respByArea, totalResp, totalAptos)).join("");
+    el.innerHTML = modulos.map(mod => _cardModulo(mod, respByModulo)).join("");
   }
 
-  function _cardModulo(mod, respByArea, totalResp, totalAptos){
+  function _cardModulo(mod, respByModulo){
     const key  = (mod.modulo || "").toUpperCase();
     const meta = MODULO_META[key] || { ic:"💬", bg:"rgba(100,100,100,0.1)", cor:"var(--tx3)", cat:"Operacional", eventos:[] };
-    const isDemandas = key.includes("DEMANDA");
+    const resp = respByModulo[key] || [];
+
+    const aptos     = resp.filter(p => p.ativo && (p.pessoas?.whatsapp || p.pessoas?.celular || p.pessoas?.telefone)).length;
+    const total     = resp.length;
 
     const badgeAtivo = mod.ativo
       ? `<span style="font-size:10px;padding:2px 8px;background:rgba(58,170,92,0.15);color:var(--gr);border-radius:20px;font-weight:700">Ativo</span>`
@@ -145,15 +144,13 @@ const WA_CFG = (function(){
       </div>`
     ).join("");
 
-    const respHtml = isDemandas ? _renderResponsaveisCard(respByArea, totalResp, totalAptos) : _renderResponsaveisGenerico();
-
     return `
       <div class="card" style="display:flex;flex-direction:column;gap:0;transition:box-shadow .15s"
            onmouseenter="this.style.boxShadow='0 4px 18px rgba(0,0,0,.12)'"
            onmouseleave="this.style.boxShadow=''">
 
         <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
-          <div style="width:40px;height:40px;border-radius:10px;background:${meta.bg};display:flex;align-items:center;justify-content:justify-content;justify-content:center;font-size:22px;flex-shrink:0">${meta.ic}</div>
+          <div style="width:40px;height:40px;border-radius:10px;background:${meta.bg};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${meta.ic}</div>
           <div style="flex:1;min-width:0">
             <div style="font-weight:700;font-size:14px;color:var(--tx1);display:flex;align-items:center;gap:6px;flex-wrap:wrap">
               ${_esc(mod.modulo)} ${badgeAtivo}
@@ -170,67 +167,163 @@ const WA_CFG = (function(){
 
         ${eventos ? `<div style="display:flex;flex-direction:column;gap:3px;margin-bottom:10px">${eventos}</div>` : ""}
 
-        ${respHtml}
+        ${_renderResponsaveisModulo(resp, key)}
 
         <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--bd1);padding-top:8px;margin-top:auto">
           <span style="font-size:11px;color:var(--tx3)">
-            ${isDemandas ? `👥 ${totalAptos}/${totalResp} aptos a receber` : "👥 Responsáveis por departamento"}
+            👥 ${total ? `${aptos}/${total} aptos a receber` : "Nenhum responsável"}
           </span>
-          ${isDemandas ? `<span style="font-size:11.5px;color:${meta.cor};cursor:pointer;font-weight:600" onclick="WA_CFG.carregarModulos()">↻ atualizar</span>` : ""}
+          <span style="font-size:11.5px;color:${meta.cor};cursor:pointer;font-weight:600"
+                onclick="WA_CFG.abrirResponsaveisModal('${_esc(mod.modulo)}')">+ Gerenciar</span>
         </div>
       </div>`;
   }
 
-  function _renderResponsaveisCard(respByArea, totalResp, totalAptos){
-    const areas = Object.keys(respByArea);
-    if(!areas.length) return `
-      <div style="padding:10px;background:var(--bg2);border-radius:8px;font-size:11px;color:var(--gold);margin-bottom:10px">
-        ⚠ Nenhum responsável cadastrado para receber notificações
+  function _renderResponsaveisModulo(resp, modulo){
+    if(!resp.length) return `
+      <div style="padding:10px;background:var(--bg2);border-radius:8px;font-size:11px;color:var(--gold);margin-bottom:10px;cursor:pointer"
+           onclick="WA_CFG.abrirResponsaveisModal('${_esc(modulo)}')">
+        ⚠ Nenhum responsável — clique em "Gerenciar" para adicionar
       </div>`;
 
-    const linhas = areas.map(area =>
-      respByArea[area].map(p => {
-        const nome = p.pessoas?.nome || "—";
-        const tel  = p.pessoas?.celular || p.pessoas?.telefone || "";
-        const apto = p.ativo && !!tel;
-        const inicial = nome.trim()[0]?.toUpperCase() || "?";
-        return `
-          <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bd2)">
-            <div style="width:28px;height:28px;border-radius:50%;background:var(--bg2);border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--tx2);flex-shrink:0">${_esc(inicial)}</div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:11.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(nome)}</div>
-              <div style="font-size:10px;color:var(--tx3)">${_esc(area)}${tel ? ` · ${_esc(tel)}` : ""}</div>
-            </div>
-            <span style="font-size:10px;font-weight:700;color:${apto?"var(--gr)":"var(--rose)"}">
-              ${apto ? "✅" : (!p.ativo ? "⛔" : "⚠")}
-            </span>
-          </div>`;
-      }).join("")
-    ).join("");
+    const linhas = resp.map(p => {
+      const nome = p.pessoas?.nome || "—";
+      const tel  = p.pessoas?.whatsapp || p.pessoas?.celular || p.pessoas?.telefone || "";
+      const apto = p.ativo && !!tel;
+      const inicial = nome.trim()[0]?.toUpperCase() || "?";
+      return `
+        <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bd2)">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--bg2);border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--tx2);flex-shrink:0">${_esc(inicial)}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(nome)}</div>
+            <div style="font-size:10px;color:var(--tx3)">${tel ? _esc(tel) : "Sem número"}</div>
+          </div>
+          <span style="font-size:11px;color:${apto?"var(--gr)":"var(--rose)"}">
+            ${apto ? "✅" : (!p.ativo ? "⛔" : "⚠")}
+          </span>
+        </div>`;
+    }).join("");
 
-    const summary = totalResp
-      ? `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-           <span style="font-size:10.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.4px">Responsáveis</span>
-           <span style="font-size:10px;padding:1px 8px;border-radius:20px;background:${totalAptos>0?"rgba(58,170,92,0.12)":"rgba(224,85,85,0.1)"};color:${totalAptos>0?"var(--gr)":"var(--rose)"}">
-             ${totalAptos}/${totalResp} aptos
-           </span>
-         </div>`
-      : "";
-
+    const aptos = resp.filter(p => p.ativo && (p.pessoas?.whatsapp || p.pessoas?.celular || p.pessoas?.telefone)).length;
     return `
       <div style="background:var(--bg2);border-radius:8px;border:1px solid var(--bd2);padding:10px 12px;margin-bottom:10px">
-        ${summary}${linhas}
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:10.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.4px">Receberão mensagens</span>
+          <span style="font-size:10px;padding:1px 8px;border-radius:20px;background:${aptos>0?"rgba(58,170,92,0.12)":"rgba(224,85,85,0.1)"};color:${aptos>0?"var(--gr)":"var(--rose)"}">
+            ${aptos}/${resp.length} aptos
+          </span>
+        </div>
+        ${linhas}
       </div>`;
   }
 
-  function _renderResponsaveisGenerico(){
-    return `
-      <div style="background:var(--bg2);border-radius:8px;border:1px solid var(--bd2);padding:10px 12px;font-size:11px;color:var(--tx3);margin-bottom:10px">
-        Responsáveis configurados nos departamentos vinculados ao módulo.
-      </div>`;
+  /* ── Modal de responsáveis por módulo ───────────────────── */
+
+  let _respModalModulo = "";
+
+  async function abrirResponsaveisModal(modulo){
+    _respModalModulo = modulo;
+    const modal = document.getElementById("wa-resp-modal");
+    if(!modal) return;
+    document.getElementById("wa-resp-modal-titulo").textContent = `Responsáveis — ${modulo}`;
+    document.getElementById("wa-resp-busca").value = "";
+    document.getElementById("wa-resp-resultados").innerHTML = "";
+    await _carregarListaResponsaveis();
+    modal.classList.add("on");
   }
 
-  function _renderResponsaveis(respByArea){ return _renderResponsaveisCard(respByArea, 0, 0); }
+  function fecharResponsaveisModal(){
+    document.getElementById("wa-resp-modal").classList.remove("on");
+    _respModalModulo = "";
+  }
+
+  async function _carregarListaResponsaveis(){
+    const el = document.getElementById("wa-resp-lista");
+    if(!el) return;
+    el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:8px 0">Carregando...</div>`;
+
+    const rows = await _fetch(
+      `/rest/v1/whatsapp_modulo_responsaveis?select=id,ativo,pessoas(id,nome,celular,whatsapp,telefone)&modulo=eq.${encodeURIComponent(_respModalModulo)}&order=pessoas(nome)`
+    );
+
+    if(!rows || !rows.length){
+      el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:8px 0">Nenhum responsável cadastrado</div>`;
+      return;
+    }
+
+    el.innerHTML = rows.map(r => {
+      const nome = r.pessoas?.nome || "—";
+      const tel  = r.pessoas?.whatsapp || r.pessoas?.celular || r.pessoas?.telefone || "";
+      const apto = r.ativo && !!tel;
+      const inicial = nome.trim()[0]?.toUpperCase() || "?";
+      return `
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd2)">
+          <div style="width:30px;height:30px;border-radius:50%;background:var(--bg1);border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--tx2);flex-shrink:0">${_esc(inicial)}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:600;color:var(--tx1)">${_esc(nome)}</div>
+            <div style="font-size:10.5px;color:var(--tx3)">${tel ? _esc(tel) : "⚠ Sem número"}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:11px;color:${apto?"var(--gr)":"var(--rose)"}">${apto?"✅":(!r.ativo?"⛔":"⚠")}</span>
+            <button class="tbt" style="font-size:10px;padding:2px 8px;color:var(--rose)"
+              onclick="WA_CFG.removerResponsavel('${_esc(r.id)}')">remover</button>
+          </div>
+        </div>`;
+    }).join("");
+  }
+
+  async function buscarPessoasParaAdicionar(){
+    const q = (document.getElementById("wa-resp-busca")?.value || "").trim();
+    const el = document.getElementById("wa-resp-resultados");
+    if(!el) return;
+    if(q.length < 2){ el.innerHTML = ""; return; }
+
+    el.innerHTML = `<div style="color:var(--tx3);font-size:11px;padding:4px 0">Buscando...</div>`;
+    const rows = await _fetch(
+      `/rest/v1/pessoas?select=id,nome,celular,whatsapp,telefone&nome=ilike.*${encodeURIComponent(q)}*&limit=8&order=nome`
+    );
+
+    if(!rows || !rows.length){
+      el.innerHTML = `<div style="color:var(--tx3);font-size:11px;padding:4px 0">Nenhuma pessoa encontrada</div>`;
+      return;
+    }
+
+    el.innerHTML = rows.map(p => {
+      const tel = p.whatsapp || p.celular || p.telefone || "";
+      return `
+        <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;cursor:pointer;background:var(--bg1);margin-bottom:4px"
+             onclick="WA_CFG.adicionarResponsavel('${_esc(p.id)}','${_esc(p.nome.replace(/'/g,""))}')"
+             onmouseenter="this.style.background='var(--bg2)'" onmouseleave="this.style.background='var(--bg1)'">
+          <div style="width:26px;height:26px;border-radius:50%;background:var(--bg2);border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--tx2);flex-shrink:0">${_esc(p.nome.trim()[0]?.toUpperCase()||"?")}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${_esc(p.nome)}</div>
+            <div style="font-size:10px;color:var(--tx3)">${tel ? _esc(tel) : "Sem número"}</div>
+          </div>
+          <span style="font-size:10.5px;color:var(--sky)">+ adicionar</span>
+        </div>`;
+    }).join("");
+  }
+
+  async function adicionarResponsavel(pessoaId, nome){
+    const res = await _fetch("/rest/v1/whatsapp_modulo_responsaveis", {
+      method: "POST",
+      body: JSON.stringify({ modulo: _respModalModulo, pessoa_id: pessoaId, ativo: true }),
+    });
+    if(res !== null){
+      if(typeof T === "function") T("Responsável adicionado", nome);
+      document.getElementById("wa-resp-busca").value = "";
+      document.getElementById("wa-resp-resultados").innerHTML = "";
+      await _carregarListaResponsaveis();
+      carregarModulos();
+    }
+  }
+
+  async function removerResponsavel(id){
+    await _fetch(`/rest/v1/whatsapp_modulo_responsaveis?id=eq.${encodeURIComponent(id)}`, { method: "DELETE" });
+    if(typeof T === "function") T("Responsável removido", "");
+    await _carregarListaResponsaveis();
+    carregarModulos();
+  }
 
   async function toggleModulo(modulo, ativo){
     await _fetch(`/rest/v1/whatsapp_modulo_config?modulo=eq.${encodeURIComponent(modulo)}`, {
@@ -503,7 +596,9 @@ const WA_CFG = (function(){
   return {
     refresh,
     carregarStatus, carregarKpis,
-    carregarModulos, toggleModulo, _renderResponsaveis,
+    carregarModulos, toggleModulo,
+    abrirResponsaveisModal, fecharResponsaveisModal,
+    buscarPessoasParaAdicionar, adicionarResponsavel, removerResponsavel,
     carregarEstadoConfig,
     carregarHistorico,
     carregarTemplates, openTemplateModal, closeTplModal, _editTpl, toggleTemplate, salvarTemplate,
