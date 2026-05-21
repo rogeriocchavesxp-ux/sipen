@@ -12,6 +12,7 @@
       <div class="ini" onclick="go('infra-pat')">Patrimônio</div>
       <div class="ini" onclick="go('infra-pre')">Prestadores</div>
       <div class="ini" onclick="go('infra-demandas')">Demandas</div>
+      <div class="ini" onclick="go('infra-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
       <div class="kpis c4">
@@ -152,6 +153,16 @@
   <div class="view" id="v-infra-pre">
     <div class="hero"><div class="hero-ic" style="background:var(--amberbg)">👷</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Prestadores de Serviço</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo Prestador</button></div></div>
     <div class="ct"><div class="card"><div class="ctit">Prestadores <span class="cact" onclick="listarModulo('MEMBROS','infra-pre-list')">↻</span></div><div id="infra-pre-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <!-- INFRAESTRUTURA: WHATSAPP -->
+  <div class="view" id="v-infra-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--amberbg)">💬</div>
+      <div><div class="hero-lbl">Infraestrutura</div><div class="hero-ttl">WhatsApp — Infraestrutura</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('infra-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('INFRAESTRUTURA')">↻ Atualizar</button></div>
+    </div>
+    <div class="ct" id="wa-tab-INFRAESTRUTURA"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
   </div>
 
   <!-- DEMANDAS CONCLUÍDAS -->

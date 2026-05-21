@@ -13,6 +13,7 @@
       <div class="ini" data-memb-adm="1" onclick="go('memb-bat')">Batismos</div><div class="ini" data-memb-adm="1" onclick="go('memb-prof')">Profissões de Fé</div>
       <div class="ini" data-memb-adm="1" onclick="go('memb-trans')">Transferências</div>
       <div class="ini" onclick="go('memb-aniv')">Aniversariantes</div>
+      <div class="ini" onclick="go('memb-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
       <div class="kpis c4" data-memb-adm="1">
@@ -229,6 +230,16 @@
         <div id="aniv-lista"><div style="color:var(--tx3);font-size:11.5px;padding:16px 0">Carregando...</div></div>
       </div>
     </div>
+  </div>
+
+  <!-- MEMBRESIA: WHATSAPP -->
+  <div class="view" id="v-memb-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(82,196,110,0.12)">💬</div>
+      <div><div class="hero-lbl">Membresia</div><div class="hero-ttl">WhatsApp — Membresia</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('memb-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('MEMBRESIA')">↻ Atualizar</button></div>
+    </div>
+    <div class="ct" id="wa-tab-MEMBRESIA"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
   </div>
 
   <!-- PGS -->

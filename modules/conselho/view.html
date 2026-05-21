@@ -11,6 +11,7 @@
       <div class="ini" onclick="go('conselho-contratados')">Contratados</div>
       <div class="ini" onclick="T('Estratégico','Relatórios macro')">Estratégico</div>
       <div class="ini" onclick="T('Documentos','Atas e resoluções')">Documentos</div>
+      <div class="ini" onclick="go('conselho-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
       <div class="kpis c4">
@@ -445,6 +446,16 @@
   <div class="view" id="v-conselho-hist">
     <div class="hero"><div class="hero-ic" style="background:var(--bluebg)">📜</div><div><div class="hero-lbl">Conselho</div><div class="hero-ttl">Histórico de Atas e Deliberações</div></div></div>
     <div class="ct"><div class="card"><div class="ctit">Histórico <span class="cact" onclick="listarModulo('LOG_AUDITORIA','conselho-hist-list')">↻</span></div><div id="conselho-hist-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <!-- CONSELHO: WHATSAPP -->
+  <div class="view" id="v-conselho-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--skybg)">💬</div>
+      <div><div class="hero-lbl">Conselho e Governança</div><div class="hero-ttl">WhatsApp — Conselho</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('conselho-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('CONSELHO')">↻ Atualizar</button></div>
+    </div>
+    <div class="ct" id="wa-tab-CONSELHO"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
   </div>
 
   <!-- ════ JUNTA DIACONAL ══════════════════════ -->

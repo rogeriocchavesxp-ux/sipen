@@ -10,6 +10,7 @@
       <div class="ini" onclick="go('agenda-solicitacoes')">Solicitações</div>
       <div class="ini" onclick="go('agenda-ambientes')">Por Espaço</div>
       <div class="ini" onclick="go('agenda-confirmados')">Confirmados</div>
+      <div class="ini" onclick="go('agenda-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
       <!-- KPIs linha 1 -->
@@ -297,6 +298,16 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- AGENDA: WHATSAPP -->
+  <div class="view" id="v-agenda-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(42,181,192,0.12)">💬</div>
+      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">WhatsApp — Agenda</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('agenda-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('AGENDA')">↻ Atualizar</button></div>
+    </div>
+    <div class="ct" id="wa-tab-AGENDA"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
   </div>
 
 <!-- ════ GENÉRICO ════════════════════════ -->

@@ -13,6 +13,7 @@
       <div class="ini" onclick="go('min-prog')">Programações</div>
       <div class="ini" onclick="go('min-lit')">Liturgia</div>
       <div class="ini" onclick="go('min-vol')">Voluntários</div>
+      <div class="ini" onclick="go('min-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
       <!-- KPIs globais: visíveis apenas para gestores (admin, conselho, lider_area) -->
@@ -194,6 +195,16 @@
         <div id="min-com-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
       </div>
     </div>
+  </div>
+
+  <!-- DEPARTAMENTOS: WHATSAPP -->
+  <div class="view" id="v-min-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--violetbg)">💬</div>
+      <div><div class="hero-lbl">Departamentos</div><div class="hero-ttl">WhatsApp — Departamentos</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('min-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('MINISTERIAL')">↻ Atualizar</button></div>
+    </div>
+    <div class="ct" id="wa-tab-MINISTERIAL"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
   </div>
 
   <!-- INFRAESTRUTURA -->

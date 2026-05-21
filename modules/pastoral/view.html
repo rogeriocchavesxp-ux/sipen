@@ -11,6 +11,7 @@
       <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
       <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
       <div class="ini" onclick="go('pastoral-relatorios')">Relatórios</div>
+      <div class="ini" onclick="go('pastoral-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
       <div id="pd-content"><div style="text-align:center;padding:40px;color:var(--teal);font-size:12px">⏳ Carregando dados pastorais...</div></div>
@@ -307,6 +308,16 @@
         <div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Carregando…</div>
       </div>
     </div>
+  </div>
+
+  <!-- PASTORAL: WHATSAPP -->
+  <div class="view" id="v-pastoral-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--tealbg)">💬</div>
+      <div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">WhatsApp — Pastoral</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('pastoral-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('PASTORAL')">↻ Atualizar</button></div>
+    </div>
+    <div class="ct" id="wa-tab-PASTORAL"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
   </div>
 
   <!-- MINISTERIAL -->

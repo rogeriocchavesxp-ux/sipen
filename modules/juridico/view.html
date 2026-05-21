@@ -10,6 +10,7 @@
       <div class="ini" onclick="go('jur-contratos')">Contratos</div>
       <div class="ini" onclick="go('jur-riscos')">Riscos</div>
       <div class="ini" onclick="go('jur-historico')">Histórico</div>
+      <div class="ini" onclick="go('jur-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
       <div class="kpis c4">
@@ -137,6 +138,16 @@
   <div class="view" id="v-jur-historico">
     <div class="hero"><div class="hero-ic" style="background:var(--bluebg)">📜</div><div><div class="hero-lbl">Jurídico</div><div class="hero-ttl">Histórico e Auditoria Jurídica</div></div></div>
     <div class="ct"><div class="card"><div class="ctit">Histórico <span class="cact" onclick="listarModulo('LOG_AUDITORIA','jur-hist-list',{modulo:'juridico'})">↻</span></div><div id="jur-hist-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <!-- JURIDICO: WHATSAPP -->
+  <div class="view" id="v-jur-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.12)">💬</div>
+      <div><div class="hero-lbl">Jurídico</div><div class="hero-ttl">WhatsApp — Jurídico</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('jur-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('JURIDICO')">↻ Atualizar</button></div>
+    </div>
+    <div class="ct" id="wa-tab-JURIDICO"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
   </div>
 
   <!-- CONSELHO -->

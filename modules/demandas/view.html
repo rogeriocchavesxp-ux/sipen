@@ -12,6 +12,7 @@
       <div class="ini" onclick="go('dem-conc')">Concluídas</div>
       <div class="ini" onclick="go('dem-pri')">Prioridades</div>
       <div class="ini" onclick="go('dem-hist')">Histórico</div>
+      <div class="ini" onclick="go('dem-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct" id="dem-dash-content"></div>
   </div>
@@ -165,5 +166,15 @@
   <!-- DEMANDA DETALHE -->
 
   <div class="view" id="v-dem-detalhe"></div>
+
+  <!-- DEMANDAS: WHATSAPP -->
+  <div class="view" id="v-dem-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(224,85,85,0.12)">💬</div>
+      <div><div class="hero-lbl">Demandas</div><div class="hero-ttl">WhatsApp — Demandas</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('dem-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('DEMANDAS')">↻ Atualizar</button></div>
+    </div>
+    <div class="ct" id="wa-tab-DEMANDAS"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
+  </div>
 
   <!-- RELATÓRIOS -->

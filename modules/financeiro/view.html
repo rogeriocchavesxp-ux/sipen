@@ -11,6 +11,7 @@
       <div class="ini" onclick="go('fin-pagar')">A Pagar</div>
       <div class="ini" onclick="go('fin-receber')">A Receber</div>
       <div class="ini" onclick="go('fin-relatorios')">Relatórios</div>
+      <div class="ini" onclick="go('fin-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct" id="fin-dash-content"></div>
   </div>
@@ -202,6 +203,16 @@
         <div id="fin-demandas-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
       </div>
     </div>
+  </div>
+
+  <!-- FINANCEIRO: WHATSAPP -->
+  <div class="view" id="v-fin-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(61,160,85,0.12)">💬</div>
+      <div><div class="hero-lbl">Financeiro</div><div class="hero-ttl">WhatsApp — Financeiro</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('fin-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('FINANCEIRO')">↻ Atualizar</button></div>
+    </div>
+    <div class="ct" id="wa-tab-FINANCEIRO"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
   </div>
 
   <!-- DEMANDAS TODAS -->
