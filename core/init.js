@@ -10,7 +10,7 @@
 
 (function() {
   var xhr = new XMLHttpRequest();
-  xhr.open("GET", "views/sidebar.html?v=6.30.68", false);
+  xhr.open("GET", "views/sidebar.html?v=6.30.69", false);
   xhr.send(null);
   if (xhr.status >= 200 && xhr.status < 300) {
     var login = document.getElementById("login-screen");

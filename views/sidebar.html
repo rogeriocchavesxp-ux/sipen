@@ -14,6 +14,94 @@
       Dashboard Geral
     </div>
 
+    <!-- ── GOVERNANÇA ─────────────────────────────────── -->
+    <div class="slbl">Governança</div>
+
+    <!-- Conselho e Governança -->
+    <div class="mwrap" id="mw-conselho" data-modulo="CONSELHO">
+      <div class="mhdr" onclick="tog('conselho')">
+        <div class="micon" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)">◈</div>
+        <span class="mname">Conselho e Governança</span>
+        <span class="marr">▶</span>
+      </div>
+      <div class="msub" id="ms-conselho">
+        <div class="si" onclick="go('conselho-dash')">Dashboard do Conselho</div>
+        <div class="si" onclick="go('conselho-nomeados')">Nomeados</div>
+        <div class="si" onclick="go('conselho-ordenados')">Ordenados</div>
+        <div class="si" onclick="go('conselho-seminaristas')">Seminaristas</div>
+        <div class="si" onclick="go('conselho-contratados')">Contratados</div>
+        <div class="si" onclick="go('conselho-rel')">Relatórios Estratégicos</div>
+        <div class="si" onclick="go('conselho-ind')">Indicadores Institucionais</div>
+        <div class="si" onclick="go('conselho-doc')">Documentos do Conselho</div>
+        <div class="si" onclick="go('pautas-reunioes')">Pautas do Conselho</div>
+        <div class="si" onclick="go('atas-dash')">Atas e Deliberações</div>
+        <div class="sdiv"></div>
+        <div class="si" onclick="go('conselho-demandas')">Demandas do Conselho</div>
+        <div class="si" onclick="go('conselho-com')">Comissões</div>
+      </div>
+    </div>
+
+    <!-- Junta Diaconal -->
+    <div class="mwrap" id="mw-diac" data-modulo="JUNTA_DIACONAL">
+      <div class="mhdr" onclick="tog('diac')">
+        <div class="micon" style="background:rgba(184,122,86,0.14);border-color:rgba(184,122,86,0.25);color:var(--copper)">✚</div>
+        <span class="mname">Junta Diaconal</span>
+        <span class="marr">▶</span>
+      </div>
+      <div class="msub" id="ms-diac">
+        <div class="si" onclick="go('diac-dash')">Dashboard Diaconal</div>
+        <div class="si" onclick="go('diac-diaconos')">Diáconos</div>
+        <div class="si" onclick="go('diac-escalas')">Escalas de Serviço</div>
+        <div class="si" onclick="go('diac-visitacao')">Visitação Diaconal</div>
+        <div class="si" onclick="go('diac-relatorios')">Relatórios Diaconais</div>
+        <div class="si" onclick="go('diac-historico')">Histórico e Atas</div>
+        <div class="sdiv"></div>
+        <div class="si" onclick="go('dem-todas')">Todas as Demandas</div>
+      </div>
+    </div>
+
+    <!-- Congregações -->
+    <div class="mwrap" id="mw-cong" data-modulo="CONGREGACOES">
+      <div class="mhdr" onclick="tog('cong')">
+        <div class="micon" style="background:rgba(58,170,92,0.14);border-color:rgba(58,170,92,0.25);color:var(--gr)">⛪</div>
+        <span class="mname">Congregações</span>
+        <span class="marr">▶</span>
+      </div>
+      <div class="msub" id="ms-cong">
+        <div class="si" id="sb-cong-dash-link" onclick="go('cong-dash')" style="display:none">Dashboard Geral</div>
+      </div>
+    </div>
+
+    <!-- Membresia -->
+    <div class="mwrap" id="mw-memb" data-modulo="MEMBRESIA">
+      <div class="mhdr" onclick="tog('memb')">
+        <div class="micon" style="background:rgba(82,196,110,0.14);border-color:rgba(82,196,110,0.25);color:var(--gbr)">✝</div>
+        <span class="mname">Membresia</span>
+        <span class="marr">▶</span>
+      </div>
+      <div class="msub" id="ms-memb">
+        <div class="si" data-memb-adm="1" onclick="go('memb-dash')">Dashboard de Membresia</div>
+        <div class="si" onclick="go('memb-cad')">Cadastro de Membros</div>
+        <div class="si" data-memb-adm="1" onclick="go('memb-com')">Comungantes</div>
+        <div class="si" data-memb-adm="1" onclick="go('memb-ncom')">Não Comungantes</div>
+        <div class="si" data-memb-adm="1" onclick="go('memb-vis')">Visitantes</div>
+        <div class="sdiv" data-memb-adm="1"></div>
+        <div class="si" data-memb-adm="1" onclick="go('memb-bat')">Batismos</div>
+        <div class="si" data-memb-adm="1" onclick="go('memb-prof')">Profissões de Fé</div>
+        <div class="si" data-memb-adm="1" onclick="go('memb-trans')">Transferências</div>
+        <div class="si" data-memb-adm="1" onclick="go('memb-hist')">Histórico de Membros</div>
+        <div class="si" onclick="go('memb-aniv')">Aniversariantes</div>
+      </div>
+    </div>
+
+    <!-- Aniversariantes — acesso público para todos os usuários -->
+    <div id="sb-aniversariantes-pub" style="padding:4px 8px 2px">
+      <div onclick="go('memb-aniv')" style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--teal);background:rgba(58,176,184,0.08);border:1px solid rgba(58,176,184,0.2);transition:background .12s" onmouseover="this.style.background='rgba(58,176,184,0.14)'" onmouseout="this.style.background='rgba(58,176,184,0.08)'">
+        <span style="font-size:15px">🎂</span>
+        <span>Aniversariantes</span>
+      </div>
+    </div>
+
     <!-- ── OPERAÇÃO ──────────────────────────────────── -->
     <div class="slbl">Operação</div>
 
@@ -255,94 +343,6 @@
         <div class="si" onclick="go('rel-exp')">Exportações</div>
         <div class="si" onclick="go('rel-uni')">Visão por Congregação</div>
         <div class="si" onclick="go('rel-res')">Visão por Responsável</div>
-      </div>
-    </div>
-
-    <!-- ── GOVERNANÇA ─────────────────────────────────── -->
-    <div class="slbl">Governança</div>
-
-    <!-- Conselho e Governança -->
-    <div class="mwrap" id="mw-conselho" data-modulo="CONSELHO">
-      <div class="mhdr" onclick="tog('conselho')">
-        <div class="micon" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)">◈</div>
-        <span class="mname">Conselho e Governança</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-conselho">
-        <div class="si" onclick="go('conselho-dash')">Dashboard do Conselho</div>
-        <div class="si" onclick="go('conselho-nomeados')">Nomeados</div>
-        <div class="si" onclick="go('conselho-ordenados')">Ordenados</div>
-        <div class="si" onclick="go('conselho-seminaristas')">Seminaristas</div>
-        <div class="si" onclick="go('conselho-contratados')">Contratados</div>
-        <div class="si" onclick="go('conselho-rel')">Relatórios Estratégicos</div>
-        <div class="si" onclick="go('conselho-ind')">Indicadores Institucionais</div>
-        <div class="si" onclick="go('conselho-doc')">Documentos do Conselho</div>
-        <div class="si" onclick="go('pautas-reunioes')">Pautas do Conselho</div>
-        <div class="si" onclick="go('atas-dash')">Atas e Deliberações</div>
-        <div class="sdiv"></div>
-        <div class="si" onclick="go('conselho-demandas')">Demandas do Conselho</div>
-        <div class="si" onclick="go('conselho-com')">Comissões</div>
-      </div>
-    </div>
-
-    <!-- Junta Diaconal -->
-    <div class="mwrap" id="mw-diac" data-modulo="JUNTA_DIACONAL">
-      <div class="mhdr" onclick="tog('diac')">
-        <div class="micon" style="background:rgba(184,122,86,0.14);border-color:rgba(184,122,86,0.25);color:var(--copper)">✚</div>
-        <span class="mname">Junta Diaconal</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-diac">
-        <div class="si" onclick="go('diac-dash')">Dashboard Diaconal</div>
-        <div class="si" onclick="go('diac-diaconos')">Diáconos</div>
-        <div class="si" onclick="go('diac-escalas')">Escalas de Serviço</div>
-        <div class="si" onclick="go('diac-visitacao')">Visitação Diaconal</div>
-        <div class="si" onclick="go('diac-relatorios')">Relatórios Diaconais</div>
-        <div class="si" onclick="go('diac-historico')">Histórico e Atas</div>
-        <div class="sdiv"></div>
-        <div class="si" onclick="go('dem-todas')">Todas as Demandas</div>
-      </div>
-    </div>
-
-    <!-- Congregações -->
-    <div class="mwrap" id="mw-cong" data-modulo="CONGREGACOES">
-      <div class="mhdr" onclick="tog('cong')">
-        <div class="micon" style="background:rgba(58,170,92,0.14);border-color:rgba(58,170,92,0.25);color:var(--gr)">⛪</div>
-        <span class="mname">Congregações</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-cong">
-        <div class="si" id="sb-cong-dash-link" onclick="go('cong-dash')" style="display:none">Dashboard Geral</div>
-      </div>
-    </div>
-
-    <!-- Membresia -->
-    <div class="mwrap" id="mw-memb" data-modulo="MEMBRESIA">
-      <div class="mhdr" onclick="tog('memb')">
-        <div class="micon" style="background:rgba(82,196,110,0.14);border-color:rgba(82,196,110,0.25);color:var(--gbr)">✝</div>
-        <span class="mname">Membresia</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-memb">
-        <div class="si" data-memb-adm="1" onclick="go('memb-dash')">Dashboard de Membresia</div>
-        <div class="si" onclick="go('memb-cad')">Cadastro de Membros</div>
-        <div class="si" data-memb-adm="1" onclick="go('memb-com')">Comungantes</div>
-        <div class="si" data-memb-adm="1" onclick="go('memb-ncom')">Não Comungantes</div>
-        <div class="si" data-memb-adm="1" onclick="go('memb-vis')">Visitantes</div>
-        <div class="sdiv" data-memb-adm="1"></div>
-        <div class="si" data-memb-adm="1" onclick="go('memb-bat')">Batismos</div>
-        <div class="si" data-memb-adm="1" onclick="go('memb-prof')">Profissões de Fé</div>
-        <div class="si" data-memb-adm="1" onclick="go('memb-trans')">Transferências</div>
-        <div class="si" data-memb-adm="1" onclick="go('memb-hist')">Histórico de Membros</div>
-        <div class="si" onclick="go('memb-aniv')">Aniversariantes</div>
-      </div>
-    </div>
-
-    <!-- Aniversariantes — acesso público para todos os usuários -->
-    <div id="sb-aniversariantes-pub" style="padding:4px 8px 2px">
-      <div onclick="go('memb-aniv')" style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--teal);background:rgba(58,176,184,0.08);border:1px solid rgba(58,176,184,0.2);transition:background .12s" onmouseover="this.style.background='rgba(58,176,184,0.14)'" onmouseout="this.style.background='rgba(58,176,184,0.08)'">
-        <span style="font-size:15px">🎂</span>
-        <span>Aniversariantes</span>
       </div>
     </div>
 
