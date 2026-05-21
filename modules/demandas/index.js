@@ -1698,22 +1698,57 @@
     ].filter(l => l !== null).join("\n");
   }
 
+  const _AREA_MODULO_WA = {
+    "Conselho":                "CONSELHO",
+    "Agendamentos":            "AGENDA",
+    "Manutenção":              "INFRAESTRUTURA",
+    "Limpeza e Organização":   "INFRAESTRUTURA",
+    "Logística":               "INFRAESTRUTURA",
+    "Financeiro":              "FINANCEIRO",
+    "Comunicação e Divulgação":"MINISTERIAL",
+    "Secretaria":              "CONSELHO",
+    "Cadastro":                "MEMBRESIA",
+    "Oração e Aconselhamento": "PASTORAL",
+    "Visitação":               "JUNTA_DIACONAL",
+    "Apoio ao Culto":          "MINISTERIAL",
+    "Ensino (EBT)":            "MINISTERIAL",
+    "Ação Social / Hebron":    "MINISTERIAL",
+    "Administrativo Geral":    "DEMANDAS",
+  };
+
   async function _notificarResponsaveisWA(dem) {
     if (typeof WA === "undefined") return;
     const base = typeof SUPABASE_URL !== "undefined" ? SUPABASE_URL.trim().replace(/\/$/, "") : "";
     const hdrs = typeof apiHeaders === "function" ? apiHeaders() : {};
 
     let rows = [];
-    try {
-      const res = await fetch(
-        `${base}/rest/v1/demanda_responsaveis?area=eq.${encodeURIComponent(dem.area)}&ativo=eq.true` +
-        `&select=pessoa_id,pessoas(id,nome,telefone,celular)`,
-        { headers: hdrs }
-      );
-      rows = res.ok ? await res.json() : [];
-    } catch (_) {}
 
-    // Fallback: notifica admins se área sem responsável configurado
+    // Prioridade 1: responsáveis configurados por módulo WhatsApp
+    const modulo = _AREA_MODULO_WA[dem.area];
+    if (modulo) {
+      try {
+        const res = await fetch(
+          `${base}/rest/v1/whatsapp_modulo_responsaveis?modulo=eq.${encodeURIComponent(modulo)}&ativo=eq.true` +
+          `&select=pessoa_id,pessoas(id,nome,telefone,celular)`,
+          { headers: hdrs }
+        );
+        rows = res.ok ? await res.json() : [];
+      } catch (_) {}
+    }
+
+    // Prioridade 2: demanda_responsaveis por área
+    if (!rows.length) {
+      try {
+        const res = await fetch(
+          `${base}/rest/v1/demanda_responsaveis?area=eq.${encodeURIComponent(dem.area)}&ativo=eq.true` +
+          `&select=pessoa_id,pessoas(id,nome,telefone,celular)`,
+          { headers: hdrs }
+        );
+        rows = res.ok ? await res.json() : [];
+      } catch (_) {}
+    }
+
+    // Prioridade 3: admins
     if (!rows.length) {
       try {
         const res = await fetch(
@@ -1737,7 +1772,7 @@
         para:        tel,
         nome:        p.nome,
         mensagem:    msg,
-        modulo:      "DEMANDAS",
+        modulo:      modulo || "DEMANDAS",
         referenciaT: "demanda",
         referenciaId: dem.id,
         chave:       `DEM_NOVA_${dem.id}_${row.pessoa_id}`,
