@@ -86,22 +86,86 @@ const WA_CFG = (function(){
     if(!el) return;
     el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px">Carregando...</div>`;
 
-    const rows = await _fetch("/rest/v1/whatsapp_modulo_config?select=*&order=modulo");
-    if(!rows){ el.innerHTML = `<div style="color:var(--rose);font-size:11.5px">Erro ao carregar módulos</div>`; return; }
-    if(!rows.length){ el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px">Nenhum módulo configurado</div>`; return; }
+    const [modulos, responsaveis] = await Promise.all([
+      _fetch("/rest/v1/whatsapp_modulo_config?select=*&order=modulo"),
+      _fetch("/rest/v1/demanda_responsaveis?select=area,ativo,pessoas(nome,celular,telefone)&order=area"),
+    ]);
 
-    el.innerHTML = rows.map(r => `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--bd2)">
-        <div>
-          <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${_esc(r.modulo)}</div>
-          <div style="font-size:11px;color:var(--tx3)">${_esc(r.descricao||"")}</div>
+    if(!modulos){ el.innerHTML = `<div style="color:var(--rose);font-size:11.5px">Erro ao carregar módulos</div>`; return; }
+    if(!modulos.length){ el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px">Nenhum módulo configurado</div>`; return; }
+
+    // Agrupa responsáveis por área
+    const respByArea = {};
+    (responsaveis || []).forEach(r => {
+      const area = r.area || "Geral";
+      if(!respByArea[area]) respByArea[area] = [];
+      respByArea[area].push(r);
+    });
+
+    el.innerHTML = modulos.map(mod => {
+      const isDemandas = (mod.modulo || "").toUpperCase().includes("DEMANDA");
+      const respHtml   = isDemandas ? _renderResponsaveis(respByArea) : "";
+
+      return `
+        <div style="padding:10px 0;border-bottom:1px solid var(--bd2)">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${_esc(mod.modulo)}</div>
+              <div style="font-size:11px;color:var(--tx3)">${_esc(mod.descricao||"")}</div>
+            </div>
+            <label class="wa-toggle">
+              <input type="checkbox" ${mod.ativo?"checked":""} onchange="WA_CFG.toggleModulo('${_esc(mod.modulo)}',this.checked)">
+              <span></span>
+            </label>
+          </div>
+          ${respHtml}
         </div>
-        <label class="wa-toggle">
-          <input type="checkbox" ${r.ativo?"checked":""} onchange="WA_CFG.toggleModulo('${_esc(r.modulo)}',this.checked)">
-          <span></span>
-        </label>
-      </div>
-    `).join("");
+      `;
+    }).join("");
+  }
+
+  function _renderResponsaveis(respByArea){
+    const areas = Object.keys(respByArea);
+    if(!areas.length) return `
+      <div style="margin-top:8px;padding:8px 10px;background:var(--bg2);border-radius:6px;font-size:11px;color:var(--gold)">
+        ⚠ Nenhum responsável cadastrado para receber notificações de Demandas
+      </div>`;
+
+    const linhas = areas.map(area => {
+      const pessoas = respByArea[area];
+      return pessoas.map(p => {
+        const pessoa = p.pessoas || {};
+        const tel    = pessoa.celular || pessoa.telefone || "";
+        const apto   = p.ativo && !!tel;
+        const badge  = apto
+          ? `<span style="font-size:10px;color:var(--gr);font-weight:700">✅ apto</span>`
+          : `<span style="font-size:10px;color:var(--rose);font-weight:700">${!p.ativo ? "⛔ inativo" : "⚠ sem número"}</span>`;
+
+        return `
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bd2)">
+            <div style="flex:1;min-width:0">
+              <span style="font-size:12px;font-weight:600;color:var(--tx1)">${_esc(pessoa.nome||"—")}</span>
+              <span style="font-size:11px;color:var(--tx3);margin-left:5px">— ${_esc(area)}</span>
+              ${tel ? `<span style="font-size:10.5px;color:var(--tx3);margin-left:5px;font-family:var(--mono)">${_esc(tel)}</span>` : ""}
+            </div>
+            ${badge}
+          </div>`;
+      }).join("");
+    }).join("");
+
+    const total  = areas.reduce((n, a) => n + respByArea[a].length, 0);
+    const aptos  = areas.reduce((n, a) => n + respByArea[a].filter(p => p.ativo && (p.pessoas?.celular || p.pessoas?.telefone)).length, 0);
+
+    return `
+      <div style="margin-top:10px;padding:10px 12px;background:var(--bg2);border-radius:8px;border:1px solid var(--bd2)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:10.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px">
+            Responsáveis que recebem mensagem
+          </span>
+          <span style="font-size:10px;color:var(--tx3)">${aptos}/${total} aptos</span>
+        </div>
+        ${linhas}
+      </div>`;
   }
 
   async function toggleModulo(modulo, ativo){
@@ -375,7 +439,7 @@ const WA_CFG = (function(){
   return {
     refresh,
     carregarStatus, carregarKpis,
-    carregarModulos, toggleModulo,
+    carregarModulos, toggleModulo, _renderResponsaveis,
     carregarEstadoConfig,
     carregarHistorico,
     carregarTemplates, openTemplateModal, closeTplModal, _editTpl, toggleTemplate, salvarTemplate,
