@@ -5,9 +5,15 @@
       <div class="hero-act"><button class="tbt" onclick="T('Novo encontro','Registro de relatório de PG')">+ Encontro</button><button class="tbt pri" onclick="T('Novo estudo','Cadastro de estudo vinculado a livro bíblico')">+ Estudo</button></div>
     </div>
     <div class="inav" style="--mc:var(--gbr)">
-      <div class="ini on">Dashboard</div><div class="ini" onclick="go('pgs-lista')">Lista de PGs</div>
-      <div class="ini" onclick="go('pgs-encontros')">Encontros</div><div class="ini" onclick="go('pgs-estudos')">Estudos</div>
-      <div class="ini" onclick="go('pgs-relatorios')">Relatórios</div><div class="ini" onclick="go('pgs-visitantes')">Visitantes</div>
+      <div class="ini on">Dashboard</div>
+      <div class="ini" onclick="go('pgs-lista')">Lista de PGs</div>
+      <div class="ini" onclick="go('pgs-encontros')">Encontros</div>
+      <div class="ini" onclick="go('pgs-participantes')">Participantes</div>
+      <div class="ini" onclick="go('pgs-visitantes')">Visitantes</div>
+      <div class="ini" onclick="go('pgs-estudos')">Estudos</div>
+      <div class="ini" onclick="go('pgs-relatorios')">Relatórios</div>
+      <div class="ini" onclick="go('pgs-oracao')">Oração</div>
+      <div class="ini" onclick="go('pgs-historico')">Histórico</div>
     </div>
     <div class="ct">
       <div class="alr alr-w"><div class="alr-i">ℹ</div><div><strong>Regra pastoral:</strong> visitante não se torna membro automaticamente. O estudo aplicado é escolhido em dropdown vinculado à base de estudos, sem obrigar sequência única entre os PGs.</div></div>
@@ -59,6 +65,17 @@
 
   <div class="view" id="v-pgs-lista">
     <div class="hero"><div class="hero-ic" style="background:rgba(82,196,110,0.12)">🏠</div><div><div class="hero-lbl">Pequenos Grupos</div><div class="hero-ttl">Lista de PGs</div><div class="hero-dsc">Grupos ativos, líderes e horários</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('PGS')">+ Novo PG</button></div></div>
+    <div class="inav" style="--mc:var(--gbr)">
+      <div class="ini" onclick="go('pgs-dash')">Dashboard</div>
+      <div class="ini on">Lista de PGs</div>
+      <div class="ini" onclick="go('pgs-encontros')">Encontros</div>
+      <div class="ini" onclick="go('pgs-participantes')">Participantes</div>
+      <div class="ini" onclick="go('pgs-visitantes')">Visitantes</div>
+      <div class="ini" onclick="go('pgs-estudos')">Estudos</div>
+      <div class="ini" onclick="go('pgs-relatorios')">Relatórios</div>
+      <div class="ini" onclick="go('pgs-oracao')">Oração</div>
+      <div class="ini" onclick="go('pgs-historico')">Histórico</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Pequenos Grupos <span class="cact" onclick="listarModulo('PGS','pgs-lista-list')">↻ Atualizar</span></div>
@@ -71,6 +88,17 @@
 
   <div class="view" id="v-pgs-visitantes">
     <div class="hero"><div class="hero-ic" style="background:rgba(42,181,192,0.12)">🙋</div><div><div class="hero-lbl">Pequenos Grupos</div><div class="hero-ttl">Visitantes dos PGs</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('VISITANTES')">+ Novo Visitante</button></div></div>
+    <div class="inav" style="--mc:var(--gbr)">
+      <div class="ini" onclick="go('pgs-dash')">Dashboard</div>
+      <div class="ini" onclick="go('pgs-lista')">Lista de PGs</div>
+      <div class="ini" onclick="go('pgs-encontros')">Encontros</div>
+      <div class="ini" onclick="go('pgs-participantes')">Participantes</div>
+      <div class="ini on">Visitantes</div>
+      <div class="ini" onclick="go('pgs-estudos')">Estudos</div>
+      <div class="ini" onclick="go('pgs-relatorios')">Relatórios</div>
+      <div class="ini" onclick="go('pgs-oracao')">Oração</div>
+      <div class="ini" onclick="go('pgs-historico')">Histórico</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Visitantes <span class="cact" onclick="listarModulo('VISITANTES','pgs-vis-list')">↻ Atualizar</span></div>
@@ -83,31 +111,97 @@
 
   <div class="view" id="v-pgs-encontros">
     <div class="hero"><div class="hero-ic" style="background:rgba(82,196,110,0.12)">🏠</div><div><div class="hero-lbl">Pequenos Grupos</div><div class="hero-ttl">Encontros</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Novo Encontro</button></div></div>
+    <div class="inav" style="--mc:var(--gbr)">
+      <div class="ini" onclick="go('pgs-dash')">Dashboard</div>
+      <div class="ini" onclick="go('pgs-lista')">Lista de PGs</div>
+      <div class="ini on">Encontros</div>
+      <div class="ini" onclick="go('pgs-participantes')">Participantes</div>
+      <div class="ini" onclick="go('pgs-visitantes')">Visitantes</div>
+      <div class="ini" onclick="go('pgs-estudos')">Estudos</div>
+      <div class="ini" onclick="go('pgs-relatorios')">Relatórios</div>
+      <div class="ini" onclick="go('pgs-oracao')">Oração</div>
+      <div class="ini" onclick="go('pgs-historico')">Histórico</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Encontros <span class="cact" onclick="listarModulo('AGENDA','pgs-enc-list',{organizador:'Pequenos Grupos'})">↻</span></div><div id="pgs-enc-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-pgs-participantes">
     <div class="hero"><div class="hero-ic" style="background:rgba(82,196,110,0.12)">👥</div><div><div class="hero-lbl">Pequenos Grupos</div><div class="hero-ttl">Participantes</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo</button></div></div>
+    <div class="inav" style="--mc:var(--gbr)">
+      <div class="ini" onclick="go('pgs-dash')">Dashboard</div>
+      <div class="ini" onclick="go('pgs-lista')">Lista de PGs</div>
+      <div class="ini" onclick="go('pgs-encontros')">Encontros</div>
+      <div class="ini on">Participantes</div>
+      <div class="ini" onclick="go('pgs-visitantes')">Visitantes</div>
+      <div class="ini" onclick="go('pgs-estudos')">Estudos</div>
+      <div class="ini" onclick="go('pgs-relatorios')">Relatórios</div>
+      <div class="ini" onclick="go('pgs-oracao')">Oração</div>
+      <div class="ini" onclick="go('pgs-historico')">Histórico</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Participantes <span class="cact" onclick="listarModulo('MEMBROS','pgs-part-list')">↻</span></div><div id="pgs-part-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-pgs-estudos">
     <div class="hero"><div class="hero-ic" style="background:rgba(82,196,110,0.12)">📖</div><div><div class="hero-lbl">Pequenos Grupos</div><div class="hero-ttl">Estudos</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Novo Estudo</button></div></div>
+    <div class="inav" style="--mc:var(--gbr)">
+      <div class="ini" onclick="go('pgs-dash')">Dashboard</div>
+      <div class="ini" onclick="go('pgs-lista')">Lista de PGs</div>
+      <div class="ini" onclick="go('pgs-encontros')">Encontros</div>
+      <div class="ini" onclick="go('pgs-participantes')">Participantes</div>
+      <div class="ini" onclick="go('pgs-visitantes')">Visitantes</div>
+      <div class="ini on">Estudos</div>
+      <div class="ini" onclick="go('pgs-relatorios')">Relatórios</div>
+      <div class="ini" onclick="go('pgs-oracao')">Oração</div>
+      <div class="ini" onclick="go('pgs-historico')">Histórico</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Estudos <span class="cact" onclick="listarModulo('AGENDA','pgs-est-list',{organizador:'Pequenos Grupos'})">↻</span></div><div id="pgs-est-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-pgs-relatorios">
     <div class="hero"><div class="hero-ic" style="background:rgba(82,196,110,0.12)">📊</div><div><div class="hero-lbl">Pequenos Grupos</div><div class="hero-ttl">Relatórios</div></div></div>
+    <div class="inav" style="--mc:var(--gbr)">
+      <div class="ini" onclick="go('pgs-dash')">Dashboard</div>
+      <div class="ini" onclick="go('pgs-lista')">Lista de PGs</div>
+      <div class="ini" onclick="go('pgs-encontros')">Encontros</div>
+      <div class="ini" onclick="go('pgs-participantes')">Participantes</div>
+      <div class="ini" onclick="go('pgs-visitantes')">Visitantes</div>
+      <div class="ini" onclick="go('pgs-estudos')">Estudos</div>
+      <div class="ini on">Relatórios</div>
+      <div class="ini" onclick="go('pgs-oracao')">Oração</div>
+      <div class="ini" onclick="go('pgs-historico')">Histórico</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">PGs Ativos <span class="cact" onclick="listarModulo('PGS','pgs-rel-list')">↻</span></div><div id="pgs-rel-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-pgs-oracao">
     <div class="hero"><div class="hero-ic" style="background:rgba(82,196,110,0.12)">🙏</div><div><div class="hero-lbl">Pequenos Grupos</div><div class="hero-ttl">Pedidos de Oração</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo Pedido</button></div></div>
+    <div class="inav" style="--mc:var(--gbr)">
+      <div class="ini" onclick="go('pgs-dash')">Dashboard</div>
+      <div class="ini" onclick="go('pgs-lista')">Lista de PGs</div>
+      <div class="ini" onclick="go('pgs-encontros')">Encontros</div>
+      <div class="ini" onclick="go('pgs-participantes')">Participantes</div>
+      <div class="ini" onclick="go('pgs-visitantes')">Visitantes</div>
+      <div class="ini" onclick="go('pgs-estudos')">Estudos</div>
+      <div class="ini" onclick="go('pgs-relatorios')">Relatórios</div>
+      <div class="ini on">Oração</div>
+      <div class="ini" onclick="go('pgs-historico')">Histórico</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Pedidos de Oração <span class="cact" onclick="listarModulo('DEMANDAS','pgs-ora-list',{area:'PGs'})">↻</span></div><div id="pgs-ora-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-pgs-historico">
     <div class="hero"><div class="hero-ic" style="background:rgba(82,196,110,0.12)">📜</div><div><div class="hero-lbl">Pequenos Grupos</div><div class="hero-ttl">Histórico</div></div></div>
+    <div class="inav" style="--mc:var(--gbr)">
+      <div class="ini" onclick="go('pgs-dash')">Dashboard</div>
+      <div class="ini" onclick="go('pgs-lista')">Lista de PGs</div>
+      <div class="ini" onclick="go('pgs-encontros')">Encontros</div>
+      <div class="ini" onclick="go('pgs-participantes')">Participantes</div>
+      <div class="ini" onclick="go('pgs-visitantes')">Visitantes</div>
+      <div class="ini" onclick="go('pgs-estudos')">Estudos</div>
+      <div class="ini" onclick="go('pgs-relatorios')">Relatórios</div>
+      <div class="ini" onclick="go('pgs-oracao')">Oração</div>
+      <div class="ini on">Histórico</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Histórico de PGs <span class="cact" onclick="listarModulo('PGS','pgs-hist-list')">↻</span></div><div id="pgs-hist-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
