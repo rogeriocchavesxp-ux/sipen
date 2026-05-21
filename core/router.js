@@ -150,7 +150,7 @@ const _VIEW_MAP = {
   "atas":        "modules/conselho/view.html",
   "pastoral":    "modules/pastoral/view.html",
   "min":         "modules/departamentos/view.html",
-  "agenda":      "modules/agenda/view.html",
+  "agenda":      "modules/agenda/view.html?v=6.30.59",
   "pgs":         "modules/pgs/view.html",
   "infra":       "modules/infraestrutura/view.html",
   "dem":         "modules/demandas/view.html",
