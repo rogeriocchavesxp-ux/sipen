@@ -98,6 +98,7 @@
       <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
       <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
       <div class="ini" onclick="go('pastoral-relatorios')">Relatórios</div>
+      <div class="ini" onclick="go('pastoral-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
       <div id="pd-content"><div style="text-align:center;padding:40px;color:var(--teal);font-size:12px">⏳ Carregando dados pastorais...</div></div>
@@ -168,6 +169,7 @@
       <div class="ini on">Dashboard</div><div class="ini" onclick="go('min-min')">Ministérios</div>
       <div class="ini" onclick="go('min-esc')">Escalas</div><div class="ini" onclick="go('min-prog')">Programações</div>
       <div class="ini" onclick="go('min-lit')">Liturgia</div><div class="ini" onclick="go('min-vol')">Voluntários</div>
+      <div class="ini" onclick="go('min-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
       <!-- KPIs globais: visíveis apenas para gestores (admin, conselho, lider_area) -->
@@ -201,6 +203,7 @@
       <div class="ini" onclick="go('infra-pat')">Patrimônio</div>
       <div class="ini" onclick="go('infra-pre')">Prestadores</div>
       <div class="ini" onclick="go('infra-demandas')">Demandas</div>
+      <div class="ini" onclick="go('infra-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
       <div class="kpis c4">
@@ -260,6 +263,7 @@
       <div class="ini" onclick="go('dem-conc')">Concluídas</div>
       <div class="ini" onclick="go('dem-pri')">Prioridades</div>
       <div class="ini" onclick="go('dem-hist')">Histórico</div>
+      <div class="ini" onclick="go('dem-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct" id="dem-dash-content"></div>
   </div>
@@ -278,6 +282,7 @@
       <div class="ini" onclick="go('conselho-contratados')">Contratados</div>
       <div class="ini" onclick="T('Estratégico','Relatórios macro')">Estratégico</div>
       <div class="ini" onclick="T('Documentos','Atas e resoluções')">Documentos</div>
+      <div class="ini" onclick="go('conselho-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
       <div class="kpis c4">
@@ -681,6 +686,7 @@
     <div class="inav" style="--mc:var(--gbr)">
       <div class="ini on" data-memb-adm="1">Dashboard</div><div class="ini" onclick="go('memb-cad')">Cadastro</div>
       <div class="ini" data-memb-adm="1" onclick="go('memb-com')">Comungantes</div><div class="ini" data-memb-adm="1" onclick="go('memb-ncom')">Não Comungantes</div><div class="ini" data-memb-adm="1" onclick="go('memb-vis')">Visitantes</div>
+      <div class="ini" onclick="go('memb-whatsapp')">WhatsApp</div>
       <div class="ini" data-memb-adm="1" onclick="go('memb-bat')">Batismos</div><div class="ini" data-memb-adm="1" onclick="go('memb-prof')">Profissões de Fé</div>
       <div class="ini" data-memb-adm="1" onclick="go('memb-trans')">Transferências</div>
       <div class="ini" onclick="go('memb-aniv')">Aniversariantes</div>
@@ -795,6 +801,7 @@
       <div class="ini" onclick="go('jur-contratos')">Contratos</div>
       <div class="ini" onclick="go('jur-riscos')">Riscos</div>
       <div class="ini" onclick="go('jur-historico')">Histórico</div>
+      <div class="ini" onclick="go('jur-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
       <div class="kpis c4">
@@ -834,6 +841,7 @@
       <div class="ini" onclick="go('agenda-solicitacoes')">Solicitações</div>
       <div class="ini" onclick="go('agenda-ambientes')">Por Espaço</div>
       <div class="ini" onclick="go('agenda-confirmados')">Confirmados</div>
+      <div class="ini" onclick="go('agenda-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
       <!-- KPIs linha 1 -->
@@ -1198,6 +1206,7 @@
       <div class="ini" onclick="go('fin-pagar')">A Pagar</div>
       <div class="ini" onclick="go('fin-receber')">A Receber</div>
       <div class="ini" onclick="go('fin-relatorios')">Relatórios</div>
+      <div class="ini" onclick="go('fin-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct" id="fin-dash-content"></div>
   </div>
@@ -2080,6 +2089,7 @@
       <div class="ini" onclick="go('diac-familias')">Famílias</div>
       <div class="ini" onclick="go('diac-social')">Ação Social</div>
       <div class="ini" onclick="go('diac-solicitacoes')">Solicitações</div>
+      <div class="ini" onclick="go('diac-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
       <div class="kpis c4">
@@ -3759,6 +3769,100 @@
       </div>
     </div>
   </div>
+
+  <!-- ═══ WhatsApp Tabs por módulo ═════════════════════════════════════ -->
+
+  <div class="view" id="v-agenda-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(42,181,192,0.12)">💬</div>
+      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">WhatsApp — Agenda</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('agenda-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('AGENDA')">↻ Atualizar</button></div>
+    </div>
+    <div class="ct" id="wa-tab-AGENDA"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
+  </div>
+
+  <div class="view" id="v-dem-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(224,85,85,0.12)">💬</div>
+      <div><div class="hero-lbl">Demandas</div><div class="hero-ttl">WhatsApp — Demandas</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('dem-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('DEMANDAS')">↻ Atualizar</button></div>
+    </div>
+    <div class="ct" id="wa-tab-DEMANDAS"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
+  </div>
+
+  <div class="view" id="v-pastoral-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(42,181,192,0.12)">💬</div>
+      <div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">WhatsApp — Pastoral</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('pastoral-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('PASTORAL')">↻ Atualizar</button></div>
+    </div>
+    <div class="ct" id="wa-tab-PASTORAL"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
+  </div>
+
+  <div class="view" id="v-min-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(139,111,212,0.12)">💬</div>
+      <div><div class="hero-lbl">Departamentos</div><div class="hero-ttl">WhatsApp — Departamentos</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('min-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('MINISTERIAL')">↻ Atualizar</button></div>
+    </div>
+    <div class="ct" id="wa-tab-MINISTERIAL"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
+  </div>
+
+  <div class="view" id="v-memb-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(82,196,110,0.12)">💬</div>
+      <div><div class="hero-lbl">Membresia</div><div class="hero-ttl">WhatsApp — Membresia</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('memb-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('MEMBRESIA')">↻ Atualizar</button></div>
+    </div>
+    <div class="ct" id="wa-tab-MEMBRESIA"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
+  </div>
+
+  <div class="view" id="v-fin-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(58,170,92,0.12)">💬</div>
+      <div><div class="hero-lbl">Financeiro</div><div class="hero-ttl">WhatsApp — Financeiro</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('fin-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('FINANCEIRO')">↻ Atualizar</button></div>
+    </div>
+    <div class="ct" id="wa-tab-FINANCEIRO"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
+  </div>
+
+  <div class="view" id="v-conselho-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.12)">💬</div>
+      <div><div class="hero-lbl">Conselho</div><div class="hero-ttl">WhatsApp — Conselho</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('conselho-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('CONSELHO')">↻ Atualizar</button></div>
+    </div>
+    <div class="ct" id="wa-tab-CONSELHO"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
+  </div>
+
+  <div class="view" id="v-diac-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(184,122,86,0.12)">💬</div>
+      <div><div class="hero-lbl">Junta Diaconal</div><div class="hero-ttl">WhatsApp — Junta Diaconal</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('diac-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('JUNTA_DIACONAL')">↻ Atualizar</button></div>
+    </div>
+    <div class="ct" id="wa-tab-JUNTA_DIACONAL"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
+  </div>
+
+  <div class="view" id="v-infra-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(208,144,64,0.12)">💬</div>
+      <div><div class="hero-lbl">Infraestrutura</div><div class="hero-ttl">WhatsApp — Infraestrutura</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('infra-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('INFRAESTRUTURA')">↻ Atualizar</button></div>
+    </div>
+    <div class="ct" id="wa-tab-INFRAESTRUTURA"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
+  </div>
+
+  <div class="view" id="v-jur-whatsapp">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.12)">💬</div>
+      <div><div class="hero-lbl">Jurídico</div><div class="hero-ttl">WhatsApp — Jurídico</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
+      <div class="hero-act"><button class="tbt" onclick="go('jur-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('JURIDICO')">↻ Atualizar</button></div>
+    </div>
+    <div class="ct" id="wa-tab-JURIDICO"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
+  </div>
+
+  <!-- ═══ fim WhatsApp Tabs ══════════════════════════════════════════════ -->
 
   <div class="view" id="v-generic">
     <div class="ct" style="padding-top:56px;text-align:center">
