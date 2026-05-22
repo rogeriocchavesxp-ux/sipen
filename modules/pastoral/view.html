@@ -7,9 +7,7 @@
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini on">Dashboard</div>
       <div class="ini" onclick="go('pastoral-preg')">Escala</div>
-      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
       <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
-      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
       <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
       <div class="ini" onclick="go('pastoral-ora')">Oração</div>
       <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
@@ -32,9 +30,7 @@
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
       <div class="ini on">Escala</div>
-      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
       <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
-      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
       <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
       <div class="ini" onclick="go('pastoral-ora')">Oração</div>
       <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
@@ -44,6 +40,14 @@
       <div class="ini" onclick="go('pastoral-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
+      <!-- Sub-nav Escala -->
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:14px">
+        <div class="sni on">Escala</div>
+        <div class="sni-sep"></div>
+        <div class="sni" onclick="go('pastoral-disp')">Disponibilidade</div>
+        <div class="sni-sep"></div>
+        <div class="sni" onclick="go('pastoral-historico')">Histórico de Pregação</div>
+      </div>
       <!-- Barra de controles -->
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding:12px 14px;background:var(--bg-card);border:1px solid var(--bd1);border-radius:8px">
         <!-- Seletor de modo -->
@@ -89,9 +93,7 @@
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
       <div class="ini" onclick="go('pastoral-preg')">Escala</div>
-      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
       <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
-      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
       <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
       <div class="ini" onclick="go('pastoral-ora')">Oração</div>
       <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
@@ -158,9 +160,7 @@
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
       <div class="ini" onclick="go('pastoral-preg')">Escala</div>
-      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
       <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
-      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
       <div class="ini on">Atendimentos</div>
       <div class="ini" onclick="go('pastoral-ora')">Oração</div>
       <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
@@ -177,9 +177,7 @@
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
       <div class="ini" onclick="go('pastoral-preg')">Escala</div>
-      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
       <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
-      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
       <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
       <div class="ini on">Oração</div>
       <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
@@ -196,9 +194,7 @@
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
       <div class="ini" onclick="go('pastoral-preg')">Escala</div>
-      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
       <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
-      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
       <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
       <div class="ini" onclick="go('pastoral-ora')">Oração</div>
       <div class="ini on">Acompanhamentos</div>
@@ -220,9 +216,7 @@
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
       <div class="ini" onclick="go('pastoral-preg')">Escala</div>
-      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
       <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
-      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
       <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
       <div class="ini" onclick="go('pastoral-ora')">Oração</div>
       <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
@@ -239,15 +233,13 @@
   <div class="view" id="v-pastoral-disp">
     <div class="hero">
       <div class="hero-ic" style="background:var(--tealbg);border-color:rgba(58,176,184,0.25)">📅</div>
-      <div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Disponibilidade Pregação</div><div class="hero-dsc">Toque em cada culto para informar sua disponibilidade. Salva automaticamente.</div></div>
+      <div><div class="hero-lbl">Pastoral · Escala</div><div class="hero-ttl">Disponibilidade Pregação</div><div class="hero-dsc">Toque em cada culto para informar sua disponibilidade. Salva automaticamente.</div></div>
       <div class="hero-act" id="dp-hero-act-admin" style="display:none"><button class="tbt pri" onclick="dp_abrirFormDisp()">+ Lançamento Manual</button></div>
     </div>
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
-      <div class="ini" onclick="go('pastoral-preg')">Escala</div>
-      <div class="ini on">Disponibilidade</div>
+      <div class="ini on" onclick="go('pastoral-preg')">Escala</div>
       <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
-      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
       <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
       <div class="ini" onclick="go('pastoral-ora')">Oração</div>
       <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
@@ -257,6 +249,14 @@
       <div class="ini" onclick="go('pastoral-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
+      <!-- Sub-nav Escala -->
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:14px">
+        <div class="sni" onclick="go('pastoral-preg')">Escala</div>
+        <div class="sni-sep"></div>
+        <div class="sni on">Disponibilidade</div>
+        <div class="sni-sep"></div>
+        <div class="sni" onclick="go('pastoral-historico')">Histórico de Pregação</div>
+      </div>
       <!-- Tabs -->
       <div style="display:flex;border:1px solid var(--bd2);border-radius:7px;overflow:hidden;margin-bottom:16px;width:fit-content">
         <button id="dp-tab-btn-minha" onclick="dp_setTab('minha')" style="padding:7px 16px;border:none;cursor:pointer;font-size:11.5px;font-family:var(--sans);background:var(--teal);color:#fff;font-weight:600">Minha Disponibilidade</button>
@@ -329,9 +329,7 @@
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
       <div class="ini" onclick="go('pastoral-preg')">Escala</div>
-      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
       <div class="ini on">Pastores</div>
-      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
       <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
       <div class="ini" onclick="go('pastoral-ora')">Oração</div>
       <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
@@ -350,15 +348,13 @@
   <div class="view" id="v-pastoral-historico">
     <div class="hero">
       <div class="hero-ic" style="background:var(--tealbg);border-color:rgba(58,176,184,0.25)">📜</div>
-      <div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Histórico de Pregações</div><div class="hero-dsc">Registro histórico de todas as pregações realizadas por data, culto e pastor</div></div>
+      <div><div class="hero-lbl">Pastoral · Escala</div><div class="hero-ttl">Histórico de Pregações</div><div class="hero-dsc">Registro histórico de todas as pregações realizadas por data, culto e pastor</div></div>
       <div class="hero-act"><button class="tbt" onclick="go('pastoral-preg')">← Escala</button></div>
     </div>
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
-      <div class="ini" onclick="go('pastoral-preg')">Escala</div>
-      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
+      <div class="ini on" onclick="go('pastoral-preg')">Escala</div>
       <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
-      <div class="ini on">Histórico</div>
       <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
       <div class="ini" onclick="go('pastoral-ora')">Oração</div>
       <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
@@ -368,6 +364,14 @@
       <div class="ini" onclick="go('pastoral-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
+      <!-- Sub-nav Escala -->
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:14px">
+        <div class="sni" onclick="go('pastoral-preg')">Escala</div>
+        <div class="sni-sep"></div>
+        <div class="sni" onclick="go('pastoral-disp')">Disponibilidade</div>
+        <div class="sni-sep"></div>
+        <div class="sni on">Histórico de Pregação</div>
+      </div>
       <div id="pd-historico-content"><div style="color:var(--tx3);font-size:11.5px;padding:20px 0">Carregando...</div></div>
     </div>
   </div>
@@ -383,9 +387,7 @@
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
       <div class="ini" onclick="go('pastoral-preg')">Escala de Pregação</div>
-      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
       <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
-      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
       <div class="ini on">Relatórios</div>
     </div>
     <div class="ct">
@@ -407,9 +409,7 @@
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
       <div class="ini" onclick="go('pastoral-preg')">Escala</div>
-      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
       <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
-      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
       <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
       <div class="ini" onclick="go('pastoral-ora')">Oração</div>
       <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
@@ -435,9 +435,7 @@
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
       <div class="ini" onclick="go('pastoral-preg')">Escala</div>
-      <div class="ini" onclick="go('pastoral-disp')">Disponibilidade</div>
       <div class="ini" onclick="go('pastoral-pastores')">Pastores</div>
-      <div class="ini" onclick="go('pastoral-historico')">Histórico</div>
       <div class="ini" onclick="go('pastoral-ate')">Atendimentos</div>
       <div class="ini" onclick="go('pastoral-ora')">Oração</div>
       <div class="ini" onclick="go('pastoral-aco')">Acompanhamentos</div>
