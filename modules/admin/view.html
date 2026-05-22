@@ -253,11 +253,36 @@
   <!-- RH -->
 
   <div class="view" id="v-admin-rh">
-    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">👥</div><div><div class="hero-lbl">Administração</div><div class="hero-ttl">RH / Gestão de Pessoas</div><div class="hero-dsc">Colaboradores, funções e equipe</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo Colaborador</button></div></div>
-    <div class="ct">
+    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">👥</div><div><div class="hero-lbl">Administração</div><div class="hero-ttl">RH / Gestão de Pessoas</div><div class="hero-dsc">Colaboradores, contratados e terceirizados</div></div><div class="hero-act"><button class="tbt pri" id="rh-btn-novo" onclick="openCrudForm('MEMBROS')">+ Novo Colaborador</button></div></div>
+    <div class="bnav" style="--mc:var(--gold)">
+      <div class="bni on" onclick="adminRhSec(this,'rh-sec-colab','MEMBROS')">Colaboradores</div>
+      <div class="bni" onclick="adminRhSec(this,'rh-sec-contrat',null)">Contratados</div>
+      <div class="bni" onclick="adminRhSec(this,'rh-sec-terc',null)">Terceirizados</div>
+    </div>
+    <div id="rh-sec-colab" class="ct">
       <div class="card">
         <div class="ctit">Colaboradores <span class="cact" onclick="listarModulo('MEMBROS','rh-list')">↻ Atualizar</span></div>
         <div id="rh-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>
+    <div id="rh-sec-contrat" class="ct" style="display:none">
+      <div class="alr alr-w"><div class="alr-i">⚠</div><div><strong>Regra:</strong> Contratados <strong>não são</strong> nomeados nem ordenados. Não aparecem em escalas ministeriais nem recebem permissões de módulo.</div></div>
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◫</div><div class="kpi-body"><div class="kpi-lbl">Contratados ativos</div><div class="kpi-val" id="cont-kpi-total">—</div><div class="kpi-d nu" id="cont-kpi-detalhe">carregando…</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Terceirizados</div><div class="kpi-val" id="cont-kpi-terc">—</div><div class="kpi-d nu">via empresa</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Contratação direta</div><div class="kpi-val" id="cont-kpi-dir">—</div><div class="kpi-d nu">administrativo e manutenção</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr);">✦</div><div class="kpi-body"><div class="kpi-lbl">Contratos vigentes</div><div class="kpi-val" id="cont-kpi-vig">—</div><div class="kpi-d nu">sem pendências</div></div></div>
+      </div>
+      <div class="card">
+        <div class="ctit">Lista geral de contratados <span class="cact" onclick="renderContratados()">↻ Atualizar</span></div>
+        <div id="contratados-list-container"><div style="color:var(--tx3);font-size:11px">Carregando…</div></div>
+      </div>
+    </div>
+    <div id="rh-sec-terc" class="ct" style="display:none">
+      <div class="alr alr-w"><div class="alr-i">ℹ</div><div>Terceirizados são prestadores de serviço via empresa contratada. Cadastre o contrato em <strong>Contratos</strong> e vincule o prestador aqui.</div></div>
+      <div class="card">
+        <div class="ctit">Empresas terceirizadas <span class="cact" onclick="T('Terceirizados','Em desenvolvimento')">↻ Atualizar</span></div>
+        <div style="padding:24px;text-align:center;color:var(--tx3);font-size:12px">Nenhum registro. Use <strong>Contratados</strong> para cadastrar prestadores diretos.</div>
       </div>
     </div>
   </div>

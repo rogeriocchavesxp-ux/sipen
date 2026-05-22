@@ -8,17 +8,15 @@
       <div class="bni" onclick="go('conselho-nomeados')">Nomeados</div>
       <div class="bni" onclick="go('conselho-ordenados')">Ordenados</div>
       <div class="bni" onclick="go('conselho-seminaristas')">Seminaristas</div>
-      <div class="bni" onclick="go('conselho-contratados')">Contratados</div>
       <div class="bni" onclick="T('Estratégico','Relatórios macro')">Estratégico</div>
       <div class="bni" onclick="T('Documentos','Atas e resoluções')">Documentos</div>
       <div class="bni" onclick="go('conselho-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
-      <div class="kpis c4">
+      <div class="kpis c3">
         <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Nomeados ativos</div><div class="kpi-val" id="cdash-kpi-nom">—</div><div class="kpi-d nu" id="cdash-kpi-nom-d">carregando…</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal);">◈</div><div class="kpi-body"><div class="kpi-lbl">Ordenados ativos</div><div class="kpi-val" id="cdash-kpi-ord">—</div><div class="kpi-d nu" id="cdash-kpi-ord-d">carregando…</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Mandatos a vencer</div><div class="kpi-val" id="cdash-kpi-mand">—</div><div class="kpi-d wa" id="cdash-kpi-mand-d">próximos 90 dias</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Contratados ativos</div><div class="kpi-val" id="cdash-kpi-cont">—</div><div class="kpi-d nu" id="cdash-kpi-cont-d">carregando…</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Mandatos a vencer</div><div class="kpi-val" id="cdash-kpi-mand">—</div><div class="kpi-d nu" id="cdash-kpi-mand-d">próximos 90 dias</div></div></div>
       </div>
       <div class="g2">
         <div class="card">
@@ -188,7 +186,6 @@
       <div class="bni" onclick="go('conselho-nomeados')">Nomeados</div>
       <div class="bni" onclick="go('conselho-ordenados')">Ordenados</div>
       <div class="bni" onclick="go('conselho-seminaristas')">Seminaristas</div>
-      <div class="bni" onclick="go('conselho-contratados')">Contratados</div>
       <div class="bni" onclick="T('Estratégico','Relatórios macro')">Estratégico</div>
       <div class="bni" onclick="T('Documentos','Atas e resoluções')">Documentos</div>
       <div class="bni" onclick="go('conselho-whatsapp')">WhatsApp</div>
@@ -225,7 +222,6 @@
       <div class="bni" onclick="go('conselho-nomeados')">Nomeados</div>
       <div class="bni" onclick="go('conselho-ordenados')">Ordenados</div>
       <div class="bni" onclick="go('conselho-seminaristas')">Seminaristas</div>
-      <div class="bni" onclick="go('conselho-contratados')">Contratados</div>
       <div class="bni" onclick="T('Estratégico','Relatórios macro')">Estratégico</div>
       <div class="bni" onclick="T('Documentos','Atas e resoluções')">Documentos</div>
       <div class="bni" onclick="go('conselho-whatsapp')">WhatsApp</div>
@@ -288,7 +284,6 @@
       <div class="bni" onclick="go('conselho-nomeados')">Nomeados</div>
       <div class="bni" onclick="go('conselho-ordenados')">Ordenados</div>
       <div class="bni" onclick="go('conselho-seminaristas')">Seminaristas</div>
-      <div class="bni" onclick="go('conselho-contratados')">Contratados</div>
       <div class="bni" onclick="T('Estratégico','Relatórios macro')">Estratégico</div>
       <div class="bni" onclick="T('Documentos','Atas e resoluções')">Documentos</div>
       <div class="bni" onclick="go('conselho-whatsapp')">WhatsApp</div>
@@ -314,44 +309,6 @@
     </div>
   </div>
 
-  <!-- ════ CONSELHO CONTRATADOS ═══════════ -->
-
-  <div class="view" id="v-conselho-contratados">
-    <div class="hero">
-      <div class="hero-ic" style="background:var(--skybg);border-color:rgba(88,152,212,0.25)">◫</div>
-      <div><div class="hero-lbl">Conselho e Governança</div><div class="hero-ttl">Contratados</div><div class="hero-dsc">Funcionários terceirizados e contratados que prestam apoio operacional e administrativo à IPPenha. Registro separado de nomeados e ordenados.</div></div>
-      <div class="hero-act"><button class="tbt pri" onclick="T('Novo contratado','Cadastro de funcionário ou prestador')">+ Novo Contratado</button></div>
-    </div>
-    <div class="bnav" style="--mc:var(--sky);margin-bottom:0">
-      <div class="bni" onclick="go('conselho-dash')">Dashboard</div>
-      <div class="bni" onclick="go('conselho-nomeados')">Nomeados</div>
-      <div class="bni" onclick="go('conselho-ordenados')">Ordenados</div>
-      <div class="bni" onclick="go('conselho-seminaristas')">Seminaristas</div>
-      <div class="bni" onclick="go('conselho-contratados')">Contratados</div>
-      <div class="bni" onclick="T('Estratégico','Relatórios macro')">Estratégico</div>
-      <div class="bni" onclick="T('Documentos','Atas e resoluções')">Documentos</div>
-      <div class="bni" onclick="go('conselho-whatsapp')">WhatsApp</div>
-    </div>
-    <div class="bnav" style="--mc:var(--sky);margin-top:0">
-      <div class="bni on">Lista Geral</div>
-      <div class="bni" onclick="T('Terceirizados','Empresas contratadas')">Terceirizados</div>
-      <div class="bni" onclick="T('Diretos','Contratação direta')">Contratação Direta</div>
-      <div class="bni" onclick="T('Por Categoria','Segurança, Limpeza, Admin, Manutenção')">Por Categoria</div>
-    </div>
-    <div class="ct">
-      <div class="alr alr-w"><div class="alr-i">⚠</div><div><strong>Regra crítica:</strong> Contratados <strong>não são</strong> nomeados nem ordenados. Não aparecem em escalas ministeriais nem recebem permissões de módulo. Seu cadastro é exclusivo desta seção.</div></div>
-      <div class="kpis c4">
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◫</div><div class="kpi-body"><div class="kpi-lbl">Contratados ativos</div><div class="kpi-val" id="cont-kpi-total">—</div><div class="kpi-d nu" id="cont-kpi-detalhe">carregando…</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Terceirizados</div><div class="kpi-val" id="cont-kpi-terc">—</div><div class="kpi-d nu">via empresa</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Contratação direta</div><div class="kpi-val" id="cont-kpi-dir">—</div><div class="kpi-d nu">administrativo e manutenção</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gr);">✦</div><div class="kpi-body"><div class="kpi-lbl">Contratos vigentes</div><div class="kpi-val" id="cont-kpi-vig">—</div><div class="kpi-d nu">sem pendências</div></div></div>
-      </div>
-      <div class="card">
-        <div class="ctit">Lista geral de contratados <span class="cact" onclick="renderContratados()">↻ Atualizar</span></div>
-        <div id="contratados-list-container"><div style="color:var(--tx3);font-size:11px">Carregando…</div></div>
-      </div>
-    </div>
-  </div>
 
   <!-- ════ PGS DASHBOARD ═══════════════════ -->
 

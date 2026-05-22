@@ -10,7 +10,7 @@
 
 (function() {
   var xhr = new XMLHttpRequest();
-  xhr.open("GET", "views/sidebar.html?v=6.30.76", false);
+  xhr.open("GET", "views/sidebar.html?v=6.30.77", false);
   xhr.send(null);
   if (xhr.status >= 200 && xhr.status < 300) {
     var login = document.getElementById("login-screen");
@@ -342,6 +342,19 @@ function switchNomTab(tipo) {
   });
   _renderNomTabContent(tipo);
 }
+
+window.adminRhSec = function(btn, secId, loadKey) {
+  const bnav = btn.closest('.bnav');
+  if (bnav) bnav.querySelectorAll('.bni').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  ['rh-sec-colab','rh-sec-contrat','rh-sec-terc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = (id === secId) ? '' : 'none';
+  });
+  const novoBt = document.getElementById('rh-btn-novo');
+  if (novoBt) novoBt.style.display = secId === 'rh-sec-colab' ? '' : 'none';
+  if (loadKey === 'MEMBROS') listarModulo('MEMBROS','rh-list');
+};
 
 function toggleNomOrgao(uid) {
   const body  = document.getElementById(uid + "-body");
