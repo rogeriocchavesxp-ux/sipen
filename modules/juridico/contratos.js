@@ -1007,9 +1007,7 @@
 
   /* ── Hook no go() ───────────────────────────────────── */
 
-  const _origGo = window.go;
-  window.go = async function (id) {
-    await _origGo(id);
+  document.addEventListener("sipen:navigate", ({ detail: { id } }) => {
     if (id === "admin-con") {
       _invalidate();
       _tipoFiltro = ""; _buscaFiltro = ""; _statusFiltro = "";
@@ -1020,7 +1018,7 @@
       document.querySelectorAll("#con-tipo-tabs .ini").forEach((el, i) => el.classList.toggle("on", i === 0));
       renderContratos();
     }
-  };
+  });
 
   window.conRecarregar = async function () { _invalidate(); await renderContratos(); };
 

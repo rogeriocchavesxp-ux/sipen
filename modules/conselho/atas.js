@@ -1110,9 +1110,7 @@
      NAVEGAÇÃO — intercepta window.go
   ══════════════════════════════════════════════════════ */
 
-  const _origGo = window.go;
-  window.go = async function (id) {
-    await _origGo(id);
+  document.addEventListener("sipen:navigate", ({ detail: { id } }) => {
     const MAP = {
       "atas-dash":  () => renderDash(),
       "atas-todas": () => renderTodasAtas(),
@@ -1120,6 +1118,6 @@
       "atas-delib": () => renderDeliberacoesGlobal(),
     };
     if (MAP[id]) MAP[id]();
-  };
+  });
 
 })();

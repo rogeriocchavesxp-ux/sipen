@@ -1023,12 +1023,10 @@
 
   /* ── NAVEGAÇÃO ───────────────────────────────────────────── */
 
-  const _origGo = window.go;
-  window.go = async function (id) {
-    await _origGo(id);
+  document.addEventListener("sipen:navigate", async ({ detail: { id } }) => {
     if (id === "pautas-reunioes") await renderReunioes();
     if (id === "pautas-lista")    await renderPautas();
     if (id === "pautas-imprimir") await renderImprimir();
-  };
+  });
 
 })();

@@ -725,10 +725,7 @@
   window.cnabAbrirConfig  = cnabAbrirConfig;
   window.cnabSalvarConfig = cnabSalvarConfig;
 
-  const _goOrig = window.go;
-  window.go = async function (id, ...args) {
-    const ret = await _goOrig(id, ...args);
+  document.addEventListener("sipen:navigate", ({ detail: { id } }) => {
     if (id === "cnab-remessas") cnabInit();
-    return ret;
-  };
+  });
 })();

@@ -360,13 +360,7 @@
     window.projInit();
   };
 
-  const _oldGo = window.go;
-  if (typeof _oldGo === "function" && !_oldGo.__projWrapped) {
-    const wrapped = async function(id) {
-      await _oldGo(id);
-      if (id === "proj-lista") window.projInit();
-    };
-    wrapped.__projWrapped = true;
-    window.go = wrapped;
-  }
+  document.addEventListener("sipen:navigate", ({ detail: { id } }) => {
+    if (id === "proj-lista") window.projInit();
+  });
 })();

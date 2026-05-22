@@ -884,9 +884,7 @@
 
   /* ── HOOK INTO go() ──────────────────────────────────────── */
 
-  const _origGo = window.go;
-  window.go = async function (id) {
-    await _origGo(id);
+  document.addEventListener("sipen:navigate", ({ detail: { id } }) => {
     const MAP = {
       "fin-dash":        () => renderDash(),
       "fin-lancamentos": renderLancamentos,
@@ -898,7 +896,7 @@
       "fin-auditoria":   renderAuditoria,
     };
     if (MAP[id]) MAP[id]();
-  };
+  });
 
   window.finFiltrarLanc  = renderLancamentos;
   window.finFiltrarPagar = () => renderPagar();

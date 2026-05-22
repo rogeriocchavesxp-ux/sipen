@@ -1871,9 +1871,7 @@
     }
   };
 
-  const _origGo = window.go;
-  window.go = async function(id) {
-    await _origGo(id);
+  document.addEventListener("sipen:navigate", async ({ detail: { id } }) => {
     if (id && id.startsWith("dem-")) _aplicarMenuDem();
     const MAP = {
       "dem-dash":    () => renderDash(),
@@ -1881,29 +1879,29 @@
       "dem-analise": () => renderLista("dem-analise-content", { status:"EM_ANALISE" }),
       "dem-and":     () => renderLista("dem-and-content",     { status:"EM_ANDAMENTO" }),
       "dem-conc":    () => renderLista("dem-conc-content",    { status:"CONCLUIDA" }),
-      "dem-pri":          () => renderLista("dem-pri-content",              { prioridade:"Alta" }),
-      "dem-hist":         () => renderLista("dem-hist-content"),
-      "admin-demandas":          () => _admRender(),
-      "admin-demandas-adm":      async () => { _admFiltro = "Administrativo"; try { localStorage.setItem(_ADM_KEY, _admFiltro); } catch(_){} await go("admin-demandas"); },
-      "fin-demandas":            () => _finRender(),
-      "conselho-demandas":        () => renderLista("conselho-demandas-content"),
-      "conselho-demandas-cons":   () => renderLista("conselho-demandas-cons-content",  { area:"Conselho" }),
-      "infra-dash":               () => _renderInfraDash(),
-      "infra-demandas":           () => renderLista("infra-demandas-content"),
-      "infra-demandas-infra":     () => renderLista("infra-demandas-infra-content",    { area:"Infraestrutura" }),
-      "jur-demandas-tab":         () => renderLista("jur-demandas-tab-content"),
-      "jur-demandas-jur":         () => renderLista("jur-demandas-jur-content",        { area:"Jurídico" }),
-      "pastoral-demandas":        () => renderLista("pastoral-demandas-content",         { area:"Pastoral" }),
-      "pastoral-demandas-pas":    () => renderLista("pastoral-demandas-pas-content",     { area:"Pastoral" }),
-      "pastoral-ate":             () => listarModulo("DEMANDAS", "pastoral-ate-list",   { area:"Pastoral" }),
-      "pastoral-ora":             () => listarModulo("DEMANDAS", "pastoral-ora-list",   { area:"Pastoral" }),
-      "pastoral-reg":             () => listarModulo("DEMANDAS", "pastoral-reg-list",   { area:"Pastoral" }),
-      "pastoral-pri":             () => _carregarCasosPri(),
-      "pastoral-aco":             () => listarModulo("MEMBROS",  "pastoral-aco-list"),
-      "area-dem":                 () => renderLista("area-dem-content"),
+      "dem-pri":               () => renderLista("dem-pri-content",             { prioridade:"Alta" }),
+      "dem-hist":              () => renderLista("dem-hist-content"),
+      "admin-demandas":        () => _admRender(),
+      "admin-demandas-adm":    async () => { _admFiltro = "Administrativo"; try { localStorage.setItem(_ADM_KEY, _admFiltro); } catch(_){} await go("admin-demandas"); },
+      "fin-demandas":          () => _finRender(),
+      "conselho-demandas":     () => renderLista("conselho-demandas-content"),
+      "conselho-demandas-cons":() => renderLista("conselho-demandas-cons-content",  { area:"Conselho" }),
+      "infra-dash":            () => _renderInfraDash(),
+      "infra-demandas":        () => renderLista("infra-demandas-content"),
+      "infra-demandas-infra":  () => renderLista("infra-demandas-infra-content",    { area:"Infraestrutura" }),
+      "jur-demandas-tab":      () => renderLista("jur-demandas-tab-content"),
+      "jur-demandas-jur":      () => renderLista("jur-demandas-jur-content",        { area:"Jurídico" }),
+      "pastoral-demandas":     () => renderLista("pastoral-demandas-content",       { area:"Pastoral" }),
+      "pastoral-demandas-pas": () => renderLista("pastoral-demandas-pas-content",   { area:"Pastoral" }),
+      "pastoral-ate":          () => listarModulo("DEMANDAS", "pastoral-ate-list",  { area:"Pastoral" }),
+      "pastoral-ora":          () => listarModulo("DEMANDAS", "pastoral-ora-list",  { area:"Pastoral" }),
+      "pastoral-reg":          () => listarModulo("DEMANDAS", "pastoral-reg-list",  { area:"Pastoral" }),
+      "pastoral-pri":          () => _carregarCasosPri(),
+      "pastoral-aco":          () => listarModulo("MEMBROS",  "pastoral-aco-list"),
+      "area-dem":              () => renderLista("area-dem-content"),
     };
     if (MAP[id]) await MAP[id]();
-  };
+  });
 
   // ── Casos Prioritários (Pastoral) ─────────────────────────────────────
   const _CP_LB  = 'display:block;font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px';

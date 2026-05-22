@@ -1856,31 +1856,31 @@ window.area_dash_load = function() { _areaDashLoad(); };
 // Rotas de Membresia que exigem acesso pleno
 const _MEMB_ROTAS_RESTRITAS = ["memb-dash","memb-com","memb-ncom","memb-vis","memb-bat","memb-prof","memb-trans","memb-hist"];
 
-const _goBase = window.go; // captura a função original
+const _goBase = window.go;
 window.go = async function(id) {
-  // Guarda de rota: redireciona usuários sem acesso pleno à Membresia
   if (USUARIO_ATUAL && _MEMB_ROTAS_RESTRITAS.includes(id) && !_podeMembresiaPlena()) {
     id = "memb-aniv";
   }
   await _goBase(id);
-  // Agenda
+};
+
+document.addEventListener("sipen:navigate", ({ detail: { id } }) => {
   if (id === "agenda-dash")           carregarAgendaDash();
   if (id === "agenda-ambientes")      carregarEspacos();
   if (id === "agenda-conflitos")      detectarConflitos();
   if (id === "agenda-historico")      carregarHistorico();
   if (id === "agenda-config")         carregarConfigAgenda();
-  if (id === "agenda-solicitacoes") carregarSolicitacoesAgenda();
+  if (id === "agenda-solicitacoes")   carregarSolicitacoesAgenda();
   if (id === "agenda-pormes") {
     const m = new Date().toLocaleString("pt-BR",{month:"long"});
     const sel = document.getElementById("ag-mes-sel");
     if(sel){ sel.value = m.charAt(0).toUpperCase()+m.slice(1); carregarMes(); }
   }
-  if (id === "conselho-ind")  carregarIndicadores();
-  if (id === "rel-ind")       carregarIndicadoresGerais();
-
+  if (id === "conselho-ind")          carregarIndicadores();
+  if (id === "rel-ind")               carregarIndicadoresGerais();
   if (id === "config-permissoes")     renderMatrizPermissoes();
-  if (id === "config-whatsapp")      { if(typeof WA_CFG!=="undefined") WA_CFG.refresh(); }
-  if (id === "min-adm")              { if(typeof DEPT_ADM!=="undefined") DEPT_ADM.load(); }
+  if (id === "config-whatsapp")       { if(typeof WA_CFG!=="undefined") WA_CFG.refresh(); }
+  if (id === "min-adm")               { if(typeof DEPT_ADM!=="undefined") DEPT_ADM.load(); }
   if (id === "geral")                 renderGeralDash();
   if (id === "area-dash")             _areaDashLoad();
   if (id.startsWith("cong"))          window._congSyncOnNav?.();
@@ -1892,7 +1892,7 @@ window.go = async function(id) {
   if (id === "pastoral-pastores")     pd_renderPastores();
   if (id === "pastoral-historico")    pd_renderHistorico();
   if (id === "pastoral-relatorios")   pd_renderRelatorios();
-};
+});
 
 // CRUMBs adicionais
 CRUMB["agenda-solicitacoes"]  = ["Agenda","Solicitações de Agendamento","/ demandas de agendamento"];

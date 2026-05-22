@@ -138,18 +138,18 @@ const MN={admin:"Administrativo",fin:"Financeiro",jur:"Jurídico",conselho:"Cons
 const _viewCache = {};
 const _VIEW_MAP = {
   "geral":       "modules/dashboard/view.html",
-  "admin":       "modules/admin/view.html?v=6.30.89",
-  "pext":        "modules/admin/view.html?v=6.30.89",
+  "admin":       "modules/admin/view.html?v=6.30.90",
+  "pext":        "modules/admin/view.html?v=6.30.90",
   "fin":         "modules/financeiro/view.html",
   "cnab":        "modules/financeiro/view.html",
   "jur":         "modules/juridico/view.html",
-  "conselho":    "modules/conselho/view.html?v=6.30.89",
-  "atas":        "modules/conselho/view.html?v=6.30.89",
-  "pautas":      "modules/conselho/view.html?v=6.30.89",
-  "pastoral":    "modules/pastoral/view.html?v=6.30.89",
+  "conselho":    "modules/conselho/view.html?v=6.30.90",
+  "atas":        "modules/conselho/view.html?v=6.30.90",
+  "pautas":      "modules/conselho/view.html?v=6.30.90",
+  "pastoral":    "modules/pastoral/view.html?v=6.30.90",
   "min":         "modules/departamentos/view.html",
-  "agenda":      "modules/agenda/view.html?v=6.30.89",
-  "pgs":         "modules/pgs/view.html?v=6.30.89",
+  "agenda":      "modules/agenda/view.html?v=6.30.90",
+  "pgs":         "modules/pgs/view.html?v=6.30.90",
   "infra":       "modules/infraestrutura/view.html",
   "dem":         "modules/demandas/view.html",
   "rel":         "modules/relatorios/view.html",
@@ -157,12 +157,12 @@ const _VIEW_MAP = {
   "proj":        "modules/projetos/view.html",
   "diac":        "modules/diaconal/view.html",
   "cong":        "modules/congregacoes/view.html",
-  "com":         "modules/comunicacao/view.html?v=6.30.89",
-  "eve":         "modules/eventos/view.html?v=6.30.89",
+  "com":         "modules/comunicacao/view.html?v=6.30.90",
+  "eve":         "modules/eventos/view.html?v=6.30.90",
   "area":        "modules/area-membro/view.html",
   "config":      "modules/config/view.html",
   "generic":     "modules/shared/view.html",
-  "acesso":      "modules/acesso/view.html?v=6.30.89",
+  "acesso":      "modules/acesso/view.html?v=6.30.90",
 };
 
 function _getViewFileForRoute(id) {
@@ -259,6 +259,7 @@ async function go(id){
   // Persistir rota atual para restauração após F5 (sessionStorage = isolado por aba)
   try { sessionStorage.setItem("sipen_route", id); } catch(_) {}
   try { history.replaceState(null, "", location.pathname + location.search + "#" + id); } catch(_) {}
+  document.dispatchEvent(new CustomEvent("sipen:navigate", { detail: { id } }));
 }
 
 function tog(mod,defaultRoute){
