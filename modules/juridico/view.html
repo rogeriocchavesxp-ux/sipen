@@ -41,6 +41,14 @@
 
   <div class="view" id="v-jur-demandas-tab">
     <div class="hero"><div class="hero-ic" style="background:rgba(74,156,245,0.12)">⚖️</div><div><div class="hero-lbl">Jurídico</div><div class="hero-ttl">Solicitações e Demandas</div><div class="hero-dsc">Todas as demandas e as direcionadas ao módulo Jurídico</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="bnav" style="--mc:var(--blue)">
+      <div class="bni" onclick="go('jur-dash')">Dashboard</div>
+      <div class="bni" onclick="go('jur-demandas')">Demandas</div>
+      <div class="bni" onclick="go('jur-contratos')">Contratos</div>
+      <div class="bni" onclick="go('jur-riscos')">Riscos</div>
+      <div class="bni" onclick="go('jur-historico')">Histórico</div>
+      <div class="bni" onclick="go('jur-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
@@ -75,6 +83,14 @@
 
   <div class="view" id="v-jur-demandas-jur">
     <div class="hero"><div class="hero-ic" style="background:rgba(74,156,245,0.12)">⚖️</div><div><div class="hero-lbl">Jurídico</div><div class="hero-ttl">Demandas Jurídicas</div><div class="hero-dsc">Demandas direcionadas ao módulo Jurídico</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="bnav" style="--mc:var(--blue)">
+      <div class="bni" onclick="go('jur-dash')">Dashboard</div>
+      <div class="bni" onclick="go('jur-demandas')">Demandas</div>
+      <div class="bni" onclick="go('jur-contratos')">Contratos</div>
+      <div class="bni" onclick="go('jur-riscos')">Riscos</div>
+      <div class="bni" onclick="go('jur-historico')">Histórico</div>
+      <div class="bni" onclick="go('jur-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
@@ -105,6 +121,14 @@
 
   <div class="view" id="v-jur-demandas">
     <div class="hero"><div class="hero-ic" style="background:rgba(74,156,245,0.12)">⚖️</div><div><div class="hero-lbl">Jurídico</div><div class="hero-ttl">Processos e Demandas Jurídicas</div><div class="hero-dsc">Acompanhamento de processos e solicitações jurídicas</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova Demanda</button></div></div>
+    <div class="bnav" style="--mc:var(--blue)">
+      <div class="bni" onclick="go('jur-dash')">Dashboard</div>
+      <div class="bni" onclick="go('jur-demandas')">Demandas</div>
+      <div class="bni" onclick="go('jur-contratos')">Contratos</div>
+      <div class="bni" onclick="go('jur-riscos')">Riscos</div>
+      <div class="bni" onclick="go('jur-historico')">Histórico</div>
+      <div class="bni" onclick="go('jur-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Demandas Jurídicas <span class="cact" onclick="listarModulo('DEMANDAS','jur-dem-list',{area:'Jurídico'})">↻ Atualizar</span></div>
@@ -117,26 +141,66 @@
 
   <div class="view" id="v-jur-contratos">
     <div class="hero"><div class="hero-ic" style="background:var(--bluebg)">⚖️</div><div><div class="hero-lbl">Jurídico</div><div class="hero-ttl">Contratos e Instrumentos</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo</button></div></div>
+    <div class="bnav" style="--mc:var(--blue)">
+      <div class="bni" onclick="go('jur-dash')">Dashboard</div>
+      <div class="bni" onclick="go('jur-demandas')">Demandas</div>
+      <div class="bni" onclick="go('jur-contratos')">Contratos</div>
+      <div class="bni" onclick="go('jur-riscos')">Riscos</div>
+      <div class="bni" onclick="go('jur-historico')">Histórico</div>
+      <div class="bni" onclick="go('jur-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Contratos Jurídicos <span class="cact" onclick="listarModulo('DEMANDAS','jur-con-list',{area:'Jurídico'})">↻</span></div><div id="jur-con-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-jur-pareceres">
     <div class="hero"><div class="hero-ic" style="background:var(--bluebg)">📋</div><div><div class="hero-lbl">Jurídico</div><div class="hero-ttl">Pareceres</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo</button></div></div>
+    <div class="bnav" style="--mc:var(--blue)">
+      <div class="bni" onclick="go('jur-dash')">Dashboard</div>
+      <div class="bni" onclick="go('jur-demandas')">Demandas</div>
+      <div class="bni" onclick="go('jur-contratos')">Contratos</div>
+      <div class="bni" onclick="go('jur-riscos')">Riscos</div>
+      <div class="bni" onclick="go('jur-historico')">Histórico</div>
+      <div class="bni" onclick="go('jur-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Pareceres <span class="cact" onclick="listarModulo('DEMANDAS','jur-par-list',{area:'Jurídico'})">↻</span></div><div id="jur-par-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-jur-documentos">
     <div class="hero"><div class="hero-ic" style="background:var(--bluebg)">🗂</div><div><div class="hero-lbl">Jurídico</div><div class="hero-ttl">Documentos Jurídicos</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo</button></div></div>
+    <div class="bnav" style="--mc:var(--blue)">
+      <div class="bni" onclick="go('jur-dash')">Dashboard</div>
+      <div class="bni" onclick="go('jur-demandas')">Demandas</div>
+      <div class="bni" onclick="go('jur-contratos')">Contratos</div>
+      <div class="bni" onclick="go('jur-riscos')">Riscos</div>
+      <div class="bni" onclick="go('jur-historico')">Histórico</div>
+      <div class="bni" onclick="go('jur-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Documentos <span class="cact" onclick="listarModulo('DEMANDAS','jur-doc-list',{area:'Jurídico'})">↻</span></div><div id="jur-doc-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-jur-riscos">
     <div class="hero"><div class="hero-ic" style="background:var(--rosebg)">⚠️</div><div><div class="hero-lbl">Jurídico</div><div class="hero-ttl">Riscos e Pendências</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo</button></div></div>
+    <div class="bnav" style="--mc:var(--blue)">
+      <div class="bni" onclick="go('jur-dash')">Dashboard</div>
+      <div class="bni" onclick="go('jur-demandas')">Demandas</div>
+      <div class="bni" onclick="go('jur-contratos')">Contratos</div>
+      <div class="bni" onclick="go('jur-riscos')">Riscos</div>
+      <div class="bni" onclick="go('jur-historico')">Histórico</div>
+      <div class="bni" onclick="go('jur-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Riscos <span class="cact" onclick="listarModulo('DEMANDAS','jur-ris-list',{area:'Jurídico',prioridade:'Alta'})">↻</span></div><div id="jur-ris-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-jur-historico">
     <div class="hero"><div class="hero-ic" style="background:var(--bluebg)">📜</div><div><div class="hero-lbl">Jurídico</div><div class="hero-ttl">Histórico e Auditoria Jurídica</div></div></div>
+    <div class="bnav" style="--mc:var(--blue)">
+      <div class="bni" onclick="go('jur-dash')">Dashboard</div>
+      <div class="bni" onclick="go('jur-demandas')">Demandas</div>
+      <div class="bni" onclick="go('jur-contratos')">Contratos</div>
+      <div class="bni" onclick="go('jur-riscos')">Riscos</div>
+      <div class="bni" onclick="go('jur-historico')">Histórico</div>
+      <div class="bni" onclick="go('jur-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Histórico <span class="cact" onclick="listarModulo('LOG_AUDITORIA','jur-hist-list',{modulo:'juridico'})">↻</span></div><div id="jur-hist-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 

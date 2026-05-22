@@ -35,6 +35,16 @@
 
   <div class="view" id="v-min-vol">
     <div class="hero"><div class="hero-ic" style="background:rgba(139,111,212,0.12)">🙌</div><div><div class="hero-lbl">Departamentos</div><div class="hero-ttl">Voluntários</div><div class="hero-dsc">Cadastro de voluntários e ministérios</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo Voluntário</button></div></div>
+    <div class="bnav" style="--mc:var(--violet)">
+      <div class="bni" onclick="go('min-dash')">Dashboard</div>
+      <div class="bni" onclick="go('min-min')">Ministérios</div>
+      <div class="bni" onclick="go('min-adm')">Administração</div>
+      <div class="bni" onclick="go('min-esc')">Escalas</div>
+      <div class="bni" onclick="go('min-prog')">Programações</div>
+      <div class="bni" onclick="go('min-lit')">Liturgia</div>
+      <div class="bni" onclick="go('min-vol')">Voluntários</div>
+      <div class="bni" onclick="go('min-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Voluntários <span class="cact" onclick="listarModulo('MEMBROS','vol-list')">↻ Atualizar</span></div>
@@ -48,6 +58,16 @@
   <div class="view" id="v-min-min">
     <div class="hero">
       <div class="hero-ic" style="background:var(--violetbg)">⭐</div>
+    <div class="bnav" style="--mc:var(--violet)">
+      <div class="bni" onclick="go('min-dash')">Dashboard</div>
+      <div class="bni" onclick="go('min-min')">Ministérios</div>
+      <div class="bni" onclick="go('min-adm')">Administração</div>
+      <div class="bni" onclick="go('min-esc')">Escalas</div>
+      <div class="bni" onclick="go('min-prog')">Programações</div>
+      <div class="bni" onclick="go('min-lit')">Liturgia</div>
+      <div class="bni" onclick="go('min-vol')">Voluntários</div>
+      <div class="bni" onclick="go('min-whatsapp')">WhatsApp</div>
+    </div>
       <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Ministérios</div></div>
       <div class="hero-act" id="min-min-hero-act" style="display:none">
         <button class="tbt pri" onclick="minMinNovo()">+ Novo Ministério</button>
@@ -89,21 +109,61 @@
 
   <div class="view" id="v-min-lid">
     <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">👤</div><div><div class="hero-lbl">Departamentos</div><div class="hero-ttl">Liderança Ministerial</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo Líder</button></div></div>
+    <div class="bnav" style="--mc:var(--violet)">
+      <div class="bni" onclick="go('min-dash')">Dashboard</div>
+      <div class="bni" onclick="go('min-min')">Ministérios</div>
+      <div class="bni" onclick="go('min-adm')">Administração</div>
+      <div class="bni" onclick="go('min-esc')">Escalas</div>
+      <div class="bni" onclick="go('min-prog')">Programações</div>
+      <div class="bni" onclick="go('min-lit')">Liturgia</div>
+      <div class="bni" onclick="go('min-vol')">Voluntários</div>
+      <div class="bni" onclick="go('min-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Líderes <span class="cact" onclick="listarModulo('MEMBROS','min-lid-list')">↻</span></div><div id="min-lid-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-min-esc">
     <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">📅</div><div><div class="hero-lbl">Departamentos</div><div class="hero-ttl">Escalas</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Nova Escala</button></div></div>
+    <div class="bnav" style="--mc:var(--violet)">
+      <div class="bni" onclick="go('min-dash')">Dashboard</div>
+      <div class="bni" onclick="go('min-min')">Ministérios</div>
+      <div class="bni" onclick="go('min-adm')">Administração</div>
+      <div class="bni" onclick="go('min-esc')">Escalas</div>
+      <div class="bni" onclick="go('min-prog')">Programações</div>
+      <div class="bni" onclick="go('min-lit')">Liturgia</div>
+      <div class="bni" onclick="go('min-vol')">Voluntários</div>
+      <div class="bni" onclick="go('min-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Escalas <span class="cact" onclick="listarModulo('AGENDA','min-esc-list',{organizador:'Min. Música'})">↻</span></div><div id="min-esc-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-min-prog">
     <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">📋</div><div><div class="hero-lbl">Departamentos</div><div class="hero-ttl">Programações</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Nova Prog.</button></div></div>
+    <div class="bnav" style="--mc:var(--violet)">
+      <div class="bni" onclick="go('min-dash')">Dashboard</div>
+      <div class="bni" onclick="go('min-min')">Ministérios</div>
+      <div class="bni" onclick="go('min-adm')">Administração</div>
+      <div class="bni" onclick="go('min-esc')">Escalas</div>
+      <div class="bni" onclick="go('min-prog')">Programações</div>
+      <div class="bni" onclick="go('min-lit')">Liturgia</div>
+      <div class="bni" onclick="go('min-vol')">Voluntários</div>
+      <div class="bni" onclick="go('min-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Programações <span class="cact" onclick="listarModulo('AGENDA','min-prog-list')">↻</span></div><div id="min-prog-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-min-lit">
     <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">🎵</div><div><div class="hero-lbl">Departamentos</div><div class="hero-ttl">Liturgia dos Cultos</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Novo Culto</button></div></div>
+    <div class="bnav" style="--mc:var(--violet)">
+      <div class="bni" onclick="go('min-dash')">Dashboard</div>
+      <div class="bni" onclick="go('min-min')">Ministérios</div>
+      <div class="bni" onclick="go('min-adm')">Administração</div>
+      <div class="bni" onclick="go('min-esc')">Escalas</div>
+      <div class="bni" onclick="go('min-prog')">Programações</div>
+      <div class="bni" onclick="go('min-lit')">Liturgia</div>
+      <div class="bni" onclick="go('min-vol')">Voluntários</div>
+      <div class="bni" onclick="go('min-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Liturgia <span class="cact" onclick="listarModulo('AGENDA','min-lit-list',{organizador:'Min. Música'})">↻</span></div><div id="min-lit-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
@@ -112,6 +172,16 @@
   <div class="view" id="v-min-soc">
     <div class="hero">
       <div class="hero-ic" style="background:var(--violetbg)">🏛</div>
+    <div class="bnav" style="--mc:var(--violet)">
+      <div class="bni" onclick="go('min-dash')">Dashboard</div>
+      <div class="bni" onclick="go('min-min')">Ministérios</div>
+      <div class="bni" onclick="go('min-adm')">Administração</div>
+      <div class="bni" onclick="go('min-esc')">Escalas</div>
+      <div class="bni" onclick="go('min-prog')">Programações</div>
+      <div class="bni" onclick="go('min-lit')">Liturgia</div>
+      <div class="bni" onclick="go('min-vol')">Voluntários</div>
+      <div class="bni" onclick="go('min-whatsapp')">WhatsApp</div>
+    </div>
       <div>
         <div class="hero-lbl">Departamentos</div>
         <div class="hero-ttl">Sociedades Internas</div>
@@ -158,6 +228,16 @@
   <div class="view" id="v-min-adm">
     <div class="hero">
       <div class="hero-ic" style="background:var(--violetbg)">🏢</div>
+    <div class="bnav" style="--mc:var(--violet)">
+      <div class="bni" onclick="go('min-dash')">Dashboard</div>
+      <div class="bni" onclick="go('min-min')">Ministérios</div>
+      <div class="bni" onclick="go('min-adm')">Administração</div>
+      <div class="bni" onclick="go('min-esc')">Escalas</div>
+      <div class="bni" onclick="go('min-prog')">Programações</div>
+      <div class="bni" onclick="go('min-lit')">Liturgia</div>
+      <div class="bni" onclick="go('min-vol')">Voluntários</div>
+      <div class="bni" onclick="go('min-whatsapp')">WhatsApp</div>
+    </div>
       <div>
         <div class="hero-lbl">Departamentos</div>
         <div class="hero-ttl" id="dept-adm-titulo">Administração</div>

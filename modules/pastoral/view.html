@@ -127,6 +127,18 @@
 
   <div class="view" id="v-pastoral-demandas-pas">
     <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🙏</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Demandas Pastorais</div><div class="hero-dsc">Demandas direcionadas ao módulo Pastoral</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="bnav" style="--mc:var(--teal)">
+      <div class="bni" onclick="go('pastoral-dash')">Dashboard</div>
+      <div class="bni" onclick="go('pastoral-preg')">Escala</div>
+      <div class="bni" onclick="go('pastoral-pastores')">Pastores</div>
+      <div class="bni" onclick="go('pastoral-ate')">Atendimentos</div>
+      <div class="bni" onclick="go('pastoral-ora')">Oração</div>
+      <div class="bni" onclick="go('pastoral-aco')">Acompanhamentos</div>
+      <div class="bni" onclick="go('pastoral-pri')">Prioritários</div>
+      <div class="bni" onclick="go('pastoral-rede')">Rede de Cuidado</div>
+      <div class="bni" onclick="go('pastoral-demandas')">Demandas</div>
+      <div class="bni" onclick="go('pastoral-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
@@ -208,6 +220,18 @@
 
   <div class="view" id="v-pastoral-reg">
     <div class="hero"><div class="hero-ic" style="background:var(--tealbg)">📓</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Registros Pastorais</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Novo Registro</button></div></div>
+    <div class="bnav" style="--mc:var(--teal)">
+      <div class="bni" onclick="go('pastoral-dash')">Dashboard</div>
+      <div class="bni" onclick="go('pastoral-preg')">Escala</div>
+      <div class="bni" onclick="go('pastoral-pastores')">Pastores</div>
+      <div class="bni" onclick="go('pastoral-ate')">Atendimentos</div>
+      <div class="bni" onclick="go('pastoral-ora')">Oração</div>
+      <div class="bni" onclick="go('pastoral-aco')">Acompanhamentos</div>
+      <div class="bni" onclick="go('pastoral-pri')">Prioritários</div>
+      <div class="bni" onclick="go('pastoral-rede')">Rede de Cuidado</div>
+      <div class="bni" onclick="go('pastoral-demandas')">Demandas</div>
+      <div class="bni" onclick="go('pastoral-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Registros <span class="cact" onclick="listarModulo('DEMANDAS','pastoral-reg-list',{area:'Pastoral'})">↻</span></div><div id="pastoral-reg-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 

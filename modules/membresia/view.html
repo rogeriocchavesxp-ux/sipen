@@ -7,13 +7,18 @@
         <button class="tbt pri" onclick="T('Novo membro','Formulário de cadastro completo')">+ Novo Membro</button>
       </div>
     </div>
-    <div class="bnav" style="--mc:var(--gbr)">
-      <div class="bni on" data-memb-adm="1">Dashboard</div><div class="bni" onclick="go('memb-cad')">Cadastro</div>
-      <div class="bni" data-memb-adm="1" onclick="go('memb-com')">Comungantes</div><div class="bni" data-memb-adm="1" onclick="go('memb-ncom')">Não Comungantes</div><div class="bni" data-memb-adm="1" onclick="go('memb-vis')">Visitantes</div>
-      <div class="bni" data-memb-adm="1" onclick="go('memb-bat')">Batismos</div><div class="bni" data-memb-adm="1" onclick="go('memb-prof')">Profissões de Fé</div>
-      <div class="bni" data-memb-adm="1" onclick="go('memb-trans')">Transferências</div>
+        <div class="bnav" style="--mc:var(--gbr)">
+      <div class="bni" onclick="go('memb-dash')">Dashboard</div>
+      <div class="bni" onclick="go('memb-cad')">Cadastro</div>
+      <div class="bni" onclick="go('memb-com')">Comungantes</div>
+      <div class="bni" onclick="go('memb-ncom')">Não Comungantes</div>
+      <div class="bni" onclick="go('memb-vis')">Visitantes</div>
+      <div class="bni" onclick="go('memb-bat')">Batismos</div>
+      <div class="bni" onclick="go('memb-prof')">Profissões de Fé</div>
+      <div class="bni" onclick="go('memb-trans')">Transferências</div>
       <div class="bni" onclick="go('memb-aniv')">Aniversariantes</div>
       <div class="bni" onclick="go('memb-whatsapp')">WhatsApp</div>
+    </div>
     </div>
     <div class="ct">
       <div class="kpis c4" data-memb-adm="1">
@@ -73,6 +78,18 @@
 
   <div class="view" id="v-memb-cad">
     <div class="hero"><div class="hero-ic" style="background:rgba(82,196,110,0.12)">👤</div><div><div class="hero-lbl">Membresia</div><div class="hero-ttl">Cadastro de Membros</div><div class="hero-dsc">Gerencie membros, funções e status na IPPenha</div></div><div class="hero-act" data-memb-adm="1"><button class="tbt pri" onclick="openNovoMembro()">+ Novo Membro</button></div></div>
+    <div class="bnav" style="--mc:var(--gbr)">
+      <div class="bni" onclick="go('memb-dash')">Dashboard</div>
+      <div class="bni" onclick="go('memb-cad')">Cadastro</div>
+      <div class="bni" onclick="go('memb-com')">Comungantes</div>
+      <div class="bni" onclick="go('memb-ncom')">Não Comungantes</div>
+      <div class="bni" onclick="go('memb-vis')">Visitantes</div>
+      <div class="bni" onclick="go('memb-bat')">Batismos</div>
+      <div class="bni" onclick="go('memb-prof')">Profissões de Fé</div>
+      <div class="bni" onclick="go('memb-trans')">Transferências</div>
+      <div class="bni" onclick="go('memb-aniv')">Aniversariantes</div>
+      <div class="bni" onclick="go('memb-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Membros <span class="csub" id="memb-cad-count"></span><span class="cact" onclick="listarMembros('memb-cad-list','memb-cad-count')">↻ Atualizar</span></div>
@@ -104,6 +121,18 @@
 
   <div class="view" id="v-memb-vis">
     <div class="hero"><div class="hero-ic" style="background:rgba(42,181,192,0.12)">🙋</div><div><div class="hero-lbl">Membresia</div><div class="hero-ttl">Visitantes</div><div class="hero-dsc">Acompanhe visitantes e conversões</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('VISITANTES')">+ Novo Visitante</button></div></div>
+    <div class="bnav" style="--mc:var(--gbr)">
+      <div class="bni" onclick="go('memb-dash')">Dashboard</div>
+      <div class="bni" onclick="go('memb-cad')">Cadastro</div>
+      <div class="bni" onclick="go('memb-com')">Comungantes</div>
+      <div class="bni" onclick="go('memb-ncom')">Não Comungantes</div>
+      <div class="bni" onclick="go('memb-vis')">Visitantes</div>
+      <div class="bni" onclick="go('memb-bat')">Batismos</div>
+      <div class="bni" onclick="go('memb-prof')">Profissões de Fé</div>
+      <div class="bni" onclick="go('memb-trans')">Transferências</div>
+      <div class="bni" onclick="go('memb-aniv')">Aniversariantes</div>
+      <div class="bni" onclick="go('memb-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Visitantes <span class="csub" id="vis-count"></span><span class="cact" onclick="listarVisitantes('vis-list','vis-count')">↻ Atualizar</span></div>
@@ -126,6 +155,18 @@
 
   <div class="view" id="v-memb-com">
     <div class="hero"><div class="hero-ic" style="background:rgba(58,170,92,0.12)">🍞</div><div><div class="hero-lbl">Membresia</div><div class="hero-ttl">Comungantes</div><div class="hero-dsc">Membros batizados com profissão pública de fé, aptos à Ceia do Senhor</div></div><div class="hero-act"><button class="tbt pri" onclick="openNovoMembro()">+ Novo</button></div></div>
+    <div class="bnav" style="--mc:var(--gbr)">
+      <div class="bni" onclick="go('memb-dash')">Dashboard</div>
+      <div class="bni" onclick="go('memb-cad')">Cadastro</div>
+      <div class="bni" onclick="go('memb-com')">Comungantes</div>
+      <div class="bni" onclick="go('memb-ncom')">Não Comungantes</div>
+      <div class="bni" onclick="go('memb-vis')">Visitantes</div>
+      <div class="bni" onclick="go('memb-bat')">Batismos</div>
+      <div class="bni" onclick="go('memb-prof')">Profissões de Fé</div>
+      <div class="bni" onclick="go('memb-trans')">Transferências</div>
+      <div class="bni" onclick="go('memb-aniv')">Aniversariantes</div>
+      <div class="bni" onclick="go('memb-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Comungantes <span class="csub" id="memb-com-count"></span><span class="cact" onclick="listarMembros('memb-com-list','memb-com-count',{tipo_membro:'COMUNGANTE'})">↻</span></div>
@@ -139,6 +180,18 @@
 
   <div class="view" id="v-memb-ncom">
     <div class="hero"><div class="hero-ic" style="background:rgba(42,181,192,0.12)">◈</div><div><div class="hero-lbl">Membresia</div><div class="hero-ttl">Não Comungantes</div><div class="hero-dsc">Membros batizados ainda sem profissão pública de fé</div></div><div class="hero-act"><button class="tbt pri" onclick="openNovoMembro()">+ Novo</button></div></div>
+    <div class="bnav" style="--mc:var(--gbr)">
+      <div class="bni" onclick="go('memb-dash')">Dashboard</div>
+      <div class="bni" onclick="go('memb-cad')">Cadastro</div>
+      <div class="bni" onclick="go('memb-com')">Comungantes</div>
+      <div class="bni" onclick="go('memb-ncom')">Não Comungantes</div>
+      <div class="bni" onclick="go('memb-vis')">Visitantes</div>
+      <div class="bni" onclick="go('memb-bat')">Batismos</div>
+      <div class="bni" onclick="go('memb-prof')">Profissões de Fé</div>
+      <div class="bni" onclick="go('memb-trans')">Transferências</div>
+      <div class="bni" onclick="go('memb-aniv')">Aniversariantes</div>
+      <div class="bni" onclick="go('memb-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Não Comungantes <span class="csub" id="memb-ncom-count"></span><span class="cact" onclick="listarMembros('memb-ncom-list','memb-ncom-count',{tipo_membro:'NAO_COMUNGANTE'})">↻</span></div>
@@ -152,6 +205,18 @@
 
   <div class="view" id="v-memb-bat">
     <div class="hero"><div class="hero-ic" style="background:rgba(58,170,92,0.12)">💧</div><div><div class="hero-lbl">Membresia</div><div class="hero-ttl">Batismos</div><div class="hero-dsc">Membros que ingressaram por batismo</div></div></div>
+    <div class="bnav" style="--mc:var(--gbr)">
+      <div class="bni" onclick="go('memb-dash')">Dashboard</div>
+      <div class="bni" onclick="go('memb-cad')">Cadastro</div>
+      <div class="bni" onclick="go('memb-com')">Comungantes</div>
+      <div class="bni" onclick="go('memb-ncom')">Não Comungantes</div>
+      <div class="bni" onclick="go('memb-vis')">Visitantes</div>
+      <div class="bni" onclick="go('memb-bat')">Batismos</div>
+      <div class="bni" onclick="go('memb-prof')">Profissões de Fé</div>
+      <div class="bni" onclick="go('memb-trans')">Transferências</div>
+      <div class="bni" onclick="go('memb-aniv')">Aniversariantes</div>
+      <div class="bni" onclick="go('memb-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Batizados <span class="csub" id="memb-bat-count"></span><span class="cact" onclick="listarMembros('memb-bat-list','memb-bat-count',{tipo_ingresso:'batismo'})">↻</span></div>
@@ -165,6 +230,18 @@
 
   <div class="view" id="v-memb-prof">
     <div class="hero"><div class="hero-ic" style="background:rgba(58,170,92,0.12)">✝️</div><div><div class="hero-lbl">Membresia</div><div class="hero-ttl">Profissões de Fé</div><div class="hero-dsc">Membros que ingressaram por profissão de fé</div></div></div>
+    <div class="bnav" style="--mc:var(--gbr)">
+      <div class="bni" onclick="go('memb-dash')">Dashboard</div>
+      <div class="bni" onclick="go('memb-cad')">Cadastro</div>
+      <div class="bni" onclick="go('memb-com')">Comungantes</div>
+      <div class="bni" onclick="go('memb-ncom')">Não Comungantes</div>
+      <div class="bni" onclick="go('memb-vis')">Visitantes</div>
+      <div class="bni" onclick="go('memb-bat')">Batismos</div>
+      <div class="bni" onclick="go('memb-prof')">Profissões de Fé</div>
+      <div class="bni" onclick="go('memb-trans')">Transferências</div>
+      <div class="bni" onclick="go('memb-aniv')">Aniversariantes</div>
+      <div class="bni" onclick="go('memb-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Profissões de Fé <span class="csub" id="memb-prof-count"></span><span class="cact" onclick="listarMembros('memb-prof-list','memb-prof-count',{tipo_ingresso:'profissão de fé'})">↻</span></div>
@@ -178,6 +255,18 @@
 
   <div class="view" id="v-memb-trans">
     <div class="hero"><div class="hero-ic" style="background:rgba(58,170,92,0.12)">🔄</div><div><div class="hero-lbl">Membresia</div><div class="hero-ttl">Transferências</div><div class="hero-dsc">Membros que ingressaram por carta de transferência</div></div></div>
+    <div class="bnav" style="--mc:var(--gbr)">
+      <div class="bni" onclick="go('memb-dash')">Dashboard</div>
+      <div class="bni" onclick="go('memb-cad')">Cadastro</div>
+      <div class="bni" onclick="go('memb-com')">Comungantes</div>
+      <div class="bni" onclick="go('memb-ncom')">Não Comungantes</div>
+      <div class="bni" onclick="go('memb-vis')">Visitantes</div>
+      <div class="bni" onclick="go('memb-bat')">Batismos</div>
+      <div class="bni" onclick="go('memb-prof')">Profissões de Fé</div>
+      <div class="bni" onclick="go('memb-trans')">Transferências</div>
+      <div class="bni" onclick="go('memb-aniv')">Aniversariantes</div>
+      <div class="bni" onclick="go('memb-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Transferências <span class="csub" id="memb-trans-count"></span><span class="cact" onclick="listarMembros('memb-trans-list','memb-trans-count',{tipo_ingresso:'transferência'})">↻</span></div>
@@ -191,6 +280,18 @@
 
   <div class="view" id="v-memb-hist">
     <div class="hero"><div class="hero-ic" style="background:rgba(58,170,92,0.12)">📜</div><div><div class="hero-lbl">Membresia</div><div class="hero-ttl">Histórico</div><div class="hero-dsc">Membros inativos, transferidos, afastados e falecidos</div></div></div>
+    <div class="bnav" style="--mc:var(--gbr)">
+      <div class="bni" onclick="go('memb-dash')">Dashboard</div>
+      <div class="bni" onclick="go('memb-cad')">Cadastro</div>
+      <div class="bni" onclick="go('memb-com')">Comungantes</div>
+      <div class="bni" onclick="go('memb-ncom')">Não Comungantes</div>
+      <div class="bni" onclick="go('memb-vis')">Visitantes</div>
+      <div class="bni" onclick="go('memb-bat')">Batismos</div>
+      <div class="bni" onclick="go('memb-prof')">Profissões de Fé</div>
+      <div class="bni" onclick="go('memb-trans')">Transferências</div>
+      <div class="bni" onclick="go('memb-aniv')">Aniversariantes</div>
+      <div class="bni" onclick="go('memb-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Histórico <span class="csub" id="memb-hist-count"></span><span class="cact" onclick="listarMembros('memb-hist-list','memb-hist-count',{}, true)">↻</span></div>
@@ -213,6 +314,18 @@
   <div class="view" id="v-memb-aniv">
     <div class="hero">
       <div class="hero-ic" style="background:rgba(212,168,67,0.12);border-color:rgba(212,168,67,0.28)">🎂</div>
+    <div class="bnav" style="--mc:var(--gbr)">
+      <div class="bni" onclick="go('memb-dash')">Dashboard</div>
+      <div class="bni" onclick="go('memb-cad')">Cadastro</div>
+      <div class="bni" onclick="go('memb-com')">Comungantes</div>
+      <div class="bni" onclick="go('memb-ncom')">Não Comungantes</div>
+      <div class="bni" onclick="go('memb-vis')">Visitantes</div>
+      <div class="bni" onclick="go('memb-bat')">Batismos</div>
+      <div class="bni" onclick="go('memb-prof')">Profissões de Fé</div>
+      <div class="bni" onclick="go('memb-trans')">Transferências</div>
+      <div class="bni" onclick="go('memb-aniv')">Aniversariantes</div>
+      <div class="bni" onclick="go('memb-whatsapp')">WhatsApp</div>
+    </div>
       <div><div class="hero-lbl">Membresia</div><div class="hero-ttl">Aniversariantes</div><div class="hero-dsc">Membros que fazem aniversário no mês selecionado</div></div>
       <div class="hero-act">
         <select id="aniv-mes" onchange="carregarAniversariantes()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:11.5px;padding:0 12px;outline:none;height:34px;cursor:pointer">

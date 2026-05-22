@@ -44,11 +44,23 @@
 
   <div class="view" id="v-rel-mod">
     <div class="hero"><div class="hero-ic" style="background:rgba(58,170,92,0.12)">📊</div><div><div class="hero-lbl">Relatórios</div><div class="hero-ttl">Por Módulo</div></div></div>
+    <div class="bnav" style="--mc:var(--gmd)">
+      <div class="bni" onclick="go('rel-dash')">Dashboard</div>
+      <div class="bni" onclick="T('Por Módulo','Filtro por área')">Por Módulo</div>
+      <div class="bni" onclick="T('Indicadores','KPIs detalhados')">Indicadores</div>
+      <div class="bni" onclick="T('Exportações','PDF, Excel, CSV')">Exportações</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Demandas por Área <span class="cact" onclick="listarModulo('DEMANDAS','rel-mod-list')">↻</span></div><div id="rel-mod-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-rel-ind">
     <div class="hero"><div class="hero-ic" style="background:rgba(58,170,92,0.12)">📈</div><div><div class="hero-lbl">Relatórios</div><div class="hero-ttl">Indicadores</div></div></div>
+    <div class="bnav" style="--mc:var(--gmd)">
+      <div class="bni" onclick="go('rel-dash')">Dashboard</div>
+      <div class="bni" onclick="T('Por Módulo','Filtro por área')">Por Módulo</div>
+      <div class="bni" onclick="T('Indicadores','KPIs detalhados')">Indicadores</div>
+      <div class="bni" onclick="T('Exportações','PDF, Excel, CSV')">Exportações</div>
+    </div>
     <div class="ct">
       <div class="kpis c4">
         <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.12)">👥</div><div class="kpi-body"><div class="kpi-lbl">Membros</div><div class="kpi-val" id="ri-memb">—</div></div></div>
@@ -62,16 +74,34 @@
 
   <div class="view" id="v-rel-uni">
     <div class="hero"><div class="hero-ic" style="background:rgba(58,170,92,0.12)">⛪</div><div><div class="hero-lbl">Relatórios</div><div class="hero-ttl">Por Congregação</div></div></div>
+    <div class="bnav" style="--mc:var(--gmd)">
+      <div class="bni" onclick="go('rel-dash')">Dashboard</div>
+      <div class="bni" onclick="T('Por Módulo','Filtro por área')">Por Módulo</div>
+      <div class="bni" onclick="T('Indicadores','KPIs detalhados')">Indicadores</div>
+      <div class="bni" onclick="T('Exportações','PDF, Excel, CSV')">Exportações</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Membros <span class="cact" onclick="listarModulo('MEMBROS','rel-uni-list')">↻</span></div><div id="rel-uni-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-rel-res">
     <div class="hero"><div class="hero-ic" style="background:rgba(58,170,92,0.12)">👤</div><div><div class="hero-lbl">Relatórios</div><div class="hero-ttl">Por Responsável</div></div></div>
+    <div class="bnav" style="--mc:var(--gmd)">
+      <div class="bni" onclick="go('rel-dash')">Dashboard</div>
+      <div class="bni" onclick="T('Por Módulo','Filtro por área')">Por Módulo</div>
+      <div class="bni" onclick="T('Indicadores','KPIs detalhados')">Indicadores</div>
+      <div class="bni" onclick="T('Exportações','PDF, Excel, CSV')">Exportações</div>
+    </div>
     <div class="ct"><div class="card"><div class="ctit">Demandas por Responsável <span class="cact" onclick="listarModulo('DEMANDAS','rel-res-list')">↻</span></div><div id="rel-res-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-rel-exp">
     <div class="hero"><div class="hero-ic" style="background:rgba(58,170,92,0.12)">⬇️</div><div><div class="hero-lbl">Relatórios</div><div class="hero-ttl">Exportações</div></div></div>
+    <div class="bnav" style="--mc:var(--gmd)">
+      <div class="bni" onclick="go('rel-dash')">Dashboard</div>
+      <div class="bni" onclick="T('Por Módulo','Filtro por área')">Por Módulo</div>
+      <div class="bni" onclick="T('Indicadores','KPIs detalhados')">Indicadores</div>
+      <div class="bni" onclick="T('Exportações','PDF, Excel, CSV')">Exportações</div>
+    </div>
     <div class="ct">
       <div class="g3">
         <div class="card" style="cursor:pointer" onclick="exportarDados('MEMBROS','membros')"><div class="ctit">👥 Membros</div><div style="font-size:11px;color:var(--tx3)">Exportar todos os membros em JSON</div><div style="margin-top:10px"><span style="background:var(--gr);color:#fff;border-radius:5px;padding:5px 10px;font-size:11px">⬇ Exportar</span></div></div>

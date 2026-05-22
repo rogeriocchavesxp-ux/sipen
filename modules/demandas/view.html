@@ -21,6 +21,16 @@
 
   <div class="view" id="v-dem-todas">
     <div class="hero"><div class="hero-ic" style="background:rgba(224,85,85,0.12)">📋</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Todas as Solicitações</div><div class="hero-dsc">Todas as demandas abertas, em andamento, concluídas e canceladas</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="bnav" style="--mc:var(--rose)">
+      <div class="bni" onclick="go('dem-dash')">Dashboard</div>
+      <div class="bni" onclick="go('dem-todas')">Todas</div>
+      <div class="bni" onclick="go('dem-analise')">Em Análise</div>
+      <div class="bni" onclick="go('dem-and')">Em Andamento</div>
+      <div class="bni" onclick="go('dem-conc')">Concluídas</div>
+      <div class="bni" onclick="go('dem-pri')">Prioridades</div>
+      <div class="bni" onclick="go('dem-hist')">Histórico</div>
+      <div class="bni" onclick="go('dem-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('dem-todas-content')">↻ Atualizar</span></div>
@@ -50,6 +60,16 @@
 
   <div class="view" id="v-dem-analise">
     <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🔍</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Em Análise</div><div class="hero-dsc">Demandas aguardando análise e triagem</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="bnav" style="--mc:var(--rose)">
+      <div class="bni" onclick="go('dem-dash')">Dashboard</div>
+      <div class="bni" onclick="go('dem-todas')">Todas</div>
+      <div class="bni" onclick="go('dem-analise')">Em Análise</div>
+      <div class="bni" onclick="go('dem-and')">Em Andamento</div>
+      <div class="bni" onclick="go('dem-conc')">Concluídas</div>
+      <div class="bni" onclick="go('dem-pri')">Prioridades</div>
+      <div class="bni" onclick="go('dem-hist')">Histórico</div>
+      <div class="bni" onclick="go('dem-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('dem-analise-content',{status:'Em Análise'})">↻ Atualizar</span></div>
@@ -75,6 +95,16 @@
 
   <div class="view" id="v-dem-and">
     <div class="hero"><div class="hero-ic" style="background:rgba(139,111,212,0.12)">🔄</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Em Andamento</div><div class="hero-dsc">Demandas em execução</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="bnav" style="--mc:var(--rose)">
+      <div class="bni" onclick="go('dem-dash')">Dashboard</div>
+      <div class="bni" onclick="go('dem-todas')">Todas</div>
+      <div class="bni" onclick="go('dem-analise')">Em Análise</div>
+      <div class="bni" onclick="go('dem-and')">Em Andamento</div>
+      <div class="bni" onclick="go('dem-conc')">Concluídas</div>
+      <div class="bni" onclick="go('dem-pri')">Prioridades</div>
+      <div class="bni" onclick="go('dem-hist')">Histórico</div>
+      <div class="bni" onclick="go('dem-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('dem-and-content',{status:'EM_ANDAMENTO'})">↻ Atualizar</span></div>
@@ -100,6 +130,16 @@
 
   <div class="view" id="v-dem-conc">
     <div class="hero"><div class="hero-ic" style="background:rgba(58,170,92,0.12)">✅</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Concluídas</div><div class="hero-dsc">Demandas finalizadas com sucesso</div></div></div>
+    <div class="bnav" style="--mc:var(--rose)">
+      <div class="bni" onclick="go('dem-dash')">Dashboard</div>
+      <div class="bni" onclick="go('dem-todas')">Todas</div>
+      <div class="bni" onclick="go('dem-analise')">Em Análise</div>
+      <div class="bni" onclick="go('dem-and')">Em Andamento</div>
+      <div class="bni" onclick="go('dem-conc')">Concluídas</div>
+      <div class="bni" onclick="go('dem-pri')">Prioridades</div>
+      <div class="bni" onclick="go('dem-hist')">Histórico</div>
+      <div class="bni" onclick="go('dem-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('dem-conc-content',{status:'Concluída'})">↻ Atualizar</span></div>
@@ -121,6 +161,16 @@
 
   <div class="view" id="v-dem-pri">
     <div class="hero"><div class="hero-ic" style="background:var(--rosebg)">🚨</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Alta Prioridade</div><div class="hero-dsc">Demandas urgentes e de alta prioridade</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova</button></div></div>
+    <div class="bnav" style="--mc:var(--rose)">
+      <div class="bni" onclick="go('dem-dash')">Dashboard</div>
+      <div class="bni" onclick="go('dem-todas')">Todas</div>
+      <div class="bni" onclick="go('dem-analise')">Em Análise</div>
+      <div class="bni" onclick="go('dem-and')">Em Andamento</div>
+      <div class="bni" onclick="go('dem-conc')">Concluídas</div>
+      <div class="bni" onclick="go('dem-pri')">Prioridades</div>
+      <div class="bni" onclick="go('dem-hist')">Histórico</div>
+      <div class="bni" onclick="go('dem-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('dem-pri-content',{prioridade:'Alta'})">↻ Atualizar</span></div>
@@ -142,6 +192,16 @@
 
   <div class="view" id="v-dem-hist">
     <div class="hero"><div class="hero-ic" style="background:var(--violetbg)">📜</div><div><div class="hero-lbl">Demandas</div><div class="hero-ttl">Histórico</div><div class="hero-dsc">Todas as demandas de todos os períodos</div></div></div>
+    <div class="bnav" style="--mc:var(--rose)">
+      <div class="bni" onclick="go('dem-dash')">Dashboard</div>
+      <div class="bni" onclick="go('dem-todas')">Todas</div>
+      <div class="bni" onclick="go('dem-analise')">Em Análise</div>
+      <div class="bni" onclick="go('dem-and')">Em Andamento</div>
+      <div class="bni" onclick="go('dem-conc')">Concluídas</div>
+      <div class="bni" onclick="go('dem-pri')">Prioridades</div>
+      <div class="bni" onclick="go('dem-hist')">Histórico</div>
+      <div class="bni" onclick="go('dem-whatsapp')">WhatsApp</div>
+    </div>
     <div class="ct">
       <div class="card">
         <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('dem-hist-content')">↻ Atualizar</span></div>
@@ -171,6 +231,16 @@
   <div class="view" id="v-dem-whatsapp">
     <div class="hero">
       <div class="hero-ic" style="background:rgba(224,85,85,0.12)">💬</div>
+    <div class="bnav" style="--mc:var(--rose)">
+      <div class="bni" onclick="go('dem-dash')">Dashboard</div>
+      <div class="bni" onclick="go('dem-todas')">Todas</div>
+      <div class="bni" onclick="go('dem-analise')">Em Análise</div>
+      <div class="bni" onclick="go('dem-and')">Em Andamento</div>
+      <div class="bni" onclick="go('dem-conc')">Concluídas</div>
+      <div class="bni" onclick="go('dem-pri')">Prioridades</div>
+      <div class="bni" onclick="go('dem-hist')">Histórico</div>
+      <div class="bni" onclick="go('dem-whatsapp')">WhatsApp</div>
+    </div>
       <div><div class="hero-lbl">Demandas</div><div class="hero-ttl">WhatsApp — Demandas</div><div class="hero-dsc">Responsáveis, tipos de mensagem e histórico de envios automáticos</div></div>
       <div class="hero-act"><button class="tbt" onclick="go('dem-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('DEMANDAS')">↻ Atualizar</button></div>
     </div>
