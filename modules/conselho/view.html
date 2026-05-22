@@ -4,7 +4,7 @@
       <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Conselho e Governança</div><div class="hero-dsc">Visão estratégica, indicadores institucionais e governança da IPPenha</div></div>
     </div>
     <div class="bnav" style="--mc:var(--sky)">
-      <div class="bni on">Dashboard</div>
+      <div class="bni" onclick="go('conselho-dash')">Dashboard</div>
       <div class="bni" onclick="go('conselho-nomeados')">Nomeados</div>
       <div class="bni" onclick="go('conselho-ordenados')">Ordenados</div>
       <div class="bni" onclick="go('conselho-seminaristas')">Seminaristas</div>
@@ -183,14 +183,15 @@
       <div><div class="hero-lbl">Conselho e Governança</div><div class="hero-ttl">Nomeados</div><div class="hero-dsc">Funções designadas e temporárias sempre vinculadas à membresia, com histórico, ata de origem e possibilidade de permissões derivadas.</div></div>
       <div class="hero-act"><button class="tbt pri" onclick="T('Novo nomeado','Registro vinculado à membresia e à ata')">+ Novo Registro</button></div>
     </div>
-    <div class="secnav">
-      <div class="sni on">Nomeados</div>
-      <div class="sni-sep"></div>
-      <div class="sni" onclick="go('conselho-ordenados')">Ordenados</div>
-      <div class="sni-sep"></div>
-      <div class="sni" onclick="go('conselho-seminaristas')">Seminaristas</div>
-      <div class="sni-sep"></div>
-      <div class="sni" onclick="go('conselho-contratados')">Contratados</div>
+    <div class="bnav" style="--mc:var(--sky);margin-bottom:0">
+      <div class="bni" onclick="go('conselho-dash')">Dashboard</div>
+      <div class="bni" onclick="go('conselho-nomeados')">Nomeados</div>
+      <div class="bni" onclick="go('conselho-ordenados')">Ordenados</div>
+      <div class="bni" onclick="go('conselho-seminaristas')">Seminaristas</div>
+      <div class="bni" onclick="go('conselho-contratados')">Contratados</div>
+      <div class="bni" onclick="T('Estratégico','Relatórios macro')">Estratégico</div>
+      <div class="bni" onclick="T('Documentos','Atas e resoluções')">Documentos</div>
+      <div class="bni" onclick="go('conselho-whatsapp')">WhatsApp</div>
     </div>
     <div class="bnav" style="--mc:var(--sky);margin-top:0" id="nom-inav">
       <div class="bni on" onclick="switchNomTab('governo')">Governo</div>
@@ -219,14 +220,15 @@
       <div><div class="hero-lbl">Conselho e Governança</div><div class="hero-ttl">Ordenados</div><div class="hero-dsc">Oficiais ordenados da igreja com tratamento distinto de funções temporárias, histórico de ordenação, situação atual e mandatos.</div></div>
       <div class="hero-act"><button class="tbt pri" onclick="T('Novo oficial','Cadastro restrito para ordenados')">+ Novo Oficial</button></div>
     </div>
-    <div class="secnav">
-      <div class="sni" onclick="go('conselho-nomeados')">Nomeados</div>
-      <div class="sni-sep"></div>
-      <div class="sni on">Ordenados</div>
-      <div class="sni-sep"></div>
-      <div class="sni" onclick="go('conselho-seminaristas')">Seminaristas</div>
-      <div class="sni-sep"></div>
-      <div class="sni" onclick="go('conselho-contratados')">Contratados</div>
+    <div class="bnav" style="--mc:var(--sky);margin-bottom:0">
+      <div class="bni" onclick="go('conselho-dash')">Dashboard</div>
+      <div class="bni" onclick="go('conselho-nomeados')">Nomeados</div>
+      <div class="bni" onclick="go('conselho-ordenados')">Ordenados</div>
+      <div class="bni" onclick="go('conselho-seminaristas')">Seminaristas</div>
+      <div class="bni" onclick="go('conselho-contratados')">Contratados</div>
+      <div class="bni" onclick="T('Estratégico','Relatórios macro')">Estratégico</div>
+      <div class="bni" onclick="T('Documentos','Atas e resoluções')">Documentos</div>
+      <div class="bni" onclick="go('conselho-whatsapp')">WhatsApp</div>
     </div>
     <div class="bnav" style="--mc:var(--sky);margin-top:0">
       <div class="bni on">Lista Geral</div>
@@ -281,14 +283,15 @@
       <div><div class="hero-lbl">Conselho e Governança</div><div class="hero-ttl">Seminaristas</div><div class="hero-dsc">Membros em formação teológica vinculados à IPPenha — acompanhamento de estágio, progresso acadêmico e integração ao ministério.</div></div>
       <div class="hero-act"><button class="tbt pri" onclick="T('Novo seminarista','Registro de membro em formação teológica')">+ Novo Seminarista</button></div>
     </div>
-    <div class="secnav">
-      <div class="sni" onclick="go('conselho-nomeados')">Nomeados</div>
-      <div class="sni-sep"></div>
-      <div class="sni" onclick="go('conselho-ordenados')">Ordenados</div>
-      <div class="sni-sep"></div>
-      <div class="sni on">Seminaristas</div>
-      <div class="sni-sep"></div>
-      <div class="sni" onclick="go('conselho-contratados')">Contratados</div>
+    <div class="bnav" style="--mc:var(--sky);margin-bottom:0">
+      <div class="bni" onclick="go('conselho-dash')">Dashboard</div>
+      <div class="bni" onclick="go('conselho-nomeados')">Nomeados</div>
+      <div class="bni" onclick="go('conselho-ordenados')">Ordenados</div>
+      <div class="bni" onclick="go('conselho-seminaristas')">Seminaristas</div>
+      <div class="bni" onclick="go('conselho-contratados')">Contratados</div>
+      <div class="bni" onclick="T('Estratégico','Relatórios macro')">Estratégico</div>
+      <div class="bni" onclick="T('Documentos','Atas e resoluções')">Documentos</div>
+      <div class="bni" onclick="go('conselho-whatsapp')">WhatsApp</div>
     </div>
     <div class="bnav" style="--mc:var(--sky);margin-top:0">
       <div class="bni on">Lista Geral</div>
@@ -319,14 +322,15 @@
       <div><div class="hero-lbl">Conselho e Governança</div><div class="hero-ttl">Contratados</div><div class="hero-dsc">Funcionários terceirizados e contratados que prestam apoio operacional e administrativo à IPPenha. Registro separado de nomeados e ordenados.</div></div>
       <div class="hero-act"><button class="tbt pri" onclick="T('Novo contratado','Cadastro de funcionário ou prestador')">+ Novo Contratado</button></div>
     </div>
-    <div class="secnav">
-      <div class="sni" onclick="go('conselho-nomeados')">Nomeados</div>
-      <div class="sni-sep"></div>
-      <div class="sni" onclick="go('conselho-ordenados')">Ordenados</div>
-      <div class="sni-sep"></div>
-      <div class="sni" onclick="go('conselho-seminaristas')">Seminaristas</div>
-      <div class="sni-sep"></div>
-      <div class="sni on">Contratados</div>
+    <div class="bnav" style="--mc:var(--sky);margin-bottom:0">
+      <div class="bni" onclick="go('conselho-dash')">Dashboard</div>
+      <div class="bni" onclick="go('conselho-nomeados')">Nomeados</div>
+      <div class="bni" onclick="go('conselho-ordenados')">Ordenados</div>
+      <div class="bni" onclick="go('conselho-seminaristas')">Seminaristas</div>
+      <div class="bni" onclick="go('conselho-contratados')">Contratados</div>
+      <div class="bni" onclick="T('Estratégico','Relatórios macro')">Estratégico</div>
+      <div class="bni" onclick="T('Documentos','Atas e resoluções')">Documentos</div>
+      <div class="bni" onclick="go('conselho-whatsapp')">WhatsApp</div>
     </div>
     <div class="bnav" style="--mc:var(--sky);margin-top:0">
       <div class="bni on">Lista Geral</div>
