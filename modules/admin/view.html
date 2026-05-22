@@ -4,19 +4,19 @@
       <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Administração</div><div class="hero-dsc">Secretaria, contratos, RH, estoque e documentação institucional da IPPenha</div></div>
       <div class="hero-act"><button class="tbt pri" onclick="openModal()">+ Nova Tarefa</button></div>
     </div>
-    <div class="inav" style="--mc:var(--gold)">
-      <div class="ini on">Dashboard</div>
-      <div class="ini" onclick="go('admin-sec')">Secretaria</div>
-      <div class="ini" onclick="go('admin-rh')">RH</div>
-      <div class="ini" onclick="go('admin-con')">Contratos</div>
-      <div class="ini" onclick="go('admin-doc')">Documentos</div>
-      <div class="ini" onclick="go('admin-est')">Estoque</div>
-      <div class="ini" onclick="go('admin-parking-controls')">Estacionamento</div>
-      <div class="ini" onclick="go('admin-facial')">Acesso Facial</div>
-      <div class="ini" onclick="go('admin-pessoas')">Cadastro de Pessoas</div>
-      <div class="ini" onclick="go('pext-lista')">Part. Externos</div>
-      <div class="ini" onclick="go('admin-demandas')">Demandas</div>
-      <div class="ini" onclick="go('admin-aud')">Auditoria</div>
+    <div class="bnav" style="--mc:var(--gold)">
+      <div class="bni on">Dashboard</div>
+      <div class="bni" onclick="go('admin-sec')">Secretaria</div>
+      <div class="bni" onclick="go('admin-rh')">RH</div>
+      <div class="bni" onclick="go('admin-con')">Contratos</div>
+      <div class="bni" onclick="go('admin-doc')">Documentos</div>
+      <div class="bni" onclick="go('admin-est')">Estoque</div>
+      <div class="bni" onclick="go('admin-parking-controls')">Estacionamento</div>
+      <div class="bni" onclick="go('admin-facial')">Acesso Facial</div>
+      <div class="bni" onclick="go('admin-pessoas')">Cadastro de Pessoas</div>
+      <div class="bni" onclick="go('pext-lista')">Part. Externos</div>
+      <div class="bni" onclick="go('admin-demandas')">Demandas</div>
+      <div class="bni" onclick="go('admin-aud')">Auditoria</div>
     </div>
     <div class="ct">
       <div class="kpis c4">
@@ -60,10 +60,10 @@
       <div><div class="hero-lbl">Administração</div><div class="hero-ttl">Controle de Estoque</div><div class="hero-dsc">Itens, entradas, saídas, solicitações, inventário, alertas e controle interno de materiais.</div></div>
       <div class="hero-act"><button class="tbt" onclick="T('Nova solicitação','Fluxo: solicitação → verificação → aprovação → saída/compra')">+ Solicitação</button><button class="tbt pri" onclick="T('Nova movimentação','Registro de movimentação aberto')">+ Movimentação</button></div>
     </div>
-    <div class="inav" style="--mc:var(--gold)">
-      <div class="ini on">Visão Geral</div><div class="ini" onclick="T('Itens','Cadastro de itens com estoque mínimo')">Itens</div>
-      <div class="ini" onclick="T('Entradas','Compras e reposições')">Entradas</div><div class="ini" onclick="T('Saídas','Consumo vinculado a solicitações')">Saídas</div>
-      <div class="ini" onclick="T('Inventário','Conferências e ajustes auditáveis')">Inventário</div><div class="ini" onclick="T('Alertas','Itens abaixo do mínimo')">Alertas</div>
+    <div class="bnav" style="--mc:var(--gold)">
+      <div class="bni on">Visão Geral</div><div class="bni" onclick="T('Itens','Cadastro de itens com estoque mínimo')">Itens</div>
+      <div class="bni" onclick="T('Entradas','Compras e reposições')">Entradas</div><div class="bni" onclick="T('Saídas','Consumo vinculado a solicitações')">Saídas</div>
+      <div class="bni" onclick="T('Inventário','Conferências e ajustes auditáveis')">Inventário</div><div class="bni" onclick="T('Alertas','Itens abaixo do mínimo')">Alertas</div>
     </div>
     <div class="ct">
       <div class="kpis c4">
@@ -304,19 +304,19 @@
     <div class="ct">
       <div class="kpis c4" id="con-kpis"></div>
       <div id="con-alertas"></div>
-      <div class="inav" style="--mc:var(--gold);margin-bottom:16px" id="con-tipo-tabs">
-        <div class="ini on" data-tipo="" onclick="conFiltrarTipo('')">Todos</div>
-        <div class="ini" data-tipo="Software" onclick="conFiltrarTipo('Software')">💻 Software</div>
-        <div class="ini" data-tipo="Segurança" onclick="conFiltrarTipo('Segurança')">🔒 Segurança</div>
-        <div class="ini" data-tipo="Portaria Remota" onclick="conFiltrarTipo('Portaria Remota')">🚪 Portaria</div>
-        <div class="ini" data-tipo="Locação" onclick="conFiltrarTipo('Locação')">🏢 Locação</div>
-        <div class="ini" data-tipo="Infraestrutura" onclick="conFiltrarTipo('Infraestrutura')">⚙ Infraestrutura</div>
-        <div class="ini" data-tipo="Serviços" onclick="conFiltrarTipo('Serviços')">🛠 Serviços</div>
-        <div class="ini" data-tipo="Seguro" onclick="conFiltrarTipo('Seguro')">🛡 Seguro</div>
-        <div class="ini" data-tipo="Fornecimento" onclick="conFiltrarTipo('Fornecimento')">📦 Fornecimento</div>
-        <div class="ini" data-tipo="Telefonia" onclick="conFiltrarTipo('Telefonia')">📱 Telefonia</div>
-        <div class="ini" data-tipo="Internet" onclick="conFiltrarTipo('Internet')">🌐 Internet</div>
-        <div class="ini" data-tipo="Outro" onclick="conFiltrarTipo('Outro')">📄 Outro</div>
+      <div class="bnav" style="--mc:var(--gold);margin-bottom:16px" id="con-tipo-tabs">
+        <div class="bni on" data-tipo="" onclick="conFiltrarTipo('')">Todos</div>
+        <div class="bni" data-tipo="Software" onclick="conFiltrarTipo('Software')">💻 Software</div>
+        <div class="bni" data-tipo="Segurança" onclick="conFiltrarTipo('Segurança')">🔒 Segurança</div>
+        <div class="bni" data-tipo="Portaria Remota" onclick="conFiltrarTipo('Portaria Remota')">🚪 Portaria</div>
+        <div class="bni" data-tipo="Locação" onclick="conFiltrarTipo('Locação')">🏢 Locação</div>
+        <div class="bni" data-tipo="Infraestrutura" onclick="conFiltrarTipo('Infraestrutura')">⚙ Infraestrutura</div>
+        <div class="bni" data-tipo="Serviços" onclick="conFiltrarTipo('Serviços')">🛠 Serviços</div>
+        <div class="bni" data-tipo="Seguro" onclick="conFiltrarTipo('Seguro')">🛡 Seguro</div>
+        <div class="bni" data-tipo="Fornecimento" onclick="conFiltrarTipo('Fornecimento')">📦 Fornecimento</div>
+        <div class="bni" data-tipo="Telefonia" onclick="conFiltrarTipo('Telefonia')">📱 Telefonia</div>
+        <div class="bni" data-tipo="Internet" onclick="conFiltrarTipo('Internet')">🌐 Internet</div>
+        <div class="bni" data-tipo="Outro" onclick="conFiltrarTipo('Outro')">📄 Outro</div>
       </div>
       <div class="card">
         <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">

@@ -4,14 +4,14 @@
       <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Financeiro</div><div class="hero-dsc">Visão consolidada de receitas, despesas, saldo e alertas</div></div>
       <div class="hero-act"><button class="tbt pri" onclick="go('fin-lancamentos')">+ Novo Lançamento</button></div>
     </div>
-    <div class="inav" style="--mc:var(--gr)">
-      <div class="ini on">Dashboard</div>
-      <div class="ini" onclick="go('fin-lancamentos')">Lançamentos</div>
-      <div class="ini" onclick="go('fin-fluxo')">Fluxo de Caixa</div>
-      <div class="ini" onclick="go('fin-pagar')">A Pagar</div>
-      <div class="ini" onclick="go('fin-receber')">A Receber</div>
-      <div class="ini" onclick="go('fin-relatorios')">Relatórios</div>
-      <div class="ini" onclick="go('fin-whatsapp')">WhatsApp</div>
+    <div class="bnav" style="--mc:var(--gr)">
+      <div class="bni on">Dashboard</div>
+      <div class="bni" onclick="go('fin-lancamentos')">Lançamentos</div>
+      <div class="bni" onclick="go('fin-fluxo')">Fluxo de Caixa</div>
+      <div class="bni" onclick="go('fin-pagar')">A Pagar</div>
+      <div class="bni" onclick="go('fin-receber')">A Receber</div>
+      <div class="bni" onclick="go('fin-relatorios')">Relatórios</div>
+      <div class="bni" onclick="go('fin-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct" id="fin-dash-content"></div>
   </div>
@@ -38,13 +38,13 @@
         <button class="tbt pri" onclick="alert('Formulário de novo lançamento — integração com backend em desenvolvimento')">+ Novo Lançamento</button>
       </div>
     </div>
-    <div class="inav" style="--mc:var(--gr)">
-      <div class="ini" onclick="go('fin-dash')">Dashboard</div>
-      <div class="ini on">Lançamentos</div>
-      <div class="ini" onclick="go('fin-fluxo')">Fluxo de Caixa</div>
-      <div class="ini" onclick="go('fin-pagar')">A Pagar</div>
-      <div class="ini" onclick="go('fin-receber')">A Receber</div>
-      <div class="ini" onclick="go('fin-relatorios')">Relatórios</div>
+    <div class="bnav" style="--mc:var(--gr)">
+      <div class="bni" onclick="go('fin-dash')">Dashboard</div>
+      <div class="bni on">Lançamentos</div>
+      <div class="bni" onclick="go('fin-fluxo')">Fluxo de Caixa</div>
+      <div class="bni" onclick="go('fin-pagar')">A Pagar</div>
+      <div class="bni" onclick="go('fin-receber')">A Receber</div>
+      <div class="bni" onclick="go('fin-relatorios')">Relatórios</div>
     </div>
     <div class="ct" id="fin-lanc-content"></div>
   </div>
@@ -56,13 +56,13 @@
       <div class="hero-ic" style="background:rgba(61,160,85,0.12)">📈</div>
       <div><div class="hero-lbl">Financeiro</div><div class="hero-ttl">Fluxo de Caixa</div><div class="hero-dsc">Entradas e saídas por período com saldo acumulado</div></div>
     </div>
-    <div class="inav" style="--mc:var(--gr)">
-      <div class="ini" onclick="go('fin-dash')">Dashboard</div>
-      <div class="ini" onclick="go('fin-lancamentos')">Lançamentos</div>
-      <div class="ini on">Fluxo de Caixa</div>
-      <div class="ini" onclick="go('fin-pagar')">A Pagar</div>
-      <div class="ini" onclick="go('fin-receber')">A Receber</div>
-      <div class="ini" onclick="go('fin-relatorios')">Relatórios</div>
+    <div class="bnav" style="--mc:var(--gr)">
+      <div class="bni" onclick="go('fin-dash')">Dashboard</div>
+      <div class="bni" onclick="go('fin-lancamentos')">Lançamentos</div>
+      <div class="bni on">Fluxo de Caixa</div>
+      <div class="bni" onclick="go('fin-pagar')">A Pagar</div>
+      <div class="bni" onclick="go('fin-receber')">A Receber</div>
+      <div class="bni" onclick="go('fin-relatorios')">Relatórios</div>
     </div>
     <div class="ct" id="fin-fluxo-content"></div>
   </div>
@@ -75,13 +75,13 @@
       <div><div class="hero-lbl">Financeiro</div><div class="hero-ttl">Solicitações de Pagamento</div><div class="hero-dsc">Boletos, PIX e reembolsos pendentes de aprovação ou pagamento</div></div>
       <div class="hero-act"><button class="tbt" onclick="finFiltrarPagar()">↺ Atualizar</button></div>
     </div>
-    <div class="inav" style="--mc:var(--gr)">
-      <div class="ini" onclick="go('fin-dash')">Dashboard</div>
-      <div class="ini" onclick="go('fin-lancamentos')">Lançamentos</div>
-      <div class="ini" onclick="go('fin-fluxo')">Fluxo de Caixa</div>
-      <div class="ini on">A Pagar</div>
-      <div class="ini" onclick="go('fin-receber')">A Receber</div>
-      <div class="ini" onclick="go('fin-relatorios')">Relatórios</div>
+    <div class="bnav" style="--mc:var(--gr)">
+      <div class="bni" onclick="go('fin-dash')">Dashboard</div>
+      <div class="bni" onclick="go('fin-lancamentos')">Lançamentos</div>
+      <div class="bni" onclick="go('fin-fluxo')">Fluxo de Caixa</div>
+      <div class="bni on">A Pagar</div>
+      <div class="bni" onclick="go('fin-receber')">A Receber</div>
+      <div class="bni" onclick="go('fin-relatorios')">Relatórios</div>
     </div>
     <div class="ct" id="fin-pagar-content"></div>
   </div>
@@ -94,13 +94,13 @@
       <div><div class="hero-lbl">Financeiro</div><div class="hero-ttl">Contas a Receber</div><div class="hero-dsc">Receitas pendentes e confirmação de recebimentos</div></div>
       <div class="hero-act"><button class="tbt pri" onclick="alert('Formulário de nova conta a receber — integração em desenvolvimento')">+ Nova Conta</button></div>
     </div>
-    <div class="inav" style="--mc:var(--gr)">
-      <div class="ini" onclick="go('fin-dash')">Dashboard</div>
-      <div class="ini" onclick="go('fin-lancamentos')">Lançamentos</div>
-      <div class="ini" onclick="go('fin-fluxo')">Fluxo de Caixa</div>
-      <div class="ini" onclick="go('fin-pagar')">A Pagar</div>
-      <div class="ini on">A Receber</div>
-      <div class="ini" onclick="go('fin-relatorios')">Relatórios</div>
+    <div class="bnav" style="--mc:var(--gr)">
+      <div class="bni" onclick="go('fin-dash')">Dashboard</div>
+      <div class="bni" onclick="go('fin-lancamentos')">Lançamentos</div>
+      <div class="bni" onclick="go('fin-fluxo')">Fluxo de Caixa</div>
+      <div class="bni" onclick="go('fin-pagar')">A Pagar</div>
+      <div class="bni on">A Receber</div>
+      <div class="bni" onclick="go('fin-relatorios')">Relatórios</div>
     </div>
     <div class="ct" id="fin-receber-content"></div>
   </div>
@@ -124,13 +124,13 @@
       <div><div class="hero-lbl">Financeiro</div><div class="hero-ttl">Relatórios Financeiros</div><div class="hero-dsc">Consolidados por período, categoria e tipo de movimentação</div></div>
       <div class="hero-act"><button class="tbt" onclick="alert('Exportação disponível na próxima versão do módulo')">⬇ Exportar</button></div>
     </div>
-    <div class="inav" style="--mc:var(--gr)">
-      <div class="ini" onclick="go('fin-dash')">Dashboard</div>
-      <div class="ini" onclick="go('fin-lancamentos')">Lançamentos</div>
-      <div class="ini" onclick="go('fin-fluxo')">Fluxo de Caixa</div>
-      <div class="ini" onclick="go('fin-pagar')">A Pagar</div>
-      <div class="ini" onclick="go('fin-receber')">A Receber</div>
-      <div class="ini on">Relatórios</div>
+    <div class="bnav" style="--mc:var(--gr)">
+      <div class="bni" onclick="go('fin-dash')">Dashboard</div>
+      <div class="bni" onclick="go('fin-lancamentos')">Lançamentos</div>
+      <div class="bni" onclick="go('fin-fluxo')">Fluxo de Caixa</div>
+      <div class="bni" onclick="go('fin-pagar')">A Pagar</div>
+      <div class="bni" onclick="go('fin-receber')">A Receber</div>
+      <div class="bni on">Relatórios</div>
     </div>
     <div class="ct" id="fin-rel-content"></div>
   </div>
@@ -153,11 +153,11 @@
       <div><div class="hero-lbl">Financeiro</div><div class="hero-ttl">CNAB 240 — Remessas Bancárias</div><div class="hero-dsc">Geração e controle de remessas e retornos bancários para o Bradesco</div></div>
       <div class="hero-act" style="display:flex;gap:8px;flex-wrap:wrap"><button class="tbt" onclick="cnabAbrirConfig()">Configurar Empresa</button><button class="tbt" onclick="cnabImportarRetorno()">Importar Retorno</button><button class="tbt pri" onclick="cnabGerarRemessa()">Nova Remessa</button></div>
     </div>
-    <div class="inav" style="--mc:var(--gr)">
-      <div class="ini" onclick="go('fin-dash')">Dashboard</div>
-      <div class="ini" onclick="go('fin-pagar')">A Pagar</div>
-      <div class="ini on">CNAB 240</div>
-      <div class="ini" onclick="go('fin-auditoria')">Auditoria</div>
+    <div class="bnav" style="--mc:var(--gr)">
+      <div class="bni" onclick="go('fin-dash')">Dashboard</div>
+      <div class="bni" onclick="go('fin-pagar')">A Pagar</div>
+      <div class="bni on">CNAB 240</div>
+      <div class="bni" onclick="go('fin-auditoria')">Auditoria</div>
     </div>
     <div class="ct" id="cnab-remessas-body"><div class="card" style="padding:28px;color:var(--tx3)">Carregando remessas...</div></div>
   </div>
