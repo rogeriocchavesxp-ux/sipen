@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Relatório de Controle de Acesso — IPPenha — Mai/2026</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --azul: #1a3a5c;
+      --azul-medio: #2b5b8a;
+      --azul-claro: #e8f0f8;
+      --verde: #2e7d52;
+      --verde-claro: #e6f4ed;
+      --amarelo: #b8860b;
+      --amarelo-claro: #fdf6e3;
+      --vermelho: #8b1a1a;
+      --vermelho-claro: #fdecea;
+      --cinza: #6b7280;
+      --cinza-claro: #f4f6f8;
+      --borda: #d1d9e0;
+      --texto: #1a1a2e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-size: 11pt;
+      color: var(--texto);
+      background: #fff;
+      line-height: 1.6;
+    }
+
+    /* ── CAPA ── */
+    .capa {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: var(--azul);
+      color: #fff;
+      padding: 60px 40px;
+      page-break-after: always;
+    }
+    .capa .brasao {
+      width: 80px; height: 80px;
+      border: 3px solid rgba(255,255,255,0.4);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32pt; margin-bottom: 28px;
+      background: rgba(255,255,255,0.08);
+    }
+    .capa h1 { font-size: 22pt; font-weight: normal; letter-spacing: 1px; margin-bottom: 8px; }
+    .capa h2 { font-size: 13pt; font-weight: normal; opacity: 0.75; margin-bottom: 40px; }
+    .capa .linha { width: 60px; height: 2px; background: rgba(255,255,255,0.4); margin: 0 auto 40px; }
+    .capa .meta { font-size: 10pt; opacity: 0.65; line-height: 2; }
+    .capa .classificacao {
+      margin-top: 50px;
+      padding: 8px 24px;
+      border: 1px solid rgba(255,255,255,0.3);
+      font-size: 9pt;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: 0.6;
+    }
+
+    /* ── LAYOUT GERAL ── */
+    .pagina {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 50px;
+    }
+
+    /* ── CABEÇALHO DE SEÇÃO ── */
+    .secao-titulo {
+      display: flex; align-items: center; gap: 12px;
+      margin: 36px 0 18px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--azul);
+    }
+    .secao-num {
+      background: var(--azul);
+      color: #fff;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10pt;
+      flex-shrink: 0;
+    }
+    .secao-titulo h2 { font-size: 13pt; color: var(--azul); font-weight: bold; }
+
+    h3 { font-size: 11pt; color: var(--azul-medio); margin: 20px 0 10px; }
+
+    /* ── CARDS DE RESUMO ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin: 20px 0;
+    }
+    .card {
+      background: var(--azul-claro);
+      border: 1px solid var(--borda);
+      border-top: 3px solid var(--azul-medio);
+      padding: 16px;
+      text-align: center;
+    }
+    .card .valor { font-size: 22pt; font-weight: bold; color: var(--azul); line-height: 1; }
+    .card .label { font-size: 9pt; color: var(--cinza); margin-top: 4px; }
+
+    .cards-risco {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin: 20px 0;
+    }
+    .card-critico { background: var(--vermelho-claro); border-top-color: var(--vermelho); }
+    .card-critico .valor { color: var(--vermelho); }
+    .card-atencao { background: var(--amarelo-claro); border-top-color: var(--amarelo); }
+    .card-atencao .valor { color: var(--amarelo); }
+    .card-monitora { background: var(--verde-claro); border-top-color: var(--verde); }
+    .card-monitora .valor { color: var(--verde); }
+
+    /* ── GRÁFICOS ── */
+    .grafico-container {
+      background: #fff;
+      border: 1px solid var(--borda);
+      padding: 20px;
+      margin: 16px 0;
+    }
+    .grafico-titulo {
+      font-size: 10pt;
+      color: var(--azul);
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--borda);
+    }
+    .grafico-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 16px 0;
+    }
+    canvas { max-height: 260px; }
+
+    /* ── TABELAS ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.5pt;
+      margin: 14px 0;
+    }
+    thead th {
+      background: var(--azul);
+      color: #fff;
+      padding: 8px 10px;
+      text-align: left;
+      font-weight: normal;
+      font-size: 9pt;
+    }
+    tbody tr:nth-child(even) { background: var(--cinza-claro); }
+    tbody tr:hover { background: var(--azul-claro); }
+    tbody td { padding: 7px 10px; border-bottom: 1px solid var(--borda); }
+
+    /* ── BADGES DE RISCO ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 8pt;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .badge-critico { background: var(--vermelho); color: #fff; }
+    .badge-atencao { background: var(--amarelo); color: #fff; }
+    .badge-monitora { background: var(--verde); color: #fff; }
+    .badge-regular { background: #4b5563; color: #fff; }
+
+    /* ── ALERTAS ── */
+    .alerta {
+      padding: 12px 16px;
+      margin: 12px 0;
+      border-left: 4px solid;
+      font-size: 10pt;
+    }
+    .alerta-critico { border-color: var(--vermelho); background: var(--vermelho-claro); }
+    .alerta-atencao { border-color: var(--amarelo); background: var(--amarelo-claro); }
+    .alerta-info { border-color: var(--azul-medio); background: var(--azul-claro); }
+    .alerta strong { display: block; margin-bottom: 3px; }
+
+    /* ── RECOMENDAÇÕES ── */
+    .rec-item {
+      display: flex; gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--borda);
+      align-items: flex-start;
+    }
+    .rec-num {
+      background: var(--azul);
+      color: #fff;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9pt;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .rec-conteudo .rec-titulo { font-weight: bold; font-size: 10.5pt; }
+    .rec-conteudo .rec-desc { font-size: 9.5pt; color: var(--cinza); margin-top: 2px; }
+
+    /* ── RODAPÉ ── */
+    .rodape {
+      margin-top: 50px;
+      padding: 20px 0;
+      border-top: 2px solid var(--azul);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 8.5pt;
+      color: var(--cinza);
+    }
+
+    /* ── QUEBRA DE PÁGINA ── */
+    .quebra { page-break-before: always; margin-top: 0; }
+
+    /* ── PRINT ── */
+    @media print {
+      body { font-size: 10pt; }
+      .capa { height: 100vh; page-break-after: always; }
+      .pagina { padding: 24px 36px; }
+      .grafico-container { break-inside: avoid; }
+      .secao-titulo { break-after: avoid; }
+      table { break-inside: avoid; }
+      .alerta { break-inside: avoid; }
+      @page {
+        margin: 15mm 15mm 20mm 15mm;
+        size: A4;
+      }
+      @page :first { margin: 0; }
+    }
+
+    p { margin-bottom: 8px; }
+    ul { padding-left: 18px; margin-bottom: 8px; }
+    li { margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════ CAPA -->
+<div class="capa">
+  <div class="brasao">&#9961;</div>
+  <h1>Igreja Presbiteriana da Penha</h1>
+  <h2>IPPenha</h2>
+  <div class="linha"></div>
+  <h1 style="font-size:17pt; margin-bottom:10px;">Relatório de Controle de Acesso</h1>
+  <h2 style="font-size:12pt; opacity:0.9;">Análise Estatística e Operacional</h2>
+  <div class="meta" style="margin-top:30px;">
+    Período de referência: <strong>13 a 22 de maio de 2026</strong><br>
+    Elaborado por: Secretaria Executiva Estratégica — SIPEN<br>
+    Data de emissão: 22 de maio de 2026
+  </div>
+  <div class="classificacao">Uso interno — Conselho e Liderança</div>
+</div>
+
+<!-- ══════════════════════════════════════════════ CORPO -->
+<div class="pagina">
+
+  <!-- ── 1. RESUMO EXECUTIVO ── -->
+  <div class="secao-titulo">
+    <div class="secao-num">1</div>
+    <h2>Resumo Executivo</h2>
+  </div>
+
+  <p>O presente relatório analisa o funcionamento do sistema de controle de acesso da Igreja Presbiteriana da Penha no período de <strong>13 a 22 de maio de 2026</strong>, abrangendo 10 dias de operação com atividades ministeriais, administrativas e de infraestrutura.</p>
+
+  <p>A análise identificou <strong>três categorias simultâneas de problema</strong>: falhas técnicas nos equipamentos de leitura, inconsistências de dados que comprometem a rastreabilidade e padrões de acesso que requerem verificação e justificativa formal. O sistema está <strong>operacional, mas não auditável</strong> — parte substancial dos registros é inválida ou incompleta.</p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="valor">10</div>
+      <div class="label">Dias analisados</div>
+    </div>
+    <div class="card">
+      <div class="valor">~715</div>
+      <div class="label">Registros totais</div>
+    </div>
+    <div class="card">
+      <div class="valor">4</div>
+      <div class="label">Pontos de acesso</div>
+    </div>
+    <div class="card">
+      <div class="valor">10</div>
+      <div class="label">Anomalias identificadas</div>
+    </div>
+  </div>
+
+  <div class="cards-risco">
+    <div class="card card-critico">
+      <div class="valor">3</div>
+      <div class="label">Anomalias críticas</div>
+    </div>
+    <div class="card card-atencao">
+      <div class="valor">4</div>
+      <div class="label">Requerem atenção</div>
+    </div>
+    <div class="card card-monitora">
+      <div class="valor">3</div>
+      <div class="label">Em monitoramento</div>
+    </div>
+  </div>
+
+  <!-- ── 2. VOLUME DE ACESSOS ── -->
+  <div class="secao-titulo quebra">
+    <div class="secao-num">2</div>
+    <h2>Volume de Acessos por Dia</h2>
+  </div>
+
+  <div class="grafico-container">
+    <div class="grafico-titulo">Registros por dia — 13 a 22 de maio de 2026</div>
+    <canvas id="grafico-dias"></canvas>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Dia da Semana</th>
+        <th>Volume Estimado</th>
+        <th>Nível</th>
+        <th>Observação Principal</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>13/05</td><td>Terça-feira</td><td>~70</td><td><span class="badge badge-atencao">Moderado</span></td><td>Falhas críticas: Jéssica Coelho e Tiago Madeira</td></tr>
+      <tr><td>14/05</td><td>Quarta-feira</td><td>~55</td><td><span class="badge badge-regular">Normal</span></td><td>Rogerio presente até 23h</td></tr>
+      <tr><td>15/05</td><td>Quinta-feira</td><td>~95</td><td><span class="badge badge-atencao">Moderado-alto</span></td><td>Amauri Oliveira: 30+ registros em madrugada (04:55–06:43)</td></tr>
+      <tr><td>16/05</td><td>Sexta-feira</td><td>~145</td><td><span class="badge badge-critico">Pico</span></td><td>Maior volume do período + mais anomalias simultâneas</td></tr>
+      <tr><td>17/05</td><td>Sábado</td><td>~65</td><td><span class="badge badge-regular">Normal</span></td><td>Sem anomalias críticas</td></tr>
+      <tr><td>18/05</td><td>Domingo</td><td>~90</td><td><span class="badge badge-atencao">Alto</span></td><td>Culto — Felipe dos Santos: 15+ registros PORTÃO GARAGEM</td></tr>
+      <tr><td>19/05</td><td>Segunda-feira</td><td>~105</td><td><span class="badge badge-atencao">Alto</span></td><td>Jhonatan: 25+ registros anômalos no portão</td></tr>
+      <tr><td>20/05</td><td>Terça-feira</td><td>~65</td><td><span class="badge badge-regular">Regular</span></td><td>Culto noturno regular</td></tr>
+      <tr><td>21/05</td><td>Quarta-feira</td><td>~80</td><td><span class="badge badge-regular">Regular</span></td><td>Jhonatan até 22:51</td></tr>
+      <tr><td>22/05</td><td>Quinta-feira (parcial)</td><td>~15</td><td><span class="badge badge-regular">Baixo</span></td><td>Dados até 08:15 — Amauri às 04:50</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alerta alerta-info">
+    <strong>Nota metodológica</strong>
+    Os volumes acima incluem todos os registros capturados, inclusive os gerados por falhas técnicas dos leitores. O volume real de eventos físicos é inferior, especialmente em 15/05, 16/05 e 19/05, onde anomalias técnicas inflaram artificialmente os totais diários.
+  </div>
+
+  <!-- ── 3. ANÁLISE POR PONTO DE ACESSO ── -->
+  <div class="secao-titulo quebra">
+    <div class="secao-num">3</div>
+    <h2>Distribuição por Ponto de Acesso</h2>
+  </div>
+
+  <div class="grafico-row">
+    <div class="grafico-container">
+      <div class="grafico-titulo">Registros por ponto de acesso</div>
+      <canvas id="grafico-pontos"></canvas>
+    </div>
+    <div class="grafico-container">
+      <div class="grafico-titulo">Distribuição por turno</div>
+      <canvas id="grafico-turnos"></canvas>
+    </div>
+  </div>
+
+  <h3>Avaliação por Ponto</h3>
+
+  <div class="alerta alerta-critico">
+    <strong>PORTÃO GARAGEM — Criticidade Alta</strong>
+    Ponto com maior volume de anomalias no período. Afeta dias e usuários distintos (13, 15, 16, 18, 19/05), confirmando falha sistêmica do leitor, e não comportamento individual. É o equipamento de maior criticidade — controla veículos e carga — e está operando com baixa confiabilidade. Requer manutenção corretiva imediata.
+  </div>
+
+  <div class="alerta alerta-critico">
+    <strong>ENTRADA PÁTIO — Falha Pontual em 13/05</strong>
+    Jéssica Coelho registrou 17 entradas em 6 minutos. Ana Carolina Silva registrou 5 entradas em 7 minutos. Os dois eventos simultâneos no mesmo ponto confirmam falha do sensor do leitor, não comportamento dos usuários. Requer inspeção técnica.
+  </div>
+
+  <div class="alerta alerta-atencao">
+    <strong>Registros sem Leitor Identificado</strong>
+    Dispersos ao longo de todo o período, por múltiplos usuários. O evento foi capturado, mas sem associação ao ponto físico. Impede rastreabilidade, cruzamento com câmeras e cálculo de presença. Fábio Luiz de Carvalho apresenta o padrão mais recorrente.
+  </div>
+
+  <!-- ── 4. USUÁRIOS COM MAIOR FREQUÊNCIA ── -->
+  <div class="secao-titulo quebra">
+    <div class="secao-num">4</div>
+    <h2>Usuários com Maior Frequência</h2>
+  </div>
+
+  <div class="grafico-container">
+    <div class="grafico-titulo">Volume de registros por usuário — Top 10 (estimado)</div>
+    <canvas id="grafico-usuarios"></canvas>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Usuário</th>
+        <th>Padrão Identificado</th>
+        <th>Registros Est.</th>
+        <th>Classificação</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Jhonatan Diego Santos Barreto</td><td>Alta frequência, 25+ registros em 19/05, permanência até 22h+</td><td>~80</td><td><span class="badge badge-atencao">Monitoramento ativo</span></td></tr>
+      <tr><td>Rogerio de Castro Chaves</td><td>Volume alto no PORTÃO GARAGEM, presença até 23h</td><td>~65</td><td><span class="badge badge-regular">Regular — Gestor</span></td></tr>
+      <tr><td>Carlos Alberto de Paula Santos</td><td>35+ registros em 16/05 — volume concentrado em 1 dia</td><td>~55</td><td><span class="badge badge-atencao">Verificação técnica</span></td></tr>
+      <tr><td>Amauri Oliveira</td><td>Madrugadas recorrentes (15/05 e 22/05), 30+ registros portão</td><td>~55</td><td><span class="badge badge-critico">Verificação urgente</span></td></tr>
+      <tr><td>EVELIN DA SILVA LIMA</td><td>Equipe operacional matinal — padrão consistente</td><td>~50</td><td><span class="badge badge-regular">Regular</span></td></tr>
+      <tr><td>Euclides Portella da Rocha</td><td>15+ registros em menos de 2h em 16/05</td><td>~45</td><td><span class="badge badge-atencao">Verificação técnica</span></td></tr>
+      <tr><td>Jean Carlos da Silva</td><td>Presença diária regular, horário comercial</td><td>~45</td><td><span class="badge badge-regular">Regular</span></td></tr>
+      <tr><td>Fábio Luiz de Carvalho</td><td>Registros sem leitor + acessos às 05:19 e 06:24 em 22/05</td><td>~40</td><td><span class="badge badge-atencao">Atenção</span></td></tr>
+      <tr><td>ERENILZA ANUNCIAÇÃO ALELUIA</td><td>Equipe operacional matinal — padrão consistente</td><td>~35</td><td><span class="badge badge-regular">Regular</span></td></tr>
+      <tr><td>SCARLET ARAUJO ROSA</td><td>Equipe operacional matinal — padrão consistente</td><td>~30</td><td><span class="badge badge-regular">Regular</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- ── 5. ANOMALIAS ── -->
+  <div class="secao-titulo quebra">
+    <div class="secao-num">5</div>
+    <h2>Anomalias Identificadas</h2>
+  </div>
+
+  <div class="grafico-row">
+    <div class="grafico-container">
+      <div class="grafico-titulo">Anomalias por nível de risco</div>
+      <canvas id="grafico-riscos"></canvas>
+    </div>
+    <div class="grafico-container">
+      <div class="grafico-titulo">Tipo de anomalia</div>
+      <canvas id="grafico-tipos"></canvas>
+    </div>
+  </div>
+
+  <h3>Risco Crítico</h3>
+
+  <div class="alerta alerta-critico">
+    <strong>Anomalia 1 — Falha do leitor ENTRADA PÁTIO (13/05)</strong>
+    Jéssica Coelho: 17 registros consecutivos de ENTRADA PÁTIO em 6 minutos. Ana Carolina: 5 registros em 7 minutos, no mesmo ponto e mesmo horário. Falha de sensor confirmada. Dados do ponto inválidos naquele dia.
+  </div>
+
+  <div class="alerta alerta-critico">
+    <strong>Anomalia 2 — Falha recorrente do leitor PORTÃO GARAGEM (múltiplos dias)</strong>
+    Tiago Madeira (13/05): 1 entrada + 8 saídas em 4 minutos — saldo fisicamente impossível. Carlos Alberto (16/05): 35+ registros ao longo do dia. Euclides (16/05): 15+ registros em menos de 2h. Jhonatan (19/05): 25+ registros entre 19h55 e 22h23. Felipe (18/05): 15+ registros em sequência. A distribuição por dias e usuários distintos confirma falha do equipamento.
+  </div>
+
+  <div class="alerta alerta-critico">
+    <strong>Anomalia 3 — Amauri Oliveira: acessos em madrugada sem justificativa (15/05 e 22/05)</strong>
+    15/05: presença das 04:55 às 06:43, com 30+ registros no PORTÃO GARAGEM. 22/05: presença às 04:50. Não há justificativa registrada no sistema. Sem confirmação de função noturna, representa risco de segurança patrimonial não gerenciado.
+  </div>
+
+  <h3>Risco — Atenção</h3>
+
+  <table>
+    <thead>
+      <tr><th>Anomalia</th><th>Data</th><th>Usuário</th><th>Descrição</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>4</td><td>13/05</td><td>Tiago Madeira</td><td>1 entrada, 8 saídas em 4 minutos. Saldo negativo impossível.</td></tr>
+      <tr><td>5</td><td>Recorrente</td><td>Fábio Luiz de Carvalho</td><td>Registros sem leitor identificado + acessos às 05:19 e 06:24 em 22/05.</td></tr>
+      <tr><td>6</td><td>19/05 e outros</td><td>Jhonatan Diego Santos Barreto</td><td>25+ registros em 19/05. Frequência elevada com permanência até 22h51.</td></tr>
+      <tr><td>7</td><td>16/05 — 00:12</td><td>Marcus Vinicius Barros de Novais</td><td>Registro isolado após meia-noite. Requer verificação de contexto.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Risco — Monitoramento</h3>
+
+  <table>
+    <thead>
+      <tr><th>Anomalia</th><th>Data</th><th>Usuário</th><th>Descrição</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>8</td><td>16/05</td><td>Carlos Alberto de Paula Santos</td><td>35+ registros. Combinação provável de falha técnica e uso intenso.</td></tr>
+      <tr><td>9</td><td>16/05</td><td>Euclides Portella da Rocha</td><td>15+ registros em 2h. Mesmo padrão do dia 16 — reforça falha do leitor.</td></tr>
+      <tr><td>10</td><td>18/05</td><td>Felipe dos Santos Montinegro</td><td>15+ registros em domingo (culto). Provável falha em contexto de volume alto.</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ── 6. AVALIAÇÃO DO SISTEMA ── -->
+  <div class="secao-titulo quebra">
+    <div class="secao-num">6</div>
+    <h2>Avaliação do Sistema de Monitoramento</h2>
+  </div>
+
+  <div class="grafico-container">
+    <div class="grafico-titulo">Capacidades atuais do sistema — funcionando vs. ausente</div>
+    <canvas id="grafico-sistema"></canvas>
+  </div>
+
+  <div class="alerta alerta-info">
+    <strong>Diagnóstico Central</strong>
+    O sistema funciona como <em>registrador passivo de eventos</em>, não como <em>sistema ativo de segurança</em>. Captura e registra eventos, mas não alerta, não analisa, não notifica. Toda a identificação de anomalias neste relatório foi realizada por análise manual posterior, o que não é escalável operacionalmente.
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Capacidade</th><th>Situação</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Registro de eventos com timestamp</td><td>✓ Funcionando</td></tr>
+      <tr><td>Identificação de usuários</td><td>✓ Funcionando (com exceções)</td></tr>
+      <tr><td>Cobertura de múltiplos pontos simultaneamente</td><td>✓ Funcionando</td></tr>
+      <tr><td>Disponibilidade contínua (10 dias)</td><td>✓ Funcionando</td></tr>
+      <tr><td>Alertas automáticos para volumes anômalos</td><td>✗ Ausente</td></tr>
+      <tr><td>Alerta para saldo negativo (mais saídas que entradas)</td><td>✗ Ausente</td></tr>
+      <tr><td>Alerta para acessos em madrugada</td><td>✗ Ausente</td></tr>
+      <tr><td>Associação de ponto de acesso em 100% dos registros</td><td>✗ Falha parcial</td></tr>
+      <tr><td>Relatório automático de anomalias</td><td>✗ Ausente</td></tr>
+      <tr><td>Thresholds configuráveis por usuário/ponto</td><td>✗ Ausente</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ── 7. RECOMENDAÇÕES ── -->
+  <div class="secao-titulo quebra">
+    <div class="secao-num">7</div>
+    <h2>Recomendações</h2>
+  </div>
+
+  <h3>Ações Imediatas — até 5 dias úteis</h3>
+
+  <div class="rec-item">
+    <div class="rec-num">1</div>
+    <div class="rec-conteudo">
+      <div class="rec-titulo">Manutenção corretiva — leitor PORTÃO GARAGEM</div>
+      <div class="rec-desc">Acionar a empresa responsável para inspeção física, verificação de firmware e calibração de sensores. Equipamento mais crítico da instalação, com falhas documentadas em múltiplos dias e usuários distintos.</div>
+    </div>
+  </div>
+
+  <div class="rec-item">
+    <div class="rec-num">2</div>
+    <div class="rec-conteudo">
+      <div class="rec-titulo">Manutenção corretiva — leitor ENTRADA PÁTIO</div>
+      <div class="rec-desc">Falha crítica documentada em 13/05. Verificar se o problema persiste ou foi pontual. Inspeção do sensor magnético/indutivo e log de firmware.</div>
+    </div>
+  </div>
+
+  <div class="rec-item">
+    <div class="rec-num">3</div>
+    <div class="rec-conteudo">
+      <div class="rec-titulo">Verificação urgente — Amauri Oliveira</div>
+      <div class="rec-desc">Confirmar com RH ou gestão operacional se os horários de madrugada (04:55 em 15/05 e 04:50 em 22/05) têm justificativa formal. Se sim, registrar função no sistema. Se não, suspender credencial até esclarecimento. Prazo: 48 horas.</div>
+    </div>
+  </div>
+
+  <div class="rec-item">
+    <div class="rec-num">4</div>
+    <div class="rec-conteudo">
+      <div class="rec-titulo">Revisão de cartão — Fábio Luiz de Carvalho</div>
+      <div class="rec-desc">Testar cartão em todos os leitores, revisar cadastro no sistema, verificar estado físico do cartão. Padrão recorrente de registros sem leitor identificado.</div>
+    </div>
+  </div>
+
+  <div class="rec-item">
+    <div class="rec-num">5</div>
+    <div class="rec-conteudo">
+      <div class="rec-titulo">Verificação de vínculo — Jhonatan Diego Santos Barreto</div>
+      <div class="rec-desc">Confirmar formalmente a natureza das atividades que justificam a frequência elevada e permanência até 22h51 em dias úteis e fins de semana.</div>
+    </div>
+  </div>
+
+  <h3>Curto Prazo — até 30 dias</h3>
+
+  <div class="rec-item">
+    <div class="rec-num">6</div>
+    <div class="rec-conteudo">
+      <div class="rec-titulo">Política de acesso em horário noturno</div>
+      <div class="rec-desc">Usuários com função operacional noturna devem ter esse perfil documentado no SIPEN com aprovação formal da liderança. Prazo para regularização de todos os perfis existentes.</div>
+    </div>
+  </div>
+
+  <div class="rec-item">
+    <div class="rec-num">7</div>
+    <div class="rec-conteudo">
+      <div class="rec-titulo">Configurar alertas automáticos no SIPEN</div>
+      <div class="rec-desc">Thresholds sugeridos: mais de 5 leituras do mesmo cartão no mesmo ponto em menos de 10 minutos; saldo negativo (mais saídas que entradas); acesso entre 00h e 06h por usuário sem perfil noturno.</div>
+    </div>
+  </div>
+
+  <div class="rec-item">
+    <div class="rec-num">8</div>
+    <div class="rec-conteudo">
+      <div class="rec-titulo">Resolver registros sem leitor identificado</div>
+      <div class="rec-desc">Engajamento técnico com o fornecedor para diagnóstico da perda de associação entre evento e ponto de acesso. Comprometimento de rastreabilidade em todo o período.</div>
+    </div>
+  </div>
+
+  <h3>Médio Prazo — até 90 dias</h3>
+
+  <div class="rec-item">
+    <div class="rec-num">9</div>
+    <div class="rec-conteudo">
+      <div class="rec-titulo">Relatório semanal automatizado de controle de acesso</div>
+      <div class="rec-desc">Incluir: total por ponto, usuários acima do threshold, acessos sem leitor, acessos em madrugada e alertas gerados. Elimina necessidade de análise manual.</div>
+    </div>
+  </div>
+
+  <div class="rec-item">
+    <div class="rec-num">10</div>
+    <div class="rec-conteudo">
+      <div class="rec-titulo">Revisão completa de perfis de todos os usuários</div>
+      <div class="rec-desc">Cada usuário deve ter no SIPEN: função, horário autorizado, pontos de acesso autorizados e responsável pela aprovação. Base para política de acesso sustentável.</div>
+    </div>
+  </div>
+
+  <!-- ── 8. PLANO DE AÇÃO ── -->
+  <div class="secao-titulo quebra">
+    <div class="secao-num">8</div>
+    <h2>Plano de Ação Consolidado</h2>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Ação</th>
+        <th>Responsável</th>
+        <th>Prazo</th>
+        <th>Prioridade</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Manutenção corretiva — PORTÃO GARAGEM</td><td>Administração / Patrimônio</td><td>Imediato</td><td><span class="badge badge-critico">Crítica</span></td></tr>
+      <tr><td>2</td><td>Manutenção corretiva — ENTRADA PÁTIO</td><td>Administração / Patrimônio</td><td>Esta semana</td><td><span class="badge badge-critico">Alta</span></td></tr>
+      <tr><td>3</td><td>Verificar vínculo/função — Amauri Oliveira</td><td>RH / Gestão Operacional</td><td>48 horas</td><td><span class="badge badge-critico">Alta</span></td></tr>
+      <tr><td>4</td><td>Cartão e cadastro — Fábio Luiz de Carvalho</td><td>Secretaria / TI</td><td>Esta semana</td><td><span class="badge badge-atencao">Alta</span></td></tr>
+      <tr><td>5</td><td>Verificar vínculos — Jhonatan D. Santos Barreto</td><td>RH / Liderança Pastoral</td><td>Esta semana</td><td><span class="badge badge-atencao">Média-alta</span></td></tr>
+      <tr><td>6</td><td>Verificar contexto — Marcus V. Barros de Novais</td><td>Liderança</td><td>Esta semana</td><td><span class="badge badge-atencao">Média</span></td></tr>
+      <tr><td>7</td><td>Política de perfil de acesso noturno</td><td>Administração</td><td>30 dias</td><td><span class="badge badge-atencao">Alta</span></td></tr>
+      <tr><td>8</td><td>Alertas automáticos no SIPEN</td><td>TI / Desenvolvimento</td><td>30 dias</td><td><span class="badge badge-atencao">Alta</span></td></tr>
+      <tr><td>9</td><td>Resolver registros sem leitor identificado</td><td>TI / Fornecedor</td><td>30 dias</td><td><span class="badge badge-atencao">Alta</span></td></tr>
+      <tr><td>10</td><td>Relatório semanal automatizado</td><td>TI / Secretaria</td><td>60 dias</td><td><span class="badge badge-monitora">Média</span></td></tr>
+      <tr><td>11</td><td>Revisão completa de perfis de usuários</td><td>RH / Administração</td><td>90 dias</td><td><span class="badge badge-monitora">Média</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- ── CONSIDERAÇÃO FINAL ── -->
+  <div class="secao-titulo">
+    <div class="secao-num">9</div>
+    <h2>Consideração Final</h2>
+  </div>
+
+  <p>O sistema de controle de acesso da IPPenha está operacional, mas não está auditável. Operar significa registrar eventos; ser auditável significa que esses registros podem ser usados com confiança para decisões de segurança, investigações de incidente e prestação de contas institucional.</p>
+
+  <p>O período analisado demonstra que parte dos dados gerados é inválida (falhas de leitura em loop), parte é incompleta (registros sem leitor identificado) e parte não tem contexto suficiente para ser interpretada com segurança (acessos em madrugada sem justificativa registrada).</p>
+
+  <p><strong>A correção técnica dos equipamentos e a implementação de alertas ativos no SIPEN são as duas ações de maior impacto imediato.</strong> Sem elas, qualquer análise futura terá as mesmas limitações aqui documentadas.</p>
+
+  <div class="alerta alerta-info">
+    <strong>Recomendação ao Conselho</strong>
+    Aprovar formalmente as ações de prioridade crítica e alta (itens 1 a 5), designar responsáveis e estabelecer prazo de retorno com status em 30 dias. As ações de médio prazo (itens 6 a 11) devem compor o planejamento operacional do segundo semestre de 2026.
+  </div>
+
+  <!-- ── RODAPÉ ── -->
+  <div class="rodape">
+    <div>Igreja Presbiteriana da Penha — IPPenha</div>
+    <div>Secretaria Executiva Estratégica — SIPEN</div>
+    <div>22 de maio de 2026 — Uso interno</div>
+  </div>
+
+</div><!-- /pagina -->
+
+<!-- ══════════════════════════════════════════════ SCRIPTS DOS GRÁFICOS -->
+<script>
+const AZUL       = '#1a3a5c';
+const AZUL_M     = '#2b5b8a';
+const AZUL_C     = '#5b8ec4';
+const VERDE      = '#2e7d52';
+const AMARELO    = '#b8860b';
+const VERMELHO   = '#8b1a1a';
+const CINZA      = '#9ca3af';
+
+Chart.defaults.font.family = "Georgia, 'Times New Roman', serif";
+Chart.defaults.font.size   = 10;
+Chart.defaults.color       = '#374151';
+
+// ── Gráfico 1: Acessos por dia
+new Chart(document.getElementById('grafico-dias'), {
+  type: 'bar',
+  data: {
+    labels: ['13/05 Ter','14/05 Qua','15/05 Qui','16/05 Sex','17/05 Sáb','18/05 Dom','19/05 Seg','20/05 Ter','21/05 Qua','22/05 Qui*'],
+    datasets: [{
+      label: 'Registros totais',
+      data: [70, 55, 95, 145, 65, 90, 105, 65, 80, 15],
+      backgroundColor: [
+        AZUL_C, AZUL_C, AMARELO, VERMELHO, AZUL_C, AMARELO, AMARELO, AZUL_C, AZUL_C, CINZA
+      ],
+      borderRadius: 3,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          footer: (items) => {
+            const notes = ['Anomalia leitores','Normal','Anomalia madrugada','Pico — maior volume','Normal','Culto + anomalia portão','Anomalia portão','Normal','Normal','Parcial até 08:15'];
+            return notes[items[0].dataIndex];
+          }
+        }
+      }
+    },
+    scales: {
+      y: { beginAtZero: true, title: { display: true, text: 'Nº de registros' } },
+      x: { ticks: { font: { size: 9 } } }
+    }
+  }
+});
+
+// ── Gráfico 2: Por ponto de acesso
+new Chart(document.getElementById('grafico-pontos'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Portão Garagem','Entrada Externa Pedestre','Saída Externa Pedestre','Entrada Pátio','Sem leitor identificado'],
+    datasets: [{
+      data: [38, 26, 22, 10, 4],
+      backgroundColor: [VERMELHO, AZUL, AZUL_M, VERDE, CINZA],
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 9 }, boxWidth: 12, padding: 8 } },
+      tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}: ${ctx.parsed}%` } }
+    }
+  }
+});
+
+// ── Gráfico 3: Por turno
+new Chart(document.getElementById('grafico-turnos'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Tarde (12h–18h)','Noite (18h–23h)','Manhã (06h–12h)','Madrugada (00h–06h)'],
+    datasets: [{
+      data: [34, 29, 30, 7],
+      backgroundColor: [AZUL, AZUL_M, AZUL_C, VERMELHO],
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 9 }, boxWidth: 12, padding: 8 } },
+      tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}: ${ctx.parsed}%` } }
+    }
+  }
+});
+
+// ── Gráfico 4: Usuários
+new Chart(document.getElementById('grafico-usuarios'), {
+  type: 'bar',
+  data: {
+    labels: [
+      'Jhonatan D. S. Barreto',
+      'Rogerio de Castro Chaves',
+      'Carlos Alberto P. Santos',
+      'Amauri Oliveira',
+      'Evelin da Silva Lima',
+      'Euclides Portella da Rocha',
+      'Jean Carlos da Silva',
+      'Fábio Luiz de Carvalho',
+      'Erenilza Anunciação Aleluia',
+      'Scarlet Araujo Rosa'
+    ],
+    datasets: [{
+      label: 'Registros estimados',
+      data: [80, 65, 55, 55, 50, 45, 45, 40, 35, 30],
+      backgroundColor: [
+        AMARELO, AZUL, AMARELO, VERMELHO, AZUL_C, AMARELO, AZUL_C, AMARELO, AZUL_C, AZUL_C
+      ],
+      borderRadius: 3,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { beginAtZero: true, title: { display: true, text: 'Nº de registros' } },
+      y: { ticks: { font: { size: 9 } } }
+    }
+  }
+});
+
+// ── Gráfico 5: Riscos
+new Chart(document.getElementById('grafico-riscos'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Crítico','Atenção','Monitoramento'],
+    datasets: [{
+      data: [3, 4, 3],
+      backgroundColor: [VERMELHO, AMARELO, VERDE],
+      borderWidth: 2, borderColor: '#fff'
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 9 }, boxWidth: 12, padding: 8 } }
+    }
+  }
+});
+
+// ── Gráfico 6: Tipos de anomalia
+new Chart(document.getElementById('grafico-tipos'), {
+  type: 'bar',
+  data: {
+    labels: ['Falha de leitor','Acesso em madrugada','Volume anômalo','Saldo negativo','Sem leitor identificado'],
+    datasets: [{
+      label: 'Ocorrências',
+      data: [4, 3, 4, 1, 1],
+      backgroundColor: [VERMELHO, VERMELHO, AMARELO, AZUL, CINZA],
+      borderRadius: 3,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1 } },
+      x: { ticks: { font: { size: 9 } } }
+    }
+  }
+});
+
+// ── Gráfico 7: Sistema
+new Chart(document.getElementById('grafico-sistema'), {
+  type: 'bar',
+  data: {
+    labels: [
+      'Registro de eventos',
+      'Identificação de usuários',
+      'Cobertura de pontos',
+      'Disponibilidade',
+      'Alertas automáticos',
+      'Alerta saldo negativo',
+      'Alerta madrugada',
+      'Relatório automático'
+    ],
+    datasets: [
+      {
+        label: 'Funcionando',
+        data: [100, 90, 95, 100, 0, 0, 0, 0],
+        backgroundColor: VERDE,
+        borderRadius: 3,
+      },
+      {
+        label: 'Ausente / Falha',
+        data: [0, 10, 5, 0, 100, 100, 100, 100],
+        backgroundColor: VERMELHO,
+        borderRadius: 3,
+      }
+    ]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 9 }, boxWidth: 12, padding: 6 } }
+    },
+    scales: {
+      x: {
+        stacked: true,
+        min: 0, max: 100,
+        ticks: { callback: (v) => v + '%' }
+      },
+      y: { stacked: true, ticks: { font: { size: 9 } } }
+    }
+  }
+});
+</script>
+
+</body>
+</html>
