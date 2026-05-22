@@ -1,31 +1,16 @@
 
-/* ── Shell views síncronas ───────────────── */
-(function() {
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", "views/login.html", false);
-  xhr.send(null);
-  if (xhr.status >= 200 && xhr.status < 300)
-    document.body.insertAdjacentHTML("afterbegin", xhr.responseText);
-})();
-
-(function() {
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", "views/sidebar.html?v=6.30.88", false);
-  xhr.send(null);
-  if (xhr.status >= 200 && xhr.status < 300) {
-    var login = document.getElementById("login-screen");
-    if (login) login.insertAdjacentHTML("afterend", xhr.responseText);
-    else document.body.insertAdjacentHTML("afterbegin", xhr.responseText);
-  }
-})();
-
-(function() {
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", "views/modals.html?v=6.30.88", false);
-  xhr.send(null);
-  if (xhr.status >= 200 && xhr.status < 300)
-    document.body.insertAdjacentHTML("beforeend", xhr.responseText);
-})();
+/* ── Shell views assíncronas ────────────── */
+const _shellReady = Promise.all([
+  fetch("views/login.html?v=6.30.89").then(r => r.ok ? r.text() : ""),
+  fetch("views/sidebar.html?v=6.30.89").then(r => r.ok ? r.text() : ""),
+  fetch("views/modals.html?v=6.30.89").then(r => r.ok ? r.text() : ""),
+]).then(([loginHtml, sidebarHtml, modalsHtml]) => {
+  document.body.insertAdjacentHTML("afterbegin", loginHtml);
+  const login = document.getElementById("login-screen");
+  if (login) login.insertAdjacentHTML("afterend", sidebarHtml);
+  else document.body.insertAdjacentHTML("afterbegin", sidebarHtml);
+  document.body.insertAdjacentHTML("beforeend", modalsHtml);
+});
 
 /* ── Sidebar mobile toggle ───────────────── */
 function sbToggle(){
@@ -78,7 +63,8 @@ window.go = async function(id){
   sbClose();
   if(_goOrig) await _goOrig(id);
 };
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  await _shellReady;
   _ensureViewLoaded("geral").then(() => go("geral"));
 
   document.querySelectorAll(".bf").forEach(b => {
