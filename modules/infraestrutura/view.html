@@ -1,7 +1,7 @@
   <div class="view" id="v-infra-dash">
     <div class="hero">
       <div class="hero-ic" style="background:var(--amberbg);border-color:rgba(208,144,64,0.25)">🛠</div>
-      <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Infraestrutura e Conservação</div><div class="hero-dsc">Gestão de ordens de serviço, limpeza, patrimônio, prestadores e solicitações operacionais</div></div>
+      <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Infraestrutura e Conservação</div><div class="hero-dsc">Gestão de ordens de serviço, limpeza, patrimônio e solicitações operacionais</div></div>
       <div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova OS</button></div>
     </div>
     <div class="inav" style="--mc:var(--amber)">
@@ -10,7 +10,6 @@
       <div class="ini" onclick="go('infra-lim')">Limpeza</div>
       <div class="ini" onclick="go('infra-sol')">Solicitações</div>
       <div class="ini" onclick="go('infra-pat')">Patrimônio</div>
-      <div class="ini" onclick="go('infra-pre')">Prestadores</div>
       <div class="ini" onclick="go('infra-demandas')">Demandas</div>
       <div class="ini" onclick="go('infra-whatsapp')">WhatsApp</div>
     </div>
@@ -50,7 +49,6 @@
           <button class="tbt" onclick="go('infra-lim')">🧹 Limpeza e Conservação</button>
           <button class="tbt" onclick="go('infra-sol')">📝 Solicitações Operacionais</button>
           <button class="tbt" onclick="go('infra-pat')">🏛 Patrimônio</button>
-          <button class="tbt" onclick="go('infra-pre')">👷 Prestadores de Serviço</button>
           <button class="tbt" onclick="go('infra-demandas')">📋 Todas as Demandas</button>
         </div>
       </div>
@@ -150,10 +148,6 @@
     <div class="ct"><div class="card"><div class="ctit">Itens de Patrimônio <span class="cact" onclick="listarModulo('ESTOQUE_ITENS','infra-pat-list')">↻</span></div><div id="infra-pat-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
-  <div class="view" id="v-infra-pre">
-    <div class="hero"><div class="hero-ic" style="background:var(--amberbg)">👷</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Prestadores de Serviço</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo Prestador</button></div></div>
-    <div class="ct"><div class="card"><div class="ctit">Prestadores <span class="cact" onclick="listarModulo('MEMBROS','infra-pre-list')">↻</span></div><div id="infra-pre-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
-  </div>
 
   <!-- INFRAESTRUTURA: WHATSAPP -->
   <div class="view" id="v-infra-whatsapp">
