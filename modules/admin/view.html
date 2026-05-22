@@ -1,43 +1,32 @@
   <div class="view" id="v-admin-dash">
     <div class="hero">
       <div class="hero-ic" style="background:rgba(201,168,76,0.12);border-color:rgba(201,168,76,0.28)">◆</div>
-      <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Administração</div><div class="hero-dsc">Secretaria, finanças, contratos, RH e documentação institucional da IPPenha</div></div>
+      <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Administração</div><div class="hero-dsc">Secretaria, contratos, RH, estoque e documentação institucional da IPPenha</div></div>
       <div class="hero-act"><button class="tbt pri" onclick="openModal()">+ Nova Tarefa</button></div>
     </div>
     <div class="inav" style="--mc:var(--gold)">
-      <div class="ini on">Dashboard</div><div class="ini" onclick="go('admin-sec')">Secretaria</div>
-      <div class="ini" onclick="go('admin-fin')">Financeiro</div><div class="ini" onclick="go('admin-con')">Contratos</div>
+      <div class="ini on">Dashboard</div>
+      <div class="ini" onclick="go('admin-sec')">Secretaria</div>
+      <div class="ini" onclick="go('admin-con')">Contratos</div>
       <div class="ini" onclick="go('admin-rh')">RH</div>
-      <div class="ini" onclick="go('admin-est')">Estoque</div><div class="ini" onclick="go('admin-aud')">Auditoria</div>
+      <div class="ini" onclick="go('admin-est')">Estoque</div>
+      <div class="ini" onclick="go('admin-aud')">Auditoria</div>
     </div>
     <div class="ct">
       <div class="kpis c4">
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Saldo financeiro</div><div class="kpi-val">R$ 13.600</div><div class="kpi-d up">▲ positivo</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:rgba(224,85,85,0.15);color:var(--rose);">◻</div><div class="kpi-body"><div class="kpi-lbl">Contratos a vencer</div><div class="kpi-val">3</div><div class="kpi-d wa">⚠ em 30 dias</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal);">◈</div><div class="kpi-body"><div class="kpi-lbl">Documentos (Abr)</div><div class="kpi-val">128</div><div class="kpi-d nu">arquivados</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal);">◈</div><div class="kpi-body"><div class="kpi-lbl">Documentos arquivados</div><div class="kpi-val">128</div><div class="kpi-d nu">este mês</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Colaboradores</div><div class="kpi-val">24</div><div class="kpi-d up">▲ ativos</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Itens em estoque</div><div class="kpi-val">213</div><div class="kpi-d nu">12 categorias</div></div></div>
       </div>
       <div class="alr alr-w"><span class="alr-i">⚠</span><div><strong>3 contratos</strong> vencem em 30 dias — Sonorização (30/04), Internet (15/05) e Seguro (20/05)</div><span class="alr-a" onclick="go('admin-con')">Ver →</span></div>
       <div class="qa">
-        <div class="qai" onclick="go('admin-fin')"><div class="qi" style="background:rgba(61,160,85,0.14)">◇</div><div><div class="ql">Financeiro</div><div class="qs">lançamentos e fluxo</div></div></div>
         <div class="qai" onclick="go('admin-con')"><div class="qi" style="background:var(--amberbg)">◈</div><div><div class="ql">Contratos</div><div class="qs">3 a vencer</div></div></div>
         <div class="qai" onclick="go('admin-sec')"><div class="qi" style="background:var(--skybg)">§</div><div><div class="ql">Secretaria</div><div class="qs">cadastros e docs</div></div></div>
+        <div class="qai" onclick="go('admin-rh')"><div class="qi" style="background:rgba(74,156,245,0.14)">👥</div><div><div class="ql">RH</div><div class="qs">gestão de pessoas</div></div></div>
         <div class="qai" onclick="go('admin-aud')"><div class="qi" style="background:var(--violetbg)">≡</div><div><div class="ql">Auditoria</div><div class="qs">log de ações</div></div></div>
       </div>
       <div class="g2">
-        <div class="card">
-          <div class="ctit">Lançamentos recentes</div>
-          <table class="tbl">
-            <thead><tr><th>Data</th><th>Descrição</th><th>Tipo</th><th>Valor</th><th>Status</th></tr></thead>
-            <tbody>
-              <tr><td class="tdc">13/04</td><td class="tdp">Dízimos culto domingo</td><td class="pos">Receita</td><td class="mono pos">+R$ 8.420,00</td><td><span class="pill pd">Confirmado</span></td></tr>
-              <tr><td class="tdc">12/04</td><td class="tdp">Energia elétrica</td><td class="neg">Despesa</td><td class="mono neg">–R$ 1.240,00</td><td><span class="pill pd">Pago</span></td></tr>
-              <tr><td class="tdc">10/04</td><td class="tdp">Ofertas — missões</td><td class="pos">Receita</td><td class="mono pos">+R$ 3.100,00</td><td><span class="pill pd">Confirmado</span></td></tr>
-              <tr><td class="tdc">08/04</td><td class="tdp">Manutenção sonorização</td><td class="neg">Despesa</td><td class="mono neg">–R$ 890,00</td><td><span class="pill pn">Aprovação</span></td></tr>
-              <tr><td class="tdc">05/04</td><td class="tdp">Subsídio pastoral</td><td class="neg">Despesa</td><td class="mono neg">–R$ 4.800,00</td><td><span class="pill pd">Pago</span></td></tr>
-            </tbody>
-          </table>
-        </div>
         <div class="card">
           <div class="ctit">Contratos monitorados</div>
           <div class="trow"><div class="tdot" style="background:var(--rose)"></div><div class="tbody"><div class="ttitle">Manutenção Sonorização</div><div class="tmeta">AudioTec · R$ 890/mês · vence 30/04</div></div><span class="pill pl">Urgente</span></div>
@@ -45,17 +34,24 @@
           <div class="trow"><div class="tdot" style="background:var(--amber)"></div><div class="tbody"><div class="ttitle">Seguro predial</div><div class="tmeta">Seguradora A · R$ 450/mês · vence 20/05</div></div><span class="pill po">Atenção</span></div>
           <div class="trow"><div class="tdot" style="background:var(--gmd)"></div><div class="tbody"><div class="ttitle">Aluguel salão</div><div class="tmeta">Imóveis Santos · R$ 2.500/mês · vence 30/08</div></div><span class="pill pg">Vigente</span></div>
         </div>
+        <div class="card">
+          <div class="ctit">Pendências Administrativas</div>
+          <div class="trow"><div class="tdot" style="background:var(--rose)"></div><div class="tbody"><div class="ttitle">Renovação contrato AudioTec</div><div class="tmeta">Vence em 9 dias · Sonorização</div></div><span class="pill pl">Urgente</span></div>
+          <div class="trow"><div class="tdot" style="background:var(--amber)"></div><div class="tbody"><div class="ttitle">Atualização cadastral RH</div><div class="tmeta">3 colaboradores pendentes</div></div><span class="pill po">Atenção</span></div>
+          <div class="trow"><div class="tdot" style="background:var(--sky)"></div><div class="tbody"><div class="ttitle">Inventário de estoque</div><div class="tmeta">Previsto para final do mês</div></div><span class="pill pd">Programado</span></div>
+          <div class="trow"><div class="tdot" style="background:var(--gmd)"></div><div class="tbody"><div class="ttitle">Arquivo de documentos 2024</div><div class="tmeta">Digitalizações concluídas</div></div><span class="pill pg">Concluído</span></div>
+        </div>
       </div>
     </div>
   </div>
 
 
-  <!-- ════ PROJETOS & ACOMPANHAMENTO ══════════════════════ -->
+  <!-- ════ CONTROLE DE ESTOQUE ═══════════════════════════ -->
 
   <div class="view" id="v-admin-est">
     <div class="hero">
       <div class="hero-ic" style="background:rgba(201,168,76,0.12);border-color:rgba(201,168,76,0.28)">◫</div>
-      <div><div class="hero-lbl">Administração</div><div class="hero-ttl">Controle de Estoque</div><div class="hero-dsc">Itens, entradas, saídas, solicitações, inventário, alertas e integração com demandas, financeiro, infraestrutura e áreas ministeriais.</div></div>
+      <div><div class="hero-lbl">Administração</div><div class="hero-ttl">Controle de Estoque</div><div class="hero-dsc">Itens, entradas, saídas, solicitações, inventário, alertas e controle interno de materiais.</div></div>
       <div class="hero-act"><button class="tbt" onclick="T('Nova solicitação','Fluxo: solicitação → verificação → aprovação → saída/compra')">+ Solicitação</button><button class="tbt pri" onclick="T('Nova movimentação','Registro de movimentação aberto')">+ Movimentação</button></div>
     </div>
     <div class="inav" style="--mc:var(--gold)">
@@ -76,7 +72,7 @@
           <div class="feed">
             <div class="fi"><div class="fl"><div class="fdot" style="background:var(--rose);color:var(--rose)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Solicitação</b> vinculada ao módulo de origem e ao solicitante</div><div class="ftm">rastreável · sem saída silenciosa</div></div></div>
             <div class="fi"><div class="fl"><div class="fdot" style="background:var(--amber);color:var(--amber)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Verificação de estoque</b> com alerta de estoque mínimo e bloqueio de inconsistência</div><div class="ftm">controle preventivo</div></div></div>
-            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--sky);color:var(--sky)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Aprovação</b> para saída imediata ou compra integrada ao financeiro</div><div class="ftm">documento opcional e centro de custo</div></div></div>
+            <div class="fi"><div class="fl"><div class="fdot" style="background:var(--sky);color:var(--sky)"></div><div class="fc"></div></div><div class="fb"><div class="ft"><b>Aprovação</b> para saída imediata ou compra via Solicitação de Compra</div><div class="ftm">documento opcional e centro de custo</div></div></div>
             <div class="fi"><div class="fl"><div class="fdot" style="background:var(--gmd);color:var(--gmd)"></div></div><div class="fb"><div class="ft"><b>Histórico completo</b> de movimentações, inventários e ajustes</div><div class="ftm">auditoria permanente</div></div></div>
           </div>
         </div>
@@ -101,35 +97,14 @@
     </div>
   </div>
 
-  <!-- ════ CONSELHO NOMEADOS ═══════════════ -->
-
-  <div class="view" id="v-admin-fin">
-    <div class="hero"><div class="hero-ic" style="background:rgba(61,160,85,0.12)">💰</div><div><div class="hero-lbl">Administração</div><div class="hero-ttl">Financeiro</div><div class="hero-dsc">Lançamentos, receitas, despesas e fluxo de caixa</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('FINANCEIRO')">+ Novo Lançamento</button></div></div>
-    <div class="ct">
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px" id="fin-kpis">
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(61,160,85,0.12)">📈</div><div class="kpi-body"><div class="kpi-lbl">Receitas</div><div class="kpi-val" id="fin-rec">—</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,85,85,0.12)">📉</div><div class="kpi-body"><div class="kpi-lbl">Despesas</div><div class="kpi-val" id="fin-desp">—</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.12)">⚖️</div><div class="kpi-body"><div class="kpi-lbl">Saldo</div><div class="kpi-val" id="fin-saldo">—</div></div></div>
-      </div>
-      <div class="card">
-        <div class="ctit">Lançamentos <span class="cact" onclick="listarModulo('FINANCEIRO','fin-list')">↻ Atualizar</span></div>
-        <div id="fin-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ════ FINANCEIRO — MÓDULO COMPLETO ════════════════════ -->
-
-  <!-- Dashboard Financeiro -->
+  <!-- ════ DEMANDAS ADMINISTRATIVAS ══════════════════════ -->
 
   <div class="view" id="v-admin-demandas">
-    <div class="hero"><div class="hero-ic" style="background:rgba(224,85,85,0.12)">📋</div><div><div class="hero-lbl">Administração</div><div class="hero-ttl">Demandas Administrativas</div><div class="hero-dsc">Demandas do módulo Administração e visão geral de todas as demandas</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:rgba(224,85,85,0.12)">📋</div><div><div class="hero-lbl">Administração</div><div class="hero-ttl">Demandas Administrativas</div><div class="hero-dsc">Demandas do módulo Administração — secretaria, contratos, RH e infraestrutura</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
     <div class="ct">
       <div class="card">
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
           <div id="adm-dem-btn-adm" class="sni on" onclick="adminDemSetFiltro('Administração')">Secretaria</div>
-          <div class="sni-sep"></div>
-          <div id="adm-dem-btn-fin" class="sni"    onclick="adminDemSetFiltro('Financeiro')">Financeiras</div>
           <div class="sni-sep"></div>
           <div id="adm-dem-btn-inf" class="sni"    onclick="adminDemSetFiltro('Infraestrutura e Conservação')">Infraestrutura e Conservação</div>
           <div class="sni-sep"></div>
@@ -153,8 +128,6 @@
       </div>
     </div>
   </div>
-
-  <!-- v-admin-demandas-adm: redirecionado para v-admin-demandas via go() override em demandas.js -->
 
   <!-- ADMIN: CONTROLE DE ACESSO / ESTACIONAMENTO -->
 
@@ -283,7 +256,7 @@
     </div>
   </div>
 
-  <!-- MINISTERIAL / VOLUNTÁRIOS -->
+  <!-- CONTRATOS -->
 
   <div class="view" id="v-admin-con">
     <div class="hero">
@@ -344,7 +317,7 @@
     <div class="ct"><div class="card"><div class="ctit">Documentos <span class="cact" onclick="listarModulo('DEMANDAS','admin-doc-list',{area:'Documentos'})">↻ Atualizar</span></div><div id="admin-doc-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>
 
-  <!-- JURÍDICO -->
+  <!-- PARTICIPANTES EXTERNOS -->
 
   <div class="view" id="v-pext-lista">
     <div class="hero">
@@ -378,13 +351,11 @@
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
 
-          <!-- Nome -->
           <div style="grid-column:1/-1">
             <label class="mem-lbl">Nome completo <span style="color:var(--rose)">*</span></label>
             <input id="ap-nome" type="text" class="mem-inp" placeholder="Nome completo da pessoa">
           </div>
 
-          <!-- E-mail / Celular -->
           <div>
             <label class="mem-lbl">E-mail</label>
             <input id="ap-email" type="email" class="mem-inp" placeholder="email@exemplo.com">
@@ -394,7 +365,6 @@
             <input id="ap-celular" type="tel" class="mem-inp" placeholder="(11) 99999-9999">
           </div>
 
-          <!-- CPF / Nascimento -->
           <div>
             <label class="mem-lbl">CPF</label>
             <input id="ap-cpf" type="text" class="mem-inp" placeholder="000.000.000-00">
@@ -404,11 +374,9 @@
             <input id="ap-nasc" type="date" class="mem-inp">
           </div>
 
-          <!-- Separador -->
           <div style="grid-column:1/-1;border-top:1px solid var(--bd);margin:4px 0"></div>
           <div style="grid-column:1/-1;font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:-4px">Endereço (opcional)</div>
 
-          <!-- Endereço -->
           <div style="grid-column:1/-1">
             <label class="mem-lbl">Logradouro</label>
             <input id="ap-end" type="text" class="mem-inp" placeholder="Rua, Avenida, Travessa…">
@@ -449,13 +417,11 @@
             </select>
           </div>
 
-          <!-- Observações -->
           <div style="grid-column:1/-1">
             <label class="mem-lbl">Observações</label>
             <textarea id="ap-obs" class="mem-inp" rows="2" style="resize:vertical" placeholder="Informações adicionais…"></textarea>
           </div>
 
-          <!-- Ações -->
           <div style="grid-column:1/-1;display:flex;gap:10px;justify-content:flex-end;margin-top:4px">
             <button class="btn-sec" onclick="adminPessoasLimpar()">Limpar</button>
             <button id="ap-btn-salvar" class="btn-pri" onclick="adminPessoasSalvar()">Salvar Cadastro</button>
