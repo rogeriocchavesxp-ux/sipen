@@ -1,9 +1,9 @@
 
 /* ── Shell views assíncronas ────────────── */
 const _shellReady = Promise.all([
-  fetch("views/login.html?v=6.30.98").then(r => r.ok ? r.text() : ""),
-  fetch("views/sidebar.html?v=6.30.98").then(r => r.ok ? r.text() : ""),
-  fetch("views/modals.html?v=6.30.98").then(r => r.ok ? r.text() : ""),
+  fetch("views/login.html?v=6.30.99").then(r => r.ok ? r.text() : ""),
+  fetch("views/sidebar.html?v=6.30.99").then(r => r.ok ? r.text() : ""),
+  fetch("views/modals.html?v=6.30.99").then(r => r.ok ? r.text() : ""),
 ]).then(([loginHtml, sidebarHtml, modalsHtml]) => {
   document.body.insertAdjacentHTML("afterbegin", loginHtml);
   const login = document.getElementById("login-screen");
