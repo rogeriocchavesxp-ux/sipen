@@ -234,6 +234,7 @@ function renderModuloList(rows, tab, containerId) {
 
 /* Mapa de auto-load: view id → {tab, containerId, filtro} */
 const VIEW_AUTOLOAD = {
+  "pastoral-disp": { fn: () => typeof dp_loadDisps === 'function' && dp_loadDisps() },
   "pastoral-rede": { fn: () => typeof redeCuidadoLoad === 'function' && redeCuidadoLoad() },
   "memb-cad":      { fn: () => listarMembros("memb-cad-list","memb-cad-count") },
   "memb-vis":      { fn: () => listarVisitantes("vis-list","vis-count") },
