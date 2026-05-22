@@ -812,10 +812,10 @@
 (function () {
 
   const _TIPO = {
-    domingo_manha:     {label:"Domingo Manhã",      ico:"☀️",  cor:"#4a9cf5"},
-    domingo_noite:     {label:"Domingo Noite",      ico:"🌙",  cor:"#8b6fd4"},
-    conexao_com_deus:  {label:"Conexão com Deus",   ico:"🙏",  cor:"#2ab5c0"},
-    tarde_da_esperanca:{label:"Tarde da Esperança", ico:"✝️",  cor:"#d4a843"},
+    domingo_manha:     {label:"Domingo Manhã",      ico:"☀️",  cor:"#4a9cf5", hora:"09:00"},
+    domingo_noite:     {label:"Domingo Noite",      ico:"🌙",  cor:"#8b6fd4", hora:"18:00"},
+    conexao_com_deus:  {label:"Conexão com Deus",   ico:"🙏",  cor:"#2ab5c0", hora:"Segunda-feira"},
+    tarde_da_esperanca:{label:"Tarde da Esperança", ico:"✝️",  cor:"#d4a843", hora:"Quarta-feira"},
   };
 	  const _STATUS = {
 	    PENDENTE:   {label:"Sem resposta", bg:"rgba(212,168,67,.15)",   cl:"#d4a843"},
@@ -915,29 +915,26 @@
 	  function _slotCard(pastorId, ds, tipo, reg, isFuture){
 	    const t=_TIPO[tipo]||_TIPO.domingo_manha;
 	    const estado=_estadoDisp(reg);
-	    const obs=reg?.observacoes||"";
-	    let h=`<div class="dp-slot is-${estado.key}" style="border-left-color:${estado.key==="pendente"?t.cor:""}">`;
-	    h+=`<div class="dp-slot-top"><div class="dp-slot-title" style="color:${t.cor}">${_eh(t.ico)} ${_eh(t.label)}</div><span class="dp-slot-state" style="background:${estado.bg};color:${estado.cl}">${_eh(estado.label)}</span></div>`;
-	    if(obs) h+=`<div class="dp-slot-obs" title="${_ea(obs)}">${_eh(obs)}</div>`;
-	    h+=`<div class="dp-slot-actions">`;
-	    if(isFuture){
-	      if(estado.key==="disponivel"){
-	        h+=`<span class="done">✓ Disponibilidade registrada</span>`;
-	        if(reg?.id) h+=`<button class="edit" onclick="dp_editarDisp('${_ea(reg.id)}')">Editar</button>`;
-	        h+=`<button class="no" onclick="dp_marcarIndisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}')">Marcar indisponível</button>`;
-	      } else if(estado.key==="indisponivel"){
-	        h+=`<span class="blocked">Indisponível registrado</span>`;
-	        if(reg?.id) h+=`<button class="edit" onclick="dp_editarDisp('${_ea(reg.id)}')">Editar</button>`;
-	        h+=`<button class="ok" onclick="dp_marcarDisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}',true)">Estou disponível</button>`;
-	      } else {
-	        h+=`<button class="ok" onclick="dp_marcarDisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}',true)">Estou disponível</button>`;
-	        h+=`<button class="no" onclick="dp_marcarIndisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}')">Indisponível</button>`;
-	      }
+	    let btnBg,btnColor,btnBorder,btnLabel,nextAction;
+	    if(estado.key==="disponivel"){
+	      btnBg="rgba(58,170,92,0.12)";btnColor="#2a7d3f";btnBorder="rgba(58,170,92,0.4)";
+	      btnLabel="🟢 Estou disponível";
+	      nextAction=`dp_toggleDisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}',false)`;
+	    } else if(estado.key==="indisponivel"){
+	      btnBg="rgba(208,104,104,0.12)";btnColor="#c62828";btnBorder="rgba(208,104,104,0.4)";
+	      btnLabel="🔴 Indisponível";
+	      nextAction=`dp_toggleDisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}',true)`;
 	    } else {
-	      h+=`<span style="font-size:9.5px;color:var(--tx3)">${_eh(estado.label)}</span>`;
+	      btnBg="var(--bg-surface)";btnColor="var(--tx3)";btnBorder="var(--bd2)";
+	      btnLabel="⚪ Sem resposta";
+	      nextAction=`dp_toggleDisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}',true)`;
 	    }
-	    h+=`</div></div>`;
-	    return h;
+	    const borderCard=estado.key==="disponivel"?"rgba(58,170,92,0.3)":estado.key==="indisponivel"?"rgba(208,104,104,0.2)":"var(--bd2)";
+	    const editBtn=_isAdmin()&&reg?.id?`<button onclick="dp_editarDisp('${_ea(reg.id)}')" style="position:absolute;top:10px;right:10px;background:none;border:1px solid var(--bd2);border-radius:5px;color:var(--tx3);font-size:10px;padding:3px 8px;cursor:pointer">✏️</button>`:"";
+	    const btn=isFuture&&pastorId
+	      ?`<button onclick="${nextAction}" style="width:100%;padding:16px;border-radius:10px;border:1.5px solid ${btnBorder};background:${btnBg};color:${btnColor};font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans);text-align:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation" onmousedown="this.style.opacity='.6'" onmouseup="this.style.opacity='1'" ontouchstart="this.style.opacity='.6'" ontouchend="this.style.opacity='1'">${_eh(btnLabel)}</button>`
+	      :`<div style="font-size:11px;color:var(--tx3);padding:4px 0">${_eh(estado.label)}</div>`;
+	    return `<div style="position:relative;background:var(--bg-card);border:1px solid ${borderCard};border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">${editBtn}<div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">${_eh(t.ico)}</span><div><div style="font-size:13px;font-weight:700;color:${t.cor}">${_eh(t.label)}</div>${t.hora?`<div style="font-size:11px;color:var(--tx3)">${_eh(t.hora)}</div>`:""}</div></div>${btn}</div>`;
 	  }
 
 	  /* ── API Supabase ─────────────────────────────────────────────── */
@@ -1083,9 +1080,6 @@
 
 	  /* ── Render: Tab Minha ───────────────────────────────────────── */
 	  function _renderMinha(){
-	    const lbl=document.getElementById("dp-mes-label");
-	    if(lbl) lbl.textContent=_fmtMes(_st.mes).charAt(0).toUpperCase()+_fmtMes(_st.mes).slice(1);
-
 	    const sel=document.getElementById("dp-pastor-sel");
 	    const inferredPastorId=_inferPastorAtualId();
 	    if(sel){
@@ -1093,52 +1087,54 @@
 	      const current=sel.value||_st.pastorFiltro||inferredPastorId||"";
 	      let pOpts=`<option value="${_ea(inferredPastorId)}">Minha disponibilidade</option>`;
 	      if(_isAdmin()) pastores.forEach(p=>{pOpts+=`<option value="${_ea(p.id)}">${_eh(p.nome_exibicao||p.nome_completo)}</option>`;});
-	      if(sel.innerHTML!==pOpts){
-	        sel.innerHTML=pOpts;
-	        if([...sel.options].some(o=>o.value===current)) sel.value=current;
-	      }
+	      if(sel.innerHTML!==pOpts){sel.innerHTML=pOpts;if([...sel.options].some(o=>o.value===current))sel.value=current;}
 	      _st.pastorFiltro=sel.value||"";
+	      sel.style.display=_isAdmin()?"":"none";
 	    }
+	    // Ocultar navegação de mês (não necessária no modo lista)
+	    const navMes=document.getElementById("dp-nav-mes");
+	    if(navMes) navMes.style.display="none";
 
 	    const grade=document.getElementById("dp-grade"); if(!grade) return;
 	    const pastorId=sel?.value||inferredPastorId||"";
-	    const slots=_slotsDoMes(_st.mes);
 	    const map=_dispMap();
-
-	    const porData={};
-	    slots.forEach(s=>{if(!porData[s.ds]) porData[s.ds]=[];porData[s.ds].push(s.tipo);});
-
 	    const hoje=_iso(new Date());
-	    const ano=_st.mes.getFullYear(), mes=_st.mes.getMonth();
-	    const lastDay=new Date(ano,mes+1,0).getDate(), firstDow=new Date(ano,mes,1).getDay();
-	    const DIAS=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
-	    let h=`<div class="dp-cal">`;
-	    h+=`<div class="dp-cal-head">`;
-	    DIAS.forEach((d,i)=>{h+=`<div class="dp-cal-dow" style="color:${i===0||i===6?'var(--tx2)':'var(--tx3)'}">${d}</div>`;});
-	    h+=`</div><div class="dp-cal-grid">`;
-	    for(let i=0;i<firstDow;i++) h+=`<div class="dp-cal-empty"></div>`;
-	    for(let day=1;day<=lastDay;day++){
-	      const ds=`${ano}-${String(mes+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
-	      const dow=(firstDow+day-1)%7;
-	      const daySlots=porData[ds]||[];
-	      const classes=["dp-cal-cell"];
-	      if(dow===0||dow===6) classes.push("is-weekend");
-	      if(ds===hoje) classes.push("is-today");
-	      if(daySlots.length) classes.push("has-slots");
-	      const dtFmt=new Date(ds+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long"});
-	      h+=`<div class="${classes.join(" ")}" title="${_ea(dtFmt)}">`;
-	      h+=`<span class="dp-cal-day">${day}</span>`;
-	      daySlots.forEach(tipo=>{
-	        const reg=pastorId ? map.get(_dispKey(pastorId,ds,tipo)) : null;
-	        h+=_slotCard(pastorId,ds,tipo,reg,ds>=hoje);
-	      });
-	      h+=`</div>`;
+
+	    // Monta slots dos próximos 3 meses
+	    const allSlots=[];
+	    for(let i=0;i<4;i++){
+	      const d=new Date(_st.mes.getFullYear(),_st.mes.getMonth()+i,1);
+	      _slotsDoMes(d).forEach(s=>{if(s.ds>=hoje) allSlots.push(s);});
 	    }
-	    const trail=(firstDow+lastDay)%7;
-	    if(trail>0) for(let i=0;i<7-trail;i++) h+=`<div class="dp-cal-empty"></div>`;
-	    h+=`</div></div>`;
-	    if(!slots.length) h+=`<div class="dp-cal-note">Nenhuma oportunidade de pregação neste mês.</div>`;
-	    if(!pastorId) h+=`<div class="dp-cal-note">Selecione um pastor para visualizar respostas salvas neste calendário.</div>`;
+	    const porData={};
+	    allSlots.forEach(s=>{if(!porData[s.ds])porData[s.ds]=[];porData[s.ds].push(s.tipo);});
+	    const dates=Object.keys(porData).sort().slice(0,60);
+
+	    if(!pastorId){
+	      grade.innerHTML=`<div style="text-align:center;padding:40px 0;color:var(--tx3);font-size:12.5px">Seu usuário não está vinculado a um pastor cadastrado.<br>Solicite ao administrador que faça o vínculo.</div>`;
+	      return;
+	    }
+	    if(!dates.length){
+	      grade.innerHTML=`<div style="text-align:center;padding:40px 0;color:var(--tx3);font-size:12.5px">Nenhum culto programado nos próximos 3 meses.</div>`;
+	      return;
+	    }
+
+	    let h=`<div style="display:flex;flex-direction:column;gap:20px">`;
+	    dates.forEach(ds=>{
+	      const isToday=ds===hoje;
+	      const dtFmt=new Date(ds+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long"});
+	      h+=`<div>`;
+	      h+=`<div style="font-size:11px;font-weight:700;text-transform:capitalize;letter-spacing:.04em;padding:0 2px;margin-bottom:8px;color:${isToday?"var(--teal)":"var(--tx3)"}">`;
+	      if(isToday) h+=`📍 HOJE — `;
+	      h+=`${_eh(dtFmt)}</div>`;
+	      h+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">`;
+	      porData[ds].forEach(tipo=>{
+	        const reg=map.get(_dispKey(pastorId,ds,tipo));
+	        h+=_slotCard(pastorId,ds,tipo,reg,true);
+	      });
+	      h+=`</div></div>`;
+	    });
+	    h+=`</div>`;
 	    grade.innerHTML=h;
 	  }
 
@@ -1317,13 +1313,20 @@
     _openModal("",hoje,"domingo_manha",null);
   };
 	  window.dp_marcarDisp = async function(pastor_id, data, culto_tipo, disponivel){
-	    await _loadPastores();
-	    _openModal(pastor_id,data,culto_tipo,null);
+	    if(_isAdmin()){ await _loadPastores(); _openModal(pastor_id,data,culto_tipo,null); return; }
+	    if(!pastor_id){ T("Pastor não identificado","Seu usuário não está vinculado a um pastor cadastrado."); return; }
+	    const ok=await _upsert({pastor_id,data,culto_tipo,disponivel:true,status:"PREENCHIDA",observacoes:""});
+	    if(ok){ _renderMinha(); _atualizarKpis(); }
 	  };
 	  window.dp_marcarIndisp = async function(pastor_id, data, culto_tipo){
-	    if(!pastor_id){ await _loadPastores(); _openModal("",data,culto_tipo,null); return; }
+	    if(!pastor_id){ T("Pastor não identificado","Seu usuário não está vinculado a um pastor cadastrado."); return; }
 	    const ok=await _upsert({pastor_id,data,culto_tipo,disponivel:false,status:"PENDENTE",observacoes:""});
-	    if(ok){ _renderAll(); _atualizarKpis(); }
+	    if(ok){ _renderMinha(); _atualizarKpis(); }
+	  };
+	  window.dp_toggleDisp = async function(pastor_id, data, culto_tipo, disponivel){
+	    if(!pastor_id){ T("Pastor não identificado","Seu usuário não está vinculado a um pastor cadastrado."); return; }
+	    const ok=await _upsert({pastor_id,data,culto_tipo,disponivel,status:disponivel?"PREENCHIDA":"PENDENTE",observacoes:""});
+	    if(ok){ _renderMinha(); _atualizarKpis(); }
 	  };
 	  window.dp_editarDisp = async function(id){
 	    await _loadPastores();
@@ -1378,5 +1381,18 @@
     const a=document.createElement("a"); a.href=url; a.download=`disponibilidade_${mesKey}.csv`; a.click(); URL.revokeObjectURL(url);
   };
   window.dp_loadDisps = _loadDisps;
+
+  // Exibe controles administrativos apenas para admins
+  function _ajustarUiPorPerfil(){
+    const isAdm=_isAdmin();
+    const heroAct=document.getElementById("dp-hero-act-admin");
+    const tabAdmin=document.getElementById("dp-tab-btn-admin");
+    const tabRel=document.getElementById("dp-tab-btn-relatorio");
+    if(heroAct) heroAct.style.display=isAdm?"":"none";
+    if(tabAdmin) tabAdmin.style.display=isAdm?"":"none";
+    if(tabRel) tabRel.style.display=isAdm?"":"none";
+  }
+  // Chama após carregar (USUARIO_ATUAL já disponível)
+  setTimeout(_ajustarUiPorPerfil, 100);
 
 })();

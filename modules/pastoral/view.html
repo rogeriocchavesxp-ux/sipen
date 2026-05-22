@@ -239,8 +239,8 @@
   <div class="view" id="v-pastoral-disp">
     <div class="hero">
       <div class="hero-ic" style="background:var(--tealbg);border-color:rgba(58,176,184,0.25)">📅</div>
-      <div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Disponibilidade Pregação</div><div class="hero-dsc">Informe suas datas disponíveis para pregar. A Escala de Pregação usará essas informações para sugerir pastores disponíveis.</div></div>
-      <div class="hero-act"><button class="tbt pri" onclick="dp_abrirFormDisp()">+ Informar Disponibilidade</button></div>
+      <div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Disponibilidade Pregação</div><div class="hero-dsc">Toque em cada culto para informar sua disponibilidade. Salva automaticamente.</div></div>
+      <div class="hero-act" id="dp-hero-act-admin" style="display:none"><button class="tbt pri" onclick="dp_abrirFormDisp()">+ Lançamento Manual</button></div>
     </div>
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini" onclick="go('pastoral-dash')">Dashboard</div>
@@ -273,12 +273,14 @@
           <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:#4a9cf5">🎙</div><div class="kpi-body"><div class="kpi-lbl">Na Escala</div><div class="kpi-val" id="dp-kpi-escala">—</div><div class="kpi-d nu">próximos 60 dias</div></div></div>
           <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold)">⏳</div><div class="kpi-body"><div class="kpi-lbl">Pendentes</div><div class="kpi-val" id="dp-kpi-pendentes">—</div><div class="kpi-d wa">sem confirmação</div></div></div>
         </div>
-        <!-- Seletor de mês -->
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <!-- Seletor de pastor (admin) e navegação (oculta por padrão) -->
+        <div id="dp-nav-mes" style="display:none;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
           <button class="tbt" onclick="dp_mesAnterior()" style="padding:5px 10px">← Anterior</button>
-          <span id="dp-mes-label" style="min-width:160px;text-align:center;font-size:12px;font-weight:600;color:var(--tx1)">carregando...</span>
+          <span id="dp-mes-label" style="min-width:160px;text-align:center;font-size:12px;font-weight:600;color:var(--tx1)"></span>
           <button class="tbt" onclick="dp_mesProximo()" style="padding:5px 10px">Próximo →</button>
-          <select id="dp-pastor-sel" onchange="dp_render()" style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:11.5px;padding:5px 10px;outline:none;height:32px;font-family:var(--sans);margin-left:auto"></select>
+        </div>
+        <div style="margin-bottom:14px">
+          <select id="dp-pastor-sel" onchange="dp_render()" style="display:none;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:11.5px;padding:5px 10px;outline:none;height:32px;font-family:var(--sans)"></select>
         </div>
         <!-- Grade de disponibilidades -->
         <div id="dp-grade"></div>
