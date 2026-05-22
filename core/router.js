@@ -148,7 +148,7 @@ const _VIEW_MAP = {
   "jur":         "modules/juridico/view.html",
   "conselho":    "modules/conselho/view.html",
   "atas":        "modules/conselho/view.html",
-  "pastoral":    "modules/pastoral/view.html?v=6.30.60",
+  "pastoral":    "modules/pastoral/view.html?v=6.30.80",
   "min":         "modules/departamentos/view.html",
   "agenda":      "modules/agenda/view.html?v=6.30.59",
   "pgs":         "modules/pgs/view.html?v=6.30.65",
