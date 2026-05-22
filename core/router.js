@@ -148,6 +148,7 @@ const _VIEW_MAP = {
   "jur":         "modules/juridico/view.html",
   "conselho":    "modules/conselho/view.html?v=6.30.81",
   "atas":        "modules/conselho/view.html?v=6.30.81",
+  "pautas":      "modules/conselho/view.html?v=6.30.81",
   "pastoral":    "modules/pastoral/view.html?v=6.30.81",
   "min":         "modules/departamentos/view.html",
   "agenda":      "modules/agenda/view.html?v=6.30.59",
@@ -243,7 +244,7 @@ async function go(id){
     const fn=e.getAttribute("onclick");
     if(fn&&fn.includes(`'${id}'`))e.classList.add("on");
   });
-  document.querySelectorAll(".ini").forEach(e=>{
+  document.querySelectorAll(".ini,.bni").forEach(e=>{
     e.classList.remove("on");
     const fn=e.getAttribute("onclick");
     if(fn&&fn.includes(`'${id}'`))e.classList.add("on");

@@ -337,7 +337,7 @@ const NOM_TIPO_BG    = { governo:"rgba(74,156,245,0.12)", comissao:"rgba(139,111
 function switchNomTab(tipo) {
   _nomTabAtivo = tipo;
   const nav = document.getElementById("nom-inav");
-  if (nav) nav.querySelectorAll(".ini").forEach(el => {
+  if (nav) nav.querySelectorAll(".ini,.bni").forEach(el => {
     el.classList.toggle("on", el.getAttribute("onclick")?.includes(`'${tipo}'`));
   });
   _renderNomTabContent(tipo);
