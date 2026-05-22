@@ -3,10 +3,11 @@
 # Uso: ./bump-version.sh 6.30.88
 #
 # Arquivos afetados:
-#   index.html   → todos os ?v= (CSS + JS)
-#   core/router.js  → ?v= nas entradas do _VIEW_MAP
-#   core/init.js    → ?v= do sidebar.html
-#   sw.js           → CACHE_VERSION = 'sipen-vX.Y.Z'
+#   index.html        → todos os ?v= (CSS + JS)
+#   core/router.js    → ?v= nas entradas do _VIEW_MAP
+#   core/init.js      → ?v= do sidebar.html
+#   sw.js             → CACHE_VERSION = 'sipen-vX.Y.Z'
+#   views/sidebar.html → número de versão exibido no canto superior esquerdo
 
 set -e
 
@@ -59,9 +60,29 @@ bump_qv "index.html"
 bump_qv "core/router.js"
 bump_qv "core/init.js"
 bump_sw
+
+# sidebar.html — versão exibida no canto superior esquerdo
+bump_sidebar() {
+  local file="$ROOT/views/sidebar.html"
+  if [ ! -f "$file" ]; then
+    echo "  AVISO: views/sidebar.html não encontrado" >&2
+    return
+  fi
+  local old
+  old=$(grep -o 'v[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*' "$file" | head -1)
+  if [ "$old" = "v${NEW_VER}" ]; then
+    echo "  --  views/sidebar.html  (versão já é ${NEW_VER})"
+    return
+  fi
+  sed -i '' "s/v[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*/v${NEW_VER}/g" "$file"
+  echo "  ok  views/sidebar.html  (${old:-desconhecido} → v${NEW_VER})"
+  CHANGED=$((CHANGED + 1))
+}
+
+bump_sidebar
 echo "────────────────────────────"
 echo "${CHANGED} arquivo(s) atualizado(s)."
 echo ""
 echo "Próximo passo:"
-echo "  git add index.html core/router.js core/init.js sw.js"
+echo "  git add index.html core/router.js core/init.js sw.js views/sidebar.html"
 echo "  git commit -m \"chore: bump versão para ${NEW_VER}\""
