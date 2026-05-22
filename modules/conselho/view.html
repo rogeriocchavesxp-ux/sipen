@@ -8,7 +8,6 @@
       <div class="bni" onclick="go('conselho-nomeados')">Nomeados</div>
       <div class="bni" onclick="go('conselho-ordenados')">Ordenados</div>
       <div class="bni" onclick="go('conselho-seminaristas')">Seminaristas</div>
-      <div class="bni" onclick="T('Estratégico','Relatórios macro')">Estratégico</div>
       <div class="bni" onclick="T('Documentos','Atas e resoluções')">Documentos</div>
       <div class="bni" onclick="go('conselho-whatsapp')">WhatsApp</div>
     </div>
@@ -186,7 +185,6 @@
       <div class="bni" onclick="go('conselho-nomeados')">Nomeados</div>
       <div class="bni" onclick="go('conselho-ordenados')">Ordenados</div>
       <div class="bni" onclick="go('conselho-seminaristas')">Seminaristas</div>
-      <div class="bni" onclick="T('Estratégico','Relatórios macro')">Estratégico</div>
       <div class="bni" onclick="T('Documentos','Atas e resoluções')">Documentos</div>
       <div class="bni" onclick="go('conselho-whatsapp')">WhatsApp</div>
     </div>
@@ -222,15 +220,8 @@
       <div class="bni" onclick="go('conselho-nomeados')">Nomeados</div>
       <div class="bni" onclick="go('conselho-ordenados')">Ordenados</div>
       <div class="bni" onclick="go('conselho-seminaristas')">Seminaristas</div>
-      <div class="bni" onclick="T('Estratégico','Relatórios macro')">Estratégico</div>
       <div class="bni" onclick="T('Documentos','Atas e resoluções')">Documentos</div>
       <div class="bni" onclick="go('conselho-whatsapp')">WhatsApp</div>
-    </div>
-    <div class="bnav" style="--mc:var(--sky);margin-top:0">
-      <div class="bni on">Lista Geral</div>
-      <div class="bni" onclick="T('Pastores','Filtro por tipo de ofício')">Pastores</div>
-      <div class="bni" onclick="T('Presbíteros','Filtro por tipo de ofício')">Presbíteros</div>
-      <div class="bni" onclick="T('Histórico','Mandatos e situação ministerial')">Histórico</div>
     </div>
     <div class="ct">
       <div class="alr alr-w"><div class="alr-i">⚠</div><div><strong>Regra crítica:</strong> Ordenado é ofício permanente. Não se confunde com nomeação temporária. O sistema mantém registros separados para ofício e função designada. Supervisor deve ser sempre um ordenado.</div></div>
@@ -284,15 +275,8 @@
       <div class="bni" onclick="go('conselho-nomeados')">Nomeados</div>
       <div class="bni" onclick="go('conselho-ordenados')">Ordenados</div>
       <div class="bni" onclick="go('conselho-seminaristas')">Seminaristas</div>
-      <div class="bni" onclick="T('Estratégico','Relatórios macro')">Estratégico</div>
       <div class="bni" onclick="T('Documentos','Atas e resoluções')">Documentos</div>
       <div class="bni" onclick="go('conselho-whatsapp')">WhatsApp</div>
-    </div>
-    <div class="bnav" style="--mc:var(--sky);margin-top:0">
-      <div class="bni on">Lista Geral</div>
-      <div class="bni" onclick="T('Em Curso','Formação em andamento')">Em Curso</div>
-      <div class="bni" onclick="T('Estágio','Atuação prática na igreja')">Estágio</div>
-      <div class="bni" onclick="T('Concluídos','Formação concluída')">Concluídos</div>
     </div>
     <div class="ct">
       <div class="alr alr-w"><div class="alr-i">ℹ</div><div><strong>Nota:</strong> Seminaristas são membros em formação. Não são ordenados nem nomeados para funções de governo. Sua atuação prática deve ser supervisionada por um pastor ordenado.</div></div>
@@ -374,25 +358,6 @@
     </div>
   </div>
 
-  <!-- DEMANDAS EM ANÁLISE -->
-
-  <div class="view" id="v-conselho-rel">
-    <div class="hero"><div class="hero-ic" style="background:var(--bluebg)">📊</div><div><div class="hero-lbl">Conselho</div><div class="hero-ttl">Relatórios Estratégicos</div></div></div>
-    <div class="ct"><div class="card"><div class="ctit">Demandas Estratégicas <span class="cact" onclick="listarModulo('DEMANDAS','conselho-rel-list')">↻</span></div><div id="conselho-rel-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
-  </div>
-
-  <div class="view" id="v-conselho-ind">
-    <div class="hero"><div class="hero-ic" style="background:var(--bluebg)">📈</div><div><div class="hero-lbl">Conselho</div><div class="hero-ttl">Indicadores Institucionais</div></div></div>
-    <div class="ct">
-      <div class="kpis c4" id="conselho-ind-kpis">
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.12)">👥</div><div class="kpi-body"><div class="kpi-lbl">Membros</div><div class="kpi-val" id="ci-memb">—</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:var(--tealbg)">🏠</div><div class="kpi-body"><div class="kpi-lbl">PGs Ativos</div><div class="kpi-val" id="ci-pgs">—</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:var(--goldbg)">📋</div><div class="kpi-body"><div class="kpi-lbl">Demandas Abertas</div><div class="kpi-val" id="ci-dem">—</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.12)">🗓</div><div class="kpi-body"><div class="kpi-lbl">Eventos 2026</div><div class="kpi-val" id="ci-ag">—</div></div></div>
-      </div>
-      <div class="card"><div class="ctit">Membros Cadastrados <span class="cact" onclick="carregarIndicadores()">↻ Atualizar</span></div><div id="conselho-ind-list"><div style="color:var(--tx3)">Carregando...</div></div></div>
-    </div>
-  </div>
 
   <div class="view" id="v-conselho-doc">
     <div class="hero"><div class="hero-ic" style="background:var(--bluebg)">🗂</div><div><div class="hero-lbl">Conselho</div><div class="hero-ttl">Documentos do Conselho</div></div></div>
