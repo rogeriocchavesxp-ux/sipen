@@ -10,7 +10,7 @@
 
 (function() {
   var xhr = new XMLHttpRequest();
-  xhr.open("GET", "views/sidebar.html?v=6.30.79", false);
+  xhr.open("GET", "views/sidebar.html?v=6.30.88", false);
   xhr.send(null);
   if (xhr.status >= 200 && xhr.status < 300) {
     var login = document.getElementById("login-screen");
@@ -21,7 +21,7 @@
 
 (function() {
   var xhr = new XMLHttpRequest();
-  xhr.open("GET", "views/modals.html?v=6.30.3", false);
+  xhr.open("GET", "views/modals.html?v=6.30.88", false);
   xhr.send(null);
   if (xhr.status >= 200 && xhr.status < 300)
     document.body.insertAdjacentHTML("beforeend", xhr.responseText);
