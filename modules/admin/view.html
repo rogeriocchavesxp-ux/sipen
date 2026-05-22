@@ -5,7 +5,7 @@
       <div class="hero-act"><button class="tbt pri" onclick="openModal()">+ Nova Tarefa</button></div>
     </div>
     <div class="bnav" style="--mc:var(--gold)">
-      <div class="bni on">Dashboard</div>
+      <div class="bni" onclick="go('admin-dash')">Dashboard</div>
       <div class="bni" onclick="go('admin-sec')">Secretaria</div>
       <div class="bni" onclick="go('admin-rh')">RH</div>
       <div class="bni" onclick="go('admin-con')">Contratos</div>
@@ -61,7 +61,7 @@
       <div class="hero-act"><button class="tbt" onclick="T('Nova solicitação','Fluxo: solicitação → verificação → aprovação → saída/compra')">+ Solicitação</button><button class="tbt pri" onclick="T('Nova movimentação','Registro de movimentação aberto')">+ Movimentação</button></div>
     </div>
     <div class="bnav" style="--mc:var(--gold)">
-      <div class="bni on">Visão Geral</div><div class="bni" onclick="T('Itens','Cadastro de itens com estoque mínimo')">Itens</div>
+      <div class="bni" onclick="go('admin-est')">Visão Geral</div><div class="bni" onclick="T('Itens','Cadastro de itens com estoque mínimo')">Itens</div>
       <div class="bni" onclick="T('Entradas','Compras e reposições')">Entradas</div><div class="bni" onclick="T('Saídas','Consumo vinculado a solicitações')">Saídas</div>
       <div class="bni" onclick="T('Inventário','Conferências e ajustes auditáveis')">Inventário</div><div class="bni" onclick="T('Alertas','Itens abaixo do mínimo')">Alertas</div>
     </div>

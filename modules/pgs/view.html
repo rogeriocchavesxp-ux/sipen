@@ -5,7 +5,7 @@
       <div class="hero-act"><button class="tbt" onclick="T('Novo encontro','Registro de relatório de PG')">+ Encontro</button><button class="tbt pri" onclick="T('Novo estudo','Cadastro de estudo vinculado a livro bíblico')">+ Estudo</button></div>
     </div>
     <div class="bnav" style="--mc:var(--gbr)">
-      <div class="bni on">Dashboard</div>
+      <div class="bni" onclick="go('pgs-dash')">Dashboard</div>
       <div class="bni" onclick="go('pgs-lista')">Lista de PGs</div>
       <div class="bni" onclick="go('pgs-encontros')">Encontros</div>
       <div class="bni" onclick="go('pgs-participantes')">Participantes</div>
@@ -67,7 +67,7 @@
     <div class="hero"><div class="hero-ic" style="background:rgba(82,196,110,0.12)">🏠</div><div><div class="hero-lbl">Pequenos Grupos</div><div class="hero-ttl">Lista de PGs</div><div class="hero-dsc">Grupos ativos, líderes e horários</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('PGS')">+ Novo PG</button></div></div>
     <div class="bnav" style="--mc:var(--gbr)">
       <div class="bni" onclick="go('pgs-dash')">Dashboard</div>
-      <div class="bni on">Lista de PGs</div>
+      <div class="bni" onclick="go('pgs-lista')">Lista de PGs</div>
       <div class="bni" onclick="go('pgs-encontros')">Encontros</div>
       <div class="bni" onclick="go('pgs-participantes')">Participantes</div>
       <div class="bni" onclick="go('pgs-visitantes')">Visitantes</div>
@@ -93,7 +93,7 @@
       <div class="bni" onclick="go('pgs-lista')">Lista de PGs</div>
       <div class="bni" onclick="go('pgs-encontros')">Encontros</div>
       <div class="bni" onclick="go('pgs-participantes')">Participantes</div>
-      <div class="bni on">Visitantes</div>
+      <div class="bni" onclick="go('pgs-visitantes')">Visitantes</div>
       <div class="bni" onclick="go('pgs-estudos')">Estudos</div>
       <div class="bni" onclick="go('pgs-relatorios')">Relatórios</div>
       <div class="bni" onclick="go('pgs-oracao')">Oração</div>
@@ -114,7 +114,7 @@
     <div class="bnav" style="--mc:var(--gbr)">
       <div class="bni" onclick="go('pgs-dash')">Dashboard</div>
       <div class="bni" onclick="go('pgs-lista')">Lista de PGs</div>
-      <div class="bni on">Encontros</div>
+      <div class="bni" onclick="go('pgs-encontros')">Encontros</div>
       <div class="bni" onclick="go('pgs-participantes')">Participantes</div>
       <div class="bni" onclick="go('pgs-visitantes')">Visitantes</div>
       <div class="bni" onclick="go('pgs-estudos')">Estudos</div>
@@ -131,7 +131,7 @@
       <div class="bni" onclick="go('pgs-dash')">Dashboard</div>
       <div class="bni" onclick="go('pgs-lista')">Lista de PGs</div>
       <div class="bni" onclick="go('pgs-encontros')">Encontros</div>
-      <div class="bni on">Participantes</div>
+      <div class="bni" onclick="go('pgs-participantes')">Participantes</div>
       <div class="bni" onclick="go('pgs-visitantes')">Visitantes</div>
       <div class="bni" onclick="go('pgs-estudos')">Estudos</div>
       <div class="bni" onclick="go('pgs-relatorios')">Relatórios</div>
@@ -149,7 +149,7 @@
       <div class="bni" onclick="go('pgs-encontros')">Encontros</div>
       <div class="bni" onclick="go('pgs-participantes')">Participantes</div>
       <div class="bni" onclick="go('pgs-visitantes')">Visitantes</div>
-      <div class="bni on">Estudos</div>
+      <div class="bni" onclick="go('pgs-estudos')">Estudos</div>
       <div class="bni" onclick="go('pgs-relatorios')">Relatórios</div>
       <div class="bni" onclick="go('pgs-oracao')">Oração</div>
       <div class="bni" onclick="go('pgs-historico')">Histórico</div>
@@ -166,7 +166,7 @@
       <div class="bni" onclick="go('pgs-participantes')">Participantes</div>
       <div class="bni" onclick="go('pgs-visitantes')">Visitantes</div>
       <div class="bni" onclick="go('pgs-estudos')">Estudos</div>
-      <div class="bni on">Relatórios</div>
+      <div class="bni" onclick="go('pgs-relatorios')">Relatórios</div>
       <div class="bni" onclick="go('pgs-oracao')">Oração</div>
       <div class="bni" onclick="go('pgs-historico')">Histórico</div>
     </div>
@@ -183,7 +183,7 @@
       <div class="bni" onclick="go('pgs-visitantes')">Visitantes</div>
       <div class="bni" onclick="go('pgs-estudos')">Estudos</div>
       <div class="bni" onclick="go('pgs-relatorios')">Relatórios</div>
-      <div class="bni on">Oração</div>
+      <div class="bni" onclick="go('pgs-oracao')">Oração</div>
       <div class="bni" onclick="go('pgs-historico')">Histórico</div>
     </div>
     <div class="ct"><div class="card"><div class="ctit">Pedidos de Oração <span class="cact" onclick="listarModulo('DEMANDAS','pgs-ora-list',{area:'PGs'})">↻</span></div><div id="pgs-ora-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
@@ -200,7 +200,7 @@
       <div class="bni" onclick="go('pgs-estudos')">Estudos</div>
       <div class="bni" onclick="go('pgs-relatorios')">Relatórios</div>
       <div class="bni" onclick="go('pgs-oracao')">Oração</div>
-      <div class="bni on">Histórico</div>
+      <div class="bni" onclick="go('pgs-historico')">Histórico</div>
     </div>
     <div class="ct"><div class="card"><div class="ctit">Histórico de PGs <span class="cact" onclick="listarModulo('PGS','pgs-hist-list')">↻</span></div><div id="pgs-hist-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
   </div>

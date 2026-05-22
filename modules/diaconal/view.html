@@ -4,7 +4,7 @@
       <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Junta Diaconal</div><div class="hero-dsc">Visão geral do serviço diaconal — diáconos, famílias assistidas, escalas e atendimentos sociais da IPPenha</div></div>
     </div>
     <div class="bnav" style="--mc:var(--copper)">
-      <div class="bni on">Dashboard</div>
+      <div class="bni" onclick="go('diac-dash')">Dashboard</div>
       <div class="bni" onclick="go('diac-diaconos')">Diáconos</div>
       <div class="bni" onclick="go('diac-escalas')">Escalas</div>
       <div class="bni" onclick="go('diac-familias')">Famílias</div>
@@ -49,7 +49,7 @@
       <div class="hero-act"><button class="tbt pri" onclick="T('Novo Diácono','Registro vinculado à membresia e ordenação')">+ Novo Registro</button></div>
     </div>
     <div class="bnav" style="--mc:var(--copper)">
-      <div class="bni on">Lista Geral</div>
+      <div class="bni" onclick="go('diac-diaconos')">Lista Geral</div>
       <div class="bni" onclick="T('Por Área','Filtro por área de atuação')">Por Área</div>
       <div class="bni" onclick="T('Por Congregação','Distribuição por unidade')">Por Congregação</div>
     </div>
@@ -92,7 +92,7 @@
       <div class="hero-act"><button class="tbt pri" onclick="T('Nova Família','Registro de família para acompanhamento')">+ Nova Família</button></div>
     </div>
     <div class="bnav" style="--mc:var(--copper)">
-      <div class="bni on">Lista Geral</div>
+      <div class="bni" onclick="go('diac-familias')">Lista Geral</div>
       <div class="bni" onclick="T('Por Necessidade','Categorias de necessidade')">Por Necessidade</div>
       <div class="bni" onclick="T('Por Prioridade','Alta, média, baixa')">Por Prioridade</div>
       <div class="bni" onclick="T('Histórico','Registros anteriores')">Histórico</div>
@@ -127,7 +127,7 @@
       <div class="hero-act"><button class="tbt pri" onclick="T('Novo Auxílio','Registro de doação ou benefício')">+ Novo Auxílio</button></div>
     </div>
     <div class="bnav" style="--mc:var(--copper)">
-      <div class="bni on">Visão Geral</div>
+      <div class="bni" onclick="go('diac-social')">Visão Geral</div>
       <div class="bni" onclick="T('Doações','Entradas e dízimos sociais')">Doações</div>
       <div class="bni" onclick="T('Cestas Básicas','Distribuição mensal')">Cestas Básicas</div>
       <div class="bni" onclick="T('Campanhas','Campanhas ativas e encerradas')">Campanhas</div>
@@ -170,7 +170,7 @@
       <div class="hero-act"><button class="tbt pri" onclick="T('Nova Visita','Registro ou agendamento de visita')">+ Nova Visita</button></div>
     </div>
     <div class="bnav" style="--mc:var(--copper)">
-      <div class="bni on">Visão Geral</div>
+      <div class="bni" onclick="go('diac-visitacao')">Visão Geral</div>
       <div class="bni" onclick="T('Agendadas','Visitas programadas')">Agendadas</div>
       <div class="bni" onclick="T('Concluídas','Visitas realizadas')">Concluídas</div>
     </div>
@@ -202,7 +202,7 @@
       <div class="hero-act"><button class="tbt pri" onclick="T('Nova Demanda','Registro de demanda operacional')">+ Nova Demanda</button></div>
     </div>
     <div class="bnav" style="--mc:var(--copper)">
-      <div class="bni on">Visão Geral</div>
+      <div class="bni" onclick="go('diac-patrimonio')">Visão Geral</div>
       <div class="bni" onclick="T('Equipamentos','Controle de equipamentos')">Equipamentos</div>
       <div class="bni" onclick="T('Organização','Demandas de organização')">Organização</div>
       <div class="bni" onclick="T('Suporte','Apoio logístico e operacional')">Suporte</div>
@@ -235,7 +235,7 @@
       <div class="hero-act"><button class="tbt pri" onclick="T('Nova Solicitação','Registro de pedido diaconal')">+ Nova Solicitação</button></div>
     </div>
     <div class="bnav" style="--mc:var(--copper)">
-      <div class="bni on">Todas</div>
+      <div class="bni" onclick="go('diac-solicitacoes')">Todas</div>
       <div class="bni" onclick="T('Pendentes','Aguardando triagem')">Pendentes</div>
       <div class="bni" onclick="T('Em Atendimento','Em execução')">Em Atendimento</div>
       <div class="bni" onclick="T('Concluídas','Finalizadas')">Concluídas</div>
@@ -271,7 +271,7 @@
       <div class="hero-act"><button class="tbt" onclick="T('Exportar','Exportar relatório em PDF ou XLSX')">Exportar</button><button class="tbt pri" onclick="T('Gerar Relatório','Relatório mensal da Junta Diaconal')">Gerar Relatório</button></div>
     </div>
     <div class="bnav" style="--mc:var(--copper)">
-      <div class="bni on">Mensal</div>
+      <div class="bni" onclick="go('diac-relatorios')">Mensal</div>
       <div class="bni" onclick="T('Indicadores','Métricas de atendimento')">Indicadores</div>
       <div class="bni" onclick="T('Por Diácono','Performance individual')">Por Diácono</div>
       <div class="bni" onclick="T('Exportações','Downloads disponíveis')">Exportações</div>
@@ -312,7 +312,7 @@
       <div class="hero-act"><button class="tbt pri" onclick="T('Nova Ata','Registro de reunião da Junta Diaconal')">+ Nova Ata</button></div>
     </div>
     <div class="bnav" style="--mc:var(--copper)">
-      <div class="bni on">Atas</div>
+      <div class="bni" onclick="go('diac-historico')">Atas</div>
       <div class="bni" onclick="T('Deliberações','Decisões tomadas')">Deliberações</div>
       <div class="bni" onclick="T('Histórico Geral','Linha do tempo')">Histórico Geral</div>
     </div>

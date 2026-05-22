@@ -5,7 +5,7 @@
       <div class="hero-act"><button class="tbt pri" onclick="go('fin-lancamentos')">+ Novo Lançamento</button></div>
     </div>
     <div class="bnav" style="--mc:var(--gr)">
-      <div class="bni on">Dashboard</div>
+      <div class="bni" onclick="go('fin-dash')">Dashboard</div>
       <div class="bni" onclick="go('fin-lancamentos')">Lançamentos</div>
       <div class="bni" onclick="go('fin-fluxo')">Fluxo de Caixa</div>
       <div class="bni" onclick="go('fin-pagar')">A Pagar</div>
@@ -40,7 +40,7 @@
     </div>
     <div class="bnav" style="--mc:var(--gr)">
       <div class="bni" onclick="go('fin-dash')">Dashboard</div>
-      <div class="bni on">Lançamentos</div>
+      <div class="bni" onclick="go('fin-lancamentos')">Lançamentos</div>
       <div class="bni" onclick="go('fin-fluxo')">Fluxo de Caixa</div>
       <div class="bni" onclick="go('fin-pagar')">A Pagar</div>
       <div class="bni" onclick="go('fin-receber')">A Receber</div>
@@ -59,7 +59,7 @@
     <div class="bnav" style="--mc:var(--gr)">
       <div class="bni" onclick="go('fin-dash')">Dashboard</div>
       <div class="bni" onclick="go('fin-lancamentos')">Lançamentos</div>
-      <div class="bni on">Fluxo de Caixa</div>
+      <div class="bni" onclick="go('fin-fluxo')">Fluxo de Caixa</div>
       <div class="bni" onclick="go('fin-pagar')">A Pagar</div>
       <div class="bni" onclick="go('fin-receber')">A Receber</div>
       <div class="bni" onclick="go('fin-relatorios')">Relatórios</div>
@@ -79,7 +79,7 @@
       <div class="bni" onclick="go('fin-dash')">Dashboard</div>
       <div class="bni" onclick="go('fin-lancamentos')">Lançamentos</div>
       <div class="bni" onclick="go('fin-fluxo')">Fluxo de Caixa</div>
-      <div class="bni on">A Pagar</div>
+      <div class="bni" onclick="go('fin-pagar')">A Pagar</div>
       <div class="bni" onclick="go('fin-receber')">A Receber</div>
       <div class="bni" onclick="go('fin-relatorios')">Relatórios</div>
     </div>
@@ -99,7 +99,7 @@
       <div class="bni" onclick="go('fin-lancamentos')">Lançamentos</div>
       <div class="bni" onclick="go('fin-fluxo')">Fluxo de Caixa</div>
       <div class="bni" onclick="go('fin-pagar')">A Pagar</div>
-      <div class="bni on">A Receber</div>
+      <div class="bni" onclick="go('fin-receber')">A Receber</div>
       <div class="bni" onclick="go('fin-relatorios')">Relatórios</div>
     </div>
     <div class="ct" id="fin-receber-content"></div>
@@ -130,7 +130,7 @@
       <div class="bni" onclick="go('fin-fluxo')">Fluxo de Caixa</div>
       <div class="bni" onclick="go('fin-pagar')">A Pagar</div>
       <div class="bni" onclick="go('fin-receber')">A Receber</div>
-      <div class="bni on">Relatórios</div>
+      <div class="bni" onclick="go('fin-relatorios')">Relatórios</div>
     </div>
     <div class="ct" id="fin-rel-content"></div>
   </div>
@@ -156,7 +156,7 @@
     <div class="bnav" style="--mc:var(--gr)">
       <div class="bni" onclick="go('fin-dash')">Dashboard</div>
       <div class="bni" onclick="go('fin-pagar')">A Pagar</div>
-      <div class="bni on">CNAB 240</div>
+      <div class="bni" onclick="go('cnab-remessas')">CNAB 240</div>
       <div class="bni" onclick="go('fin-auditoria')">Auditoria</div>
     </div>
     <div class="ct" id="cnab-remessas-body"><div class="card" style="padding:28px;color:var(--tx3)">Carregando remessas...</div></div>
