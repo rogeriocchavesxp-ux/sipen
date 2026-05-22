@@ -206,7 +206,8 @@
     _editingPastorId = pastor?.id||null;
     const isNew = !pastor;
     const v = n=>(n||"").replace(/"/g,"&quot;");
-    const modal = document.getElementById("ep-modal"); if(!modal) return;
+    let modal = document.getElementById("ep-modal");
+    if(!modal){modal=document.createElement("div");modal.id="ep-modal";document.body.appendChild(modal);}
     modal.innerHTML = `<div style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9990;display:flex;align-items:center;justify-content:center" onclick="if(event.target===this)ep_closeModal()"><div style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;width:420px;max-width:94vw;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.4)"><div style="display:flex;align-items:center;margin-bottom:18px"><div style="font-size:13px;font-weight:700;color:var(--tx1)">${isNew?"Novo Pastor":"Editar Pastor"}</div><button onclick="ep_closeModal()" style="margin-left:auto;background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button></div><div style="display:flex;flex-direction:column;gap:12px"><div><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;margin-bottom:4px;display:block">Nome Completo</label><input id="ep-pm-nome" type="text" value="${v(pastor?.nome_completo)}" placeholder="Rev. Nome Sobrenome" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans);box-sizing:border-box"></div><div><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;margin-bottom:4px;display:block">Nome de Exibição</label><input id="ep-pm-exib" type="text" value="${v(pastor?.nome_exibicao)}" placeholder="Rev. Nome" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans);box-sizing:border-box"></div><div><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;margin-bottom:4px;display:block">Função</label><input id="ep-pm-funcao" type="text" value="${v(pastor?.funcao)}" placeholder="Pastor, Diácono, etc." style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans);box-sizing:border-box"></div><div><label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;margin-bottom:4px;display:block">Unidade</label><input id="ep-pm-unidade" type="text" value="${v(pastor?.unidade)}" placeholder="Sede, Filial, etc." style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;font-family:var(--sans);box-sizing:border-box"></div><div style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="ep-pm-ativo" ${pastor?.ativo!==false?"checked":""} style="width:14px;height:14px;accent-color:var(--teal)"><label for="ep-pm-ativo" style="font-size:12px;color:var(--tx2)">Pastor ativo (aparece nas escalas)</label></div></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px"><button onclick="ep_closeModal()" style="padding:8px 16px;background:var(--bg-surface);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:12px;cursor:pointer;font-family:var(--sans)">Cancelar</button><button onclick="ep_savePastor()" style="padding:8px 16px;background:var(--teal);border:none;border-radius:6px;color:#fff;font-size:12px;cursor:pointer;font-weight:600;font-family:var(--sans)">Salvar</button></div></div></div>`;
     modal.style.display = "block";
   }
@@ -222,9 +223,17 @@
       else   await fetch(`${apiBaseUrl()}/rest/v1/pastores`,{method:"POST",headers:apiHeaders({"Prefer":"return=representation"}),body:JSON.stringify(payload)});
     } catch(e){alert("Erro ao salvar: "+e.message);return;}
     ep_closeModal(); await _loadAll();
+    if(typeof pd_renderPastores==="function") pd_renderPastores();
+    T(!_editingPastorId?"Pastor Cadastrado":"Pastor Atualizado",!_editingPastorId?"Cadastro realizado com sucesso.":"Dados atualizados com sucesso.");
   };
   window.ep_togglePastorAtivo = async function(id,ativo){
-    try{await fetch(`${apiBaseUrl()}/rest/v1/pastores?id=eq.${id}`,{method:"PATCH",headers:apiHeaders({"Prefer":"return=minimal"}),body:JSON.stringify({ativo})});await _loadAll();}catch(e){}
+    if(!ativo&&!confirm("Desativar este pastor? Ele não aparecerá mais nas escalas.")) return;
+    try{
+      await fetch(`${apiBaseUrl()}/rest/v1/pastores?id=eq.${id}`,{method:"PATCH",headers:apiHeaders({"Prefer":"return=minimal"}),body:JSON.stringify({ativo})});
+      await _loadAll();
+      if(typeof pd_renderPastores==="function") pd_renderPastores();
+      T(ativo?"Pastor Ativado":"Pastor Desativado",ativo?"Pastor reativado com sucesso.":"Pastor desativado com sucesso.");
+    }catch(e){T("Erro","Não foi possível atualizar o status do pastor.");}
   };
 
   /* ── Painel de gerenciamento (admin) ─────────────────────────── */
@@ -457,6 +466,13 @@
   window.ep_ver       = function(key){ep_openSlot(key);};
   window.ep_getPastores = () => _pastores;
   window.ep_getEscala   = () => _escala;
+  window.ep_refreshPastores = async function(){
+    try{
+      const r=await fetch(`${apiBaseUrl()}/rest/v1/pastores?select=*&order=nome_completo.asc`,{headers:apiHeaders()});
+      if(r.ok){const d=await r.json();if(Array.isArray(d)&&d.length)_pastores=d;}
+    }catch(e){}
+    if(typeof pd_renderPastores==="function") pd_renderPastores();
+  };
 
 })();
 
