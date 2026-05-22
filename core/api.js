@@ -1,6 +1,23 @@
 /* ══════════════════════════════════════════
    SUPABASE INTEGRATION LAYER — v5.2.3
    CRUD real via Supabase REST
+
+   CONVENÇÃO DE ACESSO A DADOS
+   ───────────────────────────
+   Existem 3 formas de consultar o Supabase neste projeto.
+   Prefira sempre as opções superiores:
+
+   1. listarModulo(key, elId, filtro) / apiRead(key) / apiWrite(key, ...)
+      Usa TABLE_MAP + SCHEMA. Para tabelas mapeadas (MEMBROS, DEMANDAS, etc.).
+      Inclui paginação, cache e tratamento de erro padrão.
+
+   2. apiFetchTable(tableName, params)  ← PADRÃO RECOMENDADO para código novo
+      Definida em init.js. Fetch direto sem TABLE_MAP.
+      Use para views e tabelas que não precisam de CRUD completo.
+      Ex: apiFetchTable("v_oficiais", { cargo:"pastor", _limit:100 })
+
+   3. fetch(apiBaseUrl() + '/rest/v1/...')  ← EVITAR em código novo
+      Raw fetch manual. Só manter onde já existe; não usar em features novas.
 ══════════════════════════════════════════ */
 const SUPABASE_PROJECT_REF = "erhwryfzpycahgsohhbh";
 const SUPABASE_DASHBOARD_URL = `https://supabase.com/dashboard/project/${SUPABASE_PROJECT_REF}`;
