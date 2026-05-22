@@ -983,7 +983,7 @@
 
   window.conFiltrarTipo = function (tipo) {
     _tipoFiltro = tipo;
-    document.querySelectorAll("#con-tipo-tabs .ini").forEach(el => {
+    document.querySelectorAll("#con-tipo-tabs .bni").forEach(el => {
       el.classList.toggle("on", (el.dataset.tipo || "") === tipo);
     });
     renderContratos();
@@ -1015,7 +1015,7 @@
       const status = document.getElementById("con-f-status");
       if (busca)  busca.value  = "";
       if (status) status.value = "";
-      document.querySelectorAll("#con-tipo-tabs .ini").forEach((el, i) => el.classList.toggle("on", i === 0));
+      document.querySelectorAll("#con-tipo-tabs .bni").forEach((el, i) => el.classList.toggle("on", i === 0));
       renderContratos();
     }
   });

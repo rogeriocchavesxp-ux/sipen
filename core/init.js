@@ -1,9 +1,9 @@
 
 /* ── Shell views assíncronas ────────────── */
 const _shellReady = Promise.all([
-  fetch("views/login.html?v=6.30.92").then(r => r.ok ? r.text() : ""),
-  fetch("views/sidebar.html?v=6.30.92").then(r => r.ok ? r.text() : ""),
-  fetch("views/modals.html?v=6.30.92").then(r => r.ok ? r.text() : ""),
+  fetch("views/login.html?v=6.30.93").then(r => r.ok ? r.text() : ""),
+  fetch("views/sidebar.html?v=6.30.93").then(r => r.ok ? r.text() : ""),
+  fetch("views/modals.html?v=6.30.93").then(r => r.ok ? r.text() : ""),
 ]).then(([loginHtml, sidebarHtml, modalsHtml]) => {
   document.body.insertAdjacentHTML("afterbegin", loginHtml);
   const login = document.getElementById("login-screen");
@@ -323,7 +323,7 @@ const NOM_TIPO_BG    = { governo:"rgba(74,156,245,0.12)", comissao:"rgba(139,111
 function switchNomTab(tipo) {
   _nomTabAtivo = tipo;
   const nav = document.getElementById("nom-inav");
-  if (nav) nav.querySelectorAll(".ini,.bni").forEach(el => {
+  if (nav) nav.querySelectorAll(".bni").forEach(el => {
     el.classList.toggle("on", el.getAttribute("onclick")?.includes(`'${tipo}'`));
   });
   _renderNomTabContent(tipo);

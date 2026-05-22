@@ -138,31 +138,31 @@ const MN={admin:"Administrativo",fin:"Financeiro",jur:"Jurídico",conselho:"Cons
 const _viewCache = {};
 const _VIEW_MAP = {
   "geral":       "modules/dashboard/view.html",
-  "admin":       "modules/admin/view.html?v=6.30.92",
-  "pext":        "modules/admin/view.html?v=6.30.92",
-  "fin":         "modules/financeiro/view.html?v=6.30.92",
-  "cnab":        "modules/financeiro/view.html?v=6.30.92",
-  "jur":         "modules/juridico/view.html?v=6.30.92",
-  "conselho":    "modules/conselho/view.html?v=6.30.92",
-  "atas":        "modules/conselho/view.html?v=6.30.92",
-  "pautas":      "modules/conselho/view.html?v=6.30.92",
-  "pastoral":    "modules/pastoral/view.html?v=6.30.92",
-  "min":         "modules/departamentos/view.html?v=6.30.92",
-  "agenda":      "modules/agenda/view.html?v=6.30.92",
-  "pgs":         "modules/pgs/view.html?v=6.30.92",
-  "infra":       "modules/infraestrutura/view.html?v=6.30.92",
-  "dem":         "modules/demandas/view.html?v=6.30.92",
-  "rel":         "modules/relatorios/view.html?v=6.30.92",
-  "memb":        "modules/membresia/view.html?v=6.30.92",
+  "admin":       "modules/admin/view.html?v=6.30.93",
+  "pext":        "modules/admin/view.html?v=6.30.93",
+  "fin":         "modules/financeiro/view.html?v=6.30.93",
+  "cnab":        "modules/financeiro/view.html?v=6.30.93",
+  "jur":         "modules/juridico/view.html?v=6.30.93",
+  "conselho":    "modules/conselho/view.html?v=6.30.93",
+  "atas":        "modules/conselho/view.html?v=6.30.93",
+  "pautas":      "modules/conselho/view.html?v=6.30.93",
+  "pastoral":    "modules/pastoral/view.html?v=6.30.93",
+  "min":         "modules/departamentos/view.html?v=6.30.93",
+  "agenda":      "modules/agenda/view.html?v=6.30.93",
+  "pgs":         "modules/pgs/view.html?v=6.30.93",
+  "infra":       "modules/infraestrutura/view.html?v=6.30.93",
+  "dem":         "modules/demandas/view.html?v=6.30.93",
+  "rel":         "modules/relatorios/view.html?v=6.30.93",
+  "memb":        "modules/membresia/view.html?v=6.30.93",
   "proj":        "modules/projetos/view.html",
-  "diac":        "modules/diaconal/view.html?v=6.30.92",
+  "diac":        "modules/diaconal/view.html?v=6.30.93",
   "cong":        "modules/congregacoes/view.html",
-  "com":         "modules/comunicacao/view.html?v=6.30.92",
-  "eve":         "modules/eventos/view.html?v=6.30.92",
-  "area":        "modules/area-membro/view.html?v=6.30.92",
+  "com":         "modules/comunicacao/view.html?v=6.30.93",
+  "eve":         "modules/eventos/view.html?v=6.30.93",
+  "area":        "modules/area-membro/view.html?v=6.30.93",
   "config":      "modules/config/view.html",
   "generic":     "modules/shared/view.html",
-  "acesso":      "modules/acesso/view.html?v=6.30.92",
+  "acesso":      "modules/acesso/view.html?v=6.30.93",
 };
 
 function _getViewFileForRoute(id) {
@@ -242,7 +242,7 @@ async function go(id){
     const fn=e.getAttribute("onclick");
     if(fn&&fn.includes(`'${id}'`))e.classList.add("on");
   });
-  document.querySelectorAll(".ini,.bni").forEach(e=>{
+  document.querySelectorAll(".bni").forEach(e=>{
     e.classList.remove("on");
     const fn=e.getAttribute("onclick");
     if(fn&&fn.includes(`'${id}'`))e.classList.add("on");
