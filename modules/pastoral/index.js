@@ -915,26 +915,26 @@
 	  function _slotCard(pastorId, ds, tipo, reg, isFuture){
 	    const t=_TIPO[tipo]||_TIPO.domingo_manha;
 	    const estado=_estadoDisp(reg);
-	    let btnBg,btnColor,btnBorder,btnLabel,nextAction;
-	    if(estado.key==="disponivel"){
-	      btnBg="rgba(58,170,92,0.12)";btnColor="#2a7d3f";btnBorder="rgba(58,170,92,0.4)";
-	      btnLabel="🟢 Estou disponível";
-	      nextAction=`dp_toggleDisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}',false)`;
-	    } else if(estado.key==="indisponivel"){
-	      btnBg="rgba(208,104,104,0.12)";btnColor="#c62828";btnBorder="rgba(208,104,104,0.4)";
-	      btnLabel="🔴 Indisponível";
-	      nextAction=`dp_toggleDisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}',true)`;
-	    } else {
-	      btnBg="var(--bg-surface)";btnColor="var(--tx3)";btnBorder="var(--bd2)";
-	      btnLabel="⚪ Sem resposta";
-	      nextAction=`dp_toggleDisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}',true)`;
-	    }
-	    const borderCard=estado.key==="disponivel"?"rgba(58,170,92,0.3)":estado.key==="indisponivel"?"rgba(208,104,104,0.2)":"var(--bd2)";
+	    const isDisp=estado.key==="disponivel";
+	    const isIndisp=estado.key==="indisponivel";
+	    const borderCard=isDisp?"rgba(58,170,92,0.3)":isIndisp?"rgba(208,104,104,0.2)":"var(--bd2)";
 	    const editBtn=_isAdmin()&&reg?.id?`<button onclick="dp_editarDisp('${_ea(reg.id)}')" style="position:absolute;top:10px;right:10px;background:none;border:1px solid var(--bd2);border-radius:5px;color:var(--tx3);font-size:10px;padding:3px 8px;cursor:pointer">✏️</button>`:"";
-	    const btn=isFuture&&pastorId
-	      ?`<button onclick="${nextAction}" style="width:100%;padding:18px 16px;border-radius:10px;border:1.5px solid ${btnBorder};background:${btnBg};color:${btnColor};font-size:17px;font-weight:700;cursor:pointer;font-family:var(--sans);text-align:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation" onmousedown="this.style.opacity='.6'" onmouseup="this.style.opacity='1'" ontouchstart="this.style.opacity='.6'" ontouchend="this.style.opacity='1'">${_eh(btnLabel)}</button>`
-	      :`<div style="font-size:13px;color:var(--tx3);padding:4px 0">${_eh(estado.label)}</div>`;
-	    return `<div style="position:relative;background:var(--bg-card);border:1px solid ${borderCard};border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px">${editBtn}<div style="display:flex;align-items:center;gap:12px"><span style="font-size:26px">${_eh(t.ico)}</span><div><div style="font-size:15px;font-weight:700;color:${t.cor}">${_eh(t.label)}</div>${t.hora?`<div style="font-size:13px;color:var(--tx3)">${_eh(t.hora)}</div>`:""}</div></div>${btn}</div>`;
+	    let btns;
+	    if(isFuture&&pastorId){
+	      const base="padding:10px 6px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);text-align:center;flex:1;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:opacity .1s";
+	      const tapEvts="onmousedown=\"this.style.opacity='.7'\" onmouseup=\"this.style.opacity='1'\" ontouchstart=\"this.style.opacity='.7'\" ontouchend=\"this.style.opacity='1'\"";
+	      const semAct=!isDisp&&!isIndisp?"background:rgba(212,168,67,0.18);border:1.5px solid rgba(212,168,67,0.5);color:#b8912e;":"background:var(--bg-surface);border:1.5px solid var(--bd2);color:var(--tx3);";
+	      const dispAct=isDisp?"background:rgba(58,170,92,0.18);border:1.5px solid rgba(58,170,92,0.5);color:#2a7d3f;":"background:var(--bg-surface);border:1.5px solid var(--bd2);color:var(--tx3);";
+	      const indAct=isIndisp?"background:rgba(208,104,104,0.18);border:1.5px solid rgba(208,104,104,0.5);color:#c62828;":"background:var(--bg-surface);border:1.5px solid var(--bd2);color:var(--tx3);";
+	      btns=`<div style="display:flex;gap:6px">
+	        <button onclick="dp_toggleDisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}','pendente')" style="${base};${semAct}" ${tapEvts}>⚪ Sem resposta</button>
+	        <button onclick="dp_toggleDisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}',true)" style="${base};${dispAct}" ${tapEvts}>🟢 Disponível</button>
+	        <button onclick="dp_toggleDisp('${_ea(pastorId)}','${_ea(ds)}','${_ea(tipo)}',false)" style="${base};${indAct}" ${tapEvts}>🔴 Indisponível</button>
+	      </div>`;
+	    } else {
+	      btns=`<div style="font-size:13px;color:var(--tx3);padding:4px 0">${_eh(estado.label)}</div>`;
+	    }
+	    return `<div style="position:relative;background:var(--bg-card);border:1px solid ${borderCard};border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px">${editBtn}<div style="display:flex;align-items:center;gap:12px"><span style="font-size:26px">${_eh(t.ico)}</span><div><div style="font-size:15px;font-weight:700;color:${t.cor}">${_eh(t.label)}</div>${t.hora?`<div style="font-size:13px;color:var(--tx3)">${_eh(t.hora)}</div>`:""}</div></div>${btns}</div>`;
 	  }
 
 	  /* ── API Supabase ─────────────────────────────────────────────── */
@@ -1325,7 +1325,11 @@
 	  };
 	  window.dp_toggleDisp = async function(pastor_id, data, culto_tipo, disponivel){
 	    if(!pastor_id){ T("Pastor não identificado","Seu usuário não está vinculado a um pastor cadastrado."); return; }
-	    const ok=await _upsert({pastor_id,data,culto_tipo,disponivel,status:disponivel?"PREENCHIDA":"PENDENTE",observacoes:""});
+	    const isPendente=disponivel==="pendente";
+	    const dispBool=isPendente?false:!!disponivel;
+	    const status=isPendente?"PENDENTE":dispBool?"PREENCHIDA":"PENDENTE";
+	    const pid=isPendente?null:pastor_id;
+	    const ok=await _upsert({pastor_id:pid,data,culto_tipo,disponivel:dispBool,status,observacoes:""});
 	    if(ok){ _renderMinha(); _atualizarKpis(); }
 	  };
 	  window.dp_editarDisp = async function(id){
