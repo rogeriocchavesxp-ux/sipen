@@ -932,9 +932,9 @@
 	    const borderCard=estado.key==="disponivel"?"rgba(58,170,92,0.3)":estado.key==="indisponivel"?"rgba(208,104,104,0.2)":"var(--bd2)";
 	    const editBtn=_isAdmin()&&reg?.id?`<button onclick="dp_editarDisp('${_ea(reg.id)}')" style="position:absolute;top:10px;right:10px;background:none;border:1px solid var(--bd2);border-radius:5px;color:var(--tx3);font-size:10px;padding:3px 8px;cursor:pointer">✏️</button>`:"";
 	    const btn=isFuture&&pastorId
-	      ?`<button onclick="${nextAction}" style="width:100%;padding:16px;border-radius:10px;border:1.5px solid ${btnBorder};background:${btnBg};color:${btnColor};font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans);text-align:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation" onmousedown="this.style.opacity='.6'" onmouseup="this.style.opacity='1'" ontouchstart="this.style.opacity='.6'" ontouchend="this.style.opacity='1'">${_eh(btnLabel)}</button>`
-	      :`<div style="font-size:11px;color:var(--tx3);padding:4px 0">${_eh(estado.label)}</div>`;
-	    return `<div style="position:relative;background:var(--bg-card);border:1px solid ${borderCard};border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">${editBtn}<div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">${_eh(t.ico)}</span><div><div style="font-size:13px;font-weight:700;color:${t.cor}">${_eh(t.label)}</div>${t.hora?`<div style="font-size:11px;color:var(--tx3)">${_eh(t.hora)}</div>`:""}</div></div>${btn}</div>`;
+	      ?`<button onclick="${nextAction}" style="width:100%;padding:18px 16px;border-radius:10px;border:1.5px solid ${btnBorder};background:${btnBg};color:${btnColor};font-size:17px;font-weight:700;cursor:pointer;font-family:var(--sans);text-align:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation" onmousedown="this.style.opacity='.6'" onmouseup="this.style.opacity='1'" ontouchstart="this.style.opacity='.6'" ontouchend="this.style.opacity='1'">${_eh(btnLabel)}</button>`
+	      :`<div style="font-size:13px;color:var(--tx3);padding:4px 0">${_eh(estado.label)}</div>`;
+	    return `<div style="position:relative;background:var(--bg-card);border:1px solid ${borderCard};border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px">${editBtn}<div style="display:flex;align-items:center;gap:12px"><span style="font-size:26px">${_eh(t.ico)}</span><div><div style="font-size:15px;font-weight:700;color:${t.cor}">${_eh(t.label)}</div>${t.hora?`<div style="font-size:13px;color:var(--tx3)">${_eh(t.hora)}</div>`:""}</div></div>${btn}</div>`;
 	  }
 
 	  /* ── API Supabase ─────────────────────────────────────────────── */
@@ -1124,7 +1124,7 @@
 	      const isToday=ds===hoje;
 	      const dtFmt=new Date(ds+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long"});
 	      h+=`<div>`;
-	      h+=`<div style="font-size:11px;font-weight:700;text-transform:capitalize;letter-spacing:.04em;padding:0 2px;margin-bottom:8px;color:${isToday?"var(--teal)":"var(--tx3)"}">`;
+	      h+=`<div style="font-size:13px;font-weight:700;text-transform:capitalize;letter-spacing:.04em;padding:0 2px;margin-bottom:8px;color:${isToday?"var(--teal)":"var(--tx3)"}">`;
 	      if(isToday) h+=`📍 HOJE — `;
 	      h+=`${_eh(dtFmt)}</div>`;
 	      h+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">`;
