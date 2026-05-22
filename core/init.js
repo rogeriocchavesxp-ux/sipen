@@ -1,9 +1,9 @@
 
 /* ── Shell views assíncronas ────────────── */
 const _shellReady = Promise.all([
-  fetch("views/login.html?v=6.30.97").then(r => r.ok ? r.text() : ""),
-  fetch("views/sidebar.html?v=6.30.97").then(r => r.ok ? r.text() : ""),
-  fetch("views/modals.html?v=6.30.97").then(r => r.ok ? r.text() : ""),
+  fetch("views/login.html?v=6.30.98").then(r => r.ok ? r.text() : ""),
+  fetch("views/sidebar.html?v=6.30.98").then(r => r.ok ? r.text() : ""),
+  fetch("views/modals.html?v=6.30.98").then(r => r.ok ? r.text() : ""),
 ]).then(([loginHtml, sidebarHtml, modalsHtml]) => {
   document.body.insertAdjacentHTML("afterbegin", loginHtml);
   const login = document.getElementById("login-screen");
@@ -357,6 +357,47 @@ function toggleNomOrgao(uid) {
   }
 }
 
+function _renderNomAll() {
+  const el = document.getElementById("nomeados-list-container");
+  if (!el) return;
+  if (!_nomeadosData) { el.innerHTML = `<p style="color:var(--tx4);font-size:12px;padding:20px">Carregando…</p>`; return; }
+  const tipos = Object.keys(_nomeadosByTipo).sort();
+  if (!tipos.length) { el.innerHTML = `<p style="color:var(--tx4);font-size:12px;padding:20px">Nenhum registro.</p>`; return; }
+  let html = `<div style="display:flex;flex-direction:column;gap:20px">`;
+  tipos.forEach(tipo => {
+    const label = NOM_TIPO_LABEL[tipo] || tipo;
+    const cor   = NOM_TIPO_COR[tipo]   || "var(--sky)";
+    const byOrgao = _nomeadosByTipo[tipo] || {};
+    const orgaos  = Object.keys(byOrgao).sort();
+    if (!orgaos.length) return;
+    html += `<div><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;padding:0 2px">${label}</div><div style="display:flex;flex-direction:column;gap:2px">`;
+    orgaos.forEach((orgao, i) => {
+      const pessoas = byOrgao[orgao];
+      const uid = `nom-${tipo}-${i}`;
+      html += `<div style="border-radius:8px;overflow:hidden;border:1px solid var(--bd1)">
+        <div onclick="toggleNomOrgao('${uid}')" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--bg-surface);user-select:none;transition:background .15s" onmouseover="this.style.background='var(--bg-surface2)'" onmouseout="this.style.background='var(--bg-surface)'">
+          <div style="width:8px;height:8px;border-radius:50%;background:${cor};flex-shrink:0"></div>
+          <span style="flex:1;font-size:13px;font-weight:600;color:var(--tx1)">${orgao}</span>
+          <span style="font-size:10px;color:var(--tx3);margin-right:6px">${pessoas.length} pessoa${pessoas.length !== 1 ? "s" : ""}</span>
+          <span id="${uid}-chev" class="nom-orgao-chev" style="color:var(--tx4);font-size:14px;width:12px;text-align:center;transition:all .2s">›</span>
+        </div>
+        <div id="${uid}-body" class="nom-orgao-body" style="display:none;border-top:1px solid var(--bd1)">`;
+      pessoas.forEach((p, pi) => {
+        const sub = p.suborgao ? ` <span style="font-size:10px;color:var(--tx4)">(${p.suborgao})</span>` : "";
+        const obs = p.obs ? ` <span style="font-size:10px;color:var(--tx3);font-style:italic">· ${p.obs}</span>` : "";
+        html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px 8px 32px;${pi < pessoas.length-1 ? "border-bottom:1px solid rgba(255,255,255,0.04)" : ""}">
+            <span style="font-size:12px;color:var(--tx1)">${p.nome}${sub}${obs}</span>
+            <span style="font-size:11px;color:${cor};font-weight:600;white-space:nowrap;margin-left:12px">${p.cargo || ""}</span>
+          </div>`;
+      });
+      html += `</div></div>`;
+    });
+    html += `</div></div>`;
+  });
+  html += `</div>`;
+  el.innerHTML = html;
+}
+
 function _renderNomTabContent(tipo) {
   const el = document.getElementById("nomeados-list-container");
   if (!el) return;
@@ -424,7 +465,7 @@ async function renderNomeados() {
     setV("nom-kpi-min",  rows.filter(r => r.orgao_tipo === "ministerio").length);
     setV("nom-kpi-gov",  rows.filter(r => r.orgao_tipo === "governo" || r.orgao_tipo === "comissao").length);
     setV("nom-kpi-soc",  rows.filter(r => r.orgao_tipo === "sociedade" || r.orgao_tipo === "grupo").length);
-    switchNomTab(_nomTabAtivo);
+    _renderNomAll();
   } catch(e) {
     if (el) el.innerHTML = `<p style="color:var(--rose);font-size:12px;padding:20px">Erro: ${e.message}</p>`;
   }
