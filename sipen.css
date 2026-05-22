@@ -344,6 +344,46 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 .ini:hover{color:var(--tx2)}
 .ini.on{color:var(--tx1);border-bottom-color:var(--mc,var(--gr))}
 
+/* ═══ BROWSER-STYLE TAB NAV ════════════════════════════════════════ */
+.bnav{
+  display:flex;align-items:flex-end;gap:2px;
+  padding:8px 16px 0;
+  border-bottom:1.5px solid var(--bd2);
+  margin-bottom:20px;overflow-x:auto;flex-shrink:0;
+  -webkit-overflow-scrolling:touch;
+}
+.bnav::-webkit-scrollbar{height:0}
+.bni{
+  position:relative;
+  display:flex;align-items:center;gap:5px;
+  padding:7px 13px 9px;
+  font-size:11.5px;font-weight:500;color:var(--tx3);
+  cursor:pointer;
+  border-radius:7px 7px 0 0;
+  border:1.5px solid transparent;border-bottom:none;
+  margin-bottom:-1.5px;
+  white-space:nowrap;flex-shrink:0;
+  transition:color .12s,background .12s,border-color .12s;
+  user-select:none;line-height:1;
+}
+.bni:hover:not(.on){
+  color:var(--tx2);
+  background:rgba(255,255,255,0.04);
+  border-color:var(--bd1);
+}
+.bni.on{
+  color:var(--tx1);font-weight:600;
+  background:var(--bg-card);
+  border-color:var(--bd2);
+  z-index:1;
+}
+.bni.on::after{
+  content:'';position:absolute;
+  top:0;left:5px;right:5px;height:2px;
+  border-radius:1px 1px 0 0;
+  background:var(--mc,var(--teal));
+}
+
 /* ═══ SECTION NAV (nível 1 de módulo) ══════ */
 .secnav{display:flex;align-items:center;gap:5px;padding:14px 20px 12px;border-bottom:1px solid var(--bd1);margin-bottom:0;}
 .sni{padding:6px 15px;font-size:12px;font-weight:600;color:var(--tx3);cursor:pointer;border-radius:var(--r);border:1px solid var(--bd1);transition:all .12s;white-space:nowrap;}
@@ -742,6 +782,8 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
   /* Abas internas: mínimo 44px */
   .inav{padding:0 12px}
   .ini{padding:11px 12px;font-size:12px;min-height:44px;display:flex;align-items:center}
+  .bnav{padding:6px 12px 0}
+  .bni{padding:7px 10px 9px;font-size:11px;min-height:40px}
   .secnav{padding:10px 12px;flex-wrap:wrap;gap:6px}
   .sni{padding:9px 14px;font-size:11.5px;min-height:40px}
 
@@ -840,6 +882,9 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 
   /* Topbar */
   .c-pg{font-size:12px;max-width:calc(100vw - 130px)}
+
+  .bnav{padding:4px 8px 0;gap:1px}
+  .bni{padding:6px 8px 8px;font-size:10.5px;gap:3px}
 
   /* ostrip compacto */
   .osi{padding:12px 14px}
