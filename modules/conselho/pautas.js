@@ -734,23 +734,33 @@
     document.getElementById("mp-titulo")?.focus();
   }
 
+  const _BUCKET = "conselho-documentos";
+
   async function _uploadPautaAnexo(file, pautaId) {
     const sb = typeof getSupabase === "function" ? getSupabase() : null;
-    if (!sb) throw new Error("Supabase não disponível");
-    if (file.size > 10 * 1024 * 1024) throw new Error("Arquivo maior que 10 MB");
+    if (!sb) throw new Error("Cliente Supabase não inicializado.");
+    if (file.size > 10 * 1024 * 1024) throw new Error("Arquivo maior que 10 MB. Reduza o tamanho e tente novamente.");
     const ts   = Date.now();
     const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const path = `pautas/${pautaId}/${ts}_${safe}`;
-    const { error } = await sb.storage.from("conselho-documentos").upload(path, file, { contentType: file.type, upsert: true });
-    if (error) throw new Error(error.message);
+    const { error } = await sb.storage.from(_BUCKET).upload(path, file, { contentType: file.type, upsert: true });
+    if (error) {
+      if (error.message?.includes("Bucket not found"))
+        throw new Error("Bucket de armazenamento não encontrado. Contate o administrador do sistema.");
+      if (error.message?.includes("row-level security") || error.message?.includes("policy"))
+        throw new Error("Sem permissão para fazer upload. Verifique as políticas de storage do Supabase.");
+      if (error.message?.includes("mime") || error.message?.includes("type"))
+        throw new Error(`Tipo de arquivo não permitido: ${file.type}. Use PDF, DOCX, XLSX, PNG ou JPG.`);
+      throw new Error(`Erro no upload: ${error.message}`);
+    }
     return { path, nome: file.name };
   }
 
   window.pautasAbrirAnexo = async function (path) {
     const sb = typeof getSupabase === "function" ? getSupabase() : null;
-    if (!sb) return;
-    const { data, error } = await sb.storage.from("conselho-documentos").createSignedUrl(path, 3600);
-    if (error) { _toast("Erro", error.message); return; }
+    if (!sb) { _toast("Erro", "Cliente Supabase não disponível."); return; }
+    const { data, error } = await sb.storage.from(_BUCKET).createSignedUrl(path, 3600);
+    if (error) { _toast("Erro ao abrir documento", error.message); return; }
     window.open(data.signedUrl, "_blank");
   };
 
@@ -760,7 +770,7 @@
       const p = (_pautas || []).find(x => x.id === pautaId);
       if (p?.arquivo_path) {
         const sb = typeof getSupabase === "function" ? getSupabase() : null;
-        if (sb) await sb.storage.from("conselho-documentos").remove([p.arquivo_path]);
+        if (sb) await sb.storage.from(_BUCKET).remove([p.arquivo_path]);
       }
       await _fetchJson(`${_api()}/rest/v1/conselho_pautas?id=eq.${encodeURIComponent(pautaId)}`, {
         method: "PATCH",
