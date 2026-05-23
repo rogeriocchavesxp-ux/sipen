@@ -257,29 +257,6 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 .si.on::before{background:var(--gr)}
 .sdiv{height:1px;background:var(--bd1);margin:2px 10px}
 
-/* Sub-grupo colapsável dentro de msub */
-.sgrp{list-style:none}
-.sgrp summary{
-  display:flex;align-items:center;gap:6px;
-  padding:6px 10px 6px 44px;font-size:12px;
-  color:var(--tx3);cursor:pointer;
-  border-left:2px solid transparent;
-  transition:all .1s;position:relative;
-  list-style:none;user-select:none;
-}
-.sgrp summary::-webkit-details-marker{display:none}
-.sgrp summary::before{
-  content:"";position:absolute;left:32px;top:50%;
-  transform:translateY(-50%);width:4px;height:4px;
-  border-radius:50%;background:rgba(255,255,255,0.22);transition:background .1s;
-}
-.sgrp summary:hover{color:var(--tx1);background:rgba(255,255,255,0.04)}
-.sgrp summary:hover::before{background:var(--tx2)}
-.sgrp summary .sgrp-arr{margin-left:auto;font-size:9px;opacity:.4;transition:transform .18s}
-.sgrp[open] summary .sgrp-arr{transform:rotate(90deg)}
-.sgrp[open] summary{color:var(--tx2)}
-.sgrp .si{padding-left:56px}
-.sgrp .si::before{left:44px}
 
 /* Sistema (pinned above footer) */
 .sb-sys{

@@ -49,13 +49,17 @@
 
   <div class="view" id="v-pautas-reunioes">
     <div class="hero">
-      <div class="hero-ic" style="background:rgba(58,170,92,0.14);border-color:rgba(58,170,92,0.25);color:var(--gr)">◧</div>
+      <div class="hero-ic" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)">◧</div>
       <div>
         <div class="hero-lbl">Conselho e Governança</div>
-        <div class="hero-ttl">Pautas do Conselho</div>
-        <div class="hero-dsc">Reuniões, itens de pauta, deliberações e histórico do Conselho da IPPenha.</div>
+        <div class="hero-ttl">Reuniões do Conselho</div>
+        <div class="hero-dsc">Reuniões, pautas, atas, deliberações e histórico do Conselho da IPPenha.</div>
       </div>
       <div class="hero-act"><button class="tbt pri" onclick="pautasNovaReuniao()">+ Nova Reunião</button></div>
+    </div>
+    <div class="bnav" style="--mc:var(--sky)">
+      <div class="bni on" onclick="go('pautas-reunioes')">Pautas do Conselho</div>
+      <div class="bni" onclick="go('atas-dash')">Atas e Deliberações</div>
     </div>
     <div class="ct" id="pautas-reunioes-content">
       <div class="card" style="padding:28px;color:var(--tx3)">Carregando reuniões...</div>
@@ -64,13 +68,17 @@
 
   <div class="view" id="v-pautas-lista">
     <div class="hero">
-      <div class="hero-ic" style="background:rgba(58,170,92,0.14);border-color:rgba(58,170,92,0.25);color:var(--gr)">◧</div>
+      <div class="hero-ic" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)">◧</div>
       <div>
-        <div class="hero-lbl">Pautas do Conselho</div>
+        <div class="hero-lbl">Reuniões do Conselho · Pautas</div>
         <div class="hero-ttl" id="pautas-lista-reuniao-titulo">Itens da Reunião</div>
         <div class="hero-dsc">Assuntos, encaminhamentos e deliberações desta reunião.</div>
       </div>
       <div class="hero-act"><button class="tbt" onclick="go('pautas-reunioes')">← Voltar</button></div>
+    </div>
+    <div class="bnav" style="--mc:var(--sky)">
+      <div class="bni on" onclick="go('pautas-reunioes')">Pautas do Conselho</div>
+      <div class="bni" onclick="go('atas-dash')">Atas e Deliberações</div>
     </div>
     <div class="ct" id="pautas-lista-content">
       <div class="card" style="padding:28px;color:var(--tx3)">Carregando pautas...</div>
@@ -79,12 +87,16 @@
 
   <div class="view" id="v-pautas-imprimir">
     <div class="hero">
-      <div class="hero-ic" style="background:rgba(58,170,92,0.14);border-color:rgba(58,170,92,0.25);color:var(--gr)">◧</div>
+      <div class="hero-ic" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)">◧</div>
       <div>
-        <div class="hero-lbl">Pautas do Conselho</div>
+        <div class="hero-lbl">Reuniões do Conselho · Pautas</div>
         <div class="hero-ttl">Pauta Oficial</div>
         <div class="hero-dsc">Documento formatado para impressão e distribuição.</div>
       </div>
+    </div>
+    <div class="bnav" style="--mc:var(--sky)">
+      <div class="bni on" onclick="go('pautas-reunioes')">Pautas do Conselho</div>
+      <div class="bni" onclick="go('atas-dash')">Atas e Deliberações</div>
     </div>
     <div class="ct" id="pautas-imprimir-content">
       <div class="card" style="padding:28px;color:var(--tx3)">Preparando documento...</div>
@@ -97,7 +109,7 @@
     <div class="hero">
       <div class="hero-ic" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)">◈</div>
       <div>
-        <div class="hero-lbl">Conselho e Governança</div>
+        <div class="hero-lbl">Reuniões do Conselho</div>
         <div class="hero-ttl">Atas e Deliberações</div>
         <div class="hero-dsc">Gestão de atas, deliberações e demandas geradas automaticamente pelo banco de dados</div>
       </div>
@@ -106,6 +118,10 @@
       </div>
     </div>
     <div class="bnav" style="--mc:var(--sky)">
+      <div class="bni" onclick="go('pautas-reunioes')">Pautas do Conselho</div>
+      <div class="bni on" onclick="go('atas-dash')">Atas e Deliberações</div>
+    </div>
+    <div class="bnav" style="--mc:var(--sky);margin-top:0;border-top:1px solid var(--bd1)">
       <div class="bni on" onclick="go('atas-dash')">Dashboard</div>
       <div class="bni" onclick="go('atas-todas')">Todas as Atas</div>
       <div class="bni" onclick="go('atas-nova')">Nova Ata</div>
@@ -118,7 +134,7 @@
     <div class="hero">
       <div class="hero-ic" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)">◈</div>
       <div>
-        <div class="hero-lbl">Conselho e Governança</div>
+        <div class="hero-lbl">Reuniões do Conselho</div>
         <div class="hero-ttl">Todas as Atas</div>
         <div class="hero-dsc">Lista completa de atas com filtros e ações de aprovação</div>
       </div>
@@ -127,6 +143,10 @@
       </div>
     </div>
     <div class="bnav" style="--mc:var(--sky)">
+      <div class="bni" onclick="go('pautas-reunioes')">Pautas do Conselho</div>
+      <div class="bni on" onclick="go('atas-dash')">Atas e Deliberações</div>
+    </div>
+    <div class="bnav" style="--mc:var(--sky);margin-top:0;border-top:1px solid var(--bd1)">
       <div class="bni" onclick="go('atas-dash')">Dashboard</div>
       <div class="bni on" onclick="go('atas-todas')">Todas as Atas</div>
       <div class="bni" onclick="go('atas-nova')">Nova Ata</div>
@@ -139,12 +159,16 @@
     <div class="hero">
       <div class="hero-ic" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)">◈</div>
       <div>
-        <div class="hero-lbl">Conselho e Governança</div>
+        <div class="hero-lbl">Reuniões do Conselho</div>
         <div class="hero-ttl">Nova Ata</div>
         <div class="hero-dsc">Registre uma nova ata e adicione as deliberações com geração automática de demandas</div>
       </div>
     </div>
     <div class="bnav" style="--mc:var(--sky)">
+      <div class="bni" onclick="go('pautas-reunioes')">Pautas do Conselho</div>
+      <div class="bni on" onclick="go('atas-dash')">Atas e Deliberações</div>
+    </div>
+    <div class="bnav" style="--mc:var(--sky);margin-top:0;border-top:1px solid var(--bd1)">
       <div class="bni" onclick="go('atas-dash')">Dashboard</div>
       <div class="bni" onclick="go('atas-todas')">Todas as Atas</div>
       <div class="bni on" onclick="go('atas-nova')">Nova Ata</div>
@@ -157,12 +181,16 @@
     <div class="hero">
       <div class="hero-ic" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)">◈</div>
       <div>
-        <div class="hero-lbl">Conselho e Governança</div>
+        <div class="hero-lbl">Reuniões do Conselho</div>
         <div class="hero-ttl">Deliberações</div>
         <div class="hero-dsc">Todas as deliberações com vínculos às atas e demandas geradas automaticamente</div>
       </div>
     </div>
     <div class="bnav" style="--mc:var(--sky)">
+      <div class="bni" onclick="go('pautas-reunioes')">Pautas do Conselho</div>
+      <div class="bni on" onclick="go('atas-dash')">Atas e Deliberações</div>
+    </div>
+    <div class="bnav" style="--mc:var(--sky);margin-top:0;border-top:1px solid var(--bd1)">
       <div class="bni" onclick="go('atas-dash')">Dashboard</div>
       <div class="bni" onclick="go('atas-todas')">Todas as Atas</div>
       <div class="bni" onclick="go('atas-nova')">Nova Ata</div>
