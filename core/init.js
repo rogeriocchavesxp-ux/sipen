@@ -1,9 +1,9 @@
 
 /* ── Shell views assíncronas ────────────── */
 const _shellReady = Promise.all([
-  fetch("views/login.html?v=6.31.0").then(r => r.ok ? r.text() : ""),
-  fetch("views/sidebar.html?v=6.31.0").then(r => r.ok ? r.text() : ""),
-  fetch("views/modals.html?v=6.31.0").then(r => r.ok ? r.text() : ""),
+  fetch("views/login.html?v=6.31.1").then(r => r.ok ? r.text() : ""),
+  fetch("views/sidebar.html?v=6.31.1").then(r => r.ok ? r.text() : ""),
+  fetch("views/modals.html?v=6.31.1").then(r => r.ok ? r.text() : ""),
 ]).then(([loginHtml, sidebarHtml, modalsHtml]) => {
   document.body.insertAdjacentHTML("afterbegin", loginHtml);
   const login = document.getElementById("login-screen");
@@ -63,7 +63,121 @@ window.go = async function(id){
   sbClose();
   if(_goOrig) await _goOrig(id);
 };
+/* ── Página pública de pautas (sem login) ─────────────────────
+   Acessível em: https://www.sipen.com.br/#pautas-reunioes       */
+(function () {
+  if (window.location.hash !== "#pautas-reunioes") return;
+
+  const SUPA_URL = "https://erhwryfzpycahgsohhbh.supabase.co";
+  const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyaHdyeWZ6cHljYWhnc29oaGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg2MTUsImV4cCI6MjA5MTg0NDYxNX0.T0hp90Bmufj6a3oUPq1vYcLiGx9YjyMaZiE38S0e3_8";
+
+  const TIPO_LABEL = { ORDINARIA: "Ordinária", EXTRAORDINARIA: "Extraordinária", COMISSAO_EXECUTIVA: "Comissão Executiva" };
+  const STATUS_CFG = {
+    PENDENTE:   { label: "Pendente",   cor: "#888" },
+    EM_ANALISE: { label: "Em análise", cor: "#d4a843" },
+    APROVADO:   { label: "Aprovado",   cor: "#3aaa5c" },
+    REJEITADO:  { label: "Rejeitado",  cor: "#e05555" },
+    ADIADO:     { label: "Adiado",     cor: "#4a9cf5" },
+    CONCLUIDO:  { label: "Concluído",  cor: "#8b6fd4" },
+  };
+
+  function fmtData(d) {
+    if (!d) return "—";
+    const [y, m, day] = d.split("T")[0].split("-");
+    return `${day}/${m}/${y}`;
+  }
+
+  async function api(path) {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${path}`, {
+      headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}` }
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  }
+
+  async function renderPublico() {
+    document.body.style.cssText = "margin:0;padding:0;background:#0f1117;color:#e8e8ee;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh";
+
+    document.body.innerHTML = `
+      <div style="max-width:820px;margin:0 auto;padding:32px 20px 60px">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #2a2d3a">
+          <div style="width:36px;height:36px;background:rgba(42,181,192,.15);border:1.5px solid rgba(42,181,192,.35);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#2ab5c0">◆</div>
+          <div>
+            <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em">IPPenha · Conselho e Governança</div>
+            <div style="font-size:20px;font-weight:700;color:#e8e8ee">Pautas das Reuniões</div>
+          </div>
+        </div>
+        <div id="pub-content"><div style="color:#555;font-size:13px;padding:40px 0;text-align:center">Carregando reuniões...</div></div>
+      </div>`;
+
+    const el = document.getElementById("pub-content");
+    try {
+      const [reunioes, pautas] = await Promise.all([
+        api("conselho_reunioes?select=*&order=data_reuniao.desc&limit=100"),
+        api("conselho_pautas?select=*&order=ordem.asc,created_at.asc&limit=1000"),
+      ]);
+
+      if (!reunioes.length) {
+        el.innerHTML = `<div style="color:#555;font-size:13px;padding:40px 0;text-align:center">Nenhuma reunião registrada.</div>`;
+        return;
+      }
+
+      const pautasPorReuniao = {};
+      pautas.forEach(p => {
+        if (!pautasPorReuniao[p.reuniao_id]) pautasPorReuniao[p.reuniao_id] = [];
+        pautasPorReuniao[p.reuniao_id].push(p);
+      });
+
+      el.innerHTML = reunioes.map((r, ri) => {
+        const tipo  = TIPO_LABEL[r.tipo] || r.tipo || "Reunião";
+        const itens = pautasPorReuniao[r.id] || [];
+        const uid   = `pub-r-${ri}`;
+        const statusR = r.status === "REALIZADA" ? "#3aaa5c" : r.status === "CANCELADA" ? "#e05555" : "#4a9cf5";
+        const statusL = r.status === "REALIZADA" ? "Realizada" : r.status === "CANCELADA" ? "Cancelada" : "Agendada";
+
+        const pautasHtml = itens.length ? itens.map(p => {
+          const sc = STATUS_CFG[p.status] || { label: p.status || "—", cor: "#888" };
+          return `<div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #1e2130">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:600;color:#e8e8ee">${p.titulo || "—"}</div>
+              ${p.descricao ? `<div style="font-size:11.5px;color:#888;margin-top:3px">${p.descricao}</div>` : ""}
+              ${p.categoria ? `<div style="font-size:10px;color:#555;margin-top:4px;text-transform:uppercase;letter-spacing:.06em">${p.categoria}</div>` : ""}
+            </div>
+            <span style="flex-shrink:0;font-size:10.5px;padding:3px 9px;border-radius:10px;border:1px solid ${sc.cor}44;color:${sc.cor};background:${sc.cor}11;white-space:nowrap">${sc.label}</span>
+          </div>`;
+        }).join("") : `<div style="color:#444;font-size:12px;padding:12px 0">Nenhum item de pauta registrado.</div>`;
+
+        return `
+          <div style="background:#161922;border:1px solid #2a2d3a;border-radius:10px;margin-bottom:16px;overflow:hidden">
+            <div onclick="(function(el){el.style.display=el.style.display==='none'?'':'none'})(document.getElementById('${uid}'))"
+              style="padding:16px 20px;cursor:pointer;display:flex;align-items:center;gap:12px;user-select:none">
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:700;color:#e8e8ee">${tipo} · ${fmtData(r.data_reuniao)}</div>
+                ${r.local ? `<div style="font-size:11px;color:#666;margin-top:2px">${r.local}</div>` : ""}
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:10px;padding:2px 8px;border-radius:8px;border:1px solid ${statusR}44;color:${statusR};background:${statusR}11">${statusL}</span>
+                <span style="font-size:10px;color:#555">${itens.length} item${itens.length !== 1 ? "s" : ""}</span>
+                <span style="color:#444;font-size:14px">›</span>
+              </div>
+            </div>
+            <div id="${uid}" style="display:none;padding:0 20px 16px;border-top:1px solid #1e2130">
+              ${r.observacoes ? `<div style="font-size:12px;color:#666;padding:10px 0;border-bottom:1px solid #1e2130;font-style:italic">${r.observacoes}</div>` : ""}
+              ${pautasHtml}
+            </div>
+          </div>`;
+      }).join("");
+
+    } catch (e) {
+      el.innerHTML = `<div style="color:#e05555;font-size:12px;padding:40px 0;text-align:center">Erro ao carregar dados: ${e.message}</div>`;
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", renderPublico);
+})();
+
 document.addEventListener("DOMContentLoaded", async () => {
+  if (window.location.hash === "#pautas-reunioes") return;
   await _shellReady;
   _ensureViewLoaded("geral").then(() => go("geral"));
 
