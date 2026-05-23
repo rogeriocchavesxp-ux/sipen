@@ -584,6 +584,9 @@
         <!-- Deliberação -->
         ${p.deliberacao ? `<div style="margin-top:10px;padding:9px 12px;background:rgba(58,170,92,.07);border:1px solid rgba(58,170,92,.18);border-radius:7px;font-size:12px;color:var(--tx2);line-height:1.55"><span style="font-size:10.5px;font-weight:700;color:var(--gr);letter-spacing:.04em;text-transform:uppercase;margin-right:6px">Deliberação</span>${_eh(p.deliberacao)}${p.responsaveis ? `<span style="display:block;font-size:10.5px;color:var(--tx3);margin-top:4px">Responsáveis: ${_eh(p.responsaveis)}</span>` : ""}</div>` : ""}
 
+        <!-- Anexo -->
+        ${p.arquivo_path ? `<div style="margin-top:10px"><button onclick="pautasAbrirAnexo('${_ea(p.arquivo_path)}')" style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--blue);background:rgba(74,156,245,.08);border:1px solid rgba(74,156,245,.25);border-radius:6px;padding:5px 10px;cursor:pointer">📎 ${_eh(p.arquivo_nome || "Ver documento")}</button></div>` : ""}
+
         <!-- Ações de status -->
         ${podeSec && p.status === "PENDENTE" ? `
           <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd1);display:flex;gap:5px;flex-wrap:wrap">
@@ -642,6 +645,7 @@
         ${p.encaminhamento ? `<div class="sr"><span class="sl">Encaminhamento</span><span class="sv">${_eh(p.encaminhamento)}</span></div>` : ""}
         ${p.sintese ? `<div style="margin-top:12px"><div style="font-size:11px;color:var(--tx3);margin-bottom:6px">Síntese</div><div style="font-size:13px;color:var(--tx2);line-height:1.6;background:var(--bg3,#2b2f33);border-radius:6px;padding:10px 12px">${_eh(p.sintese)}</div></div>` : ""}
         ${p.observacoes ? `<div style="margin-top:10px"><div style="font-size:11px;color:var(--tx3);margin-bottom:4px">Observações</div><div style="font-size:12px;color:var(--tx3);line-height:1.5">${_eh(p.observacoes)}</div></div>` : ""}
+        ${p.arquivo_path ? `<div style="margin-top:12px"><button onclick="pautasAbrirAnexo('${_ea(p.arquivo_path)}')" style="display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--blue);background:rgba(74,156,245,.08);border:1px solid rgba(74,156,245,.25);border-radius:7px;padding:7px 12px;cursor:pointer">📎 ${_eh(p.arquivo_nome || "Abrir documento")}</button></div>` : ""}
         ${p.deliberacao ? `<div style="margin-top:14px;padding:12px;background:rgba(58,170,92,.08);border:1px solid rgba(58,170,92,.2);border-radius:8px">
           <div style="font-size:11px;color:var(--gr);font-weight:700;margin-bottom:6px">Deliberação Final</div>
           <div style="font-size:13px;color:var(--tx2);line-height:1.6">${_eh(p.deliberacao)}</div>
@@ -703,6 +707,21 @@
             <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:4px">Observações</label>
             <textarea id="mp-obs" rows="2" style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px;resize:vertical">${_eh(pauta?.observacoes || "")}</textarea>
           </div>
+          <div>
+            <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:6px">Documento anexo</label>
+            ${pauta?.arquivo_path ? `
+            <div id="mp-anexo-atual" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3,#1a1d21);border:1px solid var(--bd2);border-radius:6px;margin-bottom:8px">
+              <span style="font-size:18px">📎</span>
+              <span style="flex:1;font-size:12px;color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_eh(pauta.arquivo_nome || pauta.arquivo_path.split("/").pop())}</span>
+              <button type="button" onclick="pautasRemoverAnexo('${_ea(pauta.id)}')" style="background:none;border:none;color:var(--rose);font-size:12px;cursor:pointer;flex-shrink:0">Remover</button>
+            </div>` : ""}
+            <label id="mp-file-label" style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg-input,#1a1d21);border:1px dashed var(--bd2);border-radius:6px;cursor:pointer;font-size:12px;color:var(--tx3)">
+              <span style="font-size:16px">⊕</span>
+              <span id="mp-file-name">${pauta?.arquivo_path ? "Substituir arquivo…" : "Selecionar arquivo (PDF, DOCX, imagem — máx. 10 MB)"}</span>
+              <input type="file" id="mp-file" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" style="display:none"
+                onchange="document.getElementById('mp-file-name').textContent = this.files[0]?.name || 'Selecionar arquivo…'">
+            </label>
+          </div>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px">
           <button onclick="pautasFecharModal()" class="btn">Cancelar</button>
@@ -715,6 +734,46 @@
     document.getElementById("mp-titulo")?.focus();
   }
 
+  async function _uploadPautaAnexo(file, pautaId) {
+    const sb = typeof getSupabase === "function" ? getSupabase() : null;
+    if (!sb) throw new Error("Supabase não disponível");
+    if (file.size > 10 * 1024 * 1024) throw new Error("Arquivo maior que 10 MB");
+    const ts   = Date.now();
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `pautas/${pautaId}/${ts}_${safe}`;
+    const { error } = await sb.storage.from("conselho-documentos").upload(path, file, { contentType: file.type, upsert: true });
+    if (error) throw new Error(error.message);
+    return { path, nome: file.name };
+  }
+
+  window.pautasAbrirAnexo = async function (path) {
+    const sb = typeof getSupabase === "function" ? getSupabase() : null;
+    if (!sb) return;
+    const { data, error } = await sb.storage.from("conselho-documentos").createSignedUrl(path, 3600);
+    if (error) { _toast("Erro", error.message); return; }
+    window.open(data.signedUrl, "_blank");
+  };
+
+  window.pautasRemoverAnexo = async function (pautaId) {
+    if (!confirm("Remover o documento anexado?")) return;
+    try {
+      const p = (_pautas || []).find(x => x.id === pautaId);
+      if (p?.arquivo_path) {
+        const sb = typeof getSupabase === "function" ? getSupabase() : null;
+        if (sb) await sb.storage.from("conselho-documentos").remove([p.arquivo_path]);
+      }
+      await _fetchJson(`${_api()}/rest/v1/conselho_pautas?id=eq.${encodeURIComponent(pautaId)}`, {
+        method: "PATCH",
+        headers: _headers({ "Content-Type": "application/json", Prefer: "return=minimal" }),
+        body: JSON.stringify({ arquivo_path: null, arquivo_nome: null }),
+      });
+      await _carregarPautas(true);
+      _renderListaPautas();
+      _fecharModal();
+      _toast("Removido", "Documento removido com sucesso.");
+    } catch (e) { _toast("Erro", e.message); }
+  };
+
   window.pautasSalvar = async function (id) {
     const titulo = (_view("mp-titulo")?.value || "").trim();
     const enc    = (_view("mp-enc")?.value || "").trim();
@@ -722,6 +781,8 @@
     const sint   = (_view("mp-sint")?.value || "").trim();
     const obs    = (_view("mp-obs")?.value || "").trim();
     const status = _view("mp-status")?.value || "PENDENTE";
+    const fileInput = _view("mp-file");
+    const file = fileInput?.files?.[0] || null;
 
     if (!titulo) { _toast("Campo obrigatório", "Informe o título do assunto."); return; }
 
@@ -740,6 +801,13 @@
 
       if (id) {
         pautaAntes = (_pautas || []).find(p => p.id === id) || null;
+        if (file) {
+          const btn = document.getElementById("btn-salvar-pauta");
+          if (btn) btn.textContent = "Enviando arquivo…";
+          const { path, nome } = await _uploadPautaAnexo(file, id);
+          payload.arquivo_path = path;
+          payload.arquivo_nome = nome;
+        }
         await _fetchJson(`${_api()}/rest/v1/conselho_pautas?id=eq.${encodeURIComponent(id)}`, {
           method: "PATCH",
           headers: _headers({ "Content-Type": "application/json", Prefer: "return=minimal" }),
@@ -766,6 +834,16 @@
         });
         await _registrarHistorico(null, "criacao", null, titulo);
         if (novaPauta?.id) {
+          if (file) {
+            const btnEl = document.getElementById("btn-salvar-pauta");
+            if (btnEl) btnEl.textContent = "Enviando arquivo…";
+            const { path, nome } = await _uploadPautaAnexo(file, novaPauta.id);
+            await _fetchJson(`${_api()}/rest/v1/conselho_pautas?id=eq.${encodeURIComponent(novaPauta.id)}`, {
+              method: "PATCH",
+              headers: _headers({ "Content-Type": "application/json", Prefer: "return=minimal" }),
+              body: JSON.stringify({ arquivo_path: path, arquivo_nome: nome }),
+            });
+          }
           const reuniaoTitulo = _reuniaoAtual?.titulo || "";
           const msg = [
             `📋 *Nova Pauta do Conselho*`,
