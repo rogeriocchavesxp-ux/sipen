@@ -3,7 +3,7 @@
   <div class="sb-logo">
     <div class="sb-brand">
       <div class="sb-sipen">SIPEN</div>
-      <div class="sb-church">Sistema Integrado da IPPenha · v6.31.4</div>
+      <div class="sb-church">Sistema Integrado da IPPenha · v6.31.5</div>
     </div>
   </div>
 
@@ -30,8 +30,11 @@
         <div class="si" onclick="go('conselho-ordenados')">Ordenados</div>
         <div class="si" onclick="go('conselho-seminaristas')">Seminaristas</div>
         <div class="si" onclick="go('conselho-doc')">Documentos do Conselho</div>
-        <div class="si" onclick="go('pautas-reunioes')">Pautas do Conselho</div>
-        <div class="si" onclick="go('atas-dash')">Atas e Deliberações</div>
+        <details class="sgrp">
+          <summary>Atas e Deliberações <span class="sgrp-arr">▶</span></summary>
+          <div class="si" onclick="go('pautas-reunioes')">Pautas do Conselho</div>
+          <div class="si" onclick="go('atas-dash')">Atas e Deliberações</div>
+        </details>
         <div class="sdiv"></div>
         <div class="si" onclick="go('conselho-demandas')">Demandas do Conselho</div>
         <div class="si" onclick="go('conselho-com')">Comissões</div>
