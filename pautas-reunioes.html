@@ -30,6 +30,9 @@
     .pauta-ttl{font-size:13px;font-weight:600;color:#e8e8ee}
     .pauta-dsc{font-size:11.5px;color:#666;margin-top:3px}
     .pauta-cat{font-size:10px;color:#444;margin-top:4px;text-transform:uppercase;letter-spacing:.06em}
+    .pauta-sintese{font-size:12px;color:#888;margin-top:6px;padding:7px 10px;border-left:2px solid #2a2d3a;line-height:1.6}
+    .pauta-delib{font-size:12px;color:#3aaa5c;margin-top:6px;padding:7px 10px;background:rgba(58,170,92,.07);border-left:2px solid rgba(58,170,92,.4);border-radius:0 4px 4px 0;line-height:1.6}
+    .pauta-delib-lbl{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#3aaa5c;opacity:.7;margin-bottom:3px}
     .empty{color:#444;font-size:12px;padding:14px 0}
     .obs{font-size:12px;color:#555;padding:10px 0;border-bottom:1px solid #1a1d28;font-style:italic}
     #status{color:#555;font-size:13px;padding:40px 0;text-align:center}
@@ -96,6 +99,8 @@
               <div class="pauta-info">
                 <div class="pauta-ttl">${p.titulo||"—"}</div>
                 ${p.descricao?`<div class="pauta-dsc">${p.descricao}</div>`:""}
+                ${p.sintese?`<div class="pauta-sintese">${p.sintese}</div>`:""}
+                ${p.deliberacao?`<div class="pauta-delib"><span class="pauta-delib-lbl">Deliberação</span>${p.deliberacao}</div>`:""}
                 ${p.categoria?`<div class="pauta-cat">${p.categoria}</div>`:""}
               </div>
               <span class="badge" style="color:${pCor};background:${pCor}18;border:1px solid ${pCor}44">${pLabel}</span>
