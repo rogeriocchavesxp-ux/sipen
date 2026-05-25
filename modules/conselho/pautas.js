@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   SIPEN — Pautas do Conselho  v6.30.36
+   SIPEN — Pautas do Conselho  v6.31.7
    Gestão de pautas, reuniões e deliberações do Conselho IPPenha
 ═══════════════════════════════════════════════════════════════ */
 (function () {
@@ -57,6 +57,8 @@
   let _filtroStatus = "";
   let _filtroCategoria = "";
   let _modalAberto  = null;
+  let _presencasEdit = null;
+  let _oficiaisCache = null;
 
   /* ── Helpers ─────────────────────────────────────────────── */
 
@@ -198,6 +200,161 @@
     } catch (_) {}
   }
 
+  /* ── REUNIÕES — helpers de presença e formulário ────────── */
+
+  const _PRESENCA_GRUPOS = [
+    { tipo: "PASTOR_PRESENTE",     lbl: "Presentes — Pastores",    cargos: ["pastor"],             cls: "" },
+    { tipo: "PRESBITERO_PRESENTE", lbl: "Presentes — Presbíteros", cargos: ["presbitero"],         cls: "" },
+    { tipo: "ONLINE",              lbl: "Presença Online",         cargos: ["pastor","presbitero"], cls: "mr-chip-online" },
+    { tipo: "PASTOR_AUSENTE",      lbl: "Ausentes — Pastores",     cargos: ["pastor"],             cls: "mr-chip-aus" },
+    { tipo: "PRESBITERO_AUSENTE",  lbl: "Ausentes — Presbíteros",  cargos: ["presbitero"],         cls: "mr-chip-aus" },
+    { tipo: "AUSENTE_JUSTIFICADO", lbl: "Ausentes Justificados",   cargos: ["pastor","presbitero"], cls: "mr-chip-just" },
+  ];
+
+  function _injectMRStyles() {
+    if (document.getElementById("mr-styles")) return;
+    const s = document.createElement("style");
+    s.id = "mr-styles";
+    s.textContent = `
+      .mr-tabs{display:flex;gap:0;border-bottom:1px solid var(--bd1);margin-bottom:18px}
+      .mr-tab{padding:8px 14px;border:none;background:none;color:var(--tx3);font-size:12px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+      .mr-tab.on{color:var(--tx1);border-bottom-color:var(--sky);font-weight:500}
+      .mr-chips{display:flex;flex-wrap:wrap;gap:5px;min-height:28px;margin-bottom:5px}
+      .mr-chip{display:inline-flex;align-items:center;gap:4px;background:rgba(88,152,212,.14);border:1px solid rgba(88,152,212,.28);border-radius:20px;padding:3px 10px;font-size:11.5px;color:var(--tx1)}
+      .mr-chip button{background:none;border:none;color:var(--tx3);cursor:pointer;padding:0 0 0 4px;font-size:13px;line-height:1}
+      .mr-chip-online{background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.28)}
+      .mr-chip-aus{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.22)}
+      .mr-chip-just{background:rgba(148,163,184,.12);border-color:rgba(148,163,184,.25)}
+      .mr-autocomplete{position:relative}
+      .mr-drop{position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--bg3,#2a2d31);border:1px solid var(--bd2);border-radius:6px;z-index:200;max-height:180px;overflow-y:auto;display:none;box-shadow:0 4px 16px rgba(0,0,0,.35)}
+      .mr-drop-item{padding:8px 12px;cursor:pointer;font-size:12.5px;display:flex;align-items:center;justify-content:space-between}
+      .mr-drop-item:hover{background:rgba(255,255,255,.05)}
+      .mr-grp-ttl{font-size:10.5px;font-weight:600;color:var(--sky);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--bd1)}
+      .mr-inp{width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px;box-sizing:border-box}
+      .mr-inp:focus{outline:none;border-color:var(--sky)}
+      .mr-lbl{font-size:11px;color:var(--tx3);display:block;margin-bottom:4px}
+      .mr-section{display:flex;flex-direction:column;gap:14px}
+      .mr-row{display:grid;gap:12px}
+      select.mr-inp{appearance:auto}
+      textarea.mr-inp{font-family:inherit;resize:vertical}
+    `;
+    document.head.appendChild(s);
+  }
+
+  async function _carregarOficiais() {
+    if (_oficiaisCache) return;
+    try {
+      const data = await _fetchJson(
+        `${_api()}/rest/v1/oficiais?select=id,cargo,pessoa_id,pessoas(id,nome)&status=eq.ativo&deleted_at=is.null`,
+        { headers: _headers() }
+      );
+      _oficiaisCache = (data || []).filter(o => o.pessoas?.nome);
+    } catch (_) { _oficiaisCache = []; }
+  }
+
+  async function _carregarPresencas(reuniaoId) {
+    if (!reuniaoId) return null;
+    try {
+      const rows = await _fetchJson(
+        `${_api()}/rest/v1/conselho_reuniao_presentes?reuniao_id=eq.${encodeURIComponent(reuniaoId)}&select=*&order=nome.asc`,
+        { headers: _headers() }
+      ) || [];
+      const result = {};
+      _PRESENCA_GRUPOS.forEach(g => { result[g.tipo] = []; });
+      rows.forEach(r => { if (result[r.tipo]) result[r.tipo].push({ pessoa_id: r.pessoa_id, nome: r.nome }); });
+      return result;
+    } catch (_) { return null; }
+  }
+
+  async function _salvarPresencas(reuniaoId) {
+    if (!_presencasEdit || !reuniaoId) return;
+    try {
+      await _fetchJson(`${_api()}/rest/v1/conselho_reuniao_presentes?reuniao_id=eq.${encodeURIComponent(reuniaoId)}`, {
+        method: "DELETE", headers: _headers(),
+      });
+    } catch (_) {}
+    const todos = [];
+    for (const [tipo, lista] of Object.entries(_presencasEdit)) {
+      for (const p of lista) todos.push({ reuniao_id: reuniaoId, pessoa_id: p.pessoa_id || null, nome: p.nome, tipo });
+    }
+    if (!todos.length) return;
+    await _fetchJson(`${_api()}/rest/v1/conselho_reuniao_presentes`, {
+      method: "POST",
+      headers: _headers({ "Content-Type": "application/json", Prefer: "return=minimal" }),
+      body: JSON.stringify(todos),
+    });
+  }
+
+  function _renderChipsMR(tipo) {
+    const el = document.getElementById(`mr-chips-${tipo}`);
+    if (!el || !_presencasEdit) return;
+    const cls = (_PRESENCA_GRUPOS.find(g => g.tipo === tipo) || {}).cls || "";
+    el.innerHTML = (_presencasEdit[tipo] || []).map((p, i) =>
+      `<span class="mr-chip ${cls}">${_eh(p.nome)}<button type="button" onclick="mrRemoverPresenca('${tipo}',${i})">×</button></span>`
+    ).join("");
+  }
+
+  function _setupMRAutocomplete(tipo, cargos) {
+    const input = document.getElementById(`mr-search-${tipo}`);
+    const drop  = document.getElementById(`mr-drop-${tipo}`);
+    if (!input || !drop) return;
+
+    input.addEventListener("input", () => {
+      const q = input.value.trim().toLowerCase();
+      if (!q) { drop.style.display = "none"; return; }
+      const jaAdicionados = new Set((_presencasEdit[tipo] || []).map(p => p.pessoa_id).filter(Boolean));
+      const matches = (_oficiaisCache || [])
+        .filter(o => cargos.includes(o.cargo) && o.pessoas.nome.toLowerCase().includes(q) && !jaAdicionados.has(o.id))
+        .sort((a, b) => a.pessoas.nome.localeCompare(b.pessoas.nome))
+        .slice(0, 8);
+      if (!matches.length) { drop.style.display = "none"; return; }
+      drop.innerHTML = matches.map(o =>
+        `<div class="mr-drop-item" onmousedown="mrAdicionarPresenca('${tipo}','${_ea(o.id)}','${_ea(o.pessoas.nome)}')">
+          <span>${_eh(o.pessoas.nome)}</span>
+          <span style="font-size:10px;color:var(--tx3);background:rgba(255,255,255,.07);padding:2px 7px;border-radius:10px">${o.cargo}</span>
+        </div>`
+      ).join("");
+      drop.style.display = "block";
+    });
+
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const q = input.value.trim();
+        if (q) { mrAdicionarPresenca(tipo, null, q); input.value = ""; drop.style.display = "none"; }
+      }
+      if (e.key === "Escape") { drop.style.display = "none"; }
+    });
+
+    input.addEventListener("blur", () => setTimeout(() => { drop.style.display = "none"; }, 150));
+  }
+
+  window.mrAba = function (tab) {
+    document.querySelectorAll("#modal-reuniao .mr-tab").forEach(t => t.classList.remove("on"));
+    document.querySelectorAll("#modal-reuniao .mr-panel").forEach(p => { p.style.display = "none"; });
+    const btn = document.getElementById(`mr-tab-${tab}`);
+    const panel = document.getElementById(`mr-panel-${tab}`);
+    if (btn) btn.classList.add("on");
+    if (panel) panel.style.display = "";
+  };
+
+  window.mrAdicionarPresenca = function (tipo, pessoaId, nome) {
+    if (!_presencasEdit) return;
+    if (pessoaId && _presencasEdit[tipo].some(p => p.pessoa_id === pessoaId)) return;
+    _presencasEdit[tipo].push({ pessoa_id: pessoaId || null, nome });
+    _renderChipsMR(tipo);
+    const input = document.getElementById(`mr-search-${tipo}`);
+    const drop  = document.getElementById(`mr-drop-${tipo}`);
+    if (input) input.value = "";
+    if (drop)  drop.style.display = "none";
+  };
+
+  window.mrRemoverPresenca = function (tipo, idx) {
+    if (!_presencasEdit) return;
+    _presencasEdit[tipo].splice(idx, 1);
+    _renderChipsMR(tipo);
+  };
+
   /* ── REUNIÕES ────────────────────────────────────────────── */
 
   async function _carregarReunioes(forcar) {
@@ -235,8 +392,9 @@
       return `<div class="card" style="border-left:3px solid ${r.status === "REALIZADA" ? "var(--gr)" : r.status === "CANCELADA" ? "var(--rose)" : "var(--sky)"}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
           <div style="min-width:0">
-            <div class="ctit" style="margin-bottom:4px">${_eh(r.titulo)}</div>
-            <div style="font-size:11px;color:var(--tx3)">${tipo} · ${_fmtData(r.data_reuniao)}${r.horario ? " · " + String(r.horario).slice(0,5) : ""}${r.local ? " · " + _eh(r.local) : ""}</div>
+            <div class="ctit" style="margin-bottom:4px">${r.numero_ata ? `<span style="font-size:11px;color:var(--tx3);font-weight:400;margin-right:8px">Ata nº ${_eh(r.numero_ata)}</span>` : ""}${_eh(r.titulo)}</div>
+            <div style="font-size:11px;color:var(--tx3)">${tipo} · ${_fmtData(r.data_reuniao)}${r.horario ? " · " + String(r.horario).slice(0,5) : ""}${r.horario_encerramento ? " → " + String(r.horario_encerramento).slice(0,5) : ""}${r.local ? " · " + _eh(r.local) : ""}</div>
+            ${r.presidente || r.secretario ? `<div style="font-size:11px;color:var(--tx3);margin-top:2px">${r.presidente ? "Presidente: " + _eh(r.presidente) : ""}${r.presidente && r.secretario ? " · " : ""}${r.secretario ? "Secretário: " + _eh(r.secretario) : ""}</div>` : ""}
           </div>
           <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
             <span class="pill ${scfg.cls}">${_eh(scfg.label)}</span>
@@ -272,86 +430,193 @@
 
   function _abrirModalReuniao(reuniao) {
     _fecharModal();
+    _injectMRStyles();
     const isEdit = !!reuniao;
+
+    _presencasEdit = {};
+    _PRESENCA_GRUPOS.forEach(g => { _presencasEdit[g.tipo] = []; });
+
     const overlay = document.createElement("div");
     overlay.id = "modal-reuniao";
     overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9800;display:flex;align-items:center;justify-content:center;padding:16px";
     overlay.innerHTML = `
-      <div style="background:var(--bg2,#212529);border:1px solid var(--bd2,rgba(255,255,255,.12));border-radius:12px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:24px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div style="background:var(--bg2,#212529);border:1px solid var(--bd2,rgba(255,255,255,.12));border-radius:12px;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;padding:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
           <strong style="font-size:15px">${isEdit ? "Editar Reunião" : "Nova Reunião do Conselho"}</strong>
           <button onclick="pautasFecharModal()" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button>
         </div>
-        <div style="display:flex;flex-direction:column;gap:14px">
+
+        <div class="mr-tabs">
+          <button id="mr-tab-dados" class="mr-tab on"  onclick="mrAba('dados')">Dados Gerais</button>
+          <button id="mr-tab-mesa"  class="mr-tab"     onclick="mrAba('mesa')">Mesa & Orações</button>
+          <button id="mr-tab-pres"  class="mr-tab"     onclick="mrAba('pres')">Presenças</button>
+          <button id="mr-tab-obs"   class="mr-tab"     onclick="mrAba('obs')">Observações</button>
+        </div>
+
+        <!-- DADOS GERAIS -->
+        <div id="mr-panel-dados" class="mr-panel mr-section">
           <div>
-            <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:4px">Título da reunião *</label>
-            <input id="mr-titulo" type="text" value="${_ea(reuniao?.titulo || "")}" placeholder="Ex: Reunião Ordinária do Conselho — Maio/2026"
-              style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px">
+            <label class="mr-lbl">Título da reunião *</label>
+            <input id="mr-titulo" class="mr-inp" type="text" value="${_ea(reuniao?.titulo || "")}"
+              placeholder="Ex: Ata nº 1289 — Reunião Ordinária do Conselho">
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="mr-row" style="grid-template-columns:1fr 1fr 1fr">
             <div>
-              <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:4px">Tipo *</label>
-              <select id="mr-tipo" style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px">
-                ${Object.entries(TIPO_REUNIAO).map(([k, v]) => `<option value="${k}" ${reuniao?.tipo === k ? "selected" : ""}>${v}</option>`).join("")}
+              <label class="mr-lbl">Número da Ata</label>
+              <input id="mr-numata" class="mr-inp" type="text" value="${_ea(reuniao?.numero_ata || "")}" placeholder="Ex: 1289">
+            </div>
+            <div>
+              <label class="mr-lbl">Tipo *</label>
+              <select id="mr-tipo" class="mr-inp">
+                ${Object.entries(TIPO_REUNIAO).map(([k, v]) => `<option value="${k}" ${(reuniao?.tipo || "ORDINARIA") === k ? "selected" : ""}>${v}</option>`).join("")}
               </select>
             </div>
             <div>
-              <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:4px">Status</label>
-              <select id="mr-status" style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px">
+              <label class="mr-lbl">Status</label>
+              <select id="mr-status" class="mr-inp">
                 ${Object.entries(STATUS_REUNIAO).map(([k, v]) => `<option value="${k}" ${(reuniao?.status || "AGENDADA") === k ? "selected" : ""}>${v.label}</option>`).join("")}
               </select>
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="mr-row" style="grid-template-columns:1fr 1fr 1fr">
             <div>
-              <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:4px">Data *</label>
-              <input id="mr-data" type="date" value="${_ea(reuniao?.data_reuniao || _hojeIso())}"
-                style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px">
+              <label class="mr-lbl">Data *</label>
+              <input id="mr-data" class="mr-inp" type="date" value="${_ea(reuniao?.data_reuniao || _hojeIso())}">
             </div>
             <div>
-              <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:4px">Horário</label>
-              <input id="mr-horario" type="time" value="${_ea(reuniao?.horario ? String(reuniao.horario).slice(0,5) : "")}"
-                style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px">
+              <label class="mr-lbl">Horário de início</label>
+              <input id="mr-horario" class="mr-inp" type="time" value="${_ea(reuniao?.horario ? String(reuniao.horario).slice(0,5) : "")}">
+            </div>
+            <div>
+              <label class="mr-lbl">Horário de encerramento</label>
+              <input id="mr-henc" class="mr-inp" type="time" value="${_ea(reuniao?.horario_encerramento ? String(reuniao.horario_encerramento).slice(0,5) : "")}">
             </div>
           </div>
           <div>
-            <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:4px">Local</label>
-            <input id="mr-local" type="text" value="${_ea(reuniao?.local || "")}" placeholder="Ex: Sala de Reuniões — Sede IPPenha"
-              style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px">
-          </div>
-          <div>
-            <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:4px">Observações</label>
-            <textarea id="mr-obs" rows="2" style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px;resize:vertical">${_eh(reuniao?.observacoes || "")}</textarea>
+            <label class="mr-lbl">Local</label>
+            <input id="mr-local" class="mr-inp" type="text" value="${_ea(reuniao?.local || "")}"
+              placeholder="Ex: Igreja Presbiteriana da Penha — Rua Major Rudge, nº 145">
           </div>
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px">
+
+        <!-- MESA & ORAÇÕES -->
+        <div id="mr-panel-mesa" class="mr-panel mr-section" style="display:none">
+          <div class="mr-row" style="grid-template-columns:1fr 1fr">
+            <div>
+              <label class="mr-lbl">Presidente</label>
+              <input id="mr-presidente" class="mr-inp" type="text" value="${_ea(reuniao?.presidente || "")}"
+                placeholder="Ex: Pr. Amauri Costa de Oliveira">
+            </div>
+            <div>
+              <label class="mr-lbl">Secretário</label>
+              <input id="mr-secretario" class="mr-inp" type="text" value="${_ea(reuniao?.secretario || "")}"
+                placeholder="Ex: Pb. Laércio Ferreira Lima">
+            </div>
+          </div>
+          <div class="mr-row" style="grid-template-columns:1fr 1fr">
+            <div>
+              <label class="mr-lbl">Oração inicial</label>
+              <input id="mr-orinicial" class="mr-inp" type="text" value="${_ea(reuniao?.oracao_inicial || "")}"
+                placeholder="Ex: Pb. Carlos Alberto e Pb. Marcus Novaes">
+            </div>
+            <div>
+              <label class="mr-lbl">Oração final</label>
+              <input id="mr-orfinal" class="mr-inp" type="text" value="${_ea(reuniao?.oracao_final || "")}"
+                placeholder="Ex: Pb. Hugo">
+            </div>
+          </div>
+        </div>
+
+        <!-- PRESENÇAS -->
+        <div id="mr-panel-pres" class="mr-panel" style="display:none">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+            ${_PRESENCA_GRUPOS.map(g => `
+            <div>
+              <div class="mr-grp-ttl">${g.lbl}</div>
+              <div id="mr-chips-${g.tipo}" class="mr-chips"></div>
+              <div class="mr-autocomplete">
+                <input id="mr-search-${g.tipo}" class="mr-inp" type="text"
+                  placeholder="Buscar ou digitar nome…" autocomplete="off" style="font-size:12px">
+                <div id="mr-drop-${g.tipo}" class="mr-drop"></div>
+              </div>
+            </div>`).join("")}
+          </div>
+          <div style="margin-top:10px;font-size:11px;color:var(--tx3)">
+            Selecione da lista ou pressione Enter para adicionar qualquer nome.
+          </div>
+        </div>
+
+        <!-- OBSERVAÇÕES -->
+        <div id="mr-panel-obs" class="mr-panel" style="display:none">
+          <div>
+            <label class="mr-lbl">Observações livres</label>
+            <textarea id="mr-obs" class="mr-inp" rows="6">${_eh(reuniao?.observacoes || "")}</textarea>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--bd1)">
           <button onclick="pautasFecharModal()" class="btn">Cancelar</button>
           <button onclick="pautasSalvarReuniao('${_ea(reuniao?.id || "")}')" class="btn btn-p">Salvar</button>
         </div>
       </div>`;
+
     document.body.appendChild(overlay);
     _modalAberto = overlay;
     overlay.addEventListener("click", e => { if (e.target === overlay) _fecharModal(); });
+
+    Promise.all([
+      _carregarOficiais(),
+      isEdit ? _carregarPresencas(reuniao.id) : Promise.resolve(null),
+    ]).then(([, presencas]) => {
+      if (presencas) {
+        _presencasEdit = presencas;
+        _PRESENCA_GRUPOS.forEach(g => _renderChipsMR(g.tipo));
+      }
+      _PRESENCA_GRUPOS.forEach(g => _setupMRAutocomplete(g.tipo, g.cargos));
+    }).catch(() => {
+      _PRESENCA_GRUPOS.forEach(g => _setupMRAutocomplete(g.tipo, g.cargos));
+    });
   }
 
   window.pautasSalvarReuniao = async function (id) {
     const titulo = (_view("mr-titulo")?.value || "").trim();
+    const numata = (_view("mr-numata")?.value || "").trim();
     const tipo   = _view("mr-tipo")?.value || "ORDINARIA";
     const status = _view("mr-status")?.value || "AGENDADA";
     const data   = _view("mr-data")?.value || "";
     const hora   = _view("mr-horario")?.value || null;
+    const henc   = _view("mr-henc")?.value || null;
     const local  = (_view("mr-local")?.value || "").trim();
+    const pres   = (_view("mr-presidente")?.value || "").trim();
+    const sec    = (_view("mr-secretario")?.value || "").trim();
+    const orIn   = (_view("mr-orinicial")?.value || "").trim();
+    const orFin  = (_view("mr-orfinal")?.value || "").trim();
     const obs    = (_view("mr-obs")?.value || "").trim();
 
-    if (!titulo) { _toast("Campo obrigatório", "Informe o título da reunião."); return; }
-    if (!data)   { _toast("Campo obrigatório", "Informe a data da reunião."); return; }
+    if (!titulo) { _toast("Campo obrigatório", "Informe o título da reunião."); mrAba("dados"); return; }
+    if (!data)   { _toast("Campo obrigatório", "Informe a data da reunião."); mrAba("dados"); return; }
 
     const u = _user();
-    const payload = { titulo, tipo, status, data_reuniao: data, horario: hora || null, local: local || null, observacoes: obs || null };
+    const payload = {
+      titulo,
+      numero_ata:           numata || null,
+      tipo, status,
+      data_reuniao:         data,
+      horario:              hora || null,
+      horario_encerramento: henc || null,
+      local:                local || null,
+      presidente:           pres || null,
+      secretario:           sec || null,
+      oracao_inicial:       orIn || null,
+      oracao_final:         orFin || null,
+      observacoes:          obs || null,
+    };
 
     try {
       const btn = document.querySelector("#modal-reuniao .btn-p");
       if (btn) { btn.textContent = "Salvando…"; btn.disabled = true; }
+
+      let reuniaoId = id;
 
       if (id) {
         await _fetchJson(`${_api()}/rest/v1/conselho_reunioes?id=eq.${encodeURIComponent(id)}`, {
@@ -366,6 +631,7 @@
           headers: _headers({ "Content-Type": "application/json", Prefer: "return=representation" }),
           body: JSON.stringify(payload),
         });
+        reuniaoId = nova?.id;
         if (nova?.id) {
           const dataFmt = _fmtData(payload.data_reuniao);
           const tipoLabel = TIPO_REUNIAO[payload.tipo] || payload.tipo;
@@ -373,14 +639,18 @@
             `📋 *Nova Reunião do Conselho*`,
             ``,
             `*Título:* ${payload.titulo}`,
+            payload.numero_ata ? `*Ata nº:* ${payload.numero_ata}` : null,
             `*Tipo:* ${tipoLabel}`,
             `*Data:* ${dataFmt}`,
             payload.horario ? `*Horário:* ${payload.horario}` : null,
-            payload.local   ? `*Local:* ${payload.local}`     : null,
+            payload.local   ? `*Local:* ${payload.local}` : null,
           ].filter(l => l !== null).join("\n");
           _notificarConselhoWA(msg, "reuniao", nova.id).catch(() => {});
         }
       }
+
+      if (reuniaoId && _presencasEdit) await _salvarPresencas(reuniaoId);
+
       _fecharModal();
       _toast("Salvo", id ? "Reunião atualizada." : "Reunião criada com sucesso.");
       await _carregarReunioes(true);
