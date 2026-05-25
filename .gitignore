@@ -19,6 +19,7 @@ logs/
 # Temp
 *.tmp
 *.bak
+supabase/.temp/
 .env
 node_modules/
 sync-log-*.json
