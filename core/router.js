@@ -235,8 +235,8 @@ async function go(id){
       if(minHdr)minHdr.classList.add("open");
     }
   }
-  // config-* está dentro de Sistema — garante que ms-sys está aberto
-  if(mod==="config"){
+  // config-* e wa-* estão dentro de Sistema — garante que ms-sys está aberto
+  if(mod==="config"||mod==="wa"){
     const sysSub=document.getElementById("ms-sys");
     const sysHdr=document.querySelector("#mw-sys .mhdr");
     if(sysSub&&!sysSub.classList.contains("open")){

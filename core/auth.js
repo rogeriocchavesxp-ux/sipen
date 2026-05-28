@@ -522,7 +522,8 @@ async function entrarNoSistema() {
     // F5 ou rota salva: restaura sem mostrar a tela de escolha
     if (_isGestor()) _aplicarModoGestor();
     const mod = rotaSalva.split("-")[0];
-    if (mod !== "geral") _expandirSidebar(mod);
+    const sidebarMod = mod === "wa" ? "sys" : mod;
+    if (mod !== "geral") _expandirSidebar(sidebarMod);
     await go(rotaSalva);
     T(`Bem-vindo, ${USUARIO_ATUAL.nome.split(" ")[0]}! 👋`,
       `Perfil: ${PERFIS[USUARIO_ATUAL.perfil]?.nome || USUARIO_ATUAL.perfil}`);
