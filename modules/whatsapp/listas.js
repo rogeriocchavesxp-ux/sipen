@@ -35,7 +35,7 @@ const WA_LISTAS = (function () {
 
   async function _patch(path, body) {
     try {
-      const r = await fetch(_base() + path, { method: 'PATCH', headers: { ...._hdr(true), 'Prefer': 'return=representation' }, body: JSON.stringify(body) });
+      const r = await fetch(_base() + path, { method: 'PATCH', headers: { ..._hdr(true), 'Prefer': 'return=representation' }, body: JSON.stringify(body) });
       return { ok: r.ok, data: r.ok ? await r.json() : await r.text() };
     } catch (e) { return { ok: false, data: e.message }; }
   }
