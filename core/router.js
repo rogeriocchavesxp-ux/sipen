@@ -125,6 +125,7 @@ const CRUMB={
   "area-pgs":  ["Área do Membro","Meu PG","/ pequeno grupo"],
   "area-dem":  ["Área do Membro","Minhas Solicitações","/ pedidos e demandas"],
   "config-whatsapp": ["Configurações","WhatsApp — BotConversa","/ status, histórico e templates"],
+  "wa-listas":       ["Sistema","Listas de Comunicação","/ WhatsApp"],
   "com-dash":          ["Comunicação","Dashboard","/ solicitações e KPIs"],
   "com-solicitacoes":  ["Comunicação","Solicitações de Arte","/ artes, campanhas e transmissões"],
   "com-detalhe":       ["Comunicação","Detalhe da Solicitação","/ visualização e edição"],
