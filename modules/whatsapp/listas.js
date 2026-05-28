@@ -72,12 +72,9 @@ const WA_LISTAS = (function () {
 
   async function init() {
     _tab = 'listas';
-    await _renderPage();
-  }
-
-  async function _renderPage() {
-    const el = document.getElementById('v-wa-listas');
-    if (!el) return;
+    const ct = document.getElementById('wa-listas-ct');
+    if (!ct) return;
+    ct.innerHTML = '<div style="color:var(--tx3);text-align:center;padding:40px;font-size:13px">Carregando...</div>';
 
     const [listas, envios, agendamentos] = await Promise.all([
       _get('/rest/v1/wa_listas?select=id,nome,descricao,icone,ativo&order=nome'),
@@ -90,10 +87,7 @@ const WA_LISTAS = (function () {
     const pendAgend = agendamentos.length;
     const enviados  = envios.reduce((s, e) => s + (e.enviados || 0), 0);
 
-    const inner = document.getElementById('wa-listas-inner');
-    if (inner) { _renderInner(inner, listas, envios, agendamentos); return; }
-
-    el.querySelector('.ct') && (el.querySelector('.ct').innerHTML = `
+    ct.innerHTML = `
       <div class="kpis c4" style="margin-bottom:16px">
         <div class="kpi">
           <div class="kpi-ico" style="background:rgba(37,211,102,0.12)">📋</div>
@@ -114,14 +108,13 @@ const WA_LISTAS = (function () {
       </div>
 
       <div class="tabs-bar" style="margin-bottom:16px">
-        <button class="tbt ${_tab==='listas'?'pri':''}" onclick="WA_LISTAS.setTab('listas')">Listas</button>
-        <button class="tbt ${_tab==='enviar'?'pri':''}" onclick="WA_LISTAS.setTab('enviar')">Enviar Comunicado</button>
-        <button class="tbt ${_tab==='agendamentos'?'pri':''}" onclick="WA_LISTAS.setTab('agendamentos')">Agendamentos</button>
-        <button class="tbt ${_tab==='historico'?'pri':''}" onclick="WA_LISTAS.setTab('historico')">Histórico</button>
+        <button class="tbt pri" onclick="WA_LISTAS.setTab('listas')">Listas</button>
+        <button class="tbt" onclick="WA_LISTAS.setTab('enviar')">Enviar Comunicado</button>
+        <button class="tbt" onclick="WA_LISTAS.setTab('agendamentos')">Agendamentos</button>
+        <button class="tbt" onclick="WA_LISTAS.setTab('historico')">Histórico</button>
       </div>
 
-      <div id="wa-listas-inner"></div>
-    `);
+      <div id="wa-listas-inner"></div>`;
 
     _renderInner(document.getElementById('wa-listas-inner'), listas, envios, agendamentos);
   }
@@ -760,16 +753,6 @@ const WA_LISTAS = (function () {
   function fecharModal() {
     const m = document.getElementById('wa-listas-modal');
     if (m) m.style.display = 'none';
-  }
-
-  /* ── VIEW_AUTOLOAD + CRUMB ──────────────────────────── */
-
-  if (typeof VIEW_AUTOLOAD !== 'undefined') {
-    VIEW_AUTOLOAD['wa-listas'] = { fn: () => init() };
-  }
-
-  if (typeof CRUMB !== 'undefined') {
-    CRUMB['wa-listas'] = ['Sistema', 'Listas de Comunicação', '/ WhatsApp'];
   }
 
   /* ── API pública ────────────────────────────────────── */
