@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   SIPEN — Pautas do Conselho  v6.31.7
+   SIPEN — Pautas do Conselho  v6.32.0
    Gestão de pautas, reuniões e deliberações do Conselho IPPenha
 ═══════════════════════════════════════════════════════════════ */
 (function () {
@@ -84,6 +84,11 @@
   }
   function _user()  { return typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL : null; }
   function _view(id) { return document.getElementById(id); }
+  function _labelReuniao(id) {
+    if (!id) return null;
+    const r = (_reunioes || []).find(x => x.id === id);
+    return r ? _eh(r.titulo) : null;
+  }
 
   async function _notificarConselhoWA(mensagem, tipo, referenciaId) {
     if (typeof WA === "undefined") return;
@@ -857,17 +862,22 @@
         <!-- Anexo -->
         ${p.arquivo_path ? `<div style="margin-top:10px"><button onclick="pautasAbrirAnexo('${_ea(p.arquivo_path)}')" style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--blue);background:rgba(74,156,245,.08);border:1px solid rgba(74,156,245,.25);border-radius:6px;padding:5px 10px;cursor:pointer">📎 ${_eh(p.arquivo_nome || "Ver documento")}</button></div>` : ""}
 
+        <!-- Tramitação: destino -->
+        ${p.reuniao_destino_id ? `<div style="margin-top:8px;padding:6px 10px;background:rgba(74,156,245,.08);border:1px solid rgba(74,156,245,.2);border-radius:6px;font-size:11.5px;color:var(--blue)">Adiada para: <strong>${_labelReuniao(p.reuniao_destino_id) || "outra reunião"}</strong></div>` : ""}
+        <!-- Tramitação: origem -->
+        ${p.pauta_origem_id ? `<div style="margin-top:8px;padding:6px 10px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:6px;font-size:11.5px;color:var(--amber)">Transferida de: <strong>${_labelReuniao(p.reuniao_origem_id) || "reunião anterior"}</strong></div>` : ""}
         <!-- Ações de status -->
-        ${podeSec && p.status === "PENDENTE" ? `
+        ${podeSec && p.status === "PENDENTE" && !p.reuniao_destino_id ? `
           <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd1);display:flex;gap:5px;flex-wrap:wrap">
             <button class="tbt" style="font-size:11px" onclick="pautasAlterarStatus('${_ea(p.id)}','EM_ANALISE')">Em análise</button>
             <button class="tbt" style="font-size:11px;color:var(--gr)" onclick="pautasAlterarStatus('${_ea(p.id)}','APROVADO')">Aprovar</button>
             <button class="tbt" style="font-size:11px;color:var(--rose)" onclick="pautasAlterarStatus('${_ea(p.id)}','REJEITADO')">Rejeitar</button>
-            <button class="tbt" style="font-size:11px;color:var(--amber)" onclick="pautasAlterarStatus('${_ea(p.id)}','ADIADO')">Adiar</button>
+            <button class="tbt" style="font-size:11px;color:var(--amber)" onclick="pautasAdiarParaReuniao('${_ea(p.id)}')">Adiar para reunião...</button>
           </div>` : ""}
-        ${podeSec && (p.status === "EM_ANALISE" || p.status === "APROVADO") && !p.deliberacao ? `
-          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd1)">
+        ${podeSec && (p.status === "EM_ANALISE" || p.status === "APROVADO") && !p.deliberacao && !p.reuniao_destino_id ? `
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd1);display:flex;gap:5px;flex-wrap:wrap">
             <button class="tbt pri" style="font-size:11px" onclick="pautasRegistrarDeliberacao('${_ea(p.id)}')">+ Registrar deliberação</button>
+            <button class="tbt" style="font-size:11px;color:var(--amber)" onclick="pautasAdiarParaReuniao('${_ea(p.id)}')">Adiar para reunião...</button>
           </div>` : ""}
       </div>`;
     }).join("");
@@ -887,9 +897,11 @@
     if (p) _abrirModalPauta(p);
   };
 
-  window.pautasVerDetalhe = function (id) {
+  window.pautasVerDetalhe = async function (id) {
     const p = (_pautas || []).find(x => x.id === id);
-    if (p) _abrirModalDetalhe(p);
+    if (!p) return;
+    if (!_reunioes) await _carregarReunioes(false);
+    _abrirModalDetalhe(p);
   };
 
   function _abrirModalDetalhe(p) {
@@ -922,8 +934,15 @@
           ${p.responsaveis ? `<div style="font-size:11px;color:var(--tx3);margin-top:6px">Responsáveis: ${_eh(p.responsaveis)}</div>` : ""}
           ${p.prazo ? `<div style="font-size:11px;color:var(--tx3)">Prazo: ${_fmtData(p.prazo)}</div>` : ""}
         </div>` : ""}
+        ${(p.pauta_origem_id || p.reuniao_destino_id) ? `<div style="margin-top:14px;padding:10px 12px;background:var(--bg3,#2b2f33);border-radius:7px;border-left:2px solid var(--amber)">
+          <div style="font-size:10.5px;font-weight:700;color:var(--amber);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px">Tramitação</div>
+          ${p.reuniao_origem_id ? `<div style="font-size:12px;color:var(--tx3);margin-bottom:3px">Origem: <span style="color:var(--amber);font-weight:500">${_labelReuniao(p.reuniao_origem_id) || "reunião anterior"}</span></div>` : ""}
+          <div style="font-size:12px;color:var(--tx3);margin-bottom:3px">Esta reunião: <span style="color:var(--tx2);font-weight:500">${_eh(_reuniaoAtual?.titulo || "—")}</span></div>
+          ${p.reuniao_destino_id ? `<div style="font-size:12px;color:var(--tx3)">Destino: <span style="color:var(--blue);font-weight:500">${_labelReuniao(p.reuniao_destino_id) || "outra reunião"}</span></div>` : ""}
+        </div>` : ""}
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;justify-content:flex-end">
           ${podeEd ? `<button class="tbt" onclick="pautasEditarPauta('${_ea(p.id)}');pautasFecharModal()">Editar</button>` : ""}
+          ${podeSec && !p.deliberacao && !['CONCLUIDO','REJEITADO'].includes(p.status) && !p.reuniao_destino_id ? `<button class="tbt" style="color:var(--amber)" onclick="pautasFecharModal();pautasAdiarParaReuniao('${_ea(p.id)}')">Adiar para reunião...</button>` : ""}
           ${podeSec && !p.deliberacao ? `<button class="tbt pri" onclick="pautasRegistrarDeliberacao('${_ea(p.id)}');pautasFecharModal()">Registrar deliberação</button>` : ""}
           ${_podeAdmin() ? `<button class="tbt" style="color:var(--rose)" onclick="pautasExcluir('${_ea(p.id)}');pautasFecharModal()">Excluir</button>` : ""}
           <button onclick="pautasFecharModal()" class="btn">Fechar</button>
@@ -1210,6 +1229,135 @@
     } catch (e) { _toast("Erro", e.message); }
   };
 
+  /* ── ADIAMENTO PARA OUTRA REUNIÃO ───────────────────────────── */
+
+  window.pautasAdiarParaReuniao = async function (pautaId) {
+    if (!_podeSecretaria()) { _toast("Acesso negado", ""); return; }
+    if (!_reunioes) await _carregarReunioes(false);
+    _abrirModalAdiamento(pautaId);
+  };
+
+  function _abrirModalAdiamento(pautaId) {
+    _fecharModal();
+    const p = (_pautas || []).find(x => x.id === pautaId);
+    if (!p) return;
+
+    const opcoes = (_reunioes || [])
+      .filter(r => r.id !== _reuniaoAtual?.id && r.status !== "CANCELADA")
+      .sort((a, b) => {
+        if (a.status === "AGENDADA" && b.status !== "AGENDADA") return -1;
+        if (a.status !== "AGENDADA" && b.status === "AGENDADA") return 1;
+        return (b.data_reuniao || "").localeCompare(a.data_reuniao || "");
+      });
+
+    if (!opcoes.length) {
+      _toast("Nenhuma reunião disponível", "Cadastre outra reunião para adiar a pauta.");
+      return;
+    }
+
+    const optsHtml = opcoes.map(r => {
+      const tipo   = TIPO_REUNIAO[r.tipo] || r.tipo;
+      const status = STATUS_REUNIAO[r.status]?.label || r.status;
+      const data   = _fmtData(r.data_reuniao);
+      return `<option value="${_ea(r.id)}">${_eh(r.titulo)} · ${data} [${status}]</option>`;
+    }).join("");
+
+    const overlay = document.createElement("div");
+    overlay.id = "modal-adiamento";
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9900;display:flex;align-items:center;justify-content:center;padding:16px";
+    overlay.innerHTML = `
+      <div style="background:var(--bg2,#212529);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:480px;padding:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <strong style="font-size:15px">Adiar para outra reunião</strong>
+          <button onclick="pautasFecharModal()" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button>
+        </div>
+        <div style="font-size:12px;color:var(--tx3);margin-bottom:16px;padding:8px 10px;background:var(--bg3,#2b2f33);border-radius:6px">${_eh(p.titulo)}</div>
+        <div>
+          <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:6px">Selecione a reunião destino *</label>
+          <select id="sel-reuniao-destino" style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px">
+            <option value="">— Selecionar reunião —</option>
+            ${optsHtml}
+          </select>
+        </div>
+        <div style="margin-top:12px;padding:10px;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);border-radius:7px;font-size:11.5px;color:var(--amber);line-height:1.5">
+          A pauta permanecerá registrada nesta reunião com status <strong>Adiado</strong>. Uma cópia será incluída na reunião selecionada com status <strong>Pendente</strong>.
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px">
+          <button onclick="pautasFecharModal()" class="btn">Cancelar</button>
+          <button onclick="pautasConfirmarAdiamento('${_ea(pautaId)}')" class="btn btn-p" id="btn-confirmar-adiamento">Confirmar adiamento</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    _modalAberto = overlay;
+    overlay.addEventListener("click", e => { if (e.target === overlay) _fecharModal(); });
+  }
+
+  window.pautasConfirmarAdiamento = async function (pautaId) {
+    const reuniaoDestinoId = document.getElementById("sel-reuniao-destino")?.value;
+    if (!reuniaoDestinoId) { _toast("Selecione a reunião", ""); return; }
+
+    const p = (_pautas || []).find(x => x.id === pautaId);
+    if (!p) { _toast("Pauta não encontrada", ""); return; }
+
+    const btn = document.getElementById("btn-confirmar-adiamento");
+    if (btn) { btn.disabled = true; btn.textContent = "Adiando..."; }
+
+    try {
+      const rDest = (_reunioes || []).find(r => r.id === reuniaoDestinoId);
+
+      await _fetchJson(`${_api()}/rest/v1/conselho_pautas?id=eq.${encodeURIComponent(pautaId)}`, {
+        method: "PATCH",
+        headers: _headers({ "Content-Type": "application/json", Prefer: "return=minimal" }),
+        body: JSON.stringify({ status: "ADIADO", reuniao_destino_id: reuniaoDestinoId }),
+      });
+
+      await _registrarHistorico(pautaId, "status", p.status, "ADIADO");
+      await _registrarHistorico(pautaId, "reuniao_destino_id", null, rDest?.titulo || reuniaoDestinoId);
+
+      let nextOrdem = 0;
+      try {
+        const rows = await _fetchJson(
+          `${_api()}/rest/v1/conselho_pautas?select=ordem&reuniao_id=eq.${encodeURIComponent(reuniaoDestinoId)}&order=ordem.desc&limit=1`,
+          { headers: _headers() }
+        );
+        if (rows?.[0]) nextOrdem = (rows[0].ordem ?? 0) + 1;
+      } catch (_) {}
+
+      const u = _user();
+      await _fetchJson(`${_api()}/rest/v1/conselho_pautas`, {
+        method: "POST",
+        headers: _headers({ "Content-Type": "application/json", Prefer: "return=minimal" }),
+        body: JSON.stringify({
+          titulo:            p.titulo,
+          categoria:         p.categoria,
+          encaminhamento:    p.encaminhamento  || null,
+          sintese:           p.sintese         || null,
+          observacoes:       p.observacoes     || null,
+          status:            "PENDENTE",
+          reuniao_id:        reuniaoDestinoId,
+          pauta_origem_id:   pautaId,
+          reuniao_origem_id: _reuniaoAtual?.id || null,
+          ordem:             nextOrdem,
+          created_by:        u?.id || null,
+        }),
+      });
+
+      _fecharModal();
+      _toast("Pauta adiada", rDest?.titulo || "");
+      await _carregarPautas(true);
+      _renderListaPautas();
+
+      _notificarConselhoWA(
+        `Pauta adiada para outra reunião\n• Item: ${p.titulo}\n• De: ${_reuniaoAtual?.titulo || "reunião atual"}\n• Para: ${rDest?.titulo || "outra reunião"}`,
+        "PAUTA_ADIADA", pautaId
+      ).catch(() => {});
+
+    } catch (e) {
+      _toast("Erro ao adiar pauta", e.message);
+      if (btn) { btn.disabled = false; btn.textContent = "Confirmar adiamento"; }
+    }
+  };
+
   window.pautasRegistrarDeliberacao = function (id) {
     _fecharModal();
     const p = (_pautas || []).find(x => x.id === id);
@@ -1292,7 +1440,7 @@
 
   function _fecharModal() {
     if (_modalAberto) { _modalAberto.remove(); _modalAberto = null; }
-    const ids = ["modal-reuniao", "modal-pauta", "modal-pauta-det", "modal-delib"];
+    const ids = ["modal-reuniao", "modal-pauta", "modal-pauta-det", "modal-delib", "modal-adiamento"];
     ids.forEach(id => document.getElementById(id)?.remove());
   }
   window.pautasFecharModal = _fecharModal;
