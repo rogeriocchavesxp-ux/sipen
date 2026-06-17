@@ -174,6 +174,7 @@
   let _cache = [];
   let _ativo = null;
   let _origemView = "dem-todas"; // rastreia de onde o detalhe foi aberto
+  let _saving = false;           // guard: impede submit duplo em salvarNovaDemanda
 
   /* ── Estado: tela Admin Demandas ────────────────────── */
   const _ADM_KEY = "sipen_adm_dem_filtro";
@@ -263,15 +264,18 @@
     try {
       let rows;
       if (_podeVerTodas()) {
-        /* Admin/gestor: busca tudo via apiRead padrão */
         rows = await apiRead("DEMANDAS");
       } else {
-        /* Usuário restrito: query filtrada diretamente em v_demandas */
         rows = await _loadFiltrado();
       }
-      _cache = rows.map(r => ({ ...r, status: _toLabel(r.status) }));
-      /* Filtro local como camada de segurança adicional */
-      _cache = _filtrarVisibilidade(_cache);
+      /* Normaliza status e deduplica por ID — impede duplicatas vindas do backend */
+      const normalized = rows.map(r => ({ ...r, status: _toLabel(r.status) }));
+      const seen = new Map();
+      for (const r of normalized) {
+        const key = String(r.id ?? r._row ?? "");
+        if (key && !seen.has(key)) seen.set(key, r);
+      }
+      _cache = _filtrarVisibilidade([...seen.values()]);
     }
     catch(e) { console.warn("Demandas load:", e.message); _cache = []; }
     return _cache;
@@ -476,7 +480,13 @@
 
     if (!_cache.length) await _load();
 
-    let rows = [..._cache];
+    /* Deduplica por ID como camada defensiva antes de qualquer filtro */
+    const _seen = new Map();
+    for (const r of _cache) {
+      const key = String(r.id ?? r._row ?? "");
+      if (key && !_seen.has(key)) _seen.set(key, r);
+    }
+    let rows = [..._seen.values()];
 
     /* Filtros fixos — comparação normalizada (aceita label, código DB ou array) */
     if (filtrosFixos) {
@@ -1505,6 +1515,14 @@
   };
 
   window.salvarNovaDemanda = async function() {
+    /* Impede duplo clique ou submissão simultânea */
+    if (_saving) return;
+    _saving = true;
+    const _btn = document.getElementById("dem-btn-registrar");
+    const _btnTxt = _btn?.textContent || "Registrar Demanda";
+    if (_btn) { _btn.disabled = true; _btn.textContent = "Salvando…"; }
+
+    try {
     const cat    = document.getElementById("dem-f-cat")?.value;
     const sub    = document.getElementById("dem-f-sub")?.value;
     const titulo = document.getElementById("dem-f-titulo")?.value?.trim();
@@ -1669,6 +1687,10 @@
       if (typeof T === "function") T("Erro ao criar", e.message || "Tente novamente");
       console.error("salvarNovaDemanda:", e);
     }
+  } finally {
+    _saving = false;
+    if (_btn) { _btn.disabled = false; _btn.textContent = _btnTxt; }
+  }
   };
 
   /* ── Notificação WhatsApp ao criar demanda ───────────── */
@@ -2142,7 +2164,13 @@
 
     if (!_cache.length) await _load();
 
-    let rows = [..._cache];
+    /* Deduplica por ID antes de qualquer filtro */
+    const _finSeen = new Map();
+    for (const r of _cache) {
+      const key = String(r.id ?? r._row ?? "");
+      if (key && !_finSeen.has(key)) _finSeen.set(key, r);
+    }
+    let rows = [..._finSeen.values()];
 
     if (filtrosFixos) {
       Object.entries(filtrosFixos).forEach(([k, v]) => {
