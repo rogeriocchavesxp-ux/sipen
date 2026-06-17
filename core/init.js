@@ -180,6 +180,7 @@ window.go = async function(id){
 document.addEventListener("DOMContentLoaded", async () => {
   if (window.location.hash === "#pautas-reunioes") return;
   await _shellReady;
+  window.renderThemeToggle?.();
   _ensureViewLoaded("geral").then(() => go("geral"));
 
   document.querySelectorAll(".bf").forEach(b => {

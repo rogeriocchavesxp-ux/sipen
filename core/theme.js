@@ -49,6 +49,10 @@
   }
   window.setTheme = setTheme;
 
+  window.renderThemeToggle = function () {
+    _renderToggle(localStorage.getItem(KEY) || 'dark');
+  };
+
   MQ.addEventListener('change', function () {
     const pref = localStorage.getItem(KEY) || 'dark';
     if (pref === 'system') {
