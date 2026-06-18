@@ -1363,14 +1363,27 @@
 
   /* ── Modal: Nova Demanda ────────────────────────────── */
 
-  window.abrirModalNovaDemanda = function() {
+  window.abrirModalNovaDemanda = function(categoriaFixa) {
     const m = document.getElementById("modal-nova-demanda");
     if (!m) return;
     const usuario = typeof USUARIO_ATUAL !== "undefined" ? (USUARIO_ATUAL?.nome || "") : "";
-    m.querySelector("#dem-f-cat").innerHTML =
+    const catEl  = m.querySelector("#dem-f-cat");
+    const catRow = m.querySelector("#dem-f-cat-row");
+    catEl.innerHTML =
       `<option value="">Selecione a categoria</option>` +
       CATS.map(c => `<option value="${c.nome}">${c.icon} ${c.nome}</option>`).join("");
-    m.querySelector("#dem-f-sub").innerHTML = `<option value="">Selecione a categoria primeiro</option>`;
+    if (categoriaFixa) {
+      catEl.value = categoriaFixa;
+      if (catRow) catRow.style.display = "none";
+    } else {
+      catEl.value = "";
+      if (catRow) catRow.style.display = "";
+    }
+    if (categoriaFixa) {
+      window.demOnCatChange();
+    } else {
+      m.querySelector("#dem-f-sub").innerHTML = `<option value="">Selecione a categoria primeiro</option>`;
+    }
     m.querySelector("#dem-f-titulo").value  = "";
     m.querySelector("#dem-f-desc").value    = "";
     m.querySelector("#dem-f-sol").value     = usuario;
