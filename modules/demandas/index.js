@@ -1457,20 +1457,22 @@
   }
 
   function _toggleFormaPagamento() {
-    const forma     = document.getElementById("dem-f-forma-pag")?.value;
-    const pixSec    = document.getElementById("dem-f-pix-section");
-    const bankSec   = document.getElementById("dem-f-bank-section");
-    const boletoSec = document.getElementById("dem-f-boleto-section");
-    const nfSingle  = document.getElementById("dem-f-nf-single-section");
-    const valorEl   = document.getElementById("dem-f-valor");
-    const valorLbl  = document.getElementById("dem-f-valor-label");
+    const forma        = document.getElementById("dem-f-forma-pag")?.value;
+    const pixSec       = document.getElementById("dem-f-pix-section");
+    const bankSec      = document.getElementById("dem-f-bank-section");
+    const boletoSec    = document.getElementById("dem-f-boleto-section");
+    const notasLbl     = document.getElementById("dem-f-notas-label");
+    const totalRow     = document.getElementById("dem-f-boleto-total-row");
+    const valorEl      = document.getElementById("dem-f-valor");
+    const valorLbl     = document.getElementById("dem-f-valor-label");
 
-    if (pixSec)   pixSec.style.display   = forma === "PIX"                    ? ""     : "none";
-    if (bankSec)  bankSec.style.display  = forma === "Transferência Bancária" ? "grid" : "none";
+    if (pixSec)  pixSec.style.display  = forma === "PIX"                    ? ""     : "none";
+    if (bankSec) bankSec.style.display = forma === "Transferência Bancária" ? "grid" : "none";
 
     const isBoleto = forma === "Boleto";
-    if (boletoSec) boletoSec.style.display = isBoleto ? "flex" : "none";
-    if (nfSingle)  nfSingle.style.display  = isBoleto ? "none" : "";
+    if (boletoSec) boletoSec.style.display = isBoleto ? "" : "none";
+    if (totalRow)  totalRow.style.display  = isBoleto ? "flex" : "none";
+    if (notasLbl)  notasLbl.textContent    = isBoleto ? "Notas Fiscais *" : "Notas Fiscais / Comprovantes (opcional)";
 
     if (valorEl) {
       valorEl.readOnly = isBoleto;
@@ -1480,7 +1482,7 @@
     }
     if (valorLbl) valorLbl.textContent = isBoleto ? "Valor total (automático)" : "Valor *";
 
-    if (isBoleto && _boletoNotas.length === 0) window.demBoletoAdicionarNota();
+    if (_boletoNotas.length === 0) window.demBoletoAdicionarNota();
   }
 
   window.demOnSubChange      = _toggleFinanceiroSection;
@@ -1681,7 +1683,7 @@
         }
         const bErr = _validarArquivo(bFile);
         if (bErr) { if (typeof T === "function") T("Arquivo inválido", bErr); return; }
-        /* Valida notas fiscais */
+        /* Valida notas fiscais (obrigatório para boleto) */
         if (!_boletoNotas.length) {
           if (typeof T === "function") T("Nota fiscal obrigatória", "Adicione pelo menos uma nota fiscal");
           return;
@@ -1698,6 +1700,14 @@
             if (typeof T === "function") T("Campo obrigatório", "Informe o valor de cada nota fiscal");
             return;
           }
+        }
+      }
+      /* Para outras formas: valida arquivo de cada nota adicionada (opcional, mas se presente deve ser válido) */
+      if (forma !== "Boleto") {
+        for (const nota of _boletoNotas) {
+          if (!nota.file) continue;
+          const nErr = _validarArquivo(nota.file);
+          if (nErr) { if (typeof T === "function") T("Arquivo inválido", nErr); return; }
         }
       }
       if (forma === "Transferência Bancária" && (!banco || !agencia || !conta)) {
@@ -1773,40 +1783,29 @@
       const uploadErrs = [];
       const _forma     = financial_data.forma_pagamento;
 
+      /* Upload do boleto (quando selecionado) */
       if (_forma === "Boleto") {
-        /* Upload do boleto */
         const boletoFile = document.getElementById("dem-f-upload-boleto")?.files?.[0];
         if (boletoFile) {
           try { financial_data.boleto = await _uploadAnexoFinanceiro(boletoFile, `tmp_${tempKey}`, "boletos"); }
           catch(e) { uploadErrs.push(`Boleto: ${e.message}`); }
         }
-        /* Upload de cada nota fiscal com seu valor e observação */
+      }
+      /* Upload das notas fiscais (todas as formas de pagamento) */
+      if (_boletoNotas.some(n => n.file)) {
         financial_data.notas_fiscais = [];
         let somaNotas = 0;
         for (const nota of _boletoNotas) {
+          if (!nota.file) continue;
           const nVal = parseFloat(document.getElementById(`dem-fn-val-${nota.id}`)?.value || "0");
           const nObs = document.getElementById(`dem-fn-obs-${nota.id}`)?.value?.trim() || "";
           somaNotas += nVal;
-          if (nota.file) {
-            try {
-              const meta = await _uploadAnexoFinanceiro(nota.file, `tmp_${tempKey}`, "notas");
-              financial_data.notas_fiscais.push({ ...meta, valor: nVal, obs: nObs });
-            } catch(e) { uploadErrs.push(`Nota fiscal: ${e.message}`); }
-          }
+          try {
+            const meta = await _uploadAnexoFinanceiro(nota.file, `tmp_${tempKey}`, "notas");
+            financial_data.notas_fiscais.push({ ...meta, valor: nVal, obs: nObs });
+          } catch(e) { uploadErrs.push(`Nota fiscal: ${e.message}`); }
         }
-        financial_data.valor = parseFloat(somaNotas.toFixed(2));
-      } else {
-        /* Forma ≠ Boleto: NF avulsa opcional */
-        const nfFile = document.getElementById("dem-f-upload-nf")?.files?.[0];
-        if (nfFile) {
-          try { financial_data.nota_fiscal = await _uploadAnexoFinanceiro(nfFile, `tmp_${tempKey}`, "notas"); }
-          catch(e) { uploadErrs.push(`Nota fiscal: ${e.message}`); }
-        }
-        const boletoFile = document.getElementById("dem-f-upload-boleto")?.files?.[0];
-        if (boletoFile) {
-          try { financial_data.boleto = await _uploadAnexoFinanceiro(boletoFile, `tmp_${tempKey}`, "boletos"); }
-          catch(e) { uploadErrs.push(`Boleto: ${e.message}`); }
-        }
+        if (_forma === "Boleto") financial_data.valor = parseFloat(somaNotas.toFixed(2));
       }
 
       /* Reembolso */

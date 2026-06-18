@@ -169,39 +169,26 @@
               <input id="dem-f-conta" type="text" placeholder="00000-0" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
             </div>
           </div>
-          <!-- BOLETO: layout lado a lado boleto + múltiplas notas fiscais -->
-          <div id="dem-f-boleto-section" style="display:none;flex-direction:column;gap:12px">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:start">
-              <!-- Coluna: Boleto -->
-              <div>
-                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Boleto *</label>
-                <div onclick="document.getElementById('dem-f-upload-boleto').click()" style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;border:1.5px dashed var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx3);font-size:12.5px;cursor:pointer;box-sizing:border-box;width:100%">
-                  📎 <span id="dem-f-upload-boleto-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">Escolher arquivo · PDF, JPG ou PNG · máx. 10 MB</span>
-                </div>
-                <input id="dem-f-upload-boleto" type="file" accept=".pdf,.jpg,.jpeg,.png" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden" onchange="demOnFileSelected(this,'dem-f-upload-boleto-name')">
-              </div>
-              <!-- Coluna: Notas Fiscais -->
-              <div>
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-                  <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em">Notas Fiscais *</label>
-                  <button type="button" onclick="demBoletoAdicionarNota()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx2);cursor:pointer">+ Nota</button>
-                </div>
-                <div id="dem-f-notas-container" style="display:flex;flex-direction:column;gap:8px"></div>
-              </div>
+          <!-- Boleto (apenas quando forma = Boleto) -->
+          <div id="dem-f-boleto-section" style="display:none">
+            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Boleto *</label>
+            <div onclick="document.getElementById('dem-f-upload-boleto').click()" style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;border:1.5px dashed var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx3);font-size:12.5px;cursor:pointer;box-sizing:border-box;width:100%">
+              📎 <span id="dem-f-upload-boleto-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">Escolher arquivo · PDF, JPG ou PNG · máx. 10 MB</span>
             </div>
-            <!-- Soma automática -->
-            <div style="padding:10px 14px;background:rgba(61,160,85,.06);border:1px solid rgba(61,160,85,.25);border-radius:8px;display:flex;align-items:center;justify-content:space-between">
+            <input id="dem-f-upload-boleto" type="file" accept=".pdf,.jpg,.jpeg,.png" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden" onchange="demOnFileSelected(this,'dem-f-upload-boleto-name')">
+          </div>
+          <!-- Notas Fiscais — sempre visível em Solicitação de pagamento -->
+          <div id="dem-f-notas-section">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+              <label id="dem-f-notas-label" style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em">Notas Fiscais / Comprovantes (opcional)</label>
+              <button type="button" onclick="demBoletoAdicionarNota()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx2);cursor:pointer">+ Nota</button>
+            </div>
+            <div id="dem-f-notas-container" style="display:flex;flex-direction:column;gap:8px"></div>
+            <!-- Soma automática (só visível quando boleto) -->
+            <div id="dem-f-boleto-total-row" style="display:none;margin-top:8px;padding:10px 14px;background:rgba(61,160,85,.06);border:1px solid rgba(61,160,85,.25);border-radius:8px;justify-content:space-between;align-items:center">
               <span style="font-size:12px;color:var(--tx3)">Valor total (soma automática das notas)</span>
               <strong id="dem-f-boleto-total" style="font-size:15px;color:var(--gr)">R$ 0,00</strong>
             </div>
-          </div>
-          <!-- NF avulsa — visível quando forma ≠ Boleto -->
-          <div id="dem-f-nf-single-section">
-            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Nota Fiscal / Comprovante (opcional)</label>
-            <div onclick="document.getElementById('dem-f-upload-nf').click()" style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;border:1.5px dashed var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx3);font-size:12.5px;cursor:pointer;box-sizing:border-box;width:100%">
-              📎 <span id="dem-f-upload-nf-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">Escolher arquivo · PDF, JPG ou PNG · máx. 10 MB</span>
-            </div>
-            <input id="dem-f-upload-nf" type="file" accept=".pdf,.jpg,.jpeg,.png" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden" onchange="demOnFileSelected(this,'dem-f-upload-nf-name')">
           </div>
           <div>
             <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Observações financeiras</label>
