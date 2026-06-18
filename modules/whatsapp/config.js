@@ -422,7 +422,7 @@ const WA_CFG = (function(){
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
               <span style="font-size:10px;background:var(--bd2);padding:1px 6px;border-radius:4px;color:var(--tx3);font-family:var(--mono)">${_esc(r.chave)}</span>
               <span style="font-size:10px;background:var(--bd2);padding:1px 6px;border-radius:4px;color:var(--tx3)">${_esc(r.modulo||"GERAL")}</span>
-              ${!r.ativo ? `<span style="font-size:10px;color:var(--rose);font-weight:600">INATIVO</span>` : ""}
+              ${!r.ativo ? `<span style="font-size:10px;color:var(--rose);font-weight:600">Inativo</span>` : ""}
             </div>
             <div style="font-size:11px;color:var(--tx2);white-space:pre-wrap;background:var(--bg-sidebar);padding:8px;border-radius:4px;border:1px solid var(--bd2);line-height:1.5">${_esc(r.corpo||"")}</div>
           </div>

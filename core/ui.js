@@ -1,6 +1,43 @@
 /* ══════════════════════════════════════════
    UI helpers globais
 ══════════════════════════════════════════ */
+
+/**
+ * tcPT — Title Case para português brasileiro.
+ * Capitaliza a primeira letra de cada palavra principal.
+ * Preposições, artigos e conjunções ficam em minúsculas (exceto se forem a 1ª palavra).
+ * Siglas oficiais são preservadas em MAIÚSCULAS.
+ * Não deve ser aplicado a conteúdo digitado pelo usuário (nomes próprios, descrições).
+ */
+function tcPT(str) {
+  if (!str || typeof str !== "string") return str;
+  str = str.trim();
+  if (!str) return str;
+
+  const SIGLAS = new Set([
+    "PIX","CPF","CNPJ","CEP","RH","TI","CNAB","PDF","URL","API","SMS",
+    "SIPEN","IPCA","IGP-M","INPC","IPCA-E","EBT","PG","PGS","OS","KPI",
+    "PWA","ONG","IPP","IPPenha","LDAP","JWT","UUID",
+  ]);
+
+  const MINUSC = new Set([
+    "de","do","da","dos","das","em","no","na","nos","nas",
+    "por","para","com","sem","sob","sobre","ante","após","até",
+    "desde","entre","perante","a","ao","aos","às",
+    "o","os","um","uma","e","ou","mas","nem",
+  ]);
+
+  let wordIdx = 0;
+  return str.split(/(\s+)/).map(token => {
+    if (/^\s+$/.test(token)) return token;
+    const up = token.toUpperCase();
+    wordIdx++;
+    if (SIGLAS.has(up))                          return up;
+    if (wordIdx > 1 && MINUSC.has(token.toLowerCase())) return token.toLowerCase();
+    return token.charAt(0).toUpperCase() + token.slice(1).toLowerCase();
+  }).join("");
+}
+window.tcPT = tcPT;
 let tt;
 function T(t, s) {
   let el = document.getElementById("toast");

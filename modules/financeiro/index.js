@@ -33,8 +33,8 @@
     { id:5,  tipo:"receita",  cat:"Ofertas",            desc:"Oferta culto 14/04",                   valor:720,   data:"2026-04-14", forma:"dinheiro",          status:"confirmado", resp:"Tesoureiro",    obs:"" },
     { id:6,  tipo:"receita",  cat:"Missões (entrada)",  desc:"Oferta de missões — Abr/26",           valor:1200,  data:"2026-04-14", forma:"pix",               status:"confirmado", resp:"Tesoureiro",    obs:"" },
     { id:7,  tipo:"despesa",  cat:"Aluguel",            desc:"Aluguel sede — Abr/2026",              valor:3500,  data:"2026-04-05", forma:"transferência",     status:"confirmado", resp:"Administrador", obs:"" },
-    { id:8,  tipo:"despesa",  cat:"Utilities",          desc:"Conta de luz — Mar/26",                valor:480,   data:"2026-04-10", forma:"boleto",            status:"confirmado", resp:"Administrador", obs:"" },
-    { id:9,  tipo:"despesa",  cat:"Utilities",          desc:"Internet e telefone — Abr/26",         valor:180,   data:"2026-04-10", forma:"débito automático",  status:"confirmado", resp:"Administrador", obs:"" },
+    { id:8,  tipo:"despesa",  cat:"Utilidades",          desc:"Conta de luz — Mar/26",                valor:480,   data:"2026-04-10", forma:"boleto",            status:"confirmado", resp:"Administrador", obs:"" },
+    { id:9,  tipo:"despesa",  cat:"Utilidades",          desc:"Internet e telefone — Abr/26",         valor:180,   data:"2026-04-10", forma:"débito automático",  status:"confirmado", resp:"Administrador", obs:"" },
     { id:10, tipo:"despesa",  cat:"Folha de pagamento", desc:"Salários — Abr/2026",                  valor:4800,  data:"2026-04-15", forma:"transferência",     status:"confirmado", resp:"Administrador", obs:"" },
     { id:11, tipo:"despesa",  cat:"Material",           desc:"Material de escritório Q2",            valor:240,   data:"2026-04-08", forma:"cartão",            status:"confirmado", resp:"Secretaria",    obs:"" },
     { id:12, tipo:"despesa",  cat:"Manutenção",         desc:"Reparo sistema de som",                valor:650,   data:"2026-04-12", forma:"dinheiro",          status:"confirmado", resp:"Infraestrutura e Conservação", obs:"" },
@@ -46,7 +46,7 @@
     { id:18, tipo:"receita",  cat:"Missões (entrada)",  desc:"Oferta de missões — Mar/26",           valor:980,   data:"2026-03-24", forma:"pix",               status:"confirmado", resp:"Tesoureiro",    obs:"" },
     { id:19, tipo:"despesa",  cat:"Aluguel",            desc:"Aluguel sede — Mar/2026",              valor:3500,  data:"2026-03-05", forma:"transferência",     status:"confirmado", resp:"Administrador", obs:"" },
     { id:20, tipo:"despesa",  cat:"Folha de pagamento", desc:"Salários — Mar/2026",                  valor:4800,  data:"2026-03-15", forma:"transferência",     status:"confirmado", resp:"Administrador", obs:"" },
-    { id:21, tipo:"despesa",  cat:"Utilities",          desc:"Conta de luz — Fev/26",                valor:510,   data:"2026-03-08", forma:"boleto",            status:"confirmado", resp:"Administrador", obs:"" },
+    { id:21, tipo:"despesa",  cat:"Utilidades",          desc:"Conta de luz — Fev/26",                valor:510,   data:"2026-03-08", forma:"boleto",            status:"confirmado", resp:"Administrador", obs:"" },
     { id:22, tipo:"despesa",  cat:"Eventos",            desc:"Semana Santa — materiais e logística", valor:1200,  data:"2026-03-28", forma:"cartão",            status:"confirmado", resp:"Pastoral",      obs:"" },
     { id:23, tipo:"despesa",  cat:"Missões (saída)",    desc:"Repasse campo missionário — Mar/26",   valor:600,   data:"2026-03-31", forma:"transferência",     status:"confirmado", resp:"Conselho",      obs:"" },
     { id:24, tipo:"receita",  cat:"Dízimos",            desc:"Dízimos — Fev/26 (consolidado)",       valor:14200, data:"2026-02-28", forma:"transferência",     status:"confirmado", resp:"Tesoureiro",    obs:"Consolidado do mês" },
@@ -165,16 +165,16 @@
 
   function pillStatus(st) {
     const m = {
-      confirmado: '<span class="pill pg">confirmado</span>',
-      pendente:   '<span class="pill po">pendente</span>',
-      cancelado:  '<span class="pill">cancelado</span>',
-      atrasado:   '<span class="pill pl">atrasado</span>',
-      em_processamento: '<span class="pill pd">em processamento</span>',
-      pago:       '<span class="pill pg">pago</span>',
-      recebido:   '<span class="pill pg">recebido</span>',
-      aguardando: '<span class="pill po">aguardando</span>',
+      confirmado:        '<span class="pill pg">Confirmado</span>',
+      pendente:          '<span class="pill po">Pendente</span>',
+      cancelado:         '<span class="pill">Cancelado</span>',
+      atrasado:          '<span class="pill pl">Atrasado</span>',
+      em_processamento:  '<span class="pill pd">Em Processamento</span>',
+      pago:              '<span class="pill pg">Pago</span>',
+      recebido:          '<span class="pill pg">Recebido</span>',
+      aguardando:        '<span class="pill po">Aguardando</span>',
     };
-    return m[st] || `<span class="pill">${st}</span>`;
+    return m[st] || `<span class="pill">${typeof tcPT === "function" ? tcPT(st) : st}</span>`;
   }
 
   function pillTipo(t) {
@@ -512,7 +512,7 @@
                     <td style="padding:7px 6px;white-space:nowrap">
                       ${r.tipo_operacao
                         ? `<span class="pill pd" style="font-size:9.5px;margin-right:4px">${escapeHtml(r.tipo_operacao)}</span>`
-                        : `<span style="font-size:10px;color:var(--tx3);margin-right:4px">pendente</span>`}
+                        : `<span style="font-size:10px;color:var(--tx3);margin-right:4px">Pendente</span>`}
                       ${r.id && !pago ? `<button onclick="finEditarDadosCnab('${escapeHtmlAttr(r.id)}')" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--gr);cursor:pointer;white-space:nowrap">Dados CNAB</button>` : ""}
                     </td>
                     <td style="padding:7px 6px;color:${st === "atrasado" ? "var(--rose)" : "var(--tx2)"};white-space:nowrap;font-weight:${st === "atrasado" ? "600" : "400"}">${fmtD(r.vencimento)}</td>
