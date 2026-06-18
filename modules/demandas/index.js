@@ -1797,6 +1797,14 @@
   /* ── Expor filtrar para views ────────────────────────── */
   window.demFiltrar = function(elId, filtros) { renderLista(elId, filtros); };
 
+  window.demTabStatus = function(contentId, tabEl, status, fixos) {
+    const inp = document.getElementById(contentId + "-fstatus");
+    if (inp) inp.value = status;
+    tabEl.parentElement.querySelectorAll(".dem-stab").forEach(t => t.classList.remove("on"));
+    tabEl.classList.add("on");
+    demFiltrar(contentId, fixos);
+  };
+
   /* ── Hook no go() ────────────────────────────────────── */
 
   /* ── Dashboard de Infraestrutura ───────────────────── */
@@ -1906,8 +1914,18 @@
       "admin-demandas":        () => _admRender(),
       "admin-demandas-adm":    async () => { _admFiltro = "Administrativo"; try { localStorage.setItem(_ADM_KEY, _admFiltro); } catch(_){} await go("admin-demandas"); },
       "fin-demandas":          () => _finRender(),
-      "conselho-demandas":     () => renderLista("conselho-demandas-content"),
-      "conselho-demandas-cons":() => renderLista("conselho-demandas-cons-content",  { area:"Conselho" }),
+      "conselho-demandas": () => {
+        const inp = document.getElementById("conselho-demandas-content-fstatus");
+        if (inp) inp.value = "Aberta";
+        document.querySelectorAll("#cd-st1 .dem-stab").forEach((t, i) => t.classList.toggle("on", i === 0));
+        renderLista("conselho-demandas-content");
+      },
+      "conselho-demandas-cons": () => {
+        const inp = document.getElementById("conselho-demandas-cons-content-fstatus");
+        if (inp) inp.value = "Aberta";
+        document.querySelectorAll("#cd-st2 .dem-stab").forEach((t, i) => t.classList.toggle("on", i === 0));
+        renderLista("conselho-demandas-cons-content", { area:"Conselho" });
+      },
       "infra-dash":            () => _renderInfraDash(),
       "infra-demandas":        () => renderLista("infra-demandas-content"),
       "infra-demandas-infra":  () => renderLista("infra-demandas-infra-content",    { area:"Infraestrutura" }),

@@ -1695,12 +1695,15 @@
           <div class="sni-sep"></div>
           <div class="sni" onclick="go('conselho-demandas-cons')">Conselho e Governança</div>
         </div>
-        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('conselho-demandas-content')">↻ Atualizar</span></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-          <select id="conselho-demandas-content-fstatus" onchange="demFiltrar('conselho-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
-            <option value="">Todos os status</option>
-            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
-          </select>
+        <input type="hidden" id="conselho-demandas-content-fstatus" value="Aberta">
+        <div id="cd-st1" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">
+          <div class="sni on dem-stab" onclick="demTabStatus('conselho-demandas-content',this,'Aberta')">Aberta</div>
+          <div class="sni dem-stab"    onclick="demTabStatus('conselho-demandas-content',this,'Concluída')">Concluída</div>
+          <div class="sni dem-stab"    onclick="demTabStatus('conselho-demandas-content',this,'Em Análise')">Em análise</div>
+          <div class="sni dem-stab"    onclick="demTabStatus('conselho-demandas-content',this,'Cancelada')">Cancelada</div>
+          <div class="sni dem-stab"    onclick="demTabStatus('conselho-demandas-content',this,'')">Todos</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           <select id="conselho-demandas-content-fcat" onchange="demFiltrar('conselho-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
             <option value="">Todas as categorias</option>
             <option>Conselho</option><option>Agendamentos</option><option>Manutenção</option><option>Limpeza e Organização</option><option>Logística</option><option>Financeiro</option><option>Comunicação e Divulgação</option><option>Secretaria</option><option>Cadastro</option><option>Oração e Aconselhamento</option><option>Visitação</option><option>Apoio ao Culto</option><option>Ensino (EBT)</option><option>Ação Social / Hebron</option><option>Administrativo Geral</option>
@@ -1710,6 +1713,7 @@
             <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
           </select>
           <input id="conselho-demandas-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('conselho-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+          <span class="cact" onclick="demFiltrar('conselho-demandas-content')" style="font-size:11px">↻ Atualizar</span>
         </div>
       </div>
       <div class="card" style="margin-top:0">
@@ -1728,17 +1732,21 @@
           <div class="sni-sep"></div>
           <div class="sni on">Conselho e Governança</div>
         </div>
-        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('conselho-demandas-cons-content',{area:'Conselho'})">↻ Atualizar</span></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-          <select id="conselho-demandas-cons-content-fstatus" onchange="demFiltrar('conselho-demandas-cons-content',{area:'Conselho'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
-            <option value="">Todos os status</option>
-            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
-          </select>
+        <input type="hidden" id="conselho-demandas-cons-content-fstatus" value="Aberta">
+        <div id="cd-st2" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">
+          <div class="sni on dem-stab" onclick="demTabStatus('conselho-demandas-cons-content',this,'Aberta',{area:'Conselho'})">Aberta</div>
+          <div class="sni dem-stab"    onclick="demTabStatus('conselho-demandas-cons-content',this,'Concluída',{area:'Conselho'})">Concluída</div>
+          <div class="sni dem-stab"    onclick="demTabStatus('conselho-demandas-cons-content',this,'Em Análise',{area:'Conselho'})">Em análise</div>
+          <div class="sni dem-stab"    onclick="demTabStatus('conselho-demandas-cons-content',this,'Cancelada',{area:'Conselho'})">Cancelada</div>
+          <div class="sni dem-stab"    onclick="demTabStatus('conselho-demandas-cons-content',this,'',{area:'Conselho'})">Todos</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           <select id="conselho-demandas-cons-content-fprio" onchange="demFiltrar('conselho-demandas-cons-content',{area:'Conselho'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
             <option value="">Todas as prioridades</option>
             <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
           </select>
           <input id="conselho-demandas-cons-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('conselho-demandas-cons-content',{area:'Conselho'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+          <span class="cact" onclick="demFiltrar('conselho-demandas-cons-content',{area:'Conselho'})" style="font-size:11px">↻ Atualizar</span>
         </div>
       </div>
       <div class="card" style="margin-top:0">
