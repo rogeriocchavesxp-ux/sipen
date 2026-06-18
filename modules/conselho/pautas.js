@@ -863,7 +863,7 @@
         ${p.arquivo_path ? `<div style="margin-top:10px"><button onclick="pautasAbrirAnexo('${_ea(p.arquivo_path)}')" style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--blue);background:rgba(74,156,245,.08);border:1px solid rgba(74,156,245,.25);border-radius:6px;padding:5px 10px;cursor:pointer">📎 ${_eh(p.arquivo_nome || "Ver documento")}</button></div>` : ""}
 
         <!-- Tramitação: destino -->
-        ${p.reuniao_destino_id ? `<div style="margin-top:8px;padding:6px 10px;background:rgba(74,156,245,.08);border:1px solid rgba(74,156,245,.2);border-radius:6px;font-size:11.5px;color:var(--blue)">Adiada para: <strong>${_labelReuniao(p.reuniao_destino_id) || "outra reunião"}</strong></div>` : ""}
+        ${p.reuniao_destino_id ? `<div style="margin-top:8px;padding:6px 10px;background:rgba(74,156,245,.08);border:1px solid rgba(74,156,245,.2);border-radius:6px;font-size:11.5px;color:var(--blue)">Adiada para: <strong>${_labelReuniao(p.reuniao_destino_id) || "outra reunião"}</strong>${p.motivo_adiamento ? ` <span style="color:var(--tx3);font-weight:400">· ${_eh(p.motivo_adiamento)}</span>` : ""}</div>` : ""}
         <!-- Tramitação: origem -->
         ${p.pauta_origem_id ? `<div style="margin-top:8px;padding:6px 10px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:6px;font-size:11.5px;color:var(--amber)">Transferida de: <strong>${_labelReuniao(p.reuniao_origem_id) || "reunião anterior"}</strong></div>` : ""}
         <!-- Ações de status -->
@@ -938,7 +938,8 @@
           <div style="font-size:10.5px;font-weight:700;color:var(--amber);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px">Tramitação</div>
           ${p.reuniao_origem_id ? `<div style="font-size:12px;color:var(--tx3);margin-bottom:3px">Origem: <span style="color:var(--amber);font-weight:500">${_labelReuniao(p.reuniao_origem_id) || "reunião anterior"}</span></div>` : ""}
           <div style="font-size:12px;color:var(--tx3);margin-bottom:3px">Esta reunião: <span style="color:var(--tx2);font-weight:500">${_eh(_reuniaoAtual?.titulo || "—")}</span></div>
-          ${p.reuniao_destino_id ? `<div style="font-size:12px;color:var(--tx3)">Destino: <span style="color:var(--blue);font-weight:500">${_labelReuniao(p.reuniao_destino_id) || "outra reunião"}</span></div>` : ""}
+          ${p.reuniao_destino_id ? `<div style="font-size:12px;color:var(--tx3);margin-bottom:3px">Destino: <span style="color:var(--blue);font-weight:500">${_labelReuniao(p.reuniao_destino_id) || "outra reunião"}</span></div>` : ""}
+          ${p.motivo_adiamento ? `<div style="font-size:12px;color:var(--tx3)">Motivo: <span style="color:var(--tx2)">${_eh(p.motivo_adiamento)}</span></div>` : ""}
         </div>` : ""}
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;justify-content:flex-end">
           ${podeEd ? `<button class="tbt" onclick="pautasEditarPauta('${_ea(p.id)}');pautasFecharModal()">Editar</button>` : ""}
@@ -1272,12 +1273,28 @@
           <button onclick="pautasFecharModal()" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button>
         </div>
         <div style="font-size:12px;color:var(--tx3);margin-bottom:16px;padding:8px 10px;background:var(--bg3,#2b2f33);border-radius:6px">${_eh(p.titulo)}</div>
-        <div>
-          <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:6px">Selecione a reunião destino *</label>
-          <select id="sel-reuniao-destino" style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px">
-            <option value="">— Selecionar reunião —</option>
-            ${optsHtml}
-          </select>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div>
+            <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:6px">Reunião destino *</label>
+            <select id="sel-reuniao-destino" style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px">
+              <option value="">— Selecionar reunião —</option>
+              ${optsHtml}
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:6px">Motivo do adiamento *</label>
+            <select id="sel-motivo-adiamento" onchange="var t=document.getElementById('txt-motivo-outro');if(t)t.style.display=this.value==='Outro'?'block':'none'" style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px">
+              <option value="">— Selecionar motivo —</option>
+              <option>Falta de quórum</option>
+              <option>Documentação incompleta</option>
+              <option>Necessidade de mais informações</option>
+              <option>Assunto não apreciado por falta de tempo</option>
+              <option>Aguardando parecer ou estudo</option>
+              <option>Decisão adiada por consenso do Conselho</option>
+              <option>Outro</option>
+            </select>
+            <textarea id="txt-motivo-outro" rows="2" placeholder="Descreva o motivo..." style="display:none;margin-top:8px;width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px;resize:vertical;box-sizing:border-box"></textarea>
+          </div>
         </div>
         <div style="margin-top:12px;padding:10px;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);border-radius:7px;font-size:11.5px;color:var(--amber);line-height:1.5">
           A pauta permanecerá registrada nesta reunião com status <strong>Adiado</strong>. Uma cópia será incluída na reunião selecionada com status <strong>Pendente</strong>.
@@ -1296,6 +1313,11 @@
     const reuniaoDestinoId = document.getElementById("sel-reuniao-destino")?.value;
     if (!reuniaoDestinoId) { _toast("Selecione a reunião", ""); return; }
 
+    const motivoSel = document.getElementById("sel-motivo-adiamento")?.value || "";
+    const motivoTxt = (document.getElementById("txt-motivo-outro")?.value || "").trim();
+    const motivo = motivoSel === "Outro" ? (motivoTxt || "Outro") : motivoSel;
+    if (!motivo) { _toast("Selecione o motivo do adiamento", ""); return; }
+
     const p = (_pautas || []).find(x => x.id === pautaId);
     if (!p) { _toast("Pauta não encontrada", ""); return; }
 
@@ -1308,10 +1330,11 @@
       await _fetchJson(`${_api()}/rest/v1/conselho_pautas?id=eq.${encodeURIComponent(pautaId)}`, {
         method: "PATCH",
         headers: _headers({ "Content-Type": "application/json", Prefer: "return=minimal" }),
-        body: JSON.stringify({ status: "ADIADO", reuniao_destino_id: reuniaoDestinoId }),
+        body: JSON.stringify({ status: "ADIADO", reuniao_destino_id: reuniaoDestinoId, motivo_adiamento: motivo }),
       });
 
       await _registrarHistorico(pautaId, "status", p.status, "ADIADO");
+      await _registrarHistorico(pautaId, "motivo_adiamento", null, motivo);
       await _registrarHistorico(pautaId, "reuniao_destino_id", null, rDest?.titulo || reuniaoDestinoId);
 
       let nextOrdem = 0;
