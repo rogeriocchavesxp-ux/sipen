@@ -1409,9 +1409,11 @@
     const _nfSingle = m.querySelector("#dem-f-nf-single-section");
     if (_nfSingle) _nfSingle.style.display = "";
     const _vEl = m.querySelector("#dem-f-valor");
-    if (_vEl) { _vEl.readOnly = false; _vEl.style.background = ""; _vEl.style.color = ""; }
+    if (_vEl) { _vEl.readOnly = false; _vEl.value = ""; _vEl.style.background = ""; _vEl.style.color = ""; }
     const _vLbl = m.querySelector("#dem-f-valor-label");
     if (_vLbl) _vLbl.textContent = "Valor *";
+    const _tRow = m.querySelector("#dem-f-boleto-total-row");
+    if (_tRow) _tRow.style.display = "none";
     m.style.display = "flex";
   };
 
@@ -1457,32 +1459,19 @@
   }
 
   function _toggleFormaPagamento() {
-    const forma        = document.getElementById("dem-f-forma-pag")?.value;
-    const pixSec       = document.getElementById("dem-f-pix-section");
-    const bankSec      = document.getElementById("dem-f-bank-section");
-    const boletoSec    = document.getElementById("dem-f-boleto-section");
-    const notasLbl     = document.getElementById("dem-f-notas-label");
-    const totalRow     = document.getElementById("dem-f-boleto-total-row");
-    const valorEl      = document.getElementById("dem-f-valor");
-    const valorLbl     = document.getElementById("dem-f-valor-label");
+    const forma     = document.getElementById("dem-f-forma-pag")?.value;
+    const pixSec    = document.getElementById("dem-f-pix-section");
+    const bankSec   = document.getElementById("dem-f-bank-section");
+    const boletoSec = document.getElementById("dem-f-boleto-section");
+    const notasLbl  = document.getElementById("dem-f-notas-label");
 
-    if (pixSec)  pixSec.style.display  = forma === "PIX"                    ? ""     : "none";
-    if (bankSec) bankSec.style.display = forma === "Transferência Bancária" ? "grid" : "none";
-
-    const isBoleto = forma === "Boleto";
-    if (boletoSec) boletoSec.style.display = isBoleto ? "" : "none";
-    if (totalRow)  totalRow.style.display  = isBoleto ? "flex" : "none";
-    if (notasLbl)  notasLbl.textContent    = isBoleto ? "Notas Fiscais *" : "Notas Fiscais / Comprovantes (opcional)";
-
-    if (valorEl) {
-      valorEl.readOnly = isBoleto;
-      valorEl.style.background = isBoleto ? "var(--bg3,#2b2f33)" : "";
-      valorEl.style.color      = isBoleto ? "var(--tx3)" : "";
-      if (isBoleto) valorEl.value = "";
-    }
-    if (valorLbl) valorLbl.textContent = isBoleto ? "Valor total (automático)" : "Valor *";
+    if (pixSec)    pixSec.style.display    = forma === "PIX"                    ? ""     : "none";
+    if (bankSec)   bankSec.style.display   = forma === "Transferência Bancária" ? "grid" : "none";
+    if (boletoSec) boletoSec.style.display = forma === "Boleto"                 ? ""     : "none";
+    if (notasLbl)  notasLbl.textContent    = forma === "Boleto" ? "Notas Fiscais *" : "Notas Fiscais / Comprovantes (opcional)";
 
     if (_boletoNotas.length === 0) window.demBoletoAdicionarNota();
+    else window.demBoletoAtualizarSoma();
   }
 
   window.demOnSubChange      = _toggleFinanceiroSection;
@@ -1508,7 +1497,7 @@
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
     <div>
       <label style="font-size:10px;font-weight:600;color:var(--tx3);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em">Valor da nota *</label>
-      <input type="number" step="0.01" min="0" placeholder="0,00" id="dem-fn-val-${id}" oninput="demBoletoAtualizarSoma()" style="${si}">
+      <input type="text" inputmode="decimal" placeholder="0,00" id="dem-fn-val-${id}" oninput="demBoletoAtualizarSoma()" style="${si}">
     </div>
     <div>
       <label style="font-size:10px;font-weight:600;color:var(--tx3);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em">Observação</label>
@@ -1532,6 +1521,7 @@
     const container = document.getElementById("dem-f-notas-container");
     if (container) container.insertAdjacentHTML("beforeend", _boletoNotaHTML(id));
     _boletoSyncRemoveBtns();
+    window.demBoletoAtualizarSoma();
   };
 
   window.demBoletoRemoverNota = function(id) {
@@ -1557,15 +1547,44 @@
     if (label) label.textContent = `✅ ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)`;
   };
 
+  function _parseNotaVal(id) {
+    let v = (document.getElementById(`dem-fn-val-${id}`)?.value || "").trim();
+    if (v.includes(",")) v = v.replace(/\./g, "").replace(",", ".");
+    const n = parseFloat(v);
+    return isNaN(n) || n < 0 ? 0 : n;
+  }
+
   window.demBoletoAtualizarSoma = function() {
-    const soma = _boletoNotas.reduce((acc, n) => {
-      const val = parseFloat(document.getElementById(`dem-fn-val-${n.id}`)?.value || "0");
-      return acc + (isNaN(val) ? 0 : val);
-    }, 0);
-    const total = document.getElementById("dem-f-boleto-total");
-    if (total) total.textContent = `R$ ${soma.toLocaleString("pt-BR", { minimumFractionDigits:2, maximumFractionDigits:2 })}`;
-    const valorEl = document.getElementById("dem-f-valor");
-    if (valorEl && valorEl.readOnly) valorEl.value = soma > 0 ? soma.toFixed(2) : "";
+    const isBoleto = document.getElementById("dem-f-forma-pag")?.value === "Boleto";
+    let soma = 0;
+    let temValor = false;
+    _boletoNotas.forEach(n => {
+      const v = _parseNotaVal(n.id);
+      if (v > 0) { soma += v; temValor = true; }
+    });
+
+    const fmtBR = v => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits:2, maximumFractionDigits:2 })}`;
+    const totalEl  = document.getElementById("dem-f-boleto-total");
+    const totalRow = document.getElementById("dem-f-boleto-total-row");
+    const valorEl  = document.getElementById("dem-f-valor");
+    const valorLbl = document.getElementById("dem-f-valor-label");
+
+    if (totalEl)  totalEl.textContent     = fmtBR(soma);
+    if (totalRow) totalRow.style.display  = (temValor || isBoleto) ? "flex" : "none";
+
+    if (valorEl) {
+      if (temValor) {
+        valorEl.readOnly         = true;
+        valorEl.value            = soma.toFixed(2);
+        valorEl.style.background = "var(--bg3,#2b2f33)";
+        valorEl.style.color      = "var(--tx3)";
+      } else if (!isBoleto) {
+        valorEl.readOnly         = false;
+        valorEl.style.background = "";
+        valorEl.style.color      = "";
+      }
+    }
+    if (valorLbl) valorLbl.textContent = temValor ? "Valor total (automático)" : (isBoleto ? "Valor total (automático)" : "Valor *");
   };
 
   window.demOnFileSelected = function(input, labelId) {
@@ -1695,8 +1714,8 @@
           }
           const nErr = _validarArquivo(nota.file);
           if (nErr) { if (typeof T === "function") T("Arquivo inválido", nErr); return; }
-          const nVal = parseFloat(document.getElementById(`dem-fn-val-${nota.id}`)?.value || "0");
-          if (!nVal || isNaN(nVal) || nVal <= 0) {
+          const nVal = _parseNotaVal(nota.id);
+          if (!nVal || nVal <= 0) {
             if (typeof T === "function") T("Campo obrigatório", "Informe o valor de cada nota fiscal");
             return;
           }
@@ -1797,7 +1816,7 @@
         let somaNotas = 0;
         for (const nota of _boletoNotas) {
           if (!nota.file) continue;
-          const nVal = parseFloat(document.getElementById(`dem-fn-val-${nota.id}`)?.value || "0");
+          const nVal = _parseNotaVal(nota.id);
           const nObs = document.getElementById(`dem-fn-obs-${nota.id}`)?.value?.trim() || "";
           somaNotas += nVal;
           try {
