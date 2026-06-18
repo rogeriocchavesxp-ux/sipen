@@ -744,6 +744,10 @@
         fd.conta     ? ["Conta",       fd.conta]     : null,
         fmtAnexo(fd.boleto,      "Boleto"),
         fmtAnexo(fd.nota_fiscal, "Nota Fiscal"),
+        ...(Array.isArray(fd.notas_fiscais) ? fd.notas_fiscais.map((nf, i) => {
+          const lbl = `Nota Fiscal ${i + 1}${nf.obs ? " — " + nf.obs : ""}${nf.valor ? " · R$ " + parseFloat(nf.valor).toLocaleString("pt-BR", { minimumFractionDigits:2, maximumFractionDigits:2 }) : ""}`;
+          return fmtAnexo(nf, lbl);
+        }) : []),
         fd.obs       ? ["Observações", fd.obs]       : null,
       ].filter(Boolean);
     } else if (sub === "Reembolso") {
@@ -1395,6 +1399,19 @@
       const el = m.querySelector("#" + id);
       if (el) el.textContent = _FIN_UPLOAD_PLACEHOLDER;
     });
+    /* Reset boleto notas state */
+    _boletoNotas = [];
+    _boletoNotaCtr = 0;
+    const _nc = m.querySelector("#dem-f-notas-container");
+    if (_nc) _nc.innerHTML = "";
+    const _bt = m.querySelector("#dem-f-boleto-total");
+    if (_bt) _bt.textContent = "R$ 0,00";
+    const _nfSingle = m.querySelector("#dem-f-nf-single-section");
+    if (_nfSingle) _nfSingle.style.display = "";
+    const _vEl = m.querySelector("#dem-f-valor");
+    if (_vEl) { _vEl.readOnly = false; _vEl.style.background = ""; _vEl.style.color = ""; }
+    const _vLbl = m.querySelector("#dem-f-valor-label");
+    if (_vLbl) _vLbl.textContent = "Valor *";
     m.style.display = "flex";
   };
 
@@ -1444,9 +1461,26 @@
     const pixSec    = document.getElementById("dem-f-pix-section");
     const bankSec   = document.getElementById("dem-f-bank-section");
     const boletoSec = document.getElementById("dem-f-boleto-section");
-    if (pixSec)    pixSec.style.display    = forma === "PIX"                    ? ""     : "none";
-    if (bankSec)   bankSec.style.display   = forma === "Transferência Bancária" ? "grid" : "none";
-    if (boletoSec) boletoSec.style.display = forma === "Boleto"                 ? ""     : "none";
+    const nfSingle  = document.getElementById("dem-f-nf-single-section");
+    const valorEl   = document.getElementById("dem-f-valor");
+    const valorLbl  = document.getElementById("dem-f-valor-label");
+
+    if (pixSec)   pixSec.style.display   = forma === "PIX"                    ? ""     : "none";
+    if (bankSec)  bankSec.style.display  = forma === "Transferência Bancária" ? "grid" : "none";
+
+    const isBoleto = forma === "Boleto";
+    if (boletoSec) boletoSec.style.display = isBoleto ? "flex" : "none";
+    if (nfSingle)  nfSingle.style.display  = isBoleto ? "none" : "";
+
+    if (valorEl) {
+      valorEl.readOnly = isBoleto;
+      valorEl.style.background = isBoleto ? "var(--bg3,#2b2f33)" : "";
+      valorEl.style.color      = isBoleto ? "var(--tx3)" : "";
+      if (isBoleto) valorEl.value = "";
+    }
+    if (valorLbl) valorLbl.textContent = isBoleto ? "Valor total (automático)" : "Valor *";
+
+    if (isBoleto && _boletoNotas.length === 0) window.demBoletoAdicionarNota();
   }
 
   window.demOnSubChange      = _toggleFinanceiroSection;
@@ -1455,6 +1489,82 @@
   /* ── Upload de anexos financeiros ───────────────────── */
 
   const _FIN_UPLOAD_PLACEHOLDER = "Escolher arquivo · PDF, JPG ou PNG · máx. 10 MB";
+
+  /* ── Boleto: múltiplas notas fiscais ────────────────── */
+
+  let _boletoNotas   = [];
+  let _boletoNotaCtr = 0;
+
+  function _boletoNotaHTML(id) {
+    const si = "width:100%;padding:7px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box";
+    return `<div id="dem-fn-${id}" style="border:1px solid var(--bd2);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px">
+  <div style="display:flex;gap:8px;align-items:center">
+    <div onclick="document.getElementById('dem-fn-file-${id}').click()" style="flex:1;display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:6px;border:1.5px dashed var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx3);font-size:12.5px;cursor:pointer;min-width:0">📎 <span id="dem-fn-fname-${id}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">Escolher NF / comprovante</span></div>
+    <input id="dem-fn-file-${id}" type="file" accept=".pdf,.jpg,.jpeg,.png" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden" onchange="demBoletoNFSelected('${id}',this)">
+    <button id="dem-fn-rm-${id}" type="button" onclick="demBoletoRemoverNota('${id}')" style="display:none;background:none;border:none;color:var(--rose);cursor:pointer;font-size:18px;padding:4px 6px;line-height:1;flex-shrink:0">✕</button>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div>
+      <label style="font-size:10px;font-weight:600;color:var(--tx3);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em">Valor da nota *</label>
+      <input type="number" step="0.01" min="0" placeholder="0,00" id="dem-fn-val-${id}" oninput="demBoletoAtualizarSoma()" style="${si}">
+    </div>
+    <div>
+      <label style="font-size:10px;font-weight:600;color:var(--tx3);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em">Observação</label>
+      <input type="text" placeholder="Ex: NF 1234" id="dem-fn-obs-${id}" style="${si}">
+    </div>
+  </div>
+</div>`;
+  }
+
+  function _boletoSyncRemoveBtns() {
+    const can = _boletoNotas.length > 1;
+    _boletoNotas.forEach(n => {
+      const btn = document.getElementById(`dem-fn-rm-${n.id}`);
+      if (btn) btn.style.display = can ? "" : "none";
+    });
+  }
+
+  window.demBoletoAdicionarNota = function() {
+    const id = ++_boletoNotaCtr;
+    _boletoNotas.push({ id, file: null, fileName: null });
+    const container = document.getElementById("dem-f-notas-container");
+    if (container) container.insertAdjacentHTML("beforeend", _boletoNotaHTML(id));
+    _boletoSyncRemoveBtns();
+  };
+
+  window.demBoletoRemoverNota = function(id) {
+    _boletoNotas = _boletoNotas.filter(n => n.id !== id);
+    document.getElementById(`dem-fn-${id}`)?.remove();
+    demBoletoAtualizarSoma();
+    _boletoSyncRemoveBtns();
+  };
+
+  window.demBoletoNFSelected = function(id, input) {
+    const file  = input.files?.[0];
+    const label = document.getElementById(`dem-fn-fname-${id}`);
+    const nota  = _boletoNotas.find(n => n.id === id);
+    if (!file) { if (label) label.textContent = "Escolher NF / comprovante"; return; }
+    const err = _validarArquivo(file);
+    if (err) {
+      input.value = "";
+      if (label) label.textContent = "Escolher NF / comprovante";
+      if (typeof T === "function") T("Arquivo inválido", err);
+      return;
+    }
+    if (nota) { nota.file = file; nota.fileName = file.name; }
+    if (label) label.textContent = `✅ ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)`;
+  };
+
+  window.demBoletoAtualizarSoma = function() {
+    const soma = _boletoNotas.reduce((acc, n) => {
+      const val = parseFloat(document.getElementById(`dem-fn-val-${n.id}`)?.value || "0");
+      return acc + (isNaN(val) ? 0 : val);
+    }, 0);
+    const total = document.getElementById("dem-f-boleto-total");
+    if (total) total.textContent = `R$ ${soma.toLocaleString("pt-BR", { minimumFractionDigits:2, maximumFractionDigits:2 })}`;
+    const valorEl = document.getElementById("dem-f-valor");
+    if (valorEl && valorEl.readOnly) valorEl.value = soma > 0 ? soma.toFixed(2) : "";
+  };
 
   window.demOnFileSelected = function(input, labelId) {
     const file  = input.files?.[0];
@@ -1547,7 +1657,7 @@
       const banco     = document.getElementById("dem-f-banco")?.value?.trim();
       const agencia   = document.getElementById("dem-f-agencia")?.value?.trim();
       const conta     = document.getElementById("dem-f-conta")?.value?.trim();
-      if (!valor || isNaN(valor) || valor <= 0) {
+      if (forma !== "Boleto" && (!valor || isNaN(valor) || valor <= 0)) {
         if (typeof T === "function") T("Campo obrigatório", "Informe o valor da solicitação");
         return;
       }
@@ -1571,6 +1681,24 @@
         }
         const bErr = _validarArquivo(bFile);
         if (bErr) { if (typeof T === "function") T("Arquivo inválido", bErr); return; }
+        /* Valida notas fiscais */
+        if (!_boletoNotas.length) {
+          if (typeof T === "function") T("Nota fiscal obrigatória", "Adicione pelo menos uma nota fiscal");
+          return;
+        }
+        for (const nota of _boletoNotas) {
+          if (!nota.file) {
+            if (typeof T === "function") T("Arquivo obrigatório", "Adicione o arquivo de cada nota fiscal");
+            return;
+          }
+          const nErr = _validarArquivo(nota.file);
+          if (nErr) { if (typeof T === "function") T("Arquivo inválido", nErr); return; }
+          const nVal = parseFloat(document.getElementById(`dem-fn-val-${nota.id}`)?.value || "0");
+          if (!nVal || isNaN(nVal) || nVal <= 0) {
+            if (typeof T === "function") T("Campo obrigatório", "Informe o valor de cada nota fiscal");
+            return;
+          }
+        }
       }
       if (forma === "Transferência Bancária" && (!banco || !agencia || !conta)) {
         if (typeof T === "function") T("Campo obrigatório", "Informe banco, agência e conta para transferência");
@@ -1643,19 +1771,45 @@
     if (financial_data) {
       const tempKey    = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
       const uploadErrs = [];
+      const _forma     = financial_data.forma_pagamento;
 
-      const nfFile = document.getElementById("dem-f-upload-nf")?.files?.[0];
-      if (nfFile) {
-        try { financial_data.nota_fiscal = await _uploadAnexoFinanceiro(nfFile, `tmp_${tempKey}`, "notas"); }
-        catch(e) { uploadErrs.push(`Nota fiscal: ${e.message}`); }
+      if (_forma === "Boleto") {
+        /* Upload do boleto */
+        const boletoFile = document.getElementById("dem-f-upload-boleto")?.files?.[0];
+        if (boletoFile) {
+          try { financial_data.boleto = await _uploadAnexoFinanceiro(boletoFile, `tmp_${tempKey}`, "boletos"); }
+          catch(e) { uploadErrs.push(`Boleto: ${e.message}`); }
+        }
+        /* Upload de cada nota fiscal com seu valor e observação */
+        financial_data.notas_fiscais = [];
+        let somaNotas = 0;
+        for (const nota of _boletoNotas) {
+          const nVal = parseFloat(document.getElementById(`dem-fn-val-${nota.id}`)?.value || "0");
+          const nObs = document.getElementById(`dem-fn-obs-${nota.id}`)?.value?.trim() || "";
+          somaNotas += nVal;
+          if (nota.file) {
+            try {
+              const meta = await _uploadAnexoFinanceiro(nota.file, `tmp_${tempKey}`, "notas");
+              financial_data.notas_fiscais.push({ ...meta, valor: nVal, obs: nObs });
+            } catch(e) { uploadErrs.push(`Nota fiscal: ${e.message}`); }
+          }
+        }
+        financial_data.valor = parseFloat(somaNotas.toFixed(2));
+      } else {
+        /* Forma ≠ Boleto: NF avulsa opcional */
+        const nfFile = document.getElementById("dem-f-upload-nf")?.files?.[0];
+        if (nfFile) {
+          try { financial_data.nota_fiscal = await _uploadAnexoFinanceiro(nfFile, `tmp_${tempKey}`, "notas"); }
+          catch(e) { uploadErrs.push(`Nota fiscal: ${e.message}`); }
+        }
+        const boletoFile = document.getElementById("dem-f-upload-boleto")?.files?.[0];
+        if (boletoFile) {
+          try { financial_data.boleto = await _uploadAnexoFinanceiro(boletoFile, `tmp_${tempKey}`, "boletos"); }
+          catch(e) { uploadErrs.push(`Boleto: ${e.message}`); }
+        }
       }
 
-      const boletoFile = document.getElementById("dem-f-upload-boleto")?.files?.[0];
-      if (boletoFile) {
-        try { financial_data.boleto = await _uploadAnexoFinanceiro(boletoFile, `tmp_${tempKey}`, "boletos"); }
-        catch(e) { uploadErrs.push(`Boleto: ${e.message}`); }
-      }
-
+      /* Reembolso */
       const reimbNfFile = document.getElementById("dem-f-upload-reimb-nf")?.files?.[0];
       if (reimbNfFile) {
         try { financial_data.nota_fiscal = await _uploadAnexoFinanceiro(reimbNfFile, `tmp_${tempKey}`, "notas"); }
