@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadastro — SIPEN</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/sipen/icons/icon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gr:    #30d158;
+    --blue:  #4a9cf5;
+    --rose:  #e05555;
+    --amber: #d09040;
+    --violet:#8b5cf6;
+    --tx1:   #1a1d21;
+    --tx2:   #4a5260;
+    --tx3:   #8a919e;
+    --bg:    #f4f6f9;
+    --card:  #ffffff;
+    --bd:    #e2e6ec;
+    --inp:   #f8fafc;
+    --inpbd: #cdd3da;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --tx1: #e8eaed; --tx2: #9aa0ac; --tx3: #5c6370;
+      --bg:  #111114; --card: #1c1c1f; --bd: #2c3040;
+      --inp: #242428; --inpbd: #3a4050;
+    }
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Source Sans 3', system-ui, sans-serif; background: var(--bg); color: var(--tx1); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+  .wrap { max-width: 580px; margin: 0 auto; padding: 24px 16px 80px; }
+
+  /* Header */
+  .page-header { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 1px solid var(--bd); }
+  .page-logo { width: 32px; height: 32px; object-fit: contain; }
+  .page-brand { font-size: 12px; font-weight: 700; color: var(--tx3); text-transform: uppercase; letter-spacing: .1em; }
+
+  /* Stepper */
+  .steps { display: flex; align-items: center; gap: 0; margin-bottom: 28px; }
+  .step { display: flex; align-items: center; gap: 8px; flex: 1; }
+  .step:last-child { flex: 0; }
+  .step-num {
+    width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+    background: var(--bd); color: var(--tx3); transition: background .2s, color .2s;
+  }
+  .step.active .step-num  { background: var(--gr); color: #fff; }
+  .step.done .step-num    { background: var(--gr); color: #fff; }
+  .step-label { font-size: 12px; font-weight: 600; color: var(--tx3); white-space: nowrap; }
+  .step.active .step-label { color: var(--tx1); }
+  .step.done .step-label  { color: var(--gr); }
+  .step-line { flex: 1; height: 1px; background: var(--bd); margin: 0 8px; }
+  .step.done + .step-line, .step.active + .step-line { background: var(--gr); }
+
+  /* Cards */
+  .card { background: var(--card); border: 1px solid var(--bd); border-radius: 14px; padding: 22px 24px; margin-bottom: 16px; }
+  .card-title { font-size: 13px; font-weight: 700; color: var(--tx2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--bd); }
+
+  /* Campos */
+  .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label { font-size: 10px; font-weight: 700; color: var(--tx3); text-transform: uppercase; letter-spacing: .07em; }
+  .field input, .field select, .field textarea {
+    padding: 10px 12px; border-radius: 8px; border: 1px solid var(--inpbd);
+    background: var(--inp); color: var(--tx1); font-size: 13.5px; font-family: inherit;
+    outline: none; width: 100%; transition: border-color .15s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--gr); }
+  .field input:read-only { opacity: .6; cursor: not-allowed; }
+  .field textarea { resize: vertical; }
+  .req { color: var(--rose); margin-left: 2px; }
+  .hint { font-size: 11px; color: var(--tx3); margin-top: 3px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  @media (max-width: 420px) { .row2, .row3 { grid-template-columns: 1fr; } }
+
+  /* Toggle doc type */
+  .doc-toggle { display: flex; border: 1px solid var(--inpbd); border-radius: 8px; overflow: hidden; margin-bottom: 10px; }
+  .doc-toggle button {
+    flex: 1; padding: 8px; border: none; background: var(--inp); color: var(--tx2); font-family: inherit;
+    font-size: 12px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s;
+  }
+  .doc-toggle button.active { background: var(--gr); color: #fff; }
+
+  /* Planos */
+  .planos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 420px) { .planos { grid-template-columns: 1fr; } }
+  .plano-card {
+    border: 2px solid var(--bd); border-radius: 10px; padding: 14px 14px 12px;
+    cursor: pointer; transition: border-color .15s, background .15s; position: relative;
+  }
+  .plano-card:hover { border-color: var(--gr); background: rgba(48,209,88,.05); }
+  .plano-card.selected { border-color: var(--gr); background: rgba(48,209,88,.07); }
+  .plano-badge { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+  .plano-nome { font-size: 14px; font-weight: 700; color: var(--tx1); margin-bottom: 2px; }
+  .plano-preco { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+  .plano-preco span { font-size: 11px; font-weight: 400; color: var(--tx3); }
+  .plano-recursos { font-size: 11.5px; color: var(--tx2); line-height: 1.7; }
+  .plano-card .popular-tag {
+    position: absolute; top: -8px; right: 12px;
+    background: var(--amber); color: #fff; font-size: 9px; font-weight: 700;
+    padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .06em;
+  }
+
+  /* Pagamento */
+  .pagto-opts { display: flex; flex-direction: column; gap: 8px; }
+  .pagto-opt {
+    display: flex; align-items: center; gap: 10px;
+    border: 1px solid var(--inpbd); border-radius: 8px; padding: 11px 14px;
+    cursor: pointer; transition: border-color .15s;
+  }
+  .pagto-opt input[type="radio"] { accent-color: var(--gr); width: 15px; height: 15px; flex-shrink: 0; }
+  .pagto-opt:has(input:checked) { border-color: var(--gr); background: rgba(48,209,88,.05); }
+  .pagto-opt-label { font-size: 13px; font-weight: 600; color: var(--tx1); }
+  .pagto-opt-desc  { font-size: 11px; color: var(--tx3); }
+
+  /* Checkboxes de aceite */
+  .check-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; }
+  .check-row input[type="checkbox"] { accent-color: var(--gr); width: 15px; height: 15px; flex-shrink: 0; margin-top: 2px; }
+  .check-row label { font-size: 12.5px; color: var(--tx2); line-height: 1.5; cursor: pointer; }
+  .check-row a { color: var(--gr); text-decoration: none; }
+  .check-row a:hover { text-decoration: underline; }
+
+  /* Botões */
+  .btn-primary {
+    width: 100%; padding: 13px; border-radius: 9px; border: none;
+    background: var(--gr); color: #fff; font-size: 14px; font-weight: 700;
+    cursor: pointer; font-family: inherit; transition: opacity .15s;
+  }
+  .btn-primary:hover   { opacity: .88; }
+  .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-secondary {
+    width: 100%; padding: 11px; border-radius: 9px; border: 1px solid var(--bd);
+    background: transparent; color: var(--tx2); font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: inherit; margin-top: 10px; transition: background .15s;
+  }
+  .btn-secondary:hover { background: rgba(0,0,0,.04); }
+
+  /* Erro / Sucesso */
+  .msg-err {
+    display: none; padding: 10px 12px; border-radius: 7px; margin-bottom: 14px;
+    background: rgba(224,85,85,.08); border: 1px solid rgba(224,85,85,.2); color: var(--rose); font-size: 12.5px;
+  }
+  .msg-info {
+    padding: 10px 12px; border-radius: 7px; margin-bottom: 14px;
+    background: rgba(74,156,245,.08); border: 1px solid rgba(74,156,245,.2); color: var(--blue); font-size: 12.5px;
+  }
+
+  /* Success */
+  .success-card { background: var(--card); border: 1px solid rgba(48,209,88,.35); border-radius: 14px; padding: 40px 28px; text-align: center; }
+  .success-card .s-icon { font-size: 48px; margin-bottom: 14px; }
+  .success-card h2 { font-size: 20px; font-weight: 800; color: var(--gr); margin-bottom: 8px; }
+  .success-card p { font-size: 13.5px; color: var(--tx2); line-height: 1.6; }
+  .success-details { background: var(--inp); border-radius: 10px; padding: 16px; text-align: left; margin-top: 20px; }
+  .success-details dl { display: grid; grid-template-columns: 1fr 2fr; gap: 6px 12px; font-size: 12.5px; }
+  .success-details dt { color: var(--tx3); font-weight: 600; }
+  .success-details dd { color: var(--tx1); }
+
+  /* Footer */
+  .footer { margin-top: 32px; text-align: center; font-size: 11px; color: var(--tx3); }
+
+  /* Loading spinner */
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Link de login */
+  .login-link { text-align: center; font-size: 12.5px; color: var(--tx3); margin-top: 16px; }
+  .login-link a { color: var(--gr); font-weight: 600; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="page-header">
+    <img src="/icons/logo-sipen.png" class="page-logo" alt="SIPEN" onerror="this.style.display='none'">
+    <span class="page-brand">SIPEN — Sistema de Gestão Eclesiástica</span>
+  </div>
+
+  <!-- Stepper -->
+  <div class="steps" id="steps">
+    <div class="step active" id="step-ind-1">
+      <div class="step-num">1</div>
+      <div class="step-label">Conta</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="step-ind-2">
+      <div class="step-num">2</div>
+      <div class="step-label">Assinatura</div>
+    </div>
+  </div>
+
+  <!-- Conteúdo dinâmico -->
+  <div id="app"></div>
+
+  <div class="footer">Sistema SIPEN · Igreja Presbiteriana da Penha</div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   Configuração
+═══════════════════════════════════════════════════════════════════ */
+const SB_URL  = "https://erhwryfzpycahgsohhbh.supabase.co";
+const SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyaHdyeWZ6cHljYWhnc29oaGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg2MTUsImV4cCI6MjA5MTg0NDYxNX0.T0hp90Bmufj6a3oUPq1vYcLiGx9YjyMaZiE38S0e3_8";
+
+const PLANOS = {
+  gratuito: {
+    nome: "Gratuito", preco: 0, label: "Grátis",
+    color: "#30d158",
+    recursos: ["Até 50 membros", "1 usuário administrador", "Módulos essenciais"],
+  },
+  basico: {
+    nome: "Básico", preco: 79, label: "R$ 79/mês",
+    color: "#4a9cf5",
+    recursos: ["Até 200 membros", "3 usuários", "Todos os módulos"],
+  },
+  profissional: {
+    nome: "Profissional", preco: 149, label: "R$ 149/mês",
+    color: "#d09040", popular: true,
+    recursos: ["Até 500 membros", "10 usuários", "Módulos + suporte prioritário"],
+  },
+  institucional: {
+    nome: "Institucional", preco: 249, label: "R$ 249/mês",
+    color: "#8b5cf6",
+    recursos: ["Membros ilimitados", "Usuários ilimitados", "Suporte dedicado"],
+  },
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   Estado
+═══════════════════════════════════════════════════════════════════ */
+let STATE = {
+  step: 1,
+  etapa1: {},  // dados do cadastro gratuito
+  token: null, // access_token após signup
+  planoPreSelecionado: null,
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   Utilitários
+═══════════════════════════════════════════════════════════════════ */
+function eh(v) {
+  return String(v ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+}
+
+function fmtMoeda(v) {
+  return "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+}
+
+function g(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : "";
+}
+
+/* ─── Máscaras ─────────────────────────────────── */
+function maskPhone(v) {
+  v = v.replace(/\D/g, "").slice(0, 11);
+  if (v.length <= 2)  return v;
+  if (v.length <= 6)  return `(${v.slice(0,2)}) ${v.slice(2)}`;
+  if (v.length <= 10) return `(${v.slice(0,2)}) ${v.slice(2,6)}-${v.slice(6)}`;
+  return `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+}
+
+function maskCPF(v) {
+  v = v.replace(/\D/g, "").slice(0, 11);
+  if (v.length <= 3)  return v;
+  if (v.length <= 6)  return `${v.slice(0,3)}.${v.slice(3)}`;
+  if (v.length <= 9)  return `${v.slice(0,3)}.${v.slice(3,6)}.${v.slice(6)}`;
+  return `${v.slice(0,3)}.${v.slice(3,6)}.${v.slice(6,9)}-${v.slice(9)}`;
+}
+
+function maskCNPJ(v) {
+  v = v.replace(/\D/g, "").slice(0, 14);
+  if (v.length <= 2)  return v;
+  if (v.length <= 5)  return `${v.slice(0,2)}.${v.slice(2)}`;
+  if (v.length <= 8)  return `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5)}`;
+  if (v.length <= 12) return `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5,8)}/${v.slice(8)}`;
+  return `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5,8)}/${v.slice(8,12)}-${v.slice(12)}`;
+}
+
+function maskCEP(v) {
+  v = v.replace(/\D/g, "").slice(0, 8);
+  if (v.length <= 5) return v;
+  return `${v.slice(0,5)}-${v.slice(5)}`;
+}
+
+function applyMask(el, fn) {
+  el.addEventListener("input", () => { el.value = fn(el.value); });
+}
+
+/* ─── Validações ───────────────────────────────── */
+function validarEmail(e) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+}
+
+function validarCPF(cpf) {
+  cpf = cpf.replace(/\D/g, "");
+  if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+  let s = 0;
+  for (let i = 0; i < 9; i++) s += +cpf[i] * (10 - i);
+  let r = (s * 10) % 11; if (r >= 10) r = 0;
+  if (r !== +cpf[9]) return false;
+  s = 0;
+  for (let i = 0; i < 10; i++) s += +cpf[i] * (11 - i);
+  r = (s * 10) % 11; if (r >= 10) r = 0;
+  return r === +cpf[10];
+}
+
+function validarCNPJ(cnpj) {
+  cnpj = cnpj.replace(/\D/g, "");
+  if (cnpj.length !== 14 || /^(\d)\1{13}$/.test(cnpj)) return false;
+  const calc = (c, l) => {
+    let s = 0, p = l - 7;
+    for (let i = l; i >= 1; i--) { s += +c[l - i] * p--; if (p < 2) p = 9; }
+    const r = s % 11; return r < 2 ? 0 : 11 - r;
+  };
+  return calc(cnpj, 12) === +cnpj[12] && calc(cnpj, 13) === +cnpj[13];
+}
+
+function validarTelefone(t) {
+  return t.replace(/\D/g, "").length >= 10;
+}
+
+/* ─── API helpers ───────────────────────────────── */
+async function sbGet(path, token) {
+  const hdrs = { apikey: SB_ANON, Authorization: `Bearer ${token || SB_ANON}` };
+  const r = await fetch(`${SB_URL}/rest/v1/${path}`, { headers: hdrs });
+  if (!r.ok) throw new Error(await r.text().catch(() => `HTTP ${r.status}`));
+  return r.json();
+}
+
+async function sbPost(path, body, token) {
+  const hdrs = {
+    apikey: SB_ANON, Authorization: `Bearer ${token || SB_ANON}`,
+    "Content-Type": "application/json", Prefer: "return=representation",
+  };
+  const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
+    method: "POST", headers: hdrs, body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error(await r.text().catch(() => `HTTP ${r.status}`));
+  return r.json();
+}
+
+async function sbPatch(path, body, token) {
+  const hdrs = {
+    apikey: SB_ANON, Authorization: `Bearer ${token || SB_ANON}`,
+    "Content-Type": "application/json", Prefer: "return=representation",
+  };
+  const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
+    method: "PATCH", headers: hdrs, body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error(await r.text().catch(() => `HTTP ${r.status}`));
+  return r.json();
+}
+
+async function authSignUp(email, password, metadata) {
+  const r = await fetch(`${SB_URL}/auth/v1/signup`, {
+    method: "POST",
+    headers: { apikey: SB_ANON, "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password, data: metadata }),
+  });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.msg || data.error_description || data.message || "Erro no cadastro.");
+  return data;
+}
+
+async function buscarCEP(cep) {
+  cep = cep.replace(/\D/g, "");
+  if (cep.length !== 8) return null;
+  try {
+    const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const d = await r.json();
+    return d.erro ? null : d;
+  } catch { return null; }
+}
+
+/* ─── UI helpers ────────────────────────────────── */
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = "block";
+  el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function hideErr(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = "none";
+}
+
+function setBusy(btnId, busy, label) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = busy;
+  btn.innerHTML = busy
+    ? `<span class="spinner"></span>${label || "Aguarde..."}`
+    : (btn.dataset.label || btn.textContent);
+  if (!busy && btn.dataset.label) btn.textContent = btn.dataset.label;
+}
+
+function updateStepper(step) {
+  const s1 = document.getElementById("step-ind-1");
+  const s2 = document.getElementById("step-ind-2");
+  if (!s1 || !s2) return;
+  if (step === 1) {
+    s1.className = "step active"; s2.className = "step";
+  } else {
+    s1.className = "step done";  s2.className = "step active";
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ETAPA 1 — Cadastro gratuito
+═══════════════════════════════════════════════════════════════════ */
+function renderStep1() {
+  const planoParam = STATE.planoPreSelecionado;
+  const infoBanner = planoParam && planoParam !== "gratuito"
+    ? `<div class="msg-info" style="display:block">Criando conta para assinar o plano <strong>${PLANOS[planoParam]?.nome || planoParam}</strong>. Preencha seus dados e avance para o próximo passo.</div>`
+    : "";
+
+  document.getElementById("app").innerHTML = `
+    ${infoBanner}
+
+    <div class="card">
+      <div class="card-title">Dados da conta</div>
+
+      <div class="field">
+        <label>Nome<span class="req">*</span></label>
+        <input id="s1-nome" type="text" placeholder="Seu nome" autocomplete="given-name">
+      </div>
+
+      <div class="field">
+        <label>E-mail<span class="req">*</span></label>
+        <input id="s1-email" type="email" placeholder="seu@email.com" autocomplete="email">
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Senha<span class="req">*</span></label>
+          <input id="s1-senha" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+        </div>
+        <div class="field">
+          <label>Confirmar senha<span class="req">*</span></label>
+          <input id="s1-senha2" type="password" placeholder="Repita a senha" autocomplete="new-password">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Sua instituição</div>
+
+      <div class="field">
+        <label>Nome da igreja / instituição<span class="req">*</span></label>
+        <input id="s1-inst" type="text" placeholder="Ex: Igreja Presbiteriana da Penha">
+      </div>
+
+      <div class="field">
+        <label>Cidade / UF<span class="req">*</span></label>
+        <input id="s1-cidade" type="text" placeholder="Ex: São Paulo / SP">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Termos</div>
+
+      <div class="check-row">
+        <input type="checkbox" id="s1-termos">
+        <label for="s1-termos">Li e aceito os <a href="#" onclick="return false">Termos de Uso</a> e a <a href="#" onclick="return false">Política de Privacidade</a><span class="req">*</span></label>
+      </div>
+
+      <div id="s1-err" class="msg-err"></div>
+
+      <button class="btn-primary" id="btn-s1" data-label="Criar conta gratuita" onclick="submitStep1()">Criar conta gratuita</button>
+
+      ${planoParam && planoParam !== "gratuito"
+        ? `<div style="text-align:center;font-size:11.5px;color:var(--tx3);margin-top:10px">Após criar a conta, você completará os dados de assinatura.</div>`
+        : ""}
+    </div>
+
+    <div class="login-link">Já tem conta? <a href="/index.html">Fazer login</a></div>
+  `;
+}
+
+async function submitStep1() {
+  hideErr("s1-err");
+
+  const nome   = g("s1-nome");
+  const email  = g("s1-email");
+  const senha  = g("s1-senha");
+  const senha2 = g("s1-senha2");
+  const inst   = g("s1-inst");
+  const cidade = g("s1-cidade");
+  const termos = document.getElementById("s1-termos")?.checked;
+
+  if (!nome)             return showErr("s1-err", "Informe seu nome.");
+  if (!email || !validarEmail(email)) return showErr("s1-err", "Informe um e-mail válido.");
+  if (senha.length < 8)  return showErr("s1-err", "A senha deve ter pelo menos 8 caracteres.");
+  if (senha !== senha2)  return showErr("s1-err", "As senhas não coincidem.");
+  if (!inst)             return showErr("s1-err", "Informe o nome da sua instituição.");
+  if (!cidade)           return showErr("s1-err", "Informe a cidade e UF.");
+  if (!termos)           return showErr("s1-err", "Você precisa aceitar os Termos de Uso e a Política de Privacidade.");
+
+  setBusy("btn-s1", true, "Criando conta...");
+
+  try {
+    // Cria usuário no Supabase Auth
+    const authRes = await authSignUp(email, senha, { nome, nome_inst: inst });
+    STATE.token = authRes.access_token || null;
+    const userId = authRes.user?.id || null;
+
+    // Insere registro em sipen_clientes
+    await sbPost("sipen_clientes", {
+      user_id:         userId,
+      nome,
+      email,
+      nome_inst:       inst,
+      cidade_uf:       cidade,
+      aceite_termos:   true,
+      aceite_politica: true,
+      criado_em:       new Date().toISOString(),
+      atualizado_em:   new Date().toISOString(),
+    });
+
+    // Salva dados para etapa 2
+    STATE.etapa1 = { nome, email, inst, cidade };
+
+    // Se veio com plano pré-selecionado, avança para etapa 2
+    if (STATE.planoPreSelecionado && STATE.planoPreSelecionado !== "gratuito") {
+      goToStep2();
+    } else {
+      renderSuccessFree(nome, email);
+    }
+
+  } catch (e) {
+    let msg = e.message || "Erro ao criar conta.";
+    try { const j = JSON.parse(msg); msg = j.message || j.error_description || msg; } catch (_) {}
+    if (msg.toLowerCase().includes("already registered") || msg.toLowerCase().includes("já cadastrado") || msg.toLowerCase().includes("duplicate")) {
+      msg = "Este e-mail já está cadastrado. Acesse com sua conta existente ou recupere sua senha.";
+    }
+    showErr("s1-err", msg);
+    setBusy("btn-s1", false);
+  }
+}
+
+function renderSuccessFree(nome, email) {
+  document.getElementById("app").innerHTML = `
+    <div class="success-card">
+      <div class="s-icon">🎉</div>
+      <h2>Conta criada com sucesso!</h2>
+      <p>
+        Bem-vindo ao SIPEN, <strong>${eh(nome)}</strong>.<br>
+        Verifique seu e-mail <strong>${eh(email)}</strong> para confirmar o cadastro.
+      </p>
+      <div class="success-details">
+        <dl>
+          <dt>Plano</dt><dd>Gratuito</dd>
+          <dt>Status</dt><dd>Ativo</dd>
+        </dl>
+      </div>
+      <div style="margin-top:20px">
+        <a href="/index.html" class="btn-primary" style="display:inline-block;text-decoration:none;text-align:center;padding:12px 28px;border-radius:9px;font-size:14px;font-weight:700">
+          Entrar no sistema
+        </a>
+      </div>
+      <div style="margin-top:14px">
+        <button class="btn-secondary" onclick="goToStep2()" style="width:auto;padding:9px 20px;font-size:12.5px">
+          Fazer upgrade para plano pago
+        </button>
+      </div>
+    </div>
+  `;
+  updateStepper(1);
+  document.getElementById("steps").style.display = "none";
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ETAPA 2 — Dados de assinatura
+═══════════════════════════════════════════════════════════════════ */
+function goToStep2() {
+  STATE.step = 2;
+  updateStepper(2);
+  document.getElementById("steps").style.display = "flex";
+  renderStep2();
+}
+
+function renderStep2() {
+  const { nome, email, inst, cidade } = STATE.etapa1;
+  const planoInicial = STATE.planoPreSelecionado && STATE.planoPreSelecionado !== "gratuito"
+    ? STATE.planoPreSelecionado : "basico";
+
+  const planoCards = Object.entries(PLANOS)
+    .filter(([k]) => k !== "gratuito")
+    .map(([k, p]) => `
+      <div class="plano-card ${k === planoInicial ? 'selected' : ''}" id="plano-card-${k}" onclick="selecionarPlano('${k}')">
+        ${p.popular ? `<div class="popular-tag">Popular</div>` : ""}
+        <div class="plano-badge" style="color:${p.color}">${p.nome}</div>
+        <div class="plano-nome" style="color:${p.color}">${p.label}</div>
+        <div class="plano-recursos">${p.recursos.map(r => `• ${r}`).join("<br>")}</div>
+      </div>
+    `).join("");
+
+  document.getElementById("app").innerHTML = `
+    <!-- Dados pessoais -->
+    <div class="card">
+      <div class="card-title">Dados pessoais</div>
+
+      <div class="field">
+        <label>Nome completo<span class="req">*</span></label>
+        <input id="s2-nome" type="text" value="${eh(nome || "")}" placeholder="Nome completo conforme documento">
+      </div>
+
+      <div class="field">
+        <label>E-mail</label>
+        <input id="s2-email" type="email" value="${eh(email || "")}" readonly>
+        <span class="hint">E-mail da conta criada</span>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Telefone / WhatsApp<span class="req">*</span></label>
+          <input id="s2-tel" type="tel" placeholder="(11) 99999-9999">
+        </div>
+        <div class="field">
+          <label>Cargo / Função</label>
+          <input id="s2-cargo" type="text" placeholder="Ex: Pastor, Secretário...">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Documento<span class="req">*</span></label>
+        <div class="doc-toggle" id="doc-toggle">
+          <button class="active" id="btn-cpf"  onclick="setTipoDoc('cpf')">CPF (Pessoa Física)</button>
+          <button          id="btn-cnpj" onclick="setTipoDoc('cnpj')">CNPJ (Pessoa Jurídica)</button>
+        </div>
+        <input id="s2-doc" type="text" placeholder="000.000.000-00">
+      </div>
+    </div>
+
+    <!-- Dados da instituição -->
+    <div class="card">
+      <div class="card-title">Instituição</div>
+
+      <div class="field">
+        <label>Nome da igreja / instituição<span class="req">*</span></label>
+        <input id="s2-inst" type="text" value="${eh(inst || "")}" placeholder="Nome completo da instituição">
+      </div>
+
+      <div class="field">
+        <label>Cidade / UF</label>
+        <input id="s2-cidade" type="text" value="${eh(cidade || "")}" placeholder="Ex: São Paulo / SP">
+      </div>
+    </div>
+
+    <!-- Endereço de cobrança -->
+    <div class="card">
+      <div class="card-title">Endereço de cobrança</div>
+
+      <div class="row2">
+        <div class="field">
+          <label>CEP</label>
+          <input id="s2-cep" type="text" placeholder="00000-000" oninput="buscarCEPAuto()">
+        </div>
+        <div class="field" style="align-self:end">
+          <span id="cep-status" class="hint"></span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Logradouro</label>
+        <input id="s2-logr" type="text" placeholder="Rua, Avenida...">
+      </div>
+
+      <div class="row3">
+        <div class="field">
+          <label>Número</label>
+          <input id="s2-num" type="text" placeholder="123">
+        </div>
+        <div class="field" style="grid-column: span 2">
+          <label>Complemento</label>
+          <input id="s2-comp" type="text" placeholder="Apto, Sala... (opcional)">
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Bairro</label>
+          <input id="s2-bairro" type="text" placeholder="Bairro">
+        </div>
+        <div class="field">
+          <label>Cidade / UF</label>
+          <input id="s2-end-cidade" type="text" placeholder="Cidade / UF">
+        </div>
+      </div>
+    </div>
+
+    <!-- Plano -->
+    <div class="card">
+      <div class="card-title">Plano escolhido</div>
+      <input type="hidden" id="s2-plano" value="${planoInicial}">
+      <div class="planos">${planoCards}</div>
+    </div>
+
+    <!-- Pagamento -->
+    <div class="card">
+      <div class="card-title">Forma de pagamento</div>
+      <div class="pagto-opts" id="pagto-opts">
+        <label class="pagto-opt">
+          <input type="radio" name="pagto" value="pix" checked>
+          <div><div class="pagto-opt-label">PIX</div><div class="pagto-opt-desc">Pagamento instantâneo com confirmação imediata</div></div>
+        </label>
+        <label class="pagto-opt">
+          <input type="radio" name="pagto" value="boleto">
+          <div><div class="pagto-opt-label">Boleto bancário</div><div class="pagto-opt-desc">Vencimento em 3 dias úteis</div></div>
+        </label>
+        <label class="pagto-opt">
+          <input type="radio" name="pagto" value="cartao">
+          <div><div class="pagto-opt-label">Cartão de crédito</div><div class="pagto-opt-desc">Parcelamento em até 12x (em breve)</div></div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Dados para nota / recibo -->
+    <div class="card">
+      <div class="card-title">Dados para nota / recibo</div>
+      <span class="hint" style="display:block;margin-bottom:14px">Opcional — preencha se precisar de nota fiscal ou recibo em nome diferente</span>
+
+      <div class="field">
+        <label>Nome / Razão social</label>
+        <input id="s2-nf-nome" type="text" placeholder="Como deve constar na nota">
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>CPF / CNPJ para nota</label>
+          <input id="s2-nf-doc" type="text" placeholder="Documento para a nota">
+        </div>
+        <div class="field">
+          <label>E-mail para envio</label>
+          <input id="s2-nf-email" type="email" placeholder="email@nota.com">
+        </div>
+      </div>
+    </div>
+
+    <!-- Aceites -->
+    <div class="card">
+      <div class="card-title">Termos e contrato</div>
+
+      <div class="check-row">
+        <input type="checkbox" id="s2-termos" checked>
+        <label for="s2-termos">Li e aceito os <a href="#" onclick="return false">Termos de Uso</a> e a <a href="#" onclick="return false">Política de Privacidade</a><span class="req">*</span></label>
+      </div>
+
+      <div class="check-row">
+        <input type="checkbox" id="s2-contrato">
+        <label for="s2-contrato">Li e aceito o <a href="#" onclick="return false">Contrato de Assinatura SIPEN</a>, incluindo os valores, condições de pagamento e política de cancelamento<span class="req">*</span></label>
+      </div>
+
+      <div id="s2-err" class="msg-err"></div>
+
+      <button class="btn-primary" id="btn-s2" data-label="Confirmar assinatura" onclick="submitStep2()">Confirmar assinatura</button>
+      <button class="btn-secondary" onclick="history.back()">Voltar</button>
+    </div>
+  `;
+
+  // Máscaras
+  applyMask(document.getElementById("s2-tel"),  maskPhone);
+  applyMask(document.getElementById("s2-cep"),  maskCEP);
+
+  // Máscara do doc (CPF por padrão)
+  STATE._tipoDoc = "cpf";
+  const docEl = document.getElementById("s2-doc");
+  docEl.addEventListener("input", () => {
+    docEl.value = STATE._tipoDoc === "cpf" ? maskCPF(docEl.value) : maskCNPJ(docEl.value);
+  });
+}
+
+function setTipoDoc(tipo) {
+  STATE._tipoDoc = tipo;
+  document.getElementById("btn-cpf").className  = tipo === "cpf"  ? "active" : "";
+  document.getElementById("btn-cnpj").className = tipo === "cnpj" ? "active" : "";
+  const docEl = document.getElementById("s2-doc");
+  docEl.placeholder = tipo === "cpf" ? "000.000.000-00" : "00.000.000/0000-00";
+  docEl.value = "";
+}
+
+function selecionarPlano(k) {
+  document.querySelectorAll(".plano-card").forEach(c => c.classList.remove("selected"));
+  const card = document.getElementById(`plano-card-${k}`);
+  if (card) card.classList.add("selected");
+  const input = document.getElementById("s2-plano");
+  if (input) input.value = k;
+}
+
+let _cepTimer;
+function buscarCEPAuto() {
+  clearTimeout(_cepTimer);
+  _cepTimer = setTimeout(async () => {
+    const cep = g("s2-cep").replace(/\D/g, "");
+    if (cep.length !== 8) return;
+    const status = document.getElementById("cep-status");
+    if (status) status.textContent = "Buscando...";
+    const d = await buscarCEP(cep);
+    if (!d) { if (status) status.textContent = "CEP não encontrado."; return; }
+    if (status) status.textContent = "";
+    const set = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+    set("s2-logr",      d.logradouro);
+    set("s2-bairro",    d.bairro);
+    set("s2-end-cidade", `${d.localidade} / ${d.uf}`);
+    document.getElementById("s2-num")?.focus();
+  }, 600);
+}
+
+async function submitStep2() {
+  hideErr("s2-err");
+
+  const nome    = g("s2-nome");
+  const tel     = g("s2-tel");
+  const cargo   = g("s2-cargo");
+  const tipoDoc = STATE._tipoDoc || "cpf";
+  const docVal  = g("s2-doc").replace(/\D/g, "");
+  const inst    = g("s2-inst");
+  const plano   = g("s2-plano") || "basico";
+  const pagto   = document.querySelector('input[name="pagto"]:checked')?.value || "pix";
+  const termos  = document.getElementById("s2-termos")?.checked;
+  const contrato = document.getElementById("s2-contrato")?.checked;
+
+  const email   = g("s2-email") || STATE.etapa1.email;
+
+  if (!nome)   return showErr("s2-err", "Informe o nome completo.");
+  if (!tel || !validarTelefone(tel)) return showErr("s2-err", "Informe um telefone válido com DDD.");
+  if (!docVal) return showErr("s2-err", "Informe o CPF ou CNPJ.");
+  if (tipoDoc === "cpf"  && !validarCPF(docVal))  return showErr("s2-err", "CPF inválido. Verifique os dígitos.");
+  if (tipoDoc === "cnpj" && !validarCNPJ(docVal)) return showErr("s2-err", "CNPJ inválido. Verifique os dígitos.");
+  if (!inst)   return showErr("s2-err", "Informe o nome da instituição.");
+  if (!termos)  return showErr("s2-err", "Aceite os Termos de Uso e a Política de Privacidade.");
+  if (!contrato) return showErr("s2-err", "Aceite o Contrato de Assinatura para prosseguir.");
+
+  setBusy("btn-s2", true, "Processando...");
+
+  try {
+    // Monta payload de endereço
+    const endCobr = {
+      cep:         g("s2-cep"),
+      logradouro:  g("s2-logr"),
+      numero:      g("s2-num"),
+      complemento: g("s2-comp"),
+      bairro:      g("s2-bairro"),
+      cidade_uf:   g("s2-end-cidade"),
+    };
+
+    // Dados para nota
+    const dadosNota = {
+      nome_razao:   g("s2-nf-nome"),
+      cpf_cnpj_nf:  g("s2-nf-doc"),
+      email_nf:     g("s2-nf-email"),
+    };
+
+    // Atualiza sipen_clientes
+    await sbPatch(
+      `sipen_clientes?email=eq.${encodeURIComponent(email)}`,
+      {
+        nome_completo:   nome,
+        telefone:        tel,
+        tipo_doc:        tipoDoc,
+        cpf_cnpj:        docVal,
+        cargo_funcao:    cargo,
+        nome_inst:       inst,
+        cidade_uf:       g("s2-cidade") || STATE.etapa1.cidade,
+        endereco_cobr:   endCobr,
+        plano:           plano,
+        forma_pagto:     pagto,
+        dados_nota:      dadosNota,
+        aceite_termos:   true,
+        aceite_politica: true,
+        aceite_contrato: true,
+        status_conta:    "pendente_pagamento",
+        status_assn:     "pendente",
+        atualizado_em:   new Date().toISOString(),
+      },
+      STATE.token
+    );
+
+    // Busca id do cliente para criar a assinatura
+    const clientes = await sbGet(`sipen_clientes?email=eq.${encodeURIComponent(email)}&select=id`, STATE.token);
+    const clienteId = Array.isArray(clientes) && clientes[0] ? clientes[0].id : null;
+
+    if (clienteId) {
+      const pInfo = PLANOS[plano];
+      await sbPost("sipen_assinaturas", {
+        cliente_id:  clienteId,
+        plano:       plano,
+        status:      "pendente",
+        valor_mensal: pInfo?.preco || 0,
+        forma_pagto: pagto,
+        notas:       `Solicitação enviada em ${new Date().toLocaleDateString("pt-BR")}`,
+        criado_em:   new Date().toISOString(),
+      }, STATE.token);
+    }
+
+    renderSuccessAssn(nome, email, plano, pagto);
+
+  } catch (e) {
+    let msg = e.message || "Erro ao registrar assinatura.";
+    try { const j = JSON.parse(msg); msg = j.message || j.details || msg; } catch (_) {}
+    showErr("s2-err", msg);
+    setBusy("btn-s2", false);
+  }
+}
+
+function renderSuccessAssn(nome, email, plano, pagto) {
+  const p = PLANOS[plano] || { nome: plano, label: plano };
+  const instrPagto = {
+    pix:    "Você receberá a chave PIX por e-mail. Após o pagamento, sua assinatura será ativada em até 1 dia útil.",
+    boleto: "O boleto será enviado para seu e-mail. Pague até o vencimento para ativar sua assinatura.",
+    cartao: "Nossa equipe entrará em contato para processar o pagamento via cartão de crédito.",
+  }[pagto] || "Nossa equipe entrará em contato com as instruções de pagamento.";
+
+  document.getElementById("steps").style.display = "none";
+  document.getElementById("app").innerHTML = `
+    <div class="success-card">
+      <div class="s-icon">✅</div>
+      <h2>Assinatura solicitada!</h2>
+      <p>
+        Obrigado, <strong>${eh(nome)}</strong>.<br>
+        ${instrPagto}
+      </p>
+      <div class="success-details" style="margin-top:20px">
+        <dl>
+          <dt>E-mail</dt><dd>${eh(email)}</dd>
+          <dt>Plano</dt><dd>${eh(p.nome)} — ${eh(p.label || "")}</dd>
+          <dt>Pagamento</dt><dd>${eh(pagto)}</dd>
+          <dt>Status</dt><dd>Pendente de pagamento</dd>
+        </dl>
+      </div>
+      <div style="margin-top:20px">
+        <a href="/index.html" class="btn-primary" style="display:inline-block;text-decoration:none;text-align:center;padding:12px 28px;border-radius:9px;font-size:14px;font-weight:700">
+          Entrar no sistema
+        </a>
+      </div>
+      <div style="font-size:12px;color:var(--tx3);margin-top:12px">
+        Dúvidas? Entre em contato com <a href="mailto:suporte@ippenha.com.br" style="color:var(--gr)">suporte@ippenha.com.br</a>
+      </div>
+    </div>
+  `;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Init
+═══════════════════════════════════════════════════════════════════ */
+(function init() {
+  const params = new URLSearchParams(location.search);
+  const plano   = params.get("plano");
+  const upgrade = params.get("upgrade") === "1";
+
+  if (plano && PLANOS[plano]) STATE.planoPreSelecionado = plano;
+
+  if (upgrade) {
+    // Modo upgrade: pula step 1, mostra step 2 diretamente
+    const email = params.get("email") || "";
+    STATE.etapa1 = { nome: "", email, inst: "", cidade: "" };
+    STATE.step = 2;
+    updateStepper(2);
+    renderStep2();
+  } else {
+    renderStep1();
+  }
+})();
+</script>
+</body>
+</html>
