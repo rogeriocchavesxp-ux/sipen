@@ -58,7 +58,7 @@
   <!-- ════ DEMANDAS ════════════════════════ -->
 
   <div class="view" id="v-infra-demandas">
-    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🛠</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Solicitações e Demandas</div><div class="hero-dsc">Todas as demandas e as direcionadas ao módulo Infraestrutura e Conservação</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🛠</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Solicitações e Demandas</div><div class="hero-dsc">Demandas do módulo Infraestrutura e Conservação — manutenção, limpeza, patrimônio e operações</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
     <div class="bnav" style="--mc:var(--amber)">
       <div class="bni" onclick="go('infra-dash')">Dashboard</div>
       <div class="bni" onclick="go('infra-man')">Manutenção</div>
@@ -75,21 +75,21 @@
           <div class="sni-sep"></div>
           <div class="sni" onclick="go('infra-demandas-infra')">Infraestrutura e Conservação</div>
         </div>
-        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('infra-demandas-content')">↻ Atualizar</span></div>
+        <div class="ctit">Filtros <span class="cact" onclick="infraDemFiltrar('infra-demandas-content')">↻ Atualizar</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-          <select id="infra-demandas-content-fstatus" onchange="demFiltrar('infra-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+          <select id="infra-demandas-content-fstatus" onchange="infraDemFiltrar('infra-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
             <option value="">Todos os status</option>
             <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
           </select>
-          <select id="infra-demandas-content-fcat" onchange="demFiltrar('infra-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
-            <option value="">Todas as categorias</option>
-            <option>Conselho</option><option>Agendamentos</option><option>Manutenção</option><option>Limpeza e Organização</option><option>Logística</option><option>Financeiro</option><option>Comunicação e Divulgação</option><option>Secretaria</option><option>Cadastro</option><option>Oração e Aconselhamento</option><option>Visitação</option><option>Apoio ao Culto</option><option>Ensino (EBT)</option><option>Ação Social / Hebron</option><option>Administrativo Geral</option>
+          <select id="infra-demandas-content-fcat" onchange="infraDemFiltrar('infra-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as áreas</option>
+            <option>Infraestrutura e Conservação</option><option>Manutenção</option><option>Limpeza e Organização</option><option>Patrimônio</option><option>Solicitações Operacionais</option>
           </select>
-          <select id="infra-demandas-content-fprio" onchange="demFiltrar('infra-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+          <select id="infra-demandas-content-fprio" onchange="infraDemFiltrar('infra-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
             <option value="">Todas as prioridades</option>
             <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
           </select>
-          <input id="infra-demandas-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('infra-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+          <input id="infra-demandas-content-fbusca" type="text" placeholder="Buscar..." oninput="infraDemFiltrar('infra-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
         </div>
       </div>
       <div class="card" style="margin-top:0">
@@ -118,17 +118,17 @@
           <div class="sni-sep"></div>
           <div class="sni on">Infraestrutura e Conservação</div>
         </div>
-        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('infra-demandas-infra-content',{area:'Infraestrutura'})">↻ Atualizar</span></div>
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('infra-demandas-infra-content',{area:'Infraestrutura e Conservação'})">↻ Atualizar</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-          <select id="infra-demandas-infra-content-fstatus" onchange="demFiltrar('infra-demandas-infra-content',{area:'Infraestrutura'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+          <select id="infra-demandas-infra-content-fstatus" onchange="demFiltrar('infra-demandas-infra-content',{area:'Infraestrutura e Conservação'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
             <option value="">Todos os status</option>
             <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Concluída</option><option>Cancelada</option>
           </select>
-          <select id="infra-demandas-infra-content-fprio" onchange="demFiltrar('infra-demandas-infra-content',{area:'Infraestrutura'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+          <select id="infra-demandas-infra-content-fprio" onchange="demFiltrar('infra-demandas-infra-content',{area:'Infraestrutura e Conservação'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
             <option value="">Todas as prioridades</option>
             <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
           </select>
-          <input id="infra-demandas-infra-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('infra-demandas-infra-content',{area:'Infraestrutura'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
+          <input id="infra-demandas-infra-content-fbusca" type="text" placeholder="Buscar..." oninput="demFiltrar('infra-demandas-infra-content',{area:'Infraestrutura e Conservação'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:160px">
         </div>
       </div>
       <div class="card" style="margin-top:0">

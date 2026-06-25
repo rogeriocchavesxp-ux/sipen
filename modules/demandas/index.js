@@ -6,6 +6,15 @@
 
 (function () {
 
+  /* Áreas pertencentes ao módulo Infraestrutura e Conservação */
+  const _INFRA_AREAS = [
+    "Infraestrutura e Conservação",
+    "Manutenção",
+    "Limpeza e Organização",
+    "Patrimônio",
+    "Solicitações Operacionais",
+  ];
+
   /* ── Categorias e roteamento automático ─────────────── */
 
   const CATS = [
@@ -1982,6 +1991,11 @@
   /* ── Expor filtrar para views ────────────────────────── */
   window.demFiltrar = function(elId, filtros) { renderLista(elId, filtros); };
 
+  /* Helper específico para views de Infraestrutura — mantém o escopo correto */
+  window.infraDemFiltrar = function(elId, extra) {
+    renderLista(elId, Object.assign({ area: _INFRA_AREAS }, extra || {}));
+  };
+
   window.demTabStatus = function(contentId, tabEl, status, fixos) {
     const inp = document.getElementById(contentId + "-fstatus");
     if (inp) inp.value = status;
@@ -1996,7 +2010,7 @@
 
   async function _renderInfraDash() {
     if (!_cache.length) await _load();
-    const rows = _cache.filter(r => String(r.area||"") === "Infraestrutura");
+    const rows = _cache.filter(r => _INFRA_AREAS.includes(String(r.area||"")));
     const mes   = new Date().toISOString().slice(0, 7);
 
     const nAbertas = rows.filter(r => ["ABERTA","EM_ANALISE"].includes(_toDb(r.status))).length;
@@ -2113,8 +2127,8 @@
       },
       "infra-dash":            () => _renderInfraDash(),
       "infra-man":             () => _manRenderInternal(),
-      "infra-demandas":        () => renderLista("infra-demandas-content"),
-      "infra-demandas-infra":  () => renderLista("infra-demandas-infra-content",    { area:"Infraestrutura" }),
+      "infra-demandas":        () => renderLista("infra-demandas-content",       { area: _INFRA_AREAS }),
+      "infra-demandas-infra":  () => renderLista("infra-demandas-infra-content", { area: "Infraestrutura e Conservação" }),
       "jur-demandas-tab":      () => renderLista("jur-demandas-tab-content"),
       "jur-demandas-jur":      () => renderLista("jur-demandas-jur-content",        { area:"Jurídico" }),
       "pastoral-demandas":     () => renderLista("pastoral-demandas-content",       { area:"Pastoral" }),

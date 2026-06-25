@@ -262,7 +262,6 @@ const VIEW_AUTOLOAD = {
   "admin-est":     { tab:"ESTOQUE_ITENS", id:"est-list" },
   "pgs-lista":     { tab:"PGS",           id:"pgs-lista-list" },
   "jur-demandas":  { tab:"DEMANDAS",      id:"jur-dem-list",   filtro:{area:"Jurídico"} },
-  "infra-man":     { tab:"DEMANDAS",      id:"infra-man-list", filtro:{area:"Infraestrutura"} },
   "admin-aud":     { tab:"LOG_AUDITORIA", id:"aud-list" },
   "min-vol":       { tab:"MEMBROS",       id:"vol-list" },
   "pgs-visitantes":{ tab:"VISITANTES",    id:"pgs-vis-list" },
