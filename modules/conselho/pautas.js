@@ -1048,7 +1048,7 @@
 
   window.pautasAbrirAnexo = async function (path) {
     const sb = typeof getSupabase === "function" ? getSupabase() : null;
-    if (!sb) { _toast("Erro", "Cliente Supabase não disponível."); return; }
+    if (!sb) { _toast("Erro", "Serviço temporariamente indisponível."); return; }
     const { data, error } = await sb.storage.from(_BUCKET).createSignedUrl(path, 3600);
     if (error) { _toast("Erro ao abrir documento", error.message); return; }
     window.open(data.signedUrl, "_blank");

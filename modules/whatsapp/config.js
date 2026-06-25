@@ -342,7 +342,7 @@ const WA_CFG = (function(){
 
   function salvarConfig(){
     if(typeof T === "function")
-      T("Configuração via Supabase", "URL e instância devem ser definidas como secrets BOTCONVERSA_API_KEY e BOTCONVERSA_BASE_URL no Supabase Dashboard → Settings → Secrets.");
+      T("Configuração necessária", "As credenciais de integração não estão configuradas. Contate o administrador.");
   }
 
   /* ── Estado da configuração BotConversa ───────────────── */
@@ -529,7 +529,7 @@ const WA_CFG = (function(){
       closeTesteModal();
       setTimeout(carregarHistorico, 800);
     } else {
-      if(typeof T === "function") T("Falha no envio", r?.error || r?.status || "Verifique se BOTCONVERSA_API_KEY está configurado nos secrets do Supabase");
+      if(typeof T === "function") T("Falha no envio", r?.error || r?.status || "Serviço de mensagens não configurado. Contate o administrador.");
     }
   }
 

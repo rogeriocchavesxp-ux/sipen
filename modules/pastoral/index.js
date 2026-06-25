@@ -962,7 +962,7 @@
 	      }
 	      const err=await r.text().catch(()=>"");
 	      console.error("dp_: erro ao criar pastores padrão",r.status,err);
-	      T("Pastores","A tabela de pastores está vazia e o SIPEN não conseguiu cadastrar os pastores padrão. Execute o script supabase-escala-pregacao.sql no Supabase.");
+	      T("Pastores","Os pastores padrão não foram encontrados. Contate o administrador.");
 	    } catch(e){
 	      console.error("dp_: erro de rede ao criar pastores padrão",e);
 	      T("Pastores","A tabela de pastores está vazia e não foi possível cadastrar os pastores padrão agora.");
@@ -1278,7 +1278,7 @@
 	    const modal=document.getElementById("dp-modal"); if(!modal) return;
 	    const pastores=_getPastores();
 	    if(!pastores.length){
-	      T("Pastores","Não foi possível carregar nem cadastrar os pastores reais no Supabase. Execute o script supabase-escala-pregacao.sql no Supabase e atualize a página.");
+	      T("Pastores","Não foi possível carregar os pastores. Tente novamente ou contate o administrador.");
 	    }
 	    const reg=regId?_disps.find(r=>r.id===regId):null;
 	    const pOpts=`<option value="">— Selecionar pastor —</option>`+pastores.map(p=>`<option value="${_ea(p.id)}"${(pastor_id===p.id||reg?.pastor_id===p.id)?" selected":""}>${_eh(p.nome_completo)}</option>`).join("");

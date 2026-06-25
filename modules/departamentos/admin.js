@@ -499,7 +499,7 @@ window.minComNova = function() {
 /* ── Abrir comissão existente ──────────────────────── */
 
 window.minComDetalhe = async function(id) {
-  if (!SUPABASE_URL) { T("Configuração necessária", "Configure a conexão com o Supabase"); return; }
+  if (!SUPABASE_URL) { T("Serviço indisponível", "Não foi possível conectar ao serviço. Contate o administrador."); return; }
   try {
     const res = await fetch(
       `${apiBaseUrl()}/rest/v1/comissoes?id=eq.${encodeURIComponent(id)}&select=*&limit=1`,

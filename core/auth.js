@@ -228,11 +228,11 @@ async function carregarUsuarioLogado(authUserId) {
 
   if (pessoaError) {
     console.error("Erro ao buscar pessoa:", pessoaError);
-    alert("Erro ao buscar usuário no banco.");
+    alert("Não foi possível identificar seu usuário. Contate o administrador.");
     return;
   }
   if (!pessoa) {
-    alert("Usuário autenticado, mas não encontrado em pessoas.auth_user_id.");
+    alert("Acesso não autorizado. Contate o administrador.");
     return;
   }
 
@@ -251,7 +251,7 @@ async function carregarUsuarioLogado(authUserId) {
     return;
   }
   if (!membro) {
-    alert("Usuário sem cadastro de membro ativo vinculado.");
+    alert("Seu perfil de acesso não está ativo. Contate o administrador.");
     return;
   }
 
@@ -489,7 +489,7 @@ async function entrarNoSistema() {
   document.getElementById("login-screen").style.display = "none";
   atualizarSidebarUsuario();
   aplicarPermissoes();
-  initSupabaseBadge();
+  if (USUARIO_ATUAL?.perfil === "ADMINISTRADOR_GERAL") initSupabaseBadge();
   testApiSilently();
   carregarPermissoesDB(); // popula _perfisUuidMap e PERMISSOES_DB em background
 
@@ -1916,3 +1916,19 @@ CRUMB["area-agenda"] = ["Área do Membro","Agenda","/ próximos compromissos"];
 CRUMB["area-min"]    = ["Área do Membro","Meus Ministérios","/ serviço e escala"];
 CRUMB["area-pgs"]    = ["Área do Membro","Meu PG","/ pequeno grupo"];
 CRUMB["area-dem"]    = ["Área do Membro","Minhas Solicitações","/ pedidos e demandas"];
+
+/* ── RBAC — ponto único de controle de acesso ─────────────────── */
+window.RBAC = {
+  isAdmin:    () => USUARIO_ATUAL?.perfil === "ADMINISTRADOR_GERAL",
+  perfil:     () => USUARIO_ATUAL?.perfil || null,
+  nivel:      () => {
+    if (!USUARIO_ATUAL) return -1;
+    const p = USUARIO_ATUAL.perfil?.toLowerCase();
+    const cfg = PERFIS[p] || null;
+    return cfg ? cfg.nivel : -1;
+  },
+  pode:       (modulo, acao)  => podeAcessar(modulo, acao),
+  podeVer:    (modulo)        => podeAcessar(modulo, "visualizar"),
+  podeEditar: (modulo)        => podeAcessar(modulo, "editar"),
+  podeAdmin:  (modulo)        => USUARIO_ATUAL?.perfil === "ADMINISTRADOR_GERAL" || podeAcessar(modulo, "administrar"),
+};

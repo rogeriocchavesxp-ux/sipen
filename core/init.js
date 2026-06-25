@@ -3,7 +3,7 @@
 const _isPublicRoute = window.location.hash === "#pautas-reunioes";
 const _shellReady = _isPublicRoute ? Promise.resolve() : Promise.all([
   fetch("views/login.html?v=6.31.7").then(r => r.ok ? r.text() : ""),
-  fetch("views/sidebar.html?v=6.31.7").then(r => r.ok ? r.text() : ""),
+  fetch("views/sidebar.html?v=6.34.0").then(r => r.ok ? r.text() : ""),
   fetch("views/modals.html?v=6.31.10").then(r => r.ok ? r.text() : ""),
 ]).then(([loginHtml, sidebarHtml, modalsHtml]) => {
   document.body.insertAdjacentHTML("afterbegin", loginHtml);

@@ -998,7 +998,7 @@
       } else if (res?.status === "sem_destinatarios") {
         if (typeof T === "function") T("Sem destinatários", res.mensagem || "Nenhum membro da Tesouraria com e-mail cadastrado.");
       } else if (res?.status === "nao_configurado") {
-        if (typeof T === "function") T("Serviço não configurado", "Configure RESEND_API_KEY nos secrets do Supabase.");
+        if (typeof T === "function") T("Serviço não configurado", "O serviço de e-mail não está ativo. Contate o administrador.");
       } else {
         if (typeof T === "function") T("Erro ao enviar e-mail", res?.error || res?.mensagem || "Tente novamente.");
       }
@@ -1646,7 +1646,7 @@
   window.demAbrirAnexo = async function(storagePath) {
     if (!storagePath) return;
     const sb = _sbClient();
-    if (!sb) { if (typeof T === "function") T("Erro", "Supabase não disponível"); return; }
+    if (!sb) { if (typeof T === "function") T("Erro", "Serviço temporariamente indisponível."); return; }
     try {
       const { data, error } = await sb.storage
         .from("financial-documents")
