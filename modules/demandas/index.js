@@ -2112,6 +2112,7 @@
         renderLista("conselho-demandas-cons-content", { area:"Conselho" });
       },
       "infra-dash":            () => _renderInfraDash(),
+      "infra-man":             () => _manRenderInternal(),
       "infra-demandas":        () => renderLista("infra-demandas-content"),
       "infra-demandas-infra":  () => renderLista("infra-demandas-infra-content",    { area:"Infraestrutura" }),
       "jur-demandas-tab":      () => renderLista("jur-demandas-tab-content"),
@@ -2587,6 +2588,151 @@ ${linhas}
 
   window.finDemSetFiltro = _finSetFiltro;
   window.finDemFiltrar   = function() { _finRender(); };
+
+  /* ══════════════════════════════════════════════════════════
+     Manutenção — dashboard rica (padrão Financeiro)
+  ══════════════════════════════════════════════════════════ */
+
+  let _manFiltroExtra = null;
+
+  function _manRows() {
+    return _cache.filter(r => r.area === "Manutenção");
+  }
+
+  async function _manRenderInternal() {
+    if (!_cache.length) await _load();
+    const rows    = _manRows();
+    const hoje    = new Date();
+    const mesAtual = hoje.toISOString().slice(0, 7);
+    const todayStr = hoje.toISOString().split("T")[0];
+
+    const nAbertas = rows.filter(r => _toLabel(r.status) === "Aberta").length;
+    const nAnd     = rows.filter(r => _toLabel(r.status) === "Em Andamento").length;
+    const nPend    = rows.filter(r => ["Pendente","Em Análise"].includes(_toLabel(r.status))).length;
+    const nConc    = rows.filter(r => _toLabel(r.status) === "Concluída" && (r.data_conclusao||"").startsWith(mesAtual)).length;
+    const nAtras   = rows.filter(r => {
+      const pz = r.prazo_previsto;
+      return pz && pz < todayStr && !["Concluída","Cancelada"].includes(_toLabel(r.status));
+    }).length;
+    const nPrev = rows.filter(r => (r.tipo||"").toLowerCase().includes("preventiva")).length;
+    const nCor  = rows.filter(r => (r.tipo||"").toLowerCase().includes("corretiva")).length;
+
+    const concl = rows.filter(r => _toLabel(r.status) === "Concluída" && r.data_conclusao && r.criado_em);
+    let tempoMedio = "—";
+    if (concl.length) {
+      const totalDias = concl.reduce((acc, r) =>
+        acc + Math.max(0, (new Date(r.data_conclusao) - new Date(r.criado_em)) / 86400000), 0);
+      tempoMedio = Math.round(totalDias / concl.length) + " d";
+    }
+
+    const sv = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    sv("man-kpi-abertas", nAbertas);
+    sv("man-kpi-and",     nAnd);
+    sv("man-kpi-pend",    nPend);
+    sv("man-kpi-conc",    nConc);
+    sv("man-kpi-atras",   nAtras);
+    sv("man-kpi-prev",    nPrev);
+    sv("man-kpi-cor",     nCor);
+    sv("man-kpi-tempo",   tempoMedio);
+
+    _manRenderLista();
+  }
+
+  function _manRenderLista() {
+    const el = document.getElementById("man-list-content");
+    if (!el) return;
+
+    let rows = _manRows();
+    const todayStr = new Date().toISOString().split("T")[0];
+
+    if (_manFiltroExtra) {
+      const { tipo, val } = _manFiltroExtra;
+      if (tipo === "status") {
+        rows = rows.filter(r => _toLabel(r.status) === val);
+      } else if (tipo === "tipo") {
+        rows = rows.filter(r => (r.tipo||"").toLowerCase().includes(val.toLowerCase()));
+      } else if (tipo === "atrasadas") {
+        rows = rows.filter(r => {
+          const pz = r.prazo_previsto;
+          return pz && pz < todayStr && !["Concluída","Cancelada"].includes(_toLabel(r.status));
+        });
+      }
+    } else {
+      const fStatus = document.getElementById("man-list-fstatus")?.value || "";
+      const fPrio   = document.getElementById("man-list-fprio")?.value   || "";
+      const fBusca  = (document.getElementById("man-list-fbusca")?.value || "").toLowerCase();
+      if (fStatus) rows = rows.filter(r => _toLabel(r.status) === fStatus);
+      if (fPrio)   rows = rows.filter(r => r.prioridade === fPrio);
+      if (fBusca)  rows = rows.filter(r =>
+        (r.titulo||"").toLowerCase().includes(fBusca)          ||
+        (r.descricao||"").toLowerCase().includes(fBusca)       ||
+        (r.responsavel||r.responsavel_txt||"").toLowerCase().includes(fBusca) ||
+        (r.solicitante||r.solicitante_txt||"").toLowerCase().includes(fBusca) ||
+        (r.subcategoria||"").toLowerCase().includes(fBusca)
+      );
+    }
+
+    rows.sort((a, b) => (b.criado_em||"").localeCompare(a.criado_em||""));
+
+    if (!rows.length) {
+      el.innerHTML = '<div style="color:var(--tx3);font-size:11.5px;padding:8px 0">Nenhuma OS encontrada.</div>';
+      return;
+    }
+
+    el.innerHTML = `
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="border-bottom:1px solid var(--bd2)">
+              ${["Título","Subcategoria","Solicitante","Responsável","Prior.","Status","Abertura","Prazo"].map(h =>
+                `<th style="text-align:left;padding:8px 6px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`
+              ).join("")}
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(r => {
+              const rid      = String(r.id||r._row);
+              const pz       = r.prazo_previsto;
+              const atrasada = pz && pz < todayStr && !["Concluída","Cancelada"].includes(_toLabel(r.status));
+              const stLabel  = _toLabel(r.status);
+              return `
+              <tr style="border-bottom:1px solid var(--bd1)${atrasada?";background:rgba(224,85,85,0.04)":""}"
+                  onmouseover="this.style.background='var(--bg-hover)'"
+                  onmouseout="this.style.background='${atrasada?"rgba(224,85,85,0.04)":""}'">
+                <td style="padding:8px 6px;color:var(--tx1);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${escapeHtml(r.titulo)||"—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);font-size:11px;white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${escapeHtml(r.subcategoria)||"—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${escapeHtml(r.solicitante||r.solicitante_txt)||"—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${escapeHtml(r.responsavel||r.responsavel_txt)||"—"}</td>
+                <td style="padding:8px 6px;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${pillPrio(r.prioridade)}</td>
+                <td style="padding:4px 6px" onclick="event.stopPropagation()">
+                  <select onchange="window.manStatusChange('${rid}',this.value)" style="font-size:11px;padding:3px 6px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);cursor:pointer">
+                    ${["Aberta","Em Análise","Em Andamento","Pendente","Concluída","Cancelada"].map(s =>
+                      `<option${stLabel===s?" selected":""}>${s}</option>`
+                    ).join("")}
+                  </select>
+                </td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${fmtD(r.data_abertura||r.criado_em)}</td>
+                <td style="padding:8px 6px;white-space:nowrap;cursor:pointer;color:${atrasada?"var(--rose)":"var(--tx2)"};font-weight:${atrasada?"700":"400"}" onclick="demAbrirDetalhe('${rid}','infra-man')">${fmtD(r.prazo_previsto)||"—"}</td>
+              </tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  window.manRender       = async function()        { await _manRenderInternal(); };
+  window.manFiltrar      = function()              { _manFiltroExtra = null; _manRenderLista(); };
+  window.manKpiFiltrar   = function(tipo, val)     {
+    _manFiltroExtra = { tipo, val };
+    ["man-list-fstatus","man-list-fprio","man-list-fbusca"].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = "";
+    });
+    _manRenderLista();
+  };
+  window.manStatusChange = async function(id, val) {
+    await window.demAtualizarStatus(id, val);
+    await _manRenderInternal();
+  };
 
   window.demAtualizarLabels = function() {
     const restrito = !_podeVerTodas();

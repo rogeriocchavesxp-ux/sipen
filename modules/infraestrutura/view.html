@@ -140,7 +140,15 @@
   <!-- CONSELHO: SOLICITAÇÕES E DEMANDAS (com abas) -->
 
   <div class="view" id="v-infra-man">
-    <div class="hero"><div class="hero-ic" style="background:rgba(224,138,42,0.12)">🔧</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Manutenção</div><div class="hero-dsc">Ordens de serviço e manutenções preventivas</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova OS</button></div></div>
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(224,138,42,0.12)">🔧</div>
+      <div>
+        <div class="hero-lbl">Infraestrutura e Conservação</div>
+        <div class="hero-ttl">Manutenção</div>
+        <div class="hero-dsc">Ordens de serviço e manutenções preventivas e corretivas</div>
+      </div>
+      <div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova OS</button></div>
+    </div>
     <div class="bnav" style="--mc:var(--amber)">
       <div class="bni" onclick="go('infra-dash')">Dashboard</div>
       <div class="bni" onclick="go('infra-man')">Manutenção</div>
@@ -151,9 +159,62 @@
       <div class="bni" onclick="go('infra-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
+      <!-- KPIs linha 1 -->
+      <div class="kpis c4">
+        <div class="kpi" style="cursor:pointer" onclick="manKpiFiltrar('status','Aberta')">
+          <div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--blue)">📋</div>
+          <div class="kpi-body"><div class="kpi-lbl">Abertas</div><div class="kpi-val" id="man-kpi-abertas">—</div><div class="kpi-d nu">ordens em aberto</div></div>
+        </div>
+        <div class="kpi" style="cursor:pointer" onclick="manKpiFiltrar('status','Em Andamento')">
+          <div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet)">⚙️</div>
+          <div class="kpi-body"><div class="kpi-lbl">Em Execução</div><div class="kpi-val" id="man-kpi-and">—</div><div class="kpi-d nu">em andamento</div></div>
+        </div>
+        <div class="kpi" style="cursor:pointer" onclick="manKpiFiltrar('status','Pendente')">
+          <div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber)">⏳</div>
+          <div class="kpi-body"><div class="kpi-lbl">Pendentes</div><div class="kpi-val" id="man-kpi-pend">—</div><div class="kpi-d nu">aguardando</div></div>
+        </div>
+        <div class="kpi" style="cursor:pointer" onclick="manKpiFiltrar('status','Concluída')">
+          <div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gmd)">✅</div>
+          <div class="kpi-body"><div class="kpi-lbl">Concluídas</div><div class="kpi-val" id="man-kpi-conc">—</div><div class="kpi-d up">este mês</div></div>
+        </div>
+      </div>
+      <!-- KPIs linha 2 -->
+      <div class="kpis c4" style="margin-top:0">
+        <div class="kpi" style="cursor:pointer" onclick="manKpiFiltrar('atrasadas',true)">
+          <div class="kpi-ico" style="background:rgba(224,85,85,0.15);color:var(--rose)">🚨</div>
+          <div class="kpi-body"><div class="kpi-lbl">Atrasadas</div><div class="kpi-val" id="man-kpi-atras">—</div><div class="kpi-d dn">prazo vencido</div></div>
+        </div>
+        <div class="kpi" style="cursor:pointer" onclick="manKpiFiltrar('tipo','Preventiva')">
+          <div class="kpi-ico" style="background:rgba(90,200,250,0.15);color:var(--teal)">🔍</div>
+          <div class="kpi-body"><div class="kpi-lbl">Preventivas</div><div class="kpi-val" id="man-kpi-prev">—</div><div class="kpi-d nu">agendadas</div></div>
+        </div>
+        <div class="kpi" style="cursor:pointer" onclick="manKpiFiltrar('tipo','Corretiva')">
+          <div class="kpi-ico" style="background:rgba(224,138,42,0.12);color:var(--amber)">🔨</div>
+          <div class="kpi-body"><div class="kpi-lbl">Corretivas</div><div class="kpi-val" id="man-kpi-cor">—</div><div class="kpi-d nu">reparos</div></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-ico" style="background:rgba(74,156,245,0.10);color:var(--blue)">⏱</div>
+          <div class="kpi-body"><div class="kpi-lbl">Tempo médio</div><div class="kpi-val" id="man-kpi-tempo">—</div><div class="kpi-d nu">para concluir</div></div>
+        </div>
+      </div>
+      <!-- Filtros -->
       <div class="card">
-        <div class="ctit">Ordens de Serviço <span class="cact" onclick="listarModulo('DEMANDAS','infra-man-list',{area:'Infraestrutura'})">↻ Atualizar</span></div>
-        <div id="infra-man-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        <div class="ctit">Filtros <span class="cact" onclick="manFiltrar()">↻ Atualizar</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <select id="man-list-fstatus" onchange="manFiltrar()" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todos os status</option>
+            <option>Aberta</option><option>Em Análise</option><option>Em Andamento</option><option>Pendente</option><option>Concluída</option><option>Cancelada</option>
+          </select>
+          <select id="man-list-fprio" onchange="manFiltrar()" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
+            <option value="">Todas as prioridades</option>
+            <option>Urgente</option><option>Alta</option><option>Média</option><option>Baixa</option>
+          </select>
+          <input id="man-list-fbusca" type="text" placeholder="Buscar título, responsável, solicitante..." oninput="manFiltrar()" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);min-width:220px">
+        </div>
+      </div>
+      <!-- Tabela -->
+      <div class="card" style="margin-top:0">
+        <div id="man-list-content"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
       </div>
     </div>
   </div>
