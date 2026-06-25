@@ -1007,6 +1007,239 @@
 
   /* ── Hook no go() ───────────────────────────────────── */
 
+  async function renderAdminDash() {
+    if (!_cache.length && !_loadError) await _load();
+    const sv = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+
+    const avencer  = _cache.filter(r => _autoStatus(r) === "A vencer");
+    const vencidos = _cache.filter(r => _autoStatus(r) === "Vencido");
+    const urgentes = _cache
+      .filter(r => {
+        const st = _autoStatus(r);
+        if (["Cancelado","Encerrado"].includes(st)) return false;
+        const d = diasParaVencer(r.data_vencimento);
+        return d !== null && d <= 30;
+      })
+      .sort((a, b) => (a.data_vencimento || "").localeCompare(b.data_vencimento || ""));
+
+    const totalAlerta = avencer.length + vencidos.length;
+    sv("adm-kpi-contratos", totalAlerta);
+
+    const qaEl = document.getElementById("adm-qa-con");
+    if (qaEl) qaEl.textContent = totalAlerta > 0 ? `${totalAlerta} a vencer` : "todos em dia";
+
+    try {
+      const estRes = await fetch(
+        `${apiBaseUrl()}/rest/v1/estoque_itens?select=id&ativo=eq.true&limit=1`,
+        { headers: apiHeaders({ "Prefer": "count=exact" }) }
+      );
+      if (estRes.ok) {
+        const cr = estRes.headers.get("content-range");
+        const n  = cr ? parseInt(cr.split("/")[1], 10) : NaN;
+        sv("adm-kpi-estoque", isNaN(n) ? "—" : n);
+      }
+    } catch (_) {}
+
+    try {
+      const mbRes = await fetch(
+        `${apiBaseUrl()}/rest/v1/v_membros?select=id&limit=1`,
+        { headers: apiHeaders({ "Prefer": "count=exact" }) }
+      );
+      if (mbRes.ok) {
+        const cr = mbRes.headers.get("content-range");
+        const n  = cr ? parseInt(cr.split("/")[1], 10) : NaN;
+        sv("adm-kpi-colab", isNaN(n) ? "—" : n);
+      }
+    } catch (_) {}
+
+    const alertEl = document.getElementById("adm-dash-alerta");
+    if (alertEl) {
+      if (urgentes.length > 0) {
+        const items = urgentes.slice(0, 3).map(r => {
+          const d   = diasParaVencer(r.data_vencimento);
+          const cor = d !== null && d <= 7 ? "var(--rose)" : "var(--amber)";
+          const txt = d < 0 ? `vencido há ${Math.abs(d)}d` : d === 0 ? "vence hoje" : `vence em ${d}d`;
+          return `<span onclick="conAbrirDetalhe('${r.id}')" style="cursor:pointer;color:${cor};font-weight:600">${escapeHtml(r.produto || r.titulo || r.tipo || "—")}</span> <span style="color:var(--tx3);font-size:10px">(${txt})</span>`;
+        }).join(" · ");
+        const extra = urgentes.length > 3 ? ` <span style="color:var(--tx3);font-size:10px">+${urgentes.length - 3}</span>` : "";
+        alertEl.innerHTML = `<div class="alr alr-w" style="margin-bottom:12px"><span class="alr-i">⚠</span><div style="font-size:12px">${items}${extra}</div><span class="alr-a" onclick="go('admin-con')">Ver →</span></div>`;
+      } else {
+        alertEl.innerHTML = "";
+      }
+    }
+
+    const contEl = document.getElementById("adm-dash-contratos");
+    if (contEl) {
+      if (!_cache.length) {
+        contEl.innerHTML = `<div style="padding:20px;text-align:center;color:var(--tx3);font-size:12px">
+          <div style="font-size:22px;margin-bottom:6px">📄</div>Nenhum contrato cadastrado.
+          <div style="margin-top:10px"><button class="tbt pri" onclick="go('admin-con')">Cadastrar contrato</button></div></div>`;
+      } else if (!urgentes.length) {
+        contEl.innerHTML = `<div style="padding:16px 0;color:var(--tx3);font-size:12px;text-align:center">Nenhum contrato próximo do vencimento. <span onclick="go('admin-con')" style="color:var(--tx2);cursor:pointer">Ver todos →</span></div>`;
+      } else {
+        contEl.innerHTML = urgentes.slice(0, 5).map(r => {
+          const d    = diasParaVencer(r.data_vencimento);
+          const dot  = d !== null && d <= 7 ? "var(--rose)" : "var(--amber)";
+          const pill = d < 0 ? `<span class="pill pl">Vencido</span>` : d <= 7 ? `<span class="pill pl">Urgente</span>` : `<span class="pill po">Atenção</span>`;
+          const custo = _custosLabel(r);
+          return `<div class="trow" onclick="conAbrirDetalhe('${r.id}')" style="cursor:pointer">
+            <div class="tdot" style="background:${dot}"></div>
+            <div class="tbody">
+              <div class="ttitle">${escapeHtml(r.produto || r.titulo || "—")}</div>
+              <div class="tmeta">${escapeHtml(r.fornecedor || "—")}${custo ? " · " + custo : ""} · vence ${fmtD(r.data_vencimento)}</div>
+            </div>${pill}</div>`;
+        }).join("");
+      }
+    }
+
+    const pendEl = document.getElementById("adm-dash-pendencias");
+    if (pendEl) {
+      pendEl.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:8px 0">${_sp()} Carregando...</div>`;
+      try {
+        const url = `${apiBaseUrl()}/rest/v1/demandas?area=eq.Administrativo&status=not.in.(CONCLUIDA,CANCELADA)&select=id,titulo,prioridade,status,criado_em&order=criado_em.desc&limit=5`;
+        const res = await fetch(url, { headers: apiHeaders() });
+        if (!res.ok) throw new Error("fetch failed");
+        const dems = await res.json();
+        if (!Array.isArray(dems) || !dems.length) {
+          pendEl.innerHTML = `<div style="padding:20px;text-align:center;color:var(--tx3);font-size:12px">
+            <div style="font-size:22px;margin-bottom:6px">✅</div>Nenhuma pendência administrativa.</div>`;
+        } else {
+          const stCor = { ABERTA:"var(--sky)", EM_ANALISE:"var(--gold)", EM_ANDAMENTO:"var(--violet)", PENDENTE:"var(--amber)" };
+          const stLbl = { ABERTA:"Aberta", EM_ANALISE:"Em Análise", EM_ANDAMENTO:"Em Andamento", PENDENTE:"Pendente" };
+          pendEl.innerHTML = dems.map(r => {
+            const cor  = stCor[r.status] || "var(--tx3)";
+            const lbl  = stLbl[r.status] || r.status || "—";
+            const pill = r.prioridade === "Urgente" ? `<span class="pill pl">Urgente</span>`
+                       : r.prioridade === "Alta"    ? `<span class="pill po">Alta</span>`
+                       :                              `<span class="pill pd">${escapeHtml(r.prioridade || "Normal")}</span>`;
+            return `<div class="trow" style="cursor:pointer" onclick="demAbrirDetalhe('${r.id}','admin-dash')">
+              <div class="tdot" style="background:${cor}"></div>
+              <div class="tbody"><div class="ttitle">${escapeHtml(r.titulo || "—")}</div><div class="tmeta">${lbl}</div></div>
+              ${pill}</div>`;
+          }).join("");
+        }
+      } catch (_) {
+        pendEl.innerHTML = `<div style="padding:12px;color:var(--tx3);font-size:12px">Não foi possível carregar as pendências.</div>`;
+      }
+    }
+  }
+
+  async function renderAdminEst() {
+    try {
+      const url = `${apiBaseUrl()}/rest/v1/estoque_itens?select=nome,categoria,quantidade,quantidade_min,unidade,localizacao,ativo&ativo=eq.true&limit=500`;
+      const res = await fetch(url, { headers: apiHeaders({ "Prefer": "count=none" }) });
+      if (!res.ok) return;
+      const items = await res.json();
+      if (!Array.isArray(items)) return;
+
+      const sv = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      sv("est-kpi-total", items.length);
+
+      const criticos = items.filter(r =>
+        r.quantidade_min != null && r.quantidade != null &&
+        Number(r.quantidade) < Number(r.quantidade_min)
+      );
+      sv("est-kpi-criticos", criticos.length);
+
+      const tbody = document.getElementById("est-criticos-body");
+      if (tbody) {
+        if (!criticos.length) {
+          tbody.innerHTML = `<tr><td colspan="4" style="padding:14px;text-align:center;color:var(--tx3);font-size:12px">Nenhum item abaixo do mínimo.</td></tr>`;
+        } else {
+          tbody.innerHTML = criticos.slice(0, 8).map(r =>
+            `<tr>
+              <td class="tdp">${escapeHtml(r.nome || "—")}</td>
+              <td>${escapeHtml(r.localizacao || r.categoria || "—")}</td>
+              <td class="mono neg">${r.quantidade ?? "—"} ${escapeHtml(r.unidade || "")}</td>
+              <td class="tdc">${r.quantidade_min ?? "—"}</td>
+            </tr>`
+          ).join("");
+        }
+      }
+    } catch (e) {
+      console.warn("[AdminEst]", e);
+    }
+  }
+
+  async function renderJurDash() {
+    if (!_cache.length && !_loadError) await _load();
+    const sv = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+
+    const ativos  = _cache.filter(r => _autoStatus(r) === "Ativo");
+    const avencer = _cache.filter(r => _autoStatus(r) === "A vencer");
+    const vencido = _cache.filter(r => _autoStatus(r) === "Vencido");
+    sv("jur-kpi-con",    ativos.length);
+    sv("jur-kpi-avencer", avencer.length);
+    sv("jur-kpi-venc",   vencido.length);
+
+    const urgentes = _cache
+      .filter(r => {
+        const st = _autoStatus(r);
+        if (["Cancelado","Encerrado"].includes(st)) return false;
+        const d = diasParaVencer(r.data_vencimento);
+        return d !== null && d <= 30;
+      })
+      .sort((a, b) => (a.data_vencimento || "").localeCompare(b.data_vencimento || ""));
+
+    const conEl = document.getElementById("jur-dash-contratos");
+    if (conEl) {
+      if (!urgentes.length) {
+        conEl.innerHTML = `<div style="padding:16px 0;color:var(--tx3);font-size:12px;text-align:center">Nenhum contrato próximo do vencimento.</div>`;
+      } else {
+        conEl.innerHTML = urgentes.slice(0, 5).map(r => {
+          const d    = diasParaVencer(r.data_vencimento);
+          const dot  = d !== null && d <= 7 ? "var(--rose)" : "var(--amber)";
+          const pill = d < 0 ? `<span class="pill pl">Vencido</span>` : d <= 7 ? `<span class="pill pl">Urgente</span>` : `<span class="pill po">Atenção</span>`;
+          return `<div class="trow" onclick="conAbrirDetalhe('${r.id}')" style="cursor:pointer">
+            <div class="tdot" style="background:${dot}"></div>
+            <div class="tbody">
+              <div class="ttitle">${escapeHtml(r.produto || r.titulo || "—")}</div>
+              <div class="tmeta">${escapeHtml(r.fornecedor || "—")} · vence ${fmtD(r.data_vencimento)}</div>
+            </div>${pill}</div>`;
+        }).join("");
+      }
+    }
+
+    const filaEl = document.getElementById("jur-dash-fila");
+    if (filaEl) {
+      filaEl.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:6px 0">${_sp()} Carregando...</div>`;
+      try {
+        const url = `${apiBaseUrl()}/rest/v1/demandas?area=eq.Jurídico&status=not.in.(CONCLUIDA,CANCELADA)&select=id,titulo,prioridade,status,criado_em&order=prioridade.asc,criado_em.desc&limit=5`;
+        const res = await fetch(url, { headers: apiHeaders() });
+        if (!res.ok) throw new Error("fetch failed");
+        const dems = await res.json();
+        if (!Array.isArray(dems) || !dems.length) {
+          // count demandas ativas
+          sv("jur-kpi-dem", 0);
+          filaEl.innerHTML = `<div style="padding:20px;text-align:center;color:var(--tx3);font-size:12px">
+            <div style="font-size:22px;margin-bottom:6px">✅</div>Nenhuma demanda jurídica em aberto.</div>`;
+        } else {
+          sv("jur-kpi-dem", dems.length < 5 ? dems.length : dems.length + "+");
+          const stCor = { ABERTA:"var(--sky)", EM_ANALISE:"var(--gold)", EM_ANDAMENTO:"var(--violet)", PENDENTE:"var(--amber)" };
+          const stLbl = { ABERTA:"Aberta", EM_ANALISE:"Em Análise", EM_ANDAMENTO:"Em Andamento", PENDENTE:"Pendente" };
+          filaEl.innerHTML = dems.map(r => {
+            const cor  = stCor[r.status] || "var(--tx3)";
+            const lbl  = stLbl[r.status] || r.status || "—";
+            const pill = r.prioridade === "Urgente" ? `<span class="pill pl">Urgente</span>`
+                       : r.prioridade === "Alta"    ? `<span class="pill po">Alta</span>`
+                       :                              `<span class="pill pd">${escapeHtml(r.prioridade || "Normal")}</span>`;
+            return `<div class="trow" style="cursor:pointer" onclick="demAbrirDetalhe('${r.id}','jur-dash')">
+              <div class="tdot" style="background:${cor}"></div>
+              <div class="tbody"><div class="ttitle">${escapeHtml(r.titulo || "—")}</div><div class="tmeta">${lbl}</div></div>
+              ${pill}</div>`;
+          }).join("");
+        }
+      } catch (_) {
+        filaEl.innerHTML = `<div style="padding:12px;color:var(--tx3);font-size:12px">Não foi possível carregar as demandas.</div>`;
+        sv("jur-kpi-dem", "—");
+      }
+    }
+  }
+
+  window.renderAdminDash = renderAdminDash;
+  window.renderAdminEst  = renderAdminEst;
+  window.renderJurDash   = renderJurDash;
+
   document.addEventListener("sipen:navigate", ({ detail: { id } }) => {
     if (id === "admin-con") {
       _invalidate();
@@ -1018,6 +1251,9 @@
       document.querySelectorAll("#con-tipo-tabs .bni").forEach((el, i) => el.classList.toggle("on", i === 0));
       renderContratos();
     }
+    if (id === "admin-dash") { _invalidate(); renderAdminDash(); }
+    if (id === "admin-est")  renderAdminEst();
+    if (id === "jur-dash")   { _invalidate(); renderJurDash(); }
   });
 
   window.conRecarregar = async function () { _invalidate(); await renderContratos(); };

@@ -16,32 +16,38 @@
     </div>
     <div class="ct">
       <div class="kpis c4">
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,85,85,0.15);color:var(--rose);">◻</div><div class="kpi-body"><div class="kpi-lbl">Contratos a vencer</div><div class="kpi-val">3</div><div class="kpi-d wa">⚠ em 30 dias</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal);">◈</div><div class="kpi-body"><div class="kpi-lbl">Documentos arquivados</div><div class="kpi-val">128</div><div class="kpi-d nu">este mês</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Colaboradores</div><div class="kpi-val">24</div><div class="kpi-d up">▲ ativos</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Itens em estoque</div><div class="kpi-val">213</div><div class="kpi-d nu">12 categorias</div></div></div>
+        <div class="kpi" style="cursor:pointer" onclick="go('admin-con')">
+          <div class="kpi-ico" style="background:rgba(224,85,85,0.15);color:var(--rose)">◻</div>
+          <div class="kpi-body"><div class="kpi-lbl">Contratos a vencer</div><div class="kpi-val" id="adm-kpi-contratos">—</div><div class="kpi-d wa">próximos 30 dias</div></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal)">◈</div>
+          <div class="kpi-body"><div class="kpi-lbl">Documentos</div><div class="kpi-val" id="adm-kpi-docs">—</div><div class="kpi-d nu">arquivados</div></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky)">◎</div>
+          <div class="kpi-body"><div class="kpi-lbl">Membros ativos</div><div class="kpi-val" id="adm-kpi-colab">—</div><div class="kpi-d nu">cadastrados</div></div>
+        </div>
+        <div class="kpi" style="cursor:pointer" onclick="go('admin-est')">
+          <div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold)">⊞</div>
+          <div class="kpi-body"><div class="kpi-lbl">Itens em estoque</div><div class="kpi-val" id="adm-kpi-estoque">—</div><div class="kpi-d nu">cadastrados</div></div>
+        </div>
       </div>
-      <div class="alr alr-w"><span class="alr-i">⚠</span><div><strong>3 contratos</strong> vencem em 30 dias — Sonorização (30/04), Internet (15/05) e Seguro (20/05)</div><span class="alr-a" onclick="go('admin-con')">Ver →</span></div>
+      <div id="adm-dash-alerta"></div>
       <div class="qa">
-        <div class="qai" onclick="go('admin-con')"><div class="qi" style="background:var(--amberbg)">◈</div><div><div class="ql">Contratos</div><div class="qs">3 a vencer</div></div></div>
+        <div class="qai" onclick="go('admin-con')"><div class="qi" style="background:var(--amberbg)">◈</div><div><div class="ql">Contratos</div><div class="qs" id="adm-qa-con">—</div></div></div>
         <div class="qai" onclick="go('admin-sec')"><div class="qi" style="background:var(--skybg)">§</div><div><div class="ql">Secretaria</div><div class="qs">cadastros e docs</div></div></div>
         <div class="qai" onclick="go('admin-rh')"><div class="qi" style="background:rgba(74,156,245,0.14)">👥</div><div><div class="ql">RH</div><div class="qs">gestão de pessoas</div></div></div>
         <div class="qai" onclick="go('admin-aud')"><div class="qi" style="background:var(--violetbg)">≡</div><div><div class="ql">Auditoria</div><div class="qs">log de ações</div></div></div>
       </div>
       <div class="g2">
         <div class="card">
-          <div class="ctit">Contratos monitorados</div>
-          <div class="trow"><div class="tdot" style="background:var(--rose)"></div><div class="tbody"><div class="ttitle">Manutenção Sonorização</div><div class="tmeta">AudioTec · R$ 890/mês · vence 30/04</div></div><span class="pill pl">Urgente</span></div>
-          <div class="trow"><div class="tdot" style="background:var(--amber)"></div><div class="tbody"><div class="ttitle">Internet fibra — sede</div><div class="tmeta">Telecom SP · R$ 320/mês · vence 15/05</div></div><span class="pill po">Atenção</span></div>
-          <div class="trow"><div class="tdot" style="background:var(--amber)"></div><div class="tbody"><div class="ttitle">Seguro predial</div><div class="tmeta">Seguradora A · R$ 450/mês · vence 20/05</div></div><span class="pill po">Atenção</span></div>
-          <div class="trow"><div class="tdot" style="background:var(--gmd)"></div><div class="tbody"><div class="ttitle">Aluguel salão</div><div class="tmeta">Imóveis Santos · R$ 2.500/mês · vence 30/08</div></div><span class="pill pg">Vigente</span></div>
+          <div class="ctit">Contratos monitorados <span class="cact" onclick="renderAdminDash()">↻</span></div>
+          <div id="adm-dash-contratos"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
         </div>
         <div class="card">
-          <div class="ctit">Pendências Administrativas</div>
-          <div class="trow"><div class="tdot" style="background:var(--rose)"></div><div class="tbody"><div class="ttitle">Renovação contrato AudioTec</div><div class="tmeta">Vence em 9 dias · Sonorização</div></div><span class="pill pl">Urgente</span></div>
-          <div class="trow"><div class="tdot" style="background:var(--amber)"></div><div class="tbody"><div class="ttitle">Atualização cadastral RH</div><div class="tmeta">3 colaboradores pendentes</div></div><span class="pill po">Atenção</span></div>
-          <div class="trow"><div class="tdot" style="background:var(--sky)"></div><div class="tbody"><div class="ttitle">Inventário de estoque</div><div class="tmeta">Previsto para final do mês</div></div><span class="pill pd">Programado</span></div>
-          <div class="trow"><div class="tdot" style="background:var(--gmd)"></div><div class="tbody"><div class="ttitle">Arquivo de documentos 2024</div><div class="tmeta">Digitalizações concluídas</div></div><span class="pill pg">Concluído</span></div>
+          <div class="ctit">Pendências Administrativas <span class="cact" onclick="renderAdminDash()">↻</span></div>
+          <div id="adm-dash-pendencias"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
         </div>
       </div>
     </div>
@@ -73,10 +79,10 @@
     </div>
     <div class="ct">
       <div class="kpis c4">
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Itens cadastrados</div><div class="kpi-val">213</div><div class="kpi-d nu">12 categorias</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Abaixo do mínimo</div><div class="kpi-val">9</div><div class="kpi-d wa">⚠ requer compra</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Solicitações abertas</div><div class="kpi-val">14</div><div class="kpi-d nu">7 em análise</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gmd);">✦</div><div class="kpi-body"><div class="kpi-lbl">Saídas no mês</div><div class="kpi-val">86</div><div class="kpi-d up">▲ uso ministerial e operacional</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold)">◆</div><div class="kpi-body"><div class="kpi-lbl">Itens cadastrados</div><div class="kpi-val" id="est-kpi-total">—</div><div class="kpi-d nu">no estoque</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber)">⊞</div><div class="kpi-body"><div class="kpi-lbl">Abaixo do mínimo</div><div class="kpi-val" id="est-kpi-criticos">—</div><div class="kpi-d wa">requer atenção</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky)">◎</div><div class="kpi-body"><div class="kpi-lbl">Solicitações abertas</div><div class="kpi-val" id="est-kpi-sol">—</div><div class="kpi-d nu">em andamento</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gmd)">✦</div><div class="kpi-body"><div class="kpi-lbl">Saídas no mês</div><div class="kpi-val" id="est-kpi-saidas">—</div><div class="kpi-d nu">movimentações</div></div></div>
       </div>
       <div class="g2">
         <div class="card">
@@ -89,15 +95,11 @@
           </div>
         </div>
         <div class="card">
-          <div class="ctit">Itens críticos</div>
+          <div class="ctit">Itens críticos <span class="cact" onclick="renderAdminEst()">↻</span></div>
           <table class="tbl">
             <thead><tr><th>Item</th><th>Local</th><th>Saldo</th><th>Mínimo</th></tr></thead>
-            <tbody>
-              <tr><td class="tdp">Papel A4</td><td>Secretaria</td><td class="mono neg">3 resmas</td><td class="tdc">10</td></tr>
-              <tr><td class="tdp">Copo descartável</td><td>Copa</td><td class="mono neg">120 un.</td><td class="tdc">500</td></tr>
-              <tr><td class="tdp">Água mineral</td><td>Auditório</td><td class="mono">24 un.</td><td class="tdc">20</td></tr>
-              <tr><td class="tdp">Cabo P10</td><td>Som</td><td class="mono neg">1 un.</td><td class="tdc">3</td></tr>
-              <tr><td class="tdp">Material de limpeza</td><td>Bloco D</td><td class="mono">8 kits</td><td class="tdc">6</td></tr>
+            <tbody id="est-criticos-body">
+              <tr><td colspan="4" style="padding:14px;text-align:center;color:var(--tx3);font-size:12px">Carregando...</td></tr>
             </tbody>
           </table>
         </div>
