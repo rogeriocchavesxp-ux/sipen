@@ -336,7 +336,9 @@
 
     el.innerHTML = `
       <!-- Header -->
-      <div style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;padding:20px 24px;margin-bottom:12px">
+      <div style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;overflow:hidden;margin-bottom:12px">
+        ${evt.imagem_url ? `<img src="${_ea(evt.imagem_url)}" style="width:100%;max-height:220px;object-fit:cover;display:block" onerror="this.style.display='none'">` : ""}
+        <div style="padding:20px 24px">
         <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
           <div style="flex:1;min-width:240px">
             <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Evento · ${_eh(evt.id.slice(0, 8).toUpperCase())}</div>
@@ -355,6 +357,7 @@
               <button onclick="eveAbrirFormEvento('${_ea(evt.id)}')" style="padding:7px 14px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx1);font-size:12px;cursor:pointer;font-weight:600">Editar</button>` : ""}
             <button onclick="go('eve-todos')" style="padding:7px 14px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:12px;cursor:pointer">← Voltar</button>
           </div>
+        </div>
         </div>
       </div>
 
@@ -559,6 +562,21 @@
           <div>
             ${sec("Identificação")}
             ${inp("eve-f-titulo", "Título do Evento", 'type="text" placeholder="Nome do evento"', evt?.titulo, true)}
+            <div style="margin-top:14px">
+              ${lbl("Imagem de Capa")}
+              <div id="eve-img-preview" style="margin-top:8px;${evt?.imagem_url ? "" : "display:none;"}">
+                <img id="eve-img-thumb" src="${_ea(evt?.imagem_url || "")}" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;border:1px solid var(--bd2);display:block">
+                <div style="display:flex;gap:8px;margin-top:6px">
+                  <span style="font-size:11px;color:var(--tx3);flex:1" id="eve-img-nome">${evt?.imagem_url ? "Imagem atual" : ""}</span>
+                  <button type="button" onclick="eveRemoverImagem()" style="font-size:10.5px;color:var(--rose);background:none;border:none;cursor:pointer;padding:0">Remover</button>
+                </div>
+              </div>
+              <label style="margin-top:8px;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;border:1px dashed var(--bd2);cursor:pointer;font-size:12px;color:var(--tx3)">
+                <span style="font-size:16px">📷</span>
+                <span id="eve-img-label">Escolher imagem (JPG, PNG, WebP — máx. 5 MB)</span>
+                <input type="file" id="eve-f-imagem" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="evePreviewImagem(this)">
+              </label>
+            </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
               ${sel("eve-f-status", "Status", statusOpts, evt?.status || "rascunho")}
               ${inp("eve-f-ministerio", "Ministério Organizador", 'type="text"', evt?.ministerio_organizador)}
@@ -641,6 +659,46 @@
     if (el) el.style.display = "none";
   };
 
+  window.evePreviewImagem = function (input) {
+    const file = input.files?.[0];
+    if (!file) return;
+    const preview = document.getElementById("eve-img-preview");
+    const thumb   = document.getElementById("eve-img-thumb");
+    const nome    = document.getElementById("eve-img-nome");
+    const label   = document.getElementById("eve-img-label");
+    if (file.size > 5 * 1024 * 1024) { _T("Arquivo muito grande", "Máximo permitido: 5 MB."); input.value = ""; return; }
+    const url = URL.createObjectURL(file);
+    thumb.src = url;
+    nome.textContent = file.name;
+    label.textContent = file.name;
+    preview.style.display = "";
+  };
+
+  window.eveRemoverImagem = function () {
+    const input   = document.getElementById("eve-f-imagem");
+    const preview = document.getElementById("eve-img-preview");
+    const thumb   = document.getElementById("eve-img-thumb");
+    const label   = document.getElementById("eve-img-label");
+    if (input) input.value = "";
+    if (thumb) thumb.src = "";
+    if (preview) preview.style.display = "none";
+    if (label) label.textContent = "Escolher imagem (JPG, PNG, WebP — máx. 5 MB)";
+    document.getElementById("eve-img-removida") && (document.getElementById("eve-img-removida").value = "1");
+  };
+
+  async function _uploadImagemEvento(file, eventoId) {
+    const sb = _sbClient();
+    if (!sb) throw new Error("Supabase não disponível para upload");
+    const ext  = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `eventos/${eventoId}/capa.${ext}`;
+    const { error } = await sb.storage
+      .from("eventos-imagens")
+      .upload(path, file, { contentType: file.type, upsert: true });
+    if (error) throw new Error(error.message);
+    const base = (typeof SUPABASE_URL !== "undefined" ? SUPABASE_URL : "").replace(/\/$/, "");
+    return `${base}/storage/v1/object/public/eventos-imagens/${path}?t=${Date.now()}`;
+  }
+
   window.eveCopiarLink = function (eventoId) {
     const input = document.getElementById(`eve-link-pub-${eventoId}`);
     const link = input ? input.value : _gerarLinkPublico(eventoId);
@@ -707,8 +765,20 @@
       payload.criado_em       = new Date().toISOString();
     }
 
+    const imgFile    = document.getElementById("eve-f-imagem")?.files?.[0] || null;
+    const imgRemoved = document.getElementById("eve-img-removida")?.value === "1";
+    const thumbSrc   = document.getElementById("eve-img-thumb")?.src || "";
+
     try {
       if (!isNew) {
+        /* upload imagem antes de salvar (temos o id) */
+        if (imgFile) {
+          try { payload.imagem_url = await _uploadImagemEvento(imgFile, editId); }
+          catch (e) { _T("Erro no upload da imagem", e.message); return; }
+        } else if (imgRemoved) {
+          payload.imagem_url = null;
+        }
+
         await _fetch(`${_api()}/rest/v1/eventos?id=eq.${editId}`, {
           method: "PATCH",
           headers: _hdrs({ "Content-Type": "application/json", "Prefer": "return=minimal" }),
@@ -723,12 +793,26 @@
         } catch (_) {}
         eveAbrirDetalhe(editId);
       } else {
+        /* novo evento: cria primeiro, depois faz upload com o id gerado */
         const res = await _fetch(`${_api()}/rest/v1/eventos`, {
           method: "POST",
           headers: _hdrs({ "Content-Type": "application/json", "Prefer": "return=representation" }),
           body: JSON.stringify(payload),
         });
         const novo = Array.isArray(res) ? res[0] : res;
+
+        if (novo?.id && imgFile) {
+          try {
+            const imgUrl = await _uploadImagemEvento(imgFile, novo.id);
+            await _fetch(`${_api()}/rest/v1/eventos?id=eq.${novo.id}`, {
+              method: "PATCH",
+              headers: _hdrs({ "Content-Type": "application/json", "Prefer": "return=minimal" }),
+              body: JSON.stringify({ imagem_url: imgUrl }),
+            });
+            novo.imagem_url = imgUrl;
+          } catch (e) { _T("Evento criado, mas erro no upload da imagem", e.message); }
+        }
+
         _T("Evento criado!", titulo);
         eveFecharFormEvento();
         await _recarregarTudo();

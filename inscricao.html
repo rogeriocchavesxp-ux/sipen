@@ -229,7 +229,9 @@ function renderEvento(evt, totalInscritos) {
   document.title = `Inscrição — ${evt.titulo} · IPPenha`;
 
   app.innerHTML = `
-    <div class="event-card">
+    <div class="event-card" style="overflow:hidden;padding:0">
+      ${evt.imagem_url ? `<img src="${eh(evt.imagem_url)}" style="width:100%;max-height:200px;object-fit:cover;display:block" onerror="this.style.display='none'">` : ""}
+      <div style="padding:22px 24px">
       <div class="event-badge">Inscrição de Evento</div>
       <div class="event-title">${eh(evt.titulo)}</div>
       <div class="event-meta">${metaHtml}</div>
@@ -237,6 +239,7 @@ function renderEvento(evt, totalInscritos) {
       ${valorHtml}
       ${publicoHtml}
       ${evt.descricao ? `<div class="event-desc">${eh(evt.descricao)}</div>` : ""}
+      </div>
     </div>
 
     ${estadoHtml || renderFormHtml(evt)}
