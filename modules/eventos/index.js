@@ -586,6 +586,27 @@
               <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer"><input type="checkbox" id="eve-f-criancas" ${evt?.aceita_criancas ? "checked" : ""} style="accent-color:var(--sky)"> Aceita crianças</label>
               <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer"><input type="checkbox" id="eve-f-responsavel" ${evt?.requer_responsavel ? "checked" : ""} style="accent-color:var(--sky)"> Requer responsável</label>
             </div>
+            <div style="margin-top:16px">
+              ${sec("Campos do Formulário de Inscrição")}
+              <div style="font-size:11px;color:var(--tx3);margin-bottom:10px">Nome completo e WhatsApp são sempre exibidos. Escolha os demais campos:</div>
+              <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+                ${(() => {
+                  const ci = evt?.campos_inscricao || {};
+                  const campo = (id, label, def) =>
+                    `<label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer">
+                      <input type="checkbox" id="eve-f-campo-${id}" ${(ci[id] !== undefined ? ci[id] : def) ? "checked" : ""} style="accent-color:var(--sky)">
+                      ${label}
+                    </label>`;
+                  return [
+                    campo("email",       "E-mail",           true),
+                    campo("familia",     "Família",          false),
+                    campo("tipo_pessoa", "Tipo de pessoa",   true),
+                    campo("congregacao", "Congregação",      true),
+                    campo("observacoes", "Observações",      true),
+                  ].join("");
+                })()}
+              </div>
+            </div>
             <div style="margin-top:14px">
               ${lbl("Público-alvo")}
               <div style="margin-top:8px">${chkGroup("eve-f-publico", evt?.publico_alvo)}</div>
@@ -667,6 +688,13 @@
       aceita_nao_membros:     cbk("eve-f-nao-membros"),
       aceita_criancas:        cbk("eve-f-criancas"),
       requer_responsavel:     cbk("eve-f-responsavel"),
+      campos_inscricao: {
+        email:       cbk("eve-f-campo-email"),
+        familia:     cbk("eve-f-campo-familia"),
+        tipo_pessoa: cbk("eve-f-campo-tipo_pessoa"),
+        congregacao: cbk("eve-f-campo-congregacao"),
+        observacoes: cbk("eve-f-campo-observacoes"),
+      },
       observacoes:            g("eve-f-obs"),
       status:                 g("eve-f-status") || "rascunho",
       atualizado_em:          new Date().toISOString(),

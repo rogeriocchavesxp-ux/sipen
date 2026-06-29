@@ -200,9 +200,9 @@ function renderEvento(evt, totalInscritos) {
     ? `<div class="event-vagas ${vagasRestantes <= 5 ? "low" : "ok"}">
         ${vagasEsgotadas
           ? "Vagas esgotadas"
-          : `${vagasRestantes} vaga${vagasRestantes !== 1 ? "s" : ""} disponível${vagasRestantes !== 1 ? "s" : ""} · ${totalInscritos} inscrito${totalInscritos !== 1 ? "s" : ""}`}
+          : `${vagasRestantes} vaga${vagasRestantes !== 1 ? "s" : ""} disponível${vagasRestantes !== 1 ? "s" : ""}`}
        </div>`
-    : `<div style="font-size:11.5px;color:var(--tx3);margin-top:8px">${totalInscritos} inscrito${totalInscritos !== 1 ? "s" : ""}</div>`;
+    : "";
 
   const valorHtml = !evt.gratuito && evt.valor
     ? `<div class="event-valor">💰 ${fmtMoeda(evt.valor)} por pessoa</div>`
@@ -250,7 +250,79 @@ function renderEvento(evt, totalInscritos) {
 }
 
 function renderFormHtml(evt) {
-  const precisaResponsavel = evt.aceita_criancas || evt.requer_responsavel;
+  const c = evt.campos_inscricao || {};
+  const mostrar = {
+    email:       c.email       !== false,
+    familia:     c.familia     === true,
+    tipo_pessoa: c.tipo_pessoa !== false,
+    congregacao: c.congregacao !== false,
+    observacoes: c.observacoes !== false,
+  };
+
+  /* linha com WhatsApp + Email (ou só WhatsApp se email desativado) */
+  const telEmailHtml = mostrar.email
+    ? `<div class="row2">
+        <div class="field">
+          <label>WhatsApp<span class="req">*</span></label>
+          <input id="f-tel" type="tel" placeholder="(11) 99999-9999" autocomplete="tel">
+        </div>
+        <div class="field">
+          <label>E-mail</label>
+          <input id="f-email" type="email" placeholder="seu@email.com" autocomplete="email">
+        </div>
+       </div>`
+    : `<div class="field">
+        <label>WhatsApp<span class="req">*</span></label>
+        <input id="f-tel" type="tel" placeholder="(11) 99999-9999" autocomplete="tel">
+       </div>`;
+
+  /* linha Família + Congregação / só um dos dois / nenhum */
+  const famCongrHtml = (() => {
+    if (!mostrar.familia && !mostrar.congregacao) return "";
+    if (mostrar.familia && mostrar.congregacao) return `
+      <div class="row2">
+        <div class="field">
+          <label>Família</label>
+          <input id="f-familia" type="text" placeholder="Ex: Família Silva">
+        </div>
+        <div class="field">
+          <label>Congregação / Igreja</label>
+          <input id="f-congr" type="text" placeholder="Ex: IPPenha Sede">
+        </div>
+      </div>`;
+    if (mostrar.familia) return `
+      <div class="field">
+        <label>Família</label>
+        <input id="f-familia" type="text" placeholder="Ex: Família Silva">
+      </div>`;
+    return `
+      <div class="field">
+        <label>Congregação / Igreja</label>
+        <input id="f-congr" type="text" placeholder="Ex: IPPenha Sede, IPBras...">
+      </div>`;
+  })();
+
+  /* linha Tipo de pessoa + (congregação se família não aparece) */
+  const tipoHtml = mostrar.tipo_pessoa
+    ? `<div class="field">
+        <label>Você é<span class="req">*</span></label>
+        <select id="f-tipo" onchange="onTipoChange()">
+          <option value="membro">Membro da IPPenha</option>
+          <option value="nao_membro">Membro de outra Igreja</option>
+          <option value="visitante">Visitante</option>
+          ${evt.aceita_criancas ? `<option value="crianca">Criança (até 11 anos)</option>` : ""}
+          <option value="adolescente">Adolescente (12–17 anos)</option>
+        </select>
+       </div>`
+    : "";
+
+  const obsHtml = mostrar.observacoes
+    ? `<div class="field">
+        <label>Observações</label>
+        <textarea id="f-obs" rows="2" placeholder="Alguma informação adicional? (opcional)"></textarea>
+       </div>`
+    : "";
+
   return `
     <div class="form-card">
       <div class="form-title">Preencha seus dados para se inscrever</div>
@@ -260,33 +332,9 @@ function renderFormHtml(evt) {
         <input id="f-nome" type="text" placeholder="Seu nome completo" autocomplete="name">
       </div>
 
-      <div class="row2">
-        <div class="field">
-          <label>WhatsApp<span class="req">*</span></label>
-          <input id="f-tel" type="tel" placeholder="(11) 99999-9999" autocomplete="tel">
-        </div>
-        <div class="field">
-          <label>E-mail</label>
-          <input id="f-email" type="email" placeholder="seu@email.com" autocomplete="email">
-        </div>
-      </div>
-
-      <div class="row2">
-        <div class="field">
-          <label>Você é<span class="req">*</span></label>
-          <select id="f-tipo" onchange="onTipoChange()">
-            <option value="membro">Membro da IPPenha</option>
-            <option value="nao_membro">Membro de outra Igreja</option>
-            <option value="visitante">Visitante</option>
-            ${evt.aceita_criancas ? `<option value="crianca">Criança (até 11 anos)</option>` : ""}
-            <option value="adolescente">Adolescente (12–17 anos)</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Congregação / Igreja</label>
-          <input id="f-congr" type="text" placeholder="Ex: IPPenha Sede, IPBras...">
-        </div>
-      </div>
+      ${telEmailHtml}
+      ${famCongrHtml}
+      ${tipoHtml}
 
       <div class="resp-sec" id="resp-sec">
         <div style="font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;padding:8px 10px;background:rgba(208,144,64,.08);border-radius:6px;border:1px solid rgba(208,144,64,.2)">
@@ -304,10 +352,7 @@ function renderFormHtml(evt) {
         </div>
       </div>
 
-      <div class="field">
-        <label>Observações</label>
-        <textarea id="f-obs" rows="2" placeholder="Alguma informação adicional? (opcional)"></textarea>
-      </div>
+      ${obsHtml}
 
       ${!evt.gratuito && evt.valor ? `
       <div style="padding:12px;border-radius:8px;background:rgba(74,156,245,.07);border:1px solid rgba(74,156,245,.18);margin-bottom:14px">
@@ -378,6 +423,8 @@ async function submitForm() {
       email:                g("f-email"),
       telefone:             tel,
       tipo:                 tipo_val,
+      familia:              g("f-familia"),
+      congregacao:          g("f-congr"),
       responsavel_nome:     g("f-resp-nome"),
       responsavel_telefone: g("f-resp-tel"),
       observacao:           g("f-obs"),
