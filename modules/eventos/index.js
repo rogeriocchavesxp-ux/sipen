@@ -89,7 +89,7 @@
   }
 
   function _gerarLinkPublico(eventoId) {
-    const base = "https://rogeriocchavesxp-ux.github.io/sipen/inscricao.html";
+    const base = "https://www.sipen.com.br/inscricao.html";
     return `${base}?id=${eventoId}`;
   }
 
