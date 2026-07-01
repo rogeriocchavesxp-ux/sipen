@@ -163,10 +163,7 @@
     return `<span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;white-space:nowrap;background:${s.bg};color:${s.cl}">${label||"—"}</span>`;
   }
 
-  function pillPrio(p) {
-    const c = PRIO_CFG[p] || "var(--tx3)";
-    return `<span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;white-space:nowrap;background:${c}18;color:${c}">${p||"—"}</span>`;
-  }
+  function pillPrio(_p) { return ""; }
 
   function fmtD(d) {
     if (!d) return "—";
@@ -391,14 +388,7 @@
       { label:"Cancelada",    val:cancel.length,  cor:"var(--tx4)",    view:"dem-hist" },
     ];
 
-    const alertaUrgente = urgentes.length > 0 ? `
-      <div class="alr alr-r" style="margin-bottom:16px;cursor:pointer" onclick="window.go('dem-pri')">
-        <span class="alr-i">🚨</span>
-        <div><strong>${urgentes.length} demanda${urgentes.length>1?"s":""} urgente${urgentes.length>1?"s":""}</strong> aguardando ação —
-          ${urgentes.slice(0,3).map(r => `<em>${escapeHtml(r.titulo || r.area) || "—"}</em>`).join(", ")}${urgentes.length>3?" e mais...":""}
-        </div>
-        <span class="alr-a">Ver →</span>
-      </div>` : "";
+    const alertaUrgente = "";
 
     el.innerHTML = `
       ${alertaUrgente}
@@ -415,9 +405,9 @@
           <div class="kpi-ico" style="background:var(--violetbg);color:var(--violet)">◎</div>
           <div class="kpi-body"><div class="kpi-lbl">Em Andamento</div><div class="kpi-val">${andando.length}</div><div class="kpi-d nu">em execução</div></div>
         </div>
-        <div class="kpi" style="cursor:pointer;border-radius:0;border:none;border-right:1px solid var(--bd1)" onclick="window.go('dem-pri')">
-          <div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">!</div>
-          <div class="kpi-body"><div class="kpi-lbl">Prioritárias</div><div class="kpi-val">${urgentes.length}</div><div class="kpi-d ${urgentes.length>0?"dn":"up"}">alta/urgente</div></div>
+        <div class="kpi" style="cursor:pointer;border-radius:0;border:none;border-right:1px solid var(--bd1)" onclick="window.go('dem-todas')">
+          <div class="kpi-ico" style="background:rgba(212,168,67,.12);color:var(--amber)">⏳</div>
+          <div class="kpi-body"><div class="kpi-lbl">Pendentes</div><div class="kpi-val">${pendente.length}</div><div class="kpi-d nu">aguardando</div></div>
         </div>
         <div class="kpi" style="cursor:pointer;border-radius:0;border:none" onclick="window.go('dem-conc')">
           <div class="kpi-ico" style="background:rgba(58,170,92,.12);color:var(--gr)">✓</div>
@@ -439,7 +429,6 @@
                 </div>
                 <div class="tright" style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">
                   ${pillStatus(r.status)}
-                  ${pillPrio(r.prioridade)}
                 </div>
               </div>`).join("")}
         </div>
@@ -545,7 +534,7 @@
         <table style="width:100%;border-collapse:collapse;font-size:12px">
           <thead>
             <tr style="border-bottom:1px solid var(--bd2)">
-              ${["Categoria","Subcategoria","Título","Solicitante","Responsável","Valor","Prior.","Status","Abertura","Conclusão"].map((h,i) =>
+              ${["Categoria","Subcategoria","Título","Solicitante","Responsável","Valor","Status","Abertura","Conclusão"].map((h,i) =>
                 `<th style="text-align:${i===5?"right":"left"};padding:8px 6px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`
               ).join("")}
             </tr>
@@ -564,7 +553,6 @@
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${escapeHtml(r.solicitante || r.solicitante_txt) || "—"}</td>
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${escapeHtml(r.responsavel || r.responsavel_txt) || "—"}</td>
                 <td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--tx1);white-space:nowrap">${r.financial_data?.valor != null ? `R$ ${parseFloat(r.financial_data.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}</td>
-                <td style="padding:8px 6px">${pillPrio(r.prioridade)}</td>
                 <td style="padding:8px 6px">${pillStatus(r.status)}</td>
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${fmtD(r.data_abertura||r.criado_em)}</td>
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${fmtD(r.data_conclusao)}</td>
@@ -1044,7 +1032,6 @@
       ["Subcategoria",  escapeHtml(dem.subcategoria)||"—"],
       ["Solicitante",   escapeHtml(dem.solicitante || dem.solicitante_txt) || "—"],
       ["Responsável",   escapeHtml(dem.responsavel || dem.responsavel_txt) || "—"],
-      ["Prioridade",    pillPrio(dem.prioridade)],
       ["Abertura",      fmtD(dem.data_abertura||dem.criado_em)],
       ["Conclusão prev.",fmtD(dem.data_conclusao)],
     ];
@@ -1066,7 +1053,7 @@
           <div class="hero-lbl">Demanda · ${fmtD(dem.data_abertura||dem.criado_em)}</div>
           <div class="hero-ttl">${escapeHtml(dem.titulo) || "Sem título"}</div>
           <div class="hero-dsc" style="display:flex;gap:8px;align-items:center;margin-top:4px">
-            ${pillStatus(dem.status)} ${pillPrio(dem.prioridade)}
+            ${pillStatus(dem.status)}
             <span style="color:var(--tx3);font-size:11px">${catIcon(dem.area)} ${dem.area||"—"} → ${dem.subcategoria||"—"}</span>
           </div>
         </div>
@@ -1123,13 +1110,6 @@
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Título *</label>
               <input id="dem-edit-titulo" type="text" value="${escapeHtmlAttr(dem.titulo || '')}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>
-            ${_podeEditarPrioridade() ? `
-            <div>
-              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Prioridade</label>
-              <select id="dem-edit-prio" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px">
-                ${["Baixa","Média","Alta","Urgente"].map(p => `<option${p===dem.prioridade?" selected":""}>${p}</option>`).join("")}
-              </select>
-            </div>` : ""}
             <div>
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Responsável</label>
               <input id="dem-edit-resp" type="text" value="${escapeHtmlAttr(dem.responsavel || dem.responsavel_txt || '')}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
@@ -2318,7 +2298,6 @@
             <thead><tr style="border-bottom:2px solid var(--bd1)">
               <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-weight:600;font-size:11px">Pessoa</th>
               <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-weight:600;font-size:11px">Motivo</th>
-              <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-weight:600;font-size:11px">Prioridade</th>
               <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-weight:600;font-size:11px">Status</th>
               <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-weight:600;font-size:11px">Responsável</th>
               <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-weight:600;font-size:11px">Abertura</th>
@@ -2333,7 +2312,6 @@
               return `<tr style="border-bottom:1px solid var(--bd1)">
                 <td style="padding:8px 10px;color:var(--tx1);font-weight:500">${escapeHtml(c.solicitante || '—')}</td>
                 <td style="padding:8px 10px;color:var(--tx2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(c.titulo || '')}">${escapeHtml(c.titulo || '—')}</td>
-                <td style="padding:8px 10px"><span style="font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;background:${pCor}20;color:${pCor}">${escapeHtml(c.prioridade || '—')}</span></td>
                 <td style="padding:8px 10px"><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${stBg};color:${stCl}">${escapeHtml(stLbl)}</span></td>
                 <td style="padding:8px 10px;color:var(--tx2)">${escapeHtml(c.responsavel || '—')}</td>
                 <td style="padding:8px 10px;color:var(--tx3);font-size:11px">${dtAb}</td>
@@ -2445,7 +2423,7 @@
               <th style="padding:8px 2px;width:36px;vertical-align:middle;text-align:center">
                 <input type="checkbox" id="fin-dem-chk-all" ${todosSel?"checked":""} onchange="window._finToggleTodos(this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--gr)">
               </th>
-              ${["Categoria","Subcategoria","Título","Solicitante","Responsável","Valor","Forma Pgto.","Prior.","Status","Abertura","Conclusão"].map((h,i) =>
+              ${["Categoria","Subcategoria","Título","Solicitante","Responsável","Valor","Forma Pgto.","Status","Abertura","Conclusão"].map((h,i) =>
                 `<th style="text-align:${i===5?"right":"left"};padding:8px 6px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`
               ).join("")}
             </tr>
@@ -2470,7 +2448,6 @@
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${escapeHtml(r.responsavel||r.responsavel_txt)||"—"}</td>
                 <td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--tx1);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${r.financial_data?.valor!=null?`R$ ${parseFloat(r.financial_data.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}`:"—"}</td>
                 <td style="padding:8px 6px;color:var(--tx2);font-size:11px;white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${escapeHtml(r.financial_data?.forma_pagamento||"—")}</td>
-                <td style="padding:8px 6px;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${pillPrio(r.prioridade)}</td>
                 <td style="padding:8px 6px;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${pillStatus(r.status)}</td>
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${fmtD(r.data_abertura||r.criado_em)}</td>
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${fmtD(r.data_conclusao)}</td>
@@ -2553,7 +2530,6 @@
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
           <span style="font-size:9.5px;color:#888;font-weight:600;background:#f0f0f0;padding:2px 7px;border-radius:4px">#${r.id||r._row||"—"}</span>
           <span style="font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px;background:${stC}18;color:${stC}">${label}</span>
-          ${r.prioridade?`<span style="font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px;background:${prC}18;color:${prC}">${r.prioridade}</span>`:""}
         </div>
         <div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:11px">${escapeHtml(r.titulo)||"Sem título"}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px 28px">
@@ -2698,7 +2674,7 @@ ${linhas}
         <table style="width:100%;border-collapse:collapse;font-size:12px">
           <thead>
             <tr style="border-bottom:1px solid var(--bd2)">
-              ${["Título","Subcategoria","Solicitante","Responsável","Prior.","Status","Abertura","Prazo"].map(h =>
+              ${["Título","Subcategoria","Solicitante","Responsável","Status","Abertura","Prazo"].map(h =>
                 `<th style="text-align:left;padding:8px 6px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`
               ).join("")}
             </tr>
@@ -2717,7 +2693,6 @@ ${linhas}
                 <td style="padding:8px 6px;color:var(--tx2);font-size:11px;white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${escapeHtml(r.subcategoria)||"—"}</td>
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${escapeHtml(r.solicitante||r.solicitante_txt)||"—"}</td>
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${escapeHtml(r.responsavel||r.responsavel_txt)||"—"}</td>
-                <td style="padding:8px 6px;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${pillPrio(r.prioridade)}</td>
                 <td style="padding:4px 6px" onclick="event.stopPropagation()">
                   <select onchange="window.manStatusChange('${rid}',this.value)" style="font-size:11px;padding:3px 6px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);cursor:pointer">
                     ${["Aberta","Em Análise","Em Andamento","Pendente","Concluída","Cancelada"].map(s =>

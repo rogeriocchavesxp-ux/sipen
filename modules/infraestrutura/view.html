@@ -23,9 +23,9 @@
           <div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber)">⚙️</div>
           <div class="kpi-body"><div class="kpi-lbl">Em Andamento</div><div class="kpi-val" id="infra-kpi-and">—</div><div class="kpi-d nu">em execução</div></div>
         </div>
-        <div class="kpi" style="cursor:pointer" onclick="go('infra-demandas-infra')">
-          <div class="kpi-ico" style="background:rgba(208,104,104,0.15);color:var(--rose)">⚠️</div>
-          <div class="kpi-body"><div class="kpi-lbl">Alta Prioridade</div><div class="kpi-val" id="infra-kpi-pri">—</div><div class="kpi-d dn">requer atenção</div></div>
+        <div class="kpi" style="display:none">
+          <div class="kpi-ico"></div>
+          <div class="kpi-body"><div class="kpi-val" id="infra-kpi-pri" style="display:none">—</div></div>
         </div>
         <div class="kpi">
           <div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gmd)">✅</div>
@@ -37,9 +37,8 @@
           <div class="ctit">Demandas em aberto <span class="cact" onclick="infra_dash_load()">↻ Atualizar</span></div>
           <div id="infra-dash-abertas"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
         </div>
-        <div class="card">
-          <div class="ctit">Alta prioridade <span class="cact" onclick="infra_dash_load()">↻ Atualizar</span></div>
-          <div id="infra-dash-prioridade"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+        <div class="card" style="display:none">
+          <div id="infra-dash-prioridade" style="display:none"></div>
         </div>
       </div>
       <div class="card">
