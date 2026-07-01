@@ -16,6 +16,7 @@
     em_andamento:          { label: "Em Andamento",          cls: "pp", cor: "var(--violet)" },
     concluido:             { label: "Concluído",             cls: "pz", cor: "var(--tx4)"    },
     cancelado:             { label: "Cancelado",             cls: "po", cor: "var(--rose)"   },
+    arquivado:             { label: "Arquivado",             cls: "pz", cor: "var(--tx4)"    },
   };
 
   const STATUS_INSCR = {
@@ -152,12 +153,12 @@
   /* ── Carregar dados ─────────────────────────────────── */
 
   async function _carregarEventos() {
-    const url = `${_api()}/rest/v1/eventos?select=*&order=data_inicio.desc&limit=500`;
+    const url = `${_api()}/rest/v1/eventos?select=*&deleted_at=is.null&order=data_inicio.desc&limit=500`;
     _eventos = await _fetch(url) || [];
   }
 
   async function _carregarTodasInscricoes() {
-    const url = `${_api()}/rest/v1/evento_inscricoes?select=*&order=criado_em.desc&limit=2000`;
+    const url = `${_api()}/rest/v1/evento_inscricoes?select=*&deleted_at=is.null&order=criado_em.desc&limit=2000`;
     _todasInscricoes = await _fetch(url) || [];
   }
 
@@ -267,22 +268,27 @@
   }
 
   function _cardEvento(e) {
+    const isAdmin = _isAdmin();
     const inscrCount = _todasInscricoes.filter(i => i.evento_id === e.id).length;
     const vagasInfo = e.vagas
       ? `${inscrCount}/${e.vagas} inscritos`
       : `${inscrCount} inscritos`;
+    const isPublicado = e.status === "publicado" || e.status === "inscricoes_abertas";
     return `
-      <div onclick="eveAbrirDetalhe('${_ea(e.id)}')" style="cursor:pointer;background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;padding:16px 18px;transition:border-color .12s;display:flex;flex-direction:column;gap:10px">
+      <div style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;padding:16px 18px;transition:border-color .12s;display:flex;flex-direction:column;gap:10px;position:relative">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-          <div style="font-size:13.5px;font-weight:700;color:var(--tx1);line-height:1.3;flex:1">${_eh(e.titulo)}</div>
-          ${_pillEve(e.status)}
+          <div onclick="eveAbrirDetalhe('${_ea(e.id)}')" style="cursor:pointer;font-size:13.5px;font-weight:700;color:var(--tx1);line-height:1.3;flex:1">${_eh(e.titulo)}</div>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+            ${_pillEve(e.status)}
+            ${isAdmin ? `<button onclick="eveMenuAcoes('${_ea(e.id)}',event)" style="padding:2px 7px;border-radius:5px;border:1px solid var(--bd2);background:transparent;color:var(--tx3);font-size:15px;cursor:pointer;line-height:1;font-weight:700" title="Ações">⋮</button>` : ""}
+          </div>
         </div>
-        <div style="display:flex;gap:10px;font-size:11px;color:var(--tx3);flex-wrap:wrap">
+        <div onclick="eveAbrirDetalhe('${_ea(e.id)}')" style="cursor:pointer;display:flex;gap:10px;font-size:11px;color:var(--tx3);flex-wrap:wrap">
           <span>📅 ${_fmtD(e.data_inicio)}${e.hora_inicio ? " · " + _fmtH(e.hora_inicio) : ""}</span>
           ${e.local_nome ? `<span>📍 ${_eh(e.local_nome)}</span>` : ""}
           ${e.ministerio_organizador ? `<span>🏛 ${_eh(e.ministerio_organizador)}</span>` : ""}
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid var(--bd1)">
+        <div onclick="eveAbrirDetalhe('${_ea(e.id)}')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid var(--bd1)">
           <span style="font-size:11px;color:var(--tx3)">👥 ${vagasInfo}</span>
           <span style="font-size:11px;font-weight:600;color:${e.gratuito ? "var(--gr)" : "var(--amber)"}">${e.gratuito ? "Gratuito" : _fmtMoeda(e.valor)}</span>
         </div>
@@ -465,7 +471,7 @@
           <th>Contato</th>
           <th>Status</th>
           ${!evt.gratuito ? "<th>Pagamento</th>" : ""}
-          ${isAdmin ? "<th></th>" : ""}
+          ${isAdmin ? "<th style='width:40px'></th>" : ""}
         </tr></thead>
         <tbody>${inscricoes.map(i => _trInscricao(i, evt, isAdmin)).join("")}</tbody>
       </table>`;
@@ -477,15 +483,19 @@
       <td style="padding:10px 8px">
         <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${_eh(i.nome)}</div>
         ${i.responsavel_nome ? `<div style="font-size:10px;color:var(--tx3)">Resp.: ${_eh(i.responsavel_nome)}</div>` : ""}
+        ${i.familia ? `<div style="font-size:10px;color:var(--tx3)">Família: ${_eh(i.familia)}</div>` : ""}
       </td>
-      <td style="padding:10px 8px;font-size:11.5px;color:var(--tx2)">${_eh(tipoLabels[i.tipo] || i.tipo)}</td>
+      <td style="padding:10px 8px;font-size:11.5px;color:var(--tx2)">${_eh(tipoLabels[i.tipo] || i.tipo || "—")}</td>
       <td style="padding:10px 8px;font-size:11px;color:var(--tx3)">
         ${i.email ? _eh(i.email) : ""}${i.telefone ? `<br>${_eh(i.telefone)}` : ""}
       </td>
       <td style="padding:10px 8px">
-        <select onchange="eveAlterarStatusInscricao('${_ea(i.id)}',this.value)" style="padding:4px 6px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:11px">
-          ${Object.entries(STATUS_INSCR).map(([k, v]) => `<option value="${_ea(k)}"${k === i.status ? " selected" : ""}>${_eh(v.label)}</option>`).join("")}
-        </select>
+        ${isAdmin
+          ? `<select onchange="eveAlterarStatusInscricao('${_ea(i.id)}',this.value)" style="padding:4px 6px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:11px">
+              ${Object.entries(STATUS_INSCR).map(([k, v]) => `<option value="${_ea(k)}"${k === i.status ? " selected" : ""}>${_eh(v.label)}</option>`).join("")}
+             </select>`
+          : _pillInscr(i.status)
+        }
       </td>
       ${!evt.gratuito ? `<td style="padding:10px 8px">
         ${i.pago
@@ -494,9 +504,305 @@
         }
       </td>` : ""}
       ${isAdmin ? `<td style="padding:10px 8px;text-align:right">
-        <button onclick="eveAbrirFormInscricao('${_ea(evt.id)}','${_ea(i.id)}')" style="padding:4px 8px;border-radius:5px;border:1px solid var(--bd2);background:transparent;color:var(--tx3);font-size:11px;cursor:pointer">Editar</button>
+        <button onclick="eveMenuInscricao('${_ea(i.id)}','${_ea(evt.id)}',event)" style="padding:2px 7px;border-radius:5px;border:1px solid var(--bd2);background:transparent;color:var(--tx3);font-size:15px;cursor:pointer;line-height:1;font-weight:700" title="Ações">⋮</button>
       </td>` : ""}
     </tr>`;
+  }
+
+  /* ── Menu contextual ⋮ ──────────────────────────────── */
+
+  (function _setupCtxMenuListener() {
+    document.addEventListener("click", function (ev) {
+      const m = document.getElementById("eve-ctx-menu");
+      if (m && !m.contains(ev.target)) m.remove();
+    });
+  })();
+
+  function _ctxMenu() {
+    let m = document.getElementById("eve-ctx-menu");
+    if (m) m.remove();
+    m = document.createElement("div");
+    m.id = "eve-ctx-menu";
+    m.style.cssText = [
+      "position:fixed;z-index:9999;min-width:200px",
+      "background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px",
+      "box-shadow:0 8px 32px rgba(0,0,0,.28);padding:4px",
+      "display:flex;flex-direction:column;gap:1px",
+    ].join(";");
+    document.body.appendChild(m);
+    return m;
+  }
+
+  function _ctxItem(label, fn, danger) {
+    const btn = document.createElement("button");
+    btn.textContent = label;
+    btn.style.cssText = [
+      "width:100%;text-align:left;padding:9px 13px;border:none;background:transparent",
+      "cursor:pointer;font-size:12.5px;border-radius:7px;transition:background .1s",
+      `color:${danger ? "var(--rose)" : "var(--tx1)"}`,
+    ].join(";");
+    btn.onmouseenter = () => { btn.style.background = danger ? "rgba(224,85,85,.08)" : "var(--bg-surface)"; };
+    btn.onmouseleave = () => { btn.style.background = "transparent"; };
+    btn.onclick = () => { document.getElementById("eve-ctx-menu")?.remove(); fn(); };
+    return btn;
+  }
+
+  function _ctxSep() {
+    const d = document.createElement("div");
+    d.style.cssText = "height:1px;background:var(--bd2);margin:3px 6px";
+    return d;
+  }
+
+  window.eveMenuAcoes = function (id, ev) {
+    ev.stopPropagation();
+    const evt = _eventos.find(e => e.id === id);
+    if (!evt) return;
+    const isPublicado = ["publicado","inscricoes_abertas"].includes(evt.status);
+    const m = _ctxMenu();
+    m.appendChild(_ctxItem("Editar Evento",       () => eveAbrirFormEvento(id)));
+    m.appendChild(_ctxItem("Duplicar Evento",     () => eveDuplicarEvento(id)));
+    m.appendChild(_ctxItem(isPublicado ? "Despublicar" : "Publicar", () => evePublicarToggle(id)));
+    m.appendChild(_ctxItem("Arquivar",            () => eveArquivarEvento(id)));
+    m.appendChild(_ctxSep());
+    m.appendChild(_ctxItem("Gerenciar Inscritos", () => eveAbrirDetalhe(id)));
+    m.appendChild(_ctxItem("Exportar Inscritos",  () => eveExportarInscritos(id)));
+    m.appendChild(_ctxSep());
+    m.appendChild(_ctxItem("Excluir Evento",      () => eveExcluirEventoModal(id), true));
+
+    /* posicionar próximo ao botão */
+    const r = ev.currentTarget.getBoundingClientRect();
+    const mW = 210, mH = 320;
+    let top  = r.bottom + 4;
+    let left = r.right  - mW;
+    if (top  + mH > window.innerHeight) top  = r.top - mH - 4;
+    if (left < 6)                        left = 6;
+    m.style.top  = top  + "px";
+    m.style.left = left + "px";
+  };
+
+  /* ── Ações do menu ───────────────────────────────────── */
+
+  window.eveDuplicarEvento = async function (id) {
+    const src = _eventos.find(e => e.id === id);
+    if (!src) return;
+    const { id: _, agenda_id, criado_em, atualizado_em, deleted_at, deleted_by, imagem_url, ...rest } = src;
+    const payload = {
+      ...rest,
+      titulo:     rest.titulo + " (cópia)",
+      status:     "rascunho",
+      data_inicio: null,
+      data_fim:    null,
+      criado_por:      _authUserId(),
+      criado_por_nome: _userName(),
+      criado_em:       new Date().toISOString(),
+      atualizado_em:   new Date().toISOString(),
+    };
+    try {
+      await _fetch(`${_api()}/rest/v1/eventos`, {
+        method: "POST",
+        headers: _hdrs({ "Content-Type": "application/json", "Prefer": "return=minimal" }),
+        body: JSON.stringify(payload),
+      });
+      _T("Evento duplicado!", "Abra o rascunho e defina as datas.");
+      await _recarregarTudo();
+    } catch (e) { _T("Erro ao duplicar", e.message); }
+  };
+
+  window.evePublicarToggle = async function (id) {
+    const evt = _eventos.find(e => e.id === id);
+    if (!evt) return;
+    const novoStatus = ["publicado","inscricoes_abertas"].includes(evt.status) ? "rascunho" : "publicado";
+    await eveAlterarStatusEvento(id, novoStatus);
+  };
+
+  window.eveArquivarEvento = async function (id) {
+    await eveAlterarStatusEvento(id, "arquivado");
+  };
+
+  window.eveExportarInscritos = function (id) {
+    const evt = _eventos.find(e => e.id === id);
+    const inscs = _todasInscricoes.filter(i => i.evento_id === id);
+    if (!inscs.length) { _T("Sem inscritos", "Este evento não tem inscritos."); return; }
+    const cols = ["Nome","Email","Telefone","Família","Congregação","Tipo","Status","Pagamento","Forma Pgto","Data Inscrição"];
+    const rows = inscs.map(i => [
+      i.nome || "", i.email || "", i.telefone || "",
+      i.familia || "", i.congregacao || "",
+      i.tipo || "", i.status || "",
+      i.pago ? "Pago" : "Pendente",
+      i.forma_pagamento || "",
+      i.criado_em ? i.criado_em.slice(0, 10) : "",
+    ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(","));
+    const csv = [cols.join(","), ...rows].join("\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `inscritos_${(evt?.titulo || id).replace(/[^a-z0-9]/gi, "_")}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+    _T("Exportado!", `${inscs.length} inscritos exportados em CSV.`);
+  };
+
+  /* ── Modal de confirmação reutilizável ───────────────── */
+
+  function _eveModalConfirmar({ titulo, corpo, btnLabel, onConfirm, danger }) {
+    let el = document.getElementById("eve-confirm-modal");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "eve-confirm-modal";
+      el.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:500;padding:24px";
+      document.body.appendChild(el);
+    }
+    const cor = danger ? "var(--rose)" : "var(--sky)";
+    el.innerHTML = `
+      <div style="width:min(440px,100%);background:var(--bg-card);border:1px solid var(--bd2);border-radius:14px;overflow:hidden;box-shadow:0 12px 48px rgba(0,0,0,.35)">
+        <div style="padding:20px 22px;border-bottom:1px solid var(--bd2)">
+          <div style="font-size:15px;font-weight:700;color:var(--tx1)">${_eh(titulo)}</div>
+        </div>
+        <div style="padding:20px 22px;font-size:13px;color:var(--tx2);line-height:1.6">
+          ${corpo}
+        </div>
+        <div style="padding:14px 22px;border-top:1px solid var(--bd2);display:flex;gap:10px;justify-content:flex-end">
+          <button id="eve-confirm-cancel" style="padding:9px 20px;border-radius:8px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:13px;cursor:pointer">Cancelar</button>
+          <button id="eve-confirm-ok" style="padding:9px 20px;border-radius:8px;border:none;background:${cor};color:#fff;font-size:13px;font-weight:700;cursor:pointer">${_eh(btnLabel)}</button>
+        </div>
+      </div>`;
+    el.style.display = "flex";
+    document.getElementById("eve-confirm-cancel").onclick = () => { el.style.display = "none"; };
+    document.getElementById("eve-confirm-ok").onclick = async () => {
+      el.style.display = "none";
+      await onConfirm();
+    };
+  }
+
+  /* ── Soft delete de evento ───────────────────────────── */
+
+  window.eveExcluirEventoModal = function (id) {
+    const evt = _eventos.find(e => e.id === id);
+    _eveModalConfirmar({
+      titulo: "Excluir Evento",
+      corpo: `
+        <p>Você realmente deseja excluir <strong>${_eh(evt?.titulo || "este evento")}</strong>?</p>
+        <p style="margin-top:10px">Esta ação removerá:</p>
+        <ul style="margin:8px 0 0 18px;color:var(--tx3);font-size:12px">
+          <li>Informações do evento</li>
+          <li>Inscrições vinculadas</li>
+          <li>Credenciamentos</li>
+          <li>Pagamentos vinculados</li>
+          <li>Histórico relacionado</li>
+        </ul>
+        <p style="margin-top:12px;font-weight:700;color:var(--rose)">Esta ação não poderá ser desfeita.</p>`,
+      btnLabel: "Excluir Evento",
+      danger: true,
+      onConfirm: () => _eveSoftDeleteEvento(id),
+    });
+  };
+
+  async function _eveSoftDeleteEvento(id) {
+    try {
+      await _fetch(`${_api()}/rest/v1/eventos?id=eq.${id}`, {
+        method: "PATCH",
+        headers: _hdrs({ "Content-Type": "application/json", "Prefer": "return=minimal" }),
+        body: JSON.stringify({
+          deleted_at: new Date().toISOString(),
+          deleted_by: _authUserId(),
+          status:     "cancelado",
+          atualizado_em: new Date().toISOString(),
+        }),
+      });
+      _eventos = _eventos.filter(e => e.id !== id);
+      _todasInscricoes = _todasInscricoes.filter(i => i.evento_id !== id);
+      if (_eventoAtivo?.id === id) { _eventoAtivo = null; go("eve-todos"); }
+      _renderLista(); _renderKpis(); _renderDashProximos(); _renderDashStatus();
+      _T("Evento excluído.", "O evento foi removido com sucesso.");
+    } catch (e) { _T("Erro ao excluir", e.message); }
+  }
+
+  /* ── Ações por inscrito ──────────────────────────────── */
+
+  window.eveMenuInscricao = function (inscId, eventoId, ev) {
+    ev.stopPropagation();
+    const insc = _todasInscricoes.find(i => i.id === inscId);
+    if (!insc) return;
+    const m = _ctxMenu();
+    m.appendChild(_ctxItem("Editar",             () => eveAbrirFormInscricao(eventoId, inscId)));
+    m.appendChild(_ctxItem("Confirmar presença", () => eveConfirmarPresenca(inscId, eventoId)));
+    m.appendChild(_ctxItem("Cancelar inscrição", () => eveCancelarInscricao(inscId, eventoId)));
+    m.appendChild(_ctxSep());
+    m.appendChild(_ctxItem("Excluir inscrição",  () => eveExcluirInscricaoModal(inscId, eventoId), true));
+
+    const r = ev.currentTarget.getBoundingClientRect();
+    const mW = 200, mH = 180;
+    let top  = r.bottom + 4;
+    let left = r.right  - mW;
+    if (top  + mH > window.innerHeight) top  = r.top - mH - 4;
+    if (left < 6)                        left = 6;
+    m.style.top  = top  + "px";
+    m.style.left = left + "px";
+  };
+
+  window.eveConfirmarPresenca = async function (inscId, eventoId) {
+    try {
+      await _fetch(`${_api()}/rest/v1/evento_inscricoes?id=eq.${inscId}`, {
+        method: "PATCH",
+        headers: _hdrs({ "Content-Type": "application/json", "Prefer": "return=minimal" }),
+        body: JSON.stringify({ status: "presente", atualizado_em: new Date().toISOString() }),
+      });
+      _T("Presença confirmada!");
+      const idx = _todasInscricoes.findIndex(i => i.id === inscId);
+      if (idx >= 0) _todasInscricoes[idx] = { ..._todasInscricoes[idx], status: "presente" };
+      if (_eventoAtivo?.id === eventoId) eveAbrirDetalhe(eventoId);
+    } catch (e) { _T("Erro", e.message); }
+  };
+
+  window.eveCancelarInscricao = async function (inscId, eventoId) {
+    try {
+      await _fetch(`${_api()}/rest/v1/evento_inscricoes?id=eq.${inscId}`, {
+        method: "PATCH",
+        headers: _hdrs({ "Content-Type": "application/json", "Prefer": "return=minimal" }),
+        body: JSON.stringify({ status: "cancelada", atualizado_em: new Date().toISOString() }),
+      });
+      _T("Inscrição cancelada.");
+      const idx = _todasInscricoes.findIndex(i => i.id === inscId);
+      if (idx >= 0) _todasInscricoes[idx] = { ..._todasInscricoes[idx], status: "cancelada" };
+      if (_eventoAtivo?.id === eventoId) eveAbrirDetalhe(eventoId);
+    } catch (e) { _T("Erro", e.message); }
+  };
+
+  window.eveExcluirInscricaoModal = function (inscId, eventoId) {
+    const insc = _todasInscricoes.find(i => i.id === inscId);
+    _eveModalConfirmar({
+      titulo: "Excluir Inscrição",
+      corpo: `
+        <p>Deseja realmente excluir a inscrição de <strong>${_eh(insc?.nome || "este inscrito")}</strong>?</p>
+        <p style="margin-top:10px">Esta ação removerá:</p>
+        <ul style="margin:8px 0 0 18px;color:var(--tx3);font-size:12px">
+          <li>Dados da inscrição</li>
+          <li>Credenciamento</li>
+          <li>Registro de presença</li>
+          <li>Vínculo com o evento</li>
+        </ul>`,
+      btnLabel: "Excluir",
+      danger: true,
+      onConfirm: () => _eveSoftDeleteInscricao(inscId, eventoId),
+    });
+  };
+
+  async function _eveSoftDeleteInscricao(inscId, eventoId) {
+    try {
+      await _fetch(`${_api()}/rest/v1/evento_inscricoes?id=eq.${inscId}`, {
+        method: "PATCH",
+        headers: _hdrs({ "Content-Type": "application/json", "Prefer": "return=minimal" }),
+        body: JSON.stringify({
+          deleted_at: new Date().toISOString(),
+          deleted_by: _authUserId(),
+          status:     "cancelada",
+          atualizado_em: new Date().toISOString(),
+        }),
+      });
+      _todasInscricoes = _todasInscricoes.filter(i => i.id !== inscId);
+      _T("Inscrição removida.");
+      if (_eventoAtivo?.id === eventoId) eveAbrirDetalhe(eventoId);
+      _renderKpis();
+    } catch (e) { _T("Erro ao excluir inscrição", e.message); }
   }
 
   /* ── Formulário de evento (modal) ───────────────────── */
