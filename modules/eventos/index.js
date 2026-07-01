@@ -993,7 +993,7 @@
   };
 
   async function _uploadImagemEvento(file, eventoId) {
-    const sb = _sbClient();
+    const sb = (typeof getSupabase === "function" ? getSupabase() : null);
     if (!sb) throw new Error("Supabase não disponível para upload");
     const ext  = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const path = `eventos/${eventoId}/capa.${ext}`;
