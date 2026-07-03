@@ -1529,7 +1529,7 @@
   };
 
   window.demBoletoRemoverNota = function(id) {
-    _boletoNotas = _boletoNotas.filter(n => n.id !== id);
+    _boletoNotas = _boletoNotas.filter(n => n.id != id);
     document.getElementById(`dem-fn-${id}`)?.remove();
     demBoletoAtualizarSoma();
     _boletoSyncRemoveBtns();
@@ -1538,7 +1538,7 @@
   window.demBoletoPorNotaSelected = function(id, input) {
     const file  = input.files?.[0];
     const label = document.getElementById(`dem-fn-bname-${id}`);
-    const nota  = _boletoNotas.find(n => n.id === id);
+    const nota  = _boletoNotas.find(n => n.id == id);
     if (!file) { if (label) label.textContent = "Anexar boleto deste NF (opcional)"; return; }
     const err = _validarArquivo(file);
     if (err) {
@@ -1554,7 +1554,7 @@
   window.demBoletoNFSelected = function(id, input) {
     const file  = input.files?.[0];
     const label = document.getElementById(`dem-fn-fname-${id}`);
-    const nota  = _boletoNotas.find(n => n.id === id);
+    const nota  = _boletoNotas.find(n => n.id == id);
     if (!file) { if (label) label.textContent = "Escolher NF / comprovante"; return; }
     const err = _validarArquivo(file);
     if (err) {
