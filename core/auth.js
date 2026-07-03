@@ -334,10 +334,12 @@ function _isGestor() {
 
 function _lerRotaSalva() {
   try {
+    const restore = sessionStorage.getItem("sipen_restore_route") || "";
+    if (restore) { try { sessionStorage.removeItem("sipen_restore_route"); } catch(_) {} }
     const hash  = (window.location.hash || "").replace(/^#/, "").trim();
     const local = sessionStorage.getItem("sipen_route") || "";
-    const rota  = hash || local;
-    if (!rota) return null;
+    const rota  = restore || hash || local;
+    if (!rota || rota === "geral") return null;
     // View existe no DOM, é uma rota modular lazy-loaded ou está registrada no CRUMB.
     if (document.getElementById("v-" + rota)) return rota;
     if (typeof window.isKnownViewRoute === "function" && window.isKnownViewRoute(rota)) return rota;

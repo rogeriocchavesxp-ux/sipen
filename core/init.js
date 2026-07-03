@@ -179,6 +179,15 @@ window.go = async function(id){
 
 document.addEventListener("DOMContentLoaded", async () => {
   if (window.location.hash === "#pautas-reunioes") return;
+  // Stasha a rota salva ANTES de go("geral") sobrescrevê-la
+  try {
+    const _h = (window.location.hash || "").replace(/^#/, "").trim();
+    const _s = sessionStorage.getItem("sipen_route") || "";
+    const _r = _h || _s;
+    if (_r && _r !== "geral" && _r !== "pautas-reunioes") {
+      sessionStorage.setItem("sipen_restore_route", _r);
+    }
+  } catch(_) {}
   await _shellReady;
   window.renderThemeToggle?.();
   _ensureViewLoaded("geral").then(() => go("geral"));
