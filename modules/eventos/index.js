@@ -435,6 +435,14 @@
                 ${disponivel ? `<a href="https://wa.me/?text=${encodeURIComponent("Inscreva-se no evento: " + link)}" target="_blank" rel="noopener" style="padding:7px 14px;border-radius:7px;border:1px solid rgba(37,211,102,.4);background:rgba(37,211,102,.1);color:#25d366;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap">WhatsApp</a>` : ""}
               </div>
               ${erascunho ? `<div style="font-size:11px;color:var(--tx3)">Evento em rascunho — publique para liberar as inscrições.</div>` : !disponivel ? `<div style="font-size:11px;color:var(--amber)">⚠ Inscrições disponíveis apenas quando status for "Publicado" ou "Inscrições Abertas".</div>` : ""}
+              <div style="display:flex;align-items:flex-start;gap:16px;margin-top:14px;padding-top:14px;border-top:1px solid var(--bd1)">
+                <img id="eve-qr-${_ea(evt.id)}" src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=6&data=${encodeURIComponent(link)}" alt="QR Code" style="width:140px;height:140px;border-radius:8px;border:1px solid var(--bd2);flex-shrink:0;background:#fff">
+                <div style="display:flex;flex-direction:column;gap:8px;justify-content:center;padding-top:4px">
+                  <div style="font-size:11.5px;font-weight:600;color:var(--tx2)">QR Code de Inscrição</div>
+                  <div style="font-size:11px;color:var(--tx3);line-height:1.5">Escaneie para acessar o formulário público de inscrição neste evento.</div>
+                  <button onclick="eveBaixarQR('${_ea(evt.id)}')" style="align-self:flex-start;padding:6px 14px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer">Baixar QR</button>
+                </div>
+              </div>
             </div>`;
         })()}
 
@@ -1004,6 +1012,23 @@
     const base = (typeof SUPABASE_URL !== "undefined" ? SUPABASE_URL : "").replace(/\/$/, "");
     return `${base}/storage/v1/object/public/eventos-imagens/${path}?t=${Date.now()}`;
   }
+
+  window.eveBaixarQR = function (eventoId) {
+    const link = _gerarLinkPublico(eventoId);
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=10&data=${encodeURIComponent(link)}`;
+    const evt = _eventos.find(e => e.id === eventoId);
+    const nome = (evt?.titulo || "evento").replace(/[^a-z0-9]/gi, "_").toLowerCase();
+    fetch(qrUrl)
+      .then(r => r.blob())
+      .then(blob => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `qrcode_${nome}.png`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      })
+      .catch(() => { if (typeof _T === "function") _T("Erro", "Não foi possível baixar o QR Code"); });
+  };
 
   window.eveCopiarLink = function (eventoId) {
     const input = document.getElementById(`eve-link-pub-${eventoId}`);
