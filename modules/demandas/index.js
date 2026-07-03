@@ -1705,13 +1705,14 @@
         const bErr = _validarArquivo(bFile);
         if (bErr) { if (typeof T === "function") T("Arquivo inválido", bErr); return; }
         /* Valida notas fiscais (obrigatório para boleto) */
-        if (!_boletoNotas.length) {
+        const _notasValidas = _boletoNotas.filter(n => n.file || _parseNotaVal(n.id) > 0);
+        if (!_notasValidas.length) {
           if (typeof T === "function") T("Nota fiscal obrigatória", "Adicione pelo menos uma nota fiscal");
           return;
         }
-        for (const nota of _boletoNotas) {
+        for (const nota of _notasValidas) {
           if (!nota.file) {
-            if (typeof T === "function") T("Arquivo obrigatório", "Adicione o arquivo de cada nota fiscal");
+            if (typeof T === "function") T("Arquivo obrigatório", "Adicione o arquivo de cada nota fiscal preenchida");
             return;
           }
           const nErr = _validarArquivo(nota.file);
