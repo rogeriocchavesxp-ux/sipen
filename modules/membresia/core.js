@@ -61,9 +61,9 @@ function renderMembrosTable(rows, containerId) {
           <tr style="background:var(--bg-surface);border-bottom:2px solid var(--gr)">
             <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700;min-width:180px">Nome</th>
             <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Status</th>
-            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700;white-space:nowrap">Ingresso</th>
-            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Congregação</th>
-            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Função</th>
+            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700;white-space:nowrap">Contato</th>
+            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Nascimento</th>
+            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Email</th>
             <th style="text-align:right;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Ações</th>
           </tr>
         </thead>
@@ -72,26 +72,21 @@ function renderMembrosTable(rows, containerId) {
             const sc = MEMB_STATUS[row.status] || MEMB_STATUS.inativo;
             const ini = initials(row.nome);
             const tel = row.telefone || row.celular || "";
-            const icon = INGRESSO_ICON[row.tipo_ingresso] || "•";
             return `<tr style="border-bottom:1px solid var(--bd1);transition:background .12s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
               <td style="padding:8px 10px">
                 <div style="display:flex;align-items:center;gap:9px">
                   <div style="width:30px;height:30px;border-radius:50%;background:var(--bg-surface);border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--tx2);flex-shrink:0">${escapeHtml(ini)}</div>
                   <div style="min-width:0">
                     <div style="font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">${escapeHtml(row.nome || "—")}</div>
-                    ${tel ? `<div style="font-size:10px;color:var(--tx3)">${escapeHtml(tel)}</div>` : ""}
                   </div>
                 </div>
               </td>
               <td style="padding:8px 10px;white-space:nowrap">
                 <span style="background:${sc.bg};color:${sc.color};border-radius:5px;padding:2px 9px;font-size:10px;font-weight:600">${sc.label}</span>
               </td>
-              <td style="padding:8px 10px;color:var(--tx2);font-size:11px;white-space:nowrap">
-                <div>${icon} ${escapeHtml(row.tipo_ingresso || "—")}</div>
-                <div style="font-size:10px;color:var(--tx3)">${fmtDate(row.data_ingresso)}</div>
-              </td>
-              <td style="padding:8px 10px;color:var(--tx2);font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(row.congregacao || "—")}</td>
-              <td style="padding:8px 10px;color:var(--tx2);font-size:11px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(row.funcao || "—")}</td>
+              <td style="padding:8px 10px;color:var(--tx2);font-size:11px;white-space:nowrap">${tel ? escapeHtml(tel) : "—"}</td>
+              <td style="padding:8px 10px;color:var(--tx2);font-size:11px;white-space:nowrap">${fmtDate(row.data_nascimento)}</td>
+              <td style="padding:8px 10px;color:var(--tx2);font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${row.email ? escapeHtml(row.email) : "—"}</td>
               <td style="padding:8px 10px;text-align:right;white-space:nowrap">
                 ${_podeEditarMembresia() ? `<button onclick='openCrudForm("MEMBROS",${safeJsonForHtml(row)})' style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:10px;padding:3px 8px;cursor:pointer;margin-right:4px" title="Editar">✏️</button>` : ""}
                 ${_podeExcluirMembresia() ? `<button onclick='deletarRegistro("MEMBROS","${escapeHtml(row.id || "")}")' style="background:rgba(224,85,85,0.08);border:1px solid rgba(224,85,85,0.18);border-radius:4px;color:var(--rose);font-size:10px;padding:3px 8px;cursor:pointer" title="Remover">🗑</button>` : ""}
@@ -209,7 +204,7 @@ function _popularSelectCongregacoes(rows) {
 /* Dashboard principal de membresia */
 async function carregarMembresiaDash() {
   const sv = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  sv("md-membros-ativos", "…"); sv("md-visitantes", "…"); sv("md-batizados", "…"); sv("md-transferencias", "…");
+  sv("md-membros-ativos", "…"); sv("md-batizados", "…"); sv("md-transferencias", "…");
   try {
     const [membros, visitantes] = await Promise.all([
       apiRead("MEMBROS").catch(() => []),
@@ -218,15 +213,22 @@ async function carregarMembresiaDash() {
     _membCache = membros;
     _visCache  = visitantes;
 
+    const anoAtual      = new Date().getFullYear();
     const ativos        = membros.filter(r => r.status === "ativo").length;
     const batizados     = membros.filter(r => r.batizado === true || (r.data_batismo && r.data_batismo !== null)).length;
     const transferidos  = membros.filter(r => r.tipo_ingresso === "transferência").length;
-    const altoInteresse = visitantes.filter(r => r.interesse_nivel === "alto" || r.interesse_nivel === "convertido").length;
+    const homens        = membros.filter(r => r.genero === "M").length;
+    const mulheres      = membros.filter(r => r.genero === "F").length;
+    const criancas      = membros.filter(r => {
+      if (!r.data_nascimento) return false;
+      try { return (anoAtual - new Date(r.data_nascimento + "T00:00:00").getFullYear()) <= 12; } catch { return false; }
+    }).length;
 
     sv("md-membros-ativos",  ativos.toLocaleString("pt-BR"));
     sv("md-membros-total",   `${membros.length.toLocaleString("pt-BR")} no total`);
-    sv("md-visitantes",      visitantes.length.toLocaleString("pt-BR"));
-    sv("md-visitantes-sub",  `${altoInteresse} alta prioridade`);
+    sv("md-homens",          homens.toLocaleString("pt-BR"));
+    sv("md-mulheres",        mulheres.toLocaleString("pt-BR"));
+    sv("md-criancas",        criancas.toLocaleString("pt-BR"));
     sv("md-batizados",       batizados.toLocaleString("pt-BR"));
     sv("md-batizados-sub",   `${Math.round(batizados / Math.max(membros.length, 1) * 100)}% dos membros`);
     sv("md-transferencias",  transferidos.toLocaleString("pt-BR"));

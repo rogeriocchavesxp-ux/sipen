@@ -411,6 +411,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 /* ═══ KPI CARDS (CoreUI style) ══════ */
 /* Horizontal card: icon left, value right */
 .kpis{display:grid;gap:10px;margin-bottom:18px}
+.kpis.c6{grid-template-columns:repeat(6,minmax(0,1fr))}
 .kpis.c4{grid-template-columns:repeat(4,minmax(0,1fr))}
 .kpis.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .kpis.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -804,7 +805,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
   .ct{padding:0 12px 28px;font-size:15px}
 
   /* KPIs */
-  .kpis.c4,.kpis.c3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpis.c6,.kpis.c4,.kpis.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
   .kpi{padding:14px;gap:12px;min-height:72px}
   .kpi-val{font-size:20px}
   .kpi-ico{width:38px;height:38px;font-size:16px}
