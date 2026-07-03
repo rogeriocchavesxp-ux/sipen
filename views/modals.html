@@ -169,14 +169,6 @@
               <input id="dem-f-conta" type="text" placeholder="00000-0" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box">
             </div>
           </div>
-          <!-- Boleto (apenas quando forma = Boleto) -->
-          <div id="dem-f-boleto-section" style="display:none">
-            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Boleto *</label>
-            <div onclick="document.getElementById('dem-f-upload-boleto').click()" style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;border:1.5px dashed var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx3);font-size:12.5px;cursor:pointer;box-sizing:border-box;width:100%">
-              📎 <span id="dem-f-upload-boleto-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">Escolher arquivo · PDF, JPG ou PNG · máx. 10 MB</span>
-            </div>
-            <input id="dem-f-upload-boleto" type="file" accept=".pdf,.jpg,.jpeg,.png" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden" onchange="demOnFileSelected(this,'dem-f-upload-boleto-name')">
-          </div>
           <!-- Notas Fiscais — sempre visível em Solicitação de pagamento -->
           <div id="dem-f-notas-section">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
