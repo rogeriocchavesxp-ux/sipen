@@ -9,525 +9,465 @@
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --sky:   #4a9cf5;
-    --teal:  #2ab5c0;
-    --gr:    #3aaa5c;
-    --rose:  #e05555;
-    --amber: #d09040;
-    --tx1:   #1a1d21;
-    --tx2:   #4a5260;
-    --tx3:   #8a919e;
-    --tx4:   #b0b7c3;
-    --bg:    #f4f6f9;
-    --card:  #ffffff;
-    --bd:    #e2e6ec;
-    --inp:   #f8fafc;
-    --inpbd: #cdd3da;
+    --sky:#4a9cf5;--teal:#2ab5c0;--gr:#3aaa5c;--rose:#e05555;--amber:#d09040;
+    --tx1:#1a1d21;--tx2:#4a5260;--tx3:#8a919e;--tx4:#b0b7c3;
+    --bg:#f4f6f9;--card:#ffffff;--bd:#e2e6ec;--inp:#f8fafc;--inpbd:#cdd3da;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --tx1: #e8eaed; --tx2: #9aa0ac; --tx3: #5c6370; --tx4: #3a4050;
-      --bg: #12151a; --card: #1e2128; --bd: #2c3040; --inp: #272b34; --inpbd: #3a4050;
-    }
+  @media (prefers-color-scheme:dark) {
+    :root{--tx1:#e8eaed;--tx2:#9aa0ac;--tx3:#5c6370;--tx4:#3a4050;
+          --bg:#12151a;--card:#1e2128;--bd:#2c3040;--inp:#272b34;--inpbd:#3a4050;}
   }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Source Sans 3', system-ui, sans-serif; background: var(--bg); color: var(--tx1); min-height: 100vh; }
-  .wrap { max-width: 580px; margin: 0 auto; padding: 24px 16px 60px; }
-
-  .page-header { display: flex; justify-content: center; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--bd); }
-  .page-logo { width: 240px; height: auto; }
-
-  .info-card { background: var(--card); border: 1px solid var(--bd); border-radius: 14px; padding: 22px 24px; margin-bottom: 20px; }
-  .info-badge { font-size: 10px; font-weight: 700; color: var(--sky); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 8px; }
-  .info-title { font-size: 20px; font-weight: 800; color: var(--tx1); line-height: 1.25; margin-bottom: 10px; }
-  .info-desc  { font-size: 13px; color: var(--tx2); line-height: 1.65; }
-
-  .form-card { background: var(--card); border: 1px solid var(--bd); border-radius: 14px; padding: 22px 24px; margin-bottom: 16px; }
-  .form-section-title { font-size: 11px; font-weight: 700; color: var(--tx3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--bd); }
-
-  .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
-  .field label { font-size: 10px; font-weight: 700; color: var(--tx3); text-transform: uppercase; letter-spacing: .07em; }
-  .field input, .field select {
-    padding: 10px 12px; border-radius: 8px; border: 1px solid var(--inpbd);
-    background: var(--inp); color: var(--tx1); font-size: 13.5px; font-family: inherit;
-    outline: none; width: 100%; transition: border-color .15s;
-  }
-  .field input:focus, .field select:focus { border-color: var(--sky); }
-  .req { color: var(--rose); margin-left: 2px; }
-
-  .drop-wrap { position: relative; }
-  .dropdown {
-    position: absolute; top: calc(100% + 3px); left: 0; right: 0; z-index: 60;
-    background: var(--card); border: 1px solid var(--bd); border-radius: 10px;
-    max-height: 220px; overflow-y: auto; display: none;
-    box-shadow: 0 6px 24px rgba(0,0,0,.15);
-  }
-  .drop-item { padding: 10px 14px; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--bd); }
-  .drop-item:last-child { border-bottom: none; }
-  .drop-item:hover { background: rgba(74,156,245,.07); }
-  .drop-item.disabled { cursor: not-allowed; color: var(--tx3); }
-  .drop-item.disabled:hover { background: none; }
-  .drop-sub { font-size: 10.5px; color: var(--tx3); }
-  .drop-item.disabled .drop-sub { color: var(--rose); }
-
-  .sel-badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: rgba(58,170,92,.1); border: 1px solid rgba(58,170,92,.3);
-    color: var(--gr); border-radius: 8px; padding: 7px 12px; font-size: 12.5px; font-weight: 600;
-    margin-top: 6px;
-  }
-  .sel-badge button { background: none; border: none; color: var(--gr); cursor: pointer; font-size: 14px; padding: 0 0 0 4px; line-height: 1; opacity: .7; }
-  .sel-badge button:hover { opacity: 1; }
-
-  .item-card { border: 1px solid var(--bd); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
-  .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-  .item-num { font-size: 10px; font-weight: 700; color: var(--tx4); text-transform: uppercase; letter-spacing: .08em; }
-  .remove-btn { background: none; border: none; color: var(--rose); cursor: pointer; font-size: 16px; padding: 2px 6px; line-height: 1; opacity: .8; }
-  .remove-btn:hover { opacity: 1; }
-
-  .tipo-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-  .tipo-opt { display: flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 8px; border: 1.5px solid var(--bd); background: var(--inp); cursor: pointer; font-size: 13px; font-weight: 600; color: var(--tx2); transition: all .15s; user-select: none; }
-  .tipo-opt input[type=radio] { display: none; }
-  .tipo-opt.sel-presb { border-color: var(--sky); background: rgba(74,156,245,.08); color: var(--sky); }
-  .tipo-opt.sel-diac  { border-color: var(--teal); background: rgba(42,181,192,.08); color: var(--teal); }
-
-  .obs-input { padding: 9px 12px; border-radius: 8px; border: 1px solid var(--inpbd); background: var(--inp); color: var(--tx1); font-size: 13px; font-family: inherit; outline: none; width: 100%; transition: border-color .15s; }
-  .obs-input:focus { border-color: var(--sky); }
-
-  .add-btn { display: flex; align-items: center; gap: 7px; padding: 10px 18px; border-radius: 8px; border: 1.5px dashed var(--bd); background: transparent; color: var(--tx3); font-size: 13px; cursor: pointer; font-family: inherit; transition: all .15s; }
-  .add-btn:hover { border-color: var(--sky); color: var(--sky); }
-
-  .submit-btn { width: 100%; padding: 14px; border-radius: 10px; border: none; background: var(--sky); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 6px; transition: opacity .15s; }
-  .submit-btn:hover { opacity: .9; }
-  .submit-btn:disabled { opacity: .5; cursor: not-allowed; }
-
-  .msg { margin-top: 10px; font-size: 12.5px; }
-  .msg.err  { color: var(--rose); }
-  .msg.warn { color: var(--amber); }
-
-  .state-card { background: var(--card); border: 1px solid var(--bd); border-radius: 14px; padding: 36px 24px; text-align: center; }
-  .state-icon { font-size: 44px; margin-bottom: 14px; }
-  .state-title { font-size: 18px; font-weight: 800; color: var(--tx1); margin-bottom: 8px; }
-  .state-desc  { font-size: 13px; color: var(--tx2); line-height: 1.6; }
-  .state-card.ok { border-color: rgba(58,170,92,.35); }
-  .state-card.ok .state-title { color: var(--gr); }
-
-  .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid var(--bd); border-top-color: var(--sky); border-radius: 50%; animation: spin .7s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loader { text-align: center; padding: 48px; color: var(--tx3); }
-
-  .footer { margin-top: 36px; text-align: center; font-size: 11px; color: var(--tx3); }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Source Sans 3',system-ui,sans-serif;background:var(--bg);color:var(--tx1);min-height:100vh;}
+  .wrap{max-width:580px;margin:0 auto;padding:24px 16px 64px;}
+  .page-header{display:flex;justify-content:center;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--bd);}
+  .page-logo{width:220px;height:auto;}
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:24px;}
+  .card+.card{margin-top:14px;}
+  .badge{font-size:10px;font-weight:700;color:var(--sky);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;}
+  .title{font-size:22px;font-weight:800;color:var(--tx1);line-height:1.25;margin-bottom:10px;}
+  .desc{font-size:13px;color:var(--tx2);line-height:1.7;}
+  .ori{font-size:13px;color:var(--tx2);line-height:1.7;background:rgba(74,156,245,.06);border:1px solid rgba(74,156,245,.18);border-radius:8px;padding:12px 14px;margin-top:12px;}
+  .meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--tx3);margin-top:10px;}
+  .btn-pri{display:block;width:100%;padding:14px;border-radius:10px;border:none;background:var(--sky);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;margin-top:16px;transition:opacity .15s;}
+  .btn-pri:hover{opacity:.9;}
+  .btn-pri:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-sec{padding:9px 18px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:13px;cursor:pointer;font-family:inherit;}
+  .lbl{display:block;font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;}
+  .inp{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--inpbd);background:var(--inp);color:var(--tx1);font-size:13.5px;font-family:inherit;outline:none;transition:border-color .15s;}
+  .inp:focus{border-color:var(--sky);}
+  .field{margin-bottom:14px;}
+  .drop-wrap{position:relative;}
+  .dropdown{position:absolute;top:calc(100% + 3px);left:0;right:0;z-index:60;background:var(--card);border:1px solid var(--bd);border-radius:10px;max-height:220px;overflow-y:auto;display:none;box-shadow:0 6px 24px rgba(0,0,0,.15);}
+  .drop-item{padding:10px 14px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bd);}
+  .drop-item:last-child{border-bottom:none;}
+  .drop-item:hover{background:rgba(74,156,245,.07);}
+  .drop-item.dis{cursor:not-allowed;color:var(--tx3);}
+  .drop-item.dis:hover{background:none;}
+  .drop-sub{font-size:11px;color:var(--tx3);}
+  .drop-item.dis .drop-sub{color:var(--rose);}
+  .sel-ok{display:inline-flex;align-items:center;gap:8px;background:rgba(58,170,92,.1);border:1px solid rgba(58,170,92,.3);color:var(--gr);border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:600;margin-top:6px;}
+  .sel-ok button{background:none;border:none;color:var(--gr);cursor:pointer;font-size:14px;padding:0 0 0 4px;opacity:.7;}
+  .sel-ok button:hover{opacity:1;}
+  .item-card{border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:12px;}
+  .item-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .item-num{font-size:10px;font-weight:700;color:var(--tx4);text-transform:uppercase;letter-spacing:.08em;}
+  .rm-btn{background:none;border:none;color:var(--rose);cursor:pointer;font-size:16px;padding:2px 6px;opacity:.8;}
+  .rm-btn:hover{opacity:1;}
+  .tipo-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+  .tipo-opt{display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:8px;border:1.5px solid var(--bd);background:var(--inp);cursor:pointer;font-size:13px;font-weight:600;color:var(--tx2);transition:all .15s;user-select:none;}
+  .tipo-opt input{display:none;}
+  .tipo-opt.sp{border-color:var(--sky);background:rgba(74,156,245,.08);color:var(--sky);}
+  .tipo-opt.sd{border-color:var(--teal);background:rgba(42,181,192,.08);color:var(--teal);}
+  .add-btn{display:flex;align-items:center;gap:7px;padding:10px 18px;border-radius:8px;border:1.5px dashed var(--bd);background:transparent;color:var(--tx3);font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s;}
+  .add-btn:hover{border-color:var(--sky);color:var(--sky);}
+  .msg{margin-top:10px;font-size:12.5px;}
+  .msg.err{color:var(--rose);}
+  .state-card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:40px 24px;text-align:center;}
+  .state-icon{font-size:44px;margin-bottom:14px;}
+  .state-title{font-size:18px;font-weight:800;color:var(--tx1);margin-bottom:8px;}
+  .state-desc{font-size:13px;color:var(--tx2);line-height:1.6;}
+  .state-card.ok{border-color:rgba(58,170,92,.35);}
+  .state-card.ok .state-title{color:var(--gr);}
+  .steps{display:flex;align-items:center;gap:0;margin-bottom:20px;}
+  .step{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx4);font-weight:600;}
+  .step.on{color:var(--sky);}
+  .step.done{color:var(--gr);}
+  .step-dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--tx4);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+  .step.on .step-dot{border-color:var(--sky);background:rgba(74,156,245,.12);color:var(--sky);}
+  .step.done .step-dot{border-color:var(--gr);background:rgba(58,170,92,.12);color:var(--gr);}
+  .step-sep{flex:1;height:1px;background:var(--bd);margin:0 8px;}
+  .spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--bd);border-top-color:var(--sky);border-radius:50%;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loader{text-align:center;padding:52px;}
+  .footer{margin-top:36px;text-align:center;font-size:11px;color:var(--tx3);}
 </style>
 </head>
 <body>
 <div class="wrap">
-
   <div class="page-header">
     <img src="/icons/logo-ippenha.svg" class="page-logo" alt="Igreja Presbiteriana da Penha" onerror="this.style.display='none'">
   </div>
-
-  <div id="app">
-    <div class="loader"><div class="spinner"></div></div>
-  </div>
-
+  <div id="app"><div class="loader"><div class="spinner"></div></div></div>
   <div class="footer">Sistema SIPEN · Igreja Presbiteriana da Penha</div>
-
 </div>
 <script>
-/* ── Config ─────────────────────────────────────────── */
-const SB_URL  = "https://erhwryfzpycahgsohhbh.supabase.co";
-const SB_KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyaHdyeWZ6cHljYWhnc29oaGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg2MTUsImV4cCI6MjA5MTg0NDYxNX0.T0hp90Bmufj6a3oUPq1vYcLiGx9YjyMaZiE38S0e3_8";
-const HDRS    = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" };
-
-/* ── Helpers ─────────────────────────────────────────── */
-function eh(v) { return String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
-
-function calcIdade(dn) {
-  if (!dn) return null;
-  const h = new Date(), n = new Date(dn + "T00:00:00");
-  let a = h.getFullYear() - n.getFullYear();
-  if (h.getMonth() < n.getMonth() || (h.getMonth() === n.getMonth() && h.getDate() < n.getDate())) a--;
-  return a;
-}
-function calcMeses(di) {
-  if (!di) return null;
-  const h = new Date(), i = new Date(di + "T00:00:00");
-  return (h.getFullYear() - i.getFullYear()) * 12 + (h.getMonth() - i.getMonth());
-}
-
-async function sbGet(path) {
-  const r = await fetch(`${SB_URL}/rest/v1/${path}`, { headers: HDRS });
-  if (!r.ok) throw new Error(await r.text().catch(() => `HTTP ${r.status}`));
-  return r.json();
-}
-async function sbPost(path, body) {
-  const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
-    method: "POST",
-    headers: { ...HDRS, "Prefer": "return=minimal" },
-    body: JSON.stringify(body),
-  });
-  if (!r.ok) throw new Error(await r.text().catch(() => `HTTP ${r.status}`));
-}
+/* ── Config ──────────────────────────────────────────── */
+const SB_URL = "https://erhwryfzpycahgsohhbh.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyaHdyeWZ6cHljYWhnc29oaGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg2MTUsImV4cCI6MjA5MTg0NDYxNX0.T0hp90Bmufj6a3oUPq1vYcLiGx9YjyMaZiE38S0e3_8";
+const HDRS   = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" };
 
 /* ── Estado ──────────────────────────────────────────── */
-let membros  = [];
-let indicante = null;  // { pessoa_id, nome, congregacao, data_nascimento, data_ingresso }
-let items    = [];     // [{ id, tipo, indicado_id, indicado_nome, obs }]
-let itemCtr  = 0;
+let processo  = null;
+let membros   = [];
+let indicante = null;
+let items     = [];
+let itemCtr   = 0;
+let etapa     = 1;   // 1=info, 2=identificação, 3=formulário
 
-const app = document.getElementById("app");
+/* ── Helpers ─────────────────────────────────────────── */
+function eh(v){ return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function fmtD(d){ if(!d) return "—"; const [y,m,dia]=String(d).slice(0,10).split("-"); return `${dia}/${m}/${y}`; }
+function calcIdade(dn){ if(!dn) return null; const h=new Date(),n=new Date(dn+"T00:00:00"); let a=h.getFullYear()-n.getFullYear(); if(h.getMonth()<n.getMonth()||(h.getMonth()===n.getMonth()&&h.getDate()<n.getDate()))a--; return a; }
+function calcMeses(di){ if(!di) return null; const h=new Date(),i=new Date(di+"T00:00:00"); return (h.getFullYear()-i.getFullYear())*12+(h.getMonth()-i.getMonth()); }
 
-/* ── Inicialização ───────────────────────────────────── */
-async function init() {
+async function sbGet(path){
+  const r=await fetch(`${SB_URL}/rest/v1/${path}`,{headers:HDRS});
+  if(!r.ok) throw new Error(await r.text().catch(()=>`HTTP ${r.status}`));
+  return r.json();
+}
+async function sbPost(path,body){
+  const r=await fetch(`${SB_URL}/rest/v1/${path}`,{method:"POST",headers:{...HDRS,"Prefer":"return=minimal"},body:JSON.stringify(body)});
+  if(!r.ok) throw new Error(await r.text().catch(()=>`HTTP ${r.status}`));
+}
+
+/* ── Init ────────────────────────────────────────────── */
+const app   = document.getElementById("app");
+const slug  = new URLSearchParams(location.search).get("p");
+
+if (!slug) {
+  app.innerHTML = `<div class="state-card"><div class="state-icon">⚠️</div><div class="state-title">Link inválido</div><div class="state-desc">Este link não contém um identificador de processo. Solicite um novo link à secretaria da IPPenha.</div></div>`;
+} else {
+  init();
+}
+
+async function init(){
   try {
-    const data = await sbGet("v_membros?select=pessoa_id,nome,data_nascimento,data_ingresso,congregacao,status&status=eq.ativo&limit=2000");
-    membros = data || [];
-    renderIdentificacao();
-  } catch (e) {
-    app.innerHTML = `<div class="state-card"><div class="state-icon">⚠️</div><div class="state-title">Erro de conexão</div><div class="state-desc">${eh(e.message)}</div></div>`;
+    const dados = await sbGet(`eleicao_processos?slug=eq.${encodeURIComponent(slug)}&select=*&limit=1`);
+    if (!dados.length){ renderErro("Processo não encontrado","Este processo eleitoral não existe ou foi removido."); return; }
+    processo = dados[0];
+    document.title = `${processo.nome} — IPPenha`;
+    if (processo.status === "rascunho"){ renderErro("Não disponível","Este processo ainda não está disponível. Aguarde o início das indicações."); return; }
+    renderInfo();
+  } catch(e){
+    renderErro("Erro de conexão", e.message);
   }
 }
 
-/* ── Tela 1: identificação do membro ─────────────────── */
-function renderIdentificacao() {
+/* ── ETAPA 1: Informações do processo ────────────────── */
+function renderInfo(){
+  etapa = 1;
+  const p = processo;
+  const aberto   = p.status === "aberto";
+  const agendado = p.status === "agendado";
+  const encerrado= ["encerrado","arquivado"].includes(p.status);
+  const tipoLbl  = { presbiteros:"Presbíteros", diaconos:"Diáconos", ambos:"Presbíteros e Diáconos" };
+
   app.innerHTML = `
-    <div class="info-card">
-      <div class="info-badge">Conselho e Governança · IPPenha</div>
-      <div class="info-title">Eleições — Indicação de Oficiais</div>
-      <div class="info-desc">
-        Como membro da Igreja Presbiteriana da Penha, você pode indicar nomes para o processo de eleição de
-        <strong>diáconos</strong> e <strong>presbíteros</strong>.<br><br>
-        Para participar, localize seu nome abaixo.
+    <div class="card">
+      <div class="badge">IPPenha · Processo Eleitoral · ${p.ano}</div>
+      <div class="title">${eh(p.nome)}</div>
+      ${p.descricao ? `<div class="desc">${eh(p.descricao)}</div>` : ""}
+      <div class="meta">
+        <span>⊞ ${tipoLbl[p.tipo]||"Oficiais"}</span>
+        ${p.data_abertura    ? `<span>📅 Abertura: ${fmtD(p.data_abertura)}</span>` : ""}
+        ${p.data_encerramento? `<span>🔒 Encerramento: ${fmtD(p.data_encerramento)}</span>` : ""}
       </div>
+      ${p.orientacoes ? `<div class="ori">${eh(p.orientacoes)}</div>` : ""}
     </div>
-    <div class="form-card">
-      <div class="form-section-title">Identificação do Membro</div>
+
+    ${encerrado ? `
+      <div class="state-card" style="margin-top:14px">
+        <div class="state-icon">🔒</div>
+        <div class="state-title">Processo encerrado</div>
+        <div class="state-desc">O prazo para indicações neste processo foi encerrado.</div>
+      </div>` : agendado ? `
+      <div class="state-card" style="margin-top:14px">
+        <div class="state-icon">📅</div>
+        <div class="state-title">Em breve</div>
+        <div class="state-desc">Este processo ainda não está aberto. As indicações terão início em ${fmtD(p.data_abertura)||"data a confirmar"}.</div>
+      </div>` : aberto ? `
+      <div class="card">
+        <div style="font-size:14px;font-weight:700;color:var(--tx1);margin-bottom:6px">Participar</div>
+        <div class="desc">Como membro da IPPenha, você pode indicar nomes para este processo. Clique abaixo para começar.</div>
+        <button class="btn-pri" onclick="iniciarIndicacao()">Realizar indicação</button>
+      </div>` : ""}`;
+}
+
+/* ── ETAPA 2: Identificação do membro ────────────────── */
+function renderSteps(){
+  return `<div class="steps">
+    <div class="step ${etapa>=1?"done":""}"><div class="step-dot">${etapa>1?"✓":"1"}</div><span>Processo</span></div>
+    <div class="step-sep"></div>
+    <div class="step ${etapa===2?"on":etapa>2?"done":""}"><div class="step-dot">${etapa>2?"✓":"2"}</div><span>Identificação</span></div>
+    <div class="step-sep"></div>
+    <div class="step ${etapa===3?"on":""}"><div class="step-dot">3</div><span>Indicações</span></div>
+  </div>`;
+}
+
+async function iniciarIndicacao(){
+  if (!membros.length){
+    app.innerHTML = `<div class="loader"><div class="spinner"></div></div>`;
+    try { membros = await sbGet("v_membros?select=pessoa_id,nome,data_nascimento,data_ingresso,congregacao,status&status=eq.ativo&limit=2000"); }
+    catch(e){ renderErro("Erro", e.message); return; }
+  }
+  renderIdentificacao();
+}
+
+function renderIdentificacao(){
+  etapa = 2;
+  app.innerHTML = `
+    ${renderSteps()}
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;color:var(--tx1);margin-bottom:4px">Identifique-se</div>
+      <div class="desc" style="margin-bottom:16px">Busque seu nome na lista de membros da IPPenha para continuar.</div>
       <div class="field">
-        <label>Seu nome <span class="req">*</span></label>
+        <label class="lbl">Seu nome <span style="color:var(--rose)">*</span></label>
         <div class="drop-wrap">
-          <input id="id-busca" type="text" placeholder="Digite seu nome..." autocomplete="off"
-            oninput="buscarIndicante(this.value)" onblur="fecharDropIndicante()">
+          <input id="id-inp" class="inp" type="text" placeholder="Digite seu nome..." autocomplete="off"
+            oninput="buscarIndicante(this.value)" onblur="fecharDrop('id-drop')">
           <div class="dropdown" id="id-drop"></div>
         </div>
-        <div id="id-sel" style="margin-top:6px"></div>
+        <div id="id-sel"></div>
       </div>
-      <button class="submit-btn" onclick="confirmarIdentificacao()" style="margin-top:4px">Continuar</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+        <button class="btn-sec" onclick="renderInfo()">← Voltar</button>
+        <button class="btn-pri" onclick="confirmarIdentificacao()" style="flex:1;margin-top:0">Continuar</button>
+      </div>
       <div id="id-msg" class="msg"></div>
     </div>`;
 }
 
-window.buscarIndicante = function(q) {
+window.buscarIndicante = function(q){
   const drop = document.getElementById("id-drop");
-  indicante = null;
-  const el = document.getElementById("id-sel");
-  if (el) el.innerHTML = "";
-  const txt = (q || "").trim().toLowerCase();
-  if (txt.length < 2) { drop.style.display = "none"; return; }
-
-  const matches = membros.filter(m => m.nome?.toLowerCase().includes(txt)).slice(0, 10);
-  if (!matches.length) {
-    drop.innerHTML = `<div class="drop-item disabled"><span>Nenhum membro encontrado</span></div>`;
-    drop.style.display = "block"; return;
-  }
+  indicante  = null;
+  const sel  = document.getElementById("id-sel");
+  if (sel) sel.innerHTML = "";
+  const txt  = (q||"").trim().toLowerCase();
+  if (txt.length < 2){ drop.style.display = "none"; return; }
+  const matches = membros.filter(m => m.nome?.toLowerCase().includes(txt)).slice(0,10);
+  if (!matches.length){ drop.innerHTML = `<div class="drop-item dis"><span>Nenhum membro encontrado</span></div>`; drop.style.display="block"; return; }
   drop.innerHTML = matches.map(m => {
-    const idade = calcIdade(m.data_nascimento);
-    const meses = calcMeses(m.data_ingresso);
-    const inv   = (idade !== null && idade < 18) || (meses !== null && meses < 12);
-    const motivo = inv ? (idade !== null && idade < 18 ? "Menor de 18 anos" : "< 1 ano de membresia") : (m.congregacao || "Sede");
-    return `<div class="drop-item${inv?" disabled":""}"
-      onclick="${inv ? `""` : `selecionarIndicante('${m.pessoa_id}','${eh(m.nome).replace(/'/g,"\\'")}','${eh(m.congregacao||"Sede")}','${m.data_nascimento||""}','${m.data_ingresso||""}')`}">
-      <span>${eh(m.nome)}</span>
-      <span class="drop-sub">${motivo}</span>
+    const idade=calcIdade(m.data_nascimento), meses=calcMeses(m.data_ingresso);
+    const inv = (idade!==null&&idade<18)||(meses!==null&&meses<12);
+    const sub = inv ? (idade!==null&&idade<18?"Menor de 18 anos":"< 1 ano de membresia") : (m.congregacao||"Sede");
+    const nEsc = eh(m.nome).replace(/'/g,"\\'");
+    return `<div class="drop-item${inv?" dis":""}" onclick="${inv?`alert('Não permitido: ${sub}')`:
+      `selIndicante('${m.pessoa_id}','${nEsc}','${eh(m.congregacao||"Sede")}','${m.data_nascimento||""}','${m.data_ingresso||""}')`}">
+      <span>${eh(m.nome)}</span><span class="drop-sub">${sub}</span>
     </div>`;
   }).join("");
   drop.style.display = "block";
 };
 
-window.fecharDropIndicante = function() {
-  setTimeout(() => { const d = document.getElementById("id-drop"); if (d) d.style.display = "none"; }, 200);
-};
-
-window.selecionarIndicante = function(pessoaId, nome, congregacao, dn, di) {
-  indicante = { pessoa_id: pessoaId, nome, congregacao, data_nascimento: dn, data_ingresso: di };
-  const inp  = document.getElementById("id-busca");
-  const drop = document.getElementById("id-drop");
-  const sel  = document.getElementById("id-sel");
-  if (inp)  inp.value = nome;
-  if (drop) drop.style.display = "none";
-  if (sel)  sel.innerHTML = `<div class="sel-badge">✓ ${eh(nome)} <button onclick="limparIndicante()">✕</button></div>`;
-};
-
-window.limparIndicante = function() {
-  indicante = null;
-  const inp = document.getElementById("id-busca");
+window.selIndicante = function(pid,nome,cong,dn,di){
+  indicante = { pessoa_id:pid, nome, congregacao:cong, data_nascimento:dn, data_ingresso:di };
+  const inp = document.getElementById("id-inp");
   const sel = document.getElementById("id-sel");
-  if (inp) { inp.value = ""; inp.focus(); }
-  if (sel) sel.innerHTML = "";
+  if (inp){ inp.value = nome; document.getElementById("id-drop").style.display="none"; }
+  if (sel) sel.innerHTML = `<div class="sel-ok">✓ ${eh(nome)} <button onclick="limparIndicante()">✕</button></div>`;
 };
 
-window.confirmarIdentificacao = async function() {
+window.limparIndicante = function(){
+  indicante = null;
+  const inp = document.getElementById("id-inp");
+  const sel = document.getElementById("id-sel");
+  if (inp){ inp.value=""; inp.focus(); }
+  if (sel) sel.innerHTML="";
+};
+
+window.fecharDrop = function(id){ setTimeout(()=>{ const d=document.getElementById(id); if(d) d.style.display="none"; },200); };
+
+window.confirmarIdentificacao = async function(){
   const msgEl = document.getElementById("id-msg");
-  if (!indicante) { msgEl.textContent = "Selecione seu nome na lista."; msgEl.className = "msg err"; return; }
-
-  const btn = document.querySelector(".submit-btn");
-  if (btn) { btn.disabled = true; btn.textContent = "Verificando..."; }
-  msgEl.textContent = "";
-
+  if (!indicante){ msgEl.textContent="Selecione seu nome na lista."; msgEl.className="msg err"; return; }
+  const btn = document.querySelector("[onclick='confirmarIdentificacao()']");
+  if (btn){ btn.disabled=true; btn.textContent="Verificando..."; }
+  msgEl.textContent="";
   try {
-    // Verifica se já indicou
-    const jaFez = await sbGet(`eleicao_indicacoes?indicante_pessoa_id=eq.${indicante.pessoa_id}&deleted_at=is.null&select=id&limit=1`);
-    if (jaFez.length) {
-      renderJaIndicou();
-      return;
-    }
+    const jaFez = await sbGet(`eleicao_indicacoes?indicante_pessoa_id=eq.${indicante.pessoa_id}&processo_id=eq.${processo.id}&deleted_at=is.null&select=id&limit=1`);
+    if (jaFez.length){ renderJaIndicou(); return; }
     renderFormulario();
-  } catch (e) {
-    msgEl.textContent = "Erro ao verificar: " + e.message;
-    msgEl.className = "msg err";
-    if (btn) { btn.disabled = false; btn.textContent = "Continuar"; }
+  } catch(e){
+    msgEl.textContent="Erro: "+e.message; msgEl.className="msg err";
+    if(btn){ btn.disabled=false; btn.textContent="Continuar"; }
   }
 };
 
-/* ── Tela 2: formulário de indicações ────────────────── */
-function renderFormulario() {
-  items = [];
-  itemCtr = 0;
-  adicionarItem();
+/* ── ETAPA 3: Formulário de indicações ───────────────── */
+function renderFormulario(){
+  etapa = 3;
+  items = []; itemCtr = 0;
+  addItem();
 
+  const tipoProcess = processo.tipo; // presbiteros | diaconos | ambos
   app.innerHTML = `
-    <div class="info-card" style="padding:16px 20px">
+    ${renderSteps()}
+    <div class="card" style="padding:14px 18px">
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:36px;height:36px;border-radius:50%;background:rgba(74,156,245,.12);display:flex;align-items:center;justify-content:center;color:var(--sky);font-weight:700;font-size:15px;flex-shrink:0">
-          ${eh(indicante.nome[0])}
-        </div>
+        <div style="width:34px;height:34px;border-radius:50%;background:rgba(74,156,245,.12);display:flex;align-items:center;justify-content:center;color:var(--sky);font-weight:700;font-size:14px;flex-shrink:0">${eh(indicante.nome[0])}</div>
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--tx1)">${eh(indicante.nome)}</div>
-          <div style="font-size:11px;color:var(--tx3)">${eh(indicante.congregacao)} · Membro identificado</div>
+          <div style="font-size:11px;color:var(--tx3)">${eh(indicante.congregacao)}</div>
         </div>
         <button onclick="renderIdentificacao()" style="margin-left:auto;background:none;border:1px solid var(--bd);border-radius:6px;padding:5px 10px;font-size:11px;color:var(--tx3);cursor:pointer;font-family:inherit">Trocar</button>
       </div>
     </div>
-    <div class="form-card">
-      <div style="font-size:13px;color:var(--tx2);line-height:1.65;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--bd)">
-        Indique membros que, em sua percepção, reúnem condições espirituais e de caráter para o ofício de
-        <strong>diácono</strong> ou <strong>presbítero</strong>. Você pode indicar mais de uma pessoa.
+    <div class="card">
+      <div style="font-size:13px;color:var(--tx2);line-height:1.7;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--bd)">
+        Indique membros que, em sua percepção, reúnem condições espirituais e de caráter para o ofício de oficial da Igreja.
       </div>
-      <div id="items-container"></div>
-      <button class="add-btn" onclick="adicionarItemUI()">+ Adicionar indicação</button>
+      <div id="items-ct"></div>
+      <button class="add-btn" onclick="addItemUI()">+ Adicionar indicação</button>
     </div>
-    <div class="form-card">
-      <button class="submit-btn" onclick="submeter()">Enviar indicações</button>
+    <div class="card">
+      <button class="btn-pri" onclick="submeter()" style="margin-top:0">Enviar indicações</button>
       <div id="form-msg" class="msg"></div>
     </div>`;
 
   renderItems();
+  window._tipoProcess = tipoProcess;
 }
 
-function adicionarItem() {
-  items.push({ id: ++itemCtr, tipo: "presbitero", indicado_id: null, indicado_nome: "", obs: "" });
+function addItem(){ items.push({ id:++itemCtr, tipo: window._tipoProcess==="diaconos"?"diacono":"presbitero", indicado_id:null, indicado_nome:"", obs:"" }); }
+
+function renderItems(){
+  const c = document.getElementById("items-ct");
+  if (c) c.innerHTML = items.map(it=>itemHTML(it)).join("");
 }
 
-function renderItems() {
-  const c = document.getElementById("items-container");
-  if (!c) return;
-  c.innerHTML = items.map(it => itemHTML(it)).join("");
-}
-
-function itemHTML(it) {
+function itemHTML(it){
+  const tp = window._tipoProcess;
   const podeRemover = items.length > 1;
-  const corP = it.tipo === "presbitero" ? "sel-presb" : "";
-  const corD = it.tipo === "diacono"    ? "sel-diac"  : "";
+  const sp = it.tipo==="presbitero"?" sp":"", sd = it.tipo==="diacono"?" sd":"";
+  const soloPresb = tp==="presbiteros", soloDiac = tp==="diaconos";
+  const tipoRow = soloPresb ? "" : soloDiac ? "" : `
+    <div class="tipo-row">
+      <label class="tipo-opt${sp}" onclick="setTipo(${it.id},'presbitero')">
+        <input type="radio" name="tipo-${it.id}" value="presbitero" ${it.tipo==="presbitero"?"checked":""}> Presbítero
+      </label>
+      <label class="tipo-opt${sd}" onclick="setTipo(${it.id},'diacono')">
+        <input type="radio" name="tipo-${it.id}" value="diacono" ${it.tipo==="diacono"?"checked":""}> Diácono
+      </label>
+    </div>`;
+  const tipoBadge = soloPresb
+    ? `<span style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid rgba(74,156,245,.4);color:var(--sky);background:rgba(74,156,245,.08)">Presbítero</span>`
+    : soloDiac
+    ? `<span style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid rgba(42,181,192,.4);color:var(--teal);background:rgba(42,181,192,.08)">Diácono</span>`
+    : "";
   return `
     <div class="item-card" id="item-${it.id}">
-      <div class="item-header">
-        <span class="item-num">Indicação #${it.id}</span>
-        ${podeRemover ? `<button class="remove-btn" onclick="removerItem(${it.id})" title="Remover">✕</button>` : ""}
+      <div class="item-hdr">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="item-num">Indicação #${it.id}</span>${tipoBadge}
+        </div>
+        ${podeRemover?`<button class="rm-btn" onclick="rmItem(${it.id})">✕</button>`:""}
       </div>
-      <div class="tipo-row">
-        <label class="tipo-opt ${corP}" onclick="setTipo(${it.id},'presbitero')">
-          <input type="radio" name="tipo-${it.id}" value="presbitero" ${it.tipo==="presbitero"?"checked":""}>
-          Presbítero
-        </label>
-        <label class="tipo-opt ${corD}" onclick="setTipo(${it.id},'diacono')">
-          <input type="radio" name="tipo-${it.id}" value="diacono" ${it.tipo==="diacono"?"checked":""}>
-          Diácono
-        </label>
-      </div>
+      ${tipoRow}
       <div class="field">
-        <label>Nome do indicado <span class="req">*</span></label>
+        <label class="lbl">Nome do indicado <span style="color:var(--rose)">*</span></label>
         <div class="drop-wrap">
-          <input id="busca-${it.id}" type="text" placeholder="Digite o nome do membro..."
+          <input id="bi-${it.id}" class="inp" type="text" placeholder="Digite o nome do membro..."
             value="${eh(it.indicado_nome)}" autocomplete="off"
             oninput="buscarIndicado(${it.id},this.value)"
-            onblur="fecharDropIndicado(${it.id})">
-          <div class="dropdown" id="drop-${it.id}"></div>
+            onblur="fecharDrop('di-${it.id}')">
+          <div class="dropdown" id="di-${it.id}"></div>
         </div>
-        <div id="sel-${it.id}" style="margin-top:5px;font-size:11.5px;color:${it.indicado_id?"var(--gr)":"var(--tx3)"}">
-          ${it.indicado_id ? `✅ ${eh(it.indicado_nome)} selecionado(a)` : "Nenhum membro selecionado"}
+        <div id="si-${it.id}" style="margin-top:5px;font-size:11.5px;color:${it.indicado_id?"var(--gr)":"var(--tx3)"}">
+          ${it.indicado_id?`✅ ${eh(it.indicado_nome)} selecionado(a)`:"Nenhum membro selecionado"}
         </div>
       </div>
       <div class="field" style="margin-bottom:0">
-        <label>Observação (opcional)</label>
-        <input class="obs-input" type="text" maxlength="200" placeholder="Ex: Exerce diaconia com fidelidade..."
+        <label class="lbl">Observação (opcional)</label>
+        <input class="inp" type="text" maxlength="200" placeholder="Motivo da indicação..."
           oninput="setObs(${it.id},this.value)" value="${eh(it.obs)}">
       </div>
     </div>`;
 }
 
-window.adicionarItemUI = function() {
-  adicionarItem();
-  const c = document.getElementById("items-container");
-  if (c) c.insertAdjacentHTML("beforeend", itemHTML(items[items.length - 1]));
-  syncRemoveBtns();
-};
+window.addItemUI = function(){ addItem(); const c=document.getElementById("items-ct"); if(c) c.insertAdjacentHTML("beforeend",itemHTML(items[items.length-1])); syncRmBtns(); };
+window.rmItem   = function(id){ items=items.filter(i=>i.id!==id); document.getElementById(`item-${id}`)?.remove(); syncRmBtns(); };
+window.setTipo  = function(id,tipo){ const it=items.find(i=>i.id===id); if(!it) return; it.tipo=tipo; const el=document.getElementById(`item-${id}`); if(el) el.outerHTML=itemHTML(it); };
+window.setObs   = function(id,v){ const it=items.find(i=>i.id===id); if(it) it.obs=v; };
+function syncRmBtns(){ items.forEach(it=>{ const b=document.querySelector(`#item-${it.id} .rm-btn`); if(b) b.style.display=items.length>1?"":"none"; }); }
 
-window.removerItem = function(id) {
-  items = items.filter(i => i.id !== id);
-  document.getElementById(`item-${id}`)?.remove();
-  syncRemoveBtns();
-};
-
-window.setTipo = function(id, tipo) {
-  const it = items.find(i => i.id === id);
-  if (!it) return;
-  it.tipo = tipo;
-  const el = document.getElementById(`item-${id}`);
-  if (el) el.outerHTML = itemHTML(it);
-};
-
-window.setObs = function(id, v) {
-  const it = items.find(i => i.id === id);
-  if (it) it.obs = v;
-};
-
-function syncRemoveBtns() {
-  items.forEach(it => {
-    const btn = document.querySelector(`#item-${it.id} .remove-btn`);
-    if (btn) btn.style.display = items.length > 1 ? "" : "none";
-  });
-}
-
-/* ── Autocomplete do indicado ────────────────────────── */
-window.buscarIndicado = function(id, q) {
-  const drop = document.getElementById(`drop-${id}`);
-  if (!drop) return;
-  const it  = items.find(i => i.id === id);
-  if (it) { it.indicado_id = null; it.indicado_nome = q; }
-  const sel = document.getElementById(`sel-${id}`);
-  if (sel) { sel.textContent = "Nenhum membro selecionado"; sel.style.color = "var(--tx3)"; }
-
-  const txt = (q || "").trim().toLowerCase();
-  if (txt.length < 2) { drop.style.display = "none"; return; }
-
-  const matches = membros.filter(m => m.nome?.toLowerCase().includes(txt)).slice(0, 10);
-  if (!matches.length) {
-    drop.innerHTML = `<div class="drop-item disabled"><span>Nenhum membro encontrado</span></div>`;
-    drop.style.display = "block"; return;
-  }
-  drop.innerHTML = matches.map(m => {
-    const idade = calcIdade(m.data_nascimento);
-    const meses = calcMeses(m.data_ingresso);
-    const inv   = (idade !== null && idade < 18) || (meses !== null && meses < 12);
-    const motivo = inv ? (idade !== null && idade < 18 ? "Menor de 18 anos" : "< 1 ano de membresia") : (m.congregacao || "Sede");
-    const nEsc = eh(m.nome).replace(/'/g, "\\'");
-    return `<div class="drop-item${inv?" disabled":""}"
-      onclick="${inv ? `alert('Não permitido: ${motivo}')` : `selecionarIndicado(${id},'${m.pessoa_id}','${nEsc}')`}">
-      <span>${eh(m.nome)}</span>
-      <span class="drop-sub" style="${inv?"color:var(--rose)":""}">${motivo}</span>
+window.buscarIndicado = function(id,q){
+  const drop=document.getElementById(`di-${id}`); if(!drop) return;
+  const it=items.find(i=>i.id===id); if(it){ it.indicado_id=null; it.indicado_nome=q; }
+  const sel=document.getElementById(`si-${id}`);
+  if(sel){ sel.textContent="Nenhum membro selecionado"; sel.style.color="var(--tx3)"; }
+  const txt=(q||"").trim().toLowerCase();
+  if(txt.length<2){ drop.style.display="none"; return; }
+  const matches=membros.filter(m=>m.nome?.toLowerCase().includes(txt)).slice(0,10);
+  if(!matches.length){ drop.innerHTML=`<div class="drop-item dis"><span>Nenhum membro encontrado</span></div>`; drop.style.display="block"; return; }
+  drop.innerHTML=matches.map(m=>{
+    const idade=calcIdade(m.data_nascimento),meses=calcMeses(m.data_ingresso);
+    const inv=(idade!==null&&idade<18)||(meses!==null&&meses<12);
+    const sub=inv?(idade!==null&&idade<18?"Menor de 18 anos":"< 1 ano de membresia"):(m.congregacao||"Sede");
+    const nEsc=eh(m.nome).replace(/'/g,"\\'");
+    return `<div class="drop-item${inv?" dis":""}" onclick="${inv?`alert('Não permitido: ${sub}')`:
+      `selIndicado(${id},'${m.pessoa_id}','${nEsc}')`}">
+      <span>${eh(m.nome)}</span><span class="drop-sub" style="${inv?"color:var(--rose)":""}">${sub}</span>
     </div>`;
   }).join("");
-  drop.style.display = "block";
+  drop.style.display="block";
 };
 
-window.fecharDropIndicado = function(id) {
-  setTimeout(() => { const d = document.getElementById(`drop-${id}`); if (d) d.style.display = "none"; }, 200);
+window.selIndicado = function(id,pid,nome){
+  const it=items.find(i=>i.id===id); if(!it) return;
+  it.indicado_id=pid; it.indicado_nome=nome;
+  const inp=document.getElementById(`bi-${id}`); const drp=document.getElementById(`di-${id}`); const sel=document.getElementById(`si-${id}`);
+  if(inp) inp.value=nome; if(drp) drp.style.display="none";
+  if(sel){ sel.textContent=`✅ ${nome} selecionado(a)`; sel.style.color="var(--gr)"; }
 };
 
-window.selecionarIndicado = function(id, pessoaId, nome) {
-  const it  = items.find(i => i.id === id);
-  if (!it) return;
-  it.indicado_id   = pessoaId;
-  it.indicado_nome = nome;
-  const inp = document.getElementById(`busca-${id}`);
-  const drp = document.getElementById(`drop-${id}`);
-  const sel = document.getElementById(`sel-${id}`);
-  if (inp) inp.value = nome;
-  if (drp) drp.style.display = "none";
-  if (sel) { sel.textContent = `✅ ${nome} selecionado(a)`; sel.style.color = "var(--gr)"; }
-};
-
-/* ── Submeter ─────────────────────────────────────────── */
-window.submeter = async function() {
-  const msgEl = document.getElementById("form-msg");
-  const validos = items.filter(i => i.indicado_id);
-
-  if (!validos.length) {
-    msgEl.textContent = "Selecione ao menos um membro para indicar.";
-    msgEl.className = "msg err"; return;
-  }
-
-  const vistos = new Set();
-  for (const it of validos) {
-    const key = `${it.indicado_id}-${it.tipo}`;
-    if (vistos.has(key)) {
-      msgEl.textContent = `Indicação duplicada: ${it.indicado_nome}. Remova a duplicata.`;
-      msgEl.className = "msg err"; return;
-    }
+/* ── Submeter ────────────────────────────────────────── */
+window.submeter = async function(){
+  const msgEl=document.getElementById("form-msg");
+  const validos=items.filter(i=>i.indicado_id);
+  if(!validos.length){ msgEl.textContent="Selecione ao menos um membro para indicar."; msgEl.className="msg err"; return; }
+  const vistos=new Set();
+  for(const it of validos){
+    const key=`${it.indicado_id}-${it.tipo}`;
+    if(vistos.has(key)){ msgEl.textContent=`Indicação duplicada: ${it.indicado_nome}.`; msgEl.className="msg err"; return; }
     vistos.add(key);
   }
-
-  const btn = document.querySelector("[onclick='submeter()']");
-  if (btn) { btn.disabled = true; btn.textContent = "Enviando..."; }
-  msgEl.textContent = "";
-
-  const rows = validos.map(it => ({
-    indicante_pessoa_id: indicante.pessoa_id,
-    indicante_nome:      indicante.nome,
-    indicado_pessoa_id:  it.indicado_id,
-    indicado_nome:       it.indicado_nome,
-    tipo:                it.tipo,
-    observacao:          it.obs || null,
-    congregacao:         indicante.congregacao || null,
-    ip_dispositivo:      navigator.userAgent?.slice(0, 200) || null,
+  const tp=window._tipoProcess;
+  const btn=document.querySelector("[onclick='submeter()']");
+  if(btn){ btn.disabled=true; btn.textContent="Enviando..."; }
+  msgEl.textContent="";
+  const rows=validos.map(it=>({
+    processo_id:        processo.id,
+    indicante_pessoa_id:indicante.pessoa_id,
+    indicante_nome:     indicante.nome,
+    indicado_pessoa_id: it.indicado_id,
+    indicado_nome:      it.indicado_nome,
+    tipo:               tp==="presbiteros"?"presbitero":tp==="diaconos"?"diacono":it.tipo,
+    observacao:         it.obs||null,
+    congregacao:        indicante.congregacao||null,
+    ip_dispositivo:     navigator.userAgent?.slice(0,200)||null,
   }));
-
   try {
     await sbPost("eleicao_indicacoes", rows);
     renderSucesso(validos.length);
-  } catch (e) {
-    msgEl.textContent = "Erro ao enviar: " + e.message;
-    msgEl.className = "msg err";
-    if (btn) { btn.disabled = false; btn.textContent = "Enviar indicações"; }
+  } catch(e){
+    msgEl.textContent="Erro ao enviar: "+e.message; msgEl.className="msg err";
+    if(btn){ btn.disabled=false; btn.textContent="Enviar indicações"; }
   }
 };
 
 /* ── Estados finais ──────────────────────────────────── */
-function renderSucesso(n) {
-  app.innerHTML = `
-    <div class="state-card ok">
-      <div class="state-icon">✅</div>
-      <div class="state-title">Indicações enviadas!</div>
-      <div class="state-desc">
-        <strong>${n} indicação${n > 1 ? "ões" : ""}</strong> registrada${n > 1 ? "s" : ""} com sucesso.<br>
-        Obrigado por participar do processo eleitoral, <strong>${eh(indicante.nome)}</strong>.
-      </div>
-    </div>`;
+function renderSucesso(n){
+  app.innerHTML=`<div class="state-card ok">
+    <div class="state-icon">✅</div>
+    <div class="state-title">Indicações enviadas!</div>
+    <div class="state-desc"><strong>${n} indicação${n>1?"ões":""}</strong> registrada${n>1?"s":""} com sucesso.<br>Obrigado por participar, <strong>${eh(indicante.nome)}</strong>.</div>
+  </div>`;
 }
-
-function renderJaIndicou() {
-  app.innerHTML = `
-    <div class="state-card ok">
-      <div class="state-icon">✅</div>
-      <div class="state-title">Indicação já registrada</div>
-      <div class="state-desc">
-        Você já enviou suas indicações para esta eleição, <strong>${eh(indicante.nome)}</strong>.<br>
-        Agradecemos sua participação!
-      </div>
-    </div>`;
+function renderJaIndicou(){
+  app.innerHTML=`<div class="state-card ok">
+    <div class="state-icon">✅</div>
+    <div class="state-title">Já registrado!</div>
+    <div class="state-desc">Você já enviou suas indicações para este processo, <strong>${eh(indicante.nome)}</strong>.<br>Agradecemos sua participação!</div>
+  </div>`;
 }
-
-/* ── Start ───────────────────────────────────────────── */
-init();
+function renderErro(titulo,desc){
+  app.innerHTML=`<div class="state-card">
+    <div class="state-icon">⚠️</div>
+    <div class="state-title">${eh(titulo)}</div>
+    <div class="state-desc">${eh(desc)}</div>
+  </div>`;
+}
 </script>
 </body>
 </html>
