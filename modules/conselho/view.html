@@ -10,6 +10,7 @@
       <div class="bni" onclick="go('conselho-seminaristas')">Seminaristas</div>
       <div class="bni" onclick="T('Documentos','Atas e resoluções')">Documentos</div>
       <div class="bni" onclick="go('conselho-whatsapp')">WhatsApp</div>
+      <div class="bni" onclick="go('conselho-eleicoes')">Eleições</div>
     </div>
     <div class="ct">
       <div class="kpis c3">
@@ -402,6 +403,33 @@
       <div class="hero-act"><button class="tbt" onclick="go('conselho-dash')">← Voltar</button><button class="tbt" style="margin-left:6px" onclick="WA_TAB.load('CONSELHO')">↻ Atualizar</button></div>
     </div>
     <div class="ct" id="wa-tab-CONSELHO"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
+  </div>
+
+  <!-- ════ ELEIÇÕES / INDICAÇÕES ══════════════════════ -->
+  <div class="view" id="v-conselho-eleicoes">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--skybg);border-color:rgba(88,152,212,0.25);color:var(--sky)">⊞</div>
+      <div>
+        <div class="hero-lbl">Conselho e Governança</div>
+        <div class="hero-ttl">Eleições — Indicações</div>
+        <div class="hero-dsc">Processo de indicação de candidatos a diácono e presbítero</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt" onclick="go('conselho-dash')">← Voltar</button>
+      </div>
+    </div>
+    <div class="bnav" style="--mc:var(--sky)">
+      <div class="bni on" id="eleicao-tab-form" onclick="eleicaoTabForm()">Indicar</div>
+      <div class="bni" id="eleicao-tab-painel" onclick="eleicaoTabPainel()">Painel</div>
+    </div>
+    <div class="ct">
+      <div id="eleicao-area-form">
+        <div id="eleicao-form-area"><div style="padding:28px;color:var(--tx3);font-size:12px">Carregando...</div></div>
+      </div>
+      <div id="eleicao-area-painel" hidden>
+        <div id="eleicao-painel-area"><div style="padding:28px;color:var(--tx3);font-size:12px">Carregando...</div></div>
+      </div>
+    </div>
   </div>
 
   <!-- COMISSÕES -->
