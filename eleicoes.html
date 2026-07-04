@@ -198,7 +198,7 @@ function renderSteps(){
 async function iniciarIndicacao(){
   if (!membros.length){
     app.innerHTML = `<div class="loader"><div class="spinner"></div></div>`;
-    try { membros = await sbGet("v_membros?select=pessoa_id,nome,data_nascimento,data_ingresso,congregacao,status&status=eq.ativo&limit=2000"); }
+    try { membros = await sbGet("v_eleicao_form_membros?select=pessoa_id,nome,data_nascimento,data_ingresso,congregacao&limit=2000"); }
     catch(e){ renderErro("Erro", e.message); return; }
   }
   renderIdentificacao();
