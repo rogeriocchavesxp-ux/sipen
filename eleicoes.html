@@ -367,11 +367,6 @@ function itemHTML(it){
           ${it.indicado_id?`✅ ${eh(it.indicado_nome)} selecionado(a)`:"Nenhum membro selecionado"}
         </div>
       </div>
-      <div class="field" style="margin-bottom:0">
-        <label class="lbl">Observação (opcional)</label>
-        <input class="inp" type="text" maxlength="200" placeholder="Motivo da indicação..."
-          oninput="setObs(${it.id},this.value)" value="${eh(it.obs)}">
-      </div>
     </div>`;
 }
 
