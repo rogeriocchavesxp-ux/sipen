@@ -120,6 +120,8 @@ body {
 .req-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
 .req-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; color: var(--tx2); line-height: 1.5; }
 .req-check { display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--green-tint); border: 1px solid var(--green-border); color: var(--green); font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+.scripture-hint { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--bd); font-size: 12px; color: var(--tx3); }
+.scripture-hint strong { color: var(--green); font-weight: 600; }
 
 .detail-list { display: flex; flex-direction: column; gap: 10px; }
 .detail-row  { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13px; padding-bottom: 10px; border-bottom: 1px solid var(--bd); }
@@ -244,9 +246,12 @@ const HDRS = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-T
 let processo  = null;
 let membros   = [];
 let indicante = null;
-let items     = [];
+let dItems    = [];  // indicações de diáconos
+let pItems    = [];  // indicações de presbíteros
+let curItems  = [];  // array ativo no momento
+let curTipo   = "";  // 'diacono' | 'presbitero'
 let itemCtr   = 0;
-let etapa     = 1;
+let etapa     = 1;   // 1=info, 2=id, 3=form1, 4=form2(ambos)
 
 /* ── Helpers ─────────────────────────────────────────── */
 function eh(v) {
@@ -382,6 +387,7 @@ function renderInfo() {
           <li class="req-item"><span class="req-check">✓</span><span>18 anos ou mais</span></li>
           <li class="req-item"><span class="req-check">✓</span><span>Pelo menos 1 ano de membresia</span></li>
         </ul>
+        <div class="scripture-hint">Requisitos bíblicos para o oficialato: <strong>1 Timóteo 3</strong></div>
       </div>
       <div class="info-card">
         <div class="info-card-title">Detalhes do processo</div>
@@ -399,20 +405,32 @@ function renderInfo() {
    ETAPA 2 — IDENTIFICAÇÃO
 ═══════════════════════════════════════════════════════ */
 function stepsHtml() {
-  const d1 = etapa > 1, d2 = etapa > 2;
-  const a1 = etapa === 1, a2 = etapa === 2, a3 = etapa === 3;
+  const tp = processo?.tipo;
+  const isAmbos = tp === "ambos";
+  const s = (n) => {
+    if (etapa > n)  return "done";
+    if (etapa === n) return "on";
+    return "";
+  };
+  const n = (n) => etapa > n ? "✓" : n;
+
+  if (!isAmbos) {
+    return `<div class="steps">
+      <div class="step done"><div class="step-n">✓</div><span class="step-lbl">Processo</span></div>
+      <div class="step-sep"></div>
+      <div class="step ${s(2)}"><div class="step-n">${n(2)}</div><span class="step-lbl">Identificação</span></div>
+      <div class="step-sep"></div>
+      <div class="step ${s(3)}"><div class="step-n">${n(3)}</div><span class="step-lbl">Indicações</span></div>
+    </div>`;
+  }
   return `<div class="steps">
-    <div class="step ${d1||a1?"done":""}">
-      <div class="step-n">${d1?"✓":"1"}</div><span class="step-lbl">Processo</span>
-    </div>
+    <div class="step done"><div class="step-n">✓</div><span class="step-lbl">Processo</span></div>
     <div class="step-sep"></div>
-    <div class="step ${a2?"on":d2?"done":""}">
-      <div class="step-n">${d2?"✓":"2"}</div><span class="step-lbl">Identificação</span>
-    </div>
+    <div class="step ${s(2)}"><div class="step-n">${n(2)}</div><span class="step-lbl">Identificação</span></div>
     <div class="step-sep"></div>
-    <div class="step ${a3?"on":""}">
-      <div class="step-n">3</div><span class="step-lbl">Indicações</span>
-    </div>
+    <div class="step ${s(3)}"><div class="step-n">${n(3)}</div><span class="step-lbl">Diáconos</span></div>
+    <div class="step-sep"></div>
+    <div class="step ${s(4)}"><div class="step-n">${n(4)}</div><span class="step-lbl">Presbíteros</span></div>
   </div>`;
 }
 
@@ -512,29 +530,42 @@ window.confirmarIdentificacao = async function() {
 };
 
 /* ═══════════════════════════════════════════════════════
-   ETAPA 3 — FORMULÁRIO
+   ETAPAS 3/4 — FORMULÁRIO POR TIPO
 ═══════════════════════════════════════════════════════ */
 function renderFormulario() {
-  etapa = 3;
-  items = []; itemCtr = 0;
+  dItems = []; pItems = []; itemCtr = 0;
   const tp = processo.tipo;
-  window._tp = tp;
-  addItem();
+  if (tp === "presbiteros") { renderFormPresbiteros(); return; }
+  renderFormDiaconos(); // diaconos only, or ambos starts here
+}
+
+function memberBadgeHtml() {
+  return `<div class="member-badge">
+    <div class="member-av">${eh(indicante.nome[0])}</div>
+    <div>
+      <div class="member-name">${eh(indicante.nome)}</div>
+      <div class="member-cong">${eh(indicante.congregacao)}</div>
+    </div>
+    <button class="member-swap" onclick="renderIdentificacao()">Trocar</button>
+  </div>`;
+}
+
+function renderFormDiaconos() {
+  etapa = 3;
+  curItems = dItems;
+  curTipo  = "diacono";
+  if (!curItems.length) addItem();
+  const isAmbos = processo.tipo === "ambos";
+  const ref = "1 Timóteo 3.8–13";
 
   app.innerHTML = `
     ${stepsHtml()}
-    <div class="member-badge">
-      <div class="member-av">${eh(indicante.nome[0])}</div>
-      <div>
-        <div class="member-name">${eh(indicante.nome)}</div>
-        <div class="member-cong">${eh(indicante.congregacao)}</div>
-      </div>
-      <button class="member-swap" onclick="renderIdentificacao()">Trocar</button>
-    </div>
+    ${memberBadgeHtml()}
     <div class="id-card" style="margin-bottom:14px">
-      <p style="font-size:14px;color:var(--tx2);line-height:1.7">
-        Indique membros que, em sua percepção, reúnem condições espirituais e de caráter para o ofício de oficial da Igreja.
-        Você pode indicar mais de uma pessoa.
+      <h2 class="id-card-title" style="margin-bottom:4px">Indicação de Diáconos</h2>
+      <p class="id-card-sub" style="margin-bottom:0">
+        Indique irmãos que, em sua percepção, demonstram vocação e condições para o diaconato.
+        Requisitos bíblicos: <strong style="color:var(--green)">${ref}</strong>
       </p>
     </div>
     <div id="items-ct"></div>
@@ -542,7 +573,47 @@ function renderFormulario() {
       <span style="font-size:18px;line-height:1">+</span> Adicionar indicação
     </button>
     <div class="submit-card" style="margin-top:16px">
-      <button class="submit-btn" onclick="submeter()">Enviar indicações</button>
+      <div class="action-row" style="margin-top:0">
+        <button class="btn-sec" onclick="renderIdentificacao()">← Voltar</button>
+        ${isAmbos
+          ? `<button class="btn-pri" onclick="renderFormPresbiteros()">Próximo: Presbíteros →</button>`
+          : `<button class="btn-pri" onclick="submeter()">Enviar indicações</button>`}
+      </div>
+      <div id="form-msg" class="form-msg" style="margin-top:10px"></div>
+    </div>`;
+
+  renderItems();
+}
+
+function renderFormPresbiteros() {
+  const isAmbos = processo.tipo === "ambos";
+  etapa = isAmbos ? 4 : 3;
+  curItems = pItems;
+  curTipo  = "presbitero";
+  if (!curItems.length) addItem();
+  const ref = "1 Timóteo 3.1–7";
+
+  app.innerHTML = `
+    ${stepsHtml()}
+    ${memberBadgeHtml()}
+    <div class="id-card" style="margin-bottom:14px">
+      <h2 class="id-card-title" style="margin-bottom:4px">Indicação de Presbíteros</h2>
+      <p class="id-card-sub" style="margin-bottom:0">
+        Indique irmãos que, em sua percepção, demonstram vocação e condições para o presbiterato.
+        Requisitos bíblicos: <strong style="color:var(--green)">${ref}</strong>
+      </p>
+    </div>
+    <div id="items-ct"></div>
+    <button class="add-nom-btn" onclick="addItemUI()">
+      <span style="font-size:18px;line-height:1">+</span> Adicionar indicação
+    </button>
+    <div class="submit-card" style="margin-top:16px">
+      <div class="action-row" style="margin-top:0">
+        ${isAmbos
+          ? `<button class="btn-sec" onclick="renderFormDiaconos()">← Diáconos</button>`
+          : `<button class="btn-sec" onclick="renderIdentificacao()">← Voltar</button>`}
+        <button class="btn-pri" onclick="submeter()">Enviar indicações</button>
+      </div>
       <div id="form-msg" class="form-msg" style="margin-top:10px"></div>
     </div>`;
 
@@ -550,39 +621,25 @@ function renderFormulario() {
 }
 
 function addItem() {
-  const tp = window._tp || "ambos";
-  items.push({ id: ++itemCtr, tipo: tp === "diaconos" ? "diacono" : "presbitero", indicado_id: null, indicado_nome: "" });
+  curItems.push({ id: ++itemCtr, indicado_id: null, indicado_nome: "" });
 }
 
 function renderItems() {
   const c = document.getElementById("items-ct");
-  if (c) c.innerHTML = items.map(it => itemHTML(it)).join("");
+  if (c) c.innerHTML = curItems.map(it => itemHTML(it)).join("");
 }
 
 function itemHTML(it) {
-  const tp = window._tp || "ambos";
-  const onlP = tp === "presbiteros", onlD = tp === "diaconos", both = tp === "ambos";
-  const isP = it.tipo === "presbitero", isD = it.tipo === "diacono";
+  const isD = curTipo === "diacono";
+  const tagColor = isD ? "var(--bd2)" : "var(--green-border)";
+  const tagBg    = isD ? "var(--bg)" : "var(--green-tint)";
+  const tagTx    = isD ? "var(--tx3)" : "var(--green)";
   return `
     <div class="nom-card" id="nom-${it.id}">
       <div class="nom-header">
-        <span class="nom-num">Indicação #${it.id}</span>
-        ${items.length > 1 ? `<button class="nom-rm" onclick="rmItem(${it.id})" title="Remover">✕</button>` : ""}
+        <span class="nom-num">Indicação ${curItems.indexOf(it) + 1}</span>
+        ${curItems.length > 1 ? `<button class="nom-rm" onclick="rmItem(${it.id})" title="Remover">✕</button>` : ""}
       </div>
-      ${both ? `
-      <div class="tipo-row">
-        <label class="tipo-opt${isP?" tp":""}" onclick="setTipo(${it.id},'presbitero')">
-          <input type="radio" name="tipo-${it.id}" value="presbitero" ${isP?"checked":""}> Presbítero
-        </label>
-        <label class="tipo-opt${isD?" td":""}" onclick="setTipo(${it.id},'diacono')">
-          <input type="radio" name="tipo-${it.id}" value="diacono" ${isD?"checked":""}> Diácono
-        </label>
-      </div>` : `
-      <div style="margin-bottom:12px">
-        <span style="font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid var(--${onlP?"green-border":"bd2"});color:var(--${onlP?"green":"tx3"});background:var(--${onlP?"green-tint":"bg"})">
-          ${onlP?"Presbítero":"Diácono"}
-        </span>
-      </div>`}
       <div class="field">
         <label class="lbl">Nome do indicado <span class="req-star">*</span></label>
         <div class="drop-wrap">
@@ -602,29 +659,26 @@ function itemHTML(it) {
 window.addItemUI = function() {
   addItem();
   const c = document.getElementById("items-ct");
-  if (c) c.insertAdjacentHTML("beforeend", itemHTML(items[items.length - 1]));
+  if (c) c.insertAdjacentHTML("beforeend", itemHTML(curItems[curItems.length - 1]));
   syncRm();
 };
 window.rmItem = function(id) {
-  items = items.filter(i => i.id !== id);
+  curItems.splice(curItems.findIndex(i => i.id === id), 1);
   document.getElementById(`nom-${id}`)?.remove();
   syncRm();
 };
-window.setTipo = function(id, tipo) {
-  const it = items.find(i => i.id === id); if (!it) return;
-  it.tipo = tipo;
-  const el = document.getElementById(`nom-${id}`); if (el) el.outerHTML = itemHTML(it);
-};
 function syncRm() {
-  items.forEach(it => {
+  curItems.forEach((it, idx) => {
+    const num = document.querySelector(`#nom-${it.id} .nom-num`);
+    if (num) num.textContent = `Indicação ${idx + 1}`;
     const b = document.querySelector(`#nom-${it.id} .nom-rm`);
-    if (b) b.style.display = items.length > 1 ? "" : "none";
+    if (b) b.style.display = curItems.length > 1 ? "" : "none";
   });
 }
 
 window.buscarIndicado = function(id, q) {
   const drop = document.getElementById(`di-${id}`); if (!drop) return;
-  const it = items.find(i => i.id === id); if (it) { it.indicado_id = null; it.indicado_nome = q; }
+  const it = curItems.find(i => i.id === id); if (it) { it.indicado_id = null; it.indicado_nome = q; }
   const sel = document.getElementById(`si-${id}`);
   if (sel) { sel.textContent = "Nenhum membro selecionado"; sel.className = "field-hint"; }
   const txt = (q || "").trim().toLowerCase();
@@ -649,7 +703,7 @@ window.buscarIndicado = function(id, q) {
 };
 
 window.selIndicado = function(id, pid, nome) {
-  const it = items.find(i => i.id === id); if (!it) return;
+  const it = curItems.find(i => i.id === id); if (!it) return;
   it.indicado_id = pid; it.indicado_nome = nome;
   const inp = document.getElementById(`bi-${id}`);
   const drp = document.getElementById(`di-${id}`);
@@ -661,35 +715,53 @@ window.selIndicado = function(id, pid, nome) {
 
 /* ── Submeter ─────────────────────────────────────────── */
 window.submeter = async function() {
-  const msgEl  = document.getElementById("form-msg");
-  const validos = items.filter(i => i.indicado_id);
-  if (!validos.length) { msgEl.textContent = "Selecione ao menos um membro para indicar."; msgEl.className = "form-msg err"; return; }
+  const msgEl = document.getElementById("form-msg");
+  const tp    = processo.tipo;
+
+  const mapRows = (arr, tipo) => arr
+    .filter(i => i.indicado_id)
+    .map(i => ({
+      processo_id:         processo.id,
+      indicante_pessoa_id: indicante.pessoa_id,
+      indicante_nome:      indicante.nome,
+      indicado_pessoa_id:  i.indicado_id,
+      indicado_nome:       i.indicado_nome,
+      tipo,
+      congregacao:         indicante.congregacao || null,
+      ip_dispositivo:      navigator.userAgent?.slice(0, 200) || null,
+    }));
+
+  let rows = [];
+  if (tp === "ambos") {
+    rows = [...mapRows(dItems, "diacono"), ...mapRows(pItems, "presbitero")];
+  } else if (tp === "diaconos") {
+    rows = mapRows(dItems, "diacono");
+  } else {
+    rows = mapRows(pItems, "presbitero");
+  }
+
+  if (!rows.length) {
+    msgEl.textContent = "Selecione ao menos um membro para indicar.";
+    msgEl.className = "form-msg err"; return;
+  }
+
   const vistos = new Set();
-  for (const it of validos) {
-    const key = `${it.indicado_id}-${it.tipo}`;
-    if (vistos.has(key)) { msgEl.textContent = `Indicação duplicada: ${it.indicado_nome}.`; msgEl.className = "form-msg err"; return; }
+  for (const r of rows) {
+    const key = `${r.indicado_pessoa_id}-${r.tipo}`;
+    if (vistos.has(key)) { msgEl.textContent = `Indicação duplicada: ${r.indicado_nome}.`; msgEl.className = "form-msg err"; return; }
     vistos.add(key);
   }
-  const btn = document.querySelector("[onclick='submeter()']");
-  if (btn) { btn.disabled = true; btn.textContent = "Enviando…"; }
+
+  const btns = document.querySelectorAll(".btn-pri");
+  btns.forEach(b => { b.disabled = true; b.textContent = "Enviando…"; });
   msgEl.textContent = "";
-  const tp   = window._tp || "ambos";
-  const rows = validos.map(it => ({
-    processo_id:         processo.id,
-    indicante_pessoa_id: indicante.pessoa_id,
-    indicante_nome:      indicante.nome,
-    indicado_pessoa_id:  it.indicado_id,
-    indicado_nome:       it.indicado_nome,
-    tipo:                tp === "presbiteros" ? "presbitero" : tp === "diaconos" ? "diacono" : it.tipo,
-    congregacao:         indicante.congregacao || null,
-    ip_dispositivo:      navigator.userAgent?.slice(0, 200) || null,
-  }));
+
   try {
     await sbPost("eleicao_indicacoes", rows);
-    renderSucesso(validos.length);
+    renderSucesso(rows.length);
   } catch (e) {
     msgEl.textContent = "Erro ao enviar: " + e.message; msgEl.className = "form-msg err";
-    if (btn) { btn.disabled = false; btn.textContent = "Enviar indicações"; }
+    btns.forEach(b => { b.disabled = false; b.textContent = "Enviar indicações"; });
   }
 };
 
