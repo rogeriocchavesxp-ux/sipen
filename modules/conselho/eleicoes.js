@@ -106,13 +106,14 @@
   }
 
   async function _carregarIndicacoes(processoId) {
-    const q = _sb()
+    let q = _sb()
       .from("eleicao_indicacoes")
       .select("*")
       .is("deleted_at", null)
       .order("criado_em", { ascending: false });
-    if (processoId) q.eq("processo_id", processoId);
-    const { data } = await q;
+    if (processoId) q = q.eq("processo_id", processoId);
+    const { data, error } = await q;
+    if (error) console.error("[eleicoes] _carregarIndicacoes:", error.code, error.message);
     _indicacoes = data || [];
   }
 
