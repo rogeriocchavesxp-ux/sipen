@@ -5,97 +5,240 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Eleições — IPPenha</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* ── Tokens ─────────────────────────────────────────── */
+:root {
+  --green:        #2E6E48;
+  --green-mid:    #3A8A5A;
+  --green-tint:   #EBF5EF;
+  --green-border: #C0DECA;
+  --amber:        #9A5F1E;
+  --amber-tint:   #FBF2E6;
+  --amber-border: #E5C99A;
+
+  --tx1:  #1B2019;
+  --tx2:  #506050;
+  --tx3:  #8C9A8A;
+  --tx4:  #B0BDB0;
+
+  --bg:      #F7F8F4;
+  --surface: #FFFFFF;
+  --bd:      #DEE4DC;
+  --bd2:     #CDD5CB;
+
+  --radius-sm: 6px;
+  --radius:    10px;
+  --radius-lg: 14px;
+
+  --f-serif: Georgia, 'Palatino Linotype', 'Times New Roman', serif;
+  --f-sans:  -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
   :root {
-    --sky:#4a9cf5;--teal:#2ab5c0;--gr:#3aaa5c;--rose:#e05555;--amber:#d09040;
-    --tx1:#1a1d21;--tx2:#4a5260;--tx3:#8a919e;--tx4:#b0b7c3;
-    --bg:#f4f6f9;--card:#ffffff;--bd:#e2e6ec;--inp:#f8fafc;--inpbd:#cdd3da;
+    --green:        #4AAF72;
+    --green-mid:    #4AAF72;
+    --green-tint:   #162A1F;
+    --green-border: #264035;
+    --amber:        #D4903A;
+    --amber-tint:   #231A0C;
+    --amber-border: #5A4020;
+
+    --tx1:  #E2E7DF;
+    --tx2:  #9AAA95;
+    --tx3:  #5A6858;
+    --tx4:  #3A4A38;
+
+    --bg:      #131611;
+    --surface: #1A1E18;
+    --bd:      #272E24;
+    --bd2:     #323A30;
   }
-  @media (prefers-color-scheme:dark) {
-    :root{--tx1:#e8eaed;--tx2:#9aa0ac;--tx3:#5c6370;--tx4:#3a4050;
-          --bg:#12151a;--card:#1e2128;--bd:#2c3040;--inp:#272b34;--inpbd:#3a4050;}
-  }
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Source Sans 3',system-ui,sans-serif;background:var(--bg);color:var(--tx1);min-height:100vh;}
-  .wrap{max-width:580px;margin:0 auto;padding:24px 16px 64px;}
-  .page-header{display:flex;justify-content:center;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--bd);}
-  .page-logo{width:220px;height:auto;}
-  .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:24px;}
-  .card+.card{margin-top:14px;}
-  .badge{font-size:10px;font-weight:700;color:var(--sky);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;}
-  .title{font-size:22px;font-weight:800;color:var(--tx1);line-height:1.25;margin-bottom:10px;}
-  .desc{font-size:13px;color:var(--tx2);line-height:1.7;}
-  .ori{font-size:13px;color:var(--tx2);line-height:1.7;background:rgba(74,156,245,.06);border:1px solid rgba(74,156,245,.18);border-radius:8px;padding:12px 14px;margin-top:12px;}
-  .meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--tx3);margin-top:10px;}
-  .btn-pri{display:block;width:100%;padding:14px;border-radius:10px;border:none;background:var(--sky);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;margin-top:16px;transition:opacity .15s;}
-  .btn-pri:hover{opacity:.9;}
-  .btn-pri:disabled{opacity:.5;cursor:not-allowed;}
-  .btn-sec{padding:9px 18px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:13px;cursor:pointer;font-family:inherit;}
-  .lbl{display:block;font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;}
-  .inp{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--inpbd);background:var(--inp);color:var(--tx1);font-size:13.5px;font-family:inherit;outline:none;transition:border-color .15s;}
-  .inp:focus{border-color:var(--sky);}
-  .field{margin-bottom:14px;}
-  .drop-wrap{position:relative;}
-  .dropdown{position:absolute;top:calc(100% + 3px);left:0;right:0;z-index:60;background:var(--card);border:1px solid var(--bd);border-radius:10px;max-height:220px;overflow-y:auto;display:none;box-shadow:0 6px 24px rgba(0,0,0,.15);}
-  .drop-item{padding:10px 14px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bd);}
-  .drop-item:last-child{border-bottom:none;}
-  .drop-item:hover{background:rgba(74,156,245,.07);}
-  .drop-item.dis{cursor:not-allowed;color:var(--tx3);}
-  .drop-item.dis:hover{background:none;}
-  .drop-sub{font-size:11px;color:var(--tx3);}
-  .drop-item.dis .drop-sub{color:var(--rose);}
-  .sel-ok{display:inline-flex;align-items:center;gap:8px;background:rgba(58,170,92,.1);border:1px solid rgba(58,170,92,.3);color:var(--gr);border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:600;margin-top:6px;}
-  .sel-ok button{background:none;border:none;color:var(--gr);cursor:pointer;font-size:14px;padding:0 0 0 4px;opacity:.7;}
-  .sel-ok button:hover{opacity:1;}
-  .item-card{border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:12px;}
-  .item-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
-  .item-num{font-size:10px;font-weight:700;color:var(--tx4);text-transform:uppercase;letter-spacing:.08em;}
-  .rm-btn{background:none;border:none;color:var(--rose);cursor:pointer;font-size:16px;padding:2px 6px;opacity:.8;}
-  .rm-btn:hover{opacity:1;}
-  .tipo-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
-  .tipo-opt{display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:8px;border:1.5px solid var(--bd);background:var(--inp);cursor:pointer;font-size:13px;font-weight:600;color:var(--tx2);transition:all .15s;user-select:none;}
-  .tipo-opt input{display:none;}
-  .tipo-opt.sp{border-color:var(--sky);background:rgba(74,156,245,.08);color:var(--sky);}
-  .tipo-opt.sd{border-color:var(--teal);background:rgba(42,181,192,.08);color:var(--teal);}
-  .add-btn{display:flex;align-items:center;gap:7px;padding:10px 18px;border-radius:8px;border:1.5px dashed var(--bd);background:transparent;color:var(--tx3);font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s;}
-  .add-btn:hover{border-color:var(--sky);color:var(--sky);}
-  .msg{margin-top:10px;font-size:12.5px;}
-  .msg.err{color:var(--rose);}
-  .state-card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:40px 24px;text-align:center;}
-  .state-icon{font-size:44px;margin-bottom:14px;}
-  .state-title{font-size:18px;font-weight:800;color:var(--tx1);margin-bottom:8px;}
-  .state-desc{font-size:13px;color:var(--tx2);line-height:1.6;}
-  .state-card.ok{border-color:rgba(58,170,92,.35);}
-  .state-card.ok .state-title{color:var(--gr);}
-  .steps{display:flex;align-items:center;gap:0;margin-bottom:20px;}
-  .step{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx4);font-weight:600;}
-  .step.on{color:var(--sky);}
-  .step.done{color:var(--gr);}
-  .step-dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--tx4);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
-  .step.on .step-dot{border-color:var(--sky);background:rgba(74,156,245,.12);color:var(--sky);}
-  .step.done .step-dot{border-color:var(--gr);background:rgba(58,170,92,.12);color:var(--gr);}
-  .step-sep{flex:1;height:1px;background:var(--bd);margin:0 8px;}
-  .spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--bd);border-top-color:var(--sky);border-radius:50%;animation:spin .7s linear infinite;}
-  @keyframes spin{to{transform:rotate(360deg);}}
-  .loader{text-align:center;padding:52px;}
-  .footer{margin-top:36px;text-align:center;font-size:11px;color:var(--tx3);}
+}
+
+:root[data-theme="light"] {
+  --green: #2E6E48; --green-mid: #3A8A5A; --green-tint: #EBF5EF; --green-border: #C0DECA;
+  --amber: #9A5F1E; --amber-tint: #FBF2E6; --amber-border: #E5C99A;
+  --tx1: #1B2019; --tx2: #506050; --tx3: #8C9A8A; --tx4: #B0BDB0;
+  --bg: #F7F8F4; --surface: #FFFFFF; --bd: #DEE4DC; --bd2: #CDD5CB;
+}
+:root[data-theme="dark"] {
+  --green: #4AAF72; --green-mid: #4AAF72; --green-tint: #162A1F; --green-border: #264035;
+  --amber: #D4903A; --amber-tint: #231A0C; --amber-border: #5A4020;
+  --tx1: #E2E7DF; --tx2: #9AAA95; --tx3: #5A6858; --tx4: #3A4A38;
+  --bg: #131611; --surface: #1A1E18; --bd: #272E24; --bd2: #323A30;
+}
+
+/* ── Reset ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--f-sans);
+  background: var(--bg);
+  color: var(--tx1);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Page shell ──────────────────────────────────────── */
+.page-wrap   { max-width: 720px; margin: 0 auto; padding: 32px 20px 72px; }
+.page-header { display: flex; justify-content: center; padding-bottom: 28px; margin-bottom: 28px; border-bottom: 1px solid var(--bd); }
+.page-logo   { width: 200px; height: auto; }
+.page-footer { margin-top: 48px; text-align: center; font-size: 12px; color: var(--tx3); letter-spacing: .02em; }
+
+/* ── Process header ──────────────────────────────────── */
+.proc-header   { margin-bottom: 32px; }
+.proc-eyebrow  { font-size: 11px; font-weight: 600; color: var(--green); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 12px; }
+.proc-title    { font-family: var(--f-serif); font-size: clamp(26px, 5vw, 36px); font-weight: normal; color: var(--tx1); line-height: 1.2; text-wrap: balance; margin-bottom: 12px; }
+.proc-subtitle { font-size: 15px; color: var(--tx2); line-height: 1.7; max-width: 560px; margin-bottom: 20px; }
+.proc-meta     { display: flex; flex-wrap: wrap; gap: 8px; }
+.meta-chip     { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--bd2); background: var(--surface); font-size: 12.5px; color: var(--tx2); white-space: nowrap; }
+.meta-chip.s-aberto   { color: var(--green); background: var(--green-tint); border-color: var(--green-border); }
+.meta-chip.s-agendado { color: var(--amber); background: var(--amber-tint); border-color: var(--amber-border); }
+.meta-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+/* ── Divider ─────────────────────────────────────────── */
+.sec-divider { border: none; border-top: 1px solid var(--bd); margin: 0 0 28px; }
+
+/* ── Participation card ──────────────────────────────── */
+.join-card { background: var(--surface); border: 1px solid var(--bd); border-radius: var(--radius-lg); padding: 28px 28px 24px; margin-bottom: 20px; }
+.join-title { font-family: var(--f-serif); font-size: 20px; font-weight: normal; color: var(--tx1); margin-bottom: 12px; }
+.join-text  { font-size: 14px; color: var(--tx2); line-height: 1.75; }
+.join-ori   { margin-top: 16px; padding: 12px 16px; border-left: 3px solid var(--green-border); background: var(--green-tint); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 13.5px; color: var(--tx2); line-height: 1.65; font-style: italic; }
+.cta-btn    { display: block; width: 100%; margin-top: 22px; padding: 14px 28px; border-radius: var(--radius); border: none; background: var(--green); color: #fff; font-family: var(--f-sans); font-size: 15px; font-weight: 600; cursor: pointer; letter-spacing: .02em; transition: background .15s, opacity .15s; }
+.cta-btn:hover    { background: var(--green-mid); }
+.cta-btn:disabled { opacity: .5; cursor: not-allowed; }
+@media (min-width: 540px) { .cta-btn { width: auto; } }
+
+/* ── Info grid ───────────────────────────────────────── */
+.info-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 0; }
+@media (min-width: 540px) { .info-grid { grid-template-columns: 1fr 1fr; } }
+
+.info-card       { background: var(--surface); border: 1px solid var(--bd); border-radius: var(--radius-lg); padding: 22px 24px; }
+.info-card-title { font-size: 11px; font-weight: 700; color: var(--tx3); text-transform: uppercase; letter-spacing: .09em; margin-bottom: 16px; }
+
+.req-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.req-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; color: var(--tx2); line-height: 1.5; }
+.req-check { display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--green-tint); border: 1px solid var(--green-border); color: var(--green); font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+.detail-list { display: flex; flex-direction: column; gap: 10px; }
+.detail-row  { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13px; padding-bottom: 10px; border-bottom: 1px solid var(--bd); }
+.detail-row:last-child { padding-bottom: 0; border-bottom: none; }
+.detail-row dt { color: var(--tx3); flex-shrink: 0; }
+.detail-row dd { color: var(--tx1); font-weight: 600; text-align: right; }
+.detail-row dd.s-aberto   { color: var(--green); }
+.detail-row dd.s-agendado { color: var(--amber); }
+
+/* ── State blocks ────────────────────────────────────── */
+.state-block        { background: var(--surface); border: 1px solid var(--bd); border-radius: var(--radius-lg); padding: 40px 28px; text-align: center; margin-bottom: 20px; }
+.state-block h2     { font-family: var(--f-serif); font-size: 22px; font-weight: normal; color: var(--tx1); margin-bottom: 10px; }
+.state-block p      { font-size: 14px; color: var(--tx2); line-height: 1.7; max-width: 400px; margin: 0 auto; }
+.state-block.ok h2  { color: var(--green); }
+.state-block.ok     { border-color: var(--green-border); }
+
+/* ── Step indicator ──────────────────────────────────── */
+.steps        { display: flex; align-items: center; margin-bottom: 24px; }
+.step         { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--tx4); font-weight: 600; }
+.step.on      { color: var(--green); }
+.step.done    { color: var(--green); }
+.step-n       { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid currentColor; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+.step.on  .step-n  { background: var(--green-tint); }
+.step.done .step-n { background: var(--green-tint); }
+.step-sep     { flex: 1; height: 1px; background: var(--bd); margin: 0 10px; }
+.step-lbl     { display: none; }
+@media (min-width: 440px) { .step-lbl { display: inline; } }
+
+/* ── Identification card ─────────────────────────────── */
+.id-card       { background: var(--surface); border: 1px solid var(--bd); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 16px; }
+.id-card-title { font-family: var(--f-serif); font-size: 18px; font-weight: normal; color: var(--tx1); margin-bottom: 6px; }
+.id-card-sub   { font-size: 13.5px; color: var(--tx2); margin-bottom: 18px; }
+
+/* ── Member badge ────────────────────────────────────── */
+.member-badge { background: var(--surface); border: 1px solid var(--bd); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.member-av    { width: 36px; height: 36px; border-radius: 50%; background: var(--green-tint); border: 1px solid var(--green-border); color: var(--green); font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.member-name  { font-size: 14px; font-weight: 600; color: var(--tx1); }
+.member-cong  { font-size: 12px; color: var(--tx3); }
+.member-swap  { margin-left: auto; padding: 5px 12px; border-radius: var(--radius-sm); border: 1px solid var(--bd); background: transparent; color: var(--tx3); font-size: 12px; cursor: pointer; font-family: var(--f-sans); }
+
+/* ── Fields ──────────────────────────────────────────── */
+.field       { margin-bottom: 14px; }
+.lbl         { display: block; font-size: 10.5px; font-weight: 700; color: var(--tx3); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
+.req-star    { color: #C0392B; margin-left: 2px; }
+.inp         { width: 100%; padding: 10px 13px; border-radius: var(--radius-sm); border: 1px solid var(--bd2); background: var(--bg); color: var(--tx1); font-size: 14px; font-family: var(--f-sans); outline: none; transition: border-color .15s, box-shadow .15s; }
+.inp:focus   { border-color: var(--green); box-shadow: 0 0 0 3px var(--green-tint); }
+.drop-wrap   { position: relative; }
+.dropdown    { position: absolute; top: calc(100% + 3px); left: 0; right: 0; z-index: 60; background: var(--surface); border: 1px solid var(--bd2); border-radius: var(--radius); max-height: 230px; overflow-y: auto; display: none; box-shadow: 0 6px 24px rgba(0,0,0,.12); }
+.drop-item   { padding: 10px 14px; font-size: 13.5px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px solid var(--bd); transition: background .1s; }
+.drop-item:last-child { border-bottom: none; }
+.drop-item:hover      { background: var(--green-tint); }
+.drop-item.dis        { cursor: not-allowed; color: var(--tx3); }
+.drop-item.dis:hover  { background: none; }
+.drop-name   { font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.drop-sub    { font-size: 11.5px; color: var(--tx3); white-space: nowrap; flex-shrink: 0; }
+.drop-item.dis .drop-sub { color: #C0392B; }
+
+.sel-ok { display: inline-flex; align-items: center; gap: 8px; background: var(--green-tint); border: 1px solid var(--green-border); color: var(--green); border-radius: 20px; padding: 5px 12px; font-size: 12.5px; font-weight: 600; margin-top: 6px; }
+.sel-ok-rm { background: none; border: none; color: var(--green); cursor: pointer; font-size: 14px; padding: 0 0 0 4px; opacity: .7; }
+.sel-ok-rm:hover { opacity: 1; }
+.field-hint { margin-top: 5px; font-size: 12px; color: var(--tx3); }
+
+/* ── Form action row ─────────────────────────────────── */
+.action-row { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+@media (min-width: 440px) { .action-row { flex-direction: row; align-items: center; } }
+.btn-sec { padding: 11px 20px; border-radius: var(--radius-sm); border: 1px solid var(--bd2); background: transparent; color: var(--tx2); font-size: 13.5px; cursor: pointer; font-family: var(--f-sans); transition: background .12s; }
+.btn-sec:hover { background: var(--bg); }
+.btn-pri { padding: 11px 24px; border-radius: var(--radius-sm); border: none; background: var(--green); color: #fff; font-size: 13.5px; font-weight: 600; cursor: pointer; font-family: var(--f-sans); transition: background .12s; flex: 1; }
+.btn-pri:hover { background: var(--green-mid); }
+.btn-pri:disabled { opacity: .5; cursor: not-allowed; }
+.form-msg { font-size: 13px; }
+.form-msg.err { color: #C0392B; }
+
+/* ── Nomination items ────────────────────────────────── */
+.nom-card { background: var(--surface); border: 1px solid var(--bd); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 12px; }
+.nom-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.nom-num  { font-size: 10px; font-weight: 700; color: var(--tx4); text-transform: uppercase; letter-spacing: .1em; }
+.nom-rm   { background: none; border: none; color: var(--tx4); cursor: pointer; font-size: 16px; padding: 2px 4px; line-height: 1; transition: color .12s; }
+.nom-rm:hover { color: #C0392B; }
+.tipo-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.tipo-opt { display: flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: 20px; border: 1.5px solid var(--bd2); background: var(--bg); cursor: pointer; font-size: 13px; font-weight: 600; color: var(--tx2); transition: all .15s; user-select: none; }
+.tipo-opt input { display: none; }
+.tipo-opt.tp { border-color: var(--green); background: var(--green-tint); color: var(--green); }
+.tipo-opt.td { border-color: #4A8FBF; background: rgba(74,143,191,.08); color: #2A6A9A; }
+
+@media (prefers-color-scheme: dark) {
+  .tipo-opt.td { color: #6AAFD4; background: rgba(74,143,191,.12); border-color: #2A5070; }
+}
+:root[data-theme="dark"] .tipo-opt.td { color: #6AAFD4; background: rgba(74,143,191,.12); border-color: #2A5070; }
+
+.add-nom-btn { display: flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: var(--radius-sm); border: 1.5px dashed var(--bd2); background: transparent; color: var(--tx3); font-size: 13.5px; cursor: pointer; font-family: var(--f-sans); transition: all .15s; }
+.add-nom-btn:hover { border-color: var(--green); color: var(--green); }
+
+/* ── Submit section ──────────────────────────────────── */
+.submit-card { background: var(--surface); border: 1px solid var(--bd); border-radius: var(--radius-lg); padding: 22px 24px; }
+.submit-btn  { display: block; width: 100%; padding: 14px; border-radius: var(--radius); border: none; background: var(--green); color: #fff; font-family: var(--f-sans); font-size: 15px; font-weight: 600; cursor: pointer; transition: background .15s; }
+.submit-btn:hover { background: var(--green-mid); }
+.submit-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── Loader ──────────────────────────────────────────── */
+.loader      { text-align: center; padding: 60px 24px; }
+.spinner     { display: inline-block; width: 28px; height: 28px; border: 2.5px solid var(--bd); border-top-color: var(--green); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; border-top-color: var(--green); } }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="page-wrap">
   <div class="page-header">
     <img src="/icons/logo-ippenha.svg" class="page-logo" alt="Igreja Presbiteriana da Penha" onerror="this.style.display='none'">
   </div>
   <div id="app"><div class="loader"><div class="spinner"></div></div></div>
-  <div class="footer">SIPEN — Sistema Integrado da IPPenha</div>
+  <div class="page-footer">SIPEN — Sistema Integrado da IPPenha</div>
 </div>
 <script>
 /* ── Config ──────────────────────────────────────────── */
 const SB_URL = "https://erhwryfzpycahgsohhbh.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyaHdyeWZ6cHljYWhnc29oaGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg2MTUsImV4cCI6MjA5MTg0NDYxNX0.T0hp90Bmufj6a3oUPq1vYcLiGx9YjyMaZiE38S0e3_8";
-const HDRS   = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" };
+const HDRS = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" };
 
 /* ── Estado ──────────────────────────────────────────── */
 let processo  = null;
@@ -103,116 +246,195 @@ let membros   = [];
 let indicante = null;
 let items     = [];
 let itemCtr   = 0;
-let etapa     = 1;   // 1=info, 2=identificação, 3=formulário
+let etapa     = 1;
 
 /* ── Helpers ─────────────────────────────────────────── */
-function eh(v){ return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
-function fmtD(d){ if(!d) return "—"; const [y,m,dia]=String(d).slice(0,10).split("-"); return `${dia}/${m}/${y}`; }
-function calcIdade(dn){ if(!dn) return null; const h=new Date(),n=new Date(dn+"T00:00:00"); let a=h.getFullYear()-n.getFullYear(); if(h.getMonth()<n.getMonth()||(h.getMonth()===n.getMonth()&&h.getDate()<n.getDate()))a--; return a; }
-function calcMeses(di){ if(!di) return null; const h=new Date(),i=new Date(di+"T00:00:00"); return (h.getFullYear()-i.getFullYear())*12+(h.getMonth()-i.getMonth()); }
+function eh(v) {
+  return String(v ?? "").replace(/[&<>"']/g, c =>
+    ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function fmtD(d) {
+  if (!d) return "—";
+  const [y,m,dia] = String(d).slice(0,10).split("-");
+  return `${dia}/${m}/${y}`;
+}
+function calcIdade(dn) {
+  if (!dn) return null;
+  const h = new Date(), n = new Date(dn + "T00:00:00");
+  let a = h.getFullYear() - n.getFullYear();
+  if (h.getMonth() < n.getMonth() || (h.getMonth() === n.getMonth() && h.getDate() < n.getDate())) a--;
+  return a;
+}
+function calcMeses(di) {
+  if (!di) return null;
+  const h = new Date(), i = new Date(di + "T00:00:00");
+  return (h.getFullYear() - i.getFullYear()) * 12 + (h.getMonth() - i.getMonth());
+}
 
-async function sbGet(path){
-  const r=await fetch(`${SB_URL}/rest/v1/${path}`,{headers:HDRS});
-  if(!r.ok) throw new Error(await r.text().catch(()=>`HTTP ${r.status}`));
+async function sbGet(path) {
+  const r = await fetch(`${SB_URL}/rest/v1/${path}`, { headers: HDRS });
+  if (!r.ok) throw new Error(await r.text().catch(() => `HTTP ${r.status}`));
   return r.json();
 }
-async function sbPost(path,body){
-  const r=await fetch(`${SB_URL}/rest/v1/${path}`,{method:"POST",headers:{...HDRS,"Prefer":"return=minimal"},body:JSON.stringify(body)});
-  if(!r.ok) throw new Error(await r.text().catch(()=>`HTTP ${r.status}`));
+async function sbPost(path, body) {
+  const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
+    method: "POST",
+    headers: { ...HDRS, "Prefer": "return=minimal" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error(await r.text().catch(() => `HTTP ${r.status}`));
 }
 
+const STATUS = {
+  aberto:    { label: "Processo aberto",  cls: "s-aberto"   },
+  agendado:  { label: "Em breve",         cls: "s-agendado" },
+  encerrado: { label: "Encerrado",        cls: "s-encerrado"},
+  arquivado: { label: "Arquivado",        cls: "s-encerrado"},
+  rascunho:  { label: "Em preparação",    cls: "s-encerrado"},
+};
+const TIPO_NOME = { presbiteros:"presbíteros", diaconos:"diáconos", ambos:"presbíteros e/ou diáconos" };
+const TIPO_LBL  = { presbiteros:"Presbíteros", diaconos:"Diáconos", ambos:"Presbíteros e Diáconos"   };
+
 /* ── Init ────────────────────────────────────────────── */
-const app   = document.getElementById("app");
-const slug  = new URLSearchParams(location.search).get("p");
+const app  = document.getElementById("app");
+const slug = new URLSearchParams(location.search).get("p");
 
 if (!slug) {
-  app.innerHTML = `<div class="state-card"><div class="state-icon">⚠️</div><div class="state-title">Link inválido</div><div class="state-desc">Este link não contém um identificador de processo. Solicite um novo link à secretaria da IPPenha.</div></div>`;
+  renderErro("Link inválido", "Este link não contém um identificador de processo. Solicite um novo link à secretaria da IPPenha.");
 } else {
   init();
 }
 
-async function init(){
+async function init() {
   try {
     const dados = await sbGet(`eleicao_processos?slug=eq.${encodeURIComponent(slug)}&select=*&limit=1`);
-    if (!dados.length){ renderErro("Processo não encontrado","Este processo eleitoral não existe ou foi removido."); return; }
+    if (!dados.length) { renderErro("Processo não encontrado", "Este processo eleitoral não existe ou foi removido."); return; }
     processo = dados[0];
     document.title = `${processo.nome} — IPPenha`;
-    if (processo.status === "rascunho"){ renderErro("Não disponível","Este processo ainda não está disponível. Aguarde o início das indicações."); return; }
+    if (processo.status === "rascunho") { renderErro("Não disponível", "Este processo ainda não está disponível. Aguarde o início das indicações."); return; }
     renderInfo();
-  } catch(e){
+  } catch (e) {
     renderErro("Erro de conexão", e.message);
   }
 }
 
-/* ── ETAPA 1: Informações do processo ────────────────── */
-function renderInfo(){
+/* ═══════════════════════════════════════════════════════
+   ETAPA 1 — INFORMAÇÕES
+═══════════════════════════════════════════════════════ */
+function renderInfo() {
   etapa = 1;
-  const p = processo;
-  const aberto   = p.status === "aberto";
-  const agendado = p.status === "agendado";
-  const encerrado= ["encerrado","arquivado"].includes(p.status);
-  const tipoLbl  = { presbiteros:"Presbíteros", diaconos:"Diáconos", ambos:"Presbíteros e Diáconos" };
+  const p  = processo;
+  const sc = STATUS[p.status] || STATUS.rascunho;
+  const aberto    = p.status === "aberto";
+  const agendado  = p.status === "agendado";
+  const encerrado = ["encerrado","arquivado"].includes(p.status);
+
+  const periodo = (() => {
+    if (p.data_abertura && p.data_encerramento) return `${fmtD(p.data_abertura)} – ${fmtD(p.data_encerramento)}`;
+    if (p.data_encerramento) return `até ${fmtD(p.data_encerramento)}`;
+    if (p.data_abertura)     return `a partir de ${fmtD(p.data_abertura)}`;
+    return null;
+  })();
+
+  const subtitulo = p.descricao
+    || "Processo oficial de indicação de candidatos ao oficialato da Igreja Presbiteriana da Penha.";
+
+  const tipoTexto = TIPO_NOME[p.tipo] || "oficiais";
+
+  const participacaoTexto = aberto
+    ? `Se você é membro apto da Igreja Presbiteriana da Penha, você poderá indicar irmãos que, em sua percepção, possuem vocação e condições para servir como <strong>${tipoTexto}</strong>. Todas as indicações serão recebidas pelo Conselho e utilizadas exclusivamente neste processo eleitoral.`
+    : "";
 
   app.innerHTML = `
-    <div class="card">
-      <div class="badge">IPPenha · Processo Eleitoral · ${p.ano}</div>
-      <div class="title">${eh(p.nome)}</div>
-      ${p.descricao ? `<div class="desc">${eh(p.descricao)}</div>` : ""}
-      <div class="meta">
-        <span>⊞ ${tipoLbl[p.tipo]||"Oficiais"}</span>
-        ${p.data_abertura    ? `<span>📅 Abertura: ${fmtD(p.data_abertura)}</span>` : ""}
-        ${p.data_encerramento? `<span>🔒 Encerramento: ${fmtD(p.data_encerramento)}</span>` : ""}
+    <div class="proc-header">
+      <div class="proc-eyebrow">Igreja Presbiteriana da Penha · Processo Eleitoral</div>
+      <h1 class="proc-title">${eh(p.nome)}</h1>
+      <p class="proc-subtitle">${eh(subtitulo)}</p>
+      <div class="proc-meta">
+        <div class="meta-chip ${sc.cls}"><span class="meta-dot"></span><span>${sc.label}</span></div>
+        ${periodo ? `<div class="meta-chip"><span>${periodo}</span></div>` : ""}
       </div>
-      ${p.orientacoes ? `<div class="ori">${eh(p.orientacoes)}</div>` : ""}
     </div>
 
-    ${encerrado ? `
-      <div class="state-card" style="margin-top:14px">
-        <div class="state-icon">🔒</div>
-        <div class="state-title">Processo encerrado</div>
-        <div class="state-desc">O prazo para indicações neste processo foi encerrado.</div>
-      </div>` : agendado ? `
-      <div class="state-card" style="margin-top:14px">
-        <div class="state-icon">📅</div>
-        <div class="state-title">Em breve</div>
-        <div class="state-desc">Este processo ainda não está aberto. As indicações terão início em ${fmtD(p.data_abertura)||"data a confirmar"}.</div>
-      </div>` : aberto ? `
-      <div class="card">
-        <div style="font-size:14px;font-weight:700;color:var(--tx1);margin-bottom:6px">Participar</div>
-        <div class="desc">Como membro da IPPenha, você pode indicar nomes para este processo. Clique abaixo para começar.</div>
-        <button class="btn-pri" onclick="iniciarIndicacao()">Realizar indicação</button>
-      </div>` : ""}`;
+    <hr class="sec-divider">
+
+    ${aberto ? `
+    <div class="join-card">
+      <h2 class="join-title">Sua participação é importante</h2>
+      <p class="join-text">${participacaoTexto}</p>
+      ${p.orientacoes ? `<blockquote class="join-ori">${eh(p.orientacoes)}</blockquote>` : ""}
+      <button class="cta-btn" onclick="iniciarIndicacao()">Realizar indicação</button>
+    </div>` : agendado ? `
+    <div class="state-block">
+      <h2>Em breve</h2>
+      <p>Este processo ainda não está aberto. As indicações terão início em ${fmtD(p.data_abertura) || "data a confirmar"}.</p>
+    </div>` : `
+    <div class="state-block">
+      <h2>Processo encerrado</h2>
+      <p>O prazo para indicações neste processo foi encerrado. Agradecemos a participação de todos os membros.</p>
+    </div>`}
+
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-card-title">Quem pode participar?</div>
+        <ul class="req-list">
+          <li class="req-item"><span class="req-check">✓</span><span>Membros da Igreja Presbiteriana da Penha</span></li>
+          <li class="req-item"><span class="req-check">✓</span><span>18 anos ou mais</span></li>
+          <li class="req-item"><span class="req-check">✓</span><span>Pelo menos 1 ano de membresia</span></li>
+        </ul>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">Detalhes do processo</div>
+        <dl class="detail-list">
+          <div class="detail-row"><dt>Ano</dt><dd>${p.ano}</dd></div>
+          <div class="detail-row"><dt>Tipo</dt><dd>${TIPO_LBL[p.tipo] || "Oficiais"}</dd></div>
+          <div class="detail-row"><dt>Situação</dt><dd class="${sc.cls}">${sc.label}</dd></div>
+          ${p.data_encerramento ? `<div class="detail-row"><dt>Encerramento</dt><dd>${fmtD(p.data_encerramento)}</dd></div>` : ""}
+        </dl>
+      </div>
+    </div>`;
 }
 
-/* ── ETAPA 2: Identificação do membro ────────────────── */
-function renderSteps(){
+/* ═══════════════════════════════════════════════════════
+   ETAPA 2 — IDENTIFICAÇÃO
+═══════════════════════════════════════════════════════ */
+function stepsHtml() {
+  const d1 = etapa > 1, d2 = etapa > 2;
+  const a1 = etapa === 1, a2 = etapa === 2, a3 = etapa === 3;
   return `<div class="steps">
-    <div class="step ${etapa>=1?"done":""}"><div class="step-dot">${etapa>1?"✓":"1"}</div><span>Processo</span></div>
+    <div class="step ${d1||a1?"done":""}">
+      <div class="step-n">${d1?"✓":"1"}</div><span class="step-lbl">Processo</span>
+    </div>
     <div class="step-sep"></div>
-    <div class="step ${etapa===2?"on":etapa>2?"done":""}"><div class="step-dot">${etapa>2?"✓":"2"}</div><span>Identificação</span></div>
+    <div class="step ${a2?"on":d2?"done":""}">
+      <div class="step-n">${d2?"✓":"2"}</div><span class="step-lbl">Identificação</span>
+    </div>
     <div class="step-sep"></div>
-    <div class="step ${etapa===3?"on":""}"><div class="step-dot">3</div><span>Indicações</span></div>
+    <div class="step ${a3?"on":""}">
+      <div class="step-n">3</div><span class="step-lbl">Indicações</span>
+    </div>
   </div>`;
 }
 
-async function iniciarIndicacao(){
-  if (!membros.length){
+async function iniciarIndicacao() {
+  if (!membros.length) {
     app.innerHTML = `<div class="loader"><div class="spinner"></div></div>`;
-    try { membros = await sbGet("v_eleicao_form_membros?select=pessoa_id,nome,data_nascimento,data_ingresso,congregacao&limit=2000"); }
-    catch(e){ renderErro("Erro", e.message); return; }
+    try {
+      membros = await sbGet("v_eleicao_form_membros?select=pessoa_id,nome,data_nascimento,data_ingresso,congregacao&limit=2000");
+    } catch (e) { renderErro("Erro", e.message); return; }
   }
   renderIdentificacao();
 }
 
-function renderIdentificacao(){
+function renderIdentificacao() {
   etapa = 2;
   app.innerHTML = `
-    ${renderSteps()}
-    <div class="card">
-      <div style="font-size:14px;font-weight:700;color:var(--tx1);margin-bottom:4px">Identifique-se</div>
-      <div class="desc" style="margin-bottom:16px">Busque seu nome na lista de membros da IPPenha para continuar.</div>
+    ${stepsHtml()}
+    <div class="id-card">
+      <h2 class="id-card-title">Identifique-se</h2>
+      <p class="id-card-sub">Busque seu nome na lista de membros da IPPenha para continuar.</p>
       <div class="field">
-        <label class="lbl">Seu nome <span style="color:var(--rose)">*</span></label>
+        <label class="lbl">Seu nome <span class="req-star">*</span></label>
         <div class="drop-wrap">
           <input id="id-inp" class="inp" type="text" placeholder="Digite seu nome..." autocomplete="off"
             oninput="buscarIndicante(this.value)" onblur="fecharDrop('id-drop')">
@@ -220,142 +442,149 @@ function renderIdentificacao(){
         </div>
         <div id="id-sel"></div>
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+      <div class="action-row">
         <button class="btn-sec" onclick="renderInfo()">← Voltar</button>
-        <button class="btn-pri" onclick="confirmarIdentificacao()" style="flex:1;margin-top:0">Continuar</button>
+        <button class="btn-pri" onclick="confirmarIdentificacao()">Continuar</button>
       </div>
-      <div id="id-msg" class="msg"></div>
+      <div id="id-msg" class="form-msg" style="margin-top:10px"></div>
     </div>`;
 }
 
-window.buscarIndicante = function(q){
+window.buscarIndicante = function(q) {
   const drop = document.getElementById("id-drop");
-  indicante  = null;
-  const sel  = document.getElementById("id-sel");
+  indicante = null;
+  const sel = document.getElementById("id-sel");
   if (sel) sel.innerHTML = "";
-  const txt  = (q||"").trim().toLowerCase();
-  if (txt.length < 2){ drop.style.display = "none"; return; }
-  const matches = membros.filter(m => m.nome?.toLowerCase().includes(txt)).slice(0,10);
-  if (!matches.length){ drop.innerHTML = `<div class="drop-item dis"><span>Nenhum membro encontrado</span></div>`; drop.style.display="block"; return; }
+  const txt = (q || "").trim().toLowerCase();
+  if (txt.length < 2) { drop.style.display = "none"; return; }
+  const matches = membros.filter(m => m.nome?.toLowerCase().includes(txt)).slice(0, 10);
+  if (!matches.length) {
+    drop.innerHTML = `<div class="drop-item dis"><span class="drop-name">Nenhum membro encontrado</span></div>`;
+    drop.style.display = "block"; return;
+  }
   drop.innerHTML = matches.map(m => {
-    const idade=calcIdade(m.data_nascimento), meses=calcMeses(m.data_ingresso);
-    const inv = (idade!==null&&idade<18)||(meses!==null&&meses<12);
-    const sub = inv ? (idade!==null&&idade<18?"Menor de 18 anos":"< 1 ano de membresia") : (m.congregacao||"Sede");
-    const nEsc = eh(m.nome).replace(/'/g,"\\'");
-    return `<div class="drop-item${inv?" dis":""}" onclick="${inv?`alert('Não permitido: ${sub}')`:
-      `selIndicante('${m.pessoa_id}','${nEsc}','${eh(m.congregacao||"Sede")}','${m.data_nascimento||""}','${m.data_ingresso||""}')`}">
-      <span>${eh(m.nome)}</span><span class="drop-sub">${sub}</span>
+    const idade = calcIdade(m.data_nascimento), meses = calcMeses(m.data_ingresso);
+    const inv   = (idade !== null && idade < 18) || (meses !== null && meses < 12);
+    const sub   = inv ? (idade !== null && idade < 18 ? "Menor de 18 anos" : "< 1 ano de membresia") : (m.congregacao || "Sede");
+    const nEsc  = eh(m.nome).replace(/'/g, "\\'");
+    return `<div class="drop-item${inv ? " dis" : ""}"
+      onclick="${inv ? `alert('Não permitido: ${sub}')` : `selIndicante('${m.pessoa_id}','${nEsc}','${eh(m.congregacao||"Sede")}','${m.data_nascimento||""}','${m.data_ingresso||""}')`}">
+      <span class="drop-name">${eh(m.nome)}</span>
+      <span class="drop-sub">${sub}</span>
     </div>`;
   }).join("");
   drop.style.display = "block";
 };
 
-window.selIndicante = function(pid,nome,cong,dn,di){
-  indicante = { pessoa_id:pid, nome, congregacao:cong, data_nascimento:dn, data_ingresso:di };
+window.selIndicante = function(pid, nome, cong, dn, di) {
+  indicante = { pessoa_id: pid, nome, congregacao: cong, data_nascimento: dn, data_ingresso: di };
   const inp = document.getElementById("id-inp");
   const sel = document.getElementById("id-sel");
-  if (inp){ inp.value = nome; document.getElementById("id-drop").style.display="none"; }
-  if (sel) sel.innerHTML = `<div class="sel-ok">✓ ${eh(nome)} <button onclick="limparIndicante()">✕</button></div>`;
+  if (inp) { inp.value = nome; document.getElementById("id-drop").style.display = "none"; }
+  if (sel) sel.innerHTML = `<div class="sel-ok">✓ ${eh(nome)} <button class="sel-ok-rm" onclick="limparIndicante()">✕</button></div>`;
 };
 
-window.limparIndicante = function(){
+window.limparIndicante = function() {
   indicante = null;
-  const inp = document.getElementById("id-inp");
-  const sel = document.getElementById("id-sel");
-  if (inp){ inp.value=""; inp.focus(); }
-  if (sel) sel.innerHTML="";
+  const inp = document.getElementById("id-inp"), sel = document.getElementById("id-sel");
+  if (inp) { inp.value = ""; inp.focus(); }
+  if (sel) sel.innerHTML = "";
 };
 
-window.fecharDrop = function(id){ setTimeout(()=>{ const d=document.getElementById(id); if(d) d.style.display="none"; },200); };
+window.fecharDrop = function(id) {
+  setTimeout(() => { const d = document.getElementById(id); if (d) d.style.display = "none"; }, 200);
+};
 
-window.confirmarIdentificacao = async function(){
+window.confirmarIdentificacao = async function() {
   const msgEl = document.getElementById("id-msg");
-  if (!indicante){ msgEl.textContent="Selecione seu nome na lista."; msgEl.className="msg err"; return; }
+  if (!indicante) { msgEl.textContent = "Selecione seu nome na lista."; msgEl.className = "form-msg err"; return; }
   const btn = document.querySelector("[onclick='confirmarIdentificacao()']");
-  if (btn){ btn.disabled=true; btn.textContent="Verificando..."; }
-  msgEl.textContent="";
+  if (btn) { btn.disabled = true; btn.textContent = "Verificando..."; }
+  msgEl.textContent = "";
   try {
     const jaFez = await sbGet(`eleicao_indicacoes?indicante_pessoa_id=eq.${indicante.pessoa_id}&processo_id=eq.${processo.id}&deleted_at=is.null&select=id&limit=1`);
-    if (jaFez.length){ renderJaIndicou(); return; }
+    if (jaFez.length) { renderJaIndicou(); return; }
     renderFormulario();
-  } catch(e){
-    msgEl.textContent="Erro: "+e.message; msgEl.className="msg err";
-    if(btn){ btn.disabled=false; btn.textContent="Continuar"; }
+  } catch (e) {
+    msgEl.textContent = "Erro: " + e.message; msgEl.className = "form-msg err";
+    if (btn) { btn.disabled = false; btn.textContent = "Continuar"; }
   }
 };
 
-/* ── ETAPA 3: Formulário de indicações ───────────────── */
-function renderFormulario(){
+/* ═══════════════════════════════════════════════════════
+   ETAPA 3 — FORMULÁRIO
+═══════════════════════════════════════════════════════ */
+function renderFormulario() {
   etapa = 3;
   items = []; itemCtr = 0;
+  const tp = processo.tipo;
+  window._tp = tp;
   addItem();
 
-  const tipoProcess = processo.tipo; // presbiteros | diaconos | ambos
   app.innerHTML = `
-    ${renderSteps()}
-    <div class="card" style="padding:14px 18px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:34px;height:34px;border-radius:50%;background:rgba(74,156,245,.12);display:flex;align-items:center;justify-content:center;color:var(--sky);font-weight:700;font-size:14px;flex-shrink:0">${eh(indicante.nome[0])}</div>
-        <div>
-          <div style="font-size:13px;font-weight:700;color:var(--tx1)">${eh(indicante.nome)}</div>
-          <div style="font-size:11px;color:var(--tx3)">${eh(indicante.congregacao)}</div>
-        </div>
-        <button onclick="renderIdentificacao()" style="margin-left:auto;background:none;border:1px solid var(--bd);border-radius:6px;padding:5px 10px;font-size:11px;color:var(--tx3);cursor:pointer;font-family:inherit">Trocar</button>
+    ${stepsHtml()}
+    <div class="member-badge">
+      <div class="member-av">${eh(indicante.nome[0])}</div>
+      <div>
+        <div class="member-name">${eh(indicante.nome)}</div>
+        <div class="member-cong">${eh(indicante.congregacao)}</div>
       </div>
+      <button class="member-swap" onclick="renderIdentificacao()">Trocar</button>
     </div>
-    <div class="card">
-      <div style="font-size:13px;color:var(--tx2);line-height:1.7;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--bd)">
+    <div class="id-card" style="margin-bottom:14px">
+      <p style="font-size:14px;color:var(--tx2);line-height:1.7">
         Indique membros que, em sua percepção, reúnem condições espirituais e de caráter para o ofício de oficial da Igreja.
-      </div>
-      <div id="items-ct"></div>
-      <button class="add-btn" onclick="addItemUI()">+ Adicionar indicação</button>
+        Você pode indicar mais de uma pessoa.
+      </p>
     </div>
-    <div class="card">
-      <button class="btn-pri" onclick="submeter()" style="margin-top:0">Enviar indicações</button>
-      <div id="form-msg" class="msg"></div>
+    <div id="items-ct"></div>
+    <button class="add-nom-btn" onclick="addItemUI()">
+      <span style="font-size:18px;line-height:1">+</span> Adicionar indicação
+    </button>
+    <div class="submit-card" style="margin-top:16px">
+      <button class="submit-btn" onclick="submeter()">Enviar indicações</button>
+      <div id="form-msg" class="form-msg" style="margin-top:10px"></div>
     </div>`;
 
   renderItems();
-  window._tipoProcess = tipoProcess;
 }
 
-function addItem(){ items.push({ id:++itemCtr, tipo: window._tipoProcess==="diaconos"?"diacono":"presbitero", indicado_id:null, indicado_nome:"", obs:"" }); }
+function addItem() {
+  const tp = window._tp || "ambos";
+  items.push({ id: ++itemCtr, tipo: tp === "diaconos" ? "diacono" : "presbitero", indicado_id: null, indicado_nome: "" });
+}
 
-function renderItems(){
+function renderItems() {
   const c = document.getElementById("items-ct");
-  if (c) c.innerHTML = items.map(it=>itemHTML(it)).join("");
+  if (c) c.innerHTML = items.map(it => itemHTML(it)).join("");
 }
 
-function itemHTML(it){
-  const tp = window._tipoProcess;
-  const podeRemover = items.length > 1;
-  const sp = it.tipo==="presbitero"?" sp":"", sd = it.tipo==="diacono"?" sd":"";
-  const soloPresb = tp==="presbiteros", soloDiac = tp==="diaconos";
-  const tipoRow = soloPresb ? "" : soloDiac ? "" : `
-    <div class="tipo-row">
-      <label class="tipo-opt${sp}" onclick="setTipo(${it.id},'presbitero')">
-        <input type="radio" name="tipo-${it.id}" value="presbitero" ${it.tipo==="presbitero"?"checked":""}> Presbítero
-      </label>
-      <label class="tipo-opt${sd}" onclick="setTipo(${it.id},'diacono')">
-        <input type="radio" name="tipo-${it.id}" value="diacono" ${it.tipo==="diacono"?"checked":""}> Diácono
-      </label>
-    </div>`;
-  const tipoBadge = soloPresb
-    ? `<span style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid rgba(74,156,245,.4);color:var(--sky);background:rgba(74,156,245,.08)">Presbítero</span>`
-    : soloDiac
-    ? `<span style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid rgba(42,181,192,.4);color:var(--teal);background:rgba(42,181,192,.08)">Diácono</span>`
-    : "";
+function itemHTML(it) {
+  const tp = window._tp || "ambos";
+  const onlP = tp === "presbiteros", onlD = tp === "diaconos", both = tp === "ambos";
+  const isP = it.tipo === "presbitero", isD = it.tipo === "diacono";
   return `
-    <div class="item-card" id="item-${it.id}">
-      <div class="item-hdr">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="item-num">Indicação #${it.id}</span>${tipoBadge}
-        </div>
-        ${podeRemover?`<button class="rm-btn" onclick="rmItem(${it.id})">✕</button>`:""}
+    <div class="nom-card" id="nom-${it.id}">
+      <div class="nom-header">
+        <span class="nom-num">Indicação #${it.id}</span>
+        ${items.length > 1 ? `<button class="nom-rm" onclick="rmItem(${it.id})" title="Remover">✕</button>` : ""}
       </div>
-      ${tipoRow}
+      ${both ? `
+      <div class="tipo-row">
+        <label class="tipo-opt${isP?" tp":""}" onclick="setTipo(${it.id},'presbitero')">
+          <input type="radio" name="tipo-${it.id}" value="presbitero" ${isP?"checked":""}> Presbítero
+        </label>
+        <label class="tipo-opt${isD?" td":""}" onclick="setTipo(${it.id},'diacono')">
+          <input type="radio" name="tipo-${it.id}" value="diacono" ${isD?"checked":""}> Diácono
+        </label>
+      </div>` : `
+      <div style="margin-bottom:12px">
+        <span style="font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid var(--${onlP?"green-border":"bd2"});color:var(--${onlP?"green":"tx3"});background:var(--${onlP?"green-tint":"bg"})">
+          ${onlP?"Presbítero":"Diácono"}
+        </span>
+      </div>`}
       <div class="field">
-        <label class="lbl">Nome do indicado <span style="color:var(--rose)">*</span></label>
+        <label class="lbl">Nome do indicado <span class="req-star">*</span></label>
         <div class="drop-wrap">
           <input id="bi-${it.id}" class="inp" type="text" placeholder="Digite o nome do membro..."
             value="${eh(it.indicado_nome)}" autocomplete="off"
@@ -363,105 +592,136 @@ function itemHTML(it){
             onblur="fecharDrop('di-${it.id}')">
           <div class="dropdown" id="di-${it.id}"></div>
         </div>
-        <div id="si-${it.id}" style="margin-top:5px;font-size:11.5px;color:${it.indicado_id?"var(--gr)":"var(--tx3)"}">
-          ${it.indicado_id?`✅ ${eh(it.indicado_nome)} selecionado(a)`:"Nenhum membro selecionado"}
+        <div id="si-${it.id}" class="field-hint">
+          ${it.indicado_id ? `<span class="sel-ok" style="margin-top:0">✓ ${eh(it.indicado_nome)}</span>` : "Nenhum membro selecionado"}
         </div>
       </div>
     </div>`;
 }
 
-window.addItemUI = function(){ addItem(); const c=document.getElementById("items-ct"); if(c) c.insertAdjacentHTML("beforeend",itemHTML(items[items.length-1])); syncRmBtns(); };
-window.rmItem   = function(id){ items=items.filter(i=>i.id!==id); document.getElementById(`item-${id}`)?.remove(); syncRmBtns(); };
-window.setTipo  = function(id,tipo){ const it=items.find(i=>i.id===id); if(!it) return; it.tipo=tipo; const el=document.getElementById(`item-${id}`); if(el) el.outerHTML=itemHTML(it); };
-window.setObs   = function(id,v){ const it=items.find(i=>i.id===id); if(it) it.obs=v; };
-function syncRmBtns(){ items.forEach(it=>{ const b=document.querySelector(`#item-${it.id} .rm-btn`); if(b) b.style.display=items.length>1?"":"none"; }); }
+window.addItemUI = function() {
+  addItem();
+  const c = document.getElementById("items-ct");
+  if (c) c.insertAdjacentHTML("beforeend", itemHTML(items[items.length - 1]));
+  syncRm();
+};
+window.rmItem = function(id) {
+  items = items.filter(i => i.id !== id);
+  document.getElementById(`nom-${id}`)?.remove();
+  syncRm();
+};
+window.setTipo = function(id, tipo) {
+  const it = items.find(i => i.id === id); if (!it) return;
+  it.tipo = tipo;
+  const el = document.getElementById(`nom-${id}`); if (el) el.outerHTML = itemHTML(it);
+};
+function syncRm() {
+  items.forEach(it => {
+    const b = document.querySelector(`#nom-${it.id} .nom-rm`);
+    if (b) b.style.display = items.length > 1 ? "" : "none";
+  });
+}
 
-window.buscarIndicado = function(id,q){
-  const drop=document.getElementById(`di-${id}`); if(!drop) return;
-  const it=items.find(i=>i.id===id); if(it){ it.indicado_id=null; it.indicado_nome=q; }
-  const sel=document.getElementById(`si-${id}`);
-  if(sel){ sel.textContent="Nenhum membro selecionado"; sel.style.color="var(--tx3)"; }
-  const txt=(q||"").trim().toLowerCase();
-  if(txt.length<2){ drop.style.display="none"; return; }
-  const matches=membros.filter(m=>m.nome?.toLowerCase().includes(txt)).slice(0,10);
-  if(!matches.length){ drop.innerHTML=`<div class="drop-item dis"><span>Nenhum membro encontrado</span></div>`; drop.style.display="block"; return; }
-  drop.innerHTML=matches.map(m=>{
-    const idade=calcIdade(m.data_nascimento),meses=calcMeses(m.data_ingresso);
-    const inv=(idade!==null&&idade<18)||(meses!==null&&meses<12);
-    const sub=inv?(idade!==null&&idade<18?"Menor de 18 anos":"< 1 ano de membresia"):(m.congregacao||"Sede");
-    const nEsc=eh(m.nome).replace(/'/g,"\\'");
-    return `<div class="drop-item${inv?" dis":""}" onclick="${inv?`alert('Não permitido: ${sub}')`:
-      `selIndicado(${id},'${m.pessoa_id}','${nEsc}')`}">
-      <span>${eh(m.nome)}</span><span class="drop-sub" style="${inv?"color:var(--rose)":""}">${sub}</span>
+window.buscarIndicado = function(id, q) {
+  const drop = document.getElementById(`di-${id}`); if (!drop) return;
+  const it = items.find(i => i.id === id); if (it) { it.indicado_id = null; it.indicado_nome = q; }
+  const sel = document.getElementById(`si-${id}`);
+  if (sel) { sel.textContent = "Nenhum membro selecionado"; sel.className = "field-hint"; }
+  const txt = (q || "").trim().toLowerCase();
+  if (txt.length < 2) { drop.style.display = "none"; return; }
+  const matches = membros.filter(m => m.nome?.toLowerCase().includes(txt)).slice(0, 10);
+  if (!matches.length) {
+    drop.innerHTML = `<div class="drop-item dis"><span class="drop-name">Nenhum membro encontrado</span></div>`;
+    drop.style.display = "block"; return;
+  }
+  drop.innerHTML = matches.map(m => {
+    const idade = calcIdade(m.data_nascimento), meses = calcMeses(m.data_ingresso);
+    const inv   = (idade !== null && idade < 18) || (meses !== null && meses < 12);
+    const sub   = inv ? (idade !== null && idade < 18 ? "Menor de 18 anos" : "< 1 ano") : (m.congregacao || "Sede");
+    const nEsc  = eh(m.nome).replace(/'/g, "\\'");
+    return `<div class="drop-item${inv ? " dis" : ""}"
+      onclick="${inv ? `alert('Não permitido: ${sub}')` : `selIndicado(${id},'${m.pessoa_id}','${nEsc}')`}">
+      <span class="drop-name">${eh(m.nome)}</span>
+      <span class="drop-sub" style="${inv ? "color:#C0392B" : ""}">${sub}</span>
     </div>`;
   }).join("");
-  drop.style.display="block";
+  drop.style.display = "block";
 };
 
-window.selIndicado = function(id,pid,nome){
-  const it=items.find(i=>i.id===id); if(!it) return;
-  it.indicado_id=pid; it.indicado_nome=nome;
-  const inp=document.getElementById(`bi-${id}`); const drp=document.getElementById(`di-${id}`); const sel=document.getElementById(`si-${id}`);
-  if(inp) inp.value=nome; if(drp) drp.style.display="none";
-  if(sel){ sel.textContent=`✅ ${nome} selecionado(a)`; sel.style.color="var(--gr)"; }
+window.selIndicado = function(id, pid, nome) {
+  const it = items.find(i => i.id === id); if (!it) return;
+  it.indicado_id = pid; it.indicado_nome = nome;
+  const inp = document.getElementById(`bi-${id}`);
+  const drp = document.getElementById(`di-${id}`);
+  const sel = document.getElementById(`si-${id}`);
+  if (inp) inp.value = nome;
+  if (drp) drp.style.display = "none";
+  if (sel) sel.innerHTML = `<span class="sel-ok" style="margin-top:0">✓ ${eh(nome)}</span>`;
 };
 
-/* ── Submeter ────────────────────────────────────────── */
-window.submeter = async function(){
-  const msgEl=document.getElementById("form-msg");
-  const validos=items.filter(i=>i.indicado_id);
-  if(!validos.length){ msgEl.textContent="Selecione ao menos um membro para indicar."; msgEl.className="msg err"; return; }
-  const vistos=new Set();
-  for(const it of validos){
-    const key=`${it.indicado_id}-${it.tipo}`;
-    if(vistos.has(key)){ msgEl.textContent=`Indicação duplicada: ${it.indicado_nome}.`; msgEl.className="msg err"; return; }
+/* ── Submeter ─────────────────────────────────────────── */
+window.submeter = async function() {
+  const msgEl  = document.getElementById("form-msg");
+  const validos = items.filter(i => i.indicado_id);
+  if (!validos.length) { msgEl.textContent = "Selecione ao menos um membro para indicar."; msgEl.className = "form-msg err"; return; }
+  const vistos = new Set();
+  for (const it of validos) {
+    const key = `${it.indicado_id}-${it.tipo}`;
+    if (vistos.has(key)) { msgEl.textContent = `Indicação duplicada: ${it.indicado_nome}.`; msgEl.className = "form-msg err"; return; }
     vistos.add(key);
   }
-  const tp=window._tipoProcess;
-  const btn=document.querySelector("[onclick='submeter()']");
-  if(btn){ btn.disabled=true; btn.textContent="Enviando..."; }
-  msgEl.textContent="";
-  const rows=validos.map(it=>({
-    processo_id:        processo.id,
-    indicante_pessoa_id:indicante.pessoa_id,
-    indicante_nome:     indicante.nome,
-    indicado_pessoa_id: it.indicado_id,
-    indicado_nome:      it.indicado_nome,
-    tipo:               tp==="presbiteros"?"presbitero":tp==="diaconos"?"diacono":it.tipo,
-    observacao:         it.obs||null,
-    congregacao:        indicante.congregacao||null,
-    ip_dispositivo:     navigator.userAgent?.slice(0,200)||null,
+  const btn = document.querySelector("[onclick='submeter()']");
+  if (btn) { btn.disabled = true; btn.textContent = "Enviando…"; }
+  msgEl.textContent = "";
+  const tp   = window._tp || "ambos";
+  const rows = validos.map(it => ({
+    processo_id:         processo.id,
+    indicante_pessoa_id: indicante.pessoa_id,
+    indicante_nome:      indicante.nome,
+    indicado_pessoa_id:  it.indicado_id,
+    indicado_nome:       it.indicado_nome,
+    tipo:                tp === "presbiteros" ? "presbitero" : tp === "diaconos" ? "diacono" : it.tipo,
+    congregacao:         indicante.congregacao || null,
+    ip_dispositivo:      navigator.userAgent?.slice(0, 200) || null,
   }));
   try {
     await sbPost("eleicao_indicacoes", rows);
     renderSucesso(validos.length);
-  } catch(e){
-    msgEl.textContent="Erro ao enviar: "+e.message; msgEl.className="msg err";
-    if(btn){ btn.disabled=false; btn.textContent="Enviar indicações"; }
+  } catch (e) {
+    msgEl.textContent = "Erro ao enviar: " + e.message; msgEl.className = "form-msg err";
+    if (btn) { btn.disabled = false; btn.textContent = "Enviar indicações"; }
   }
 };
 
 /* ── Estados finais ──────────────────────────────────── */
-function renderSucesso(n){
-  app.innerHTML=`<div class="state-card ok">
-    <div class="state-icon">✅</div>
-    <div class="state-title">Indicações enviadas!</div>
-    <div class="state-desc"><strong>${n} indicação${n>1?"ões":""}</strong> registrada${n>1?"s":""} com sucesso.<br>Obrigado por participar, <strong>${eh(indicante.nome)}</strong>.</div>
-  </div>`;
+function renderSucesso(n) {
+  app.innerHTML = `
+    <div class="state-block ok">
+      <div style="font-size:44px;margin-bottom:16px">✅</div>
+      <h2>Indicações registradas</h2>
+      <p><strong>${n} indicação${n > 1 ? "ões" : ""}</strong> registrada${n > 1 ? "s" : ""} com sucesso.<br>
+      Obrigado por participar, <strong>${eh(indicante.nome)}</strong>.<br>
+      O Conselho da IPPenha analisará as indicações recebidas.</p>
+    </div>`;
 }
-function renderJaIndicou(){
-  app.innerHTML=`<div class="state-card ok">
-    <div class="state-icon">✅</div>
-    <div class="state-title">Já registrado!</div>
-    <div class="state-desc">Você já enviou suas indicações para este processo, <strong>${eh(indicante.nome)}</strong>.<br>Agradecemos sua participação!</div>
-  </div>`;
+
+function renderJaIndicou() {
+  app.innerHTML = `
+    <div class="state-block ok">
+      <div style="font-size:44px;margin-bottom:16px">✅</div>
+      <h2>Participação registrada</h2>
+      <p>Você já enviou suas indicações para este processo, <strong>${eh(indicante.nome)}</strong>.<br>
+      Agradecemos sua participação!</p>
+    </div>`;
 }
-function renderErro(titulo,desc){
-  app.innerHTML=`<div class="state-card">
-    <div class="state-icon">⚠️</div>
-    <div class="state-title">${eh(titulo)}</div>
-    <div class="state-desc">${eh(desc)}</div>
-  </div>`;
+
+function renderErro(titulo, desc) {
+  app.innerHTML = `
+    <div class="state-block">
+      <div style="font-size:36px;margin-bottom:14px;opacity:.5">⚠</div>
+      <h2 style="font-family:var(--f-serif)">${eh(titulo)}</h2>
+      <p>${eh(desc)}</p>
+    </div>`;
 }
 </script>
 </body>
