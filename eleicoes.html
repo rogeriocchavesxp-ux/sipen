@@ -781,9 +781,11 @@ function renderJaIndicou() {
   app.innerHTML = `
     <div class="state-block ok">
       <div style="font-size:44px;margin-bottom:16px">✅</div>
-      <h2>Participação registrada</h2>
-      <p>Você já enviou suas indicações para este processo, <strong>${eh(indicante.nome)}</strong>.<br>
-      Agradecemos sua participação!</p>
+      <h2>Indicações já enviadas</h2>
+      <p>
+        <strong>${eh(indicante.nome)}</strong>, suas indicações para este processo já foram registradas anteriormente.<br><br>
+        Caso acredite que isso seja um engano, entre em contato com a secretaria da Igreja Presbiteriana da Penha.
+      </p>
     </div>`;
 }
 
