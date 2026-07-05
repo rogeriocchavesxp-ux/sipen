@@ -46,9 +46,9 @@ GRANT SELECT, INSERT, UPDATE ON public.eleicao_processos TO authenticated;
 CREATE TABLE IF NOT EXISTS public.eleicao_indicacoes (
   id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   processo_id         UUID        REFERENCES public.eleicao_processos(id),
-  indicante_pessoa_id UUID        REFERENCES public.pessoas(id),
+  indicante_pessoa_id UUID,
   indicante_nome      TEXT,
-  indicado_pessoa_id  UUID        REFERENCES public.pessoas(id),
+  indicado_pessoa_id  UUID,
   indicado_nome       TEXT        NOT NULL,
   tipo                TEXT        NOT NULL CHECK (tipo IN ('presbitero','diacono')),
   congregacao         TEXT,
