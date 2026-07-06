@@ -564,6 +564,20 @@
     return d;
   }
 
+  function _menuPos(ev, mW, mH) {
+    const zoom = parseFloat(getComputedStyle(document.body).zoom) || 1;
+    const r    = ev.currentTarget.getBoundingClientRect();
+    const vH   = window.innerHeight / zoom;
+    const vW   = window.innerWidth  / zoom;
+    let top    = r.bottom / zoom + 4;
+    let left   = r.right  / zoom - mW;
+    if (top + mH > vH) top  = r.top / zoom - mH - 4;
+    if (top  < 4)      top  = 4;
+    if (left < 6)      left = 6;
+    if (left + mW > vW - 6) left = vW - mW - 6;
+    return { top, left };
+  }
+
   window.eveMenuAcoes = function (id, ev) {
     ev.stopPropagation();
     const evt = _eventos.find(e => e.id === id);
@@ -580,13 +594,7 @@
     m.appendChild(_ctxSep());
     m.appendChild(_ctxItem("Excluir Evento",      () => eveExcluirEventoModal(id), true));
 
-    /* posicionar próximo ao botão */
-    const r = ev.currentTarget.getBoundingClientRect();
-    const mW = 210, mH = 320;
-    let top  = r.bottom + 4;
-    let left = r.right  - mW;
-    if (top  + mH > window.innerHeight) top  = r.top - mH - 4;
-    if (left < 6)                        left = 6;
+    const { top, left } = _menuPos(ev, 210, 320);
     m.style.top  = top  + "px";
     m.style.left = left + "px";
   };
@@ -851,8 +859,6 @@ tr:nth-child(even) td{background:#f9fafb}
 
   window.eveMenuInscricao = function (inscId, eventoId, ev) {
     ev.stopPropagation();
-    const insc = _todasInscricoes.find(i => i.id === inscId);
-    if (!insc) return;
     const m = _ctxMenu();
     m.appendChild(_ctxItem("Editar",             () => eveAbrirFormInscricao(eventoId, inscId)));
     m.appendChild(_ctxItem("Confirmar presença", () => eveConfirmarPresenca(inscId, eventoId)));
@@ -860,12 +866,7 @@ tr:nth-child(even) td{background:#f9fafb}
     m.appendChild(_ctxSep());
     m.appendChild(_ctxItem("Excluir inscrição",  () => eveExcluirInscricaoModal(inscId, eventoId), true));
 
-    const r = ev.currentTarget.getBoundingClientRect();
-    const mW = 200, mH = 180;
-    let top  = r.bottom + 4;
-    let left = r.right  - mW;
-    if (top  + mH > window.innerHeight) top  = r.top - mH - 4;
-    if (left < 6)                        left = 6;
+    const { top, left } = _menuPos(ev, 200, 200);
     m.style.top  = top  + "px";
     m.style.left = left + "px";
   };
@@ -899,7 +900,8 @@ tr:nth-child(even) td{background:#f9fafb}
   };
 
   window.eveExcluirInscricaoModal = function (inscId, eventoId) {
-    const insc = _todasInscricoes.find(i => i.id === inscId);
+    const insc = _todasInscricoes.find(i => i.id === inscId)
+              || _inscricoesDetalhe.find(i => i.id === inscId);
     _eveModalConfirmar({
       titulo: "Excluir Inscrição",
       corpo: `
