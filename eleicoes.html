@@ -284,10 +284,17 @@ async function sbGet(path) {
 async function sbPost(path, body) {
   const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
     method: "POST",
-    headers: { ...HDRS, "Prefer": "return=minimal" },
+    headers: { ...HDRS, "Prefer": "return=representation" },
     body: JSON.stringify(body),
   });
-  if (!r.ok) throw new Error(await r.text().catch(() => `HTTP ${r.status}`));
+  const text = await r.text();
+  if (!r.ok) throw new Error(text || `HTTP ${r.status}`);
+  let data;
+  try { data = JSON.parse(text); } catch { data = []; }
+  if (!Array.isArray(data) || data.length === 0) {
+    throw new Error("Nenhuma indicação foi salva. Verifique se você está identificado como membro ativo.");
+  }
+  return data;
 }
 
 const STATUS = {
