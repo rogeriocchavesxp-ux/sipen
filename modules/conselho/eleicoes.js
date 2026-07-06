@@ -625,13 +625,14 @@
                 <th style="${thS}">Indicado por</th>
                 <th style="${thS}">Congregação</th>
                 <th style="${thS}">Data</th>
-                <th style="${thS}">Obs.</th>
+                <th style="${thS}"></th>
               </tr>
             </thead>
             <tbody>
               ${rows.length ? rows.map(row => {
                 const cor = row.tipo==="presbitero" ? "var(--sky)" : "var(--teal)";
                 const lbl = row.tipo==="presbitero" ? "Presbítero" : "Diácono";
+                const nEsc = _esc(row.indicante_nome||"").replace(/'/g,"&#39;");
                 return `<tr style="border-bottom:1px solid var(--bd1)"
                   onmouseover="this.style.background='var(--bg-hover)'"
                   onmouseout="this.style.background=''">
@@ -640,7 +641,11 @@
                   <td style="${tdS}">${_esc(row.indicante_nome||"—")}</td>
                   <td style="${tdS};font-size:11px;color:var(--tx3)">${_esc(row.congregacao||"Sede")}</td>
                   <td style="${tdS};font-size:11px;white-space:nowrap">${_fmtDtHr(row.criado_em)}</td>
-                  <td style="${tdS};font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(row.observacao||"—")}</td>
+                  <td style="padding:8px 10px;text-align:right">
+                    <button onclick="eleicaoExcluirIndicacao('${row.id}','${nEsc}')"
+                      style="background:none;border:1px solid var(--bd2);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--rose);cursor:pointer"
+                      title="Excluir indicação">✕</button>
+                  </td>
                 </tr>`;
               }).join("") : `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--tx3)">Nenhuma indicação encontrada.</td></tr>`}
             </tbody>
@@ -746,6 +751,15 @@
 
   window.eleicaoFiltroTipo    = function(v) { _filtroTipo    = v; _renderIndicacoesTab(); };
   window.eleicaoFiltroCongreg = function(v) { _filtroCongreg = v; _renderIndicacoesTab(); };
+
+  window.eleicaoExcluirIndicacao = async function(id, indicanteNome) {
+    if (!confirm(`Excluir a indicação de "${indicanteNome}"?\n\nEsta ação libera o membro para indicar novamente.`)) return;
+    const { error } = await _sb().from("eleicao_indicacoes").delete().eq("id", id);
+    if (error) { alert("Erro ao excluir: " + error.message); return; }
+    _indicacoes = _indicacoes.filter(i => i.id !== id);
+    _renderIndicacoesTab();
+    if (typeof T === "function") T("Indicação excluída", indicanteNome);
+  };
 
   window.eleicaoExportar = function() {
     let rows = _indicacoes;
