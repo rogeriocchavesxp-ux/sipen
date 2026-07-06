@@ -37,7 +37,7 @@ CREATE POLICY "ep_sel_anon" ON public.eleicao_processos
 CREATE POLICY "ep_ins_auth" ON public.eleicao_processos
   FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "ep_upd_auth" ON public.eleicao_processos
-  FOR UPDATE TO authenticated USING (deleted_at IS NULL);
+  FOR UPDATE TO authenticated USING (deleted_at IS NULL) WITH CHECK (true);
 
 GRANT SELECT ON public.eleicao_processos TO anon;
 GRANT SELECT, INSERT, UPDATE ON public.eleicao_processos TO authenticated;

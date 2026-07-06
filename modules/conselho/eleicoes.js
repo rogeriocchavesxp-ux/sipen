@@ -185,8 +185,17 @@
   }
 
   function _processoCard(p, destaque) {
-    const s    = STATUS_CFG[p.status] || STATUS_CFG.rascunho;
-    const isAberto = p.status === "aberto";
+    const isAberto   = p.status === "aberto";
+    const isEditavel = !["encerrado","arquivado"].includes(p.status);
+    const nomeEsc    = _esc(p.nome).replace(/'/g, "&#39;");
+    const menuId     = `card-menu-${p.id}`;
+
+    const menuItem = (label, onclick, danger=false) =>
+      `<button onclick="event.stopPropagation();eleicaoCloseMenus();${onclick}"
+        style="display:block;width:100%;text-align:left;padding:9px 14px;background:none;border:none;font-size:12.5px;color:${danger?"var(--rose)":"var(--tx1)"};cursor:pointer;font-family:inherit;white-space:nowrap"
+        onmouseover="this.style.background='var(--bg-hover)'"
+        onmouseout="this.style.background=''">${label}</button>`;
+
     return `
       <div onclick="eleicaoNavDetalhe('${p.id}')"
         style="background:var(--bg-card);border:1px solid ${destaque?"var(--bd2)":"var(--bd1)"};border-radius:12px;padding:${destaque?"18px":"14px"} 20px;cursor:pointer;transition:border-color .15s;${isAberto?"border-left:3px solid var(--gr)":""}"
@@ -202,7 +211,18 @@
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
             ${p.data_encerramento ? `<span style="font-size:10px;color:var(--tx3)">Encerra ${_fmtDate(p.data_encerramento)}</span>` : ""}
-            <span style="font-size:14px;color:var(--tx4)">›</span>
+            <div style="position:relative">
+              <button onclick="event.stopPropagation();eleicaoToggleMenu('${p.id}')"
+                style="background:none;border:1px solid var(--bd2);border-radius:6px;padding:3px 10px;cursor:pointer;color:var(--tx3);font-size:16px;line-height:1.2;font-family:inherit;letter-spacing:1px"
+                title="Ações">⋯</button>
+              <div id="${menuId}" style="display:none;position:absolute;right:0;top:calc(100% + 4px);z-index:200;background:var(--bg-card);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.18);min-width:160px;overflow:hidden;padding:4px 0">
+                ${menuItem("Ver detalhes", `eleicaoNavDetalhe('${p.id}')`)}
+                ${isEditavel ? menuItem("✏ Editar", `eleicaoNavEditar('${p.id}')`) : ""}
+                ${menuItem("Duplicar", `eleicaoDuplicar('${p.id}',event)`)}
+                <div style="height:1px;background:var(--bd1);margin:4px 0"></div>
+                ${menuItem("Excluir processo", `eleicaoExcluirProcesso('${p.id}','${nomeEsc}')`, true)}
+              </div>
+            </div>
           </div>
         </div>
       </div>`;
@@ -785,6 +805,41 @@
     URL.revokeObjectURL(a.href);
   };
 
+  window.eleicaoToggleMenu = function(id) {
+    const menu = document.getElementById(`card-menu-${id}`);
+    if (!menu) return;
+    const isOpen = menu.style.display !== "none";
+    document.querySelectorAll("[id^='card-menu-']").forEach(m => m.style.display = "none");
+    if (!isOpen) menu.style.display = "block";
+  };
+
+  window.eleicaoCloseMenus = function() {
+    document.querySelectorAll("[id^='card-menu-']").forEach(m => m.style.display = "none");
+  };
+
+  window.eleicaoExcluirProcesso = async function(id, nome) {
+    const { count } = await _sb()
+      .from("eleicao_indicacoes")
+      .select("*", { count: "exact", head: true })
+      .eq("processo_id", id)
+      .is("deleted_at", null);
+
+    let msg = `Excluir o processo "${nome}"?`;
+    if (count > 0) msg += `\n\n⚠️ Há ${count} indicação(ões) vinculada(s). Elas continuarão no banco mas o processo ficará inacessível.`;
+    msg += "\n\nEsta ação não pode ser desfeita.";
+    if (!confirm(msg)) return;
+
+    const { error } = await _sb()
+      .from("eleicao_processos")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", id);
+
+    if (error) { alert("Erro ao excluir: " + error.message); return; }
+    if (typeof T === "function") T("Processo excluído", nome);
+    _processos = _processos.filter(p => p.id !== id);
+    _renderLista();
+  };
+
   /* ── Navegação pública ───────────────────────────────── */
   window.eleicaoNavLista     = function()    { _editando = false; _show("lista"); };
   window.eleicaoNavHistorico = function()    { _show("historico"); };
@@ -814,5 +869,9 @@
   };
 
   VIEW_AUTOLOAD["conselho-eleicoes"] = { fn: () => (typeof eleicaoInit === "function" ? eleicaoInit() : null) };
+
+  document.addEventListener("click", function() {
+    window.eleicaoCloseMenus && window.eleicaoCloseMenus();
+  });
 
 })();
