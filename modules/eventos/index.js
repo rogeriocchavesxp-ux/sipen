@@ -48,12 +48,13 @@
 
   /* ── Estado ─────────────────────────────────────────── */
 
-  let _eventos         = [];
-  let _todasInscricoes = [];
-  let _eventoAtivo     = null;
-  let _fStatus         = "";
-  let _fTipo           = "";
-  let _fBusca          = "";
+  let _eventos            = [];
+  let _todasInscricoes    = [];
+  let _eventoAtivo        = null;
+  let _inscricoesDetalhe  = [];
+  let _fStatus            = "";
+  let _fTipo              = "";
+  let _fBusca             = "";
 
   /* ── Utilidades ─────────────────────────────────────── */
 
@@ -322,6 +323,7 @@
     try {
       const data = await _fetch(`${_api()}/rest/v1/evento_inscricoes?evento_id=eq.${evt.id}&select=*&order=criado_em.asc&limit=500`);
       inscricoes = data || [];
+      _inscricoesDetalhe = inscricoes;
     } catch (_) {}
     if (evt.agenda_id) {
       try {
@@ -361,6 +363,7 @@
                 ${Object.entries(STATUS_EVE).map(([k, v]) => `<option value="${_ea(k)}"${k === evt.status ? " selected" : ""}>${_eh(v.label)}</option>`).join("")}
               </select>
               <button onclick="eveAbrirFormEvento('${_ea(evt.id)}')" style="padding:7px 14px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx1);font-size:12px;cursor:pointer;font-weight:600">Editar</button>` : ""}
+            <button onclick="eveImprimirRelatorio()" style="padding:7px 14px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:12px;cursor:pointer;font-weight:600">🖨 Imprimir</button>
             <button onclick="go('eve-todos')" style="padding:7px 14px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:12px;cursor:pointer">← Voltar</button>
           </div>
         </div>
@@ -647,6 +650,126 @@
     a.href = url; a.download = `inscritos_${(evt?.titulo || id).replace(/[^a-z0-9]/gi, "_")}.csv`;
     a.click(); URL.revokeObjectURL(url);
     _T("Exportado!", `${inscs.length} inscritos exportados em CSV.`);
+  };
+
+  window.eveImprimirRelatorio = function() {
+    const evt  = _eventoAtivo;
+    const insc = _inscricoesDetalhe;
+    if (!evt) return;
+
+    const fD = d => d ? String(d).slice(0,10).split("-").reverse().join("/") : "—";
+    const fH = h => h ? String(h).slice(0,5) : "";
+    const fM = v => v != null ? "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : "—";
+
+    const TIPO_LBL   = { membro:"Membro", nao_membro:"Não membro", visitante:"Visitante", crianca:"Criança", adolescente:"Adolescente" };
+    const STATUS_LBL = { pendente:"Pendente", confirmada:"Confirmada", cancelada:"Cancelada", presente:"Presente", ausente:"Ausente" };
+    const STATUS_COR = { pendente:"#B45309", confirmada:"#1D4ED8", presente:"#15803D", cancelada:"#6B7280", ausente:"#6B7280" };
+
+    const total      = insc.length;
+    const confirmadas = insc.filter(i => i.status === "confirmada").length;
+    const presentes  = insc.filter(i => i.status === "presente").length;
+    const canceladas = insc.filter(i => i.status === "cancelada").length;
+    const pendentes  = insc.filter(i => i.status === "pendente").length;
+    const totalPago  = insc.filter(i => i.pago).reduce((s,i) => s + (Number(i.valor_pago)||0), 0);
+    const pago       = insc.filter(i => i.pago).length;
+
+    const rows = insc.map((i, idx) => `
+      <tr>
+        <td style="text-align:center;color:#999">${idx+1}</td>
+        <td>
+          <strong>${i.nome || "—"}</strong>
+          ${i.responsavel_nome ? `<br><span style="font-size:10px;color:#777">Resp.: ${i.responsavel_nome}</span>` : ""}
+          ${i.familia ? `<br><span style="font-size:10px;color:#777">Família: ${i.familia}</span>` : ""}
+        </td>
+        <td>${TIPO_LBL[i.tipo] || i.tipo || "—"}</td>
+        <td style="font-size:10px">${i.telefone ? i.telefone+"<br>" : ""}${i.email || ""}</td>
+        <td style="text-align:center">
+          <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;letter-spacing:.04em;background:${STATUS_COR[i.status] || "#999"}18;color:${STATUS_COR[i.status] || "#999"};border:1px solid ${STATUS_COR[i.status] || "#999"}44">
+            ${STATUS_LBL[i.status] || i.status || "—"}
+          </span>
+        </td>
+        ${!evt.gratuito ? `<td style="text-align:center">${i.pago ? `<span style="color:#15803D;font-weight:700">${fM(i.valor_pago)}</span>` : `<span style="color:#B45309">Pendente</span>`}</td>` : ""}
+        <td style="text-align:center;font-size:10px;color:#888">${fD(i.criado_em)}</td>
+      </tr>`).join("");
+
+    const pagoCol = !evt.gratuito ? "<th>Pagamento</th>" : "";
+
+    const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Lista de Inscrições — ${evt.titulo}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#111;background:#fff;padding:28px 32px}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2.5px solid #2E6E48;padding-bottom:12px;margin-bottom:16px}
+.church{font-size:9px;font-weight:700;color:#2E6E48;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+h1{font-size:19px;font-weight:800;color:#111;line-height:1.2;margin-bottom:6px}
+.meta{display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:#555}
+.logo-box{text-align:right;font-size:10px;color:#999}
+.summary{display:flex;gap:0;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:18px}
+.kpi{flex:1;text-align:center;padding:10px 6px;border-right:1px solid #e5e7eb}
+.kpi:last-child{border-right:none}
+.kpi-val{font-size:20px;font-weight:800;color:#2E6E48;line-height:1}
+.kpi-lbl{font-size:9px;color:#777;text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+table{width:100%;border-collapse:collapse}
+thead tr{background:#2E6E48;color:#fff}
+th{padding:8px 10px;text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+td{padding:7px 10px;border-bottom:1px solid #f0f0f0;vertical-align:top;font-size:11px}
+tr:nth-child(even) td{background:#f9fafb}
+.footer{margin-top:16px;font-size:9px;color:#aaa;display:flex;justify-content:space-between;border-top:1px solid #e5e7eb;padding-top:8px}
+@media print{body{padding:0}@page{margin:1.2cm;size:A4 portrait}}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div>
+    <div class="church">Igreja Presbiteriana da Penha — SIPEN</div>
+    <h1>${evt.titulo}</h1>
+    <div class="meta">
+      <span>📅 ${fD(evt.data_inicio)}${evt.hora_inicio ? " · " + fH(evt.hora_inicio) : ""}</span>
+      ${evt.local_nome ? `<span>📍 ${evt.local_nome}</span>` : ""}
+      ${evt.ministerio_organizador ? `<span>🏛 ${evt.ministerio_organizador}</span>` : ""}
+      <span>Status: <strong>${STATUS_LBL[evt.status] || evt.status || "—"}</strong></span>
+    </div>
+  </div>
+  <div class="logo-box">Gerado em<br>${new Date().toLocaleString("pt-BR")}</div>
+</div>
+
+<div class="summary">
+  <div class="kpi"><div class="kpi-val">${total}</div><div class="kpi-lbl">Total</div></div>
+  <div class="kpi"><div class="kpi-val">${pendentes}</div><div class="kpi-lbl">Pendentes</div></div>
+  <div class="kpi"><div class="kpi-val">${confirmadas}</div><div class="kpi-lbl">Confirmadas</div></div>
+  <div class="kpi"><div class="kpi-val">${presentes}</div><div class="kpi-lbl">Presentes</div></div>
+  <div class="kpi"><div class="kpi-val">${canceladas}</div><div class="kpi-lbl">Canceladas</div></div>
+  ${!evt.gratuito ? `<div class="kpi"><div class="kpi-val">${pago}</div><div class="kpi-lbl">Pagos</div></div>
+  <div class="kpi"><div class="kpi-val" style="font-size:14px">${fM(totalPago)}</div><div class="kpi-lbl">Arrecadado</div></div>` : ""}
+</div>
+
+<table>
+  <thead><tr>
+    <th style="width:32px;text-align:center">#</th>
+    <th>Nome</th>
+    <th>Tipo</th>
+    <th>Contato</th>
+    <th style="text-align:center">Status</th>
+    ${pagoCol}
+    <th style="text-align:center">Inscrição</th>
+  </tr></thead>
+  <tbody>${rows || `<tr><td colspan="7" style="text-align:center;padding:24px;color:#aaa">Nenhuma inscrição registrada.</td></tr>`}</tbody>
+</table>
+
+<div class="footer">
+  <span>SIPEN — Sistema Integrado da IPPenha</span>
+  <span>${total} inscrito(s) listado(s)</span>
+</div>
+<script>window.onload=function(){window.print()}<\/script>
+</body></html>`;
+
+    const win = window.open("", "_blank", "width=960,height=720");
+    if (!win) { alert("Permita pop-ups para gerar o relatório."); return; }
+    win.document.write(html);
+    win.document.close();
   };
 
   /* ── Modal de confirmação reutilizável ───────────────── */
