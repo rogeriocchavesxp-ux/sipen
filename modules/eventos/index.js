@@ -363,7 +363,6 @@
                 ${Object.entries(STATUS_EVE).map(([k, v]) => `<option value="${_ea(k)}"${k === evt.status ? " selected" : ""}>${_eh(v.label)}</option>`).join("")}
               </select>
               <button onclick="eveAbrirFormEvento('${_ea(evt.id)}')" style="padding:7px 14px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx1);font-size:12px;cursor:pointer;font-weight:600">Editar</button>` : ""}
-            <button onclick="eveImprimirRelatorio()" style="padding:7px 14px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:12px;cursor:pointer;font-weight:600">🖨 Imprimir</button>
             <button onclick="go('eve-todos')" style="padding:7px 14px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:12px;cursor:pointer">← Voltar</button>
           </div>
         </div>
@@ -458,7 +457,11 @@
             ${field("Presentes", inscricoes.filter(i => i.status === "presente").length)}
             ${!evt.gratuito ? field("Recebido", _fmtMoeda(totalPago)) : ""}
           </div>
-          ${isAdmin ? `<button onclick="eveAbrirFormInscricao('${_ea(evt.id)}', null)" style="padding:7px 16px;border-radius:7px;border:none;background:var(--sky);color:#fff;font-size:12px;font-weight:700;cursor:pointer">+ Nova Inscrição</button>` : ""}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+            ${isAdmin ? `<button onclick="eveAbrirFormInscricao('${_ea(evt.id)}', null)" style="padding:7px 16px;border-radius:7px;border:none;background:var(--sky);color:#fff;font-size:12px;font-weight:700;cursor:pointer">+ Nova Inscrição</button>` : ""}
+            <button onclick="eveImprimirRelatorio()" style="padding:7px 14px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer">🖨 Imprimir / PDF</button>
+            <button onclick="eveExportarInscritos('${_ea(evt.id)}')" style="padding:7px 14px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer">⬇ Exportar XLS</button>
+          </div>
         </div>
 
         <!-- Lista de inscrições -->
