@@ -829,10 +829,7 @@
     msg += "\n\nEsta ação não pode ser desfeita.";
     if (!confirm(msg)) return;
 
-    const { error } = await _sb()
-      .from("eleicao_processos")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", id);
+    const { error } = await _sb().rpc("excluir_processo_eleitoral", { p_id: id });
 
     if (error) { alert("Erro ao excluir: " + error.message); return; }
     if (typeof T === "function") T("Processo excluído", nome);
