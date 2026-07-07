@@ -10,7 +10,7 @@
 
 // Força re-seed quando a versão do catálogo muda
 (function(){
-  const VER_KEY="sipen_cong_catalog_ver", VER="2026-05-06-v11";
+  const VER_KEY="sipen_cong_catalog_ver", VER="2026-07-07-v12";
   if(localStorage.getItem(VER_KEY)!==VER){
     localStorage.removeItem("sipen_cong_v2");
     localStorage.setItem(VER_KEY, VER);
@@ -157,18 +157,6 @@ const CONG = (function(){
         equipe: [
           "Bárbara Gomes", "Cláudia", "David Franco",
           "Deniel de Castro Flor", "Edson", "João Sobrinho", "Patrícia"
-        ]
-      }),
-
-      _mkCong("ip-analia-franco", "IP Anália Franco", "#3AAA5C", "⛪", {
-        supervisao:          "Rev. Michael Fassheber",
-        tesoureiro:          "Rodrigo Cunha Nascimento",
-        mesa_administrativa: [
-          "André Colette",
-          "Pb Alberto Noguti",
-          "Eli Coelho",
-          "Rafael Cavalcante",
-          "Sergio"
         ]
       }),
 
