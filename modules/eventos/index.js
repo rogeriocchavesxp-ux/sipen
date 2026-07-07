@@ -1333,11 +1333,11 @@ tr:nth-child(even) td{background:#f9fafb}
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             ${inp("eve-i-email", "E-mail", 'type="email"', inscr?.email)}
-            ${inp("eve-i-tel", "Telefone", 'type="tel"', inscr?.telefone)}
+            ${inp("eve-i-tel", "Telefone WhatsApp", 'type="tel" oninput="eveFormatarTelefone(this)" onblur="eveFormatarTelefone(this)" placeholder="(11) 99999-9999" maxlength="16"', _normTel(inscr?.telefone))}
           </div>
           <div id="eve-i-resp-sec" style="display:${respHidden};display:grid;grid-template-columns:1fr 1fr;gap:12px">
             ${inp("eve-i-resp-nome", "Nome do Responsável", 'type="text"', inscr?.responsavel_nome)}
-            ${inp("eve-i-resp-tel", "Tel. do Responsável", 'type="tel"', inscr?.responsavel_telefone)}
+            ${inp("eve-i-resp-tel", "Tel. do Responsável", 'type="tel" oninput="eveFormatarTelefone(this)" onblur="eveFormatarTelefone(this)" placeholder="(11) 99999-9999" maxlength="16"', _normTel(inscr?.responsavel_telefone))}
           </div>
           ${!evt?.gratuito ? `
           <div style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:8px;padding:12px">
@@ -1366,6 +1366,25 @@ tr:nth-child(even) td{background:#f9fafb}
     if (el) el.style.display = "none";
   };
 
+  function _normTel(v) {
+    if (!v) return "";
+    let d = String(v).replace(/\D/g, "");
+    if (d.startsWith("55") && d.length > 11) d = d.slice(2);
+    if (d.startsWith("0"))                    d = d.slice(1);
+    d = d.slice(0, 11);
+    if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+    if (d.length === 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+    return d;
+  }
+
+  window.eveFormatarTelefone = function(input) {
+    const cursor = input.selectionStart;
+    const raw    = input.value.replace(/\D/g, "").replace(/^55(\d{10,11})$/, "$1").replace(/^0/, "").slice(0, 11);
+    const fmt    = _normTel(raw);
+    input.value  = fmt;
+    try { input.setSelectionRange(cursor + (fmt.length - input.value.length + 1), cursor + 1); } catch(_) {}
+  };
+
   window.eveSalvarInscricao = async function (eventoId, editId) {
     const g  = id => document.getElementById(id)?.value?.trim() || null;
     const cbk = id => !!document.getElementById(id)?.checked;
@@ -1383,9 +1402,9 @@ tr:nth-child(even) td{background:#f9fafb}
       tipo:                 g("eve-i-tipo") || "membro",
       status:               g("eve-i-status") || "pendente",
       email:                g("eve-i-email"),
-      telefone:             g("eve-i-tel"),
+      telefone:             _normTel(g("eve-i-tel")) || null,
       responsavel_nome:     g("eve-i-resp-nome"),
-      responsavel_telefone: g("eve-i-resp-tel"),
+      responsavel_telefone: _normTel(g("eve-i-resp-tel")) || null,
       observacao:           g("eve-i-obs"),
       atualizado_em:        new Date().toISOString(),
     };
