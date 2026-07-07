@@ -591,9 +591,13 @@ async function enviarChamado() {
   const fin = _coletarFinanceiro(cat, sub);
   if (!fin.ok) { mostrarErro(fin.msg); return; }
 
-  const catObj   = CATS.find(c => c.nome === cat);
-  const resp     = catObj?.resp || "Administração Geral";
-  const descFinal = desc + fin.extra;
+  const catObj = CATS.find(c => c.nome === cat);
+  const resp   = catObj?.resp || "Administração Geral";
+
+  /* Embute financial_data como JSON após separador no corpo da descrição.
+     O RPC extrai e salva na coluna financial_data (sem poluir o texto). */
+  let descFinal = desc + fin.extra;
+  if (fin.fd) descFinal += "\n\n__FD__" + JSON.stringify(fin.fd);
 
   const btn = document.getElementById("btn-enviar");
   btn.disabled    = true;
@@ -611,7 +615,6 @@ async function enviarChamado() {
         p_solicitante_nome: nome,
         p_solicitante_tel:  tel,
         p_responsavel:      resp,
-        p_financial_data:   fin.fd ?? null,
       }),
     });
 
