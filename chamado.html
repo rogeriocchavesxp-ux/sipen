@@ -596,15 +596,21 @@ async function enviarChamado() {
   const hoje    = new Date().toISOString().split("T")[0];
   const descFinal = desc + fin.extra;
 
+  /* UUID gerado no cliente — evita SELECT após INSERT (sem política anon) */
+  const newId = crypto.randomUUID();
+  const ano   = new Date().getFullYear();
+  const ticket = `#${ano}-${newId.slice(0, 6).toUpperCase()}`;
+
   const btn = document.getElementById("btn-enviar");
   btn.disabled    = true;
   btn.textContent = "Enviando…";
 
   try {
-    const res = await fetch(`${SB_URL}/rest/v1/demandas?select=id`, {
+    const res = await fetch(`${SB_URL}/rest/v1/demandas`, {
       method:  "POST",
-      headers: { ...HDRS, "Prefer": "return=representation" },
+      headers: { ...HDRS, "Prefer": "return=minimal" },
       body: JSON.stringify({
+        id:              newId,
         area:            cat,
         subcategoria:    sub,
         titulo:          titulo,
@@ -623,11 +629,6 @@ async function enviarChamado() {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.message || err.hint || err.details || `Erro ${res.status}`);
     }
-
-    const rows   = await res.json();
-    const uuid   = rows?.[0]?.id || "";
-    const ano    = new Date().getFullYear();
-    const ticket = `#${ano}-${String(uuid).slice(0, 6).toUpperCase() || Math.random().toString(36).slice(2,8).toUpperCase()}`;
 
     try { localStorage.setItem(_RL_KEY, String(Date.now())); } catch(_) {}
 
