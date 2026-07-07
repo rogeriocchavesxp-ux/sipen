@@ -591,41 +591,47 @@ async function enviarChamado() {
   const fin = _coletarFinanceiro(cat, sub);
   if (!fin.ok) { mostrarErro(fin.msg); return; }
 
-  const catObj = CATS.find(c => c.nome === cat);
-  const resp   = catObj?.resp || "Administração Geral";
-
-  /* Embute financial_data como JSON após separador no corpo da descrição.
-     O RPC extrai e salva na coluna financial_data (sem poluir o texto). */
-  let descFinal = desc + fin.extra;
-  if (fin.fd) descFinal += "\n\n__FD__" + JSON.stringify(fin.fd);
+  const catObj  = CATS.find(c => c.nome === cat);
+  const resp    = catObj?.resp || "Administração Geral";
+  const hoje    = new Date().toISOString().split("T")[0];
+  const descFinal = desc + fin.extra;
 
   const btn = document.getElementById("btn-enviar");
   btn.disabled    = true;
   btn.textContent = "Enviando…";
 
   try {
-    const res = await fetch(`${SB_URL}/rest/v1/rpc/registrar_chamado_publico`, {
+    const res = await fetch(`${SB_URL}/rest/v1/demandas?select=id`, {
       method:  "POST",
-      headers: HDRS,
+      headers: { ...HDRS, "Prefer": "return=representation" },
       body: JSON.stringify({
-        p_area:             cat,
-        p_subcategoria:     sub,
-        p_titulo:           titulo,
-        p_descricao:        descFinal,
-        p_solicitante_nome: nome,
-        p_solicitante_tel:  tel,
-        p_responsavel:      resp,
+        area:                     cat,
+        subcategoria:             sub,
+        titulo:                   titulo,
+        descricao:                descFinal,
+        solicitante:              nome,
+        solicitante_txt:          nome,
+        nome_solicitante_externo: nome,
+        telefone_solicitante:     tel,
+        responsavel:              resp,
+        responsavel_txt:          resp,
+        financial_data:           fin.fd || null,
+        origem:                   "Portal Público",
+        prioridade:               "Média",
+        status:                   "Aberta",
+        data_abertura:            hoje,
       }),
     });
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || err.hint || `Erro ${res.status}`);
+      throw new Error(err.message || err.hint || err.details || `Erro ${res.status}`);
     }
 
-    const uuid   = await res.json();
+    const rows   = await res.json();
+    const uuid   = rows?.[0]?.id || "";
     const ano    = new Date().getFullYear();
-    const ticket = `#${ano}-${String(uuid || "").slice(0, 6).toUpperCase() || Math.random().toString(36).slice(2,8).toUpperCase()}`;
+    const ticket = `#${ano}-${String(uuid).slice(0, 6).toUpperCase() || Math.random().toString(36).slice(2,8).toUpperCase()}`;
 
     try { localStorage.setItem(_RL_KEY, String(Date.now())); } catch(_) {}
 
