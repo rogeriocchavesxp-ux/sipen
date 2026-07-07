@@ -2,7 +2,10 @@
     <div class="hero">
       <div class="hero-ic" style="background:var(--amberbg);border-color:rgba(208,144,64,0.25)">🛠</div>
       <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Infraestrutura e Conservação</div><div class="hero-dsc">Gestão de ordens de serviço, limpeza, patrimônio e solicitações operacionais</div></div>
-      <div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova OS</button></div>
+      <div class="hero-act" style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="tbt" onclick="infraLinkPublico()" title="Link público para abertura de chamados">🌐 Link Público</button>
+        <button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova OS</button>
+      </div>
     </div>
     <div class="bnav" style="--mc:var(--amber)">
       <div class="bni" onclick="go('infra-dash')">Dashboard</div>
@@ -272,5 +275,62 @@
     </div>
     <div class="ct" id="wa-tab-INFRAESTRUTURA"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
   </div>
+
+  <!-- MODAL: Link Público de Chamados -->
+  <div id="modal-link-publico" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9900;align-items:center;justify-content:center;padding:16px">
+    <div style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:16px;padding:28px 24px;max-width:420px;width:100%;position:relative">
+      <button onclick="infraFecharLinkModal()" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:20px;color:var(--tx3);cursor:pointer;line-height:1">✕</button>
+      <div style="font-size:22px;margin-bottom:10px">🌐</div>
+      <div style="font-size:16px;font-weight:800;color:var(--tx1);margin-bottom:4px">Portal Público de Chamados</div>
+      <div style="font-size:12.5px;color:var(--tx2);margin-bottom:20px;line-height:1.5">Qualquer pessoa pode abrir um chamado de infraestrutura sem precisar de conta no SIPEN.</div>
+
+      <!-- URL -->
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px">
+        <div id="lp-url-box" style="flex:1;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg1);font-size:12.5px;color:var(--tx1);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          https://www.sipen.com.br/chamado
+        </div>
+        <button onclick="infraCopiarLink()" id="lp-btn-copiar" class="tbt pri" style="white-space:nowrap;padding:9px 14px;flex-shrink:0">Copiar</button>
+      </div>
+
+      <!-- QR Code -->
+      <div style="text-align:center;margin-bottom:16px">
+        <img id="lp-qr"
+          src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fwww.sipen.com.br%2Fchamado"
+          alt="QR Code"
+          style="width:160px;height:160px;border-radius:8px;border:1px solid var(--bd2)">
+        <div style="font-size:10.5px;color:var(--tx3);margin-top:6px">Escaneie para acessar</div>
+      </div>
+
+      <!-- Compartilhar WhatsApp -->
+      <a href="https://wa.me/?text=Acesse%20o%20portal%20de%20chamados%20da%20IPPenha%3A%0Ahttps%3A%2F%2Fwww.sipen.com.br%2Fchamado"
+         target="_blank" rel="noopener"
+         style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;border-radius:9px;background:#25d366;color:#fff;font-size:13.5px;font-weight:700;text-decoration:none;margin-bottom:0">
+        💬 Compartilhar pelo WhatsApp
+      </a>
+    </div>
+  </div>
+
+  <script>
+  window.infraLinkPublico = function() {
+    document.getElementById("modal-link-publico").style.display = "flex";
+  };
+  window.infraFecharLinkModal = function() {
+    document.getElementById("modal-link-publico").style.display = "none";
+  };
+  window.infraCopiarLink = function() {
+    const url = "https://www.sipen.com.br/chamado";
+    navigator.clipboard.writeText(url).then(() => {
+      const btn = document.getElementById("lp-btn-copiar");
+      const old = btn.textContent;
+      btn.textContent = "✓ Copiado!";
+      setTimeout(() => { btn.textContent = old; }, 2000);
+    }).catch(() => {
+      if (typeof T === "function") T("Link", "https://www.sipen.com.br/chamado");
+    });
+  };
+  document.getElementById("modal-link-publico").addEventListener("click", function(e) {
+    if (e.target === this) infraFecharLinkModal();
+  });
+  </script>
 
   <!-- DEMANDAS CONCLUÍDAS -->

@@ -165,6 +165,11 @@
 
   function pillPrio(_p) { return ""; }
 
+  function pillOrigem(origem) {
+    if (origem !== "Portal Público") return "";
+    return `<span style="font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;background:rgba(74,156,245,.12);color:var(--sky);margin-left:4px">🌐 Portal</span>`;
+  }
+
   function fmtD(d) {
     if (!d) return "—";
     const s = d.split("T")[0].split("-");
@@ -550,7 +555,7 @@
                 </td>
                 <td style="padding:8px 6px;color:var(--tx2);font-size:11px">${r.subcategoria||"—"}</td>
                 <td style="padding:8px 6px;color:var(--tx1);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.titulo) || "—"}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${escapeHtml(r.solicitante || r.solicitante_txt) || "—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${escapeHtml(r.solicitante || r.solicitante_txt || r.nome_solicitante_externo) || "—"}${pillOrigem(r.origem)}</td>
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${escapeHtml(r.responsavel || r.responsavel_txt) || "—"}</td>
                 <td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--tx1);white-space:nowrap">${r.financial_data?.valor != null ? `R$ ${parseFloat(r.financial_data.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}</td>
                 <td style="padding:8px 6px">${pillStatus(r.status)}</td>
@@ -1030,7 +1035,7 @@
     const detailRows = [
       ["Categoria",     `<span style="color:${catCor(dem.area)};font-weight:600">${catIcon(dem.area)} ${escapeHtml(dem.area)||"—"}</span>`],
       ["Subcategoria",  escapeHtml(dem.subcategoria)||"—"],
-      ["Solicitante",   escapeHtml(dem.solicitante || dem.solicitante_txt) || "—"],
+      ["Solicitante",   `${escapeHtml(dem.solicitante || dem.solicitante_txt || dem.nome_solicitante_externo) || "—"}${pillOrigem(dem.origem)}${dem.telefone_solicitante ? `<br><span style="color:var(--tx3);font-size:11px">📞 ${escapeHtml(dem.telefone_solicitante)}</span>` : ""}`],
       ["Responsável",   escapeHtml(dem.responsavel || dem.responsavel_txt) || "—"],
       ["Abertura",      fmtD(dem.data_abertura||dem.criado_em)],
       ["Conclusão prev.",fmtD(dem.data_conclusao)],
