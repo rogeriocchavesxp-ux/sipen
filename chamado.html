@@ -68,8 +68,7 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 /* honeypot */
 .hp { position: absolute; left: -9999px; top: -9999px; opacity: 0; height: 0; overflow: hidden; }
 
-/* Seção financeira */
-.fin-sec { display: none; }
+/* Seção financeira — ocultação via style inline; a classe .fin-sec é apenas agrupamento */
 
 .btn-submit {
   width: 100%; padding: 14px; border-radius: 9px; border: none;
@@ -175,22 +174,32 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
       </div>
 
       <!-- ── Financeiro: Solicitação de Pagamento ───────── -->
-      <div class="card fin-sec" id="fin-pag">
+      <div class="card fin-sec" id="fin-pag" style="display:none">
         <div class="card-title">💰 Dados do Pagamento</div>
 
         <div class="row2">
           <div class="field">
-            <label for="f-fin-tipo">Tipo</label>
+            <label for="f-fin-tipo">Tipo de solicitação</label>
             <select id="f-fin-tipo">
-              <option value="Pagamento">Pagamento a fornecedor</option>
+              <option value="Pagamento">Pagamento</option>
+              <option value="Reembolso">Reembolso</option>
               <option value="Adiantamento">Adiantamento</option>
-              <option value="Compra">Compra</option>
-              <option value="Outro">Outro</option>
             </select>
           </div>
           <div class="field">
             <label for="f-fin-valor">Valor (R$) <span class="req">*</span></label>
             <input type="text" id="f-fin-valor" placeholder="0,00" inputmode="decimal">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-fin-venc">Data de vencimento</label>
+            <input type="date" id="f-fin-venc">
+          </div>
+          <div class="field">
+            <label for="f-fin-centro">Centro de custo / Ministério</label>
+            <input type="text" id="f-fin-centro" placeholder="Ex: Ministério de Louvor">
           </div>
         </div>
 
@@ -205,35 +214,28 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
           </div>
         </div>
 
-        <div class="row2">
-          <div class="field">
-            <label for="f-fin-venc">Data de vencimento</label>
-            <input type="date" id="f-fin-venc">
-          </div>
-          <div class="field">
-            <label for="f-fin-centro">Centro de custo</label>
-            <input type="text" id="f-fin-centro" placeholder="Ex: Ministério de Música">
-          </div>
-        </div>
-
         <div class="field">
           <label for="f-fin-forma">Forma de pagamento <span class="req">*</span></label>
           <select id="f-fin-forma" onchange="onFormaChange()">
             <option value="">Selecione</option>
             <option value="PIX">PIX</option>
-            <option value="Transferência Bancária">Transferência Bancária (TED)</option>
-            <option value="Dinheiro">Dinheiro</option>
-            <option value="Cartão">Cartão</option>
             <option value="Boleto">Boleto</option>
+            <option value="Cartão de Crédito">Cartão de Crédito</option>
+            <option value="Cartão de Débito">Cartão de Débito</option>
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Transferência Bancária">Transferência Bancária</option>
+            <option value="Débito em Conta">Débito em Conta</option>
+            <option value="Cheque">Cheque</option>
+            <option value="Outro">Outro</option>
           </select>
         </div>
 
-        <div class="field fin-sec" id="fin-pix-sec">
+        <div class="field fin-sec" id="fin-pix-sec" style="display:none">
           <label for="f-fin-pix">Chave PIX <span class="req">*</span></label>
           <input type="text" id="f-fin-pix" placeholder="CPF, e-mail, telefone ou chave aleatória">
         </div>
 
-        <div class="fin-sec" id="fin-ted-sec">
+        <div class="fin-sec" id="fin-ted-sec" style="display:none">
           <div class="row3">
             <div class="field">
               <label for="f-fin-banco">Banco <span class="req">*</span></label>
@@ -251,13 +253,13 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
         </div>
 
         <div class="field">
-          <label for="f-fin-obs">Observação</label>
-          <textarea id="f-fin-obs" placeholder="Informações adicionais sobre o pagamento" style="min-height:70px"></textarea>
+          <label for="f-fin-obs">Observações financeiras</label>
+          <textarea id="f-fin-obs" placeholder="Informações adicionais relevantes para o pagamento" style="min-height:70px"></textarea>
         </div>
       </div>
 
       <!-- ── Financeiro: Reembolso ───────────────────── -->
-      <div class="card fin-sec" id="fin-reimb">
+      <div class="card fin-sec" id="fin-reimb" style="display:none">
         <div class="card-title">💰 Dados do Reembolso</div>
 
         <div class="row2">
@@ -272,35 +274,45 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
         </div>
 
         <div class="field">
-          <label for="f-reimb-motivo">Motivo</label>
-          <input type="text" id="f-reimb-motivo" placeholder="Ex: Compra de material para EBD">
+          <label for="f-reimb-motivo">Motivo do reembolso</label>
+          <textarea id="f-reimb-motivo" placeholder="Descreva o motivo e a finalidade do gasto..." style="min-height:70px"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="f-reimb-forma">Forma de pagamento <span class="req">*</span></label>
+          <select id="f-reimb-forma">
+            <option value="">Selecione</option>
+            <option value="PIX">PIX</option>
+            <option value="Boleto">Boleto</option>
+            <option value="Cartão de Crédito">Cartão de Crédito</option>
+            <option value="Cartão de Débito">Cartão de Débito</option>
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Transferência Bancária">Transferência Bancária</option>
+            <option value="Débito em Conta">Débito em Conta</option>
+            <option value="Cheque">Cheque</option>
+            <option value="Outro">Outro</option>
+          </select>
         </div>
 
         <div class="row2">
           <div class="field">
-            <label for="f-reimb-forma">Forma de pagamento</label>
-            <select id="f-reimb-forma" onchange="onReimbFormaChange()">
-              <option value="">Selecione</option>
-              <option value="PIX">PIX</option>
-              <option value="Transferência Bancária">Transferência Bancária</option>
-              <option value="Dinheiro">Dinheiro</option>
-            </select>
-          </div>
-          <div class="field fin-sec" id="reimb-pix-sec">
             <label for="f-reimb-pix">Chave PIX</label>
-            <input type="text" id="f-reimb-pix" placeholder="CPF, e-mail, telefone...">
+            <input type="text" id="f-reimb-pix" placeholder="CPF, e-mail, telefone ou chave aleatória">
           </div>
-        </div>
-
-        <div class="row2">
           <div class="field">
-            <label for="f-reimb-min">Ministério</label>
+            <label for="f-reimb-min">Ministério / Área</label>
             <input type="text" id="f-reimb-min" placeholder="Ex: EBD, Música, Ação Social">
           </div>
-          <div class="field">
-            <label for="f-reimb-pastor">Pastor ciente</label>
-            <input type="text" id="f-reimb-pastor" placeholder="Nome do pastor responsável">
-          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-reimb-pastor">Pastor / líder ciente ou aprovador</label>
+          <input type="text" id="f-reimb-pastor" placeholder="Nome do aprovador">
+        </div>
+
+        <div class="field">
+          <label for="f-reimb-obs">Observações</label>
+          <textarea id="f-reimb-obs" placeholder="Informações adicionais..." style="min-height:70px"></textarea>
         </div>
       </div>
 
@@ -406,7 +418,7 @@ function onSubChange() {
 }
 
 function _ocultarFinanceiro() {
-  ["fin-pag","fin-reimb","fin-pix-sec","fin-ted-sec","reimb-pix-sec"].forEach(_hide);
+  ["fin-pag","fin-reimb","fin-pix-sec","fin-ted-sec"].forEach(_hide);
 }
 
 function onFormaChange() {
@@ -415,12 +427,6 @@ function onFormaChange() {
   _hide("fin-ted-sec");
   if (forma === "PIX")                    _show("fin-pix-sec");
   if (forma === "Transferência Bancária") _show("fin-ted-sec");
-}
-
-function onReimbFormaChange() {
-  const forma = document.getElementById("f-reimb-forma").value;
-  _hide("reimb-pix-sec");
-  if (forma === "PIX") _show("reimb-pix-sec");
 }
 
 /* ── Telefone ──────────────────────────────────────────────── */
@@ -539,15 +545,18 @@ function _coletarFinanceiro(cat, sub) {
     const min    = g("f-reimb-min");
     const pastor = g("f-reimb-pastor");
 
+    const obs    = g("f-reimb-obs");
+
     const linhas = [
       "━━━ Dados do Reembolso ━━━",
       `Reembolsar para: ${nome}`,
       `Valor: R$ ${valor}`,
       motivo ? `Motivo: ${motivo}` : null,
       forma  ? `Forma de pagamento: ${forma}` : null,
-      forma === "PIX" && pix ? `Chave PIX: ${pix}` : null,
+      pix    ? `Chave PIX: ${pix}` : null,
       min    ? `Ministério: ${min}` : null,
       pastor ? `Pastor ciente: ${pastor}` : null,
+      obs    ? `Observação: ${obs}` : null,
     ].filter(Boolean).join("\n");
 
     const fd = { reimb_nome: nome };
@@ -558,6 +567,7 @@ function _coletarFinanceiro(cat, sub) {
     if (pix)    fd.chave_pix = pix;
     if (min)    fd.ministerio = min;
     if (pastor) fd.pastor_ciente = pastor;
+    if (obs)    fd.obs = obs;
 
     return { ok: true, extra: "\n\n" + linhas, fd };
   }
@@ -650,7 +660,7 @@ function novoEnvio() {
    "f-fin-tipo","f-fin-valor","f-fin-venc","f-fin-centro","f-fin-benefic","f-fin-cpf",
    "f-fin-forma","f-fin-pix","f-fin-banco","f-fin-ag","f-fin-conta","f-fin-obs",
    "f-reimb-nome","f-reimb-valor","f-reimb-motivo","f-reimb-forma","f-reimb-pix",
-   "f-reimb-min","f-reimb-pastor"
+   "f-reimb-min","f-reimb-pastor","f-reimb-obs"
   ].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
 
   document.getElementById("f-cat").value     = "";
