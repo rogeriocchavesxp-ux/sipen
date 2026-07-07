@@ -519,7 +519,20 @@ function _coletarFinanceiro(cat, sub) {
       forma === "Transferência Bancária" ? `Banco: ${banco} · Ag: ${ag} · Conta: ${conta}` : null,
       obs    ? `Observação: ${obs}` : null,
     ].filter(Boolean).join("\n");
-    return { ok: true, extra: "\n\n" + linhas };
+
+    const fd = { tipo, forma_pagamento: forma, beneficiario: benefic };
+    const valorNum = parseFloat(valor.replace(/\./g, "").replace(",", "."));
+    if (!isNaN(valorNum)) fd.valor = valorNum; else fd.valor = valor;
+    if (venc)   fd.data_vencimento = venc;
+    if (cpf)    fd.cpf_cnpj = cpf;
+    if (centro) fd.centro_custo = centro;
+    if (pix)    fd.chave_pix = pix;
+    if (banco)  fd.banco = banco;
+    if (ag)     fd.agencia = ag;
+    if (conta)  fd.conta = conta;
+    if (obs)    fd.obs = obs;
+
+    return { ok: true, extra: "\n\n" + linhas, fd };
   }
 
   if (sub === "Reembolso") {
@@ -544,10 +557,20 @@ function _coletarFinanceiro(cat, sub) {
       min    ? `Ministério: ${min}` : null,
       pastor ? `Pastor ciente: ${pastor}` : null,
     ].filter(Boolean).join("\n");
-    return { ok: true, extra: "\n\n" + linhas };
+
+    const fd = { reimb_nome: nome };
+    const valorNum = parseFloat(valor.replace(/\./g, "").replace(",", "."));
+    if (!isNaN(valorNum)) fd.valor = valorNum; else fd.valor = valor;
+    if (motivo) fd.motivo = motivo;
+    if (forma)  fd.forma_pagamento = forma;
+    if (pix)    fd.chave_pix = pix;
+    if (min)    fd.ministerio = min;
+    if (pastor) fd.pastor_ciente = pastor;
+
+    return { ok: true, extra: "\n\n" + linhas, fd };
   }
 
-  return { ok: true, extra: "" };
+  return { ok: true, extra: "", fd: null };
 }
 
 /* ── Envio ─────────────────────────────────────────────────── */
@@ -596,6 +619,7 @@ async function enviarChamado() {
         p_solicitante_nome: nome,
         p_solicitante_tel:  tel,
         p_responsavel:      resp,
+        p_financial_data:   fin.fd ?? null,
       }),
     });
 
