@@ -22,7 +22,7 @@ serve(async (req) => {
           solicitante, solicitante_txt,
           responsavel, responsavel_txt,
           nome_solicitante_externo, telefone_solicitante,
-          financial_data,
+          financial_data, numero_chamado,
           origem, prioridade, status, data_abertura
         ) VALUES (
           ${b.id}::uuid,
@@ -31,6 +31,7 @@ serve(async (req) => {
           ${b.responsavel}, ${b.responsavel_txt},
           ${b.solicitante}, ${b.telefone},
           ${b.financial_data ? JSON.stringify(b.financial_data) : null}::jsonb,
+          ${b.numero_chamado ?? null},
           'Portal Público', 'Média', 'Aberta', CURRENT_DATE
         )
         RETURNING id

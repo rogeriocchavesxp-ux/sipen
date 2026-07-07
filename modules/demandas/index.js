@@ -429,7 +429,7 @@
               <div class="trow" style="cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','dem-dash')">
                 <div class="tdot" style="background:${catCor(r.area)}"></div>
                 <div class="tbody">
-                  <div class="ttitle">${catIcon(r.area)} ${escapeHtml(r.titulo) || "Sem título"}</div>
+                  <div class="ttitle">${catIcon(r.area)} ${escapeHtml(r.titulo) || "Sem título"}${r.numero_chamado ? ` <span style="font-size:10px;font-weight:600;color:var(--acc,#4a9cf5);letter-spacing:.04em">${escapeHtml(r.numero_chamado)}</span>` : ""}</div>
                   <div class="tmeta">${r.area||"—"}${r.subcategoria?" · "+r.subcategoria:""} · ${escapeHtml(r.solicitante || r.solicitante_txt) || "—"} · ${fmtD(r.data_abertura||r.criado_em)}</div>
                 </div>
                 <div class="tright" style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">
@@ -1040,6 +1040,9 @@
       ["Abertura",      fmtD(dem.data_abertura||dem.criado_em)],
       ["Conclusão prev.",fmtD(dem.data_conclusao)],
     ];
+    if (dem.numero_chamado) {
+      detailRows.unshift(["N° do chamado", `<span style="font-weight:700;color:var(--acc,#4a9cf5);letter-spacing:.04em">${escapeHtml(dem.numero_chamado)}</span>`]);
+    }
     if (_temFinancialData(dem) && _toLabel(dem.status) === "Aguardando Pagamento") {
       detailRows.push([
         "Solicitação Financeira",
