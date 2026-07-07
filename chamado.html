@@ -606,22 +606,22 @@ async function enviarChamado() {
   btn.textContent = "Enviando…";
 
   try {
-    const res = await fetch(`${SB_URL}/rest/v1/demandas`, {
+    const res = await fetch(`${SB_URL}/functions/v1/chamado-publico`, {
       method:  "POST",
-      headers: { ...HDRS, "Prefer": "return=minimal" },
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + SB_KEY },
       body: JSON.stringify({
-        id:              newId,
-        area:            cat,
-        subcategoria:    sub,
-        titulo:          titulo,
-        descricao:       descFinal,
-        solicitante:     nome,
+        id:            newId,
+        area:          cat,
+        subcategoria:  sub,
+        titulo:        titulo,
+        descricao:     descFinal,
+        solicitante:   nome,
         solicitante_txt: tel ? `${nome} · ${tel}` : nome,
-        responsavel:     resp,
+        telefone:      tel,
+        responsavel:   resp,
         responsavel_txt: resp,
-        prioridade:      "Média",
-        status:          "Aberta",
-        data_abertura:   hoje,
+        financial_data: fin.fd || null,
+        data_abertura: hoje,
       }),
     });
 
