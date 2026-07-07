@@ -11,6 +11,7 @@
   --accbg: rgba(74,156,245,.10);
   --gr:    #3aaa5c;
   --rose:  #e05555;
+  --amber: #d09040;
   --tx1:   #1a1d21; --tx2: #4a5260; --tx3: #8a919e;
   --bg:    #f4f6f9; --card: #ffffff; --bd: #e2e6ec;
   --inp:   #f8fafc; --inpbd: #cdd3da;
@@ -32,7 +33,7 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
   margin-bottom: 24px; padding-bottom: 20px;
   border-bottom: 1px solid var(--bd); text-align: center; gap: 12px;
 }
-.page-logo { height: 52px; width: auto; }
+.page-logo  { height: 52px; width: auto; }
 .page-title { font-size: 21px; font-weight: 800; color: var(--tx1); line-height: 1.2; }
 .page-sub   { font-size: 13px; color: var(--tx2); line-height: 1.55; max-width: 460px; }
 
@@ -47,6 +48,7 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 }
 
 .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
 .field label { font-size: 10px; font-weight: 700; color: var(--tx3); text-transform: uppercase; letter-spacing: .07em; }
 .field input, .field select, .field textarea {
   padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--inpbd);
@@ -56,18 +58,25 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--acc); }
 .field textarea { resize: vertical; min-height: 110px; }
 .req { color: var(--rose); }
+
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-@media (max-width: 420px) { .row2 { grid-template-columns: 1fr; } }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+@media (max-width: 480px) { .row2 { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .row3 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 380px) { .row3 { grid-template-columns: 1fr; } }
 
 /* honeypot */
 .hp { position: absolute; left: -9999px; top: -9999px; opacity: 0; height: 0; overflow: hidden; }
+
+/* Seção financeira */
+.fin-sec { display: none; }
 
 .btn-submit {
   width: 100%; padding: 14px; border-radius: 9px; border: none;
   background: var(--acc); color: #fff; font-size: 14.5px; font-weight: 700;
   cursor: pointer; font-family: inherit; margin-top: 4px; transition: opacity .15s;
 }
-.btn-submit:hover { opacity: .88; }
+.btn-submit:hover  { opacity: .88; }
 .btn-submit:disabled { opacity: .5; cursor: not-allowed; }
 
 .err-msg {
@@ -79,20 +88,16 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 
 /* Tela de sucesso */
 #screen-ok { display: none; }
-.ok-card {
-  background: var(--card); border: 1px solid var(--bd);
-  border-radius: 16px; padding: 44px 28px; text-align: center;
-}
-.ok-icon  { font-size: 52px; margin-bottom: 16px; }
-.ok-title { font-size: 21px; font-weight: 800; color: var(--tx1); margin-bottom: 8px; }
+.ok-card   { background: var(--card); border: 1px solid var(--bd); border-radius: 16px; padding: 44px 28px; text-align: center; }
+.ok-icon   { font-size: 52px; margin-bottom: 16px; }
+.ok-title  { font-size: 21px; font-weight: 800; color: var(--tx1); margin-bottom: 8px; }
 .ok-ticket {
-  display: inline-block;
-  font-size: 18px; font-weight: 800; letter-spacing: .06em;
+  display: inline-block; font-size: 18px; font-weight: 800; letter-spacing: .06em;
   color: var(--acc); background: var(--accbg);
   padding: 8px 22px; border-radius: 8px; margin: 12px 0 18px;
   font-variant-numeric: tabular-nums;
 }
-.ok-msg { font-size: 13.5px; color: var(--tx2); line-height: 1.65; margin-bottom: 28px; }
+.ok-msg  { font-size: 13.5px; color: var(--tx2); line-height: 1.65; margin-bottom: 28px; }
 .btn-novo {
   padding: 11px 26px; border-radius: 8px; border: 1.5px solid var(--acc);
   background: transparent; color: var(--acc); font-size: 13.5px; font-weight: 700;
@@ -100,10 +105,7 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 }
 .btn-novo:hover { background: var(--acc); color: #fff; }
 
-.footer-note {
-  text-align: center; font-size: 11px; color: var(--tx3);
-  margin-top: 32px; line-height: 1.7;
-}
+.footer-note { text-align: center; font-size: 11px; color: var(--tx3); margin-top: 32px; line-height: 1.7; }
 </style>
 </head>
 <body>
@@ -121,7 +123,7 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 
     <form id="form-chamado" onsubmit="return false">
 
-      <!-- Honeypot (anti-spam) -->
+      <!-- Honeypot -->
       <div class="hp" aria-hidden="true">
         <input type="text" name="_gotcha" id="_gotcha" tabindex="-1" autocomplete="off">
       </div>
@@ -132,8 +134,7 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
         <div class="row2">
           <div class="field">
             <label for="f-nome">Nome completo <span class="req">*</span></label>
-            <input type="text" id="f-nome" placeholder="Seu nome completo"
-              autocomplete="name" maxlength="120">
+            <input type="text" id="f-nome" placeholder="Seu nome completo" autocomplete="name" maxlength="120">
           </div>
           <div class="field">
             <label for="f-tel">Telefone / WhatsApp <span class="req">*</span></label>
@@ -156,7 +157,7 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
           </div>
           <div class="field">
             <label for="f-sub">Tipo de solicitação <span class="req">*</span></label>
-            <select id="f-sub">
+            <select id="f-sub" onchange="onSubChange()">
               <option value="">Selecione a área primeiro</option>
             </select>
           </div>
@@ -170,6 +171,136 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
         <div class="field">
           <label for="f-desc">Descrição detalhada <span class="req">*</span></label>
           <textarea id="f-desc" placeholder="Forneça todos os detalhes que possam ajudar no atendimento: local, quando ocorreu, urgência, contexto etc."></textarea>
+        </div>
+      </div>
+
+      <!-- ── Financeiro: Solicitação de Pagamento ───────── -->
+      <div class="card fin-sec" id="fin-pag">
+        <div class="card-title">💰 Dados do Pagamento</div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-fin-tipo">Tipo</label>
+            <select id="f-fin-tipo">
+              <option value="Pagamento">Pagamento a fornecedor</option>
+              <option value="Adiantamento">Adiantamento</option>
+              <option value="Compra">Compra</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="f-fin-valor">Valor (R$) <span class="req">*</span></label>
+            <input type="text" id="f-fin-valor" placeholder="0,00" inputmode="decimal">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-fin-benefic">Beneficiário / Favorecido <span class="req">*</span></label>
+            <input type="text" id="f-fin-benefic" placeholder="Nome ou razão social">
+          </div>
+          <div class="field">
+            <label for="f-fin-cpf">CPF / CNPJ</label>
+            <input type="text" id="f-fin-cpf" placeholder="000.000.000-00">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-fin-venc">Data de vencimento</label>
+            <input type="date" id="f-fin-venc">
+          </div>
+          <div class="field">
+            <label for="f-fin-centro">Centro de custo</label>
+            <input type="text" id="f-fin-centro" placeholder="Ex: Ministério de Música">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-fin-forma">Forma de pagamento <span class="req">*</span></label>
+          <select id="f-fin-forma" onchange="onFormaChange()">
+            <option value="">Selecione</option>
+            <option value="PIX">PIX</option>
+            <option value="Transferência Bancária">Transferência Bancária (TED)</option>
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Cartão">Cartão</option>
+            <option value="Boleto">Boleto</option>
+          </select>
+        </div>
+
+        <div class="field fin-sec" id="fin-pix-sec">
+          <label for="f-fin-pix">Chave PIX <span class="req">*</span></label>
+          <input type="text" id="f-fin-pix" placeholder="CPF, e-mail, telefone ou chave aleatória">
+        </div>
+
+        <div class="fin-sec" id="fin-ted-sec">
+          <div class="row3">
+            <div class="field">
+              <label for="f-fin-banco">Banco <span class="req">*</span></label>
+              <input type="text" id="f-fin-banco" placeholder="Ex: Bradesco">
+            </div>
+            <div class="field">
+              <label for="f-fin-ag">Agência <span class="req">*</span></label>
+              <input type="text" id="f-fin-ag" placeholder="0000">
+            </div>
+            <div class="field">
+              <label for="f-fin-conta">Conta <span class="req">*</span></label>
+              <input type="text" id="f-fin-conta" placeholder="00000-0">
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-fin-obs">Observação</label>
+          <textarea id="f-fin-obs" placeholder="Informações adicionais sobre o pagamento" style="min-height:70px"></textarea>
+        </div>
+      </div>
+
+      <!-- ── Financeiro: Reembolso ───────────────────── -->
+      <div class="card fin-sec" id="fin-reimb">
+        <div class="card-title">💰 Dados do Reembolso</div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-reimb-nome">Reembolsar para <span class="req">*</span></label>
+            <input type="text" id="f-reimb-nome" placeholder="Nome completo">
+          </div>
+          <div class="field">
+            <label for="f-reimb-valor">Valor (R$) <span class="req">*</span></label>
+            <input type="text" id="f-reimb-valor" placeholder="0,00" inputmode="decimal">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-reimb-motivo">Motivo</label>
+          <input type="text" id="f-reimb-motivo" placeholder="Ex: Compra de material para EBD">
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-reimb-forma">Forma de pagamento</label>
+            <select id="f-reimb-forma" onchange="onReimbFormaChange()">
+              <option value="">Selecione</option>
+              <option value="PIX">PIX</option>
+              <option value="Transferência Bancária">Transferência Bancária</option>
+              <option value="Dinheiro">Dinheiro</option>
+            </select>
+          </div>
+          <div class="field fin-sec" id="reimb-pix-sec">
+            <label for="f-reimb-pix">Chave PIX</label>
+            <input type="text" id="f-reimb-pix" placeholder="CPF, e-mail, telefone...">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-reimb-min">Ministério</label>
+            <input type="text" id="f-reimb-min" placeholder="Ex: EBD, Música, Ação Social">
+          </div>
+          <div class="field">
+            <label for="f-reimb-pastor">Pastor ciente</label>
+            <input type="text" id="f-reimb-pastor" placeholder="Nome do pastor responsável">
+          </div>
         </div>
       </div>
 
@@ -203,7 +334,7 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 
 </div>
 <script>
-/* ── Supabase ─────────────────────────────────────────────── */
+/* ── Supabase ──────────────────────────────────────────────── */
 const SB_URL = "https://erhwryfzpycahgsohhbh.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyaHdyeWZ6cHljYWhnc29oaGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg2MTUsImV4cCI6MjA5MTg0NDYxNX0.T0hp90Bmufj6a3oUPq1vYcLiGx9YjyMaZiE38S0e3_8";
 const HDRS = {
@@ -212,7 +343,7 @@ const HDRS = {
   "Content-Type":  "application/json"
 };
 
-/* ── Categorias ───────────────────────────────────────────── */
+/* ── Categorias ────────────────────────────────────────────── */
 const CATS = [
   { nome:"Manutenção", icon:"🛠", resp:"Departamento de Manutenção", subcats:[
     { grupo:"Infraestrutura Civil",     itens:["Elétrica","Hidráulica","Estrutural","Civil","Pintura","Marcenaria","Vidraçaria","Manutenção predial","Chaveiro","Elevador/Plataforma"] },
@@ -239,7 +370,7 @@ const CATS = [
   { nome:"Administrativo Geral",     icon:"🧾", resp:"Administração Geral",              subcats:["Demandas gerais","Apoio administrativo","Solicitações internas","Processos institucionais"] },
 ];
 
-/* ── Preenche categorias ──────────────────────────────────── */
+/* ── Preenche categorias ───────────────────────────────────── */
 (function () {
   const sel = document.getElementById("f-cat");
   CATS.forEach(c => {
@@ -250,10 +381,14 @@ const CATS = [
   });
 })();
 
+function _show(id) { const el = document.getElementById(id); if (el) el.style.display = ""; }
+function _hide(id) { const el = document.getElementById(id); if (el) el.style.display = "none"; }
+
 function onCatChange() {
   const catNome = document.getElementById("f-cat").value;
   const subSel  = document.getElementById("f-sub");
   const cat     = CATS.find(c => c.nome === catNome);
+  _ocultarFinanceiro();
   if (!cat) {
     subSel.innerHTML = "<option value=''>Selecione a área primeiro</option>";
     return;
@@ -266,20 +401,57 @@ function onCatChange() {
   } else {
     subSel.innerHTML = cat.subcats.map(s => `<option value="${s}">${s}</option>`).join("");
   }
+  onSubChange();
 }
 
-/* ── Telefone ─────────────────────────────────────────────── */
+function onSubChange() {
+  const cat = document.getElementById("f-cat").value;
+  const sub = document.getElementById("f-sub").value;
+  _ocultarFinanceiro();
+  if (cat !== "Financeiro") return;
+  if (sub === "Solicitação de pagamento") _show("fin-pag");
+  if (sub === "Reembolso")               _show("fin-reimb");
+}
+
+function _ocultarFinanceiro() {
+  ["fin-pag","fin-reimb","fin-pix-sec","fin-ted-sec","reimb-pix-sec"].forEach(_hide);
+}
+
+function onFormaChange() {
+  const forma = document.getElementById("f-fin-forma").value;
+  _hide("fin-pix-sec");
+  _hide("fin-ted-sec");
+  if (forma === "PIX")                    _show("fin-pix-sec");
+  if (forma === "Transferência Bancária") _show("fin-ted-sec");
+}
+
+function onReimbFormaChange() {
+  const forma = document.getElementById("f-reimb-forma").value;
+  _hide("reimb-pix-sec");
+  if (forma === "PIX") _show("reimb-pix-sec");
+}
+
+/* ── Telefone ──────────────────────────────────────────────── */
 function fmtTel(input) {
   let d = input.value.replace(/\D/g, "");
   if (d.startsWith("55") && d.length > 11) d = d.slice(2);
   if (d.startsWith("0")) d = d.slice(1);
   d = d.slice(0, 11);
-  if (d.length === 11)     input.value = `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+  if (d.length === 11)      input.value = `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
   else if (d.length === 10) input.value = `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
   else                      input.value = d;
 }
 
-/* ── Rate limiting ────────────────────────────────────────── */
+/* ── Helpers ───────────────────────────────────────────────── */
+function fmtDataBR(d) {
+  if (!d) return "";
+  const [y, m, dia] = d.split("-");
+  return `${dia}/${m}/${y}`;
+}
+
+function g(id) { return (document.getElementById(id)?.value || "").trim(); }
+
+/* ── Rate limiting ─────────────────────────────────────────── */
 const _RL_KEY = "sipen_chamado_last";
 const _RL_MS  = 5 * 60 * 1000;
 
@@ -296,51 +468,117 @@ function _checarRateLimit() {
   } catch(_) { return null; }
 }
 
-function _registrarEnvio() {
-  try { localStorage.setItem(_RL_KEY, String(Date.now())); } catch(_) {}
-}
-
-/* ── UI helpers ───────────────────────────────────────────── */
+/* ── UI ────────────────────────────────────────────────────── */
 function mostrarErro(msg) {
-  const el  = document.getElementById("err-msg");
+  const el = document.getElementById("err-msg");
   el.textContent = msg;
   el.classList.add("show");
   el.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
-
 function limparErro() {
   const el = document.getElementById("err-msg");
   el.textContent = "";
   el.classList.remove("show");
 }
 
-/* ── Envio via RPC (SECURITY DEFINER — bypassa RLS e schema cache) */
+/* ── Coleta dados financeiros e valida ─────────────────────── */
+function _coletarFinanceiro(cat, sub) {
+  if (cat !== "Financeiro") return { ok: true, extra: "" };
+
+  if (sub === "Solicitação de pagamento") {
+    const valor   = g("f-fin-valor");
+    const benefic = g("f-fin-benefic");
+    const forma   = g("f-fin-forma");
+    const pix     = g("f-fin-pix");
+    const banco   = g("f-fin-banco");
+    const ag      = g("f-fin-ag");
+    const conta   = g("f-fin-conta");
+    if (!valor)   return { ok: false, msg: "Informe o valor do pagamento." };
+    if (!benefic) return { ok: false, msg: "Informe o beneficiário / favorecido." };
+    if (!forma)   return { ok: false, msg: "Selecione a forma de pagamento." };
+    if (forma === "PIX" && !pix) return { ok: false, msg: "Informe a chave PIX." };
+    if (forma === "Transferência Bancária" && (!banco || !ag || !conta))
+      return { ok: false, msg: "Informe banco, agência e conta para TED." };
+
+    const tipo  = g("f-fin-tipo") || "Pagamento";
+    const venc  = g("f-fin-venc");
+    const centro = g("f-fin-centro");
+    const cpf   = g("f-fin-cpf");
+    const obs   = g("f-fin-obs");
+
+    const linhas = [
+      "━━━ Dados Financeiros ━━━",
+      `Tipo: ${tipo}`,
+      `Valor: R$ ${valor}`,
+      venc   ? `Vencimento: ${fmtDataBR(venc)}` : null,
+      `Beneficiário: ${benefic}`,
+      cpf    ? `CPF/CNPJ: ${cpf}` : null,
+      centro ? `Centro de custo: ${centro}` : null,
+      `Forma de pagamento: ${forma}`,
+      forma === "PIX"                    ? `Chave PIX: ${pix}` : null,
+      forma === "Transferência Bancária" ? `Banco: ${banco} · Ag: ${ag} · Conta: ${conta}` : null,
+      obs    ? `Observação: ${obs}` : null,
+    ].filter(Boolean).join("\n");
+    return { ok: true, extra: "\n\n" + linhas };
+  }
+
+  if (sub === "Reembolso") {
+    const nome  = g("f-reimb-nome");
+    const valor = g("f-reimb-valor");
+    if (!nome)  return { ok: false, msg: "Informe o nome de quem será reembolsado." };
+    if (!valor) return { ok: false, msg: "Informe o valor do reembolso." };
+
+    const motivo = g("f-reimb-motivo");
+    const forma  = g("f-reimb-forma");
+    const pix    = g("f-reimb-pix");
+    const min    = g("f-reimb-min");
+    const pastor = g("f-reimb-pastor");
+
+    const linhas = [
+      "━━━ Dados do Reembolso ━━━",
+      `Reembolsar para: ${nome}`,
+      `Valor: R$ ${valor}`,
+      motivo ? `Motivo: ${motivo}` : null,
+      forma  ? `Forma de pagamento: ${forma}` : null,
+      forma === "PIX" && pix ? `Chave PIX: ${pix}` : null,
+      min    ? `Ministério: ${min}` : null,
+      pastor ? `Pastor ciente: ${pastor}` : null,
+    ].filter(Boolean).join("\n");
+    return { ok: true, extra: "\n\n" + linhas };
+  }
+
+  return { ok: true, extra: "" };
+}
+
+/* ── Envio ─────────────────────────────────────────────────── */
 async function enviarChamado() {
-  /* Honeypot */
   if (document.getElementById("_gotcha").value) return;
 
-  /* Rate limit */
   const rlMsg = _checarRateLimit();
   if (rlMsg) { mostrarErro(rlMsg); return; }
 
   limparErro();
 
-  const nome   = document.getElementById("f-nome").value.trim();
-  const tel    = document.getElementById("f-tel").value.trim();
-  const cat    = document.getElementById("f-cat").value;
-  const sub    = document.getElementById("f-sub").value;
-  const titulo = document.getElementById("f-titulo").value.trim();
-  const desc   = document.getElementById("f-desc").value.trim();
+  const nome   = g("f-nome");
+  const tel    = g("f-tel");
+  const cat    = g("f-cat");
+  const sub    = g("f-sub");
+  const titulo = g("f-titulo");
+  const desc   = g("f-desc");
 
-  if (!nome)   { mostrarErro("Informe seu nome completo.");           document.getElementById("f-nome").focus();   return; }
-  if (!tel)    { mostrarErro("Informe seu telefone ou WhatsApp.");    document.getElementById("f-tel").focus();    return; }
-  if (!cat)    { mostrarErro("Selecione a área de atendimento.");     document.getElementById("f-cat").focus();    return; }
-  if (!sub)    { mostrarErro("Selecione o tipo de solicitação.");     document.getElementById("f-sub").focus();    return; }
-  if (!titulo) { mostrarErro("Informe o título da solicitação.");     document.getElementById("f-titulo").focus(); return; }
-  if (!desc)   { mostrarErro("Informe a descrição detalhada.");       document.getElementById("f-desc").focus();   return; }
+  if (!nome)   { mostrarErro("Informe seu nome completo.");        document.getElementById("f-nome").focus();   return; }
+  if (!tel)    { mostrarErro("Informe seu telefone ou WhatsApp."); document.getElementById("f-tel").focus();    return; }
+  if (!cat)    { mostrarErro("Selecione a área de atendimento.");  document.getElementById("f-cat").focus();    return; }
+  if (!sub)    { mostrarErro("Selecione o tipo de solicitação.");  document.getElementById("f-sub").focus();    return; }
+  if (!titulo) { mostrarErro("Informe o título da solicitação.");  document.getElementById("f-titulo").focus(); return; }
+  if (!desc)   { mostrarErro("Informe a descrição detalhada.");    document.getElementById("f-desc").focus();   return; }
 
-  const catObj = CATS.find(c => c.nome === cat);
-  const resp   = catObj?.resp || "Administração Geral";
+  const fin = _coletarFinanceiro(cat, sub);
+  if (!fin.ok) { mostrarErro(fin.msg); return; }
+
+  const catObj   = CATS.find(c => c.nome === cat);
+  const resp     = catObj?.resp || "Administração Geral";
+  const descFinal = desc + fin.extra;
 
   const btn = document.getElementById("btn-enviar");
   btn.disabled    = true;
@@ -351,13 +589,13 @@ async function enviarChamado() {
       method:  "POST",
       headers: HDRS,
       body: JSON.stringify({
-        p_area:              cat,
-        p_subcategoria:      sub,
-        p_titulo:            titulo,
-        p_descricao:         desc,
-        p_solicitante_nome:  nome,
-        p_solicitante_tel:   tel,
-        p_responsavel:       resp,
+        p_area:             cat,
+        p_subcategoria:     sub,
+        p_titulo:           titulo,
+        p_descricao:        descFinal,
+        p_solicitante_nome: nome,
+        p_solicitante_tel:  tel,
+        p_responsavel:      resp,
       }),
     });
 
@@ -366,13 +604,13 @@ async function enviarChamado() {
       throw new Error(err.message || err.hint || `Erro ${res.status}`);
     }
 
-    const uuid   = await res.json(); /* RPC retorna UUID diretamente */
+    const uuid   = await res.json();
     const ano    = new Date().getFullYear();
     const ticket = `#${ano}-${String(uuid || "").slice(0, 6).toUpperCase() || Math.random().toString(36).slice(2,8).toUpperCase()}`;
 
-    _registrarEnvio();
+    try { localStorage.setItem(_RL_KEY, String(Date.now())); } catch(_) {}
 
-    document.getElementById("ok-numero").textContent  = ticket;
+    document.getElementById("ok-numero").textContent     = ticket;
     document.getElementById("screen-form").style.display = "none";
     document.getElementById("screen-ok").style.display   = "";
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -384,13 +622,18 @@ async function enviarChamado() {
   }
 }
 
-/* ── Novo envio ───────────────────────────────────────────── */
+/* ── Novo envio ────────────────────────────────────────────── */
 function novoEnvio() {
-  ["f-nome","f-tel","f-titulo","f-desc"].forEach(id => {
-    document.getElementById(id).value = "";
-  });
-  document.getElementById("f-cat").value    = "";
+  ["f-nome","f-tel","f-titulo","f-desc",
+   "f-fin-tipo","f-fin-valor","f-fin-venc","f-fin-centro","f-fin-benefic","f-fin-cpf",
+   "f-fin-forma","f-fin-pix","f-fin-banco","f-fin-ag","f-fin-conta","f-fin-obs",
+   "f-reimb-nome","f-reimb-valor","f-reimb-motivo","f-reimb-forma","f-reimb-pix",
+   "f-reimb-min","f-reimb-pastor"
+  ].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+
+  document.getElementById("f-cat").value     = "";
   document.getElementById("f-sub").innerHTML = "<option value=''>Selecione a área primeiro</option>";
+  _ocultarFinanceiro();
   limparErro();
   document.getElementById("screen-ok").style.display   = "none";
   document.getElementById("screen-form").style.display = "";
