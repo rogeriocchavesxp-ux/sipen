@@ -1,0 +1,187 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1050" viewBox="0 0 1600 1050" role="img" aria-labelledby="title desc">
+  <title id="title">Arquitetura do SIPEN</title>
+  <desc id="desc">Diagrama em camadas mostrando frontend estatico, core JavaScript, modulos de dominio, Supabase e integracoes externas do SIPEN.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#f7faf8"/>
+      <stop offset="1" stop-color="#eef5f2"/>
+    </linearGradient>
+    <linearGradient id="shell" x1="0" x2="1">
+      <stop offset="0" stop-color="#165a4a"/>
+      <stop offset="1" stop-color="#28745f"/>
+    </linearGradient>
+    <linearGradient id="supabase" x1="0" x2="1">
+      <stop offset="0" stop-color="#143f35"/>
+      <stop offset="1" stop-color="#2f8f69"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#143f35" flood-opacity=".13"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#48645b"/>
+    </marker>
+    <style>
+      .page-title{font:800 42px/1.1 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;fill:#10382f}
+      .subtitle{font:500 18px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;fill:#557067}
+      .label{font:700 18px -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;fill:#173d34}
+      .small{font:500 14px -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;fill:#577169}
+      .tiny{font:600 12px -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;fill:#647b73}
+      .white-title{font:800 22px -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;fill:#fff}
+      .white-small{font:500 14px -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;fill:#dff2eb}
+      .card{fill:#fff;stroke:#d6e4df;stroke-width:1.4;rx:16;filter:url(#shadow)}
+      .subcard{fill:#f9fcfb;stroke:#d9e8e2;stroke-width:1.2;rx:12}
+      .chip{fill:#ecf6f2;stroke:#cddfd8;stroke-width:1;rx:8}
+      .module{fill:#ffffff;stroke:#cddfd8;stroke-width:1.1;rx:10}
+      .line{fill:none;stroke:#48645b;stroke-width:2.2;marker-end:url(#arrow)}
+      .softline{fill:none;stroke:#8ea79e;stroke-width:1.6;stroke-dasharray:7 7;marker-end:url(#arrow)}
+      .band-title{font:800 15px -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;fill:#21483f}
+      .band-note{font:500 12.5px -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;fill:#667e76}
+    </style>
+  </defs>
+
+  <rect width="1600" height="1050" fill="url(#bg)"/>
+  <rect x="48" y="44" width="1504" height="962" rx="28" fill="#ffffff" opacity=".68" stroke="#dce9e4"/>
+
+  <text x="88" y="106" class="page-title">Arquitetura do SIPEN</text>
+  <text x="88" y="138" class="subtitle">App web estatico em JavaScript vanilla, HTML e CSS, com backend Supabase e funcoes serverless para integracoes.</text>
+  <text x="1320" y="104" class="tiny">Visao de alto nivel</text>
+  <text x="1320" y="126" class="tiny">Gerado a partir do codigo local</text>
+
+  <!-- User and delivery -->
+  <rect x="80" y="190" width="240" height="126" class="card"/>
+  <text x="112" y="230" class="label">Usuarios</text>
+  <text x="112" y="258" class="small">Conselho, pastoral, administrativo,</text>
+  <text x="112" y="280" class="small">liderancas e membros</text>
+  <rect x="100" y="292" width="86" height="26" class="chip"/>
+  <text x="116" y="310" class="tiny">Navegador</text>
+
+  <rect x="420" y="172" width="760" height="164" rx="18" fill="url(#shell)" filter="url(#shadow)"/>
+  <text x="456" y="216" class="white-title">Frontend estatico</text>
+  <text x="456" y="246" class="white-small">index.html carrega CSS, Supabase JS CDN, core scripts e modulos de dominio</text>
+  <text x="456" y="274" class="white-small">Deploy: servir arquivos estaticos diretamente</text>
+  <rect x="456" y="292" width="108" height="28" rx="8" fill="#e5f5ef" opacity=".95"/>
+  <text x="476" y="311" class="tiny">index.html</text>
+  <rect x="580" y="292" width="96" height="28" rx="8" fill="#e5f5ef" opacity=".95"/>
+  <text x="604" y="311" class="tiny">sipen.css</text>
+  <rect x="692" y="292" width="84" height="28" rx="8" fill="#e5f5ef" opacity=".95"/>
+  <text x="715" y="311" class="tiny">sw.js</text>
+  <rect x="792" y="292" width="122" height="28" rx="8" fill="#e5f5ef" opacity=".95"/>
+  <text x="812" y="311" class="tiny">manifest.json</text>
+  <rect x="930" y="292" width="128" height="28" rx="8" fill="#e5f5ef" opacity=".95"/>
+  <text x="950" y="311" class="tiny">offline.html</text>
+
+  <rect x="1280" y="190" width="240" height="126" class="card"/>
+  <text x="1312" y="230" class="label">Entrada publica</text>
+  <text x="1312" y="258" class="small">inscricao.html e pages/</text>
+  <text x="1312" y="280" class="small">para fluxos especificos</text>
+
+  <path class="line" d="M320 253 C360 253 372 253 410 253"/>
+  <path class="softline" d="M1180 253 C1220 253 1235 253 1270 253"/>
+
+  <!-- Core layer -->
+  <rect x="80" y="388" width="1440" height="188" class="card"/>
+  <text x="112" y="426" class="label">Camada core</text>
+  <text x="112" y="452" class="small">Responsavel por inicializacao, navegacao, UI comum, autenticacao, permissoes, API e PWA.</text>
+
+  <rect x="112" y="486" width="186" height="58" class="subcard"/>
+  <text x="134" y="511" class="band-title">core/init.js</text>
+  <text x="134" y="531" class="band-note">login, sidebar, sessao</text>
+
+  <rect x="322" y="486" width="186" height="58" class="subcard"/>
+  <text x="344" y="511" class="band-title">core/router.js</text>
+  <text x="344" y="531" class="band-note">go(), views lazy, crumbs</text>
+
+  <rect x="532" y="486" width="186" height="58" class="subcard"/>
+  <text x="554" y="511" class="band-title">core/ui.js</text>
+  <text x="554" y="531" class="band-note">toasts, modais, CRUD</text>
+
+  <rect x="742" y="486" width="186" height="58" class="subcard"/>
+  <text x="764" y="511" class="band-title">core/api.js</text>
+  <text x="764" y="531" class="band-note">REST Supabase, helpers</text>
+
+  <rect x="952" y="486" width="186" height="58" class="subcard"/>
+  <text x="974" y="511" class="band-title">core/auth.js</text>
+  <text x="974" y="531" class="band-note">Auth, perfis, permissoes</text>
+
+  <rect x="1162" y="486" width="148" height="58" class="subcard"/>
+  <text x="1184" y="511" class="band-title">core/pwa.js</text>
+  <text x="1184" y="531" class="band-note">service worker</text>
+
+  <rect x="1334" y="486" width="148" height="58" class="subcard"/>
+  <text x="1356" y="511" class="band-title">core/theme.js</text>
+  <text x="1356" y="531" class="band-note">tema visual</text>
+
+  <path class="line" d="M800 336 L800 378"/>
+
+  <!-- Modules layer -->
+  <rect x="80" y="624" width="910" height="292" class="card"/>
+  <text x="112" y="662" class="label">Modulos de dominio</text>
+  <text x="112" y="688" class="small">Cada modulo combina view.html e JavaScript proprio em modules/*.</text>
+
+  <g>
+    <rect x="112" y="724" width="130" height="42" class="module"/><text x="138" y="750" class="tiny">Dashboard</text>
+    <rect x="258" y="724" width="130" height="42" class="module"/><text x="286" y="750" class="tiny">Admin</text>
+    <rect x="404" y="724" width="130" height="42" class="module"/><text x="427" y="750" class="tiny">Financeiro</text>
+    <rect x="550" y="724" width="130" height="42" class="module"/><text x="582" y="750" class="tiny">Juridico</text>
+    <rect x="696" y="724" width="130" height="42" class="module"/><text x="724" y="750" class="tiny">Conselho</text>
+    <rect x="842" y="724" width="116" height="42" class="module"/><text x="872" y="750" class="tiny">Pastoral</text>
+
+    <rect x="112" y="782" width="130" height="42" class="module"/><text x="130" y="808" class="tiny">Departamentos</text>
+    <rect x="258" y="782" width="130" height="42" class="module"/><text x="300" y="808" class="tiny">Agenda</text>
+    <rect x="404" y="782" width="130" height="42" class="module"/><text x="444" y="808" class="tiny">PGs</text>
+    <rect x="550" y="782" width="130" height="42" class="module"/><text x="573" y="808" class="tiny">Demandas</text>
+    <rect x="696" y="782" width="130" height="42" class="module"/><text x="718" y="808" class="tiny">Membresia</text>
+    <rect x="842" y="782" width="116" height="42" class="module"/><text x="870" y="808" class="tiny">Projetos</text>
+
+    <rect x="112" y="840" width="130" height="42" class="module"/><text x="140" y="866" class="tiny">Diaconal</text>
+    <rect x="258" y="840" width="130" height="42" class="module"/><text x="278" y="866" class="tiny">Congregacoes</text>
+    <rect x="404" y="840" width="130" height="42" class="module"/><text x="430" y="866" class="tiny">Comunicacao</text>
+    <rect x="550" y="840" width="130" height="42" class="module"/><text x="584" y="866" class="tiny">Eventos</text>
+    <rect x="696" y="840" width="130" height="42" class="module"/><text x="720" y="866" class="tiny">WhatsApp</text>
+    <rect x="842" y="840" width="116" height="42" class="module"/><text x="870" y="866" class="tiny">Config</text>
+  </g>
+
+  <rect x="1040" y="624" width="480" height="292" rx="18" fill="url(#supabase)" filter="url(#shadow)"/>
+  <text x="1076" y="665" class="white-title">Backend Supabase</text>
+  <text x="1076" y="694" class="white-small">Auth, PostgREST, RLS, RPCs, storage, migrations e patches SQL.</text>
+
+  <rect x="1076" y="728" width="164" height="58" rx="12" fill="#eef8f4" opacity=".97"/>
+  <text x="1100" y="753" class="band-title">Auth</text>
+  <text x="1100" y="773" class="band-note">sessao e usuarios</text>
+
+  <rect x="1264" y="728" width="214" height="58" rx="12" fill="#eef8f4" opacity=".97"/>
+  <text x="1288" y="753" class="band-title">Postgres / REST</text>
+  <text x="1288" y="773" class="band-note">tabelas, views, RLS, RPC</text>
+
+  <rect x="1076" y="808" width="164" height="58" rx="12" fill="#eef8f4" opacity=".97"/>
+  <text x="1100" y="833" class="band-title">Storage</text>
+  <text x="1100" y="853" class="band-note">anexos e arquivos</text>
+
+  <rect x="1264" y="808" width="214" height="58" rx="12" fill="#eef8f4" opacity=".97"/>
+  <text x="1288" y="833" class="band-title">Edge Functions</text>
+  <text x="1288" y="853" class="band-note">WhatsApp, e-mail, Drive</text>
+
+  <path class="line" d="M535 576 L535 614"/>
+  <path class="line" d="M990 770 L1028 770"/>
+  <path class="line" d="M835 544 C930 590 1020 642 1080 720"/>
+  <path class="line" d="M1045 544 C1120 592 1170 650 1190 720"/>
+
+  <!-- External integrations -->
+  <rect x="1040" y="950" width="480" height="38" fill="none"/>
+  <rect x="1044" y="936" width="130" height="42" class="chip"/>
+  <text x="1070" y="962" class="tiny">BotConversa</text>
+  <rect x="1190" y="936" width="130" height="42" class="chip"/>
+  <text x="1230" y="962" class="tiny">Resend</text>
+  <rect x="1336" y="936" width="130" height="42" class="chip"/>
+  <text x="1360" y="962" class="tiny">Google Drive</text>
+  <path class="softline" d="M1371 866 C1371 898 1371 912 1371 928"/>
+  <path class="softline" d="M1371 866 C1295 900 1255 912 1255 928"/>
+  <path class="softline" d="M1371 866 C1210 900 1120 912 1110 928"/>
+
+  <!-- Flow legend -->
+  <rect x="80" y="940" width="550" height="48" class="subcard"/>
+  <path class="line" d="M110 964 L170 964"/>
+  <text x="190" y="969" class="tiny">fluxo principal de tela, API e dados</text>
+  <path class="softline" d="M405 964 L465 964"/>
+  <text x="485" y="969" class="tiny">fluxo complementar / integracao</text>
+</svg>

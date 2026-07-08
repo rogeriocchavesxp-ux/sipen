@@ -1,0 +1,1938 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIPEN — Documentação de Arquitetura</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --primary: #2563eb;
+    --primary-light: #dbeafe;
+    --secondary: #7c3aed;
+    --secondary-light: #ede9fe;
+    --success: #059669;
+    --success-light: #d1fae5;
+    --warning: #d97706;
+    --warning-light: #fef3c7;
+    --danger: #dc2626;
+    --danger-light: #fee2e2;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --bg: #ffffff;
+    --border: #e5e7eb;
+    --radius: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.65;
+    color: var(--gray-800);
+    background: #fff;
+  }
+
+  /* ── CAPA ── */
+  .cover {
+    width: 100%;
+    min-height: 297mm;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #7c3aed 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 40px;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+    top: -150px; right: -150px;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    width: 350px; height: 350px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+    bottom: -100px; left: -80px;
+  }
+  .cover-logo {
+    width: 80px; height: 80px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    margin-bottom: 32px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .cover h1 {
+    font-size: 48px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -1px;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .cover-subtitle {
+    font-size: 18px;
+    color: rgba(255,255,255,0.8);
+    text-align: center;
+    margin-bottom: 48px;
+    font-weight: 300;
+  }
+  .cover-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 100px;
+    padding: 6px 20px;
+    color: rgba(255,255,255,0.9);
+    font-size: 13px;
+    margin-bottom: 60px;
+    backdrop-filter: blur(10px);
+  }
+  .cover-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    width: 100%;
+    max-width: 600px;
+  }
+  .cover-meta-item {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+  }
+  .cover-meta-item .label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+  }
+  .cover-meta-item .value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .cover-footer {
+    position: absolute;
+    bottom: 32px;
+    color: rgba(255,255,255,0.4);
+    font-size: 10px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── LAYOUT GERAL ── */
+  .page {
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 20mm 18mm;
+  }
+
+  /* ── ÍNDICE ── */
+  .toc-page {
+    page-break-after: always;
+  }
+  .toc-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--primary);
+  }
+  .toc-section {
+    margin-bottom: 8px;
+  }
+  .toc-item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--gray-200);
+    color: var(--gray-700);
+    font-size: 11pt;
+  }
+  .toc-item .toc-num {
+    font-weight: 600;
+    color: var(--primary);
+    min-width: 32px;
+    font-size: 10pt;
+  }
+  .toc-item .toc-label { flex: 1; }
+  .toc-sub {
+    padding-left: 24px;
+    font-size: 10pt;
+    color: var(--gray-500);
+    border-bottom: 1px dashed var(--gray-100);
+  }
+
+  /* ── SEÇÕES ── */
+  .section {
+    page-break-inside: avoid;
+    margin-bottom: 32px;
+  }
+  .section-break {
+    page-break-before: always;
+  }
+
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2 .icon {
+    width: 36px; height: 36px;
+    background: var(--primary-light);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin: 24px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  h3::before {
+    content: '';
+    display: inline-block;
+    width: 4px; height: 16px;
+    background: var(--primary);
+    border-radius: 2px;
+  }
+  h4 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin: 16px 0 8px;
+  }
+
+  p { margin-bottom: 12px; color: var(--gray-700); }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--gray-50);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+  .card-blue  { background: var(--primary-light); border-color: #93c5fd; }
+  .card-purple { background: var(--secondary-light); border-color: #c4b5fd; }
+  .card-green { background: var(--success-light); border-color: #6ee7b7; }
+  .card-amber { background: var(--warning-light); border-color: #fcd34d; }
+  .card-red   { background: var(--danger-light); border-color: #fca5a5; }
+
+  /* ── GRID ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .badge-blue    { background: var(--primary-light); color: var(--primary); }
+  .badge-purple  { background: var(--secondary-light); color: var(--secondary); }
+  .badge-green   { background: var(--success-light); color: var(--success); }
+  .badge-amber   { background: var(--warning-light); color: var(--warning); }
+  .badge-red     { background: var(--danger-light); color: var(--danger); }
+  .badge-gray    { background: var(--gray-100); color: var(--gray-600); }
+
+  /* ── TABELAS ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+    margin-bottom: 16px;
+  }
+  thead tr { background: var(--gray-800); color: #fff; }
+  thead th {
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    font-size: 9.5px;
+  }
+  tbody tr { border-bottom: 1px solid var(--gray-100); }
+  tbody tr:nth-child(even) { background: var(--gray-50); }
+  tbody td {
+    padding: 7px 10px;
+    color: var(--gray-700);
+    vertical-align: top;
+  }
+  .td-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--primary);
+  }
+
+  /* ── CODE BLOCKS ── */
+  .code-block {
+    background: var(--gray-900);
+    color: #e2e8f0;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    line-height: 1.7;
+    margin: 12px 0;
+    overflow: hidden;
+  }
+  .code-block .c-kw  { color: #93c5fd; }
+  .code-block .c-str { color: #86efac; }
+  .code-block .c-cm  { color: #64748b; }
+  .code-block .c-fn  { color: #fbbf24; }
+  .code-block .c-var { color: #f0abfc; }
+
+  /* ── DIAGRAMA ── */
+  .diagram {
+    background: var(--gray-50);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin: 16px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    line-height: 1.9;
+    color: var(--gray-700);
+  }
+
+  /* ── FLOW ARROWS ── */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 16px 0;
+    flex-wrap: wrap;
+  }
+  .flow-box {
+    background: var(--primary-light);
+    border: 1.5px solid var(--primary);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--gray-800);
+    text-align: center;
+    min-width: 80px;
+  }
+  .flow-box.green { background: var(--success-light); border-color: var(--success); }
+  .flow-box.purple { background: var(--secondary-light); border-color: var(--secondary); }
+  .flow-box.amber { background: var(--warning-light); border-color: var(--warning); }
+  .flow-box.gray  { background: var(--gray-100); border-color: var(--gray-400); }
+  .flow-arrow {
+    font-size: 18px;
+    color: var(--gray-400);
+    padding: 0 4px;
+    flex-shrink: 0;
+  }
+
+  /* ── MODULE GRID ── */
+  .module-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    background: #fff;
+    page-break-inside: avoid;
+  }
+  .module-card .mod-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .module-card .mod-icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .module-card .mod-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray-800);
+  }
+  .module-card .mod-desc {
+    font-size: 9.5px;
+    color: var(--gray-500);
+    line-height: 1.5;
+  }
+  .module-card .mod-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+  }
+  .mod-tag {
+    font-size: 8.5px;
+    padding: 1px 7px;
+    border-radius: 100px;
+    background: var(--gray-100);
+    color: var(--gray-600);
+    border: 1px solid var(--gray-200);
+  }
+
+  /* ── CALLOUT ── */
+  .callout {
+    border-left: 4px solid var(--primary);
+    background: var(--primary-light);
+    padding: 12px 16px;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    margin: 12px 0;
+    font-size: 10.5px;
+    color: var(--gray-700);
+  }
+  .callout.warning { border-color: var(--warning); background: var(--warning-light); }
+  .callout.success { border-color: var(--success); background: var(--success-light); }
+  .callout.danger  { border-color: var(--danger); background: var(--danger-light); }
+
+  /* ── PERMISSION TABLE ── */
+  .perm-table th, .perm-table td { text-align: center; }
+  .perm-table td:first-child { text-align: left; }
+  .perm-full       { color: #059669; font-weight: 700; font-size: 9px; }
+  .perm-read       { color: #2563eb; font-weight: 600; font-size: 9px; }
+  .perm-restricted { color: #d97706; font-weight: 600; font-size: 9px; }
+  .perm-none       { color: var(--gray-300); font-size: 9px; }
+
+  /* ── PRINT ── */
+  @media print {
+    body { font-size: 10pt; }
+    .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    thead tr { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .code-block { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .card-blue, .card-green, .card-purple, .card-amber {
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .flow-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    h2 .icon { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     CAPA
+══════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-logo">⛪</div>
+  <h1>SIPEN</h1>
+  <div class="cover-subtitle">Sistema Integrado de Gestão — IPPenha</div>
+  <div class="cover-badge">
+    <span>📄</span>
+    Documentação de Arquitetura e Referência Técnica
+  </div>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <div class="label">Versão</div>
+      <div class="value">v6.30.36</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Data</div>
+      <div class="value">Maio 2026</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Módulos</div>
+      <div class="value">22 módulos</div>
+    </div>
+  </div>
+  <div class="cover-footer">CONFIDENCIAL · IPPenha · Uso Interno</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ÍNDICE
+══════════════════════════════════════════ -->
+<div class="page toc-page">
+  <div class="toc-title">Índice</div>
+
+  <div class="toc-section">
+    <div class="toc-item">
+      <span class="toc-num">1</span>
+      <span class="toc-label">Visão Geral do Sistema</span>
+    </div>
+    <div class="toc-item toc-sub">
+      <span class="toc-num">1.1</span>
+      <span class="toc-label">Propósito e contexto</span>
+    </div>
+    <div class="toc-item toc-sub">
+      <span class="toc-num">1.2</span>
+      <span class="toc-label">Stack tecnológica</span>
+    </div>
+    <div class="toc-item toc-sub">
+      <span class="toc-num">1.3</span>
+      <span class="toc-label">Diagrama de arquitetura</span>
+    </div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-item">
+      <span class="toc-num">2</span>
+      <span class="toc-label">Estrutura do Projeto</span>
+    </div>
+    <div class="toc-item toc-sub">
+      <span class="toc-num">2.1</span>
+      <span class="toc-label">Organização de pastas</span>
+    </div>
+    <div class="toc-item toc-sub">
+      <span class="toc-num">2.2</span>
+      <span class="toc-label">Camada Core</span>
+    </div>
+    <div class="toc-item toc-sub">
+      <span class="toc-num">2.3</span>
+      <span class="toc-label">Padrão de módulo</span>
+    </div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-item">
+      <span class="toc-num">3</span>
+      <span class="toc-label">Módulos do Sistema</span>
+    </div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-item">
+      <span class="toc-num">4</span>
+      <span class="toc-label">Perfis e Permissões</span>
+    </div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-item">
+      <span class="toc-num">5</span>
+      <span class="toc-label">Banco de Dados (Supabase)</span>
+    </div>
+    <div class="toc-item toc-sub">
+      <span class="toc-num">5.1</span>
+      <span class="toc-label">Tabelas principais</span>
+    </div>
+    <div class="toc-item toc-sub">
+      <span class="toc-num">5.2</span>
+      <span class="toc-label">Row Level Security (RLS)</span>
+    </div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-item">
+      <span class="toc-num">6</span>
+      <span class="toc-label">Edge Functions (Serverless)</span>
+    </div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-item">
+      <span class="toc-num">7</span>
+      <span class="toc-label">Integração WhatsApp</span>
+    </div>
+    <div class="toc-item toc-sub">
+      <span class="toc-num">7.1</span>
+      <span class="toc-label">Arquitetura geral</span>
+    </div>
+    <div class="toc-item toc-sub">
+      <span class="toc-num">7.2</span>
+      <span class="toc-label">Fluxo de envio (frontend → BotConversa)</span>
+    </div>
+    <div class="toc-item toc-sub">
+      <span class="toc-num">7.3</span>
+      <span class="toc-label">Fluxo de recebimento (webhook + IA)</span>
+    </div>
+    <div class="toc-item toc-sub">
+      <span class="toc-num">7.4</span>
+      <span class="toc-label">Módulos com notificações WA</span>
+    </div>
+    <div class="toc-item toc-sub">
+      <span class="toc-num">7.5</span>
+      <span class="toc-label">Tabelas WhatsApp</span>
+    </div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-item">
+      <span class="toc-num">8</span>
+      <span class="toc-label">Autenticação e Segurança</span>
+    </div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-item">
+      <span class="toc-num">9</span>
+      <span class="toc-label">Deploy e Infraestrutura</span>
+    </div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-item">
+      <span class="toc-num">10</span>
+      <span class="toc-label">Referências e Credenciais</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     1. VISÃO GERAL
+══════════════════════════════════════════ -->
+<div class="page section-break">
+
+  <h2><span class="icon">📋</span> 1. Visão Geral do Sistema</h2>
+
+  <h3>1.1 Propósito e Contexto</h3>
+  <p>
+    O <strong>SIPEN</strong> (Sistema Integrado de Gestão — IPPenha) é uma aplicação web progressiva (PWA) desenvolvida para centralizar a gestão administrativa, pastoral, financeira e ministerial da <strong>Igreja Presbiteriana de Penha</strong>.
+  </p>
+  <p>
+    O sistema foi construído como uma <strong>SPA (Single Page Application)</strong> em Vanilla JavaScript, sem frameworks como React ou Vue, utilizando o Supabase como backend completo (banco de dados PostgreSQL, autenticação, storage e Edge Functions).
+  </p>
+
+  <div class="grid-3">
+    <div class="card card-blue">
+      <h4>22 Módulos</h4>
+      <p style="font-size:9.5px;margin:0">Gestão completa: membros, finanças, agenda, demandas, conselho, pastoral, ministerial, infraestrutura, jurídico e mais.</p>
+    </div>
+    <div class="card card-green">
+      <h4>Zero Dependências Frontend</h4>
+      <p style="font-size:9.5px;margin:0">Vanilla JS puro. Nenhum framework SPA. HTML, CSS e JS nativos com módulos IIFE por escopo.</p>
+    </div>
+    <div class="card card-purple">
+      <h4>WhatsApp Integrado</h4>
+      <p style="font-size:9.5px;margin:0">Envio e recebimento via BotConversa + IA Gemini para classificação automática de demandas.</p>
+    </div>
+  </div>
+
+  <h3>1.2 Stack Tecnológica</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Camada</th>
+        <th>Tecnologia</th>
+        <th>Versão / Detalhe</th>
+        <th>Responsabilidade</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Frontend</strong></td>
+        <td>HTML5 + CSS3 + JavaScript ES2022</td>
+        <td>Vanilla (sem framework)</td>
+        <td>SPA com roteamento client-side, módulos IIFE</td>
+      </tr>
+      <tr>
+        <td><strong>PWA</strong></td>
+        <td>Service Worker + Web App Manifest</td>
+        <td>Cache offline</td>
+        <td>Instalação no celular, uso offline parcial</td>
+      </tr>
+      <tr>
+        <td><strong>Backend / DB</strong></td>
+        <td>Supabase (PostgreSQL 15)</td>
+        <td>Projeto: erhwryfzpycahgsohhbh</td>
+        <td>Banco, autenticação JWT, RLS, Storage</td>
+      </tr>
+      <tr>
+        <td><strong>Serverless</strong></td>
+        <td>Supabase Edge Functions (Deno)</td>
+        <td>TypeScript</td>
+        <td>WhatsApp, e-mail, Google Drive, status WA</td>
+      </tr>
+      <tr>
+        <td><strong>Autenticação</strong></td>
+        <td>Supabase Auth</td>
+        <td>JWT + session localStorage</td>
+        <td>Login, perfis, RLS automático</td>
+      </tr>
+      <tr>
+        <td><strong>WhatsApp</strong></td>
+        <td>BotConversa API</td>
+        <td>REST + Webhook</td>
+        <td>Envio/recebimento de mensagens WA</td>
+      </tr>
+      <tr>
+        <td><strong>IA</strong></td>
+        <td>Google Gemini Flash Lite</td>
+        <td>gemini-2.5-flash-lite</td>
+        <td>Classificação de mensagens WA em demandas</td>
+      </tr>
+      <tr>
+        <td><strong>E-mail</strong></td>
+        <td>Nodemailer (SMTP)</td>
+        <td>Edge Function email-send</td>
+        <td>Notificações por e-mail</td>
+      </tr>
+      <tr>
+        <td><strong>Hosting</strong></td>
+        <td>GitHub Pages</td>
+        <td>Branch main</td>
+        <td>Hospedagem estática do frontend</td>
+      </tr>
+      <tr>
+        <td><strong>Versionamento</strong></td>
+        <td>Git / GitHub</td>
+        <td>Repositório privado</td>
+        <td>Controle de versão e deploy automático</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>1.3 Diagrama de Arquitetura</h3>
+  <div class="diagram">
+┌──────────────────────────────────────────────────────────────────────┐
+│                    USUÁRIO (Browser / Celular)                        │
+│                 GitHub Pages · https://ippenha.github.io/sipen        │
+│                                                                      │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │              SPA Vanilla JS (index.html)                    │    │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌───────────┐  │    │
+│  │  │  core/   │  │ modules/ │  │  views/  │  │  sipen.css│  │    │
+│  │  │ auth.js  │  │ agenda/  │  │ main.html│  │           │  │    │
+│  │  │ api.js   │  │ financ./ │  │ sidebar  │  │  sw.js    │  │    │
+│  │  │ router.js│  │ membr./  │  │ modals   │  │ (PWA)     │  │    │
+│  │  │ ui.js    │  │ conselho/│  │          │  │           │  │    │
+│  │  │ theme.js │  │ ...22x   │  │          │  │           │  │    │
+│  │  └──────────┘  └──────────┘  └──────────┘  └───────────┘  │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────────────┘
+           │  Supabase REST API (HTTPS + JWT)
+           ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                  SUPABASE (erhwryfzpycahgsohhbh)                      │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────┐  │
+│  │  PostgreSQL 15  │  │  Supabase Auth  │  │   Edge Functions    │  │
+│  │                 │  │                 │  │   (Deno/TypeScript) │  │
+│  │  ~60 tabelas    │  │  JWT · RLS      │  │                     │  │
+│  │  Row Level Sec. │  │  user_profiles  │  │  whatsapp-receive   │  │
+│  │  Migrations     │  │  pessoas        │  │  whatsapp-send      │  │
+│  │                 │  │                 │  │  whatsapp-status    │  │
+│  └─────────────────┘  └─────────────────┘  │  email-send         │  │
+│                                             │  gdrive-upload      │  │
+│                                             └─────────────────────┘  │
+└──────────────────────────────────────────────────────────────────────┘
+           │                                         │
+           ▼                                         ▼
+    ┌──────────────┐                    ┌────────────────────────┐
+    │  BotConversa │◄──────────────────►│  Google Gemini API     │
+    │  (WhatsApp)  │    webhook/send     │  (Classificação IA)    │
+    └──────────────┘                    └────────────────────────┘
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     2. ESTRUTURA DO PROJETO
+══════════════════════════════════════════ -->
+<div class="page section-break">
+
+  <h2><span class="icon">📁</span> 2. Estrutura do Projeto</h2>
+
+  <h3>2.1 Organização de Pastas</h3>
+  <div class="code-block">
+<span class="c-cm">sipen/</span>
+├── <span class="c-kw">index.html</span>             <span class="c-cm">← ponto de entrada único da SPA</span>
+├── <span class="c-kw">sipen.css</span>              <span class="c-cm">← design system global (variáveis, componentes)</span>
+├── <span class="c-kw">manifest.json</span>          <span class="c-cm">← PWA manifest (ícones, nome, display)</span>
+├── <span class="c-kw">sw.js</span>                  <span class="c-cm">← Service Worker (cache offline)</span>
+│
+├── <span class="c-fn">core/</span>                  <span class="c-cm">← infraestrutura da aplicação</span>
+│   ├── api.js             <span class="c-cm">← SUPABASE_URL, headers, fetch helpers</span>
+│   ├── auth.js            <span class="c-cm">← perfis, permissões, sessão</span>
+│   ├── init.js            <span class="c-cm">← bootstrap: auth check, nav, módulos</span>
+│   ├── router.js          <span class="c-cm">← CRUMB map, rotas hash (#modulo-view)</span>
+│   ├── theme.js           <span class="c-cm">← dark/light mode, variáveis CSS</span>
+│   ├── ui.js              <span class="c-cm">← toast T(), modal helpers</span>
+│   └── pwa.js             <span class="c-cm">← registro do Service Worker</span>
+│
+├── <span class="c-fn">modules/</span>               <span class="c-cm">← cada pasta = 1 módulo de negócio</span>
+│   ├── agenda/            view.html + index.js
+│   ├── membresia/         view.html + index.js + core.js
+│   ├── financeiro/        view.html + index.js + cnab.js
+│   ├── conselho/          view.html + pautas.js + atas.js
+│   ├── demandas/          view.html + index.js
+│   ├── pastoral/          view.html + index.js + rede-cuidado.js
+│   ├── whatsapp/          config.js + index.js + tab.js
+│   ├── infraestrutura/    view.html
+│   ├── juridico/          view.html + contratos.js
+│   └── ...18 módulos no total
+│
+├── <span class="c-fn">views/</span>                 <span class="c-cm">← fragmentos HTML do shell</span>
+│   ├── main.html          <span class="c-cm">← área de conteúdo central</span>
+│   ├── sidebar.html       <span class="c-cm">← menu lateral com navegação</span>
+│   ├── login.html         <span class="c-cm">← tela de login</span>
+│   └── modals.html        <span class="c-cm">← modais globais (wa-resp-modal, etc.)</span>
+│
+├── <span class="c-fn">supabase/</span>
+│   ├── functions/         <span class="c-cm">← Edge Functions (Deno/TypeScript)</span>
+│   │   ├── whatsapp-receive/index.ts
+│   │   ├── whatsapp-send/index.ts
+│   │   ├── whatsapp-status/index.ts
+│   │   ├── email-send/index.ts
+│   │   └── gdrive-upload/index.ts
+│   ├── migrations/        <span class="c-cm">← DDL: CREATE TABLE, RLS, indexes</span>
+│   └── patches/           <span class="c-cm">← scripts DML: seeds, fixes pontuais</span>
+│
+└── <span class="c-fn">scripts/</span>               <span class="c-cm">← utilitários Node.js (sync auth users)</span>
+  </div>
+
+  <h3>2.2 Camada Core</h3>
+  <table>
+    <thead>
+      <tr><th>Arquivo</th><th>Responsabilidade</th><th>Globals Expostos</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="td-code">core/api.js</td>
+        <td>URL do Supabase, anon key, funções de fetch autenticado, cliente supabase-js</td>
+        <td class="td-code">SUPABASE_URL, SUPABASE_ANON_KEY, apiHeaders(), apiBaseUrl(), getSupabase()</td>
+      </tr>
+      <tr>
+        <td class="td-code">core/auth.js</td>
+        <td>Perfis (11), matriz de permissões, login, logout, verificação de nível de acesso</td>
+        <td class="td-code">PERFIS, PERMISSOES_MATRIZ, USUARIO_ATUAL, sipenLogin(), sipenLogout(), podeFazer()</td>
+      </tr>
+      <tr>
+        <td class="td-code">core/router.js</td>
+        <td>Mapa de rotas (CRUMB), roteamento por hash URL, breadcrumbs</td>
+        <td class="td-code">CRUMB, MC (cores), navegarPara(rota)</td>
+      </tr>
+      <tr>
+        <td class="td-code">core/ui.js</td>
+        <td>Sistema de toast, modais genéricos, formatação de datas e valores</td>
+        <td class="td-code">T(titulo, msg), escapeHtml(), fmtMoeda(), fmtData()</td>
+      </tr>
+      <tr>
+        <td class="td-code">core/init.js</td>
+        <td>Bootstrap: verifica sessão, carrega sidebar, injeta módulo correto</td>
+        <td class="td-code">–</td>
+      </tr>
+      <tr>
+        <td class="td-code">core/theme.js</td>
+        <td>Dark/light mode, variáveis CSS dinâmicas, preferência persistida</td>
+        <td class="td-code">toggleTheme(), THEME_ATUAL</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>2.3 Padrão de Módulo</h3>
+  <p>Cada módulo segue uma estrutura consistente:</p>
+  <div class="grid-2">
+    <div>
+      <div class="code-block">
+<span class="c-cm">// modules/&lt;modulo&gt;/index.js</span>
+<span class="c-cm">// IIFE — escopo isolado, sem vazamentos</span>
+(<span class="c-kw">function</span> () {
+
+  <span class="c-cm">// estado local do módulo</span>
+  <span class="c-kw">let</span> _cache = <span class="c-kw">null</span>;
+
+  <span class="c-cm">// funções privadas</span>
+  <span class="c-kw">async function</span> <span class="c-fn">_load</span>() { ... }
+  <span class="c-kw">function</span> <span class="c-fn">_render</span>() { ... }
+
+  <span class="c-cm">// API pública via window.*</span>
+  <span class="c-var">window</span>.moduloInicia = <span class="c-kw">async function</span>() {
+    <span class="c-kw">await</span> <span class="c-fn">_load</span>();
+    <span class="c-fn">_render</span>();
+  };
+
+})();
+      </div>
+    </div>
+    <div class="card" style="margin:0">
+      <h4>Convenções obrigatórias</h4>
+      <ul style="font-size:10px;padding-left:16px;color:var(--gray-600);line-height:1.9">
+        <li>IIFE para isolamento de escopo</li>
+        <li><code>_api()</code> e <code>_headers()</code> via wrappers locais</li>
+        <li><code>_toast()</code> via wrapper local</li>
+        <li>Funções expostas via <code>window.*</code> somente quando chamadas pelo HTML</li>
+        <li>Sem <code>var</code> — apenas <code>const</code> e <code>let</code></li>
+        <li>Rota registrada no <code>CRUMB</code> do router.js</li>
+        <li>view.html carregada dinamicamente no shell</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     3. MÓDULOS
+══════════════════════════════════════════ -->
+<div class="page section-break">
+
+  <h2><span class="icon">🧩</span> 3. Módulos do Sistema</h2>
+
+  <div class="grid-2">
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#dbeafe">📊</div>
+        <div class="mod-title">Dashboard</div>
+      </div>
+      <div class="mod-desc">Visão executiva consolidada: KPIs globais, atividade recente, alertas e acesso rápido a todos os módulos.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">dashboard</span>
+        <span class="mod-tag">KPIs</span>
+        <span class="mod-tag">alertas</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#d1fae5">👥</div>
+        <div class="mod-title">Membresia</div>
+      </div>
+      <div class="mod-desc">Cadastro completo de membros, histórico de transferências, aniversários, relatórios de membresia ativa/inativa.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">pessoas</span>
+        <span class="mod-tag">membros</span>
+        <span class="mod-tag">transferência</span>
+        <span class="mod-tag">relatórios</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#fef3c7">💰</div>
+        <div class="mod-title">Financeiro</div>
+      </div>
+      <div class="mod-desc">Lançamentos, fluxo de caixa, contas a pagar/receber, categorias, CNAB 240 (remessas bancárias), auditoria financeira.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">lançamentos</span>
+        <span class="mod-tag">CNAB 240</span>
+        <span class="mod-tag">fluxo de caixa</span>
+        <span class="mod-tag">auditoria</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#ede9fe">📅</div>
+        <div class="mod-title">Agenda</div>
+      </div>
+      <div class="mod-desc">Agendamento de espaços, cultos e eventos. Calendário visual, confirmações e lembretes via WhatsApp.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">agendamentos</span>
+        <span class="mod-tag">cultos</span>
+        <span class="mod-tag">WhatsApp</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#fee2e2">📨</div>
+        <div class="mod-title">Demandas</div>
+      </div>
+      <div class="mod-desc">Sistema de solicitações internas com 15 categorias, triagem automática por área, acompanhamento de status e notificações WA.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">solicitações</span>
+        <span class="mod-tag">15 categorias</span>
+        <span class="mod-tag">WhatsApp</span>
+        <span class="mod-tag">protocolo</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#dbeafe">🏛</div>
+        <div class="mod-title">Conselho e Governança</div>
+      </div>
+      <div class="mod-desc">Reuniões, pautas e deliberações. Controle de nomeados, ordenados, seminaristas, contratados e membros da comissão executiva. Notificações WA.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">reuniões</span>
+        <span class="mod-tag">pautas</span>
+        <span class="mod-tag">nomeados</span>
+        <span class="mod-tag">WhatsApp</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#d1fae5">✝️</div>
+        <div class="mod-title">Pastoral</div>
+      </div>
+      <div class="mod-desc">Rede de cuidado pastoral, acompanhamento de famílias, pedidos de oração, visitas pastorais e relatórios de atendimento.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">cuidado</span>
+        <span class="mod-tag">visitas</span>
+        <span class="mod-tag">oração</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#ede9fe">🎯</div>
+        <div class="mod-title">Departamentos / Ministerial</div>
+      </div>
+      <div class="mod-desc">Gestão de ministérios, setores, escalas de serviço, membros por ministério, convocações e avisos via WhatsApp.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">ministérios</span>
+        <span class="mod-tag">escalas</span>
+        <span class="mod-tag">setores</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#fef3c7">🛠</div>
+        <div class="mod-title">Infraestrutura e Conservação</div>
+      </div>
+      <div class="mod-desc">Ordens de serviço de manutenção, controle de estoque de materiais, abertura e conclusão de chamados.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">manutenção</span>
+        <span class="mod-tag">estoque</span>
+        <span class="mod-tag">chamados</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#dbeafe">⚖️</div>
+        <div class="mod-title">Jurídico</div>
+      </div>
+      <div class="mod-desc">Contratos, pareceres jurídicos, processos, prazos, riscos e documentos. Gestão de instrumentos legais da igreja.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">contratos</span>
+        <span class="mod-tag">pareceres</span>
+        <span class="mod-tag">processos</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#fee2e2">🤝</div>
+        <div class="mod-title">Junta Diaconal</div>
+      </div>
+      <div class="mod-desc">Diáconos, escalas diaconais, famílias assistidas, ação social/beneficência, visitação e patrimônio operacional.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">diáconos</span>
+        <span class="mod-tag">escalas</span>
+        <span class="mod-tag">ação social</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#d1fae5">⛪</div>
+        <div class="mod-title">Congregações</div>
+      </div>
+      <div class="mod-desc">Gestão de congregações vinculadas, líderes, cultos, agenda e lançamentos financeiros por congregação.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">congregações</span>
+        <span class="mod-tag">cultos</span>
+        <span class="mod-tag">líderes</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#ede9fe">📖</div>
+        <div class="mod-title">Pequenos Grupos (PGs)</div>
+      </div>
+      <div class="mod-desc">Gerenciamento de PGs, líderes, participantes, encontros, estudos bíblicos, visitantes e pedidos de oração.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">discipulado</span>
+        <span class="mod-tag">encontros</span>
+        <span class="mod-tag">estudos</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#fef3c7">🎪</div>
+        <div class="mod-title">Eventos</div>
+      </div>
+      <div class="mod-desc">Cadastro e gestão de eventos institucionais, inscrições online, controle de vagas e lista de participantes.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">eventos</span>
+        <span class="mod-tag">inscrições</span>
+        <span class="mod-tag">vagas</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#dbeafe">📊</div>
+        <div class="mod-title">Relatórios</div>
+      </div>
+      <div class="mod-desc">Geração de relatórios consolidados por módulo: financeiro, membresia, demandas e atividades ministeriais.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">relatórios</span>
+        <span class="mod-tag">exportação</span>
+        <span class="mod-tag">consolidados</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#d1fae5">🚗</div>
+        <div class="mod-title">Administrativo</div>
+      </div>
+      <div class="mod-desc">Secretaria, RH, estoque, controle de estacionamento, acesso facial biométrico, participantes externos e documentos.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">secretaria</span>
+        <span class="mod-tag">RH</span>
+        <span class="mod-tag">acesso facial</span>
+        <span class="mod-tag">estoque</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#fee2e2">📢</div>
+        <div class="mod-title">Comunicação</div>
+      </div>
+      <div class="mod-desc">Solicitações de criação de arte, gestão de conteúdo para redes sociais e comunicados internos.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">design</span>
+        <span class="mod-tag">comunicados</span>
+        <span class="mod-tag">redes sociais</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#ede9fe">📱</div>
+        <div class="mod-title">WhatsApp</div>
+      </div>
+      <div class="mod-desc">Configuração centralizada do módulo WA: responsáveis por módulo, templates, log de envios, ativação/pausa por módulo.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">configuração</span>
+        <span class="mod-tag">responsáveis</span>
+        <span class="mod-tag">templates</span>
+        <span class="mod-tag">log</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#fef3c7">🔧</div>
+        <div class="mod-title">Configurações</div>
+      </div>
+      <div class="mod-desc">Configurações do sistema: usuários, perfis, parâmetros globais e secrets de integração (via Supabase).</div>
+      <div class="mod-tags">
+        <span class="mod-tag">admin</span>
+        <span class="mod-tag">usuários</span>
+        <span class="mod-tag">sistema</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#dbeafe">🏗</div>
+        <div class="mod-title">Projetos</div>
+      </div>
+      <div class="mod-desc">Portfólio de projetos institucionais, etapas, progresso, responsáveis e acompanhamento de prazo.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">projetos</span>
+        <span class="mod-tag">etapas</span>
+        <span class="mod-tag">portfólio</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#d1fae5">🙋</div>
+        <div class="mod-title">Área do Membro</div>
+      </div>
+      <div class="mod-desc">Portal self-service para membros: ver dados, solicitar atualizações, acompanhar demandas e notificações.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">self-service</span>
+        <span class="mod-tag">perfil</span>
+        <span class="mod-tag">demandas</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#ede9fe">📜</div>
+        <div class="mod-title">Administração de Usuários</div>
+      </div>
+      <div class="mod-desc">CRUD de usuários do sistema, vinculação com pessoas cadastradas, controle de perfis e senhas.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">usuários</span>
+        <span class="mod-tag">perfis</span>
+        <span class="mod-tag">admin</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     4. PERFIS E PERMISSÕES
+══════════════════════════════════════════ -->
+<div class="page section-break">
+
+  <h2><span class="icon">🔐</span> 4. Perfis e Permissões</h2>
+
+  <h3>Perfis do Sistema</h3>
+  <table>
+    <thead>
+      <tr><th>Perfil</th><th>Nome</th><th>Nível</th><th>Descrição</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="td-code">admin_geral</td><td>Administrador Geral</td><td><span class="badge badge-red">7</span></td><td>Acesso total ao sistema</td></tr>
+      <tr><td class="td-code">conselho</td><td>Membro do Conselho (Supervisor)</td><td><span class="badge badge-blue">6</span></td><td>Supervisão de governança e relatórios</td></tr>
+      <tr><td class="td-code">pastoral</td><td>Pastoral</td><td><span class="badge badge-green">5</span></td><td>Gestão pastoral completa</td></tr>
+      <tr><td class="td-code">adm_operacional</td><td>Adm. Operacional</td><td><span class="badge badge-amber">4</span></td><td>Administrativo, financeiro, agenda</td></tr>
+      <tr><td class="td-code">lider_ministerio</td><td>Líder de Ministério</td><td><span class="badge badge-purple">3</span></td><td>Coordenação de departamentos</td></tr>
+      <tr><td class="td-code">lider_area</td><td>Líder de Área (Líder Setorial)</td><td><span class="badge badge-purple">3</span></td><td>Responsável por setor específico</td></tr>
+      <tr><td class="td-code">membro_ministerio</td><td>Membro de Ministério (Sacerdote)</td><td><span class="badge badge-gray">2</span></td><td>Participação em ministérios</td></tr>
+      <tr><td class="td-code">lider_congregacao</td><td>Líder de Congregação</td><td><span class="badge badge-gray">2</span></td><td>Gestão de congregação vinculada</td></tr>
+      <tr><td class="td-code">operacional_servicos</td><td>Operacional Serviços (Contratados)</td><td><span class="badge badge-gray">1</span></td><td>Acesso operacional restrito</td></tr>
+      <tr><td class="td-code">membro_congregacao</td><td>Membro de Congregação</td><td><span class="badge badge-gray">1</span></td><td>Acesso básico congregação</td></tr>
+      <tr><td class="td-code">membro_igreja</td><td>Membro da Igreja</td><td><span class="badge badge-gray">0</span></td><td>Área do membro apenas</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Matriz de Permissões por Módulo</h3>
+  <p style="font-size:9.5px;margin-bottom:8px;color:var(--gray-500)">
+    <span style="color:var(--success);font-weight:700">FULL</span> = leitura e escrita completa &nbsp;|&nbsp;
+    <span style="color:var(--primary);font-weight:700">READ</span> = somente leitura &nbsp;|&nbsp;
+    <span style="color:var(--warning);font-weight:700">RESTR.</span> = restrito (ver somente próprios registros) &nbsp;|&nbsp;
+    <span style="color:var(--gray-300)">—</span> = sem acesso
+  </p>
+  <table class="perm-table" style="font-size:9px">
+    <thead>
+      <tr>
+        <th style="text-align:left;min-width:120px">Módulo</th>
+        <th>Admin</th>
+        <th>Conselho</th>
+        <th>Pastoral</th>
+        <th>Adm.Op.</th>
+        <th>Lider Min.</th>
+        <th>Mb. Min.</th>
+        <th>Op. Serv.</th>
+        <th>Mb. Igreja</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Administrativo</td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-read">READ</span></td>
+        <td><span class="perm-read">READ</span></td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+      </tr>
+      <tr>
+        <td>Financeiro</td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-read">READ</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+      </tr>
+      <tr>
+        <td>Jurídico</td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-read">READ</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-restricted">RESTR.</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+      </tr>
+      <tr>
+        <td>Pastoral</td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-read">READ</span></td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+      </tr>
+      <tr>
+        <td>Conselho / Gov.</td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-read">READ</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+      </tr>
+      <tr>
+        <td>Departamentos</td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-read">READ</span></td>
+        <td><span class="perm-read">READ</span></td>
+        <td><span class="perm-read">READ</span></td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-restricted">RESTR.</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+      </tr>
+      <tr>
+        <td>Agenda</td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-read">READ</span></td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-restricted">RESTR.</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+      </tr>
+      <tr>
+        <td>Demandas</td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-read">READ</span></td>
+        <td><span class="perm-read">READ</span></td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-restricted">RESTR.</span></td>
+        <td><span class="perm-restricted">RESTR.</span></td>
+        <td><span class="perm-restricted">RESTR.</span></td>
+        <td><span class="perm-none">—</span></td>
+      </tr>
+      <tr>
+        <td>Membresia</td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-read">READ</span></td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-read">READ</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+      </tr>
+      <tr>
+        <td>Infraestrutura</td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-read">READ</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-restricted">RESTR.</span></td>
+        <td><span class="perm-none">—</span></td>
+      </tr>
+      <tr>
+        <td>Área do Membro</td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-restricted">RESTR.</span></td>
+        <td><span class="perm-restricted">RESTR.</span></td>
+        <td><span class="perm-restricted">RESTR.</span></td>
+        <td><span class="perm-restricted">RESTR.</span></td>
+        <td><span class="perm-restricted">RESTR.</span></td>
+        <td><span class="perm-restricted">RESTR.</span></td>
+        <td><span class="perm-restricted">RESTR.</span></td>
+      </tr>
+      <tr>
+        <td>Configurações</td>
+        <td><span class="perm-full">FULL</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+        <td><span class="perm-none">—</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════
+     5. BANCO DE DADOS
+══════════════════════════════════════════ -->
+<div class="page section-break">
+
+  <h2><span class="icon">🗄</span> 5. Banco de Dados (Supabase)</h2>
+
+  <h3>5.1 Tabelas Principais</h3>
+
+  <table>
+    <thead>
+      <tr><th>Tabela</th><th>Módulo</th><th>Descrição</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="td-code">pessoas</td><td>Core</td><td>Registro central de todas as pessoas (membros, visitantes, externos). Chave estrangeira em quase todas as tabelas.</td></tr>
+      <tr><td class="td-code">user_profiles</td><td>Auth</td><td>Perfil do usuário autenticado: role, ativo, pessoa_id vinculada, permissões personalizadas.</td></tr>
+      <tr><td class="td-code">membros</td><td>Membresia</td><td>Dados de membresia: data de ingresso, tipo, status, congregação, histórico de transferências.</td></tr>
+      <tr><td class="td-code">demandas</td><td>Demandas</td><td>Solicitações com protocolo gerado, area, status, prioridade, financial_data (para demandas financeiras).</td></tr>
+      <tr><td class="td-code">demanda_andamentos</td><td>Demandas</td><td>Histórico de movimentações/comentários de cada demanda.</td></tr>
+      <tr><td class="td-code">financeiro</td><td>Financeiro</td><td>Lançamentos de receita e despesa, categorias, status de pagamento, competência.</td></tr>
+      <tr><td class="td-code">financeiro_solicitacoes</td><td>Financeiro</td><td>Solicitações de pagamento/reembolso com aprovação e anexos.</td></tr>
+      <tr><td class="td-code">cnab_remessas / cnab_retornos</td><td>Financeiro</td><td>Arquivos CNAB 240 para pagamentos bancários.</td></tr>
+      <tr><td class="td-code">agenda</td><td>Agenda</td><td>Agendamentos de espaços: título, tipo, data, horário, espaço, status de confirmação.</td></tr>
+      <tr><td class="td-code">conselho_reunioes</td><td>Conselho</td><td>Reuniões do conselho: tipo (Ordinária/Extraordinária/Comissão), data, status.</td></tr>
+      <tr><td class="td-code">conselho_pautas</td><td>Conselho</td><td>Itens de pauta com ordem, categoria, status, deliberação e histórico.</td></tr>
+      <tr><td class="td-code">conselho_pautas_historico</td><td>Conselho</td><td>Auditoria de todas as alterações em pautas.</td></tr>
+      <tr><td class="td-code">nomeados / oficiais / seminaristas / contratados</td><td>Conselho</td><td>Pessoas com funções especiais no conselho.</td></tr>
+      <tr><td class="td-code">ministerios / ministerio_membros</td><td>Departamentos</td><td>Ministérios da igreja e seus membros com funções e status.</td></tr>
+      <tr><td class="td-code">ministerio_setores / ministerio_setor_membros</td><td>Departamentos</td><td>Setores dentro de cada ministério.</td></tr>
+      <tr><td class="td-code">escala_pregacao / escala_diaconal</td><td>Ministerial</td><td>Escalas de pregação e serviço diaconal.</td></tr>
+      <tr><td class="td-code">eventos / evento_inscricoes</td><td>Eventos</td><td>Eventos institucionais e controle de inscrições com status.</td></tr>
+      <tr><td class="td-code">pgs / pg_participantes / estudos_pgs</td><td>PGs</td><td>Pequenos grupos, participantes e encontros de estudo.</td></tr>
+      <tr><td class="td-code">congregacoes / congregacao_cultos</td><td>Congregações</td><td>Congregações vinculadas e seus cultos regulares.</td></tr>
+      <tr><td class="td-code">contratos / contrato_anexos</td><td>Jurídico</td><td>Instrumentos contratuais com partes, valores, vigência e documentos.</td></tr>
+      <tr><td class="td-code">projetos / projeto_etapas</td><td>Projetos</td><td>Portfólio de projetos institucionais com etapas e progresso.</td></tr>
+      <tr><td class="td-code">estoque_itens / estoque_movimentacoes</td><td>Administrativo</td><td>Controle de materiais com entradas, saídas e saldo.</td></tr>
+      <tr><td class="td-code">acesso_facial</td><td>Administrativo</td><td>Log de acesso biométrico (facial recognition).</td></tr>
+      <tr><td class="td-code">rede_cuidado</td><td>Pastoral</td><td>Rede de cuidado pastoral com grupos e responsáveis.</td></tr>
+      <tr><td class="td-code">participantes_externos</td><td>Administrativo</td><td>Pessoas sem membresia que participam de eventos/cultos.</td></tr>
+      <tr><td class="td-code">whatsapp_config</td><td>WhatsApp</td><td>Configuração global do WA: URL BotConversa, ativo.</td></tr>
+      <tr><td class="td-code">whatsapp_mensagens</td><td>WhatsApp</td><td>Log de todas as mensagens enviadas com status, idempotency_key e referência.</td></tr>
+      <tr><td class="td-code">whatsapp_templates</td><td>WhatsApp</td><td>Templates de mensagem por módulo.</td></tr>
+      <tr><td class="td-code">whatsapp_modulo_config</td><td>WhatsApp</td><td>Configuração por módulo: ativo/pausado, descrição.</td></tr>
+      <tr><td class="td-code">whatsapp_modulo_responsaveis</td><td>WhatsApp</td><td>Pessoas responsáveis por módulo WA (única fonte de verdade).</td></tr>
+      <tr><td class="td-code">whatsapp_ia_log</td><td>WhatsApp</td><td>Log de processamento Gemini: mensagem recebida, resposta IA, demanda criada.</td></tr>
+      <tr><td class="td-code">email_notificacoes</td><td>E-mail</td><td>Fila e log de notificações enviadas por e-mail.</td></tr>
+      <tr><td class="td-code">logs_sistema</td><td>Core</td><td>Auditoria geral de ações do sistema.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5.2 Row Level Security (RLS)</h3>
+  <p>Todas as tabelas têm RLS habilitado. As políticas seguem o padrão:</p>
+  <div class="grid-2">
+    <div class="card card-blue">
+      <h4>Usuários autenticados</h4>
+      <ul style="font-size:9.5px;padding-left:14px;color:var(--gray-700);line-height:1.8">
+        <li>SELECT: permitido para autenticados</li>
+        <li>INSERT/UPDATE/DELETE: verificado via <code>public.is_admin()</code> ou permissão específica</li>
+      </ul>
+    </div>
+    <div class="card card-green">
+      <h4>Service Role</h4>
+      <ul style="font-size:9.5px;padding-left:14px;color:var(--gray-700);line-height:1.8">
+        <li>Bypass total de RLS</li>
+        <li>Usado pelas Edge Functions com <code>service_role_key</code></li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout">
+    <strong>Nota:</strong> A função <code>public.is_admin()</code> verifica se o <code>auth.uid()</code> tem <code>role = 'admin'</code> em <code>user_profiles</code>. Ela é usada em todas as políticas de escrita.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     6. EDGE FUNCTIONS
+══════════════════════════════════════════ -->
+<div class="page section-break">
+
+  <h2><span class="icon">⚡</span> 6. Edge Functions (Serverless)</h2>
+
+  <p>As Edge Functions rodam no runtime Deno do Supabase. O deploy é feito manualmente via CLI:</p>
+  <div class="code-block">
+supabase functions deploy &lt;nome-da-function&gt; --project-ref erhwryfzpycahgsohhbh
+  </div>
+
+  <div class="callout warning">
+    <strong>Atenção:</strong> <code>git push</code> NÃO faz deploy das Edge Functions. O deploy deve ser feito explicitamente via Supabase CLI.
+  </div>
+
+  <h3>Funções Disponíveis</h3>
+
+  <table>
+    <thead>
+      <tr><th>Função</th><th>Trigger</th><th>Responsabilidade</th><th>Secrets Necessários</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="td-code">whatsapp-send</td>
+        <td>Frontend (POST)</td>
+        <td>Valida JWT, verifica módulo ativo, implementa idempotência via <code>whatsapp_mensagens</code>, chama BotConversa API para envio.</td>
+        <td class="td-code">BOTCONVERSA_API_KEY, BOTCONVERSA_URL</td>
+      </tr>
+      <tr>
+        <td class="td-code">whatsapp-receive</td>
+        <td>Webhook BotConversa</td>
+        <td>Recebe mensagens WA, classifica via Gemini IA, cria demanda no banco, notifica responsáveis do módulo, confirma ao remetente.</td>
+        <td class="td-code">BOTCONVERSA_API_KEY, BOTCONVERSA_URL, GEMINI_API_KEY, SUPABASE_SERVICE_ROLE_KEY</td>
+      </tr>
+      <tr>
+        <td class="td-code">whatsapp-status</td>
+        <td>Frontend (GET)</td>
+        <td>Verifica status da conexão WhatsApp com BotConversa (conectado/desconectado).</td>
+        <td class="td-code">BOTCONVERSA_API_KEY, BOTCONVERSA_URL</td>
+      </tr>
+      <tr>
+        <td class="td-code">email-send</td>
+        <td>Frontend / Edge</td>
+        <td>Envio de e-mails transacionais via SMTP (Nodemailer). Loga em <code>email_notificacoes</code>.</td>
+        <td class="td-code">SMTP_HOST, SMTP_USER, SMTP_PASS</td>
+      </tr>
+      <tr>
+        <td class="td-code">gdrive-upload</td>
+        <td>Frontend (POST)</td>
+        <td>Upload de arquivos para o Google Drive da organização via Service Account.</td>
+        <td class="td-code">GDRIVE_SERVICE_ACCOUNT_JSON</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Estrutura de whatsapp-send</h3>
+  <div class="code-block">
+<span class="c-cm">// POST /functions/v1/whatsapp-send</span>
+<span class="c-cm">// Body: { para, nome, mensagem, modulo, referenciaT, referenciaId, chave }</span>
+
+<span class="c-kw">1.</span> Valida JWT do usuário (Authorization: Bearer &lt;token&gt;)
+<span class="c-kw">2.</span> Verifica whatsapp_modulo_config.ativo = true para o módulo
+<span class="c-kw">3.</span> Tenta INSERT em whatsapp_mensagens com idempotency_key = chave
+   → Se 23505 (unique violation): mensagem já enviada, retorna 200 sem reenvio
+<span class="c-kw">4.</span> Chama BotConversa REST API com número + mensagem
+<span class="c-kw">5.</span> Atualiza status: "enviado" ou "erro" no log
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     7. INTEGRAÇÃO WHATSAPP
+══════════════════════════════════════════ -->
+<div class="page section-break">
+
+  <h2><span class="icon">📱</span> 7. Integração WhatsApp</h2>
+
+  <h3>7.1 Arquitetura Geral</h3>
+
+  <div class="diagram">
+┌──────────────────────────────────────────────────────────────────────────┐
+│                          SISTEMA WHATSAPP SIPEN                           │
+│                                                                          │
+│  ENVIO (Frontend → BotConversa)                                          │
+│  ─────────────────────────────────────────────────────────────────────   │
+│                                                                          │
+│  módulo JS          WA.send()          whatsapp-send         BotConversa │
+│  (demandas,    ──────────────────►   Edge Function  ─────────────────►  │
+│   conselho,         POST             valida JWT            envia WA      │
+│   agenda, etc)      REST             módulo ativo?         ao número     │
+│                                      idempotência                        │
+│                                          │                               │
+│                                          ▼                               │
+│                                  whatsapp_mensagens                       │
+│                                  (log + status)                          │
+│                                                                          │
+│  RECEBIMENTO (BotConversa → Gemini → Demanda)                            │
+│  ─────────────────────────────────────────────────────────────────────   │
+│                                                                          │
+│  Usuário WA   BotConversa   whatsapp-receive    Gemini IA    Banco       │
+│  envia msg  ──────────►    Edge Function   ──────────►   cria demanda   │
+│  texto                     webhook         classifica      notifica      │
+│                            processa        intent/area     responsáveis  │
+│                                │               │           confirma WA  │
+│                                ▼               ▼                         │
+│                         whatsapp_ia_log    demandas                      │
+│                         (auditoria IA)    (banco)                        │
+└──────────────────────────────────────────────────────────────────────────┘
+  </div>
+
+  <h3>7.2 Fluxo de Envio</h3>
+  <div class="flow">
+    <div class="flow-box">Módulo JS<br><small>(event)</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">WA.send()<br><small>(modules/whatsapp)</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box purple">Edge Function<br>whatsapp-send</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box green">BotConversa<br>API REST</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box amber">Celular<br>WhatsApp</div>
+  </div>
+
+  <h3>7.3 Fluxo de Recebimento (IA)</h3>
+  <div class="flow">
+    <div class="flow-box amber">Usuário<br>WhatsApp</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box green">BotConversa<br>Webhook</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box purple">Edge Function<br>whatsapp-receive</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Gemini IA<br><small>(classifica)</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Cria Demanda<br><small>(banco)</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box green">Notifica<br>responsável</div>
+  </div>
+
+  <p>O Gemini analisa a mensagem de texto e retorna JSON estruturado com:</p>
+  <div class="code-block">
+{
+  <span class="c-str">"intent"</span>:   <span class="c-str">"criar_demanda" | "consultar" | "outro"</span>,
+  <span class="c-str">"area_id"</span>:   <span class="c-str">"financeiro" | "manutencao" | "conselho" | ...</span>,
+  <span class="c-str">"titulo"</span>:    <span class="c-str">"Título extraído da mensagem"</span>,
+  <span class="c-str">"descricao"</span>: <span class="c-str">"Descrição detalhada"</span>,
+  <span class="c-str">"prioridade"</span>: <span class="c-str">"NORMAL" | "ALTA" | "URGENTE"</span>,
+  <span class="c-str">"financial_data"</span>: {          <span class="c-cm">// opcional, somente financeiro</span>
+    <span class="c-str">"valor"</span>: 1500.00,
+    <span class="c-str">"data_vencimento"</span>: <span class="c-str">"2026-06-01"</span>
+  },
+  <span class="c-str">"resposta"</span>:   <span class="c-str">"Mensagem de confirmação ao usuário"</span>
+}
+  </div>
+
+  <h3>7.4 Módulos com Notificações WA</h3>
+  <table>
+    <thead>
+      <tr><th>Módulo WA</th><th>Evento que dispara</th><th>Código / Função</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>DEMANDAS</td><td>Nova demanda criada (qualquer área)</td><td class="td-code">_notificarResponsaveisWA() em demandas/index.js</td></tr>
+      <tr><td>CONSELHO</td><td>Nova reunião criada</td><td class="td-code">_notificarConselhoWA() em conselho/pautas.js</td></tr>
+      <tr><td>CONSELHO</td><td>Nova pauta adicionada</td><td class="td-code">_notificarConselhoWA() em conselho/pautas.js</td></tr>
+      <tr><td>AGENDA</td><td>Novo agendamento / confirmação</td><td class="td-code">WA.send() em agenda/index.js</td></tr>
+      <tr><td>FINANCEIRO</td><td>Demanda financeira (via DEMANDAS)</td><td class="td-code">_notificarResponsaveisWA() com modulo=FINANCEIRO</td></tr>
+      <tr><td>INFRAESTRUTURA</td><td>Demanda de manutenção (via DEMANDAS)</td><td class="td-code">_notificarResponsaveisWA() com modulo=INFRAESTRUTURA</td></tr>
+      <tr><td>PASTORAL</td><td>Pedido de oração/visitação (via DEMANDAS)</td><td class="td-code">_notificarResponsaveisWA() com modulo=PASTORAL</td></tr>
+      <tr><td>MEMBRESIA</td><td>Boas-vindas novo cadastro</td><td class="td-code">WA.send() em membresia</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.5 Tabelas WhatsApp</h3>
+  <table>
+    <thead>
+      <tr><th>Tabela</th><th>Finalidade</th><th>Campos chave</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="td-code">whatsapp_modulo_config</td>
+        <td>Ativa ou pausa envio por módulo</td>
+        <td class="td-code">modulo (PK), ativo, descricao</td>
+      </tr>
+      <tr>
+        <td class="td-code">whatsapp_modulo_responsaveis</td>
+        <td>Quem recebe notificações de cada módulo (fonte única)</td>
+        <td class="td-code">modulo, pessoa_id, ativo (UNIQUE modulo+pessoa_id)</td>
+      </tr>
+      <tr>
+        <td class="td-code">whatsapp_mensagens</td>
+        <td>Log de todos os envios com idempotência</td>
+        <td class="td-code">para_numero, mensagem, modulo, referencia_tipo, referencia_id, status, idempotency_key (UNIQUE)</td>
+      </tr>
+      <tr>
+        <td class="td-code">whatsapp_ia_log</td>
+        <td>Auditoria de processamento Gemini</td>
+        <td class="td-code">numero_origem, mensagem_original, resposta_ia, demanda_id, status</td>
+      </tr>
+      <tr>
+        <td class="td-code">whatsapp_config</td>
+        <td>Configuração global (URL, instância)</td>
+        <td class="td-code">chave, valor (configurações BotConversa)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <strong>Regra de responsáveis:</strong> A tabela <code>whatsapp_modulo_responsaveis</code> é a <strong>única fonte de verdade</strong> para decidir quem recebe notificações. A tabela legada <code>demanda_responsaveis</code> foi descontinuada para fins de notificação WA. Fallback: admins (user_profiles.role = 'admin') quando nenhum responsável está configurado.
+  </div>
+
+  <h3>Módulos WA Disponíveis</h3>
+  <div class="grid-4">
+    <div class="card" style="padding:10px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:var(--gray-700)">AGENDA</div>
+      <div style="font-size:9px;color:var(--gray-500)">Confirmações e lembretes</div>
+    </div>
+    <div class="card" style="padding:10px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:var(--gray-700)">DEMANDAS</div>
+      <div style="font-size:9px;color:var(--gray-500)">Status de solicitações</div>
+    </div>
+    <div class="card" style="padding:10px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:var(--gray-700)">FINANCEIRO</div>
+      <div style="font-size:9px;color:var(--gray-500)">Pagamentos e avisos</div>
+    </div>
+    <div class="card" style="padding:10px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:var(--gray-700)">PASTORAL</div>
+      <div style="font-size:9px;color:var(--gray-500)">Comunicações pastorais</div>
+    </div>
+    <div class="card" style="padding:10px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:var(--gray-700)">MINISTERIAL</div>
+      <div style="font-size:9px;color:var(--gray-500)">Escalas e convocações</div>
+    </div>
+    <div class="card" style="padding:10px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:var(--gray-700)">MEMBRESIA</div>
+      <div style="font-size:9px;color:var(--gray-500)">Boas-vindas e cadastro</div>
+    </div>
+    <div class="card" style="padding:10px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:var(--gray-700)">CONSELHO</div>
+      <div style="font-size:9px;color:var(--gray-500)">Reuniões e pautas</div>
+    </div>
+    <div class="card" style="padding:10px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:var(--gray-700)">JUNTA_DIACONAL</div>
+      <div style="font-size:9px;color:var(--gray-500)">Atendimentos diaconais</div>
+    </div>
+    <div class="card" style="padding:10px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:var(--gray-700)">INFRAESTRUTURA</div>
+      <div style="font-size:9px;color:var(--gray-500)">Ordens de manutenção</div>
+    </div>
+    <div class="card" style="padding:10px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:var(--gray-700)">JURIDICO</div>
+      <div style="font-size:9px;color:var(--gray-500)">Prazos e processos</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     8. AUTENTICAÇÃO
+══════════════════════════════════════════ -->
+<div class="page section-break">
+
+  <h2><span class="icon">🔑</span> 8. Autenticação e Segurança</h2>
+
+  <h3>Fluxo de Autenticação</h3>
+  <div class="flow">
+    <div class="flow-box amber">Usuário<br>digita login</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box purple">Supabase Auth<br>signInWithPassword</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">JWT gerado<br>salvo em localStorage</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box green">core/init.js<br>carrega perfil</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Renderiza módulo<br>autorizado</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Aspecto</th><th>Implementação</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Autenticação</strong></td>
+        <td>Supabase Auth com email/senha. JWT armazenado em <code>localStorage</code> com key <code>sipen_auth_session</code>.</td>
+      </tr>
+      <tr>
+        <td><strong>Autorização</strong></td>
+        <td>Frontend verifica <code>PERMISSOES_MATRIZ</code> em <code>core/auth.js</code> antes de renderizar. Backend aplica RLS em todas as tabelas.</td>
+      </tr>
+      <tr>
+        <td><strong>RLS</strong></td>
+        <td>Todas as tabelas têm Row Level Security habilitado. Políticas usam <code>auth.uid()</code> e <code>public.is_admin()</code>.</td>
+      </tr>
+      <tr>
+        <td><strong>Service Role</strong></td>
+        <td>Edge Functions usam <code>SUPABASE_SERVICE_ROLE_KEY</code> (secret) para operações administrativas. Nunca exposta ao frontend.</td>
+      </tr>
+      <tr>
+        <td><strong>Secrets</strong></td>
+        <td>Todas as chaves de API (BotConversa, Gemini, SMTP, Google Drive) são Supabase Secrets. Acessíveis via <code>Deno.env.get()</code> nas Edge Functions.</td>
+      </tr>
+      <tr>
+        <td><strong>Anon Key</strong></td>
+        <td>A chave anon é pública (bundle JS) e só permite operações explicitamente autorizadas pelas políticas RLS para usuários não autenticados.</td>
+      </tr>
+      <tr>
+        <td><strong>Sessão</strong></td>
+        <td>Sessão persistida no localStorage. Token renovado automaticamente pelo Supabase JS SDK. Logout limpa todos os dados da sessão.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Pontos de Segurança</h3>
+  <div class="callout warning">
+    <strong>XSS:</strong> Todas as saídas HTML passam pela função <code>escapeHtml()</code> disponível globalmente via <code>core/ui.js</code>. Módulos têm wrappers locais <code>_eh()</code> e <code>_ea()</code>.
+  </div>
+  <div class="callout success">
+    <strong>Injeção SQL:</strong> Todas as queries usam parâmetros da Supabase REST API (query string URL-encoded ou JSON body). Sem SQL dinâmico no frontend.
+  </div>
+  <div class="callout">
+    <strong>CSRF:</strong> Requisições autenticadas exigem o JWT no header <code>Authorization: Bearer</code>. A API REST do Supabase não usa cookies de sessão.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     9. DEPLOY E INFRAESTRUTURA
+══════════════════════════════════════════ -->
+<div class="page section-break">
+
+  <h2><span class="icon">🚀</span> 9. Deploy e Infraestrutura</h2>
+
+  <h3>Pipeline de Deploy</h3>
+
+  <div class="grid-2">
+    <div>
+      <h4>Frontend (GitHub Pages)</h4>
+      <div class="flow" style="flex-direction:column;gap:6px">
+        <div class="flow-box" style="width:100%">git push → branch main</div>
+        <div class="flow-arrow" style="text-align:center">↓ automático</div>
+        <div class="flow-box green" style="width:100%">GitHub Pages publica</div>
+        <div class="flow-arrow" style="text-align:center">↓ ~2 minutos</div>
+        <div class="flow-box" style="width:100%">Disponível em<br>https://[org].github.io/sipen</div>
+      </div>
+    </div>
+    <div>
+      <h4>Edge Functions (Supabase)</h4>
+      <div class="flow" style="flex-direction:column;gap:6px">
+        <div class="flow-box amber" style="width:100%">Edição em supabase/functions/</div>
+        <div class="flow-arrow" style="text-align:center">↓ MANUAL (não automático)</div>
+        <div class="flow-box purple" style="width:100%">supabase functions deploy<br>&lt;nome&gt; --project-ref &lt;ref&gt;</div>
+        <div class="flow-arrow" style="text-align:center">↓ ~30 segundos</div>
+        <div class="flow-box green" style="width:100%">Disponível em<br>*.supabase.co/functions/v1/*</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Infraestrutura</h3>
+  <table>
+    <thead>
+      <tr><th>Serviço</th><th>Plano / Detalhe</th><th>URL</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>GitHub Pages</strong></td>
+        <td>Gratuito — hospedagem estática com HTTPS automático</td>
+        <td class="td-code">github.io/sipen</td>
+      </tr>
+      <tr>
+        <td><strong>Supabase</strong></td>
+        <td>Projeto: erhwryfzpycahgsohhbh — PostgreSQL, Auth, Storage, Edge Functions</td>
+        <td class="td-code">erhwryfzpycahgsohhbh.supabase.co</td>
+      </tr>
+      <tr>
+        <td><strong>BotConversa</strong></td>
+        <td>API REST para WhatsApp Business. Webhook configurado para a Edge Function <code>whatsapp-receive</code></td>
+        <td class="td-code">API BotConversa</td>
+      </tr>
+      <tr>
+        <td><strong>Google Gemini</strong></td>
+        <td>gemini-2.5-flash-lite — classificação de mensagens WA. Chave via Supabase Secret <code>GEMINI_API_KEY</code></td>
+        <td class="td-code">generativelanguage.googleapis.com</td>
+      </tr>
+      <tr>
+        <td><strong>Google Drive</strong></td>
+        <td>Service Account para upload de documentos. Chave via Supabase Secret <code>GDRIVE_SERVICE_ACCOUNT_JSON</code></td>
+        <td class="td-code">drive.googleapis.com</td>
+      </tr>
+      <tr>
+        <td><strong>SMTP</strong></td>
+        <td>Servidor de e-mail para notificações. Configurado via Supabase Secrets</td>
+        <td class="td-code">Secrets: SMTP_*</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>PWA (Progressive Web App)</h3>
+  <div class="card card-blue">
+    <p style="font-size:10px;margin:0">O SIPEN é instalável como app no celular (iOS e Android) via <strong>manifest.json</strong> + <strong>sw.js</strong>. O Service Worker faz cache dos assets estáticos para uso offline. Dados do banco requerem conexão.</p>
+  </div>
+
+  <h3>Migrations e Patches</h3>
+  <table>
+    <thead>
+      <tr><th>Tipo</th><th>Pasta</th><th>Como executar</th><th>Finalidade</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Migrations</strong></td>
+        <td class="td-code">supabase/migrations/</td>
+        <td>Supabase Dashboard → SQL Editor</td>
+        <td>CREATE TABLE, índices, RLS, políticas — mudanças estruturais</td>
+      </tr>
+      <tr>
+        <td><strong>Patches</strong></td>
+        <td class="td-code">supabase/patches/</td>
+        <td>Supabase Dashboard → SQL Editor</td>
+        <td>Seeds, correções pontuais de dados, ajustes de configuração</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════
+     10. REFERÊNCIAS
+══════════════════════════════════════════ -->
+<div class="page section-break">
+
+  <h2><span class="icon">🔗</span> 10. Referências e Configurações</h2>
+
+  <h3>Identificadores do Projeto</h3>
+  <table>
+    <thead>
+      <tr><th>Recurso</th><th>Valor</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Supabase Project Ref</td><td class="td-code">erhwryfzpycahgsohhbh</td></tr>
+      <tr><td>Supabase API URL</td><td class="td-code">https://erhwryfzpycahgsohhbh.supabase.co</td></tr>
+      <tr><td>Supabase Dashboard</td><td class="td-code">https://supabase.com/dashboard/project/erhwryfzpycahgsohhbh</td></tr>
+      <tr><td>Modelo IA</td><td class="td-code">gemini-2.5-flash-lite</td></tr>
+      <tr><td>Versão do Sistema</td><td class="td-code">v6.30.36</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Secrets do Supabase (Edge Functions)</h3>
+  <table>
+    <thead>
+      <tr><th>Secret</th><th>Usado por</th><th>Descrição</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="td-code">BOTCONVERSA_API_KEY</td><td>whatsapp-send, whatsapp-receive, whatsapp-status</td><td>Chave de API do BotConversa para autenticação</td></tr>
+      <tr><td class="td-code">BOTCONVERSA_URL</td><td>whatsapp-send, whatsapp-receive, whatsapp-status</td><td>URL base da API BotConversa (instância)</td></tr>
+      <tr><td class="td-code">GEMINI_API_KEY</td><td>whatsapp-receive</td><td>Chave Google Generative AI para classificação</td></tr>
+      <tr><td class="td-code">SUPABASE_SERVICE_ROLE_KEY</td><td>whatsapp-receive</td><td>Chave service_role para bypass de RLS</td></tr>
+      <tr><td class="td-code">SMTP_HOST / SMTP_USER / SMTP_PASS</td><td>email-send</td><td>Credenciais do servidor de e-mail</td></tr>
+      <tr><td class="td-code">GDRIVE_SERVICE_ACCOUNT_JSON</td><td>gdrive-upload</td><td>Service Account Google para upload de arquivos</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Padrão de Versionamento</h3>
+  <div class="card">
+    <p style="font-size:10px;margin:0">O sistema segue <strong>Semantic Versioning</strong> informal: <code>v{major}.{minor}.{patch}</code>. Commits seguem Conventional Commits: <code>feat:</code>, <code>fix:</code>, <code>refactor:</code>, <code>chore:</code>. Cada alteração gera um commit dedicado.</p>
+  </div>
+
+  <h3>Manutenção e Pontos de Atenção</h3>
+  <div class="callout warning">
+    <strong>AREA_MODULO mapping:</strong> Existe em dois lugares — <code>supabase/functions/whatsapp-receive/index.ts</code> (usa area_id) e <code>modules/demandas/index.js</code> (usa area_nome). Ambos devem ser mantidos em sincronia quando novas áreas/módulos forem adicionados.
+  </div>
+  <div class="callout warning">
+    <strong>Edge Functions:</strong> Alterações no código TypeScript não entram em produção com <code>git push</code>. Sempre executar <code>supabase functions deploy</code> após edições.
+  </div>
+  <div class="callout">
+    <strong>Responsáveis WA:</strong> A tabela <code>whatsapp_modulo_responsaveis</code> deve ter ao menos um registro ativo por módulo. Se vazia, o sistema usa admins como fallback, o que pode gerar notificações em excesso para a liderança.
+  </div>
+
+  <div style="margin-top:40px;padding:20px;background:var(--gray-50);border-radius:var(--radius);border:1px solid var(--border);text-align:center">
+    <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px">SIPEN — Sistema Integrado de Gestão · IPPenha</div>
+    <div style="font-size:10px;color:var(--gray-400)">Documentação gerada em maio de 2026 · Versão v6.30.36</div>
+    <div style="font-size:10px;color:var(--gray-400);margin-top:2px">CONFIDENCIAL · Uso Interno</div>
+  </div>
+
+</div>
+
+</body>
+</html>

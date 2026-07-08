@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/air/Desktop/desenvolvimento/Lampas/lampas log --oneline -10 -- src/components/nav/TopNav.tsx)",
+      "Bash(git -C /Users/air/Desktop/desenvolvimento/Lampas/lampas log --oneline -15)",
+      "Bash(git -C /Users/air/Desktop/desenvolvimento/Lampas/lampas show 95329b2 --stat)",
+      "Bash(git -C /Users/air/Desktop/desenvolvimento/Lampas/lampas show 95329b2 -- src/components/nav/TopNav.tsx)",
+      "Bash(git -C /Users/air/Desktop/desenvolvimento/Lampas/lampas show 95329b2 -- \"src/app/workspace/[id]/WorkspaceMenuBar.tsx\")",
+      "Bash(git -C /Users/air/Desktop/desenvolvimento/Lampas/lampas add src/components/nav/TopNav.tsx \"src/app/workspace/[id]/WorkspaceMenuBar.tsx\")",
+      "Bash(git -C /Users/air/Desktop/desenvolvimento/Lampas/lampas commit -m ' *)",
+      "Bash(python3 /tmp/reformada_conservadora_pt3.py)",
+      "Bash(python3 -c ' *)",
+      "Bash(git -C /Users/air/Desktop/desenvolvimento/Lampas/lampas add src/app/dashboard/DashboardClient.tsx src/app/workspace/[id]/SectionWorkspace.tsx)",
+      "Bash(git -C /Users/air/Desktop/desenvolvimento/Lampas/lampas add \"src/app/dashboard/DashboardClient.tsx\" \"src/app/workspace/[id]/SectionWorkspace.tsx\")",
+      "Bash(git -C /Users/air/Desktop/desenvolvimento/Lampas/lampas commit -m 'feat\\(dashboard\\): view Por Livro e correção de breadcrumb nos modos Termos/Temático *)",
+      "Bash(git -C /Users/air/Desktop/desenvolvimento/Lampas/lampas add \"src/lib/study-modes/index.ts\")",
+      "Bash(git -C /Users/air/Desktop/desenvolvimento/Lampas/lampas commit -m 'fix\\(termos/tematico\\): remove secoes de Sermao \\(investigar/pregar_visao_geral\\) dos registros de Termos e Tematico *)",
+      "Bash(git -C /Users/air/Desktop/desenvolvimento/Lampas/lampas add src/lib/study-modes/index.ts src/lib/estudo-termos-sections.ts src/lib/workspace-sections-nav.ts src/app/workspace/[id]/WorkspaceClient.tsx)",
+      "Bash(git -C /Users/air/Desktop/desenvolvimento/Lampas/lampas commit -m 'feat\\(termos\\): reestruturacao completa do modo Estudo de Termos *)",
+      "Bash(git -C /Users/air/Desktop/desenvolvimento/Lampas/lampas add src/lib/study-modes/index.ts src/lib/estudo-doutrinario-sections.ts src/lib/workspace-sections-nav.ts src/app/workspace/[id]/WorkspaceClient.tsx)",
+      "Bash(git -C /Users/air/Desktop/desenvolvimento/Lampas/lampas commit -m 'feat\\(doutrinario\\): reestruturacao completa do modo Estudo Doutrinario *)",
+      "Bash(git -C /Users/air/Desktop/desenvolvimento/Lampas/lampas log --oneline origin/main -5)",
+      "Bash(npx --prefix \"/Users/air/Desktop/desenvolvimento/Lampas/lampas\" tsc --noEmit)",
+      "Bash(sed -i '' 's/\"group\": \"nr_contextual_grp\"/\"group\": \"contextual\"/g' /Users/air/Desktop/desenvolvimento/Lampas/lampas/src/lib/workspace-sections-nav.ts)",
+      "Bash(sed -i '' 's/\"group\": \"nr_textual_grp\"/\"group\": \"textual\"/g' /Users/air/Desktop/desenvolvimento/Lampas/lampas/src/lib/workspace-sections-nav.ts)",
+      "Bash(sed -i '' 's/\"group\": \"nr_teologico_grp\"/\"group\": \"teologico\"/g' /Users/air/Desktop/desenvolvimento/Lampas/lampas/src/lib/workspace-sections-nav.ts)"
+    ],
+    "additionalDirectories": [
+      "/Users/air/Library/Mobile Documents/com~apple~CloudDocs/SIPEN/Claude"
+    ]
+  }
+}

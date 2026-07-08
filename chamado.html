@@ -197,10 +197,6 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
             <label for="f-fin-venc">Data de vencimento</label>
             <input type="date" id="f-fin-venc">
           </div>
-          <div class="field">
-            <label for="f-fin-centro">Centro de custo / Ministério</label>
-            <input type="text" id="f-fin-centro" placeholder="Ex: Ministério de Louvor">
-          </div>
         </div>
 
         <div class="row2">
@@ -500,7 +496,6 @@ function _coletarFinanceiro(cat, sub) {
 
     const tipo  = g("f-fin-tipo") || "Pagamento";
     const venc  = g("f-fin-venc");
-    const centro = g("f-fin-centro");
     const cpf   = g("f-fin-cpf");
     const obs   = g("f-fin-obs");
 
@@ -511,7 +506,6 @@ function _coletarFinanceiro(cat, sub) {
       venc   ? `Vencimento: ${fmtDataBR(venc)}` : null,
       `Beneficiário: ${benefic}`,
       cpf    ? `CPF/CNPJ: ${cpf}` : null,
-      centro ? `Centro de custo: ${centro}` : null,
       `Forma de pagamento: ${forma}`,
       forma === "PIX"                    ? `Chave PIX: ${pix}` : null,
       forma === "Transferência Bancária" ? `Banco: ${banco} · Ag: ${ag} · Conta: ${conta}` : null,
@@ -523,7 +517,6 @@ function _coletarFinanceiro(cat, sub) {
     if (!isNaN(valorNum)) fd.valor = valorNum; else fd.valor = valor;
     if (venc)   fd.data_vencimento = venc;
     if (cpf)    fd.cpf_cnpj = cpf;
-    if (centro) fd.centro_custo = centro;
     if (pix)    fd.chave_pix = pix;
     if (banco)  fd.banco = banco;
     if (ag)     fd.agencia = ag;
@@ -657,7 +650,7 @@ async function enviarChamado() {
 /* ── Novo envio ────────────────────────────────────────────── */
 function novoEnvio() {
   ["f-nome","f-tel","f-titulo","f-desc",
-   "f-fin-tipo","f-fin-valor","f-fin-venc","f-fin-centro","f-fin-benefic","f-fin-cpf",
+   "f-fin-tipo","f-fin-valor","f-fin-venc","f-fin-benefic","f-fin-cpf",
    "f-fin-forma","f-fin-pix","f-fin-banco","f-fin-ag","f-fin-conta","f-fin-obs",
    "f-reimb-nome","f-reimb-valor","f-reimb-motivo","f-reimb-forma","f-reimb-pix",
    "f-reimb-min","f-reimb-pastor","f-reimb-obs"
