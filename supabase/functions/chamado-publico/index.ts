@@ -16,7 +16,13 @@ serve(async (req) => {
     const conn = await pool.connect()
 
     try {
-      const result = await conn.queryObject<{ id: string }>`
+      // Gera número sequencial no banco (atômico, sem race condition)
+      const numRes = await conn.queryObject<{ num: string }>`
+        SELECT public.gerar_numero_chamado(${b.area}) AS num
+      `
+      const numero_chamado = numRes.rows[0].num
+
+      await conn.queryObject`
         INSERT INTO public.demandas (
           id, area, subcategoria, titulo, descricao,
           solicitante, solicitante_txt,
@@ -31,12 +37,12 @@ serve(async (req) => {
           ${b.responsavel}, ${b.responsavel_txt},
           ${b.solicitante}, ${b.telefone},
           ${b.financial_data ? JSON.stringify(b.financial_data) : null}::jsonb,
-          ${b.numero_chamado ?? null},
+          ${numero_chamado},
           'Portal Público', 'Média', 'Aberta', CURRENT_DATE
         )
-        RETURNING id
       `
-      return new Response(JSON.stringify({ id: result.rows[0].id }), {
+
+      return new Response(JSON.stringify({ id: b.id, numero_chamado }), {
         headers: { ...CORS, "Content-Type": "application/json" },
       })
     } finally {

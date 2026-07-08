@@ -606,10 +606,7 @@ async function enviarChamado() {
   const hoje    = new Date().toISOString().split("T")[0];
   const descFinal = desc + fin.extra;
 
-  /* UUID gerado no cliente — evita SELECT após INSERT (sem política anon) */
   const newId = crypto.randomUUID();
-  const ano   = new Date().getFullYear();
-  const ticket = `#${ano}-${newId.slice(0, 6).toUpperCase()}`;
 
   const btn = document.getElementById("btn-enviar");
   btn.disabled    = true;
@@ -631,15 +628,17 @@ async function enviarChamado() {
         responsavel:   resp,
         responsavel_txt: resp,
         financial_data: fin.fd || null,
-        numero_chamado: ticket,
         data_abertura: hoje,
       }),
     });
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || err.hint || err.details || `Erro ${res.status}`);
+      throw new Error(err.error || err.message || err.hint || `Erro ${res.status}`);
     }
+
+    const data   = await res.json().catch(() => ({}));
+    const ticket = data.numero_chamado || "—";
 
     try { localStorage.setItem(_RL_KEY, String(Date.now())); } catch(_) {}
 
