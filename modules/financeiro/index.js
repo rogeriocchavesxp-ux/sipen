@@ -454,131 +454,98 @@
     const el = document.getElementById("fin-pagar-content");
     if (!el) return;
 
-    el.innerHTML = '<div class="empty-state">Carregando solicitações...</div>';
-    await Promise.all([_loadSolicitacoes(), _loadAnexos()]);
+    el.innerHTML = '<div class="empty-state">Carregando...</div>';
+    await Promise.all([_loadSolicitacoes(), _loadDemandasFin()]);
 
-    const H   = hoje();
-    const S7  = em7dias();
+    const H  = hoje();
+    const S7 = em7dias();
+
+    // KPIs: from financeiro_solicitacoes (vencimento-aware)
+    const allSol    = _SOLICITACOES || [];
+    const emAberto  = allSol.filter(r => !["pago","cancelado"].includes(r.status));
+    const atrasadas = emAberto.filter(r => r.vencimento && r.vencimento < H);
+    const vencBrv   = emAberto.filter(r => r.vencimento && r.vencimento >= H && r.vencimento <= S7);
+    const totalAb   = emAberto.reduce((s, r) => s + Number(r.valor || 0), 0);
+
+    // List: from v_demandas area=Financeiro (same source as menu lateral)
     const fstatus = document.getElementById("fin-pagar-fstatus")?.value || "";
-    const fcat    = document.getElementById("fin-pagar-fcat")?.value    || "";
+    const fprio   = document.getElementById("fin-pagar-fprio")?.value   || "";
     const fbusca  = (document.getElementById("fin-pagar-fbusca")?.value || "").toLowerCase();
 
-    let rows = [...(_SOLICITACOES || [])];
-    if (fstatus === "atrasado") {
-      rows = rows.filter(r => !["pago","cancelado"].includes(r.status) && r.vencimento && r.vencimento < H);
-    } else if (fstatus) {
-      rows = rows.filter(r => r.status === fstatus);
-    }
-    if (fcat)   rows = rows.filter(r => r.categoria === fcat);
-    if (fbusca) rows = rows.filter(r =>
-      (r.fornecedor   || "").toLowerCase().includes(fbusca) ||
-      (r.finalidade   || "").toLowerCase().includes(fbusca) ||
+    let rows = [...(_DEM_FIN_CACHE || [])];
+    if (fstatus) rows = rows.filter(r => r.status === fstatus);
+    if (fprio)   rows = rows.filter(r => r.prioridade === fprio);
+    if (fbusca)  rows = rows.filter(r =>
+      (r.titulo       || "").toLowerCase().includes(fbusca) ||
       (r.solicitante  || "").toLowerCase().includes(fbusca) ||
-      (r.observacoes  || "").toLowerCase().includes(fbusca)
+      (r.responsavel  || "").toLowerCase().includes(fbusca) ||
+      (r.area         || "").toLowerCase().includes(fbusca) ||
+      (r.subcategoria || "").toLowerCase().includes(fbusca)
     );
-
-    const all      = _SOLICITACOES || [];
-    const emAberto = all.filter(r => !["pago","cancelado"].includes(r.status));
-    const atrasadas= emAberto.filter(r => r.vencimento && r.vencimento < H);
-    const vencBrv  = emAberto.filter(r => r.vencimento && r.vencimento >= H && r.vencimento <= S7);
-    const totalAb  = emAberto.reduce((s, r) => s + Number(r.valor || 0), 0);
-
-    const cats = [...new Set(all.map(r => r.categoria).filter(Boolean))].sort();
+    rows.sort((a, b) => (b.criado_em || "").localeCompare(a.criado_em || ""));
 
     el.innerHTML = `
       <div class="kpis c3" style="margin-bottom:14px">
         <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">!</div><div class="kpi-body"><div class="kpi-lbl">Total em aberto</div><div class="kpi-val">${brl(totalAb)}</div><div class="kpi-d dn">${emAberto.length} solicitações</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">✕</div><div class="kpi-body"><div class="kpi-lbl">Atrasadas</div><div class="kpi-val">${atrasadas.length}</div><div class="kpi-d dn">${brl(atrasadas.reduce((s, r) => s + Number(r.valor || 0), 0))}</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:var(--goldbg);color:var(--gold)">⏰</div><div class="kpi-body"><div class="kpi-lbl">Vencendo em 7 dias</div><div class="kpi-val">${vencBrv.length}</div><div class="kpi-d wa">${brl(vencBrv.reduce((s, r) => s + Number(r.valor || 0), 0))}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">✕</div><div class="kpi-body"><div class="kpi-lbl">Atrasadas</div><div class="kpi-val">${atrasadas.length}</div><div class="kpi-d dn">${brl(atrasadas.reduce((s,r)=>s+Number(r.valor||0),0))}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--goldbg);color:var(--gold)">⏰</div><div class="kpi-body"><div class="kpi-lbl">Vencendo em 7 dias</div><div class="kpi-val">${vencBrv.length}</div><div class="kpi-d wa">${brl(vencBrv.reduce((s,r)=>s+Number(r.valor||0),0))}</div></div></div>
       </div>
 
       <div class="card">
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
           <select id="fin-pagar-fstatus" onchange="finFiltrarPagar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:6px 10px;outline:none">
             <option value="">Todos os status</option>
-            <option value="pendente">Pendente</option>
-            <option value="atrasado">Atrasado</option>
-            <option value="pago">Pago</option>
-            <option value="cancelado">Cancelado</option>
+            <option value="Aberta">Aberta</option>
+            <option value="Em Análise">Em Análise</option>
+            <option value="Em Andamento">Em Andamento</option>
+            <option value="Aguardando Pagamento">Aguardando Pagamento</option>
+            <option value="Pendente">Pendente</option>
+            <option value="Concluída">Concluída</option>
+            <option value="Cancelada">Cancelada</option>
           </select>
-          <select id="fin-pagar-fcat" onchange="finFiltrarPagar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:6px 10px;outline:none">
-            <option value="">Todas as categorias</option>
-            ${cats.map(c => `<option value="${c}">${c}</option>`).join("")}
+          <select id="fin-pagar-fprio" onchange="finFiltrarPagar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:6px 10px;outline:none">
+            <option value="">Todas as prioridades</option>
+            <option value="Baixa">Baixa</option>
+            <option value="Normal">Normal</option>
+            <option value="Alta">Alta</option>
+            <option value="Urgente">Urgente</option>
           </select>
-          <input id="fin-pagar-fbusca" type="text" placeholder="Buscar fornecedor, finalidade..." oninput="finDebouncePagar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:6px 10px;outline:none;min-width:200px">
-          <span style="font-size:11px;color:var(--tx3);margin-left:auto">${rows.length} resultado${rows.length !== 1 ? "s" : ""}</span>
+          <input id="fin-pagar-fbusca" type="text" placeholder="Buscar título, solicitante..." oninput="finDebouncePagar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:6px 10px;outline:none;min-width:200px">
+          <span style="font-size:11px;color:var(--tx3);margin-left:auto">${rows.length} demanda${rows.length !== 1 ? "s" : ""}</span>
         </div>
 
         ${rows.length === 0
-          ? '<div class="empty-state">Nenhuma solicitação encontrada.</div>'
-          : `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">
-              <thead><tr style="border-bottom:1px solid var(--bd2)">
-                ${["Fornecedor","Finalidade","Valor","Forma","Código","CNAB","Vencimento","Solicitante","Categoria","Status","",""].map((h,i) =>
-                  `<th style="text-align:${i===2?"right":"left"};padding:7px 6px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`
-                ).join("")}
-              </tr></thead>
-              <tbody>
-                ${rows.map(r => {
-                  const st     = _statusSolicitacao(r);
-                  const anexos = (_ANEXOS || {})[r.id] || [];
-                  const boleto = anexos.find(a => a.tipo_arquivo === "boleto");
-                  const nf     = anexos.find(a => a.tipo_arquivo === "nota_fiscal");
-                  const pago   = ["pago","cancelado"].includes(r.status);
-                  const rowBg  = st === "atrasado"
-                    ? "background:rgba(224,85,85,.04)"
-                    : (r.vencimento && r.vencimento >= H && r.vencimento <= S7 && !pago)
-                      ? "background:rgba(212,168,67,.04)"
-                      : "";
-                  const demandaBadge = r.demanda_id
-                    ? `<span style="font-size:9.5px;background:rgba(234,179,8,.12);color:var(--amber,#ca8a04);border-radius:4px;padding:1px 6px;margin-left:4px;cursor:pointer;white-space:nowrap"
-                        onclick="window.demAbrirDetalhe && demAbrirDetalhe('${escapeHtmlAttr(r.demanda_id)}','fin-pagar')"
-                        title="Ver demanda de origem">Demanda ↗</span>`
-                    : "";
-                  return `
-                  <tr style="border-bottom:1px solid var(--bd1);${rowBg}" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='${rowBg ? rowBg.split(":")[1].split(";")[0].trim() : ""}'">
-                    <td style="padding:7px 6px;color:var(--tx1);font-weight:500;white-space:nowrap">${escapeHtml(r.fornecedor) || "—"}${demandaBadge}</td>
-                    <td style="padding:7px 6px;color:var(--tx1);max-width:180px">${escapeHtml(r.finalidade) || "—"}</td>
-                    <td style="padding:7px 6px;text-align:right;font-weight:700;color:var(--rose)">${brl(r.valor)}</td>
-                    <td style="padding:7px 6px;color:var(--tx2);white-space:nowrap">${_labelForma(r.forma_pagamento)}</td>
-                    <td style="padding:7px 6px;color:var(--tx3);font-size:10px;max-width:160px;word-break:break-all">${escapeHtml(r.codigo_pagamento) || "—"}</td>
-                    <td style="padding:7px 6px;white-space:nowrap">
-                      ${r.tipo_operacao
-                        ? `<span class="pill pd" style="font-size:9.5px;margin-right:4px">${escapeHtml(r.tipo_operacao)}</span>`
-                        : `<span style="font-size:10px;color:var(--tx3);margin-right:4px">Pendente</span>`}
-                      ${r.id && !pago ? `<button onclick="finEditarDadosCnab('${escapeHtmlAttr(r.id)}')" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--gr);cursor:pointer;white-space:nowrap">Dados CNAB</button>` : ""}
-                    </td>
-                    <td style="padding:7px 6px;color:${st === "atrasado" ? "var(--rose)" : "var(--tx2)"};white-space:nowrap;font-weight:${st === "atrasado" ? "600" : "400"}">${fmtD(r.vencimento)}</td>
-                    <td style="padding:7px 6px;color:var(--tx2);white-space:nowrap">${nomePropio(r.solicitante) || "—"}</td>
-                    <td style="padding:7px 6px;color:var(--tx2);white-space:nowrap">${r.categoria || "—"}</td>
-                    <td style="padding:7px 6px">${pillStatus(st)}</td>
-                    <td style="padding:7px 6px;min-width:160px">
-                      <div style="display:flex;flex-direction:column;gap:3px">
-                        ${boleto
-                          ? `<button onclick="finAbrirAnexo('${escapeHtmlAttr(boleto.storage_path)}')" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--blue);cursor:pointer;text-align:left;white-space:nowrap">📎 ${escapeHtml(boleto.nome_original)}</button>`
-                          : r.id && !pago ? `<button onclick="finAnexar('${r.id}','boleto')" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px dashed var(--bd2);background:transparent;color:var(--tx3);cursor:pointer;white-space:nowrap">+ Boleto</button>` : ""}
-                        ${nf
-                          ? `<button onclick="finAbrirAnexo('${escapeHtmlAttr(nf.storage_path)}')" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--blue);cursor:pointer;text-align:left;white-space:nowrap">📎 ${escapeHtml(nf.nome_original)}</button>`
-                          : r.id && !pago ? `<button onclick="finAnexar('${r.id}','nota_fiscal')" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px dashed var(--bd2);background:transparent;color:var(--tx3);cursor:pointer;white-space:nowrap">+ Nota Fiscal</button>` : ""}
-                      </div>
-                    </td>
-                    <td style="padding:7px 6px">
-                      ${r.id && !pago
-                        ? `<button class="tbt" style="font-size:10px;padding:3px 8px;white-space:nowrap" onclick="finMarcarPago('${r.id}')">✓ Pago</button>`
-                        : ""}
-                    </td>
-                  </tr>`;
-                }).join("")}
-              </tbody>
-            </table></div>`
+          ? '<div class="empty-state">Nenhuma demanda encontrada.</div>'
+          : `<div style="overflow-x:auto">
+              <table style="width:100%;border-collapse:collapse;font-size:12px">
+                <thead>
+                  <tr style="border-bottom:1px solid var(--bd2)">
+                    ${["Categoria","Subcategoria","Título","Solicitante","Responsável","Valor","Forma Pgto.","Status","Abertura","Conclusão"].map((h,i) =>
+                      `<th style="text-align:${i===5?"right":"left"};padding:8px 6px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`
+                    ).join("")}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rows.map(r => `
+                  <tr style="border-bottom:1px solid var(--bd1);cursor:pointer"
+                      onmouseover="this.style.background='var(--bg-hover)'"
+                      onmouseout="this.style.background=''"
+                      onclick="demAbrirDetalhe('${escapeHtmlAttr(String(r.id||r._row||""))}','fin-pagar')">
+                    <td style="padding:8px 6px;font-size:11px;font-weight:600;white-space:nowrap;color:var(--tx1)">${escapeHtml(r.area||"—")}</td>
+                    <td style="padding:8px 6px;color:var(--tx2);font-size:11px">${escapeHtml(r.subcategoria||"—")}</td>
+                    <td style="padding:8px 6px;color:var(--tx1);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.titulo||"—")}</td>
+                    <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${nomePropio(r.solicitante||r.solicitante_txt)||"—"}</td>
+                    <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${nomePropio(r.responsavel||r.responsavel_txt)||"—"}</td>
+                    <td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--tx1);white-space:nowrap">${r.financial_data?.valor!=null?`R$ ${parseFloat(r.financial_data.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}`:"—"}</td>
+                    <td style="padding:8px 6px;color:var(--tx2);font-size:11px;white-space:nowrap">${escapeHtml(r.financial_data?.forma_pagamento||"—")}</td>
+                    <td style="padding:8px 6px">${_pillDem(r.status)}</td>
+                    <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${fmtD(r.data_abertura||r.criado_em)}</td>
+                    <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${fmtD(r.data_conclusao)}</td>
+                  </tr>`).join("")}
+                </tbody>
+              </table>
+            </div>`
         }
-        ${rows.some(r => r.observacoes) ? `
-          <div style="margin-top:14px;display:flex;flex-direction:column;gap:6px">
-            <div style="font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Observações</div>
-            ${rows.filter(r => r.observacoes).map(r => `
-              <div style="font-size:11.5px;color:var(--tx2);padding:6px 10px;background:var(--bg-hover);border-radius:6px">
-                <span style="font-weight:600;color:var(--tx1)">${escapeHtml(r.fornecedor) || "—"}</span> — ${escapeHtml(r.observacoes)}
-              </div>`).join("")}
-          </div>` : ""}
       </div>`;
   }
 
