@@ -520,7 +520,7 @@
               <table style="width:100%;border-collapse:collapse;font-size:12px">
                 <thead>
                   <tr style="border-bottom:1px solid var(--bd2)">
-                    ${["Categoria","Subcategoria","Título","Solicitante","Responsável","Valor","Forma Pgto.","Status","Abertura","Conclusão"].map((h,i) =>
+                    ${["Nº Chamado","Subcategoria","Título","Solicitante","Responsável","Valor","Forma Pgto.","Status","Abertura","Conclusão"].map((h,i) =>
                       `<th style="text-align:${i===5?"right":"left"};padding:8px 6px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`
                     ).join("")}
                   </tr>
@@ -531,7 +531,7 @@
                       onmouseover="this.style.background='var(--bg-hover)'"
                       onmouseout="this.style.background=''"
                       onclick="demAbrirDetalhe('${escapeHtmlAttr(String(r.id||r._row||""))}','fin-pagar')">
-                    <td style="padding:8px 6px;font-size:11px;font-weight:600;white-space:nowrap;color:var(--tx1)">${escapeHtml(r.area||"—")}</td>
+                    <td style="padding:8px 6px;font-size:10.5px;font-weight:700;font-family:var(--mono);color:var(--blue);white-space:nowrap">${escapeHtml(r.numero_chamado||"—")}</td>
                     <td style="padding:8px 6px;color:var(--tx2);font-size:11px">${escapeHtml(r.subcategoria||"—")}</td>
                     <td style="padding:8px 6px;color:var(--tx1);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.titulo||"—")}</td>
                     <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${nomePropio(r.solicitante||r.solicitante_txt)||"—"}</td>
