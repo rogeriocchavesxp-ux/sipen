@@ -425,17 +425,28 @@ function fmtD(d) {
           <div class="ctit">Solicitações recentes <span class="cact" onclick="demRecarregarDash()">↻ Atualizar</span></div>
           ${recentes.length === 0
             ? '<div class="empty-state">Nenhuma demanda registrada</div>'
-            : recentes.map(r => `
-              <div class="trow" style="cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','dem-dash')">
-                <div class="tdot" style="background:${catCor(r.area)}"></div>
-                <div class="tbody">
-                  <div class="ttitle">${catIcon(r.area)} ${escapeHtml(r.titulo) || "Sem título"}${r.numero_chamado ? ` <span style="font-size:10px;font-weight:600;color:var(--acc,#4a9cf5);letter-spacing:.04em">${escapeHtml(r.numero_chamado)}</span>` : ""}</div>
-                  <div class="tmeta">${r.area||"—"}${r.subcategoria?" · "+r.subcategoria:""} · ${nomePropio(r.solicitante || r.solicitante_txt) || "—"} · ${fmtD(r.data_abertura||r.criado_em)}</div>
-                </div>
-                <div class="tright" style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">
+            : recentes.map(r => {
+                const localPart = r.local ? ` · ${escapeHtml(r.local)}` : "";
+                const meta = [
+                  escapeHtml(r.area) || "—",
+                  r.subcategoria ? escapeHtml(r.subcategoria) : null,
+                  r.local        ? escapeHtml(r.local)        : null,
+                  nomePropio(r.solicitante || r.solicitante_txt) || "—",
+                  fmtD(r.data_abertura || r.criado_em),
+                ].filter(Boolean).join(" · ");
+                return `
+              <div onclick="demAbrirDetalhe('${r.id||r._row}','dem-dash')"
+                   style="cursor:pointer;border-bottom:1px solid var(--bd1);padding:9px 0"
+                   onmouseover="this.style.background='var(--bg-hover)'"
+                   onmouseout="this.style.background=''">
+                <div style="display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;padding:0 2px 5px">
+                  <span style="font-size:10.5px;font-weight:700;color:var(--blue);font-family:var(--mono);letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.numero_chamado ? escapeHtml(r.numero_chamado) : "—"}</span>
+                  <span style="font-size:12.5px;font-weight:600;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${catIcon(r.area)} ${escapeHtml(r.titulo) || "Sem título"}</span>
                   ${pillStatus(r.status)}
                 </div>
-              </div>`).join("")}
+                <div style="font-size:11px;color:var(--tx3);padding:0 2px;line-height:1.4">${meta}</div>
+              </div>`;
+              }).join("")}
         </div>
 
         <div style="display:flex;flex-direction:column;gap:16px">
@@ -1035,11 +1046,12 @@ function fmtD(d) {
     const detailRows = [
       ["Categoria",     `<span style="color:${catCor(dem.area)};font-weight:600">${catIcon(dem.area)} ${escapeHtml(dem.area)||"—"}</span>`],
       ["Subcategoria",  escapeHtml(dem.subcategoria)||"—"],
+      dem.local ? ["Localização", escapeHtml(dem.local)] : null,
       ["Solicitante",   `${nomePropio(dem.solicitante || dem.solicitante_txt || dem.nome_solicitante_externo) || "—"}${pillOrigem(dem.origem)}${dem.telefone_solicitante ? `<br><span style="color:var(--tx3);font-size:11px">📞 ${escapeHtml(dem.telefone_solicitante)}</span>` : ""}`],
       ["Responsável",   nomePropio(dem.responsavel || dem.responsavel_txt) || "—"],
       ["Abertura",      fmtD(dem.data_abertura||dem.criado_em)],
       ["Conclusão prev.",fmtD(dem.data_conclusao)],
-    ];
+    ].filter(Boolean);
     if (dem.numero_chamado) {
       detailRows.unshift(["N° do chamado", `<span style="font-weight:700;color:var(--acc,#4a9cf5);letter-spacing:.04em">${escapeHtml(dem.numero_chamado)}</span>`]);
     }
@@ -1121,6 +1133,10 @@ function fmtD(d) {
             <div>
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Responsável</label>
               <input id="dem-edit-resp" type="text" value="${escapeHtmlAttr(dem.responsavel || dem.responsavel_txt || '')}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Localização</label>
+              <input id="dem-edit-local" type="text" value="${escapeHtmlAttr(dem.local || '')}" placeholder="Ex: Hall da Secretaria, Templo Principal..." style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>
             <div>
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Conclusão prevista</label>
@@ -1239,6 +1255,7 @@ function fmtD(d) {
   window.demSalvarEdicao = async function(id) {
     const titulo          = document.getElementById("dem-edit-titulo")?.value?.trim();
     const desc            = document.getElementById("dem-edit-desc")?.value?.trim();
+    const local           = document.getElementById("dem-edit-local")?.value?.trim() || null;
     const prioEl          = document.getElementById("dem-edit-prio");
     const resp            = document.getElementById("dem-edit-resp")?.value?.trim();
     const venc            = document.getElementById("dem-edit-venc")?.value || null;
@@ -1250,7 +1267,7 @@ function fmtD(d) {
     }
 
     try {
-      const payload = { titulo, descricao: desc || "", responsavel: resp || "", data_conclusao: venc };
+      const payload = { titulo, descricao: desc || "", local, responsavel: resp || "", data_conclusao: venc };
       if (prioEl && _podeEditarPrioridade()) payload.prioridade = prioEl.value;
       if (_podeEditarPrioridade()) {
         const solNome = document.getElementById("dem-edit-sol-nome")?.value?.trim();
@@ -1383,6 +1400,7 @@ function fmtD(d) {
     }
     m.querySelector("#dem-f-titulo").value  = "";
     m.querySelector("#dem-f-desc").value    = "";
+    m.querySelector("#dem-f-local").value   = "";
     m.querySelector("#dem-f-sol").value     = usuario;
     m.querySelector("#dem-f-resp").value    = "";
     m.querySelector("#dem-f-venc").value    = "";
@@ -1686,6 +1704,7 @@ function fmtD(d) {
     const sub    = document.getElementById("dem-f-sub")?.value;
     const titulo = document.getElementById("dem-f-titulo")?.value?.trim();
     const desc   = document.getElementById("dem-f-desc")?.value?.trim();
+    const local  = document.getElementById("dem-f-local")?.value?.trim() || null;
     const sol    = document.getElementById("dem-f-sol")?.value?.trim();
     const resp   = document.getElementById("dem-f-resp")?.value?.trim();
     const venc   = document.getElementById("dem-f-venc")?.value || null;
@@ -1816,6 +1835,7 @@ function fmtD(d) {
       subcategoria:   sub,
       titulo,
       descricao:      desc || "",
+      local,
       prioridade:     "Média",    // definida por triagem — nunca pelo solicitante
       status:         "ABERTA",
       solicitante:    sol || "",

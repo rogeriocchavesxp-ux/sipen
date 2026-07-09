@@ -175,7 +175,7 @@ serve(async (req) => {
       // INSERT da demanda
       await conn.queryObject`
         INSERT INTO public.demandas (
-          id, area, subcategoria, titulo, descricao,
+          id, area, subcategoria, titulo, descricao, local,
           solicitante, solicitante_txt,
           responsavel, responsavel_txt,
           nome_solicitante_externo, telefone_solicitante,
@@ -183,7 +183,7 @@ serve(async (req) => {
           origem, prioridade, status, data_abertura
         ) VALUES (
           ${b.id}::uuid,
-          ${b.area}, ${b.subcategoria}, ${b.titulo}, ${b.descricao},
+          ${b.area}, ${b.subcategoria}, ${b.titulo}, ${b.descricao}, ${b.local || null},
           ${b.solicitante}, ${b.solicitante_txt},
           ${b.responsavel}, ${b.responsavel_txt},
           ${b.solicitante}, ${b.telefone},

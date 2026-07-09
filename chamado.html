@@ -169,7 +169,12 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 
         <div class="field">
           <label for="f-desc">Descrição detalhada <span class="req">*</span></label>
-          <textarea id="f-desc" placeholder="Forneça todos os detalhes que possam ajudar no atendimento: local, quando ocorreu, urgência, contexto etc."></textarea>
+          <textarea id="f-desc" placeholder="Forneça todos os detalhes que possam ajudar no atendimento: quando ocorreu, urgência, contexto etc."></textarea>
+        </div>
+
+        <div class="field">
+          <label for="f-local">Localização</label>
+          <input type="text" id="f-local" placeholder="Ex: Hall da Secretaria, Templo Principal, Sala 3...">
         </div>
       </div>
 
@@ -582,6 +587,7 @@ async function enviarChamado() {
   const sub    = g("f-sub");
   const titulo = g("f-titulo");
   const desc   = g("f-desc");
+  const local  = g("f-local") || null;
 
   if (!nome)   { mostrarErro("Informe seu nome completo.");        document.getElementById("f-nome").focus();   return; }
   if (!tel)    { mostrarErro("Informe seu telefone ou WhatsApp."); document.getElementById("f-tel").focus();    return; }
@@ -614,6 +620,7 @@ async function enviarChamado() {
         subcategoria:  sub,
         titulo:        titulo,
         descricao:     descFinal,
+        local:         local,
         solicitante:   nome,
         solicitante_txt: tel ? `${nome} · ${tel}` : nome,
         telefone:      tel,
@@ -648,7 +655,7 @@ async function enviarChamado() {
 
 /* ── Novo envio ────────────────────────────────────────────── */
 function novoEnvio() {
-  ["f-nome","f-tel","f-titulo","f-desc",
+  ["f-nome","f-tel","f-titulo","f-desc","f-local",
    "f-fin-tipo","f-fin-valor","f-fin-venc","f-fin-benefic","f-fin-cpf",
    "f-fin-forma","f-fin-pix","f-fin-banco","f-fin-ag","f-fin-conta","f-fin-obs",
    "f-reimb-nome","f-reimb-valor","f-reimb-motivo","f-reimb-forma","f-reimb-pix",
