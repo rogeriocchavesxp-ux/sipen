@@ -158,12 +158,6 @@
 
     await _loadSolicitacoes();
 
-    const abr      = LANCAMENTOS.filter(l => l.data.startsWith("2026-04"));
-    const recAbr   = abr.filter(l => l.tipo === "receita").reduce((s, l) => s + l.valor, 0);
-    const despAbr  = abr.filter(l => l.tipo === "despesa").reduce((s, l) => s + l.valor, 0);
-    const saldoAbr = recAbr - despAbr;
-    const saldoGeral = LANCAMENTOS.reduce((s, l) => s + (l.tipo === "receita" ? l.valor : -l.valor), 0);
-
     const H = hoje();
     const S7 = em7dias();
     const solPend     = (_SOLICITACOES || []).filter(r => !["pago","cancelado"].includes(r.status));
@@ -172,11 +166,11 @@
     const totalPagar  = solPend.reduce((s, r) => s + Number(r.valor || 0), 0);
     const proxPagar   = [...solPend].filter(r => r.vencimento).sort((a, b) => a.vencimento.localeCompare(b.vencimento)).slice(0, 4);
 
-    const ultLanc = [...LANCAMENTOS].sort((a, b) => b.data.localeCompare(a.data)).slice(0, 7);
-
     el.innerHTML = `
-      <div class="kpis c3">
+      <div class="kpis">
         <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">!</div><div class="kpi-body"><div class="kpi-lbl">Solicitações a pagar</div><div class="kpi-val">${brl(totalPagar)}</div><div class="kpi-d ${solAtrasadas.length ? "dn" : "wa"}">${solPend.length} pendentes${solAtrasadas.length ? ` · ${solAtrasadas.length} atrasadas` : ""}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">✕</div><div class="kpi-body"><div class="kpi-lbl">Atrasadas</div><div class="kpi-val">${solAtrasadas.length}</div><div class="kpi-d ${solAtrasadas.length ? "dn" : "nu"}">${brl(solAtrasadas.reduce((s,r)=>s+Number(r.valor||0),0))}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--goldbg);color:var(--gold)">⏰</div><div class="kpi-body"><div class="kpi-lbl">Vencendo em 7 dias</div><div class="kpi-val">${solBreve.length}</div><div class="kpi-d wa">${brl(solBreve.reduce((s,r)=>s+Number(r.valor||0),0))}</div></div></div>
       </div>
       <div class="g2">
         <div class="card">
@@ -247,11 +241,12 @@
     const totalDesp = rows.filter(l => l.tipo === "despesa").reduce((s, l) => s + l.valor, 0);
 
     el.innerHTML = `
+      ${LANCAMENTOS.length > 0 ? `
       <div class="kpis c3" style="margin-bottom:14px">
         <div class="kpi"><div class="kpi-ico" style="background:rgba(61,160,85,0.12);color:var(--gr)">↑</div><div class="kpi-body"><div class="kpi-lbl">Receitas filtradas</div><div class="kpi-val">${brl(totalRec)}</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">↓</div><div class="kpi-body"><div class="kpi-lbl">Despesas filtradas</div><div class="kpi-val">${brl(totalDesp)}</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:var(--bluebg);color:var(--blue)">⚖</div><div class="kpi-body"><div class="kpi-lbl">Resultado</div><div class="kpi-val" style="color:${totalRec - totalDesp >= 0 ? "var(--gr)" : "var(--rose)"}">${brl(totalRec - totalDesp)}</div></div></div>
-      </div>
+      </div>` : ""}
       <div class="card">
         <div class="ctit">Lançamentos <span class="csub">(${rows.length})</span></div>
         ${rows.length === 0
@@ -307,11 +302,12 @@
     const totalDesp = LANCAMENTOS.filter(l => l.tipo === "despesa").reduce((s, l) => s + l.valor, 0);
 
     el.innerHTML = `
+      ${LANCAMENTOS.length > 0 ? `
       <div class="kpis c3" style="margin-bottom:14px">
         <div class="kpi"><div class="kpi-ico" style="background:rgba(61,160,85,0.12);color:var(--gr)">↑</div><div class="kpi-body"><div class="kpi-lbl">Total entradas</div><div class="kpi-val">${brl(totalRec)}</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">↓</div><div class="kpi-body"><div class="kpi-lbl">Total saídas</div><div class="kpi-val">${brl(totalDesp)}</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:var(--bluebg);color:var(--blue)">⚖</div><div class="kpi-body"><div class="kpi-lbl">Saldo acumulado</div><div class="kpi-val" style="color:var(--gr)">${brl(totalRec - totalDesp)}</div></div></div>
-      </div>
+      </div>` : ""}
       <div class="card">
         <div class="ctit">Fluxo por período</div>
         ${mesesComSaldo.length === 0 ? EMPTY_STATE : `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">
@@ -493,11 +489,12 @@
     const vencBreve = pendentes.filter(c => c.venc <= SEMANA).length;
 
     el.innerHTML = `
+      ${CONTAS_RECEBER.length > 0 ? `
       <div class="kpis c3" style="margin-bottom:14px">
         <div class="kpi"><div class="kpi-ico" style="background:var(--tealbg);color:var(--teal)">◎</div><div class="kpi-body"><div class="kpi-lbl">Total a receber</div><div class="kpi-val">${brl(totalPend)}</div><div class="kpi-d nu">${pendentes.length} pendentes</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:rgba(61,160,85,0.12);color:var(--gr)">✓</div><div class="kpi-body"><div class="kpi-lbl">Recebidos</div><div class="kpi-val">${recebidas.length}</div><div class="kpi-d up">neste período</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:var(--goldbg);color:var(--gold)">⏰</div><div class="kpi-body"><div class="kpi-lbl">Vencendo em breve</div><div class="kpi-val">${vencBreve}</div><div class="kpi-d wa">próximos 7 dias</div></div></div>
-      </div>
+      </div>` : ""}
       <div class="card">
         <div class="ctit">Contas a receber <span class="csub">(${CONTAS_RECEBER.length})</span></div>
         ${CONTAS_RECEBER.length === 0 ? EMPTY_STATE : `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">
@@ -574,11 +571,12 @@
     const totalDesp = LANCAMENTOS.filter(l => l.tipo === "despesa").reduce((s, l) => s + l.valor, 0);
 
     el.innerHTML = `
+      ${LANCAMENTOS.length > 0 ? `
       <div class="kpis c3" style="margin-bottom:14px">
         <div class="kpi"><div class="kpi-ico" style="background:rgba(61,160,85,0.12);color:var(--gr)">↑</div><div class="kpi-body"><div class="kpi-lbl">Total receitas</div><div class="kpi-val">${brl(totalRec)}</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">↓</div><div class="kpi-body"><div class="kpi-lbl">Total despesas</div><div class="kpi-val">${brl(totalDesp)}</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:var(--bluebg);color:var(--blue)">⚖</div><div class="kpi-body"><div class="kpi-lbl">Resultado geral</div><div class="kpi-val" style="color:var(--gr)">${brl(totalRec - totalDesp)}</div></div></div>
-      </div>
+      </div>` : ""}
       <div class="card">
         <div class="ctit">Relatório por categoria
           <span style="float:right">
