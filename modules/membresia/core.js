@@ -77,7 +77,7 @@ function renderMembrosTable(rows, containerId) {
                 <div style="display:flex;align-items:center;gap:9px">
                   <div style="width:30px;height:30px;border-radius:50%;background:var(--bg-surface);border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--tx2);flex-shrink:0">${escapeHtml(ini)}</div>
                   <div style="min-width:0">
-                    <div style="font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">${escapeHtml(row.nome || "—")}</div>
+                    <div style="font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">${nomePropio(row.nome) || "—"}</div>
                   </div>
                 </div>
               </td>
@@ -129,7 +129,7 @@ function renderVisitantesTable(rows, containerId) {
       return `<tr style="border-bottom:1px solid var(--bd1);transition:background .12s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
         <td style="padding:8px 10px"><div style="display:flex;align-items:center;gap:9px">
           <div style="width:30px;height:30px;border-radius:50%;background:rgba(42,181,192,0.1);border:1px solid rgba(42,181,192,0.2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--teal);flex-shrink:0">${escapeHtml(ini)}</div>
-          <div><div style="font-weight:600;color:var(--tx1)">${escapeHtml(row.nome || "—")}</div>${tel?`<div style="font-size:10px;color:var(--tx3)">${escapeHtml(tel)}</div>`:""}</div>
+          <div><div style="font-weight:600;color:var(--tx1)">${nomePropio(row.nome) || "—"}</div>${tel?`<div style="font-size:10px;color:var(--tx3)">${escapeHtml(tel)}</div>`:""}</div>
         </div></td>
         <td style="padding:8px 10px;white-space:nowrap"><span style="background:${bg};color:${cor};border-radius:5px;padding:2px 9px;font-size:10px;font-weight:600;text-transform:capitalize">${escapeHtml(ni)}</span></td>
         <td style="padding:8px 10px;color:var(--tx2);font-size:11px;white-space:nowrap">${fmtDate(row.data_primeira_visita)}</td>
@@ -347,7 +347,7 @@ async function carregarAniversariantes() {
                   <div style="display:flex;align-items:center;gap:9px">
                     <div style="width:30px;height:30px;border-radius:50%;background:${isHoje?"rgba(212,168,67,0.2)":"var(--bg-surface)"};border:1px solid ${isHoje?"rgba(212,168,67,0.4)":"var(--bd2)"};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${isHoje?"var(--gold)":"var(--tx2)"};flex-shrink:0">${escapeHtml(ini)}</div>
                     <div>
-                      <div style="font-weight:600;color:var(--tx1)">${escapeHtml(r.nome||"—")}${isHoje?' <span style="font-size:9px;background:rgba(212,168,67,0.2);color:var(--gold);border-radius:4px;padding:1px 5px;font-weight:700">Hoje 🎉</span>':""}</div>
+                      <div style="font-weight:600;color:var(--tx1)">${nomePropio(r.nome||"—")}${isHoje?' <span style="font-size:9px;background:rgba(212,168,67,0.2);color:var(--gold);border-radius:4px;padding:1px 5px;font-weight:700">Hoje 🎉</span>':""}</div>
                       <div style="font-size:10px;color:var(--tx3)">${escapeHtml(r.funcao||"Membro")}</div>
                     </div>
                   </div>

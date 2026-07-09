@@ -591,7 +591,7 @@
                 <td style="font-size:12px;max-width:200px">${escapeHtml(d.descricao || "—")}</td>
                 <td>${pillDelib(d.tipo)}</td>
                 <td style="font-size:11.5px">${escapeHtml(d.departamento || "—")}</td>
-                <td style="font-size:11.5px">${escapeHtml(d.responsavel || "—")}</td>
+                <td style="font-size:11.5px">${nomePropio(d.responsavel) || "—"}</td>
                 <td style="font-size:11px;font-family:var(--mono);color:${isAtrasada(d.prazo) ? "var(--rose)" : "var(--tx2)"}">${fmtD(d.prazo)}${isAtrasada(d.prazo) ? " ⚠" : ""}</td>
                 <td>${pillPrio(d.prioridade)}</td>
                 <td>${_celulaDemanda(d)}</td>
@@ -864,7 +864,7 @@
             <td style="font-size:12px;max-width:200px">${escapeHtml(d.descricao || "—")}</td>
             <td>${pillDelib(d.tipo)}</td>
             <td style="font-size:11.5px">${escapeHtml(d.departamento || "—")}</td>
-            <td style="font-size:11.5px">${escapeHtml(d.responsavel || "—")}</td>
+            <td style="font-size:11.5px">${nomePropio(d.responsavel) || "—"}</td>
             <td style="font-size:11px;font-family:var(--mono);color:${isAtrasada(d.prazo) ? "var(--rose)" : "var(--tx2)"}">${fmtD(d.prazo)}${isAtrasada(d.prazo) ? " ⚠" : ""}</td>
             <td>${pillPrio(d.prioridade)}</td>
             <td>${_celulaDemandaGlobal(d)}</td>
@@ -950,7 +950,7 @@
             <td style="font-size:12px;max-width:180px">${escapeHtml(d.descricao || "—")}</td>
             <td>${pillDelib(d.tipo)}</td>
             <td style="font-size:11px">${escapeHtml(d.departamento || "—")}</td>
-            <td style="font-size:11px">${escapeHtml(d.responsavel || "—")}</td>
+            <td style="font-size:11px">${nomePropio(d.responsavel) || "—"}</td>
             <td style="font-size:11px;color:${isAtrasada(d.prazo) ? "var(--rose)" : "var(--tx2)"}">${fmtD(d.prazo)}${isAtrasada(d.prazo) ? " ⚠" : ""}</td>
             <td>${pillPrio(d.prioridade)}</td>
             <td>${_celulaDemandaModal(d)}</td>

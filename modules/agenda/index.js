@@ -551,7 +551,7 @@ async function carregarSolicitacoesAgenda() {
           return `<tr style="border-bottom:1px solid var(--bd1)" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
             <td style="padding:8px 10px;color:var(--tx1);font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(r.titulo||'')}">${escapeHtml(r.titulo||"—")}</td>
             <td style="padding:8px 10px;color:var(--tx2);font-size:11px">${escapeHtml(r.subcategoria||"—")}</td>
-            <td style="padding:8px 10px;color:var(--tx2)">${escapeHtml(r.solicitante||r.solicitante_txt||"—")}</td>
+            <td style="padding:8px 10px;color:var(--tx2)">${nomePropio(r.solicitante||r.solicitante_txt) || "—"}</td>
             <td style="padding:8px 10px;color:var(--tx2);white-space:nowrap;font-family:var(--mono);font-size:11px">${r.data_abertura||"—"}</td>
             <td style="padding:8px 10px">
               <span style="font-size:9.5px;padding:2px 8px;border-radius:10px;background:${cor}18;color:${cor};border:1px solid ${cor}33;font-weight:700">${escapeHtml(status)}</span>
@@ -613,7 +613,7 @@ function agAprovarSolicitacao(r) {
       <div style="font-size:22px">✅</div>
       <div>
         <div style="font-size:14px;font-weight:800;color:var(--tx1)">Aprovar e criar evento</div>
-        <div style="font-size:10.5px;color:var(--tx3)">${escapeHtml(r.titulo||"—")}${r.solicitante ? " · " + escapeHtml(r.solicitante) : ""}</div>
+        <div style="font-size:10.5px;color:var(--tx3)">${escapeHtml(r.titulo||"—")}${r.solicitante ? " · " + nomePropio(r.solicitante) : ""}</div>
       </div>
       <button onclick="document.getElementById('ag-aprov-modal')?.remove()" style="margin-left:auto;background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button>
     </div>

@@ -170,14 +170,7 @@
     return `<span style="font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;background:rgba(74,156,245,.12);color:var(--sky);margin-left:4px">🌐 Portal</span>`;
   }
 
-  /* Normaliza capitalização de nomes para exibição (JOÃO SILVA → João Silva) */
-  function _nome(str) {
-    if (!str) return "";
-    const norm = str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-    return escapeHtml(norm);
-  }
-
-  function fmtD(d) {
+function fmtD(d) {
     if (!d) return "—";
     const s = d.split("T")[0].split("-");
     return `${s[2]}/${s[1]}/${s[0]}`;
@@ -431,13 +424,13 @@
         <div class="card">
           <div class="ctit">Solicitações recentes <span class="cact" onclick="demRecarregarDash()">↻ Atualizar</span></div>
           ${recentes.length === 0
-            ? '<div style="color:var(--tx3);font-size:11.5px">Nenhuma demanda registrada</div>'
+            ? '<div class="empty-state">Nenhuma demanda registrada</div>'
             : recentes.map(r => `
               <div class="trow" style="cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','dem-dash')">
                 <div class="tdot" style="background:${catCor(r.area)}"></div>
                 <div class="tbody">
                   <div class="ttitle">${catIcon(r.area)} ${escapeHtml(r.titulo) || "Sem título"}${r.numero_chamado ? ` <span style="font-size:10px;font-weight:600;color:var(--acc,#4a9cf5);letter-spacing:.04em">${escapeHtml(r.numero_chamado)}</span>` : ""}</div>
-                  <div class="tmeta">${r.area||"—"}${r.subcategoria?" · "+r.subcategoria:""} · ${_nome(r.solicitante || r.solicitante_txt) || "—"} · ${fmtD(r.data_abertura||r.criado_em)}</div>
+                  <div class="tmeta">${r.area||"—"}${r.subcategoria?" · "+r.subcategoria:""} · ${nomePropio(r.solicitante || r.solicitante_txt) || "—"} · ${fmtD(r.data_abertura||r.criado_em)}</div>
                 </div>
                 <div class="tright" style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">
                   ${pillStatus(r.status)}
@@ -562,8 +555,8 @@
                 </td>
                 <td style="padding:8px 6px;color:var(--tx2);font-size:11px">${r.subcategoria||"—"}</td>
                 <td style="padding:8px 6px;color:var(--tx1);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.titulo) || "—"}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${_nome(r.solicitante || r.solicitante_txt || r.nome_solicitante_externo) || "—"}${pillOrigem(r.origem)}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${_nome(r.responsavel || r.responsavel_txt) || "—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${nomePropio(r.solicitante || r.solicitante_txt || r.nome_solicitante_externo) || "—"}${pillOrigem(r.origem)}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${nomePropio(r.responsavel || r.responsavel_txt) || "—"}</td>
                 <td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--tx1);white-space:nowrap">${r.financial_data?.valor != null ? `R$ ${parseFloat(r.financial_data.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}</td>
                 <td style="padding:8px 6px">${pillStatus(r.status)}</td>
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${fmtD(r.data_abertura||r.criado_em)}</td>
@@ -1042,8 +1035,8 @@
     const detailRows = [
       ["Categoria",     `<span style="color:${catCor(dem.area)};font-weight:600">${catIcon(dem.area)} ${escapeHtml(dem.area)||"—"}</span>`],
       ["Subcategoria",  escapeHtml(dem.subcategoria)||"—"],
-      ["Solicitante",   `${_nome(dem.solicitante || dem.solicitante_txt || dem.nome_solicitante_externo) || "—"}${pillOrigem(dem.origem)}${dem.telefone_solicitante ? `<br><span style="color:var(--tx3);font-size:11px">📞 ${escapeHtml(dem.telefone_solicitante)}</span>` : ""}`],
-      ["Responsável",   _nome(dem.responsavel || dem.responsavel_txt) || "—"],
+      ["Solicitante",   `${nomePropio(dem.solicitante || dem.solicitante_txt || dem.nome_solicitante_externo) || "—"}${pillOrigem(dem.origem)}${dem.telefone_solicitante ? `<br><span style="color:var(--tx3);font-size:11px">📞 ${escapeHtml(dem.telefone_solicitante)}</span>` : ""}`],
+      ["Responsável",   nomePropio(dem.responsavel || dem.responsavel_txt) || "—"],
       ["Abertura",      fmtD(dem.data_abertura||dem.criado_em)],
       ["Conclusão prev.",fmtD(dem.data_conclusao)],
     ];
@@ -2040,7 +2033,7 @@
       return `<tr style="border-bottom:1px solid var(--bd1);cursor:pointer" onclick="window.demAbrirDetalhe('${r.id||r._row}','infra-dash')">
         <td style="padding:7px 6px;font-weight:600;color:var(--tx1);max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(r.titulo) || "—"}</td>
         <td style="padding:7px 6px">${pillStatus(r.status)}</td>
-        <td style="padding:7px 4px;color:var(--tx3);font-size:11px">${_nome(r.responsavel || r.responsavel_txt) || "—"}</td>
+        <td style="padding:7px 4px;color:var(--tx3);font-size:11px">${nomePropio(r.responsavel || r.responsavel_txt) || "—"}</td>
       </tr>`;
     }
     function _miniTable(list) {
@@ -2079,37 +2072,20 @@
     if (!elDem) return;
     const recentes = [..._cache].sort((a,b) => (b.criado_em||"").localeCompare(a.criado_em||"")).slice(0,6);
     if (!recentes.length) {
-      elDem.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Nenhuma solicitação registrada.</div>`;
+      elDem.innerHTML = `<div class="empty-state">Nenhuma solicitação registrada.</div>`;
       return;
     }
 
-    const isMobile = typeof window.matchMedia === "function" && window.matchMedia("(max-width: 768px)").matches;
-    if (isMobile) {
-      elDem.innerHTML = recentes.map(r =>
-        `<div style="padding:10px 0;border-bottom:1px solid var(--bd1);cursor:pointer" onclick="window.demAbrirDetalhe('${r.id||r._row}','area-dem')">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-            <div style="font-size:12px;font-weight:600;color:var(--tx1);line-height:1.4">${escapeHtml(r.titulo||"—")}</div>
-            ${pillStatus(r.status)}
-          </div>
-          <div style="font-size:10.5px;color:var(--tx3);margin-top:3px">${r.area||"—"} · ${fmtD(r.criado_em)}</div>
-        </div>`
-      ).join("") + `<div style="margin-top:10px"><button class="tbt" onclick="go('area-dem')">Ver todas →</button></div>`;
-    } else {
-      elDem.innerHTML = `<table style="width:100%;border-collapse:collapse">
-        <thead><tr>
-          <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Título</th>
-          <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Status</th>
-          <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Área</th>
-          <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Data</th>
-        </tr></thead>
-        <tbody>${recentes.map(r => `<tr style="border-top:1px solid var(--bd1);cursor:pointer" onclick="window.demAbrirDetalhe('${r.id||r._row}','area-dem')">
-          <td style="padding:8px;font-size:11.5px;color:var(--tx1)"><strong>${escapeHtml(r.titulo)||"—"}</strong></td>
-          <td style="padding:8px">${pillStatus(r.status)}</td>
-          <td style="padding:8px;font-size:11px;color:var(--tx3)">${r.area||"—"}</td>
-          <td style="padding:8px;font-size:10.5px;color:var(--tx3);font-family:var(--mono)">${fmtD(r.criado_em)}</td>
-        </tr>`).join("")}</tbody>
-      </table>`;
-    }
+    elDem.innerHTML = recentes.map(r =>
+      `<div class="trow" style="cursor:pointer" onclick="window.demAbrirDetalhe('${r.id||r._row}','area-dem')">
+        <div class="tdot" style="background:${catCor(r.area)}"></div>
+        <div class="tbody">
+          <div class="ttitle">${catIcon(r.area)} ${escapeHtml(r.titulo||"—")}${r.numero_chamado ? ` <span style="font-size:10px;font-weight:600;color:var(--acc,#4a9cf5);letter-spacing:.04em">${escapeHtml(r.numero_chamado)}</span>` : ""}</div>
+          <div class="tmeta">${r.area||"—"}${r.subcategoria?" · "+r.subcategoria:""} · ${fmtD(r.criado_em)}</div>
+        </div>
+        <div class="tright">${pillStatus(r.status)}</div>
+      </div>`
+    ).join("") + `<div style="margin-top:10px"><button class="tbt" onclick="go('area-dem')">Ver todas →</button></div>`;
   };
 
   document.addEventListener("sipen:navigate", async ({ detail: { id } }) => {
@@ -2342,10 +2318,10 @@
               const stCl  = ST_CL[c.status]          || '#888';
               const dtAb  = c.data_abertura ? c.data_abertura.slice(0,10) : '—';
               return `<tr style="border-bottom:1px solid var(--bd1)">
-                <td style="padding:8px 10px;color:var(--tx1);font-weight:500">${_nome(c.solicitante) || "—"}</td>
+                <td style="padding:8px 10px;color:var(--tx1);font-weight:500">${nomePropio(c.solicitante) || "—"}</td>
                 <td style="padding:8px 10px;color:var(--tx2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(c.titulo || '')}">${escapeHtml(c.titulo || '—')}</td>
                 <td style="padding:8px 10px"><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${stBg};color:${stCl}">${escapeHtml(stLbl)}</span></td>
-                <td style="padding:8px 10px;color:var(--tx2)">${_nome(c.responsavel) || "—"}</td>
+                <td style="padding:8px 10px;color:var(--tx2)">${nomePropio(c.responsavel) || "—"}</td>
                 <td style="padding:8px 10px;color:var(--tx3);font-size:11px">${dtAb}</td>
                 <td style="padding:8px 10px;text-align:right;white-space:nowrap">
                   <button onclick='abrirModalCasoPri(${JSON.stringify(c.id)},${safeJsonForHtml(c)})' style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:10px;padding:3px 8px;cursor:pointer;margin-right:4px">✏️</button>
@@ -2476,8 +2452,8 @@
                 </td>
                 <td style="padding:8px 6px;color:var(--tx2);font-size:11px;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${r.subcategoria||"—"}</td>
                 <td style="padding:8px 6px;color:var(--tx1);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${escapeHtml(r.titulo)||"—"}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${_nome(r.solicitante||r.solicitante_txt)||"—"}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${_nome(r.responsavel||r.responsavel_txt)||"—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${nomePropio(r.solicitante||r.solicitante_txt)||"—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${nomePropio(r.responsavel||r.responsavel_txt)||"—"}</td>
                 <td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--tx1);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${r.financial_data?.valor!=null?`R$ ${parseFloat(r.financial_data.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}`:"—"}</td>
                 <td style="padding:8px 6px;color:var(--tx2);font-size:11px;white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${escapeHtml(r.financial_data?.forma_pagamento||"—")}</td>
                 <td style="padding:8px 6px;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${pillStatus(r.status)}</td>
@@ -2567,8 +2543,8 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px 28px">
           <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Categoria</div><div style="font-size:11.5px;color:#1a1a1a">${r.area||"—"}</div></div>
           <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Subcategoria</div><div style="font-size:11.5px;color:#1a1a1a">${r.subcategoria||"—"}</div></div>
-          <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Solicitante</div><div style="font-size:11.5px;color:#1a1a1a">${_nome(r.solicitante||r.solicitante_txt) || "—"}</div></div>
-          <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Responsável</div><div style="font-size:11.5px;color:#1a1a1a">${_nome(r.responsavel||r.responsavel_txt) || "—"}</div></div>
+          <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Solicitante</div><div style="font-size:11.5px;color:#1a1a1a">${nomePropio(r.solicitante||r.solicitante_txt) || "—"}</div></div>
+          <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Responsável</div><div style="font-size:11.5px;color:#1a1a1a">${nomePropio(r.responsavel||r.responsavel_txt) || "—"}</div></div>
           <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Valor</div><div style="font-size:12px;font-weight:700;color:#1a1a1a">${fmtVal(r.financial_data)}</div></div>
           <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Forma de Pagamento</div><div style="font-size:11.5px;color:#1a1a1a">${escapeHtml(r.financial_data?.forma_pagamento||"—")}</div></div>
           ${r.financial_data?.chave_pix?`<div style="grid-column:1/-1"><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Chave PIX</div><div style="font-size:11.5px;color:#1a1a1a;font-weight:600">${escapeHtml(r.financial_data.chave_pix)}</div></div>`:""}
@@ -2723,8 +2699,8 @@ ${linhas}
                   onmouseout="this.style.background='${atrasada?"rgba(224,85,85,0.04)":""}'">
                 <td style="padding:8px 6px;color:var(--tx1);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${escapeHtml(r.titulo)||"—"}</td>
                 <td style="padding:8px 6px;color:var(--tx2);font-size:11px;white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${escapeHtml(r.subcategoria)||"—"}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${_nome(r.solicitante||r.solicitante_txt)||"—"}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${_nome(r.responsavel||r.responsavel_txt)||"—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${nomePropio(r.solicitante||r.solicitante_txt)||"—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${nomePropio(r.responsavel||r.responsavel_txt)||"—"}</td>
                 <td style="padding:4px 6px" onclick="event.stopPropagation()">
                   <select onchange="window.manStatusChange('${rid}',this.value)" style="font-size:11px;padding:3px 6px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);cursor:pointer">
                     ${["Aberta","Em Análise","Em Andamento","Pendente","Concluída","Cancelada"].map(s =>

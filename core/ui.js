@@ -59,6 +59,12 @@ function escapeHtml(v) {
   return String(v ?? "").replace(/[&<>"']/g, s => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s]));
 }
 
+/* Normaliza capitalização de nomes para exibição: "JOÃO SILVA" → "João Silva" */
+function nomePropio(str) {
+  if (!str) return "";
+  return escapeHtml(str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()));
+}
+
 function escapeHtmlAttr(v) {
   return escapeHtml(v).replace(/`/g, '&#96;');
 }

@@ -1392,7 +1392,7 @@ function _renderFinanceiroPorMes(cong, el) {
           </td>
           <td style="padding:7px 8px;font-size:11.5px;color:var(--tx2);max-width:160px">${escapeHtml(l.descricao||"—")}</td>
           <td style="padding:7px 8px;font-size:11px;color:var(--tx3)">${escapeHtml(l.categoria||"—")}</td>
-          <td style="padding:7px 8px;font-size:11px;color:var(--tx3)">${escapeHtml(l.responsavel||"—")}</td>
+          <td style="padding:7px 8px;font-size:11px;color:var(--tx3)">${nomePropio(l.responsavel) || "—"}</td>
           <td style="padding:7px 0;text-align:right;font-weight:700;white-space:nowrap;color:${isR?"var(--gr)":"var(--rose)"}">
             ${isR?"+":"-"} ${fmt(l.valor)}
           </td>

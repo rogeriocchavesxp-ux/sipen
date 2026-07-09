@@ -506,7 +506,7 @@
               <td style="padding:7px 10px;text-align:center">
                 <input type="checkbox" id="af-wz-ck-${i}" ${r.selecionado && !disabled ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
               </td>
-              <td style="padding:7px 10px;color:var(--tx1);font-weight:600">${escapeHtml(r.nome)}</td>
+              <td style="padding:7px 10px;color:var(--tx1);font-weight:600">${nomePropio(r.nome)}</td>
               <td style="padding:7px 10px">${pessoaSelect}</td>
               <td style="padding:7px 10px;text-align:center;font-size:10px;font-weight:800;color:${cor}">${siLabel}</td>
               <td style="padding:7px 10px;text-align:center">${situacao}</td>

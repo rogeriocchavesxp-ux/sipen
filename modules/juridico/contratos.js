@@ -542,7 +542,7 @@
           ? `<span style="color:var(--amber);font-weight:600">Vence em ${dias} dias</span>`
           : `<span style="color:var(--gr)">${dias} dias restantes</span>`] : null,
       con.renovacao_automatica != null ? ["Renovação automática", con.renovacao_automatica ? "✅ Sim" : "Não"] : null,
-      con.responsavel        ? ["Responsável",         escapeHtml(con.responsavel)]                                             : null,
+      con.responsavel        ? ["Responsável", nomePropio(con.responsavel)]                                             : null,
       con.contato_fornecedor ? ["Contato",             escapeHtml(con.contato_fornecedor)]                                      : null,
       con.forma_pagamento    ? ["Forma de pagamento",  escapeHtml(con.forma_pagamento)]                                         : null,
     ].filter(Boolean);
@@ -1148,7 +1148,7 @@
         } else {
           tbody.innerHTML = criticos.slice(0, 8).map(r =>
             `<tr>
-              <td class="tdp">${escapeHtml(r.nome || "—")}</td>
+              <td class="tdp">${nomePropio(r.nome) || "—"}</td>
               <td>${escapeHtml(r.localizacao || r.categoria || "—")}</td>
               <td class="mono neg">${r.quantidade ?? "—"} ${escapeHtml(r.unidade || "")}</td>
               <td class="tdc">${r.quantidade_min ?? "—"}</td>
