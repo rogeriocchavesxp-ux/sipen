@@ -15,8 +15,9 @@
 
   /* ── ESTADO — Solicitações e Anexos (banco real) ────────── */
 
-  let _SOLICITACOES = null;
-  let _ANEXOS       = null; // { [solicitacao_id]: [...] }
+  let _SOLICITACOES   = null;
+  let _ANEXOS         = null; // { [solicitacao_id]: [...] }
+  let _DEM_FIN_CACHE  = null;
 
   async function _loadSolicitacoes(force) {
     if (_SOLICITACOES !== null && !force) return;
@@ -150,69 +151,174 @@
 
   const EMPTY_STATE = `<div class="empty-state">Nenhum registro encontrado.</div>`;
 
+  /* ── DEMANDAS FINANCEIRAS — helpers e carga ─────────────── */
+
+  const _DEM_STATUS_LABEL = {
+    "ABERTA": "Aberta", "EM_ANALISE": "Em Análise", "EM_ANDAMENTO": "Em Andamento",
+    "AGUARDANDO_PAGAMENTO": "Aguardando Pagamento", "PENDENTE": "Pendente",
+    "CONCLUIDA": "Concluída", "CANCELADA": "Cancelada",
+  };
+  const _DEM_STATUS_CFG = {
+    "Aberta":                { bg:"rgba(74,156,245,.12)",  cl:"var(--blue)"   },
+    "Em Análise":            { bg:"rgba(212,168,67,.12)",  cl:"var(--gold)"   },
+    "Em Andamento":          { bg:"rgba(139,111,212,.12)", cl:"var(--violet)" },
+    "Aguardando Pagamento":  { bg:"rgba(234,179,8,.12)",   cl:"var(--amber)"  },
+    "Pendente":              { bg:"rgba(224,138,42,.12)",  cl:"var(--amber)"  },
+    "Concluída":             { bg:"rgba(58,170,92,.12)",   cl:"var(--gr)"     },
+    "Cancelada":             { bg:"rgba(90,96,104,.15)",   cl:"var(--tx3)"    },
+  };
+
+  function _demLabel(st)  { return _DEM_STATUS_LABEL[st] || st || "Aberta"; }
+  function _pillDem(st) {
+    const label = _demLabel(st);
+    const s = _DEM_STATUS_CFG[label] || { bg:"rgba(90,96,104,.15)", cl:"var(--tx3)" };
+    return `<span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;white-space:nowrap;background:${s.bg};color:${s.cl}">${label}</span>`;
+  }
+
+  async function _loadDemandasFin(force) {
+    if (_DEM_FIN_CACHE !== null && !force) return _DEM_FIN_CACHE;
+    try {
+      const base = typeof apiBaseUrl === "function" ? apiBaseUrl() : "";
+      const hdrs = typeof apiHeaders === "function" ? apiHeaders({ "Prefer": "count=none" }) : {};
+      const url  = `${base}/rest/v1/v_demandas?select=*&area=eq.Financeiro&order=criado_em.desc.nullslast&limit=500`;
+      const res  = await fetch(url, { method: "GET", headers: hdrs });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      _DEM_FIN_CACHE = Array.isArray(data)
+        ? data.map(r => ({ ...r, status: _demLabel(r.status) }))
+        : [];
+    } catch (e) {
+      console.error("[financeiro] Erro ao carregar demandas:", e);
+      _DEM_FIN_CACHE = [];
+    }
+    return _DEM_FIN_CACHE;
+  }
+
   /* ── RENDER: DASHBOARD ───────────────────────────────────── */
 
   async function renderDash() {
     const el = document.getElementById("fin-dash-content");
     if (!el) return;
+    el.innerHTML = `<div style="padding:12px 0;color:var(--tx3);font-size:11.5px"><span style="display:inline-block;width:11px;height:11px;border:2px solid var(--gr);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px"></span> Carregando...</div>`;
 
-    await _loadSolicitacoes();
+    const demFin = await _loadDemandasFin();
 
-    const H = hoje();
-    const S7 = em7dias();
-    const solPend     = (_SOLICITACOES || []).filter(r => !["pago","cancelado"].includes(r.status));
-    const solAtrasadas= solPend.filter(r => r.vencimento && r.vencimento < H);
-    const solBreve    = solPend.filter(r => r.vencimento && r.vencimento >= H && r.vencimento <= S7);
-    const totalPagar  = solPend.reduce((s, r) => s + Number(r.valor || 0), 0);
-    const proxPagar   = [...solPend].filter(r => r.vencimento).sort((a, b) => a.vencimento.localeCompare(b.vencimento)).slice(0, 4);
+    const ATIVAS  = ["Aberta","Em Análise","Em Andamento","Pendente","Aguardando Pagamento"];
+    const abertas  = demFin.filter(r => r.status === "Aberta");
+    const analise  = demFin.filter(r => r.status === "Em Análise");
+    const andando  = demFin.filter(r => r.status === "Em Andamento");
+    const pendente = demFin.filter(r => r.status === "Pendente" || r.status === "Aguardando Pagamento");
+    const concl    = demFin.filter(r => r.status === "Concluída");
+    const ativas   = demFin.filter(r => ATIVAS.includes(r.status));
+
+    const limite7d  = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
+    const atrasadas = ativas.filter(r => (r.data_abertura || r.criado_em || "").split("T")[0] < limite7d);
+    const urgentes  = ativas.filter(r => ["Alta","Urgente"].includes(r.prioridade));
+
+    const recentes = [...demFin]
+      .sort((a, b) => (b.criado_em || "").localeCompare(a.criado_em || ""))
+      .slice(0, 8);
+
+    const atencao = [...new Map(
+      [...atrasadas, ...urgentes].map(r => [r.id, r])
+    ).values()].slice(0, 6);
+
+    const totalGeral = demFin.length || 1;
+    const pipeline = [
+      { label:"Aberta",       val:abertas.length,  cor:"var(--blue)"   },
+      { label:"Em Análise",   val:analise.length,  cor:"var(--gold)"   },
+      { label:"Em Andamento", val:andando.length,  cor:"var(--violet)" },
+      { label:"Pendente",     val:pendente.length, cor:"var(--amber)"  },
+      { label:"Concluída",    val:concl.length,    cor:"var(--gr)"     },
+    ];
 
     el.innerHTML = `
-      <div class="kpis">
-        <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">!</div><div class="kpi-body"><div class="kpi-lbl">Solicitações a pagar</div><div class="kpi-val">${brl(totalPagar)}</div><div class="kpi-d ${solAtrasadas.length ? "dn" : "wa"}">${solPend.length} pendentes${solAtrasadas.length ? ` · ${solAtrasadas.length} atrasadas` : ""}</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">✕</div><div class="kpi-body"><div class="kpi-lbl">Atrasadas</div><div class="kpi-val">${solAtrasadas.length}</div><div class="kpi-d ${solAtrasadas.length ? "dn" : "nu"}">${brl(solAtrasadas.reduce((s,r)=>s+Number(r.valor||0),0))}</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:var(--goldbg);color:var(--gold)">⏰</div><div class="kpi-body"><div class="kpi-lbl">Vencendo em 7 dias</div><div class="kpi-val">${solBreve.length}</div><div class="kpi-d wa">${brl(solBreve.reduce((s,r)=>s+Number(r.valor||0),0))}</div></div></div>
+      <div class="kpis" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;background:var(--bg-card);border:1px solid var(--bd1);border-radius:var(--rl);overflow:hidden;margin-bottom:18px">
+        <div class="kpi" style="border-radius:0;border:none;border-right:1px solid var(--bd1)">
+          <div class="kpi-ico" style="background:rgba(74,156,245,.12);color:var(--blue)">◻</div>
+          <div class="kpi-body"><div class="kpi-lbl">Abertas</div><div class="kpi-val">${abertas.length}</div><div class="kpi-d nu">aguardando</div></div>
+        </div>
+        <div class="kpi" style="border-radius:0;border:none;border-right:1px solid var(--bd1)">
+          <div class="kpi-ico" style="background:rgba(212,168,67,.12);color:var(--gold)">🔍</div>
+          <div class="kpi-body"><div class="kpi-lbl">Em Análise</div><div class="kpi-val">${analise.length}</div><div class="kpi-d nu">triagem</div></div>
+        </div>
+        <div class="kpi" style="border-radius:0;border:none;border-right:1px solid var(--bd1)">
+          <div class="kpi-ico" style="background:rgba(139,111,212,.12);color:var(--violet)">◎</div>
+          <div class="kpi-body"><div class="kpi-lbl">Em Andamento</div><div class="kpi-val">${andando.length}</div><div class="kpi-d nu">em execução</div></div>
+        </div>
+        <div class="kpi" style="border-radius:0;border:none;border-right:1px solid var(--bd1)">
+          <div class="kpi-ico" style="background:rgba(212,168,67,.12);color:var(--amber)">⏳</div>
+          <div class="kpi-body"><div class="kpi-lbl">Pendentes</div><div class="kpi-val">${pendente.length}</div><div class="kpi-d nu">aguardando</div></div>
+        </div>
+        <div class="kpi" style="border-radius:0;border:none">
+          <div class="kpi-ico" style="background:rgba(58,170,92,.12);color:var(--gr)">✓</div>
+          <div class="kpi-body"><div class="kpi-lbl">Concluídas</div><div class="kpi-val">${concl.length}</div><div class="kpi-d up">total</div></div>
+        </div>
       </div>
+
       <div class="g2">
         <div class="card">
-          <div class="ctit">Últimos lançamentos <span class="cact" onclick="go('fin-lancamentos')">Ver todos →</span></div>
-          ${ultLanc.length
-            ? ultLanc.map(l => `
-                <div class="trow">
-                  <div class="tdot" style="background:${l.tipo === "receita" ? "var(--gr)" : "var(--rose)"}"></div>
-                  <div class="tbody">
-                    <div class="ttitle">${l.desc}</div>
-                    <div class="tmeta">${fmtD(l.data)} · ${l.cat} · ${l.forma}</div>
+          <div class="ctit">Últimas demandas financeiras <span class="cact" onclick="finRecarregarDash()">↻ Atualizar</span></div>
+          ${recentes.length === 0
+            ? '<div class="empty-state">Nenhuma demanda financeira registrada</div>'
+            : recentes.map(r => {
+                const meta = [
+                  r.subcategoria ? escapeHtml(r.subcategoria) : null,
+                  r.local        ? escapeHtml(r.local)        : null,
+                  nomePropio(r.solicitante || r.solicitante_txt) || null,
+                  fmtD(r.data_abertura || r.criado_em),
+                ].filter(Boolean).join(" · ");
+                return `
+                <div onclick="window.demAbrirDetalhe && demAbrirDetalhe('${r.id||r._row}','fin-dash')"
+                     style="cursor:pointer;border-bottom:1px solid var(--bd1);padding:9px 0"
+                     onmouseover="this.style.background='var(--bg-hover)'"
+                     onmouseout="this.style.background=''">
+                  <div style="display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;padding:0 2px 5px">
+                    <span style="font-size:10.5px;font-weight:700;color:var(--blue);font-family:var(--mono);letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.numero_chamado ? escapeHtml(r.numero_chamado) : "—"}</span>
+                    <span style="font-size:12.5px;font-weight:600;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">💰 ${escapeHtml(r.titulo) || "Sem título"}</span>
+                    ${_pillDem(r.status)}
                   </div>
-                  <div class="tright" style="font-size:12px;font-weight:700;color:${l.tipo === "receita" ? "var(--gr)" : "var(--rose)"}">${l.tipo === "receita" ? "+" : "−"}${brl(l.valor)}</div>
-                </div>`).join("")
-            : EMPTY_STATE
-          }
+                  <div style="font-size:11px;color:var(--tx3);padding:0 2px;line-height:1.4">${meta}</div>
+                </div>`;
+              }).join("")}
         </div>
-        <div>
-          <div class="card" style="margin-bottom:10px;${solAtrasadas.length ? "border-color:rgba(224,85,85,.3)" : ""}">
-            <div class="ctit" style="${solAtrasadas.length ? "color:var(--rose)" : ""}">Alertas financeiros <span class="cact" onclick="go('fin-pagar')">Ver todas →</span></div>
-            ${solAtrasadas.length
-              ? solAtrasadas.map(r => `
-                  <div class="trow">
-                    <div class="tdot" style="background:var(--rose)"></div>
-                    <div class="tbody"><div class="ttitle">${escapeHtml(r.finalidade || r.fornecedor) || "—"}</div><div class="tmeta">Venceu ${fmtD(r.vencimento)} · ${escapeHtml(r.fornecedor) || "—"}</div></div>
-                    <div class="tright"><span class="pill pl">atrasado</span></div>
-                  </div>`)
-                .join("")
-              : '<div class="empty-state">Nenhuma solicitação atrasada ✓</div>'
-            }
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="card" style="${atencao.length ? "border-color:rgba(224,85,85,.25)" : ""}">
+            <div class="ctit" style="${atencao.length ? "color:var(--rose)" : ""}">
+              Requer atenção
+              ${atrasadas.length ? `<span style="font-size:11px;font-weight:600;padding:1px 8px;border-radius:10px;background:var(--rosebg);color:var(--rose);margin-left:6px">${atrasadas.length} atrasada${atrasadas.length !== 1 ? "s" : ""}</span>` : ""}
+            </div>
+            ${atencao.length === 0
+              ? '<div class="empty-state">Sem itens críticos ✓</div>'
+              : atencao.map(r => {
+                  const abertoEm  = (r.data_abertura || r.criado_em || "").split("T")[0];
+                  const diasAberta = Math.floor((Date.now() - new Date(abertoEm).getTime()) / 86400000);
+                  const isAtrasada = abertoEm < limite7d;
+                  return `
+                  <div class="trow" onclick="window.demAbrirDetalhe && demAbrirDetalhe('${r.id||r._row}','fin-dash')" style="cursor:pointer">
+                    <div class="tdot" style="background:${isAtrasada ? "var(--rose)" : "var(--amber)"}"></div>
+                    <div class="tbody">
+                      <div class="ttitle">${escapeHtml(r.titulo || "Sem título")}</div>
+                      <div class="tmeta">${escapeHtml(r.subcategoria || "Financeiro")} · ${diasAberta}d aberta · ${nomePropio(r.solicitante || r.solicitante_txt) || "—"}</div>
+                    </div>
+                    <div class="tright">${_pillDem(r.status)}</div>
+                  </div>`;
+                }).join("")}
           </div>
+
           <div class="card">
-            <div class="ctit">Próximos vencimentos <span class="cact" onclick="go('fin-pagar')">Ver todos →</span></div>
-            ${proxPagar.length
-              ? proxPagar.map(r => `
-                  <div class="trow">
-                    <div class="tdot" style="background:var(--gold)"></div>
-                    <div class="tbody"><div class="ttitle">${escapeHtml(r.finalidade || r.fornecedor) || "—"}</div><div class="tmeta">Vence ${fmtD(r.vencimento)} · ${r.categoria || "—"}</div></div>
-                    <div class="tright" style="font-size:12px;font-weight:600;color:var(--tx1)">${brl(r.valor)}</div>
-                  </div>`).join("")
-              : '<div class="empty-state">Sem vencimentos próximos</div>'
-            }
+            <div class="ctit">Pipeline de status</div>
+            ${pipeline.map(p => `
+              <div style="margin-bottom:9px">
+                <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+                  <span style="color:var(--tx2)">${p.label}</span>
+                  <span style="color:var(--tx1);font-weight:700">${p.val}</span>
+                </div>
+                <div style="height:5px;border-radius:3px;background:var(--bd1)">
+                  <div style="height:5px;border-radius:3px;background:${p.cor};width:${p.val ? Math.max(Math.round(p.val / totalGeral * 100), 2) : 0}%;transition:width .3s"></div>
+                </div>
+              </div>`).join("")}
           </div>
         </div>
       </div>`;
@@ -823,8 +929,9 @@
     if (MAP[id]) MAP[id]();
   });
 
-  window.finFiltrarLanc  = renderLancamentos;
-  window.finFiltrarPagar = () => renderPagar();
+  window.finRecarregarDash = async function() { _DEM_FIN_CACHE = null; await renderDash(); };
+  window.finFiltrarLanc    = renderLancamentos;
+  window.finFiltrarPagar   = () => renderPagar();
 
   let _pagarDebTimer = null;
   window.finDebouncePagar = function() {
