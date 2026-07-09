@@ -258,7 +258,7 @@
 
       <div class="g2">
         <div class="card">
-          <div class="ctit">Últimas demandas financeiras <span class="cact" onclick="finRecarregarDash()">↻ Atualizar</span></div>
+          <div class="ctit">Últimas demandas financeiras <span class="cact" onclick="go('fin-demandas')">Ver todas →</span><span class="cact" style="margin-left:8px" onclick="finRecarregarDash()">↻</span></div>
           ${recentes.length === 0
             ? '<div class="empty-state">Nenhuma demanda financeira registrada</div>'
             : recentes.map(r => {
