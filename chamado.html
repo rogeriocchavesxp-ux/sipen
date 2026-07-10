@@ -105,6 +105,39 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 .btn-novo:hover { background: var(--acc); color: #fff; }
 
 .footer-note { text-align: center; font-size: 11px; color: var(--tx3); margin-top: 32px; line-height: 1.7; }
+
+/* ── Custom subcategoria dropdown ─────────────────────────── */
+.csub { position: relative; }
+.csub-btn {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--inpbd);
+  background: var(--inp); color: var(--tx3); font-size: 13.5px; font-family: inherit;
+  cursor: pointer; text-align: left; width: 100%; min-height: 42px;
+  outline: none; transition: border-color .15s;
+}
+.csub-btn.has-val { color: var(--tx1); }
+.csub-btn:focus, .csub-btn.open { border-color: var(--acc); }
+.csub-btn svg { flex-shrink: 0; color: var(--tx3); transition: transform .2s; }
+.csub-btn.open svg { transform: rotate(180deg); }
+.csub-panel {
+  display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 300;
+  background: var(--card); border: 1.5px solid var(--acc); border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.14); overflow: hidden; max-height: 280px; overflow-y: auto;
+}
+.csub-panel.open { display: block; }
+.csub-glabel {
+  padding: 9px 12px 5px;
+  font-size: 10px; font-weight: 800; color: var(--acc);
+  text-transform: uppercase; letter-spacing: .09em;
+  border-top: 1px solid var(--bd);
+}
+.csub-glabel:first-child { border-top: none; padding-top: 11px; }
+.csub-opt {
+  padding: 8px 16px; font-size: 13.5px; color: var(--tx1);
+  cursor: pointer; transition: background .1s;
+}
+.csub-opt:hover { background: var(--accbg); color: var(--acc); }
+.csub-opt.sel   { background: var(--accbg); color: var(--acc); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -155,10 +188,17 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
             </select>
           </div>
           <div class="field">
-            <label for="f-sub">Tipo de solicitação <span class="req">*</span></label>
-            <select id="f-sub" onchange="onSubChange()">
-              <option value="">Selecione a área primeiro</option>
-            </select>
+            <label>Tipo de solicitação <span class="req">*</span></label>
+            <div class="csub">
+              <button type="button" id="f-sub-btn" class="csub-btn" onclick="csubToggle()" aria-haspopup="listbox" aria-expanded="false">
+                <span id="f-sub-lbl">Selecione a área primeiro</span>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 5l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div class="csub-panel" id="f-sub-panel" role="listbox"></div>
+              <select id="f-sub" style="display:none" onchange="onSubChange()">
+                <option value="">Selecione a área primeiro</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -392,23 +432,76 @@ function _hide(id) { const el = document.getElementById(id); if (el) el.style.di
 
 function onCatChange() {
   const catNome = document.getElementById("f-cat").value;
-  const subSel  = document.getElementById("f-sub");
   const cat     = CATS.find(c => c.nome === catNome);
   _ocultarFinanceiro();
-  if (!cat) {
-    subSel.innerHTML = "<option value=''>Selecione a área primeiro</option>";
-    return;
-  }
+  csubReset();
+  if (!cat) return;
+  const panel   = document.getElementById("f-sub-panel");
+  const nSel    = document.getElementById("f-sub");
   const primeiro = cat.subcats[0];
   if (primeiro && typeof primeiro === "object" && primeiro.grupo) {
-    subSel.innerHTML = cat.subcats
-      .map(g => `<optgroup label="${g.grupo}">${g.itens.map(s => `<option value="${s}">${s}</option>`).join("")}</optgroup>`)
+    nSel.innerHTML = "<option value=''>Selecione</option>" + cat.subcats
+      .map(grp => `<optgroup label="${grp.grupo}">${grp.itens.map(s => `<option value="${s}">${s}</option>`).join("")}</optgroup>`)
       .join("");
+    panel.innerHTML = cat.subcats.map(grp =>
+      `<div class="csub-glabel">${grp.grupo}</div>` +
+      grp.itens.map(s => `<div class="csub-opt" data-val="${s.replace(/"/g,'&quot;')}" onclick="csubSelect(this)">${s}</div>`).join("")
+    ).join("");
   } else {
-    subSel.innerHTML = cat.subcats.map(s => `<option value="${s}">${s}</option>`).join("");
+    nSel.innerHTML = "<option value=''>Selecione</option>" + cat.subcats.map(s => `<option value="${s}">${s}</option>`).join("");
+    panel.innerHTML = cat.subcats.map(s =>
+      `<div class="csub-opt" data-val="${s.replace(/"/g,'&quot;')}" onclick="csubSelect(this)">${s}</div>`
+    ).join("");
   }
   onSubChange();
 }
+
+/* ── Custom subcategoria dropdown ─────────────────────────── */
+function csubReset() {
+  const btn   = document.getElementById("f-sub-btn");
+  const lbl   = document.getElementById("f-sub-lbl");
+  const sel   = document.getElementById("f-sub");
+  const panel = document.getElementById("f-sub-panel");
+  if (btn)   { btn.className = "csub-btn"; btn.setAttribute("aria-expanded","false"); }
+  if (lbl)   lbl.textContent = "Selecione o tipo de solicitação";
+  if (sel)   { sel.innerHTML = "<option value=''>Selecione</option>"; sel.value = ""; }
+  if (panel) { panel.className = "csub-panel"; panel.innerHTML = ""; }
+}
+
+function csubToggle() {
+  const panel = document.getElementById("f-sub-panel");
+  if (!panel.innerHTML) return;
+  const btn  = document.getElementById("f-sub-btn");
+  const open = panel.classList.toggle("open");
+  btn.classList.toggle("open", open);
+  btn.setAttribute("aria-expanded", String(open));
+}
+
+function csubSelect(el) {
+  const val   = el.dataset.val;
+  const btn   = document.getElementById("f-sub-btn");
+  const lbl   = document.getElementById("f-sub-lbl");
+  const sel   = document.getElementById("f-sub");
+  const panel = document.getElementById("f-sub-panel");
+  panel.querySelectorAll(".csub-opt").forEach(o => o.classList.remove("sel"));
+  el.classList.add("sel");
+  lbl.textContent = val;
+  btn.classList.remove("open");
+  btn.classList.add("has-val");
+  btn.setAttribute("aria-expanded","false");
+  panel.classList.remove("open");
+  sel.value = val;
+  onSubChange();
+}
+
+document.addEventListener("click", function(e) {
+  if (!e.target.closest(".csub")) {
+    const panel = document.getElementById("f-sub-panel");
+    const btn   = document.getElementById("f-sub-btn");
+    if (panel) panel.classList.remove("open");
+    if (btn)   { btn.classList.remove("open"); btn.setAttribute("aria-expanded","false"); }
+  }
+});
 
 function onSubChange() {
   const cat = document.getElementById("f-cat").value;
@@ -594,7 +687,7 @@ async function enviarChamado() {
   if (!nome)   { mostrarErro("Informe seu nome completo.");        document.getElementById("f-nome").focus();   return; }
   if (!tel)    { mostrarErro("Informe seu telefone ou WhatsApp."); document.getElementById("f-tel").focus();    return; }
   if (!cat)    { mostrarErro("Selecione a área de atendimento.");  document.getElementById("f-cat").focus();    return; }
-  if (!sub)    { mostrarErro("Selecione o tipo de solicitação.");  document.getElementById("f-sub").focus();    return; }
+  if (!sub)    { mostrarErro("Selecione o tipo de solicitação.");  document.getElementById("f-sub-btn").focus(); return; }
   if (!titulo) { mostrarErro("Informe o título da solicitação.");  document.getElementById("f-titulo").focus(); return; }
   if (!desc)   { mostrarErro("Informe a descrição detalhada.");    document.getElementById("f-desc").focus();   return; }
 
