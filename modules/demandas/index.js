@@ -20,8 +20,11 @@
   const CATS = [
     { id:"conselho",    nome:"Conselho",                icon:"🏛",  cor:"var(--sky)",    resp:"Conselho / Jurídico",
       subcats:["Envio de documentos ao Conselho","Solicitação de aprovação","Análise jurídica","Questões disciplinares"] },
-    { id:"agendamentos",nome:"Agendamentos",            icon:"📅",  cor:"var(--teal)",   resp:"Secretaria / Administração",
-      subcats:["Solicitação de uso de sala","Agendamento de culto/evento","Reserva de espaço","Inclusão em calendário oficial","Cancelamento/alteração de agenda"] },
+    { id:"agendamentos",nome:"Agendamentos",            icon:"📅",  cor:"var(--teal)",   resp:"Secretaria / Liderança",
+      subcats:[
+        { grupo:"Programações",         itens:["Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"] },
+        { grupo:"Atendimento Pastoral", itens:["Aconselhamento pastoral","Atendimento pastoral","Visita espiritual","Visitação"] },
+      ] },
     { id:"manutencao",  nome:"Manutenção",              icon:"🛠",  cor:"var(--amber)",  resp:"Departamento de Manutenção",
       subcats:[
         { grupo:"Infraestrutura Civil",     itens:["Elétrica","Hidráulica","Estrutural","Civil","Pintura","Marcenaria","Vidraçaria","Manutenção predial","Chaveiro","Elevador/Plataforma"] },
@@ -1406,10 +1409,16 @@ function fmtD(d) {
     m.querySelector("#dem-f-venc").value    = "";
     /* Reset financial section */
     ["dem-f-financeiro-section","dem-f-pag-section","dem-f-reimb-section",
-     "dem-f-pix-section","dem-f-bank-section","dem-f-boleto-section"].forEach(id => {
+     "dem-f-pix-section","dem-f-bank-section","dem-f-boleto-section","dem-f-agend-section"].forEach(id => {
       const el = m.querySelector("#" + id);
       if (el) el.style.display = "none";
     });
+    /* Reset agendamento section */
+    ["dem-f-ag-data","dem-f-ag-inicio","dem-f-ag-fim","dem-f-ag-part"].forEach(id => {
+      const el = m.querySelector("#" + id);
+      if (el) el.value = "";
+    });
+    m.querySelectorAll("#dem-f-ag-spaces input[type=checkbox]").forEach(c => { c.checked = false; });
     ["dem-f-tipo-sol","dem-f-valor","dem-f-data-venc","dem-f-beneficiario","dem-f-cpf-cnpj",
      "dem-f-centro","dem-f-forma-pag","dem-f-chave-pix","dem-f-banco","dem-f-agencia",
      "dem-f-conta","dem-f-obs-fin","dem-f-reimb-nome","dem-f-reimb-valor",
@@ -1476,11 +1485,14 @@ function fmtD(d) {
     const cat      = document.getElementById("dem-f-cat")?.value;
     const sub      = document.getElementById("dem-f-sub")?.value;
     const sec      = document.getElementById("dem-f-financeiro-section");
+    const agSec    = document.getElementById("dem-f-agend-section");
     const pagSec   = document.getElementById("dem-f-pag-section");
     const reimbSec = document.getElementById("dem-f-reimb-section");
     if (!sec) return;
     const isFinanceiro = cat === "Financeiro";
-    sec.style.display      = isFinanceiro ? "" : "none";
+    const isAgendProg  = cat === "Agendamentos" && _PROG_SUBS_INT.has(sub);
+    sec.style.display             = isFinanceiro ? "" : "none";
+    if (agSec)    agSec.style.display    = isAgendProg ? "" : "none";
     if (pagSec)   pagSec.style.display   = (isFinanceiro && sub === "Solicitação de pagamento") ? "flex" : "none";
     if (reimbSec) reimbSec.style.display = (isFinanceiro && sub === "Reembolso")               ? "flex" : "none";
     if (isFinanceiro) _toggleFormaPagamento();
@@ -1501,6 +1513,23 @@ function fmtD(d) {
   }
 
   window.demOnSubChange      = _toggleFinanceiroSection;
+
+  /* ── Agendamentos: Programações ─────────────────────── */
+  const _PROG_SUBS_INT = new Set(["Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"]);
+  const _SPACES_INT    = [
+    "Templo Principal","Salão Social","Sala 1","Sala 2","Sala 3","Sala 4",
+    "Sala de Reuniões","Auditório","Cozinha","Hall de Entrada","Pátio","Estacionamento","Outros",
+  ];
+  (function() {
+    const grid = document.getElementById("dem-f-ag-spaces");
+    if (!grid || grid.children.length) return;
+    _SPACES_INT.forEach(s => {
+      const lbl = document.createElement("label");
+      lbl.style.cssText = "display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));cursor:pointer;font-size:12.5px;color:var(--tx1);user-select:none";
+      lbl.innerHTML = `<input type="checkbox" value="${s}" style="accent-color:var(--teal);width:14px;height:14px;cursor:pointer;flex-shrink:0"> ${s}`;
+      grid.appendChild(lbl);
+    });
+  })();
   window.demOnFormaPagChange = _toggleFormaPagamento;
 
   /* ── Upload de anexos financeiros ───────────────────── */
@@ -1827,6 +1856,29 @@ function fmtD(d) {
       };
     }
 
+    /* ── Coleta dados de agendamento de programação ────── */
+    let agend_extra = "";
+    if (cat === "Agendamentos" && _PROG_SUBS_INT.has(sub)) {
+      const agData   = document.getElementById("dem-f-ag-data")?.value || "";
+      const agInicio = document.getElementById("dem-f-ag-inicio")?.value || "";
+      const agFim    = document.getElementById("dem-f-ag-fim")?.value || "";
+      const agPart   = document.getElementById("dem-f-ag-part")?.value?.trim() || "";
+      if (!agData) {
+        if (typeof T === "function") T("Campo obrigatório", "Informe a data da programação");
+        return;
+      }
+      const agEspacos = [...document.querySelectorAll("#dem-f-ag-spaces input:checked")].map(c => c.value);
+      const agLinhas = [
+        "━━━ Dados da Programação ━━━",
+        `Data: ${agData}`,
+        agInicio ? `Horário de início: ${agInicio}`    : null,
+        agFim    ? `Horário de encerramento: ${agFim}` : null,
+        agPart   ? `Participantes estimados: ${agPart}` : null,
+        agEspacos.length ? `Espaços: ${agEspacos.join(", ")}` : null,
+      ].filter(Boolean).join("\n");
+      agend_extra = "\n\n" + agLinhas;
+    }
+
     const u = typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL : null;
     const pessoaId = u?.id || u?.pessoa_id || null;
 
@@ -1834,7 +1886,7 @@ function fmtD(d) {
       area:           cat,
       subcategoria:   sub,
       titulo,
-      descricao:      desc || "",
+      descricao:      (desc || "") + agend_extra,
       local,
       prioridade:     "Média",    // definida por triagem — nunca pelo solicitante
       status:         "ABERTA",
