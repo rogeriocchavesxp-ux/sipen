@@ -31,6 +31,7 @@
     { id: "eve-dash",          label: "Dashboard"      },
     { id: "eve-todos",         label: "Programações"   },
     { id: "eve-reunioes",      label: "Reuniões"       },
+    { id: "eve-ensaios",       label: "Ensaios"        },
     { id: "eve-inscricoes",    label: "Inscrições"     },
     { id: "eve-pagamentos",    label: "Pagamentos"     },
     { id: "eve-credenciamento",label: "Credenciamento" },
@@ -42,7 +43,7 @@
   ];
 
   const NAV_TARGETS = [
-    "eve-dash-nav","eve-todos-nav","eve-reunioes-nav","eve-inscricoes-nav",
+    "eve-dash-nav","eve-todos-nav","eve-reunioes-nav","eve-ensaios-nav","eve-inscricoes-nav",
     "eve-pagamentos-nav","eve-cred-nav","eve-presenca-nav",
     "eve-rel-nav","eve-config-nav","eve-demandas-nav","eve-whatsapp-nav",
   ];
