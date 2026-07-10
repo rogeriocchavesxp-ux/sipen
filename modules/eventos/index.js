@@ -28,20 +28,21 @@
   };
 
   const NAV_TABS = [
-    { id: "eve-dash",          label: "Dashboard"   },
-    { id: "eve-todos",         label: "Eventos"     },
-    { id: "eve-inscricoes",    label: "Inscrições"  },
-    { id: "eve-pagamentos",    label: "Pagamentos"  },
+    { id: "eve-dash",          label: "Dashboard"      },
+    { id: "eve-todos",         label: "Programações"   },
+    { id: "eve-reunioes",      label: "Reuniões"       },
+    { id: "eve-inscricoes",    label: "Inscrições"     },
+    { id: "eve-pagamentos",    label: "Pagamentos"     },
     { id: "eve-credenciamento",label: "Credenciamento" },
-    { id: "eve-presenca",      label: "Presença"    },
-    { id: "eve-relatorios",    label: "Relatórios"  },
-    { id: "eve-config",        label: "Config"      },
-    { id: "eve-demandas",     label: "Demandas"    },
-    { id: "eve-whatsapp",     label: "WhatsApp"    },
+    { id: "eve-presenca",      label: "Presença"       },
+    { id: "eve-relatorios",    label: "Relatórios"     },
+    { id: "eve-config",        label: "Config"         },
+    { id: "eve-demandas",      label: "Demandas"       },
+    { id: "eve-whatsapp",      label: "WhatsApp"       },
   ];
 
   const NAV_TARGETS = [
-    "eve-dash-nav","eve-todos-nav","eve-inscricoes-nav",
+    "eve-dash-nav","eve-todos-nav","eve-reunioes-nav","eve-inscricoes-nav",
     "eve-pagamentos-nav","eve-cred-nav","eve-presenca-nav",
     "eve-rel-nav","eve-config-nav","eve-demandas-nav","eve-whatsapp-nav",
   ];
