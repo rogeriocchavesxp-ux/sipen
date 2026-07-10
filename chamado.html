@@ -270,6 +270,11 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
         </div>
 
         <div class="field">
+          <label for="f-fin-centro">Centro de custo / Ministério</label>
+          <input type="text" id="f-fin-centro" placeholder="Ex: Ministério de Louvor">
+        </div>
+
+        <div class="field">
           <label for="f-fin-forma">Forma de pagamento <span class="req">*</span></label>
           <select id="f-fin-forma" onchange="onFormaChange()">
             <option value="">Selecione</option>
@@ -281,6 +286,7 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
             <option value="Transferência Bancária">Transferência Bancária</option>
             <option value="Débito em Conta">Débito em Conta</option>
             <option value="Cheque">Cheque</option>
+            <option value="Reembolso">Reembolso</option>
             <option value="Outro">Outro</option>
           </select>
         </div>
@@ -345,6 +351,7 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
             <option value="Transferência Bancária">Transferência Bancária</option>
             <option value="Débito em Conta">Débito em Conta</option>
             <option value="Cheque">Cheque</option>
+            <option value="Reembolso">Reembolso</option>
             <option value="Outro">Outro</option>
           </select>
         </div>
@@ -641,10 +648,11 @@ function _coletarFinanceiro(cat, sub) {
     if (forma === "Transferência Bancária" && (!banco || !ag || !conta))
       return { ok: false, msg: "Informe banco, agência e conta para TED." };
 
-    const tipo  = g("f-fin-tipo") || "Pagamento";
-    const venc  = g("f-fin-venc");
-    const cpf   = g("f-fin-cpf");
-    const obs   = g("f-fin-obs");
+    const tipo   = g("f-fin-tipo") || "Pagamento";
+    const venc   = g("f-fin-venc");
+    const cpf    = g("f-fin-cpf");
+    const centro = g("f-fin-centro");
+    const obs    = g("f-fin-obs");
 
     const linhas = [
       "━━━ Dados Financeiros ━━━",
@@ -653,6 +661,7 @@ function _coletarFinanceiro(cat, sub) {
       venc   ? `Vencimento: ${fmtDataBR(venc)}` : null,
       `Beneficiário: ${benefic}`,
       cpf    ? `CPF/CNPJ: ${cpf}` : null,
+      centro ? `Centro de custo / Ministério: ${centro}` : null,
       `Forma de pagamento: ${forma}`,
       forma === "PIX"                    ? `Chave PIX: ${pix}` : null,
       forma === "Transferência Bancária" ? `Banco: ${banco} · Ag: ${ag} · Conta: ${conta}` : null,
@@ -664,6 +673,7 @@ function _coletarFinanceiro(cat, sub) {
     if (!isNaN(valorNum)) fd.valor = valorNum; else fd.valor = valor;
     if (venc)   fd.data_vencimento = venc;
     if (cpf)    fd.cpf_cnpj = cpf;
+    if (centro) fd.centro_custo = centro;
     if (pix)    fd.chave_pix = pix;
     if (banco)  fd.banco = banco;
     if (ag)     fd.agencia = ag;
