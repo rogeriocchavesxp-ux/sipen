@@ -138,6 +138,20 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 }
 .csub-opt:hover { background: var(--accbg); color: var(--acc); }
 .csub-opt.sel   { background: var(--accbg); color: var(--acc); font-weight: 600; }
+
+/* ── Agendamentos: Programação ─────────────────────────────── */
+.spaces-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 6px 8px;
+  padding: 4px 0;
+}
+.space-chk {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 10px; border-radius: 7px; border: 1.5px solid var(--inpbd);
+  background: var(--inp); cursor: pointer; font-size: 13px; color: var(--tx1);
+  user-select: none; transition: border-color .12s, background .12s;
+}
+.space-chk:has(input:checked) { border-color: var(--acc); background: var(--accbg); color: var(--acc); }
+.space-chk input[type="checkbox"] { accent-color: var(--acc); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -357,6 +371,36 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
         </div>
       </div>
 
+      <!-- ── Agendamentos: Programação ─────────────────── -->
+      <div class="card" id="agend-prog" style="display:none">
+        <div class="card-title">📅 Dados da Programação</div>
+
+        <div class="row3">
+          <div class="field">
+            <label for="f-ag-data">Data <span class="req">*</span></label>
+            <input type="date" id="f-ag-data">
+          </div>
+          <div class="field">
+            <label for="f-ag-inicio">Horário de início</label>
+            <input type="time" id="f-ag-inicio">
+          </div>
+          <div class="field">
+            <label for="f-ag-fim">Horário de encerramento</label>
+            <input type="time" id="f-ag-fim">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-ag-part">Quantidade estimada de participantes</label>
+          <input type="number" id="f-ag-part" placeholder="Ex: 50" min="1" inputmode="numeric">
+        </div>
+
+        <div class="field">
+          <label>Espaços necessários</label>
+          <div class="spaces-grid" id="f-ag-spaces"></div>
+        </div>
+      </div>
+
       <button type="button" class="btn-submit" id="btn-enviar" onclick="enviarChamado()">
         Enviar Solicitação
       </button>
@@ -503,17 +547,21 @@ document.addEventListener("click", function(e) {
   }
 });
 
+const PROG_SUBS = new Set(["Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"]);
+
 function onSubChange() {
   const cat = document.getElementById("f-cat").value;
   const sub = document.getElementById("f-sub").value;
   _ocultarFinanceiro();
-  if (cat !== "Financeiro") return;
-  if (sub === "Solicitação de pagamento") _show("fin-pag");
-  if (sub === "Reembolso")               _show("fin-reimb");
+  if (cat === "Financeiro") {
+    if (sub === "Solicitação de pagamento") _show("fin-pag");
+    if (sub === "Reembolso")               _show("fin-reimb");
+  }
+  if (cat === "Agendamentos" && PROG_SUBS.has(sub)) _show("agend-prog");
 }
 
 function _ocultarFinanceiro() {
-  ["fin-pag","fin-reimb","fin-pix-sec","fin-ted-sec"].forEach(_hide);
+  ["fin-pag","fin-reimb","fin-pix-sec","fin-ted-sec","agend-prog"].forEach(_hide);
 }
 
 function onFormaChange() {
@@ -667,6 +715,40 @@ function _coletarFinanceiro(cat, sub) {
   return { ok: true, extra: "", fd: null };
 }
 
+/* ── Coleta dados de agendamento de programação ────────────── */
+const SPACES = [
+  "Templo Principal","Salão Social","Sala 1","Sala 2","Sala 3","Sala 4",
+  "Sala de Reuniões","Auditório","Cozinha","Hall de Entrada","Pátio","Estacionamento","Outros"
+];
+(function () {
+  const grid = document.getElementById("f-ag-spaces");
+  SPACES.forEach(s => {
+    const lbl = document.createElement("label");
+    lbl.className = "space-chk";
+    lbl.innerHTML = `<input type="checkbox" value="${s}"> ${s}`;
+    grid.appendChild(lbl);
+  });
+})();
+
+function _coletarAgendamento(cat, sub) {
+  if (cat !== "Agendamentos" || !PROG_SUBS.has(sub)) return { ok: true, extra: "" };
+  const data   = g("f-ag-data");
+  const inicio = g("f-ag-inicio");
+  const fim    = g("f-ag-fim");
+  const part   = g("f-ag-part");
+  if (!data) return { ok: false, msg: "Informe a data da programação." };
+  const espacos = [...document.querySelectorAll("#f-ag-spaces input:checked")].map(c => c.value);
+  const linhas = [
+    "━━━ Dados da Programação ━━━",
+    `Data: ${fmtDataBR(data)}`,
+    inicio   ? `Horário de início: ${inicio}`        : null,
+    fim      ? `Horário de encerramento: ${fim}`      : null,
+    part     ? `Participantes estimados: ${part}`     : null,
+    espacos.length ? `Espaços: ${espacos.join(", ")}` : null,
+  ].filter(Boolean).join("\n");
+  return { ok: true, extra: "\n\n" + linhas };
+}
+
 /* ── Envio ─────────────────────────────────────────────────── */
 async function enviarChamado() {
   if (document.getElementById("_gotcha").value) return;
@@ -691,13 +773,15 @@ async function enviarChamado() {
   if (!titulo) { mostrarErro("Informe o título da solicitação.");  document.getElementById("f-titulo").focus(); return; }
   if (!desc)   { mostrarErro("Informe a descrição detalhada.");    document.getElementById("f-desc").focus();   return; }
 
-  const fin = _coletarFinanceiro(cat, sub);
-  if (!fin.ok) { mostrarErro(fin.msg); return; }
+  const fin   = _coletarFinanceiro(cat, sub);
+  if (!fin.ok)   { mostrarErro(fin.msg);   return; }
+  const agend = _coletarAgendamento(cat, sub);
+  if (!agend.ok) { mostrarErro(agend.msg); return; }
 
   const catObj  = CATS.find(c => c.nome === cat);
   const resp    = catObj?.resp || "Administração Geral";
   const hoje    = new Date().toISOString().split("T")[0];
-  const descFinal = desc + fin.extra;
+  const descFinal = desc + fin.extra + agend.extra;
 
   const newId = crypto.randomUUID();
 
