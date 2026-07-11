@@ -1532,6 +1532,11 @@ function fmtD(d) {
     { grupo: "Bloco C — Estacionamento e Apoio", itens: [
       "Estacionamento",
     ]},
+    { grupo: "Bloco D — Administrativo e Pastoral", itens: [
+      "Sala D1 — Secretaria","Sala D2 — Sala de Gestão","Sala D3 — Hebron / Ação Social",
+      "Sala D4 — Bazar da Ação Social","Sala D5 — Estoque de Cestas","Sala D6 — Estoque de Produtos de Limpeza",
+      "Sala D7 — Gabinete Pr. Amauri","Sala D8 — Gabinete Pr. Felipe","Sala D9 — Gabinete Pr. Fábio",
+    ]},
   ];
   (function() {
     const grid = document.getElementById("dem-f-ag-spaces");
