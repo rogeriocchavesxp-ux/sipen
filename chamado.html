@@ -723,17 +723,36 @@ function _coletarFinanceiro(cat, sub) {
 }
 
 /* ── Coleta dados de agendamento de programação ────────────── */
-const SPACES = [
-  "Templo Principal","Salão Social","Sala 1","Sala 2","Sala 3","Sala 4",
-  "Sala de Reuniões","Auditório","Cozinha","Hall de Entrada","Pátio","Estacionamento","Outros"
+const SPACES_GROUPS = [
+  { grupo: "Bloco A — Penha Kids", itens: [
+    "Sala A01","Sala A02","Sala A03","Sala A04","Sala A05","Sala A06",
+    "Sala A07 — Estoque","Sala A08 — Dentista","Sala A09 — Copa","Banheiro",
+    "Templo — Penha Kids",
+  ]},
+  { grupo: "Bloco B — Prédio Principal", itens: [
+    "Auditório Principal","Auditório Penha Kids",
+    "Sala B2 — Adolescentes",
+    "Pátio — Salão Social","Cozinha","Casa de Apoio","Sala B3","Sala B4",
+    "Sala B06","Sala B07","Sala B08","Sala B09",
+    "Sala B10","Sala B11","Sala B12","Sala B13","Sala B14",
+  ]},
+  { grupo: "Bloco C — Estacionamento e Apoio", itens: [
+    "Estacionamento",
+  ]},
 ];
 (function () {
   const grid = document.getElementById("f-ag-spaces");
-  SPACES.forEach(s => {
-    const lbl = document.createElement("label");
-    lbl.className = "space-chk";
-    lbl.innerHTML = `<input type="checkbox" value="${s}"> ${s}`;
-    grid.appendChild(lbl);
+  SPACES_GROUPS.forEach(grp => {
+    const hdr = document.createElement("div");
+    hdr.style.cssText = "grid-column:1/-1;font-size:10px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.08em;padding:8px 0 3px;border-bottom:1px solid var(--bd);margin-top:6px";
+    hdr.textContent = grp.grupo;
+    grid.appendChild(hdr);
+    grp.itens.forEach(s => {
+      const lbl = document.createElement("label");
+      lbl.className = "space-chk";
+      lbl.innerHTML = `<input type="checkbox" value="${s}"> ${s}`;
+      grid.appendChild(lbl);
+    });
   });
 })();
 
