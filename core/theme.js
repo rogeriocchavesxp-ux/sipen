@@ -49,19 +49,28 @@
   }
   window.setTheme = setTheme;
 
+  function _defaultPref() {
+    const saved = localStorage.getItem(KEY);
+    if (saved) return saved;
+    // Mobile sem preferência salva → claro por padrão
+    return window.innerWidth < 768 ? 'light' : 'dark';
+  }
+
   window.renderThemeToggle = function () {
-    _renderToggle(localStorage.getItem(KEY) || 'dark');
+    _renderToggle(_defaultPref());
   };
 
   MQ.addEventListener('change', function () {
-    const pref = localStorage.getItem(KEY) || 'dark';
+    const pref = _defaultPref();
     if (pref === 'system') {
       ROOT.dataset.theme = _resolve('system');
       _applyMeta(ROOT.dataset.theme);
     }
   });
 
-  const _pref = localStorage.getItem(KEY) || 'dark';
-  _applyMeta(_resolve(_pref));
+  const _pref  = _defaultPref();
+  const _theme = _resolve(_pref);
+  ROOT.dataset.theme = _theme;
+  _applyMeta(_theme);
   _renderToggle(_pref);
 })();
