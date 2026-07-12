@@ -13,6 +13,50 @@ VIEW_AUTOLOAD["agenda-historico"]     = null;
 VIEW_AUTOLOAD["agenda-config"]        = null;
 
 
+/* ── SALAS DA IGREJA ─────────────────────── */
+function agSalasSelect(id, valorAtual = "") {
+  const sel = (v, l) => `<option value="${v}"${valorAtual === v ? " selected" : ""}>${l}</option>`;
+  const inputStyle = `width:100%;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none`;
+  return `<select id="${id}" class="fi2" style="${inputStyle}">
+    ${sel("","— Selecione a sala —")}
+    <optgroup label="Bloco A — Penha Kids">
+      ${sel("Sala A01","Sala A01")}
+      ${sel("Sala A02","Sala A02")}
+      ${sel("Sala A03","Sala A03")}
+      ${sel("Sala A04","Sala A04")}
+      ${sel("Sala A05","Sala A05")}
+      ${sel("Sala A06","Sala A06")}
+      ${sel("Sala A07 — Estoque","Sala A07 — Estoque")}
+      ${sel("Sala A08 — Dentista","Sala A08 — Dentista")}
+      ${sel("Sala A09 — Copa","Sala A09 — Copa")}
+      ${sel("Banheiro — Bloco A","Banheiro — Bloco A")}
+      ${sel("Templo — Penha Kids","Templo — Penha Kids")}
+    </optgroup>
+    <optgroup label="Bloco B — Prédio Principal">
+      ${sel("Auditório Principal","Auditório Principal")}
+      ${sel("Auditório Penha Kids","Auditório Penha Kids")}
+      ${sel("Sala B2 — Adolescentes","Sala B2 — Adolescentes")}
+      ${sel("Pátio — Salão Social","Pátio — Salão Social")}
+      ${sel("Cozinha","Cozinha")}
+      ${sel("Casa de Apoio","Casa de Apoio")}
+      ${sel("Sala B3","Sala B3")}
+      ${sel("Sala B4","Sala B4")}
+      ${sel("Sala B06","Sala B06")}
+      ${sel("Sala B07","Sala B07")}
+      ${sel("Sala B08","Sala B08")}
+      ${sel("Sala B09","Sala B09")}
+      ${sel("Sala B10","Sala B10")}
+      ${sel("Sala B11","Sala B11")}
+      ${sel("Sala B12","Sala B12")}
+      ${sel("Sala B13","Sala B13")}
+      ${sel("Sala B14","Sala B14")}
+    </optgroup>
+    <optgroup label="Bloco C — Estacionamento e Apoio">
+      ${sel("Estacionamento","Estacionamento")}
+    </optgroup>
+  </select>`;
+}
+
 /* ── AGENDA FUNCTIONS ─────────────────────── */
 let _agendaCache = null;
 
@@ -622,7 +666,7 @@ function agAprovarSolicitacao(r) {
       <div><label class="flb">Data *</label><input id="ag-ap-data" type="date" class="fi2"></div>
       <div><label class="flb">Horário início *</label><input id="ag-ap-hi" type="time" class="fi2" value="08:00"></div>
       <div><label class="flb">Horário fim</label><input id="ag-ap-hf" type="time" class="fi2" value="10:00"></div>
-      <div><label class="flb">Espaço / Ambiente</label><input id="ag-ap-esp" class="fi2" placeholder="Ex.: Templo, Sala 1, Salão Social"></div>
+      <div><label class="flb">Espaço / Ambiente</label>${agSalasSelect("ag-ap-esp", r.local||"")}</div>
       <div style="grid-column:1/-1"><label class="flb">Organizador</label><input id="ag-ap-org" class="fi2" value="${escapeHtml(r.responsavel||r.solicitante||'')}" placeholder="Responsável pelo evento"></div>
       <div style="grid-column:1/-1"><label class="flb">Descrição</label><textarea id="ag-ap-desc" class="fi2" rows="3" placeholder="Detalhes do evento">${escapeHtml(r.descricao||'')}</textarea></div>
     </div>

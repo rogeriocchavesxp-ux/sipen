@@ -1135,8 +1135,45 @@ function fmtD(d) {
               <input id="dem-edit-resp" type="text" value="${escapeHtmlAttr(dem.responsavel || dem.responsavel_txt || '')}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>
             <div>
-              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Localização</label>
-              <input id="dem-edit-local" type="text" value="${escapeHtmlAttr(dem.local || '')}" placeholder="Ex: Hall da Secretaria, Templo Principal..." style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Localização / Sala</label>
+              <select id="dem-edit-local" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+                <option value="">— Selecione a sala —</option>
+                <optgroup label="Bloco A — Penha Kids">
+                  <option ${dem.local==='Sala A01'?'selected':''}>Sala A01</option>
+                  <option ${dem.local==='Sala A02'?'selected':''}>Sala A02</option>
+                  <option ${dem.local==='Sala A03'?'selected':''}>Sala A03</option>
+                  <option ${dem.local==='Sala A04'?'selected':''}>Sala A04</option>
+                  <option ${dem.local==='Sala A05'?'selected':''}>Sala A05</option>
+                  <option ${dem.local==='Sala A06'?'selected':''}>Sala A06</option>
+                  <option ${dem.local==='Sala A07 — Estoque'?'selected':''}>Sala A07 — Estoque</option>
+                  <option ${dem.local==='Sala A08 — Dentista'?'selected':''}>Sala A08 — Dentista</option>
+                  <option ${dem.local==='Sala A09 — Copa'?'selected':''}>Sala A09 — Copa</option>
+                  <option ${dem.local==='Banheiro — Bloco A'?'selected':''}>Banheiro — Bloco A</option>
+                  <option ${dem.local==='Templo — Penha Kids'?'selected':''}>Templo — Penha Kids</option>
+                </optgroup>
+                <optgroup label="Bloco B — Prédio Principal">
+                  <option ${dem.local==='Auditório Principal'?'selected':''}>Auditório Principal</option>
+                  <option ${dem.local==='Auditório Penha Kids'?'selected':''}>Auditório Penha Kids</option>
+                  <option ${dem.local==='Sala B2 — Adolescentes'?'selected':''}>Sala B2 — Adolescentes</option>
+                  <option ${dem.local==='Pátio — Salão Social'?'selected':''}>Pátio — Salão Social</option>
+                  <option ${dem.local==='Cozinha'?'selected':''}>Cozinha</option>
+                  <option ${dem.local==='Casa de Apoio'?'selected':''}>Casa de Apoio</option>
+                  <option ${dem.local==='Sala B3'?'selected':''}>Sala B3</option>
+                  <option ${dem.local==='Sala B4'?'selected':''}>Sala B4</option>
+                  <option ${dem.local==='Sala B06'?'selected':''}>Sala B06</option>
+                  <option ${dem.local==='Sala B07'?'selected':''}>Sala B07</option>
+                  <option ${dem.local==='Sala B08'?'selected':''}>Sala B08</option>
+                  <option ${dem.local==='Sala B09'?'selected':''}>Sala B09</option>
+                  <option ${dem.local==='Sala B10'?'selected':''}>Sala B10</option>
+                  <option ${dem.local==='Sala B11'?'selected':''}>Sala B11</option>
+                  <option ${dem.local==='Sala B12'?'selected':''}>Sala B12</option>
+                  <option ${dem.local==='Sala B13'?'selected':''}>Sala B13</option>
+                  <option ${dem.local==='Sala B14'?'selected':''}>Sala B14</option>
+                </optgroup>
+                <optgroup label="Bloco C — Estacionamento e Apoio">
+                  <option ${dem.local==='Estacionamento'?'selected':''}>Estacionamento</option>
+                </optgroup>
+              </select>
             </div>
             <div>
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Conclusão prevista</label>
