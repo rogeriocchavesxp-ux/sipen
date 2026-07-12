@@ -23,6 +23,8 @@
   let _votacaoConfig = null;
   let _votSubTab     = "config";
   let _candFiltroTipo = "todos";
+  let _votos         = [];    // { candidato_id } — votos brutos carregados
+  let _totVotantes   = 0;     // total de eleitores que votaram
 
   /* ── Helpers ────────────────────────────────────────── */
   const _sb  = () => (typeof getSupabase === "function" ? getSupabase() : null);
@@ -151,6 +153,15 @@
       .eq("processo_id", processoId)
       .maybeSingle();
     _votacaoConfig = data || null;
+  }
+
+  async function _carregarVotos(processoId) {
+    const [{ data: votos }, { count }] = await Promise.all([
+      _sb().from("eleicao_votos").select("candidato_id").eq("processo_id", processoId),
+      _sb().from("eleicao_votos_registro").select("*", { count: "exact", head: true }).eq("processo_id", processoId),
+    ]);
+    _votos       = votos || [];
+    _totVotantes = count || 0;
   }
 
   /* ── Navegação interna ───────────────────────────────── */
@@ -1263,16 +1274,19 @@
     const el = document.getElementById("edt-content");
     if (!el) return;
 
+    const tabs = [
+      { id:"config",    lbl:"Configuração" },
+      { id:"dashboard", lbl:"Dashboard"    },
+      { id:"apuracao",  lbl:"Apuração"     },
+      { id:"resultado", lbl:"Resultado"    },
+    ];
+
+    const btnStyle = (t) => `padding:9px 18px;border:none;border-bottom:2px solid ${_votSubTab===t?"var(--sky)":"transparent"};background:none;` +
+      `color:${_votSubTab===t?"var(--sky)":"var(--tx3)"};font-size:12.5px;font-weight:${_votSubTab===t?"700":"500"};cursor:pointer;font-family:inherit`;
+
     el.innerHTML = `
-      <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--bd1)">
-        <button id="vt-btn-config" onclick="eleicaoVotSubTab('config')"
-          style="padding:9px 20px;border:none;border-bottom:2px solid ${_votSubTab==="config"?"var(--sky)":"transparent"};background:none;
-                 color:${_votSubTab==="config"?"var(--sky)":"var(--tx3)"};font-size:12.5px;font-weight:${_votSubTab==="config"?"700":"500"};
-                 cursor:pointer;font-family:inherit">Configuração</button>
-        <button id="vt-btn-dash" onclick="eleicaoVotSubTab('dashboard')"
-          style="padding:9px 20px;border:none;border-bottom:2px solid ${_votSubTab==="dashboard"?"var(--sky)":"transparent"};background:none;
-                 color:${_votSubTab==="dashboard"?"var(--sky)":"var(--tx3)"};font-size:12.5px;font-weight:${_votSubTab==="dashboard"?"700":"500"};
-                 cursor:pointer;font-family:inherit">Dashboard</button>
+      <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--bd1);overflow-x:auto">
+        ${tabs.map(t => `<button id="vt-btn-${t.id}" onclick="eleicaoVotSubTab('${t.id}')" style="${btnStyle(t.id)}">${t.lbl}</button>`).join("")}
       </div>
       <div id="vot-sub-content"></div>`;
 
@@ -1282,18 +1296,20 @@
   function _renderVotSubTab() {
     const el = document.getElementById("vot-sub-content");
     if (!el) return;
-    if (_votSubTab === "config")    _renderVotConfig();
+    if      (_votSubTab === "config")    _renderVotConfig();
     else if (_votSubTab === "dashboard") _renderVotDashboard();
+    else if (_votSubTab === "apuracao")  _renderVotApuracao();
+    else if (_votSubTab === "resultado") _renderVotResultado();
   }
 
   window.eleicaoVotSubTab = function(tab) {
     _votSubTab = tab;
-    ["config","dashboard"].forEach(t => {
+    ["config","dashboard","apuracao","resultado"].forEach(t => {
       const btn = document.getElementById(`vt-btn-${t}`);
       if (!btn) return;
       const on = t === tab;
       btn.style.borderBottomColor = on ? "var(--sky)" : "transparent";
-      btn.style.color  = on ? "var(--sky)" : "var(--tx3)";
+      btn.style.color      = on ? "var(--sky)" : "var(--tx3)";
       btn.style.fontWeight = on ? "700" : "500";
     });
     _renderVotSubTab();
@@ -1376,7 +1392,7 @@
   }
 
   function _renderVotDashboard() {
-    const el = document.getElementById("vot-sub-content");
+    const el  = document.getElementById("vot-sub-content");
     if (!el) return;
     const cfg = _votacaoConfig;
 
@@ -1392,49 +1408,265 @@
     }
 
     const candAtivos = _candidatos.filter(c => c.ativo).length;
-    const presb = _candidatos.filter(c => c.ativo && c.tipo === "presbitero").length;
-    const diac  = _candidatos.filter(c => c.ativo && c.tipo === "diacono").length;
+    const presb      = _candidatos.filter(c => c.ativo && c.tipo === "presbitero").length;
+    const diac       = _candidatos.filter(c => c.ativo && c.tipo === "diacono").length;
+    const totalVotos = _votos.length;
 
     const statusCor = { aberta:"var(--gr)", encerrada:"var(--sky)", apurada:"var(--violet)", agendada:"var(--amber)", rascunho:"var(--tx3)" };
 
     el.innerHTML = `
       <div class="kpis c4" style="margin-bottom:16px">
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,.12);color:var(--sky)">◎</div><div class="kpi-body"><div class="kpi-lbl">Candidatos ativos</div><div class="kpi-val">${candAtivos}</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,.12);color:var(--teal)">◈</div><div class="kpi-body"><div class="kpi-lbl">Presbíteros</div><div class="kpi-val">${presb}</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,.12);color:var(--violet)">◉</div><div class="kpi-body"><div class="kpi-lbl">Diáconos</div><div class="kpi-val">${diac}</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,.12);color:${statusCor[cfg.status_votacao]||"var(--tx3)"}">▶</div><div class="kpi-body"><div class="kpi-lbl">Status votação</div><div class="kpi-val" style="font-size:13px;text-transform:capitalize;color:${statusCor[cfg.status_votacao]||"var(--tx2)"}">${cfg.status_votacao}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,.12);color:var(--sky)">◎</div><div class="kpi-body"><div class="kpi-lbl">Eleitores</div><div class="kpi-val">${_totVotantes || "—"}</div><div class="kpi-d nu">votaram</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,.12);color:var(--teal)">◈</div><div class="kpi-body"><div class="kpi-lbl">Total de votos</div><div class="kpi-val">${totalVotos || "—"}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,.12);color:var(--violet)">◉</div><div class="kpi-body"><div class="kpi-lbl">Candidatos</div><div class="kpi-val">${candAtivos}</div><div class="kpi-d nu">${presb} presb. · ${diac} diác.</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,.12);color:${statusCor[cfg.status_votacao]||"var(--tx3)"}">▶</div><div class="kpi-body"><div class="kpi-lbl">Status</div><div class="kpi-val" style="font-size:13px;text-transform:capitalize;color:${statusCor[cfg.status_votacao]||"var(--tx2)"}">${cfg.status_votacao}</div></div></div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-bottom:16px">
+        <button onclick="eleicaoCarregarVotos()" style="padding:7px 16px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:12px;cursor:pointer">↻ Atualizar contagem</button>
+        ${cfg.status_votacao !== "rascunho" ? `<button onclick="eleicaoVotSubTab('apuracao')" style="padding:7px 16px;border-radius:6px;border:none;background:var(--sky);color:#fff;font-size:12px;font-weight:700;cursor:pointer">Ver apuração →</button>` : ""}
       </div>
 
       <div class="card" style="max-width:520px">
-        <div class="ctit">Resumo da Configuração</div>
-        <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
-          <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--bd1);padding-bottom:8px">
-            <span style="font-size:12.5px;color:var(--tx3)">Abertura:</span>
-            <span style="font-size:12.5px;color:var(--tx1);font-weight:600">
-              ${cfg.data_abertura_votacao ? `${_fmtDate(cfg.data_abertura_votacao)} às ${(cfg.hora_abertura_votacao||"").slice(0,5)}` : "—"}
-            </span>
+        <div class="ctit" style="margin-bottom:12px">Configuração</div>
+        <div style="display:flex;flex-direction:column;gap:0">
+          ${[
+            ["Abertura",     cfg.data_abertura_votacao    ? `${_fmtDate(cfg.data_abertura_votacao)} às ${(cfg.hora_abertura_votacao||"").slice(0,5)}` : "—"],
+            ["Encerramento", cfg.data_encerramento_votacao ? `${_fmtDate(cfg.data_encerramento_votacao)} às ${(cfg.hora_encerramento_votacao||"").slice(0,5)}` : "—"],
+            ["Máx. votos Presbíteros", cfg.max_votos_presbiteros],
+            ["Máx. votos Diáconos",    cfg.max_votos_diaconos],
+          ].map(([k,v]) => `
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--bd1);padding:8px 0">
+              <span style="font-size:12.5px;color:var(--tx3)">${k}</span>
+              <span style="font-size:12.5px;color:var(--tx1);font-weight:600">${v}</span>
+            </div>`).join("")}
+        </div>
+      </div>`;
+  }
+
+  /* ── Apuração ─────────────────────────────────────────── */
+  function _renderVotApuracao() {
+    const el = document.getElementById("vot-sub-content");
+    if (!el) return;
+
+    if (!_votos.length && !_totVotantes) {
+      el.innerHTML = `
+        <div style="text-align:center;padding:48px;background:var(--bg-surface);border:1.5px dashed var(--bd2);border-radius:12px">
+          <div style="font-size:32px;margin-bottom:12px;opacity:.4">📊</div>
+          <div style="font-size:14px;font-weight:700;color:var(--tx2);margin-bottom:6px">Apuração de Votos</div>
+          <div style="font-size:12px;color:var(--tx3);margin-bottom:18px">Carregue os dados para visualizar a contagem por candidato.</div>
+          <button onclick="eleicaoCarregarVotos()" style="padding:9px 20px;border-radius:7px;border:none;background:var(--sky);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Carregar votos</button>
+        </div>`;
+      return;
+    }
+
+    const cnt = {};
+    _votos.forEach(v => cnt[v.candidato_id] = (cnt[v.candidato_id] || 0) + 1);
+
+    const ranking = _candidatos
+      .filter(c => c.ativo)
+      .map(c => ({ ...c, votos: cnt[c.id] || 0 }))
+      .sort((a, b) => b.votos - a.votos || a.nome.localeCompare(b.nome));
+
+    const presbs     = ranking.filter(c => c.tipo === "presbitero");
+    const diacs      = ranking.filter(c => c.tipo === "diacono");
+    const totalVotos = _votos.length;
+
+    const thS = "text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);font-weight:700";
+    const tdS = "padding:8px 10px;font-size:12.5px;color:var(--tx2)";
+
+    const tabelaHtml = (titulo, lista, cor) => {
+      if (!lista.length) return "";
+      const maxV = lista[0]?.votos || 1;
+      return `
+        <div class="card" style="margin-bottom:14px">
+          <div class="ctit" style="margin-bottom:14px;color:${cor}">${titulo}</div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse">
+              <thead>
+                <tr style="background:var(--bg-surface);border-bottom:2px solid ${cor}">
+                  <th style="${thS};width:36px">#</th>
+                  <th style="${thS}">Nome</th>
+                  <th style="${thS}">Congregação</th>
+                  <th style="${thS};text-align:right;width:70px">Votos</th>
+                  <th style="${thS};min-width:100px"></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${lista.map((c, i) => `
+                  <tr style="border-bottom:1px solid var(--bd1)"
+                    onmouseover="this.style.background='var(--bg-hover)'"
+                    onmouseout="this.style.background=''">
+                    <td style="${tdS};font-size:11px;font-weight:700;color:${i<3?"var(--amber)":"var(--tx4)"}">${i+1}</td>
+                    <td style="${tdS};font-weight:600;color:var(--tx1)">${_esc(c.nome)}</td>
+                    <td style="${tdS};font-size:11px;color:var(--tx3)">${_esc(c.congregacao||"Sede")}</td>
+                    <td style="${tdS};text-align:right;font-weight:700;font-size:14px;color:${cor}">${c.votos}</td>
+                    <td style="padding:8px 10px">
+                      <div style="background:var(--bg-surface);border-radius:3px;height:6px">
+                        <div style="height:100%;background:${cor};border-radius:3px;width:${c.votos?Math.round(c.votos/maxV*100):0}%;opacity:.65"></div>
+                      </div>
+                    </td>
+                  </tr>`).join("")}
+              </tbody>
+            </table>
           </div>
-          <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--bd1);padding-bottom:8px">
-            <span style="font-size:12.5px;color:var(--tx3)">Encerramento:</span>
-            <span style="font-size:12.5px;color:var(--tx1);font-weight:600">
-              ${cfg.data_encerramento_votacao ? `${_fmtDate(cfg.data_encerramento_votacao)} às ${(cfg.hora_encerramento_votacao||"").slice(0,5)}` : "—"}
-            </span>
+        </div>`;
+    };
+
+    el.innerHTML = `
+      <div class="kpis c4" style="margin-bottom:16px">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,.12);color:var(--sky)">◎</div><div class="kpi-body"><div class="kpi-lbl">Total votos</div><div class="kpi-val">${totalVotos}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,.12);color:var(--teal)">◈</div><div class="kpi-body"><div class="kpi-lbl">Eleitores</div><div class="kpi-val">${_totVotantes}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,.12);color:var(--violet)">◉</div><div class="kpi-body"><div class="kpi-lbl">Candidatos</div><div class="kpi-val">${ranking.length}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,.12);color:var(--gr)">✓</div><div class="kpi-body"><div class="kpi-lbl">Média</div><div class="kpi-val">${ranking.length?(totalVotos/ranking.length).toFixed(1):"—"}</div></div></div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px">
+        <button onclick="eleicaoCarregarVotos()" style="padding:7px 14px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:12px;cursor:pointer">↻ Atualizar</button>
+        <button onclick="eleicaoExportarResultados()" style="padding:7px 14px;border-radius:6px;border:none;background:var(--sky);color:#fff;font-size:12px;font-weight:700;cursor:pointer">⬇ CSV</button>
+      </div>
+
+      ${tabelaHtml("Presbíteros", presbs, "var(--sky)")}
+      ${tabelaHtml("Diáconos",    diacs,  "var(--teal)")}
+      ${!ranking.length ? `<div style="text-align:center;padding:32px;color:var(--tx3)">Nenhum candidato ou voto registrado.</div>` : ""}`;
+  }
+
+  /* ── Resultado ────────────────────────────────────────── */
+  function _renderVotResultado() {
+    const el = document.getElementById("vot-sub-content");
+    if (!el) return;
+
+    if (!_votos.length && !_totVotantes) {
+      el.innerHTML = `
+        <div style="text-align:center;padding:40px;background:var(--bg-surface);border:1.5px dashed var(--bd2);border-radius:12px">
+          <div style="font-size:14px;font-weight:700;color:var(--tx2);margin-bottom:6px">Carregue os votos primeiro</div>
+          <div style="font-size:12px;color:var(--tx3);margin-bottom:16px">Vá para a aba Apuração e carregue os dados.</div>
+          <button onclick="eleicaoVotSubTab('apuracao')" style="padding:9px 20px;border-radius:7px;border:none;background:var(--sky);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Ir para Apuração</button>
+        </div>`;
+      return;
+    }
+
+    const vc     = _votacaoConfig;
+    const p      = _processo;
+    const maxPr  = vc?.max_votos_presbiteros ?? 5;
+    const maxDi  = vc?.max_votos_diaconos   ?? 4;
+
+    const cnt = {};
+    _votos.forEach(v => cnt[v.candidato_id] = (cnt[v.candidato_id] || 0) + 1);
+    const ranking = _candidatos
+      .filter(c => c.ativo)
+      .map(c => ({ ...c, votos: cnt[c.id] || 0 }))
+      .sort((a, b) => b.votos - a.votos || a.nome.localeCompare(b.nome));
+
+    const electPresb = ranking.filter(c => c.tipo === "presbitero").slice(0, maxPr);
+    const electDiac  = ranking.filter(c => c.tipo === "diacono").slice(0, maxDi);
+
+    const linhasCargo = (titulo, lista) => lista.length
+      ? `${titulo}:\n${lista.map((c, i) => `  ${i+1}. ${c.nome} (${c.votos} voto${c.votos !== 1 ? "s" : ""})`).join("\n")}`
+      : "";
+
+    const hoje = new Date().toLocaleDateString("pt-BR");
+    const partes = [
+      `RESULTADO DA ELEIÇÃO DE OFICIAIS`,
+      `${p.nome} — ${p.ano}`,
+      `${"─".repeat(44)}`,
+      "",
+      ...(p.tipo !== "diaconos"    ? [linhasCargo("PRESBÍTEROS ELEITOS", electPresb), ""] : []),
+      ...(p.tipo !== "presbiteros" ? [linhasCargo("DIÁCONOS ELEITOS",    electDiac),  ""] : []),
+      `${"─".repeat(44)}`,
+      `Total de participantes: ${_totVotantes}`,
+      `Total de votos computados: ${_votos.length}`,
+      `Data de apuração: ${hoje}`,
+      "",
+      `Igreja Presbiteriana da Penha`,
+    ];
+    const resultText = partes.join("\n");
+
+    const cardRow = (lista, titulo, cor) => {
+      if (!lista.length) return "";
+      return `
+        <div style="margin-bottom:14px">
+          <div style="font-size:10px;font-weight:700;color:${cor};text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">${titulo}</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            ${lista.map((c, i) => `
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--bd1)">
+                <div style="width:22px;height:22px;border-radius:50%;background:${cor}22;border:1px solid ${cor}44;color:${cor};font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
+                <div style="flex:1;font-size:13px;font-weight:600;color:var(--tx1)">${_esc(c.nome)}</div>
+                <div style="font-size:12px;color:var(--tx3)">${c.votos} voto${c.votos!==1?"s":""}</div>
+              </div>`).join("")}
           </div>
-          <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--bd1);padding-bottom:8px">
-            <span style="font-size:12.5px;color:var(--tx3)">Máx. votos Presbíteros:</span>
-            <span style="font-size:12.5px;color:var(--tx1);font-weight:600">${cfg.max_votos_presbiteros}</span>
+        </div>`;
+    };
+
+    el.innerHTML = `
+      <div class="g2" style="gap:14px;margin-bottom:14px">
+        <div>
+          ${cardRow(electPresb, "Presbíteros Eleitos", "var(--sky)")}
+          ${cardRow(electDiac,  "Diáconos Eleitos",    "var(--teal)")}
+          <div style="padding:10px 14px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--bd1);font-size:12px;color:var(--tx3)">
+            ${_totVotantes} participante(s) · ${_votos.length} voto(s) computado(s)
           </div>
-          <div style="display:flex;justify-content:space-between">
-            <span style="font-size:12.5px;color:var(--tx3)">Máx. votos Diáconos:</span>
-            <span style="font-size:12.5px;color:var(--tx1);font-weight:600">${cfg.max_votos_diaconos}</span>
+        </div>
+        <div class="card">
+          <div class="ctit" style="margin-bottom:12px">Texto para publicação</div>
+          <textarea readonly rows="14" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx1);font-size:11.5px;font-family:monospace;resize:vertical;line-height:1.7;outline:none">${_esc(resultText)}</textarea>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <button onclick="navigator.clipboard.writeText(${JSON.stringify(resultText)}).then(()=>typeof T==='function'&&T('Copiado!','Texto do resultado copiado.'))"
+              style="padding:8px 16px;border-radius:6px;border:none;background:var(--sky);color:#fff;font-size:12px;font-weight:700;cursor:pointer">Copiar texto</button>
+            <button onclick="eleicaoExportarResultados()"
+              style="padding:8px 16px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:12px;cursor:pointer">⬇ CSV detalhado</button>
           </div>
         </div>
       </div>
-
-      <div style="margin-top:14px;padding:12px 16px;border-radius:10px;background:rgba(74,156,245,.06);border:1px solid rgba(74,156,245,.2);font-size:12px;color:var(--tx3)">
-        Cédula eletrônica, contagem de votos em tempo real e apuração disponíveis na próxima atualização.
+      <div style="font-size:11.5px;color:var(--tx3);padding:10px 14px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--bd1)">
+        Os candidatos exibidos são os mais votados dentro do limite configurado para cada cargo. A aprovação final é de competência do Conselho da IPPenha.
       </div>`;
   }
+
+  window.eleicaoCarregarVotos = async function() {
+    if (!_processo) return;
+    const btn = event?.target;
+    if (btn) { btn.disabled = true; btn.textContent = "Carregando..."; }
+    try {
+      await _carregarVotos(_processo.id);
+      _renderVotSubTab();
+    } catch(e) {
+      alert("Erro ao carregar votos: " + e.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = btn.textContent.includes("Atualiz") ? "↻ Atualizar" : "Carregar votos"; }
+    }
+  };
+
+  window.eleicaoExportarResultados = function() {
+    if (!_votos.length && !_totVotantes) { alert("Carregue os votos primeiro."); return; }
+
+    const cnt = {};
+    _votos.forEach(v => cnt[v.candidato_id] = (cnt[v.candidato_id] || 0) + 1);
+    const rows = _candidatos
+      .filter(c => c.ativo)
+      .map(c => ({ ...c, votos: cnt[c.id] || 0 }))
+      .sort((a, b) => {
+        if (a.tipo !== b.tipo) return a.tipo === "presbitero" ? -1 : 1;
+        return b.votos - a.votos;
+      });
+
+    const hdr  = "Processo,Tipo,Nome,Congregação,Votos";
+    const body = rows.map(r => [
+      `"${(_processo.nome||"").replace(/"/g,'""')}"`,
+      r.tipo === "presbitero" ? "Presbítero" : "Diácono",
+      `"${(r.nome||"").replace(/"/g,'""')}"`,
+      `"${(r.congregacao||"Sede").replace(/"/g,'""')}"`,
+      r.votos,
+    ].join(",")).join("\n");
+
+    const csv  = "﻿" + hdr + "\n" + body;
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const a    = document.createElement("a");
+    a.href     = URL.createObjectURL(blob);
+    a.download = `resultado-${_processo.slug||"eleicao"}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
 
   window.eleicaoSalvarVotacaoConfig = async function() {
     const msgEl = document.getElementById("vc-msg");
@@ -1485,6 +1717,7 @@
   window.eleicaoNavDetalhe   = function(id)  {
     _detTab = "stats"; _filtroTipo = "todos"; _filtroCongreg = "todas";
     _candidatos = []; _votacaoConfig = null; _votSubTab = "config"; _candFiltroTipo = "todos";
+    _votos = []; _totVotantes = 0;
     _show("detalhe", id);
   };
 
