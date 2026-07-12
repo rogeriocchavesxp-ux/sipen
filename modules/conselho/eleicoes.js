@@ -17,7 +17,11 @@
   let _detTab     = "stats";       // stats | indicacoes | compartilhar
   let _filtroTipo    = "todos";
   let _filtroCongreg = "todas";
-  let _editando   = false;         // true = editar processo existente
+  let _editando      = false;
+  let _candidatos    = [];
+  let _votacaoConfig = null;
+  let _votSubTab     = "config";
+  let _candFiltroTipo = "todos";
 
   /* ── Helpers ────────────────────────────────────────── */
   const _sb  = () => (typeof getSupabase === "function" ? getSupabase() : null);
@@ -66,6 +70,7 @@
     agendado:  { lbl:"Agendado",  cor:"var(--amber)", bg:"rgba(208,144,64,.12)" },
     aberto:    { lbl:"Aberto",    cor:"var(--gr)",   bg:"rgba(58,170,92,.12)"  },
     encerrado: { lbl:"Encerrado", cor:"var(--sky)",  bg:"rgba(74,156,245,.12)" },
+    apurado:   { lbl:"Apurado",   cor:"var(--violet)", bg:"rgba(139,111,212,.12)" },
     arquivado: { lbl:"Arquivado", cor:"var(--tx4)",  bg:"rgba(60,64,80,.12)"   },
   };
 
@@ -125,6 +130,26 @@
       .eq("status","ativo")
       .limit(2000);
     _membros = data || [];
+  }
+
+  async function _carregarCandidatos(processoId) {
+    const { data } = await _sb()
+      .from("eleicao_candidatos")
+      .select("*")
+      .is("deleted_at", null)
+      .eq("processo_id", processoId)
+      .order("ordem")
+      .order("criado_em");
+    _candidatos = data || [];
+  }
+
+  async function _carregarVotacaoConfig(processoId) {
+    const { data } = await _sb()
+      .from("eleicao_votacao_config")
+      .select("*")
+      .eq("processo_id", processoId)
+      .maybeSingle();
+    _votacaoConfig = data || null;
   }
 
   /* ── Navegação interna ───────────────────────────────── */
@@ -447,6 +472,8 @@
     await Promise.all([
       _carregarIndicacoes(processoId),
       _carregarMembros(),
+      _carregarCandidatos(processoId),
+      _carregarVotacaoConfig(processoId),
     ]);
     _renderDetalhe();
   }
@@ -461,7 +488,7 @@
 
     r.innerHTML = `
       <!-- Header -->
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px">
         <div>
           <button onclick="eleicaoNavLista()" style="background:none;border:none;color:var(--tx3);font-size:12px;cursor:pointer;padding:0;margin-bottom:8px">← Processos</button>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
@@ -475,11 +502,15 @@
           ${_btn("Duplicar", `eleicaoDuplicar('${p.id}',event)`)}
         </div>
       </div>
+      <!-- Timeline de Fases -->
+      ${_renderTimeline()}
       <!-- Sub-tabs -->
       <div class="bnav" style="--mc:var(--sky);margin-bottom:16px">
-        <div class="bni ${_detTab==="stats"?"on":""}" id="edt-stats" onclick="eleicaoDetTab('stats')">Estatísticas</div>
-        <div class="bni ${_detTab==="indicacoes"?"on":""}" id="edt-ind" onclick="eleicaoDetTab('indicacoes')">Indicações</div>
-        <div class="bni ${_detTab==="compartilhar"?"on":""}" id="edt-comp" onclick="eleicaoDetTab('compartilhar')">Compartilhar</div>
+        <div class="bni ${_detTab==="stats"?"on":""}"        id="edt-stats" onclick="eleicaoDetTab('stats')">Estatísticas</div>
+        <div class="bni ${_detTab==="indicacoes"?"on":""}"   id="edt-ind"   onclick="eleicaoDetTab('indicacoes')">Indicações</div>
+        <div class="bni ${_detTab==="candidatos"?"on":""}"   id="edt-cand"  onclick="eleicaoDetTab('candidatos')">Candidatos</div>
+        <div class="bni ${_detTab==="votacao"?"on":""}"      id="edt-vot"   onclick="eleicaoDetTab('votacao')">Votação</div>
+        <div class="bni ${_detTab==="compartilhar"?"on":""}" id="edt-comp"  onclick="eleicaoDetTab('compartilhar')">Compartilhar</div>
       </div>
       <div id="edt-content"></div>`;
 
@@ -488,16 +519,18 @@
 
   window.eleicaoDetTab = function(tab) {
     _detTab = tab;
-    ["stats","indicacoes","compartilhar"].forEach(t => {
-      document.getElementById(`edt-${t === "stats" ? "stats" : t === "indicacoes" ? "ind" : "comp"}`)
-        ?.classList.toggle("on", t === tab);
+    const tabMap = { stats:"stats", indicacoes:"ind", candidatos:"cand", votacao:"vot", compartilhar:"comp" };
+    Object.keys(tabMap).forEach(t => {
+      document.getElementById(`edt-${tabMap[t]}`)?.classList.toggle("on", t === tab);
     });
     _renderDetTab();
   };
 
   function _renderDetTab() {
-    if      (_detTab === "stats")       _renderStats();
-    else if (_detTab === "indicacoes")  _renderIndicacoesTab();
+    if      (_detTab === "stats")        _renderStats();
+    else if (_detTab === "indicacoes")   _renderIndicacoesTab();
+    else if (_detTab === "candidatos")   _renderCandidatosTab();
+    else if (_detTab === "votacao")      _renderVotacaoTab();
     else if (_detTab === "compartilhar") _renderCompartilhar();
   }
 
@@ -765,7 +798,11 @@
 
   window.eleicaoAtualizarDetalhe = async function() {
     if (!_processo) return;
-    await _carregarIndicacoes(_processo.id);
+    await Promise.all([
+      _carregarIndicacoes(_processo.id),
+      _carregarCandidatos(_processo.id),
+      _carregarVotacaoConfig(_processo.id),
+    ]);
     _renderDetTab();
   };
 
@@ -837,6 +874,579 @@
     _renderLista();
   };
 
+  /* ══════════════════════════════════════════════════════
+     TIMELINE DE FASES
+  ══════════════════════════════════════════════════════ */
+
+  function _renderTimeline() {
+    const p  = _processo;
+    const vc = _votacaoConfig;
+
+    const ind_done   = ["encerrado","arquivado","apurado"].includes(p.status);
+    const ind_active = p.status === "aberto" || p.status === "agendado";
+
+    const candAtivos = _candidatos.filter(c => c.ativo).length;
+    const cand_done  = candAtivos > 0 && vc && vc.status_votacao !== "rascunho";
+    const cand_active = ind_done && candAtivos === 0;
+
+    const vot_done   = vc && ["encerrada","apurada"].includes(vc.status_votacao);
+    const vot_active = vc && vc.status_votacao === "aberta";
+
+    const apr_done   = vc && vc.status_votacao === "apurada";
+    const apr_active = vc && vc.status_votacao === "encerrada";
+
+    const fases = [
+      {
+        icon:"📋", fase:"Fase 1", label:"Indicações",
+        sub: ind_done ? "Encerrado" : ind_active ? "Em andamento" : "Pendente",
+        done: ind_done, active: ind_active,
+        nav: () => eleicaoDetTab("indicacoes"),
+      },
+      {
+        icon:"✓", fase:"Fase 2", label:"Candidatos",
+        sub: cand_done ? `${candAtivos} homologado(s)` : candAtivos ? `${candAtivos} cadastrado(s)` : ind_done ? "Aguardando" : "—",
+        done: cand_done, active: cand_active || (ind_done && candAtivos > 0 && !cand_done),
+        nav: () => eleicaoDetTab("candidatos"),
+      },
+      {
+        icon:"🗳", fase:"Fase 3", label:"Votação",
+        sub: vot_done ? "Encerrada" : vot_active ? "Em andamento" : vc ? "Configurada" : "Não configurada",
+        done: vot_done, active: vot_active,
+        nav: () => eleicaoDetTab("votacao"),
+      },
+      {
+        icon:"📊", fase:"Fase 4", label:"Apuração",
+        sub: apr_done ? "Concluída" : apr_active ? "Pendente" : "—",
+        done: apr_done, active: apr_active,
+        nav: () => eleicaoDetTab("votacao"),
+      },
+    ];
+
+    return `
+      <div style="display:flex;align-items:stretch;margin-bottom:18px;background:var(--bg-surface);border:1px solid var(--bd1);border-radius:12px;overflow:hidden">
+        ${fases.map((f, i) => `
+          <div onclick="eleicaoDetTab('${["indicacoes","candidatos","votacao","votacao"][i]}')"
+            style="flex:1;padding:11px 14px;border-right:${i<3?"1px solid var(--bd1)":"none"};
+                   border-left:${f.done?"3px solid var(--gr)":f.active?"3px solid var(--sky)":"3px solid transparent"};
+                   background:${f.done?"rgba(58,170,92,.03)":f.active?"rgba(74,156,245,.04)":"none"};
+                   cursor:pointer;transition:background .15s;min-width:0"
+            onmouseover="this.style.background='var(--bg-hover)'"
+            onmouseout="this.style.background='${f.done?"rgba(58,170,92,.03)":f.active?"rgba(74,156,245,.04)":"none"}'">
+            <div style="font-size:16px;opacity:${f.done||f.active?1:.35};margin-bottom:4px">${f.icon}</div>
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx4);margin-bottom:2px">${f.fase}</div>
+            <div style="font-size:11px;font-weight:700;color:${f.done?"var(--gr)":f.active?"var(--sky)":"var(--tx3)"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.label}</div>
+            <div style="font-size:10px;color:var(--tx4);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.sub}</div>
+          </div>`).join("")}
+      </div>`;
+  }
+
+  /* ══════════════════════════════════════════════════════
+     ABA CANDIDATOS
+  ══════════════════════════════════════════════════════ */
+
+  function _renderCandidatosTab() {
+    const el = document.getElementById("edt-content");
+    if (!el) return;
+
+    let rows = _candidatos;
+    if (_candFiltroTipo !== "todos") rows = rows.filter(c => c.tipo === _candFiltroTipo);
+
+    const total  = _candidatos.length;
+    const presb  = _candidatos.filter(c => c.tipo === "presbitero").length;
+    const diac   = _candidatos.filter(c => c.tipo === "diacono").length;
+    const ativos = _candidatos.filter(c => c.ativo).length;
+
+    const si  = "padding:7px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px";
+    const thS = "text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);font-weight:700";
+    const tdS = "padding:8px 10px;font-size:12.5px;color:var(--tx2)";
+
+    el.innerHTML = `
+      <div class="kpis c4" style="margin-bottom:16px">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,.12);color:var(--sky)">◎</div><div class="kpi-body"><div class="kpi-lbl">Total</div><div class="kpi-val">${total}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,.12);color:var(--teal)">◈</div><div class="kpi-body"><div class="kpi-lbl">Presbíteros</div><div class="kpi-val">${presb}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,.12);color:var(--violet)">◉</div><div class="kpi-body"><div class="kpi-lbl">Diáconos</div><div class="kpi-val">${diac}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,.12);color:var(--gr)">✓</div><div class="kpi-body"><div class="kpi-lbl">Ativos</div><div class="kpi-val">${ativos}</div></div></div>
+      </div>
+      <div id="cand-panel" style="display:none"></div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+          <div class="ctit" style="margin-bottom:0">Lista de Candidatos <span style="font-size:11px;color:var(--tx3);font-weight:400">(${rows.length})</span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select onchange="eleicaoCandFiltroTipo(this.value)" style="${si}">
+              <option value="todos">Todos os tipos</option>
+              <option value="presbitero" ${_candFiltroTipo==="presbitero"?"selected":""}>Presbítero</option>
+              <option value="diacono"    ${_candFiltroTipo==="diacono"?"selected":""}>Diácono</option>
+            </select>
+            ${_btn("⬇ Importar das Indicações", "eleicaoAbrirImportarIndicacoes()")}
+            ${_btnPri("+ Adicionar manualmente", "eleicaoAbrirAdicionarCandidato()")}
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr style="background:var(--bg-surface);border-bottom:2px solid var(--sky)">
+                <th style="${thS};width:36px">#</th>
+                <th style="${thS}">Nome</th>
+                <th style="${thS}">Tipo</th>
+                <th style="${thS}">Congregação</th>
+                <th style="${thS}">Origem</th>
+                <th style="${thS}">Status</th>
+                <th style="${thS}"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.length ? rows.map((c, i) => {
+                const cor  = c.tipo === "presbitero" ? "var(--sky)" : "var(--teal)";
+                const lbl  = c.tipo === "presbitero" ? "Presbítero" : "Diácono";
+                const nEsc = _esc(c.nome).replace(/'/g,"&#39;");
+                return `<tr style="border-bottom:1px solid var(--bd1);opacity:${c.ativo?1:.5}"
+                  onmouseover="this.style.background='var(--bg-hover)'"
+                  onmouseout="this.style.background=''">
+                  <td style="${tdS};font-size:11px;color:var(--tx4);font-weight:700">${i+1}</td>
+                  <td style="${tdS};font-weight:600;color:var(--tx1)">${_esc(c.nome)}</td>
+                  <td style="${tdS}"><span style="font-size:10px;padding:2px 9px;border-radius:6px;border:1px solid ${cor}44;color:${cor};background:${cor}11">${lbl}</span></td>
+                  <td style="${tdS};font-size:11px;color:var(--tx3)">${_esc(c.congregacao||"Sede")}</td>
+                  <td style="${tdS};font-size:11px">${c.origem === "manual" ? "Manual" : "Indicação"}</td>
+                  <td style="${tdS}">
+                    <span style="font-size:10px;padding:2px 9px;border-radius:6px;background:${c.ativo?"rgba(58,170,92,.12)":"rgba(138,145,158,.12)"};color:${c.ativo?"var(--gr)":"var(--tx3)"}">
+                      ${c.ativo ? "Ativo" : "Inativo"}
+                    </span>
+                  </td>
+                  <td style="padding:8px 10px">
+                    <div style="display:flex;gap:6px;justify-content:flex-end">
+                      <button onclick="eleicaoToggleCandidato('${c.id}',${!c.ativo})"
+                        style="background:none;border:1px solid var(--bd2);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--tx2);cursor:pointer"
+                        title="${c.ativo?"Inativar":"Ativar"}">${c.ativo ? "○" : "●"}</button>
+                      <button onclick="eleicaoExcluirCandidato('${c.id}','${nEsc}')"
+                        style="background:none;border:1px solid var(--bd2);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--rose);cursor:pointer"
+                        title="Remover">✕</button>
+                    </div>
+                  </td>
+                </tr>`;
+              }).join("") : `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--tx3)">
+                Nenhum candidato cadastrado. Importe das indicações ou adicione manualmente.
+              </td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+
+  window.eleicaoCandFiltroTipo = function(v) {
+    _candFiltroTipo = v;
+    _renderCandidatosTab();
+  };
+
+  window.eleicaoAbrirImportarIndicacoes = function() {
+    const panel = document.getElementById("cand-panel");
+    if (!panel) return;
+    if (panel.style.display !== "none" && panel.dataset.mode === "import") {
+      panel.style.display = "none";
+      return;
+    }
+    panel.dataset.mode = "import";
+
+    const addedKeys = new Set(_candidatos.map(c => `${c.nome}||${c.tipo}`));
+    const byNome = {};
+    _indicacoes.forEach(i => {
+      const k = `${i.indicado_nome}||${i.tipo}`;
+      if (!byNome[k]) byNome[k] = {
+        nome: i.indicado_nome, tipo: i.tipo,
+        congregacao: i.congregacao, count: 0,
+        key: k, already: addedKeys.has(k),
+      };
+      byNome[k].count++;
+    });
+    const ranked = Object.values(byNome).sort((a,b) => b.count - a.count);
+
+    if (!ranked.length) {
+      panel.innerHTML = `<div class="card" style="margin-bottom:14px;border-color:rgba(208,144,64,.4);background:rgba(208,144,64,.05)">
+        <div style="font-size:13px;color:var(--amber)">Nenhuma indicação registrada. Registre indicações primeiro na aba Indicações.</div>
+      </div>`;
+      panel.style.display = "block";
+      return;
+    }
+
+    const thS = "text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);font-weight:700";
+
+    panel.innerHTML = `
+      <div class="card" style="margin-bottom:14px;border-color:var(--sky)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+          <div>
+            <div class="ctit" style="margin-bottom:2px">Importar das Indicações</div>
+            <div style="font-size:11px;color:var(--tx3)">Selecione os candidatos a homologar</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            ${_btnPri("Importar selecionados", "eleicaoConfirmarImportacao()")}
+            ${_btn("Cancelar", "document.getElementById('cand-panel').style.display='none'")}
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr style="background:var(--bg-surface);border-bottom:2px solid var(--sky)">
+                <th style="${thS};width:36px"><input type="checkbox" id="cand-imp-all" onchange="eleicaoToggleAllImport(this.checked)" style="accent-color:var(--sky)"></th>
+                <th style="${thS}">Nome</th>
+                <th style="${thS}">Tipo</th>
+                <th style="${thS}">Indicações</th>
+                <th style="${thS}">Congregação</th>
+                <th style="${thS}">Situação</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${ranked.map(r => {
+                const cor = r.tipo === "presbitero" ? "var(--sky)" : "var(--teal)";
+                const lbl = r.tipo === "presbitero" ? "Presbítero" : "Diácono";
+                const nomeAttr = _esc(r.nome).replace(/"/g, "&quot;");
+                const congAttr = _esc(r.congregacao||"").replace(/"/g, "&quot;");
+                return `<tr style="border-bottom:1px solid var(--bd1);opacity:${r.already?".55":"1"}"
+                  onmouseover="this.style.background='var(--bg-hover)'"
+                  onmouseout="this.style.background=''">
+                  <td style="padding:8px 10px">
+                    <input type="checkbox" class="cand-imp-chk"
+                      data-nome="${nomeAttr}" data-tipo="${r.tipo}" data-cong="${congAttr}"
+                      ${r.already ? "disabled checked" : ""}
+                      style="accent-color:var(--sky);width:15px;height:15px">
+                  </td>
+                  <td style="padding:8px 10px;font-size:12.5px;font-weight:600;color:var(--tx1)">${_esc(r.nome)}</td>
+                  <td style="padding:8px 10px"><span style="font-size:10px;padding:2px 9px;border-radius:6px;border:1px solid ${cor}44;color:${cor};background:${cor}11">${lbl}</span></td>
+                  <td style="padding:8px 10px;font-weight:700;color:var(--sky)">${r.count}x</td>
+                  <td style="padding:8px 10px;font-size:11px;color:var(--tx3)">${_esc(r.congregacao||"Sede")}</td>
+                  <td style="padding:8px 10px">
+                    ${r.already
+                      ? `<span style="font-size:10px;padding:2px 9px;border-radius:6px;background:rgba(58,170,92,.12);color:var(--gr)">Já adicionado</span>`
+                      : `<span style="font-size:10px;padding:2px 9px;border-radius:6px;background:var(--bg-surface);color:var(--tx3)">Disponível</span>`}
+                  </td>
+                </tr>`;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+    panel.style.display = "block";
+  };
+
+  window.eleicaoToggleAllImport = function(checked) {
+    document.querySelectorAll(".cand-imp-chk:not(:disabled)").forEach(c => c.checked = checked);
+  };
+
+  window.eleicaoConfirmarImportacao = async function() {
+    const chks = Array.from(document.querySelectorAll(".cand-imp-chk:checked:not(:disabled)"));
+    if (!chks.length) { alert("Selecione ao menos um candidato."); return; }
+
+    const inserts = chks.map(chk => ({
+      processo_id: _processo.id,
+      nome:        chk.dataset.nome,
+      tipo:        chk.dataset.tipo,
+      congregacao: chk.dataset.cong || null,
+      origem:      "indicacao",
+      ativo:       true,
+    }));
+
+    const { error } = await _sb().from("eleicao_candidatos").insert(inserts);
+    if (error) { alert("Erro ao importar: " + error.message); return; }
+
+    if (typeof T === "function") T(`${inserts.length} candidato(s) importado(s)!`);
+    await _carregarCandidatos(_processo.id);
+    document.getElementById("cand-panel").style.display = "none";
+    _renderCandidatosTab();
+  };
+
+  window.eleicaoAbrirAdicionarCandidato = function() {
+    const panel = document.getElementById("cand-panel");
+    if (!panel) return;
+    if (panel.style.display !== "none" && panel.dataset.mode === "manual") {
+      panel.style.display = "none";
+      return;
+    }
+    panel.dataset.mode = "manual";
+
+    const inp = "width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:13px;box-sizing:border-box;outline:none;font-family:inherit";
+    const lbl = "display:block;font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px";
+
+    panel.innerHTML = `
+      <div class="card" style="margin-bottom:14px;border-color:var(--sky)">
+        <div class="ctit" style="margin-bottom:14px">Adicionar candidato manualmente</div>
+        <div style="display:grid;grid-template-columns:1fr 180px 180px;gap:12px;align-items:end;flex-wrap:wrap">
+          <div>
+            <label style="${lbl}">Nome completo *</label>
+            <input id="cand-add-nome" style="${inp}" placeholder="Nome do candidato">
+          </div>
+          <div>
+            <label style="${lbl}">Tipo *</label>
+            <select id="cand-add-tipo" style="${inp}">
+              <option value="presbitero">Presbítero</option>
+              <option value="diacono">Diácono</option>
+            </select>
+          </div>
+          <div>
+            <label style="${lbl}">Congregação</label>
+            <input id="cand-add-cong" style="${inp}" placeholder="Sede">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          ${_btnPri("Adicionar candidato", "eleicaoSalvarCandidatoManual()")}
+          ${_btn("Cancelar", "document.getElementById('cand-panel').style.display='none'")}
+        </div>
+      </div>`;
+    panel.style.display = "block";
+    document.getElementById("cand-add-nome")?.focus();
+  };
+
+  window.eleicaoSalvarCandidatoManual = async function() {
+    const nome = document.getElementById("cand-add-nome")?.value?.trim();
+    const tipo = document.getElementById("cand-add-tipo")?.value;
+    const cong = document.getElementById("cand-add-cong")?.value?.trim() || null;
+
+    if (!nome) { alert("Nome obrigatório."); return; }
+
+    const { error } = await _sb().from("eleicao_candidatos").insert({
+      processo_id: _processo.id,
+      nome, tipo, congregacao: cong,
+      origem: "manual", ativo: true,
+    });
+    if (error) { alert("Erro ao adicionar: " + error.message); return; }
+
+    if (typeof T === "function") T("Candidato adicionado!", nome);
+    await _carregarCandidatos(_processo.id);
+    document.getElementById("cand-panel").style.display = "none";
+    _renderCandidatosTab();
+  };
+
+  window.eleicaoToggleCandidato = async function(id, ativo) {
+    const { error } = await _sb().from("eleicao_candidatos").update({ ativo }).eq("id", id);
+    if (error) { alert("Erro: " + error.message); return; }
+    _candidatos = _candidatos.map(c => c.id === id ? { ...c, ativo } : c);
+    _renderCandidatosTab();
+  };
+
+  window.eleicaoExcluirCandidato = async function(id, nome) {
+    if (!confirm(`Remover "${nome}" da lista de candidatos?`)) return;
+    const { error } = await _sb().from("eleicao_candidatos")
+      .update({ deleted_at: new Date().toISOString() }).eq("id", id);
+    if (error) { alert("Erro: " + error.message); return; }
+    _candidatos = _candidatos.filter(c => c.id !== id);
+    _renderCandidatosTab();
+    if (typeof T === "function") T("Candidato removido", nome);
+  };
+
+  /* ══════════════════════════════════════════════════════
+     ABA VOTAÇÃO
+  ══════════════════════════════════════════════════════ */
+
+  function _renderVotacaoTab() {
+    const el = document.getElementById("edt-content");
+    if (!el) return;
+
+    el.innerHTML = `
+      <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--bd1)">
+        <button id="vt-btn-config" onclick="eleicaoVotSubTab('config')"
+          style="padding:9px 20px;border:none;border-bottom:2px solid ${_votSubTab==="config"?"var(--sky)":"transparent"};background:none;
+                 color:${_votSubTab==="config"?"var(--sky)":"var(--tx3)"};font-size:12.5px;font-weight:${_votSubTab==="config"?"700":"500"};
+                 cursor:pointer;font-family:inherit">Configuração</button>
+        <button id="vt-btn-dash" onclick="eleicaoVotSubTab('dashboard')"
+          style="padding:9px 20px;border:none;border-bottom:2px solid ${_votSubTab==="dashboard"?"var(--sky)":"transparent"};background:none;
+                 color:${_votSubTab==="dashboard"?"var(--sky)":"var(--tx3)"};font-size:12.5px;font-weight:${_votSubTab==="dashboard"?"700":"500"};
+                 cursor:pointer;font-family:inherit">Dashboard</button>
+      </div>
+      <div id="vot-sub-content"></div>`;
+
+    _renderVotSubTab();
+  }
+
+  function _renderVotSubTab() {
+    const el = document.getElementById("vot-sub-content");
+    if (!el) return;
+    if (_votSubTab === "config")    _renderVotConfig();
+    else if (_votSubTab === "dashboard") _renderVotDashboard();
+  }
+
+  window.eleicaoVotSubTab = function(tab) {
+    _votSubTab = tab;
+    ["config","dashboard"].forEach(t => {
+      const btn = document.getElementById(`vt-btn-${t}`);
+      if (!btn) return;
+      const on = t === tab;
+      btn.style.borderBottomColor = on ? "var(--sky)" : "transparent";
+      btn.style.color  = on ? "var(--sky)" : "var(--tx3)";
+      btn.style.fontWeight = on ? "700" : "500";
+    });
+    _renderVotSubTab();
+  };
+
+  function _renderVotConfig() {
+    const el = document.getElementById("vot-sub-content");
+    if (!el) return;
+    const cfg = _votacaoConfig || {};
+
+    const inp = "width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:13px;box-sizing:border-box;outline:none;font-family:inherit";
+    const lbl = "display:block;font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px";
+
+    const statusOpts = [
+      ["rascunho","Rascunho"],
+      ["agendada","Agendada"],
+      ["aberta","Aberta"],
+      ["encerrada","Encerrada"],
+      ["apurada","Apurada"],
+    ];
+
+    el.innerHTML = `
+      <div class="card" style="max-width:640px">
+        <div class="ctit" style="margin-bottom:16px">Configuração da Votação</div>
+
+        <div style="margin-bottom:14px">
+          <label style="${lbl}">Status da votação</label>
+          <select id="vc-status" style="${inp}">
+            ${statusOpts.map(([v,l]) => `<option value="${v}" ${(cfg.status_votacao||"rascunho")===v?"selected":""}>${l}</option>`).join("")}
+          </select>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+          <div>
+            <label style="${lbl}">Abertura da votação</label>
+            <div style="display:grid;grid-template-columns:1fr 100px;gap:8px">
+              <input id="vc-data-ab" type="date" style="${inp}" value="${cfg.data_abertura_votacao||""}">
+              <input id="vc-hora-ab" type="time" style="${inp}" value="${cfg.hora_abertura_votacao||"08:00"}">
+            </div>
+          </div>
+          <div>
+            <label style="${lbl}">Encerramento da votação</label>
+            <div style="display:grid;grid-template-columns:1fr 100px;gap:8px">
+              <input id="vc-data-enc" type="date" style="${inp}" value="${cfg.data_encerramento_votacao||""}">
+              <input id="vc-hora-enc" type="time" style="${inp}" value="${cfg.hora_encerramento_votacao||"18:00"}">
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+          <div>
+            <label style="${lbl}">Máx. votos por eleitor — Presbíteros</label>
+            <input id="vc-max-presb" type="number" min="1" max="20" style="${inp}" value="${cfg.max_votos_presbiteros??5}">
+          </div>
+          <div>
+            <label style="${lbl}">Máx. votos por eleitor — Diáconos</label>
+            <input id="vc-max-diac" type="number" min="1" max="20" style="${inp}" value="${cfg.max_votos_diaconos??4}">
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px;padding:14px;border-radius:10px;background:var(--bg-surface);border:1px solid var(--bd1)">
+          <div style="${lbl};margin-bottom:10px">Elegibilidade dos eleitores</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+              <input type="checkbox" id="vc-plena" ${cfg.somente_plena_comunhao!==false?"checked":""} style="accent-color:var(--sky);width:16px;height:16px;flex-shrink:0">
+              <span style="font-size:13px;color:var(--tx2)">Somente membros em plena comunhão</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+              <input type="checkbox" id="vc-susp" ${cfg.excluir_suspensos!==false?"checked":""} style="accent-color:var(--sky);width:16px;height:16px;flex-shrink:0">
+              <span style="font-size:13px;color:var(--tx2)">Excluir membros suspensos ou sob disciplina</span>
+            </label>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          ${_btnPri("Salvar configuração", "eleicaoSalvarVotacaoConfig()")}
+          <div id="vc-msg" style="font-size:12px"></div>
+        </div>
+      </div>`;
+  }
+
+  function _renderVotDashboard() {
+    const el = document.getElementById("vot-sub-content");
+    if (!el) return;
+    const cfg = _votacaoConfig;
+
+    if (!cfg || cfg.status_votacao === "rascunho") {
+      el.innerHTML = `
+        <div style="text-align:center;padding:48px;background:var(--bg-surface);border:1.5px dashed var(--bd2);border-radius:12px">
+          <div style="font-size:32px;margin-bottom:12px;opacity:.4">🗳</div>
+          <div style="font-size:14px;font-weight:700;color:var(--tx2);margin-bottom:6px">Votação não configurada</div>
+          <div style="font-size:12px;color:var(--tx3);margin-bottom:18px">Configure as datas e os limites de votos antes de abrir a votação.</div>
+          <button onclick="eleicaoVotSubTab('config')" style="padding:9px 20px;border-radius:7px;border:none;background:var(--sky);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Ir para Configuração</button>
+        </div>`;
+      return;
+    }
+
+    const candAtivos = _candidatos.filter(c => c.ativo).length;
+    const presb = _candidatos.filter(c => c.ativo && c.tipo === "presbitero").length;
+    const diac  = _candidatos.filter(c => c.ativo && c.tipo === "diacono").length;
+
+    const statusCor = { aberta:"var(--gr)", encerrada:"var(--sky)", apurada:"var(--violet)", agendada:"var(--amber)", rascunho:"var(--tx3)" };
+
+    el.innerHTML = `
+      <div class="kpis c4" style="margin-bottom:16px">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,.12);color:var(--sky)">◎</div><div class="kpi-body"><div class="kpi-lbl">Candidatos ativos</div><div class="kpi-val">${candAtivos}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,.12);color:var(--teal)">◈</div><div class="kpi-body"><div class="kpi-lbl">Presbíteros</div><div class="kpi-val">${presb}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,.12);color:var(--violet)">◉</div><div class="kpi-body"><div class="kpi-lbl">Diáconos</div><div class="kpi-val">${diac}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,.12);color:${statusCor[cfg.status_votacao]||"var(--tx3)"}">▶</div><div class="kpi-body"><div class="kpi-lbl">Status votação</div><div class="kpi-val" style="font-size:13px;text-transform:capitalize;color:${statusCor[cfg.status_votacao]||"var(--tx2)"}">${cfg.status_votacao}</div></div></div>
+      </div>
+
+      <div class="card" style="max-width:520px">
+        <div class="ctit">Resumo da Configuração</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--bd1);padding-bottom:8px">
+            <span style="font-size:12.5px;color:var(--tx3)">Abertura:</span>
+            <span style="font-size:12.5px;color:var(--tx1);font-weight:600">
+              ${cfg.data_abertura_votacao ? `${_fmtDate(cfg.data_abertura_votacao)} às ${(cfg.hora_abertura_votacao||"").slice(0,5)}` : "—"}
+            </span>
+          </div>
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--bd1);padding-bottom:8px">
+            <span style="font-size:12.5px;color:var(--tx3)">Encerramento:</span>
+            <span style="font-size:12.5px;color:var(--tx1);font-weight:600">
+              ${cfg.data_encerramento_votacao ? `${_fmtDate(cfg.data_encerramento_votacao)} às ${(cfg.hora_encerramento_votacao||"").slice(0,5)}` : "—"}
+            </span>
+          </div>
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--bd1);padding-bottom:8px">
+            <span style="font-size:12.5px;color:var(--tx3)">Máx. votos Presbíteros:</span>
+            <span style="font-size:12.5px;color:var(--tx1);font-weight:600">${cfg.max_votos_presbiteros}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="font-size:12.5px;color:var(--tx3)">Máx. votos Diáconos:</span>
+            <span style="font-size:12.5px;color:var(--tx1);font-weight:600">${cfg.max_votos_diaconos}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;padding:12px 16px;border-radius:10px;background:rgba(74,156,245,.06);border:1px solid rgba(74,156,245,.2);font-size:12px;color:var(--tx3)">
+        Cédula eletrônica, contagem de votos em tempo real e apuração disponíveis na próxima atualização.
+      </div>`;
+  }
+
+  window.eleicaoSalvarVotacaoConfig = async function() {
+    const msgEl = document.getElementById("vc-msg");
+    if (msgEl) { msgEl.textContent = "Salvando..."; msgEl.style.color = "var(--tx3)"; }
+
+    const payload = {
+      processo_id:               _processo.id,
+      status_votacao:            document.getElementById("vc-status")?.value     || "rascunho",
+      data_abertura_votacao:     document.getElementById("vc-data-ab")?.value    || null,
+      hora_abertura_votacao:     document.getElementById("vc-hora-ab")?.value    || null,
+      data_encerramento_votacao: document.getElementById("vc-data-enc")?.value   || null,
+      hora_encerramento_votacao: document.getElementById("vc-hora-enc")?.value   || null,
+      max_votos_presbiteros:     parseInt(document.getElementById("vc-max-presb")?.value) || 5,
+      max_votos_diaconos:        parseInt(document.getElementById("vc-max-diac")?.value)  || 4,
+      somente_plena_comunhao:    document.getElementById("vc-plena")?.checked !== false,
+      excluir_suspensos:         document.getElementById("vc-susp")?.checked  !== false,
+      atualizado_em:             new Date().toISOString(),
+    };
+
+    try {
+      const sb = _sb();
+      if (_votacaoConfig?.id) {
+        const { error } = await sb.from("eleicao_votacao_config").update(payload).eq("id", _votacaoConfig.id);
+        if (error) throw new Error(error.message);
+      } else {
+        const { data, error } = await sb.from("eleicao_votacao_config").insert(payload).select().single();
+        if (error) throw new Error(error.message);
+        _votacaoConfig = data;
+      }
+      await _carregarVotacaoConfig(_processo.id);
+      if (msgEl) { msgEl.textContent = "Salvo!"; msgEl.style.color = "var(--gr)"; setTimeout(() => { if (msgEl) msgEl.textContent = ""; }, 2500); }
+      if (typeof T === "function") T("Configuração salva!", "Votação configurada com sucesso.");
+    } catch (e) {
+      if (msgEl) { msgEl.textContent = "Erro: " + e.message; msgEl.style.color = "var(--rose)"; }
+    }
+  };
+
   /* ── Navegação pública ───────────────────────────────── */
   window.eleicaoNavLista     = function()    { _editando = false; _show("lista"); };
   window.eleicaoNavHistorico = function()    { _show("historico"); };
@@ -847,7 +1457,11 @@
     _renderForm(_processo);
     _nav = "form";
   };
-  window.eleicaoNavDetalhe   = function(id)  { _detTab = "stats"; _filtroTipo = "todos"; _filtroCongreg = "todas"; _show("detalhe", id); };
+  window.eleicaoNavDetalhe   = function(id)  {
+    _detTab = "stats"; _filtroTipo = "todos"; _filtroCongreg = "todas";
+    _candidatos = []; _votacaoConfig = null; _votSubTab = "config"; _candFiltroTipo = "todos";
+    _show("detalhe", id);
+  };
 
   /* ═══════════════════════════════════════════════════════
      ENTRY POINT
