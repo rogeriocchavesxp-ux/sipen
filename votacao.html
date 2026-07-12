@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Votação — IPPenha</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png">
+<style>
+/* ── Tokens ─────────────────────────────────────────── */
+:root {
+  --green:        #2E6E48;
+  --green-mid:    #3A8A5A;
+  --green-tint:   #EBF5EF;
+  --green-border: #C0DECA;
+  --amber:        #9A5F1E;
+  --amber-tint:   #FBF2E6;
+  --amber-border: #E5C99A;
+  --blue:         #1A5A9A;
+  --blue-tint:    #E8F0F8;
+  --blue-border:  #9AB8D8;
+
+  --tx1:  #1B2019;
+  --tx2:  #506050;
+  --tx3:  #8C9A8A;
+  --tx4:  #B0BDB0;
+
+  --bg:      #F7F8F4;
+  --surface: #FFFFFF;
+  --bd:      #DEE4DC;
+  --bd2:     #CDD5CB;
+
+  --radius-sm: 6px;
+  --radius:    10px;
+  --radius-lg: 14px;
+
+  --f-serif: Georgia, 'Palatino Linotype', 'Times New Roman', serif;
+  --f-sans:  -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --green:        #4AAF72;
+    --green-mid:    #4AAF72;
+    --green-tint:   #162A1F;
+    --green-border: #264035;
+    --amber:        #D4903A;
+    --amber-tint:   #231A0C;
+    --amber-border: #5A4020;
+    --blue:         #5A9AD4;
+    --blue-tint:    #0E1E30;
+    --blue-border:  #1E4060;
+
+    --tx1:  #E2E7DF;
+    --tx2:  #9AAA95;
+    --tx3:  #5A6858;
+    --tx4:  #3A4A38;
+
+    --bg:      #131611;
+    --surface: #1A1E18;
+    --bd:      #272E24;
+    --bd2:     #323A30;
+  }
+}
+:root[data-theme="light"] {
+  --green:#2E6E48;--green-mid:#3A8A5A;--green-tint:#EBF5EF;--green-border:#C0DECA;
+  --amber:#9A5F1E;--amber-tint:#FBF2E6;--amber-border:#E5C99A;
+  --blue:#1A5A9A;--blue-tint:#E8F0F8;--blue-border:#9AB8D8;
+  --tx1:#1B2019;--tx2:#506050;--tx3:#8C9A8A;--tx4:#B0BDB0;
+  --bg:#F7F8F4;--surface:#FFFFFF;--bd:#DEE4DC;--bd2:#CDD5CB;
+}
+:root[data-theme="dark"] {
+  --green:#4AAF72;--green-mid:#4AAF72;--green-tint:#162A1F;--green-border:#264035;
+  --amber:#D4903A;--amber-tint:#231A0C;--amber-border:#5A4020;
+  --blue:#5A9AD4;--blue-tint:#0E1E30;--blue-border:#1E4060;
+  --tx1:#E2E7DF;--tx2:#9AAA95;--tx3:#5A6858;--tx4:#3A4A38;
+  --bg:#131611;--surface:#1A1E18;--bd:#272E24;--bd2:#323A30;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--f-sans);
+  background: var(--bg);
+  color: var(--tx1);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Shell ───────────────────────────────────────────── */
+.page-wrap   { max-width: 720px; margin: 0 auto; padding: 32px 20px 72px; }
+.page-header { display: flex; justify-content: center; padding-bottom: 28px; margin-bottom: 28px; border-bottom: 1px solid var(--bd); }
+.page-logo   { width: 200px; height: auto; }
+.page-footer { margin-top: 48px; text-align: center; font-size: 12px; color: var(--tx3); letter-spacing: .02em; }
+
+/* ── Process header ──────────────────────────────────── */
+.proc-header   { margin-bottom: 28px; }
+.proc-eyebrow  { font-size: 11px; font-weight: 600; color: var(--green); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 12px; }
+.proc-title    { font-family: var(--f-serif); font-size: clamp(24px, 5vw, 34px); font-weight: normal; color: var(--tx1); line-height: 1.2; text-wrap: balance; margin-bottom: 12px; }
+.proc-subtitle { font-size: 14px; color: var(--tx2); line-height: 1.7; margin-bottom: 16px; }
+.proc-meta     { display: flex; flex-wrap: wrap; gap: 8px; }
+.meta-chip     { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--bd2); background: var(--surface); font-size: 12px; color: var(--tx2); white-space: nowrap; }
+.meta-chip.s-aberta  { color: var(--green); background: var(--green-tint); border-color: var(--green-border); }
+.meta-chip.s-agendada{ color: var(--amber); background: var(--amber-tint); border-color: var(--amber-border); }
+.meta-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.sec-divider { border: none; border-top: 1px solid var(--bd); margin: 0 0 28px; }
+
+/* ── Steps ───────────────────────────────────────────── */
+.steps     { display: flex; align-items: center; margin-bottom: 24px; }
+.step      { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--tx4); font-weight: 600; }
+.step.on   { color: var(--green); }
+.step.done { color: var(--green); }
+.step-n    { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid currentColor; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+.step.on   .step-n { background: var(--green-tint); }
+.step.done .step-n { background: var(--green-tint); }
+.step-sep  { flex: 1; height: 1px; background: var(--bd); margin: 0 10px; }
+.step-lbl  { display: none; }
+@media (min-width: 440px) { .step-lbl { display: inline; } }
+
+/* ── Cards gerais ────────────────────────────────────── */
+.card { background: var(--surface); border: 1px solid var(--bd); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 16px; }
+.card-title { font-family: var(--f-serif); font-size: 19px; font-weight: normal; color: var(--tx1); margin-bottom: 8px; }
+.card-sub   { font-size: 13.5px; color: var(--tx2); margin-bottom: 16px; line-height: 1.6; }
+
+/* ── Identificação ───────────────────────────────────── */
+.field     { margin-bottom: 14px; }
+.lbl       { display: block; font-size: 10.5px; font-weight: 700; color: var(--tx3); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
+.req-star  { color: #C0392B; margin-left: 2px; }
+.inp       { width: 100%; padding: 10px 13px; border-radius: var(--radius-sm); border: 1px solid var(--bd2); background: var(--bg); color: var(--tx1); font-size: 14px; font-family: var(--f-sans); outline: none; transition: border-color .15s, box-shadow .15s; }
+.inp:focus { border-color: var(--green); box-shadow: 0 0 0 3px var(--green-tint); }
+.drop-wrap  { position: relative; }
+.dropdown  { position: absolute; top: calc(100% + 3px); left: 0; right: 0; z-index: 60; background: var(--surface); border: 1px solid var(--bd2); border-radius: var(--radius); max-height: 220px; overflow-y: auto; display: none; box-shadow: 0 6px 24px rgba(0,0,0,.12); }
+.drop-item { padding: 10px 14px; font-size: 13.5px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px solid var(--bd); transition: background .1s; }
+.drop-item:last-child { border-bottom: none; }
+.drop-item:hover      { background: var(--green-tint); }
+.drop-item.dis        { cursor: not-allowed; color: var(--tx3); }
+.drop-item.dis:hover  { background: none; }
+.drop-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.drop-sub  { font-size: 11.5px; color: var(--tx3); white-space: nowrap; flex-shrink: 0; }
+
+.member-badge { background: var(--surface); border: 1px solid var(--bd); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.member-av    { width: 36px; height: 36px; border-radius: 50%; background: var(--green-tint); border: 1px solid var(--green-border); color: var(--green); font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.member-name  { font-size: 14px; font-weight: 600; color: var(--tx1); }
+.member-cong  { font-size: 12px; color: var(--tx3); }
+.member-swap  { margin-left: auto; padding: 5px 12px; border-radius: var(--radius-sm); border: 1px solid var(--bd); background: transparent; color: var(--tx3); font-size: 12px; cursor: pointer; font-family: var(--f-sans); }
+
+.sel-ok     { display: inline-flex; align-items: center; gap: 8px; background: var(--green-tint); border: 1px solid var(--green-border); color: var(--green); border-radius: 20px; padding: 5px 12px; font-size: 12.5px; font-weight: 600; margin-top: 6px; }
+.sel-ok-rm  { background: none; border: none; color: var(--green); cursor: pointer; font-size: 14px; padding: 0 0 0 4px; opacity: .7; }
+.sel-ok-rm:hover { opacity: 1; }
+
+/* ── Botões ──────────────────────────────────────────── */
+.action-row  { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+@media (min-width: 440px) { .action-row { flex-direction: row; align-items: center; } }
+.btn-sec { padding: 11px 20px; border-radius: var(--radius-sm); border: 1px solid var(--bd2); background: transparent; color: var(--tx2); font-size: 13.5px; cursor: pointer; font-family: var(--f-sans); transition: background .12s; }
+.btn-sec:hover { background: var(--bg); }
+.btn-pri { padding: 11px 24px; border-radius: var(--radius-sm); border: none; background: var(--green); color: #fff; font-size: 13.5px; font-weight: 600; cursor: pointer; font-family: var(--f-sans); transition: background .12s; flex: 1; }
+.btn-pri:hover { background: var(--green-mid); }
+.btn-pri:disabled { opacity: .5; cursor: not-allowed; }
+.cta-btn   { display: block; width: 100%; margin-top: 20px; padding: 14px 28px; border-radius: var(--radius); border: none; background: var(--green); color: #fff; font-family: var(--f-sans); font-size: 15px; font-weight: 600; cursor: pointer; transition: background .15s; }
+.cta-btn:hover    { background: var(--green-mid); }
+.cta-btn:disabled { opacity: .5; cursor: not-allowed; }
+@media (min-width: 540px) { .cta-btn { width: auto; } }
+.form-msg     { font-size: 13px; }
+.form-msg.err { color: #C0392B; }
+
+/* ── Cédula ──────────────────────────────────────────── */
+.secao-titulo {
+  font-size: 11px; font-weight: 700; color: var(--tx3); text-transform: uppercase;
+  letter-spacing: .09em; margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--bd); display: flex; justify-content: space-between; align-items: center;
+}
+.secao-counter { font-size: 11px; font-weight: 700; }
+.secao-counter.ok   { color: var(--green); }
+.secao-counter.warn { color: var(--amber); }
+.secao-counter.over { color: #C0392B; }
+
+.candidatos-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+@media (min-width: 480px) { .candidatos-grid { grid-template-columns: 1fr 1fr; } }
+
+.cand-card {
+  border: 1.5px solid var(--bd);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  user-select: none;
+  background: var(--surface);
+}
+.cand-card:hover:not(.disabled) { border-color: var(--green); }
+.cand-card.selected { border-color: var(--green); background: var(--green-tint); }
+.cand-card.disabled { opacity: .4; cursor: not-allowed; }
+.cand-card.selected .cand-check { background: var(--green); border-color: var(--green); }
+.cand-check {
+  width: 20px; height: 20px; border-radius: 4px; border: 1.5px solid var(--bd2);
+  background: var(--bg); flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center; transition: all .15s;
+}
+.cand-check-mark { color: #fff; font-size: 12px; font-weight: 700; display: none; }
+.cand-card.selected .cand-check-mark { display: block; }
+.cand-info { flex: 1; min-width: 0; }
+.cand-nome { font-size: 13.5px; font-weight: 600; color: var(--tx1); margin-bottom: 3px; }
+.cand-meta { font-size: 11.5px; color: var(--tx3); }
+.cand-card.selected .cand-nome { color: var(--green); }
+
+/* ── Revisão ─────────────────────────────────────────── */
+.rev-secao  { margin-bottom: 20px; }
+.rev-titulo { font-size: 10.5px; font-weight: 700; color: var(--tx3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+.rev-item   { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--bd); font-size: 13.5px; color: var(--tx2); }
+.rev-item:last-child { border-bottom: none; }
+.rev-num    { width: 22px; height: 22px; border-radius: 50%; background: var(--green-tint); border: 1px solid var(--green-border); color: var(--green); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rev-nome   { font-weight: 600; color: var(--tx1); }
+.rev-empty  { font-size: 13px; color: var(--tx3); font-style: italic; padding: 8px 0; }
+
+/* ── Info grid ───────────────────────────────────────── */
+.info-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 540px) { .info-grid { grid-template-columns: 1fr 1fr; } }
+.info-card  { background: var(--surface); border: 1px solid var(--bd); border-radius: var(--radius-lg); padding: 22px 24px; }
+.info-card-title { font-size: 11px; font-weight: 700; color: var(--tx3); text-transform: uppercase; letter-spacing: .09em; margin-bottom: 14px; }
+.detail-list { display: flex; flex-direction: column; gap: 0; }
+.detail-row  { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--bd); }
+.detail-row:last-child { border-bottom: none; }
+.detail-row dt { color: var(--tx3); flex-shrink: 0; }
+.detail-row dd { color: var(--tx1); font-weight: 600; text-align: right; }
+.detail-row dd.s-aberta  { color: var(--green); }
+.detail-row dd.s-agendada { color: var(--amber); }
+
+/* ── Estados ─────────────────────────────────────────── */
+.state-block      { background: var(--surface); border: 1px solid var(--bd); border-radius: var(--radius-lg); padding: 40px 28px; text-align: center; margin-bottom: 20px; }
+.state-block h2   { font-family: var(--f-serif); font-size: 22px; font-weight: normal; color: var(--tx1); margin-bottom: 10px; }
+.state-block p    { font-size: 14px; color: var(--tx2); line-height: 1.7; max-width: 420px; margin: 0 auto; }
+.state-block.ok   { border-color: var(--green-border); }
+.state-block.ok h2{ color: var(--green); }
+
+/* ── Loader ──────────────────────────────────────────── */
+.loader  { text-align: center; padding: 60px 24px; }
+.spinner { display: inline-block; width: 28px; height: 28px; border: 2.5px solid var(--bd); border-top-color: var(--green); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+  <div class="page-header">
+    <img src="/icons/logo-ippenha.svg" class="page-logo" alt="Igreja Presbiteriana da Penha" onerror="this.style.display='none'">
+  </div>
+  <div id="app"><div class="loader"><div class="spinner"></div></div></div>
+  <div class="page-footer">SIPEN — Sistema Integrado da IPPenha</div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   CONFIG
+═══════════════════════════════════════════════════════ */
+const SB_URL = "https://erhwryfzpycahgsohhbh.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyaHdyeWZ6cHljYWhnc29oaGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg2MTUsImV4cCI6MjA5MTg0NDYxNX0.T0hp90Bmufj6a3oUPq1vYcLiGx9YjyMaZiE38S0e3_8";
+const HDRS   = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" };
+
+/* ═══════════════════════════════════════════════════════
+   ESTADO
+═══════════════════════════════════════════════════════ */
+let processo    = null;
+let votConfig   = null;
+let candidatos  = [];    // todos os candidatos ativos
+let membros     = [];    // para lookup de eleitor
+let eleitor     = null;  // { pessoa_id, nome, congregacao }
+let selPresb    = [];    // UUIDs selecionados (presbíteros)
+let selDiac     = [];    // UUIDs selecionados (diáconos)
+let etapa       = "info"; // info | id | cedula | confirma | sucesso | jaVotou
+
+/* ═══════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════ */
+function eh(v) {
+  return String(v ?? "").replace(/[&<>"']/g, c =>
+    ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function fmtD(d) {
+  if (!d) return "—";
+  const [y, m, dia] = String(d).slice(0, 10).split("-");
+  return `${dia}/${m}/${y}`;
+}
+
+async function sbGet(path) {
+  const r = await fetch(`${SB_URL}/rest/v1/${path}`, { headers: HDRS });
+  if (!r.ok) throw new Error(await r.text().catch(() => `HTTP ${r.status}`));
+  return r.json();
+}
+async function sbRpc(fn, params) {
+  const r = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, {
+    method: "POST",
+    headers: HDRS,
+    body: JSON.stringify(params),
+  });
+  if (!r.ok) throw new Error(await r.text().catch(() => `HTTP ${r.status}`));
+  return r.json();
+}
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════ */
+const app  = document.getElementById("app");
+const slug = new URLSearchParams(location.search).get("p");
+
+if (!slug) {
+  renderErro("Link inválido", "Este link não contém um identificador de processo. Solicite o link correto à secretaria.");
+} else {
+  init();
+}
+
+async function init() {
+  try {
+    const [procs, configs] = await Promise.all([
+      sbGet(`eleicao_processos?slug=eq.${encodeURIComponent(slug)}&select=*&limit=1`),
+      sbGet(`eleicao_votacao_config?select=*&limit=1`),
+    ]);
+
+    if (!procs.length) { renderErro("Processo não encontrado", "Este processo não existe ou foi removido."); return; }
+    processo = procs[0];
+
+    // Carrega config filtrada pelo processo (feito após carregar processo)
+    const cfgData = await sbGet(`eleicao_votacao_config?processo_id=eq.${processo.id}&select=*&limit=1`);
+    votConfig = cfgData[0] || null;
+
+    document.title = `Votação · ${processo.nome} — IPPenha`;
+    renderInfo();
+  } catch (e) {
+    renderErro("Erro de conexão", e.message);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   ETAPA 1 — INFORMAÇÕES
+═══════════════════════════════════════════════════════ */
+function renderInfo() {
+  etapa = "info";
+  const p  = processo;
+  const vc = votConfig;
+
+  const status   = vc?.status_votacao || "rascunho";
+  const aberta   = status === "aberta";
+  const agendada = status === "agendada";
+
+  const periodoVot = (() => {
+    if (!vc) return null;
+    const a = vc.data_abertura_votacao, e = vc.data_encerramento_votacao;
+    if (a && e) return `${fmtD(a)} – ${fmtD(e)}`;
+    if (e) return `até ${fmtD(e)}`;
+    if (a) return `a partir de ${fmtD(a)}`;
+    return null;
+  })();
+
+  const STATUS_LBL = {
+    aberta:"Votação aberta", agendada:"Votação em breve",
+    encerrada:"Votação encerrada", apurada:"Apurado",
+    rascunho:"Em preparação"
+  };
+  const STATUS_CLS = {
+    aberta:"s-aberta", agendada:"s-agendada"
+  };
+
+  const presb = (vc?.max_votos_presbiteros ?? 5);
+  const diac  = (vc?.max_votos_diaconos   ?? 4);
+  const tipoLbl = { presbiteros:"Presbíteros", diaconos:"Diáconos", ambos:"Presbíteros e Diáconos" };
+
+  app.innerHTML = `
+    <div class="proc-header">
+      <div class="proc-eyebrow">Igreja Presbiteriana da Penha · Eleição de Oficiais</div>
+      <h1 class="proc-title">${eh(p.nome)}</h1>
+      <p class="proc-subtitle">Votação oficial para eleição de oficiais — ${tipoLbl[p.tipo] || "Presbíteros e Diáconos"} · ${p.ano}</p>
+      <div class="proc-meta">
+        <div class="meta-chip ${STATUS_CLS[status]||""}">
+          <span class="meta-dot"></span>
+          <span>${STATUS_LBL[status] || status}</span>
+        </div>
+        ${periodoVot ? `<div class="meta-chip"><span>📅 ${periodoVot}</span></div>` : ""}
+      </div>
+    </div>
+
+    <hr class="sec-divider">
+
+    ${aberta ? `
+    <div class="card" style="border-color:var(--green-border)">
+      <h2 class="card-title">Exercer seu voto</h2>
+      <p class="card-sub">
+        Cada membro apto pode votar em até <strong>${presb} presbítero(s)</strong>
+        ${p.tipo !== "presbiteros" ? ` e <strong>${diac} diácono(s)</strong>` : ""}.
+        Seu voto é <strong>sigiloso</strong>: o sistema registra apenas que você votou, sem revelar em quem.
+      </p>
+      <button class="cta-btn" onclick="iniciarVotacao()">Votar agora</button>
+    </div>` : agendada ? `
+    <div class="state-block">
+      <h2>Votação em breve</h2>
+      <p>A votação começará em ${vc?.data_abertura_votacao ? fmtD(vc.data_abertura_votacao) : "data a confirmar"}. Volte nessa data para exercer seu voto.</p>
+    </div>` : `
+    <div class="state-block">
+      <h2>Votação encerrada</h2>
+      <p>O período de votação foi encerrado. Agradecemos a participação de todos os membros da IPPenha.</p>
+    </div>`}
+
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-card-title">Regras de votação</div>
+        <dl class="detail-list">
+          ${p.tipo !== "diaconos" ? `<div class="detail-row"><dt>Presbíteros</dt><dd>até ${presb} voto(s)</dd></div>` : ""}
+          ${p.tipo !== "presbiteros" ? `<div class="detail-row"><dt>Diáconos</dt><dd>até ${diac} voto(s)</dd></div>` : ""}
+          <div class="detail-row"><dt>Sigilo</dt><dd>Garantido</dd></div>
+          <div class="detail-row"><dt>Votos por membro</dt><dd>1 participação</dd></div>
+        </dl>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">Detalhes</div>
+        <dl class="detail-list">
+          <div class="detail-row"><dt>Processo</dt><dd>${eh(p.nome)}</dd></div>
+          <div class="detail-row"><dt>Ano</dt><dd>${p.ano}</dd></div>
+          <div class="detail-row"><dt>Status</dt><dd class="${STATUS_CLS[status]||""}">${STATUS_LBL[status]||status}</dd></div>
+          ${periodoVot ? `<div class="detail-row"><dt>Período</dt><dd>${periodoVot}</dd></div>` : ""}
+        </dl>
+      </div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ETAPA 2 — IDENTIFICAÇÃO
+═══════════════════════════════════════════════════════ */
+function stepsHtml() {
+  const s = (e) => etapa === e ? "on" : (["cedula","confirma","sucesso"].indexOf(e) < ["cedula","confirma","sucesso"].indexOf(etapa) ? "done" : "");
+  const n = (lbl, e) => etapa === "sucesso" || ["cedula","confirma"].includes(etapa) && e !== etapa && e !== "confirma" ? "✓" : lbl;
+  return `<div class="steps">
+    <div class="step done"><div class="step-n">✓</div><span class="step-lbl">Processo</span></div>
+    <div class="step-sep"></div>
+    <div class="step ${etapa==="id"?"on":["cedula","confirma","sucesso"].includes(etapa)?"done":""}">
+      <div class="step-n">${["cedula","confirma","sucesso"].includes(etapa)?"✓":"2"}</div>
+      <span class="step-lbl">Identificação</span>
+    </div>
+    <div class="step-sep"></div>
+    <div class="step ${etapa==="cedula"?"on":["confirma","sucesso"].includes(etapa)?"done":""}">
+      <div class="step-n">${["confirma","sucesso"].includes(etapa)?"✓":"3"}</div>
+      <span class="step-lbl">Cédula</span>
+    </div>
+    <div class="step-sep"></div>
+    <div class="step ${etapa==="confirma"?"on":etapa==="sucesso"?"done":""}">
+      <div class="step-n">${etapa==="sucesso"?"✓":"4"}</div>
+      <span class="step-lbl">Confirmar</span>
+    </div>
+  </div>`;
+}
+
+async function iniciarVotacao() {
+  app.innerHTML = `<div class="loader"><div class="spinner"></div></div>`;
+  try {
+    if (!membros.length) {
+      membros = await sbGet("v_eleicao_form_membros?select=pessoa_id,nome,congregacao&limit=2000");
+    }
+    if (!candidatos.length) {
+      candidatos = await sbGet(`eleicao_candidatos?processo_id=eq.${processo.id}&ativo=eq.true&deleted_at=is.null&select=*&order=tipo,nome`);
+    }
+  } catch (e) { renderErro("Erro", e.message); return; }
+  renderIdentificacao();
+}
+
+function renderIdentificacao() {
+  etapa = "id";
+  app.innerHTML = `
+    ${stepsHtml()}
+    <div class="card">
+      <h2 class="card-title">Identifique-se</h2>
+      <p class="card-sub">Busque seu nome na lista de membros da IPPenha para acessar a cédula de votação.</p>
+      <div class="field">
+        <label class="lbl">Seu nome <span class="req-star">*</span></label>
+        <div class="drop-wrap">
+          <input id="id-inp" class="inp" type="text" placeholder="Digite seu nome..." autocomplete="off"
+            oninput="buscarEleitor(this.value)" onblur="fecharDrop('id-drop')">
+          <div class="dropdown" id="id-drop"></div>
+        </div>
+        <div id="id-sel"></div>
+      </div>
+      <div class="action-row">
+        <button class="btn-sec" onclick="renderInfo()">← Voltar</button>
+        <button class="btn-pri" onclick="confirmarIdentificacao()">Continuar</button>
+      </div>
+      <div id="id-msg" class="form-msg" style="margin-top:10px"></div>
+    </div>`;
+}
+
+window.buscarEleitor = function(q) {
+  const drop = document.getElementById("id-drop");
+  eleitor = null;
+  const sel = document.getElementById("id-sel");
+  if (sel) sel.innerHTML = "";
+  const txt = (q || "").trim().toLowerCase();
+  if (txt.length < 2) { drop.style.display = "none"; return; }
+  const matches = membros.filter(m => m.nome?.toLowerCase().includes(txt)).slice(0, 10);
+  if (!matches.length) {
+    drop.innerHTML = `<div class="drop-item dis"><span class="drop-name">Nenhum membro encontrado</span></div>`;
+    drop.style.display = "block"; return;
+  }
+  drop.innerHTML = matches.map(m => {
+    const nEsc = eh(m.nome).replace(/'/g, "\\'");
+    return `<div class="drop-item"
+      onclick="selEleitor('${m.pessoa_id}','${nEsc}','${eh(m.congregacao||"Sede")}')">
+      <span class="drop-name">${eh(m.nome)}</span>
+      <span class="drop-sub">${eh(m.congregacao || "Sede")}</span>
+    </div>`;
+  }).join("");
+  drop.style.display = "block";
+};
+
+window.selEleitor = function(pid, nome, cong) {
+  eleitor = { pessoa_id: pid, nome, congregacao: cong };
+  const inp = document.getElementById("id-inp");
+  const drop = document.getElementById("id-drop");
+  const sel = document.getElementById("id-sel");
+  if (inp) { inp.value = nome; }
+  if (drop) drop.style.display = "none";
+  if (sel) sel.innerHTML = `<div class="sel-ok">✓ ${eh(nome)} <button class="sel-ok-rm" onclick="limparEleitor()">✕</button></div>`;
+};
+
+window.limparEleitor = function() {
+  eleitor = null;
+  const inp = document.getElementById("id-inp"), sel = document.getElementById("id-sel");
+  if (inp) { inp.value = ""; inp.focus(); }
+  if (sel) sel.innerHTML = "";
+};
+
+window.fecharDrop = function(id) {
+  setTimeout(() => { const d = document.getElementById(id); if (d) d.style.display = "none"; }, 200);
+};
+
+window.confirmarIdentificacao = async function() {
+  const msgEl = document.getElementById("id-msg");
+  if (!eleitor) { msgEl.textContent = "Selecione seu nome na lista."; msgEl.className = "form-msg err"; return; }
+  const btn = document.querySelector("[onclick='confirmarIdentificacao()']");
+  if (btn) { btn.disabled = true; btn.textContent = "Verificando..."; }
+  msgEl.textContent = "";
+  try {
+    const reg = await sbGet(`eleicao_votos_registro?processo_id=eq.${processo.id}&eleitor_id=eq.${eleitor.pessoa_id}&select=id&limit=1`);
+    if (reg.length) { renderJaVotou(); return; }
+    renderCedula();
+  } catch {
+    // Se a query falhar por RLS, vai para a cédula; a função verifica no backend
+    renderCedula();
+  }
+};
+
+/* ═══════════════════════════════════════════════════════
+   ETAPA 3 — CÉDULA
+═══════════════════════════════════════════════════════ */
+function renderCedula() {
+  etapa = "cedula";
+  selPresb = [];
+  selDiac  = [];
+  const vc    = votConfig;
+  const maxPr = vc?.max_votos_presbiteros ?? 5;
+  const maxDi = vc?.max_votos_diaconos   ?? 4;
+  const presbs = candidatos.filter(c => c.tipo === "presbitero");
+  const diacs  = candidatos.filter(c => c.tipo === "diacono");
+  const p      = processo;
+
+  const secaoHtml = (titulo, lista, tipo, max) => {
+    if (!lista.length) return "";
+    const id = tipo === "presbitero" ? "sec-presb" : "sec-diac";
+    return `
+      <div style="margin-bottom:24px">
+        <div class="secao-titulo" id="${id}-titulo">
+          <span>${titulo}</span>
+          <span class="secao-counter" id="${id}-counter">0 / ${max} selecionado(s)</span>
+        </div>
+        <div class="candidatos-grid" id="${id}-grid">
+          ${lista.map(c => candCardHtml(c, tipo)).join("")}
+        </div>
+      </div>`;
+  };
+
+  app.innerHTML = `
+    ${stepsHtml()}
+    <div class="member-badge">
+      <div class="member-av">${eh(eleitor.nome[0])}</div>
+      <div>
+        <div class="member-name">${eh(eleitor.nome)}</div>
+        <div class="member-cong">${eh(eleitor.congregacao || "Sede")}</div>
+      </div>
+      <button class="member-swap" onclick="renderIdentificacao()">Trocar</button>
+    </div>
+    <div class="card">
+      <h2 class="card-title">Cédula de Votação</h2>
+      <p class="card-sub">
+        Selecione os candidatos de sua preferência dentro dos limites indicados.
+        Você pode votar em <strong>menos</strong> do que o máximo — não é obrigatório preencher todos os votos.
+      </p>
+    </div>
+
+    <div id="cedula-content">
+      ${p.tipo !== "diaconos"    ? secaoHtml("Presbíteros",  presbs, "presbitero", maxPr) : ""}
+      ${p.tipo !== "presbiteros" ? secaoHtml("Diáconos",     diacs,  "diacono",    maxDi) : ""}
+    </div>
+
+    <div class="card" style="border-color:var(--green-border)">
+      <div class="action-row" style="margin-top:0">
+        <button class="btn-sec" onclick="renderIdentificacao()">← Voltar</button>
+        <button class="btn-pri" onclick="revisarVotos()">Revisar votos →</button>
+      </div>
+      <div id="ced-msg" class="form-msg" style="margin-top:10px"></div>
+    </div>`;
+}
+
+function candCardHtml(c, tipo) {
+  return `<div class="cand-card" id="cand-${c.id}" onclick="toggleCandidato('${c.id}','${tipo}')">
+    <div class="cand-check"><span class="cand-check-mark">✓</span></div>
+    <div class="cand-info">
+      <div class="cand-nome">${eh(c.nome)}</div>
+      <div class="cand-meta">${eh(c.congregacao || "Sede")}</div>
+    </div>
+  </div>`;
+}
+
+window.toggleCandidato = function(id, tipo) {
+  const card = document.getElementById(`cand-${id}`);
+  if (!card || card.classList.contains("disabled")) return;
+
+  const vc    = votConfig;
+  const maxPr = vc?.max_votos_presbiteros ?? 5;
+  const maxDi = vc?.max_votos_diaconos   ?? 4;
+
+  const isPresb = tipo === "presbitero";
+  const sel     = isPresb ? selPresb : selDiac;
+  const max     = isPresb ? maxPr : maxDi;
+  const secId   = isPresb ? "sec-presb" : "sec-diac";
+  const idx     = sel.indexOf(id);
+
+  if (idx >= 0) {
+    sel.splice(idx, 1);
+    card.classList.remove("selected");
+  } else {
+    if (sel.length >= max) return;
+    sel.push(id);
+    card.classList.add("selected");
+  }
+
+  // Atualiza contador e estado das cards
+  const counter = document.getElementById(`${secId}-counter`);
+  if (counter) {
+    counter.textContent = `${sel.length} / ${max} selecionado(s)`;
+    counter.className = `secao-counter ${sel.length === max ? "ok" : ""}`;
+  }
+
+  // Bloqueia cards restantes se atingiu o máximo
+  const grid = document.getElementById(`${secId}-grid`);
+  if (grid) {
+    grid.querySelectorAll(".cand-card").forEach(el => {
+      if (!el.classList.contains("selected")) {
+        el.classList.toggle("disabled", sel.length >= max);
+      }
+    });
+  }
+};
+
+/* ═══════════════════════════════════════════════════════
+   ETAPA 4 — REVISÃO
+═══════════════════════════════════════════════════════ */
+window.revisarVotos = function() {
+  const vc = votConfig;
+  const p  = processo;
+
+  if (selPresb.length === 0 && selDiac.length === 0 && p.tipo === "ambos") {
+    const msg = document.getElementById("ced-msg");
+    if (msg) { msg.textContent = "Selecione ao menos um candidato."; msg.className = "form-msg err"; }
+    return;
+  }
+
+  etapa = "confirma";
+
+  const byId = {};
+  candidatos.forEach(c => byId[c.id] = c);
+
+  const listaPresb = selPresb.map(id => byId[id]).filter(Boolean);
+  const listaDiac  = selDiac.map(id => byId[id]).filter(Boolean);
+
+  const secRevHtml = (titulo, lista) => `
+    <div class="rev-secao">
+      <div class="rev-titulo">${titulo}</div>
+      ${lista.length ? lista.map((c, i) => `
+        <div class="rev-item">
+          <div class="rev-num">${i + 1}</div>
+          <div class="rev-nome">${eh(c.nome)}</div>
+          <div style="margin-left:auto;font-size:11.5px;color:var(--tx3)">${eh(c.congregacao || "Sede")}</div>
+        </div>`).join("") : `<div class="rev-empty">Nenhum voto para este cargo</div>`}
+    </div>`;
+
+  app.innerHTML = `
+    ${stepsHtml()}
+    <div class="member-badge">
+      <div class="member-av">${eh(eleitor.nome[0])}</div>
+      <div>
+        <div class="member-name">${eh(eleitor.nome)}</div>
+        <div class="member-cong">${eh(eleitor.congregacao || "Sede")}</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2 class="card-title">Confirme seus votos</h2>
+      <p class="card-sub">Verifique com atenção. Após confirmar, seu voto não poderá ser alterado.</p>
+
+      ${p.tipo !== "diaconos"    ? secRevHtml("Presbíteros", listaPresb) : ""}
+      ${p.tipo !== "presbiteros" ? secRevHtml("Diáconos",    listaDiac)  : ""}
+
+      <div style="margin-top:18px;padding:12px 14px;border-radius:8px;background:var(--green-tint);border:1px solid var(--green-border);font-size:12.5px;color:var(--tx2)">
+        Ao confirmar, o sistema registra que você votou, sem associar seu nome aos candidatos escolhidos.
+      </div>
+
+      <div class="action-row" style="margin-top:18px">
+        <button class="btn-sec" onclick="renderCedula()">← Corrigir</button>
+        <button class="btn-pri" id="btn-votar" onclick="submeterVotos()">Confirmar e votar</button>
+      </div>
+      <div id="vot-msg" class="form-msg" style="margin-top:10px"></div>
+    </div>`;
+};
+
+/* ═══════════════════════════════════════════════════════
+   SUBMISSÃO
+═══════════════════════════════════════════════════════ */
+window.submeterVotos = async function() {
+  const msgEl = document.getElementById("vot-msg");
+  const btn   = document.getElementById("btn-votar");
+  if (btn) { btn.disabled = true; btn.textContent = "Enviando…"; }
+  if (msgEl) msgEl.textContent = "";
+
+  const todosIds = [...selPresb, ...selDiac];
+
+  try {
+    const res = await sbRpc("registrar_voto", {
+      p_slug:       slug,
+      p_eleitor_id: eleitor.pessoa_id,
+      p_candidatos: todosIds,
+    });
+
+    if (res.ja_votou) { renderJaVotou(); return; }
+    if (!res.ok) throw new Error(res.erro || "Erro desconhecido.");
+    renderSucesso(res);
+  } catch (e) {
+    if (msgEl) { msgEl.textContent = "Erro: " + e.message; msgEl.className = "form-msg err"; }
+    if (btn) { btn.disabled = false; btn.textContent = "Confirmar e votar"; }
+  }
+};
+
+/* ═══════════════════════════════════════════════════════
+   ESTADOS FINAIS
+═══════════════════════════════════════════════════════ */
+function renderSucesso(res) {
+  etapa = "sucesso";
+  app.innerHTML = `
+    <div class="state-block ok">
+      <div style="font-size:44px;margin-bottom:16px">🗳️</div>
+      <h2>Voto registrado</h2>
+      <p>
+        Obrigado, <strong>${eh(eleitor.nome)}</strong>.<br>
+        Seu voto foi registrado com sigilo.<br><br>
+        ${res.presbiteros > 0 ? `Presbíteros: <strong>${res.presbiteros}</strong> voto(s).<br>` : ""}
+        ${res.diaconos > 0    ? `Diáconos: <strong>${res.diaconos}</strong> voto(s).<br>` : ""}
+        <br>O Conselho da IPPenha divulgará o resultado após o encerramento da votação.
+      </p>
+    </div>`;
+}
+
+function renderJaVotou() {
+  app.innerHTML = `
+    <div class="state-block ok">
+      <div style="font-size:44px;margin-bottom:16px">✅</div>
+      <h2>Voto já registrado</h2>
+      <p>
+        <strong>${eleitor ? eh(eleitor.nome) : "Você"}</strong>, seu voto neste processo já foi registrado anteriormente.<br><br>
+        Caso acredite que isso seja um erro, entre em contato com a secretaria da Igreja Presbiteriana da Penha.
+      </p>
+    </div>`;
+}
+
+function renderErro(titulo, desc) {
+  app.innerHTML = `
+    <div class="state-block">
+      <h2>${eh(titulo)}</h2>
+      <p>${eh(desc)}</p>
+    </div>`;
+}
+</script>
+</body>
+</html>

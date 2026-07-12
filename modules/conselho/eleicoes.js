@@ -6,7 +6,8 @@
 (function () {
 
   /* ── Config ─────────────────────────────────────────── */
-  const BASE_URL = "https://www.sipen.com.br/eleicoes.html?p=";
+  const BASE_URL    = "https://www.sipen.com.br/eleicoes.html?p=";
+  const VOTACAO_URL = "https://www.sipen.com.br/votacao.html?p=";
 
   /* ── Estado ─────────────────────────────────────────── */
   let _processos  = [];
@@ -711,48 +712,69 @@
   function _renderCompartilhar() {
     const el = document.getElementById("edt-content");
     if (!el || !_processo) return;
-    const p    = _processo;
-    const link = BASE_URL + p.slug;
-    const wa   = `https://wa.me/?text=${encodeURIComponent(`*${p.nome}*\n\nA IPPenha convida todos os membros a participar deste processo eleitoral.\n\nAcesse o formulário:\n${link}`)}`;
-    const mail = `mailto:?subject=${encodeURIComponent(p.nome)}&body=${encodeURIComponent(`Prezado(a) membro,\n\nA Igreja Presbiteriana da Penha abre o processo: ${p.nome}.\n\nParticipe pelo link: ${link}`)}`;
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=${encodeURIComponent(link)}`;
+    const p       = _processo;
+    const vc      = _votacaoConfig;
+    const link    = BASE_URL + p.slug;
+    const linkVot = VOTACAO_URL + p.slug;
+    const votAberta = vc && vc.status_votacao === "aberta";
+
+    const _linkCard = (titulo, url, qrSlug, statusHtml, waMsg, mailBody) => {
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=${encodeURIComponent(url)}`;
+      const wa    = `https://wa.me/?text=${encodeURIComponent(waMsg)}`;
+      const mail  = `mailto:?subject=${encodeURIComponent(p.nome)}&body=${encodeURIComponent(mailBody)}`;
+      return `
+        <div class="card" style="margin-bottom:14px">
+          <div class="ctit" style="margin-bottom:14px">${titulo}</div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
+            <div style="flex-shrink:0;background:#fff;border-radius:10px;padding:6px;border:1px solid var(--bd2)">
+              <img src="${qrUrl}" alt="QR Code" style="width:140px;height:140px;border-radius:6px;display:block">
+            </div>
+            <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:10px">
+              <div>
+                <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Link</div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <input readonly value="${url}" style="flex:1;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--sky);font-size:11px;outline:none;min-width:0">
+                  <button onclick="navigator.clipboard.writeText('${url}').then(()=>T&&T('Copiado!','${url}'))" style="padding:9px 14px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:12px;cursor:pointer;white-space:nowrap">Copiar</button>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <a href="${wa}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:8px;background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.3);color:#25d366;font-size:12px;font-weight:600;text-decoration:none">📱 WhatsApp</a>
+                <a href="${mail}" style="display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--bd2);color:var(--tx2);font-size:12px;font-weight:600;text-decoration:none">✉ E-mail</a>
+                <button onclick="eleicaoBaixarQR('${qrSlug}','${_esc(p.nome)}')" style="display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--bd2);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer">⬇ QR</button>
+              </div>
+              <div style="font-size:11.5px;color:var(--tx3);line-height:1.6;padding:10px 12px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--bd1)">${statusHtml}</div>
+            </div>
+          </div>
+        </div>`;
+    };
+
+    const statusInd = p.status === "aberto"
+      ? "✅ Processo <strong>aberto</strong>. Membros já podem indicar."
+      : (p.status === "rascunho" || p.status === "agendado")
+      ? "⚠️ Processo <strong>não aberto</strong>. Altere o status antes de compartilhar."
+      : "🔒 Processo encerrado. Novas indicações não são aceitas.";
+
+    const statusVot = votAberta
+      ? "✅ Votação <strong>aberta</strong>. Membros podem votar agora."
+      : (vc && vc.status_votacao === "agendada")
+      ? "⚠️ Votação ainda <strong>não aberta</strong>. Configure a abertura na aba Votação."
+      : !vc
+      ? "⚠️ Votação <strong>não configurada</strong>. Configure na aba Votação antes de compartilhar."
+      : "🔒 Votação encerrada.";
 
     el.innerHTML = `
-      <div class="card" style="max-width:560px">
-        <div class="ctit">Compartilhar este Processo</div>
-        <div style="margin-top:14px;display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
-          <div style="flex-shrink:0;background:#fff;border-radius:10px;padding:6px;border:1px solid var(--bd2)">
-            <img src="${qrUrl}" id="eleicao-qr" alt="QR Code" style="width:160px;height:160px;border-radius:6px;display:block">
-          </div>
-          <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:10px">
-            <div>
-              <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Link público</div>
-              <div style="display:flex;gap:8px;align-items:center">
-                <input readonly value="${link}" style="flex:1;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--sky);font-size:12px;outline:none;min-width:0">
-                <button onclick="eleicaoCopiarLink('${p.slug}')" style="padding:9px 14px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:12px;cursor:pointer;white-space:nowrap">Copiar</button>
-              </div>
-            </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <a href="${wa}" target="_blank" style="display:flex;align-items:center;gap:7px;padding:10px 16px;border-radius:8px;background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.3);color:#25d366;font-size:12.5px;font-weight:600;text-decoration:none">
-                📱 WhatsApp
-              </a>
-              <a href="${mail}" style="display:flex;align-items:center;gap:7px;padding:10px 16px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--bd2);color:var(--tx2);font-size:12.5px;font-weight:600;text-decoration:none">
-                ✉ E-mail
-              </a>
-              <button onclick="eleicaoBaixarQR('${p.slug}','${_esc(p.nome)}')" style="display:flex;align-items:center;gap:7px;padding:10px 16px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--bd2);color:var(--tx2);font-size:12.5px;font-weight:600;cursor:pointer">
-                ⬇ QR Code
-              </button>
-            </div>
-            <div style="font-size:11.5px;color:var(--tx3);line-height:1.6;padding:10px 12px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--bd1)">
-              ${p.status === "aberto"
-                ? "✅ Este processo está <strong>aberto</strong>. Membros já podem acessar o link e indicar."
-                : p.status === "rascunho" || p.status === "agendado"
-                ? "⚠️ Processo ainda <strong>não está aberto</strong>. Altere o status antes de compartilhar."
-                : "🔒 Processo <strong>encerrado</strong>. Novas indicações não são aceitas."}
-            </div>
-          </div>
-        </div>
-      </div>`;
+      ${_linkCard(
+        "Link de Indicações",
+        link, p.slug, statusInd,
+        `*${p.nome}*\n\nA IPPenha convida todos os membros a participar.\n\nAcesse o formulário de indicações:\n${link}`,
+        `Prezado(a) membro,\n\nA Igreja Presbiteriana da Penha abre o processo: ${p.nome}.\n\nParticipe pelo link: ${link}`
+      )}
+      ${_linkCard(
+        "Link de Votação",
+        linkVot, `vot-${p.slug}`, statusVot,
+        `*${p.nome}*\n\nA votação está aberta! Participe agora:\n${linkVot}`,
+        `Prezado(a) membro,\n\nVotação aberta para: ${p.nome}.\n\nVote pelo link: ${linkVot}`
+      )}`;
   }
 
   /* ── Actions globais ─────────────────────────────────── */
@@ -762,12 +784,15 @@
     });
   };
 
-  window.eleicaoBaixarQR = function(slug, nome) {
-    const url = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=12&data=${encodeURIComponent(BASE_URL + slug)}`;
+  window.eleicaoBaixarQR = function(slugArg, nome) {
+    const isVot  = slugArg.startsWith("vot-");
+    const realSlug = isVot ? slugArg.slice(4) : slugArg;
+    const pageUrl  = (isVot ? VOTACAO_URL : BASE_URL) + realSlug;
+    const url = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=12&data=${encodeURIComponent(pageUrl)}`;
     fetch(url).then(r => r.blob()).then(b => {
       const a = document.createElement("a");
       a.href = URL.createObjectURL(b);
-      a.download = `qr-eleicao-${slug}.png`;
+      a.download = `qr-${isVot ? "votacao" : "eleicao"}-${realSlug}.png`;
       a.click();
       URL.revokeObjectURL(a.href);
     });
