@@ -28,25 +28,24 @@
   };
 
   const NAV_TABS = [
-    { id: "eve-dash",          label: "Dashboard"         },
-    { id: "eve-todos",         label: "Programações"      },
-    { id: "eve-reunioes",      label: "Reuniões"          },
-    { id: "eve-ensaios",       label: "Ensaios"           },
-    { id: "eve-inscricoes",    label: "Inscrições"        },
-    { id: "eve-pagamentos",    label: "Pagamentos"        },
-    { id: "eve-credenciamento",label: "Credenciamento"    },
-    { id: "eve-presenca",      label: "Presença"          },
-    { id: "eve-relatorios",    label: "Relatórios"        },
-    { id: "eve-config",        label: "Config"            },
-    { id: "eve-demandas",      label: "Demandas"          },
-    { id: "eve-whatsapp",      label: "WhatsApp"          },
-    { id: "eve-sorteio",       label: "Família de Oração" },
+    { id: "eve-dash",          label: "Dashboard"      },
+    { id: "eve-todos",         label: "Programações"   },
+    { id: "eve-reunioes",      label: "Reuniões"       },
+    { id: "eve-ensaios",       label: "Ensaios"        },
+    { id: "eve-inscricoes",    label: "Inscrições"     },
+    { id: "eve-pagamentos",    label: "Pagamentos"     },
+    { id: "eve-credenciamento",label: "Credenciamento" },
+    { id: "eve-presenca",      label: "Presença"       },
+    { id: "eve-relatorios",    label: "Relatórios"     },
+    { id: "eve-config",        label: "Config"         },
+    { id: "eve-demandas",      label: "Demandas"       },
+    { id: "eve-whatsapp",      label: "WhatsApp"       },
   ];
 
   const NAV_TARGETS = [
     "eve-dash-nav","eve-todos-nav","eve-reunioes-nav","eve-ensaios-nav","eve-inscricoes-nav",
     "eve-pagamentos-nav","eve-cred-nav","eve-presenca-nav",
-    "eve-rel-nav","eve-config-nav","eve-demandas-nav","eve-whatsapp-nav","eve-sorteio-nav",
+    "eve-rel-nav","eve-config-nav","eve-demandas-nav","eve-whatsapp-nav",
   ];
 
   /* ── Estado ─────────────────────────────────────────── */
@@ -310,6 +309,20 @@
       } catch (e) { _T("Erro", e.message); return; }
     }
     if (!_eventoAtivo) { _T("Não encontrado", "Evento não encontrado."); return; }
+
+    // Redireciona eventos de Família de Oração para a view dedicada
+    if (_eventoAtivo.titulo?.toLowerCase().includes("família de oração")) {
+      let inscricoes = [];
+      try {
+        const d = await _fetch(`${_api()}/rest/v1/evento_inscricoes?evento_id=eq.${id}&select=*&order=criado_em.asc&limit=500`);
+        inscricoes = d || [];
+        _inscricoesDetalhe = inscricoes;
+      } catch (_) {}
+      await go("eve-sorteio");
+      foIniciarView(_eventoAtivo, inscricoes);
+      return;
+    }
+
     await go("eve-detalhe");
     const ttl = document.getElementById("eve-det-titulo");
     if (ttl) ttl.textContent = _eventoAtivo.titulo || "Evento";
@@ -2010,15 +2023,16 @@ tr:nth-child(even) td{background:#f9fafb}
   VIEW_AUTOLOAD["eve-config"]        = { fn: () => _carregarConfigTab() };
   VIEW_AUTOLOAD["eve-demandas"]      = { fn: () => _carregarDemandasTab() };
   VIEW_AUTOLOAD["eve-whatsapp"]      = { fn: () => _carregarWhatsappTab() };
-  VIEW_AUTOLOAD["eve-sorteio"]       = { fn: () => foCarregarTudo() };
-
 })();
 
 /* ══════════════════════════════════════════════════════════
-   FAMÍLIA DE ORAÇÃO — Cadastro e Sorteio Semanal
+   FAMÍLIA DE ORAÇÃO — Sorteio dentro do detalhe do evento
 ══════════════════════════════════════════════════════════ */
 
-let _foRascunho = []; // pares em memória antes de salvar
+let _foRascunho    = [];
+let _foEventoId    = null;
+let _foInscricoes  = [];
+
 
 function _foShuffle(arr) {
   const a = [...arr];
@@ -2035,203 +2049,104 @@ function _foFmtData(iso) {
   return `${d}/${m}/${y}`;
 }
 
-// Carrega famílias + rodadas ao entrar na aba
-async function foCarregarTudo() {
-  await Promise.all([foCarregarFamilias(), foCarregarRodadas()]);
+// Inicializa a view de Família de Oração com dados do evento
+function foIniciarView(evt, inscricoes) {
+  _foEventoId  = evt.id;
+  _foInscricoes = inscricoes || [];
+
+  const tit = document.getElementById("fo-evt-titulo");
+  const sub = document.getElementById("fo-evt-sub");
+  if (tit) tit.textContent = evt.titulo || "Família de Oração";
+  if (sub) sub.textContent = [
+    evt.data_inicio ? _fmtD(evt.data_inicio) : null,
+    evt.local_nome  || null,
+  ].filter(Boolean).join(" · ");
+
+  foRenderInscritos();
+  foCarregarRodadas(_foEventoId);
 }
 
-// ── Famílias ──────────────────────────────────────────────
-
-async function foCarregarFamilias() {
-  const el = document.getElementById("fo-familias-lista");
+function foRenderInscritos() {
+  const el = document.getElementById("fo-inscritos-lista");
   if (!el) return;
-  el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px">Carregando...</div>`;
-  try {
-    const res = await fetch(
-      `${apiBaseUrl()}/rest/v1/familias_oracao?order=nome&select=id,nome,responsavel,telefone,ativo,obs`,
-      { headers: apiHeaders() }
-    );
-    if (!res.ok) throw new Error(await res.text());
-    const rows = await res.json();
-
-    if (!rows.length) {
-      el.innerHTML = `<div style="color:var(--tx3);font-size:12px;padding:8px 0">Nenhuma família cadastrada ainda. Clique em "+ Nova Família" para começar.</div>`;
-      return;
-    }
-
-    el.innerHTML =
-      `<table style="width:100%;border-collapse:collapse;font-size:12.5px">
-        <thead><tr style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:11px">
-          <th style="padding:7px 8px;text-align:left;font-weight:500">Nome da Família</th>
-          <th style="padding:7px 8px;text-align:left;font-weight:500">Responsável</th>
-          <th style="padding:7px 8px;text-align:left;font-weight:500">WhatsApp</th>
-          <th style="padding:7px 8px;text-align:center;font-weight:500">Status</th>
-          <th style="padding:7px 8px"></th>
-        </tr></thead>
-        <tbody>
-          ${rows.map(f => `
-            <tr style="border-bottom:1px solid var(--bd)">
-              <td style="padding:8px 8px;font-weight:600">${_eh(f.nome)}</td>
-              <td style="padding:8px 8px;color:var(--tx2)">${_eh(f.responsavel)}</td>
-              <td style="padding:8px 8px;color:var(--tx2)">${_eh(f.telefone || "—")}</td>
-              <td style="padding:8px 8px;text-align:center">
-                ${f.ativo
-                  ? `<span style="font-size:11px;color:var(--gr);font-weight:600">Ativa</span>`
-                  : `<span style="font-size:11px;color:var(--tx3)">Inativa</span>`}
-              </td>
-              <td style="padding:8px 8px;text-align:right;white-space:nowrap">
-                <button class="tbt" style="font-size:11px;padding:3px 8px" onclick="foEditarFamilia('${f.id}','${_eh(f.nome).replace(/'/g,"\\'")}','${_eh(f.responsavel).replace(/'/g,"\\'")}','${_eh(f.telefone||'').replace(/'/g,"\\'")}','${_eh(f.obs||'').replace(/'/g,"\\'")}',${f.ativo})">Editar</button>
-                <button class="tbt" style="font-size:11px;padding:3px 8px;color:var(--rose)" onclick="foToggleAtivo('${f.id}',${f.ativo})">${f.ativo ? "Desativar" : "Ativar"}</button>
-              </td>
-            </tr>`).join("")}
-        </tbody>
-      </table>`;
-  } catch (e) {
-    el.innerHTML = `<div style="color:var(--rose);font-size:12px">Erro: ${e.message}</div>`;
+  const ativos = _foInscricoes.filter(i => i.status !== "cancelada");
+  if (!ativos.length) {
+    el.innerHTML = `<div style="color:var(--tx3);font-size:12px">Nenhuma inscrição ativa.</div>`;
+    return;
   }
+  el.innerHTML =
+    `<table style="width:100%;border-collapse:collapse;font-size:12.5px">
+      <thead><tr style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:11px">
+        <th style="padding:6px 8px;text-align:left;font-weight:500">Família</th>
+        <th style="padding:6px 8px;text-align:left;font-weight:500">Responsável</th>
+        <th style="padding:6px 8px;text-align:center;font-weight:500">WhatsApp</th>
+      </tr></thead>
+      <tbody>
+        ${ativos.map(i => `
+          <tr style="border-bottom:1px solid var(--bd)">
+            <td style="padding:7px 8px;font-weight:600">${_eh(i.familia || i.nome)}</td>
+            <td style="padding:7px 8px;color:var(--tx2)">${_eh(i.nome)}</td>
+            <td style="padding:7px 8px;text-align:center;font-size:11.5px">
+              ${i.telefone ? `<span style="color:var(--gr)">✓</span>` : `<span style="color:var(--tx3)">—</span>`}
+            </td>
+          </tr>`).join("")}
+      </tbody>
+    </table>`;
 }
 
-function foNovaFamilia() {
-  document.getElementById("fo-modal-titulo").textContent = "Nova Família";
-  document.getElementById("fo-modal-id").value  = "";
-  document.getElementById("fo-f-nome").value    = "";
-  document.getElementById("fo-f-resp").value    = "";
-  document.getElementById("fo-f-tel").value     = "";
-  document.getElementById("fo-f-obs").value     = "";
-  document.getElementById("fo-modal-err").textContent = "";
-  document.getElementById("fo-modal").style.display = "";
-  document.getElementById("fo-modal").scrollIntoView({ behavior: "smooth", block: "start" });
-  document.getElementById("fo-f-nome").focus();
-}
-
-function foEditarFamilia(id, nome, resp, tel, obs, ativo) {
-  document.getElementById("fo-modal-titulo").textContent = "Editar Família";
-  document.getElementById("fo-modal-id").value  = id;
-  document.getElementById("fo-f-nome").value    = nome;
-  document.getElementById("fo-f-resp").value    = resp;
-  document.getElementById("fo-f-tel").value     = tel;
-  document.getElementById("fo-f-obs").value     = obs;
-  document.getElementById("fo-modal-err").textContent = "";
-  document.getElementById("fo-modal").style.display = "";
-  document.getElementById("fo-modal").scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-function foFecharModal() {
-  document.getElementById("fo-modal").style.display = "none";
-}
-
-async function foSalvarFamilia() {
-  const id   = document.getElementById("fo-modal-id").value;
-  const nome = document.getElementById("fo-f-nome").value.trim();
-  const resp = document.getElementById("fo-f-resp").value.trim();
-  const tel  = document.getElementById("fo-f-tel").value.trim() || null;
-  const obs  = document.getElementById("fo-f-obs").value.trim() || null;
-  const errEl = document.getElementById("fo-modal-err");
-
-  if (!nome) { errEl.textContent = "Informe o nome da família."; return; }
-  if (!resp) { errEl.textContent = "Informe o responsável.";     return; }
-  errEl.textContent = "";
-
-  const body = JSON.stringify({ nome, responsavel: resp, telefone: tel, obs });
-  try {
-    if (id) {
-      const res = await fetch(`${apiBaseUrl()}/rest/v1/familias_oracao?id=eq.${id}`, {
-        method: "PATCH", headers: { ...apiHeaders(), "Content-Type": "application/json" }, body,
-      });
-      if (!res.ok) throw new Error(await res.text());
-    } else {
-      const res = await fetch(`${apiBaseUrl()}/rest/v1/familias_oracao`, {
-        method: "POST", headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" }, body,
-      });
-      if (!res.ok) throw new Error(await res.text());
-    }
-    foFecharModal();
-    foCarregarFamilias();
-  } catch (e) { errEl.textContent = e.message; }
-}
-
-async function foToggleAtivo(id, atual) {
-  try {
-    await fetch(`${apiBaseUrl()}/rest/v1/familias_oracao?id=eq.${id}`, {
-      method: "PATCH",
-      headers: { ...apiHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify({ ativo: !atual }),
-    });
-    foCarregarFamilias();
-  } catch (e) { T("Erro", e.message); }
-}
-
-// ── Sorteio ───────────────────────────────────────────────
-
-async function foGerarSorteio() {
+// Gera sorteio usando os inscritos armazenados em _foInscricoes
+function foGerarSorteio() {
   const prevEl = document.getElementById("fo-preview");
-  const infoEl = document.getElementById("fo-preview-info");
   const tabEl  = document.getElementById("fo-preview-table");
   const errEl  = document.getElementById("fo-preview-err");
   if (!prevEl) return;
 
-  if (infoEl) infoEl.textContent = "Buscando famílias ativas...";
-  if (tabEl)  tabEl.innerHTML    = "";
-  if (errEl)  errEl.textContent  = "";
+  const familias = _foInscricoes.filter(i => i.status !== "cancelada");
+  if (familias.length < 2) {
+    if (errEl) errEl.textContent = "É necessário ao menos 2 famílias inscritas para gerar o sorteio.";
+    prevEl.style.display = "";
+    return;
+  }
+
+  const emb = _foShuffle(familias);
+  // Circular: posição i ora pela (i+1) % n
+  _foRascunho = emb.map((f, i) => ({
+    familia_nome: f.familia || f.nome,
+    resp_nome:    f.nome,
+    resp_tel:     f.telefone || null,
+    ora_por_nome: emb[(i + 1) % emb.length].familia || emb[(i + 1) % emb.length].nome,
+  }));
+
+  if (errEl) errEl.textContent = "";
   prevEl.style.display = "";
   prevEl.scrollIntoView({ behavior: "smooth", block: "start" });
 
-  try {
-    const res = await fetch(
-      `${apiBaseUrl()}/rest/v1/familias_oracao?ativo=eq.true&order=nome&select=id,nome,responsavel,telefone`,
-      { headers: apiHeaders() }
-    );
-    if (!res.ok) throw new Error(await res.text());
-    const familias = await res.json();
-
-    if (familias.length < 2) {
-      if (infoEl) infoEl.textContent = "";
-      if (errEl)  errEl.textContent  = "É necessário ao menos 2 famílias ativas para gerar o sorteio.";
-      return;
-    }
-
-    // Embaralha e cruza em círculo: cada posição i ora pela (i+1) % n
-    const emb = _foShuffle(familias);
-    _foRascunho = emb.map((f, i) => ({
-      familia_id:    f.id,
-      ora_por_id:    emb[(i + 1) % emb.length].id,
-      familia_nome:  f.nome,
-      resp_nome:     f.responsavel,
-      resp_tel:      f.telefone || null,
-      ora_por_nome:  emb[(i + 1) % emb.length].nome,
-    }));
-
-    if (infoEl) infoEl.textContent = `${familias.length} famílias ativas — sorteio gerado.`;
-
-    if (tabEl) {
-      const semTel = _foRascunho.filter(p => !p.resp_tel).length;
-      tabEl.innerHTML =
-        `${semTel ? `<div style="font-size:11.5px;color:var(--amber);margin-bottom:10px">⚠ ${semTel} família(s) sem WhatsApp cadastrado — não receberão a mensagem.</div>` : ""}
-        <table style="width:100%;border-collapse:collapse;font-size:12.5px">
-          <thead><tr style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:11px">
-            <th style="padding:6px 8px;text-align:left;font-weight:500">Família</th>
-            <th style="padding:6px 4px"></th>
-            <th style="padding:6px 8px;text-align:left;font-weight:500">Ora por</th>
-            <th style="padding:6px 8px;text-align:left;font-weight:500">Responsável</th>
-            <th style="padding:6px 8px;text-align:center;font-weight:500">WhatsApp</th>
-          </tr></thead>
-          <tbody>
-            ${_foRascunho.map(p => `
-              <tr style="border-bottom:1px solid var(--bd)">
-                <td style="padding:7px 8px">${_eh(p.familia_nome)}</td>
-                <td style="padding:7px 4px;color:var(--tx3);font-size:11px">→</td>
-                <td style="padding:7px 8px"><strong>${_eh(p.ora_por_nome)}</strong></td>
-                <td style="padding:7px 8px;color:var(--tx2);font-size:12px">${_eh(p.resp_nome)}</td>
-                <td style="padding:7px 8px;text-align:center;font-size:11.5px">
-                  ${p.resp_tel ? `<span style="color:var(--gr)">✓</span>` : `<span style="color:var(--rose)">Sem número</span>`}
-                </td>
-              </tr>`).join("")}
-          </tbody>
-        </table>`;
-    }
-  } catch (e) {
-    if (errEl) errEl.textContent = e.message;
-    if (infoEl) infoEl.textContent = "";
+  const semTel = _foRascunho.filter(p => !p.resp_tel).length;
+  if (tabEl) {
+    tabEl.innerHTML =
+      `<div style="font-size:12px;color:var(--tx2);margin-bottom:12px">${familias.length} famílias — sorteio circular gerado.</div>
+      ${semTel ? `<div style="font-size:11.5px;color:var(--amber);margin-bottom:10px">⚠ ${semTel} família(s) sem WhatsApp — não receberão a mensagem.</div>` : ""}
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+        <thead><tr style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:11px">
+          <th style="padding:6px 8px;text-align:left;font-weight:500">Família</th>
+          <th style="padding:6px 4px"></th>
+          <th style="padding:6px 8px;text-align:left;font-weight:500">Ora por</th>
+          <th style="padding:6px 8px;text-align:left;font-weight:500">Responsável</th>
+          <th style="padding:6px 8px;text-align:center;font-weight:500">WhatsApp</th>
+        </tr></thead>
+        <tbody>
+          ${_foRascunho.map(p => `
+            <tr style="border-bottom:1px solid var(--bd)">
+              <td style="padding:7px 8px">${_eh(p.familia_nome)}</td>
+              <td style="padding:7px 4px;color:var(--tx3);font-size:11px">→</td>
+              <td style="padding:7px 8px"><strong>${_eh(p.ora_por_nome)}</strong></td>
+              <td style="padding:7px 8px;color:var(--tx2);font-size:12px">${_eh(p.resp_nome)}</td>
+              <td style="padding:7px 8px;text-align:center;font-size:11.5px">
+                ${p.resp_tel ? `<span style="color:var(--gr)">✓</span>` : `<span style="color:var(--rose)">Sem número</span>`}
+              </td>
+            </tr>`).join("")}
+        </tbody>
+      </table>`;
   }
 }
 
@@ -2242,7 +2157,7 @@ function foCancelarSorteio() {
 }
 
 async function foSalvarSorteio(enviarWA = false) {
-  if (!_foRascunho.length) return;
+  if (!_foRascunho.length || !_foEventoId) return;
   const errEl = document.getElementById("fo-preview-err");
   const btnSW = document.getElementById("btn-fo-salvar-wa");
   const btnS  = document.getElementById("btn-fo-salvar");
@@ -2255,9 +2170,12 @@ async function foSalvarSorteio(enviarWA = false) {
       method: "POST",
       headers: { ...apiHeaders(), "Content-Type": "application/json" },
       body: JSON.stringify({
+        p_evento_id: _foEventoId,
         p_pares: _foRascunho.map(p => ({
-          familia_id: p.familia_id,
-          ora_por_id: p.ora_por_id,
+          familia_nome: p.familia_nome,
+          resp_nome:    p.resp_nome,
+          resp_tel:     p.resp_tel || null,
+          ora_por_nome: p.ora_por_nome,
         })),
       }),
     });
@@ -2268,7 +2186,7 @@ async function foSalvarSorteio(enviarWA = false) {
     if (enviarWA) await _foEnviarTodosWA(data.rodada_id);
 
     foCancelarSorteio();
-    foCarregarRodadas();
+    foCarregarRodadas(_foEventoId);
   } catch (e) {
     if (errEl) { errEl.style.color = "var(--rose)"; errEl.textContent = e.message; }
     if (btnSW) btnSW.disabled = false;
@@ -2292,46 +2210,41 @@ async function _foEnviarTodosWA(rodadaId) {
         mensagem:    msg,
         modulo:      "EVENTOS",
         referenciaT: "fo_sorteio_pares",
-        chave:       `FO_${rodadaId}_${p.familia_id}`,
+        chave:       `FO_${rodadaId}_${p.familia_nome}`,
       });
     } catch (_) {}
   }
 }
 
-// Envia WA individualmente para um par já salvo
-async function foEnviarWAPar(parId, respNome, familiaNome, oraPorNome, tel) {
+async function foEnviarWAPar(parId, respNome, famNome, oraNome, tel) {
   if (!tel) { T("Sem número", "Este responsável não tem WhatsApp cadastrado."); return; }
   const primeiroNome = respNome.split(" ")[0];
   const msg =
-    `Olá ${primeiroNome}! Esta semana a família *${familiaNome}* irá orar pela família *${oraPorNome}*. ` +
+    `Olá ${primeiroNome}! Esta semana a família *${famNome}* irá orar pela família *${oraNome}*. ` +
     `Que Deus abençoe essa corrente de oração!`;
   try {
     await WA.send({
-      para:        tel,
-      nome:        respNome,
-      mensagem:    msg,
-      modulo:      "EVENTOS",
-      referenciaT: "fo_sorteio_pares",
-      referenciaId: parId,
-      chave:       `FO_PAR_${parId}`,
+      para: tel, nome: respNome, mensagem: msg,
+      modulo: "EVENTOS", referenciaT: "fo_sorteio_pares",
+      referenciaId: parId, chave: `FO_PAR_${parId}`,
     });
     await fetch(`${apiBaseUrl()}/rest/v1/rpc/fo_marcar_wa_enviado`, {
       method: "POST",
       headers: { ...apiHeaders(), "Content-Type": "application/json" },
       body: JSON.stringify({ p_par_id: parId }),
     });
-    foCarregarRodadas();
+    foCarregarRodadas(_foEventoId);
   } catch (e) { T("Erro", e.message); }
 }
 
-// Histórico de rodadas
-async function foCarregarRodadas() {
+async function foCarregarRodadas(eventoId) {
   const el = document.getElementById("fo-rodadas-lista");
   if (!el) return;
   el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px">Carregando...</div>`;
   try {
     const url = `${apiBaseUrl()}/rest/v1/fo_sorteio_rodadas`
-      + `?select=id,data,descricao,criado_em,pares:fo_sorteio_pares(id,wa_enviado,familia:familia_id(id,nome,responsavel,telefone),ora_por:ora_por_id(id,nome))`
+      + `?evento_id=eq.${eventoId}`
+      + `&select=id,data,criado_em,pares:fo_sorteio_pares(id,familia_nome,resp_nome,resp_tel,ora_por_nome,wa_enviado)`
       + `&order=criado_em.desc&limit=20`;
     const res = await fetch(url, { headers: apiHeaders() });
     if (!res.ok) throw new Error(await res.text());
@@ -2346,46 +2259,41 @@ async function foCarregarRodadas() {
       const total    = r.pares?.length || 0;
       const enviados = r.pares?.filter(p => p.wa_enviado).length || 0;
       const linhas   = (r.pares || []).map(p => {
-        const tel      = p.familia?.telefone || null;
-        const respNome = _eh(p.familia?.responsavel || "—");
-        const famNome  = _eh(p.familia?.nome || "—");
-        const porNome  = _eh(p.ora_por?.nome || "—");
-        const telEsc   = (tel || "").replace(/'/g, "\\'");
+        const fN  = _eh(p.familia_nome || "—");
+        const oN  = _eh(p.ora_por_nome || "—");
+        const rN  = _eh(p.resp_nome    || "—");
+        const tel = p.resp_tel || "";
         return `<tr style="border-bottom:1px solid var(--bd)">
-          <td style="padding:6px 8px">${famNome}</td>
+          <td style="padding:6px 8px">${fN}</td>
           <td style="padding:6px 4px;color:var(--tx3);font-size:11px">→</td>
-          <td style="padding:6px 8px"><strong>${porNome}</strong></td>
-          <td style="padding:6px 8px;font-size:12px;color:var(--tx2)">${respNome}</td>
+          <td style="padding:6px 8px"><strong>${oN}</strong></td>
+          <td style="padding:6px 8px;font-size:12px;color:var(--tx2)">${rN}</td>
           <td style="padding:6px 8px;text-align:center;font-size:11px">
-            ${p.wa_enviado
-              ? `<span style="color:var(--gr)">✓ Enviado</span>`
-              : `<span style="color:var(--tx3)">Pendente</span>`}
+            ${p.wa_enviado ? `<span style="color:var(--gr)">✓ Enviado</span>` : `<span style="color:var(--tx3)">Pendente</span>`}
           </td>
           <td style="padding:6px 8px;text-align:right">
-            ${!p.wa_enviado
+            ${!p.wa_enviado && tel
               ? `<button class="tbt" style="font-size:11px;padding:3px 8px"
-                  onclick="foEnviarWAPar('${p.id}','${respNome.replace(/'/g,"\\'")}','${famNome.replace(/'/g,"\\'")}','${porNome.replace(/'/g,"\\'")}','${telEsc}')">WhatsApp</button>`
+                  onclick="foEnviarWAPar('${p.id}','${rN.replace(/'/g,"\\'")}','${fN.replace(/'/g,"\\'")}','${oN.replace(/'/g,"\\'")}','${tel.replace(/'/g,"\\'")}')">WhatsApp</button>`
               : ""}
           </td>
         </tr>`;
       }).join("");
 
-      return `<details style="margin-bottom:12px;border:1px solid var(--bd);border-radius:8px;overflow:hidden">
+      return `<details style="margin-bottom:10px;border:1px solid var(--bd);border-radius:8px;overflow:hidden">
         <summary style="padding:10px 14px;cursor:pointer;font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;background:var(--bg);list-style:none">
-          <span>Rodada de ${_foFmtData(r.data)}${r.descricao ? " — " + _eh(r.descricao) : ""}</span>
-          <span style="font-size:11.5px;font-weight:400;color:${enviados === total && total > 0 ? "var(--gr)" : "var(--tx3)"}">
+          <span>Rodada de ${_foFmtData(r.data)}</span>
+          <span style="font-size:11.5px;font-weight:400;color:${enviados===total&&total>0?"var(--gr)":"var(--tx3)"}">
             ${enviados}/${total} WhatsApp enviados
           </span>
         </summary>
         <div style="padding:0 8px 10px">
           <table style="width:100%;border-collapse:collapse;font-size:12.5px">
             <thead><tr style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:11px">
-              <th style="padding:5px 8px;text-align:left;font-weight:500">Família</th>
-              <th></th>
+              <th style="padding:5px 8px;text-align:left;font-weight:500">Família</th><th></th>
               <th style="padding:5px 8px;text-align:left;font-weight:500">Ora por</th>
               <th style="padding:5px 8px;text-align:left;font-weight:500">Responsável</th>
-              <th style="padding:5px 8px;text-align:center;font-weight:500">Status</th>
-              <th></th>
+              <th style="padding:5px 8px;text-align:center;font-weight:500">Status</th><th></th>
             </tr></thead>
             <tbody>${linhas}</tbody>
           </table>
