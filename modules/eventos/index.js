@@ -310,19 +310,6 @@
     }
     if (!_eventoAtivo) { _T("Não encontrado", "Evento não encontrado."); return; }
 
-    // Redireciona eventos de Família de Oração para a view dedicada
-    if (_eventoAtivo.titulo?.toLowerCase().includes("família de oração")) {
-      let inscricoes = [];
-      try {
-        const d = await _fetch(`${_api()}/rest/v1/evento_inscricoes?evento_id=eq.${id}&select=*&order=criado_em.asc&limit=500`);
-        inscricoes = d || [];
-        _inscricoesDetalhe = inscricoes;
-      } catch (_) {}
-      await go("eve-sorteio");
-      foIniciarView(_eventoAtivo, inscricoes);
-      return;
-    }
-
     await go("eve-detalhe");
     const ttl = document.getElementById("eve-det-titulo");
     if (ttl) ttl.textContent = _eventoAtivo.titulo || "Evento";
@@ -485,6 +472,12 @@
           <div class="ctit">Inscrições <span class="cact" onclick="eveAbrirDetalhe('${_ea(evt.id)}')">↻</span></div>
           ${_tabelaInscricoes(inscricoes, evt)}
         </div>
+
+        ${evt.titulo?.toLowerCase().includes("família de oração") ? `
+        <!-- Sorteio de Família de Oração -->
+        <div style="grid-column:1 / -1" id="fo-detalhe-wrap">
+          ${_foRenderSecao(evt, inscricoes)}
+        </div>` : ""}
       </div>`;
   }
 
@@ -2033,6 +2026,70 @@ let _foRascunho    = [];
 let _foEventoId    = null;
 let _foInscricoes  = [];
 
+// Monta o HTML da seção de sorteio (chamado dentro do IIFE via _renderDetalhe)
+function _foRenderSecao(evt, inscricoes) {
+  _foEventoId   = evt.id;
+  _foInscricoes = inscricoes || [];
+  const ativos  = _foInscricoes.filter(i => i.status !== "cancelada");
+
+  const linhasInscritos = ativos.length
+    ? ativos.map(i => `
+        <tr style="border-bottom:1px solid var(--bd)">
+          <td style="padding:6px 8px;font-weight:600">${_foEh(i.familia || i.nome)}</td>
+          <td style="padding:6px 8px;color:var(--tx2)">${_foEh(i.nome)}</td>
+          <td style="padding:6px 8px;text-align:center;font-size:11.5px">
+            ${i.telefone ? `<span style="color:var(--gr)">✓</span>` : `<span style="color:var(--tx3)">—</span>`}
+          </td>
+        </tr>`).join("")
+    : `<tr><td colspan="3" style="padding:12px 8px;color:var(--tx3);font-size:12px">Nenhuma inscrição ativa.</td></tr>`;
+
+  // Carrega rodadas de forma assíncrona após render
+  setTimeout(() => foCarregarRodadas(_foEventoId), 0);
+
+  return `
+    <div class="card" style="border-color:rgba(74,156,245,.3)">
+      <div class="ctit" style="color:var(--sky)">Sorteio — Família de Oração
+        <button class="tbt pri" style="margin-left:auto;font-size:11.5px;padding:4px 14px" onclick="foGerarSorteio()">Gerar Sorteio</button>
+      </div>
+
+      <!-- Famílias inscritas -->
+      <div style="margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">
+          Famílias inscritas (${ativos.length})
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+          <thead><tr style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:11px">
+            <th style="padding:5px 8px;text-align:left;font-weight:500">Família</th>
+            <th style="padding:5px 8px;text-align:left;font-weight:500">Responsável</th>
+            <th style="padding:5px 8px;text-align:center;font-weight:500">WhatsApp</th>
+          </tr></thead>
+          <tbody>${linhasInscritos}</tbody>
+        </table>
+      </div>
+
+      <!-- Preview do sorteio (oculto até gerar) -->
+      <div id="fo-preview" style="display:none;margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Pré-visualização</div>
+        <div id="fo-preview-table"></div>
+        <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+          <button class="tbt pri" id="btn-fo-salvar-wa" onclick="foSalvarESendWA()">Salvar e enviar WhatsApp para todos</button>
+          <button class="tbt" id="btn-fo-salvar" onclick="foSalvarSorteio(false)">Só salvar (sem WhatsApp)</button>
+          <button class="tbt" onclick="foCancelarSorteio()" style="color:var(--tx3)">Cancelar</button>
+        </div>
+        <div id="fo-preview-err" style="margin-top:8px;font-size:12px;color:var(--rose)"></div>
+      </div>
+
+      <!-- Histórico de rodadas -->
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">
+          Rodadas anteriores
+          <span style="cursor:pointer;font-weight:400;text-transform:none;margin-left:8px;color:var(--sky)" onclick="foCarregarRodadas('${_foEh(evt.id)}')">↻</span>
+        </div>
+        <div id="fo-rodadas-lista"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>`;
+}
+
 // Helpers locais (fora do IIFE do módulo)
 function _foEh(s) {
   return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
@@ -2056,51 +2113,6 @@ function _foFmtData(iso) {
   if (!iso) return "";
   const [y, m, d] = iso.split("-");
   return `${d}/${m}/${y}`;
-}
-
-// Inicializa a view de Família de Oração com dados do evento
-function foIniciarView(evt, inscricoes) {
-  _foEventoId  = evt.id;
-  _foInscricoes = inscricoes || [];
-
-  const tit = document.getElementById("fo-evt-titulo");
-  const sub = document.getElementById("fo-evt-sub");
-  if (tit) tit.textContent = evt.titulo || "Família de Oração";
-  if (sub) sub.textContent = [
-    evt.data_inicio ? _foFmtD(evt.data_inicio) : null,
-    evt.local_nome  || null,
-  ].filter(Boolean).join(" · ");
-
-  foRenderInscritos();
-  foCarregarRodadas(_foEventoId);
-}
-
-function foRenderInscritos() {
-  const el = document.getElementById("fo-inscritos-lista");
-  if (!el) return;
-  const ativos = _foInscricoes.filter(i => i.status !== "cancelada");
-  if (!ativos.length) {
-    el.innerHTML = `<div style="color:var(--tx3);font-size:12px">Nenhuma inscrição ativa.</div>`;
-    return;
-  }
-  el.innerHTML =
-    `<table style="width:100%;border-collapse:collapse;font-size:12.5px">
-      <thead><tr style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:11px">
-        <th style="padding:6px 8px;text-align:left;font-weight:500">Família</th>
-        <th style="padding:6px 8px;text-align:left;font-weight:500">Responsável</th>
-        <th style="padding:6px 8px;text-align:center;font-weight:500">WhatsApp</th>
-      </tr></thead>
-      <tbody>
-        ${ativos.map(i => `
-          <tr style="border-bottom:1px solid var(--bd)">
-            <td style="padding:7px 8px;font-weight:600">${_foEh(i.familia || i.nome)}</td>
-            <td style="padding:7px 8px;color:var(--tx2)">${_foEh(i.nome)}</td>
-            <td style="padding:7px 8px;text-align:center;font-size:11.5px">
-              ${i.telefone ? `<span style="color:var(--gr)">✓</span>` : `<span style="color:var(--tx3)">—</span>`}
-            </td>
-          </tr>`).join("")}
-      </tbody>
-    </table>`;
 }
 
 // Gera sorteio usando os inscritos armazenados em _foInscricoes
