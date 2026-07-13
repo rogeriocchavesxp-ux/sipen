@@ -2249,6 +2249,10 @@ async function foEnviarWAPar(parId, respNome, famNome, oraNome, tel) {
 async function foCarregarRodadas(eventoId) {
   const el = document.getElementById("fo-rodadas-lista");
   if (!el) return;
+  if (!eventoId || eventoId === "undefined") {
+    el.innerHTML = `<div style="color:var(--tx3);font-size:12px">Nenhum evento selecionado.</div>`;
+    return;
+  }
   el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px">Carregando...</div>`;
   try {
     const url = `${apiBaseUrl()}/rest/v1/fo_sorteio_rodadas`
