@@ -2033,6 +2033,15 @@ let _foRascunho    = [];
 let _foEventoId    = null;
 let _foInscricoes  = [];
 
+// Helpers locais (fora do IIFE do módulo)
+function _foEh(s) {
+  return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function _foFmtD(iso) {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
 
 function _foShuffle(arr) {
   const a = [...arr];
@@ -2058,7 +2067,7 @@ function foIniciarView(evt, inscricoes) {
   const sub = document.getElementById("fo-evt-sub");
   if (tit) tit.textContent = evt.titulo || "Família de Oração";
   if (sub) sub.textContent = [
-    evt.data_inicio ? _fmtD(evt.data_inicio) : null,
+    evt.data_inicio ? _foFmtD(evt.data_inicio) : null,
     evt.local_nome  || null,
   ].filter(Boolean).join(" · ");
 
@@ -2084,8 +2093,8 @@ function foRenderInscritos() {
       <tbody>
         ${ativos.map(i => `
           <tr style="border-bottom:1px solid var(--bd)">
-            <td style="padding:7px 8px;font-weight:600">${_eh(i.familia || i.nome)}</td>
-            <td style="padding:7px 8px;color:var(--tx2)">${_eh(i.nome)}</td>
+            <td style="padding:7px 8px;font-weight:600">${_foEh(i.familia || i.nome)}</td>
+            <td style="padding:7px 8px;color:var(--tx2)">${_foEh(i.nome)}</td>
             <td style="padding:7px 8px;text-align:center;font-size:11.5px">
               ${i.telefone ? `<span style="color:var(--gr)">✓</span>` : `<span style="color:var(--tx3)">—</span>`}
             </td>
@@ -2137,10 +2146,10 @@ function foGerarSorteio() {
         <tbody>
           ${_foRascunho.map(p => `
             <tr style="border-bottom:1px solid var(--bd)">
-              <td style="padding:7px 8px">${_eh(p.familia_nome)}</td>
+              <td style="padding:7px 8px">${_foEh(p.familia_nome)}</td>
               <td style="padding:7px 4px;color:var(--tx3);font-size:11px">→</td>
-              <td style="padding:7px 8px"><strong>${_eh(p.ora_por_nome)}</strong></td>
-              <td style="padding:7px 8px;color:var(--tx2);font-size:12px">${_eh(p.resp_nome)}</td>
+              <td style="padding:7px 8px"><strong>${_foEh(p.ora_por_nome)}</strong></td>
+              <td style="padding:7px 8px;color:var(--tx2);font-size:12px">${_foEh(p.resp_nome)}</td>
               <td style="padding:7px 8px;text-align:center;font-size:11.5px">
                 ${p.resp_tel ? `<span style="color:var(--gr)">✓</span>` : `<span style="color:var(--rose)">Sem número</span>`}
               </td>
@@ -2259,9 +2268,9 @@ async function foCarregarRodadas(eventoId) {
       const total    = r.pares?.length || 0;
       const enviados = r.pares?.filter(p => p.wa_enviado).length || 0;
       const linhas   = (r.pares || []).map(p => {
-        const fN  = _eh(p.familia_nome || "—");
-        const oN  = _eh(p.ora_por_nome || "—");
-        const rN  = _eh(p.resp_nome    || "—");
+        const fN  = _foEh(p.familia_nome || "—");
+        const oN  = _foEh(p.ora_por_nome || "—");
+        const rN  = _foEh(p.resp_nome    || "—");
         const tel = p.resp_tel || "";
         return `<tr style="border-bottom:1px solid var(--bd)">
           <td style="padding:6px 8px">${fN}</td>
