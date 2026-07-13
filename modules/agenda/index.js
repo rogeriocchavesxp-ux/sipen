@@ -1093,38 +1093,38 @@ async function agMarcarEmAnalise(id) {
 async function _comSyncStatus(agendaId, acao, motivo) {
   try {
     const sol = await fetch(
-      `${apiBaseUrl()}/rest/v1/com_solicitacoes_arte?agenda_id=eq.${agendaId}&status=neq.Cancelada&select=id&limit=10`,
+      `${apiBaseUrl()}/rest/v1/com_solicitacoes_arte?agenda_id=eq.${agendaId}&status=not.in.(Cancelada,Concluída,Programação não aprovada)&select=id,status&limit=10`,
       { headers: apiHeaders() }
     );
     if (!sol.ok) return;
     const rows = await sol.json();
+
     for (const r of rows) {
-      if (acao === "recusar") {
+      let novoStatus = null;
+      let texto = "";
+
+      if (acao === "aprovar") {
+        novoStatus = "Aprovada para produção";
+        texto = "Programação aprovada pela Administração. Produção liberada.";
+      } else if (acao === "recusar") {
+        novoStatus = "Programação não aprovada";
+        texto = `Programação recusada pela Administração. Produção bloqueada.${motivo ? "\nMotivo: " + motivo : ""}`;
+      } else if (acao === "ajuste") {
+        texto = `Ajuste solicitado na programação pela Administração.${motivo ? "\nDetalhe: " + motivo : ""} Verifique se datas, horários ou local foram alterados.`;
+      }
+
+      if (novoStatus) {
         await fetch(`${apiBaseUrl()}/rest/v1/com_solicitacoes_arte?id=eq.${r.id}`, {
           method: "PATCH",
           headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
-          body: JSON.stringify({ status: "Cancelada", atualizado_em: new Date().toISOString() }),
+          body: JSON.stringify({ status: novoStatus, atualizado_em: new Date().toISOString() }),
         });
+      }
+      if (texto) {
         await fetch(`${apiBaseUrl()}/rest/v1/com_andamentos`, {
           method: "POST",
           headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
-          body: JSON.stringify({
-            sol_id: r.id,
-            texto: `Programação vinculada foi recusada. Produção cancelada automaticamente.${motivo ? "\nMotivo: " + motivo : ""}`,
-            automatico: true,
-            criado_em: new Date().toISOString(),
-          }),
-        });
-      } else {
-        await fetch(`${apiBaseUrl()}/rest/v1/com_andamentos`, {
-          method: "POST",
-          headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
-          body: JSON.stringify({
-            sol_id: r.id,
-            texto: "Programação vinculada foi aprovada. Produção pode ser iniciada.",
-            automatico: true,
-            criado_em: new Date().toISOString(),
-          }),
+          body: JSON.stringify({ sol_id: r.id, texto, automatico: true, criado_em: new Date().toISOString() }),
         });
       }
     }

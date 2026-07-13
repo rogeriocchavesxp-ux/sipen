@@ -26,12 +26,14 @@
   ];
 
   const STATUS_CFG = {
-    "Recebida":             { cls: "pn",  cor: "var(--blue)"   },
-    "Em análise":           { cls: "po",  cor: "var(--amber)"  },
-    "Em produção":          { cls: "pp",  cor: "var(--violet)" },
-    "Aguardando aprovação": { cls: "pv",  cor: "var(--gold)"   },
-    "Concluída":            { cls: "pd",  cor: "var(--gr)"     },
-    "Cancelada":            { cls: "pz",  cor: "var(--tx3)"    },
+    "Aguardando aprovação da Administração": { cls: "po", cor: "var(--amber)"  },
+    "Aprovada para produção":                { cls: "pn", cor: "var(--sky)"    },
+    "Em análise":                            { cls: "pb", cor: "var(--blue)"   },
+    "Em produção":                           { cls: "pp", cor: "var(--violet)" },
+    "Programação não aprovada":              { cls: "pr", cor: "var(--rose)"   },
+    "Concluída":                             { cls: "pd", cor: "var(--gr)"     },
+    "Recebida":                              { cls: "pn", cor: "var(--blue)"   },
+    "Cancelada":                             { cls: "pz", cor: "var(--tx3)"    },
   };
 
   // Status da programação vinculada (agenda)
@@ -209,11 +211,11 @@
 
   function _renderDash() {
     const s = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-    s("com-kpi-total", _cache.length);
-    s("com-kpi-receb", _cache.filter(r => r.status === "Recebida").length);
-    s("com-kpi-prod",  _cache.filter(r => r.status === "Em produção").length);
-    s("com-kpi-conc",  _cache.filter(r => r.status === "Concluída").length);
-    s("com-kpi-pend",  _cache.filter(r => !["Concluída","Cancelada"].includes(r.status)).length);
+    s("com-kpi-total",   _cache.length);
+    s("com-kpi-aguard",  _cache.filter(r => r.status === "Aguardando aprovação da Administração").length);
+    s("com-kpi-aprov",   _cache.filter(r => r.status === "Aprovada para produção").length);
+    s("com-kpi-prod",    _cache.filter(r => r.status === "Em produção").length);
+    s("com-kpi-conc",    _cache.filter(r => r.status === "Concluída").length);
 
     // Recentes
     const elR = document.getElementById("com-dash-recentes");
@@ -739,10 +741,16 @@
 
     const isNew = !editId || editId === "null";
     if (isNew) {
-      payload.status         = "Recebida";
-      payload.criado_por     = _userId();
+      // Se vinculada a uma programação ainda pendente → status específico
+      const agendaId = g("com-f-agenda");
+      const agendaStatus = agendaId
+        ? _cache.find(r => r.agenda_id === agendaId)?.agenda_info?.status
+        : null;
+      const agendaPendente = ["aguardando_aprovacao","em_analise","ajuste_solicitado"].includes(agendaStatus);
+      payload.status          = agendaPendente ? "Aguardando aprovação da Administração" : "Recebida";
+      payload.criado_por      = _userId();
       payload.criado_por_nome = _userName();
-      payload.criado_em      = new Date().toISOString();
+      payload.criado_em       = new Date().toISOString();
     }
 
     try {

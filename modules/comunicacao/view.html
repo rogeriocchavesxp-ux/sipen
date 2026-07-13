@@ -26,25 +26,25 @@
         <div id="com-kpi-total" style="font-size:26px;font-weight:800;color:var(--tx1);line-height:1">—</div>
         <div style="font-size:10px;color:var(--tx3);margin-top:4px">solicitações</div>
       </div>
-      <div class="card" style="padding:16px 18px;cursor:pointer" onclick="go('com-solicitacoes')">
-        <div style="font-size:9.5px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Recebidas</div>
-        <div id="com-kpi-receb" style="font-size:26px;font-weight:800;color:var(--blue);line-height:1">—</div>
-        <div style="font-size:10px;color:var(--tx3);margin-top:4px">aguardando análise</div>
+      <div class="card" style="padding:16px 18px;cursor:pointer;border-color:rgba(245,158,11,.3)" onclick="comFiltrarStatus('Aguardando aprovação da Administração')">
+        <div style="font-size:9.5px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">🟡 Ag. Administração</div>
+        <div id="com-kpi-aguard" style="font-size:26px;font-weight:800;color:var(--amber);line-height:1">—</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:4px">reserva pendente</div>
       </div>
-      <div class="card" style="padding:16px 18px;cursor:pointer" onclick="go('com-solicitacoes')">
-        <div style="font-size:9.5px;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Em Produção</div>
+      <div class="card" style="padding:16px 18px;cursor:pointer;border-color:rgba(14,165,233,.3)" onclick="comFiltrarStatus('Aprovada para produção')">
+        <div style="font-size:9.5px;font-weight:700;color:var(--sky);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">🔵 Aprovadas</div>
+        <div id="com-kpi-aprov" style="font-size:26px;font-weight:800;color:var(--sky);line-height:1">—</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:4px">prontas para produção</div>
+      </div>
+      <div class="card" style="padding:16px 18px;cursor:pointer;border-color:rgba(139,111,212,.3)" onclick="comFiltrarStatus('Em produção')">
+        <div style="font-size:9.5px;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">🟣 Em Produção</div>
         <div id="com-kpi-prod" style="font-size:26px;font-weight:800;color:var(--violet);line-height:1">—</div>
         <div style="font-size:10px;color:var(--tx3);margin-top:4px">sendo executadas</div>
       </div>
-      <div class="card" style="padding:16px 18px;cursor:pointer" onclick="go('com-solicitacoes')">
-        <div style="font-size:9.5px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Concluídas</div>
+      <div class="card" style="padding:16px 18px;cursor:pointer;border-color:rgba(34,197,94,.3)" onclick="comFiltrarStatus('Concluída')">
+        <div style="font-size:9.5px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">🟢 Finalizadas</div>
         <div id="com-kpi-conc" style="font-size:26px;font-weight:800;color:var(--gr);line-height:1">—</div>
-        <div style="font-size:10px;color:var(--tx3);margin-top:4px">finalizadas</div>
-      </div>
-      <div class="card" style="padding:16px 18px;cursor:pointer" onclick="go('com-solicitacoes')">
-        <div style="font-size:9.5px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Pendentes</div>
-        <div id="com-kpi-pend" style="font-size:26px;font-weight:800;color:var(--amber);line-height:1">—</div>
-        <div style="font-size:10px;color:var(--tx3);margin-top:4px">em aberto</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:4px">concluídas</div>
       </div>
     </div>
 
