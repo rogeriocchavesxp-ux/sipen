@@ -612,16 +612,55 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
         ⚠️ Esta programação ainda aguarda aprovação administrativa. Você pode registrar a solicitação de arte agora; a equipe de Comunicação acompanhará desde o início.
       </div>
 
+      <!-- Solicitante -->
+      <div style="font-size:9.5px;font-weight:700;color:#7057ad;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Solicitante</div>
+      <div class="row2">
+        <div class="field">
+          <label for="s2-resp">Nome do responsável <span class="req">*</span></label>
+          <input type="text" id="s2-resp" placeholder="Nome completo">
+        </div>
+        <div class="field">
+          <label for="s2-tel">WhatsApp de contato</label>
+          <input type="tel" id="s2-tel" placeholder="(11) 99999-9999">
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:18px">
+        <label for="s2-min">Ministério / Grupo <span class="req">*</span></label>
+        <select id="s2-min">
+          <option value="">Selecione…</option>
+          <option>UPA (SOS)</option>
+          <option>UMP (Movimento)</option>
+          <option>SAF</option>
+          <option>UPH</option>
+          <option>GAM</option>
+          <option>Casais (Lar Cristão)</option>
+          <option>Coral Jovem</option>
+          <option>Coral João Calvino</option>
+          <option>Música</option>
+          <option>Liderança / Conselho</option>
+          <option>Outro</option>
+        </select>
+      </div>
+
+      <!-- Programação vinculada (info) -->
+      <div style="font-size:9.5px;font-weight:700;color:#7057ad;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Programação</div>
+      <div id="s2-prog-info" style="font-size:12.5px;color:var(--tx2);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 14px;margin-bottom:18px;line-height:1.75"></div>
+
+      <!-- Demanda -->
+      <div style="font-size:9.5px;font-weight:700;color:#7057ad;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Demanda</div>
       <div class="field">
         <label for="s2-desc">O que precisa ser criado? <span class="req">*</span></label>
-        <textarea id="s2-desc" rows="4" placeholder="Descreva o que precisa ser criado: tema, textos, referências visuais, onde será divulgado..."></textarea>
+        <textarea id="s2-desc" rows="4" placeholder="Descreva o que precisa ser criado: tema, textos, referências visuais, onde será divulgado…"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Áreas da comunicação</label>
+        <div class="s2-fmt-grid" id="s2-areas"><!-- preenchido via JS --></div>
       </div>
 
       <div class="field">
         <label>Formatos desejados</label>
-        <div class="s2-fmt-grid" id="s2-formatos">
-          <!-- preenchido via JS -->
-        </div>
+        <div class="s2-fmt-grid" id="s2-formatos"><!-- preenchido via JS --></div>
       </div>
 
       <div class="row2" style="margin-top:2px">
@@ -630,10 +669,13 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
           <input type="date" id="s2-prazo">
         </div>
       </div>
+      <div id="s2-prazo-aviso" style="display:none;font-size:11.5px;color:var(--rose);margin:-6px 0 12px;padding:6px 10px;background:rgba(239,68,68,.08);border-radius:6px;border:1px solid rgba(239,68,68,.2)">
+        O prazo não pode ser posterior à data da programação.
+      </div>
 
       <div class="field">
         <label for="s2-info">Informações adicionais</label>
-        <textarea id="s2-info" style="min-height:70px" placeholder="Cores, logos, textos específicos, referências de artes anteriores..."></textarea>
+        <textarea id="s2-info" style="min-height:70px" placeholder="Cores, logos, textos específicos, referências de artes anteriores…"></textarea>
       </div>
     </div>
 
@@ -1256,6 +1298,9 @@ let _arteAgendaId  = null;
 let _arteProtocolo = null;
 let _arteTitulo    = null;
 let _arteTicket    = null;
+let _arteDataEvt   = null;
+let _arteHoraEvt   = null;
+let _arteLocal     = null;
 
 const S2_FORMATOS = [
   { label: "1:1 WhatsApp",    digital: true  },
@@ -1273,7 +1318,15 @@ function _iniciarStep2(agendaId, protocolo, titulo, ticket) {
   _arteTitulo    = titulo;
   _arteTicket    = ticket;
 
-  // Resumo da etapa 1
+  // Captura dados da etapa 1
+  const dataI  = document.getElementById("f-ag-data")?.value || "";
+  const hiVal  = document.getElementById("f-ag-inicio")?.value || "";
+  const locais = [...document.querySelectorAll("#f-ag-spaces input:checked")].map(c => c.value);
+  _arteDataEvt  = dataI || null;
+  _arteHoraEvt  = hiVal || null;
+  _arteLocal    = locais.length ? locais.join(", ") : null;
+
+  // Resumo da etapa 1 (banner superior)
   const resumoEl = document.getElementById("s2-resumo");
   if (resumoEl) {
     resumoEl.innerHTML =
@@ -1283,22 +1336,42 @@ function _iniciarStep2(agendaId, protocolo, titulo, ticket) {
       `<span style="font-size:11px;color:var(--tx3)">Aguardando aprovação — a equipe de Comunicação já pode acompanhar.</span>`;
   }
 
-  // Aviso sobre aprovação pendente
+  // Aviso aprovação pendente
   const avisoEl = document.getElementById("s2-aviso-pend");
   if (avisoEl) avisoEl.style.display = "block";
 
-  // Descrição pré-preenchida
-  const dataI  = document.getElementById("f-ag-data")?.value || "";
-  const hiVal  = document.getElementById("f-ag-inicio")?.value || "";
-  const locais = [...document.querySelectorAll("#f-ag-spaces input:checked")].map(c => c.value);
-  const dFmt   = dataI ? fmtDataBR(dataI) : "data informada";
-  const locTxt = locais.length ? `, no espaço ${locais.join(", ")}` : "";
-  const horaTxt = hiVal ? `, às ${hiVal}` : "";
-  const descBase =
-    `Produção de arte digital para a programação "${titulo || protocolo}", ` +
-    `agendada para ${dFmt}${horaTxt}${locTxt}.`;
-  const descEl = document.getElementById("s2-desc");
-  if (descEl) descEl.value = descBase;
+  // Pré-preenche solicitante
+  const nomeBase = document.getElementById("f-nome")?.value?.trim() || "";
+  const telBase  = document.getElementById("f-tel")?.value?.trim()  || "";
+  const s2resp = document.getElementById("s2-resp");
+  const s2tel  = document.getElementById("s2-tel");
+  if (s2resp) s2resp.value = nomeBase;
+  if (s2tel)  s2tel.value  = telBase;
+
+  // Bloco de info da programação
+  const dFmt   = dataI ? fmtDataBR(dataI) : "";
+  const progEl = document.getElementById("s2-prog-info");
+  if (progEl) {
+    const partes = [
+      titulo    ? `<strong>${titulo}</strong>` : null,
+      protocolo ? `Protocolo: <strong>${protocolo}</strong>` : null,
+      dFmt      ? `Data: ${dFmt}` : null,
+      hiVal     ? `Horário: ${hiVal}` : null,
+      locais.length ? `Local: ${locais.join(", ")}` : null,
+    ].filter(Boolean);
+    progEl.innerHTML = partes.join(" · ");
+  }
+
+  // Áreas (Mídias pré-selecionada)
+  const areasGrid = document.getElementById("s2-areas");
+  if (areasGrid) {
+    areasGrid.innerHTML = COM_AREAS_ALL.map(a =>
+      `<label class="s2-fmt-lbl">
+        <input type="checkbox" name="s2-area" value="${a}" ${a === "Mídias" ? "checked" : ""}>
+        ${a}
+      </label>`
+    ).join("");
+  }
 
   // Formatos (digitais pré-selecionados)
   const grid = document.getElementById("s2-formatos");
@@ -1310,6 +1383,15 @@ function _iniciarStep2(agendaId, protocolo, titulo, ticket) {
       </label>`
     ).join("");
   }
+
+  // Descrição pré-preenchida
+  const locTxt  = locais.length ? `, no espaço ${locais.join(", ")}` : "";
+  const horaTxt = hiVal ? `, às ${hiVal}` : "";
+  const descBase =
+    `Produção de arte digital para a programação "${titulo || protocolo}", ` +
+    `agendada para ${dFmt || "data informada"}${horaTxt}${locTxt}.`;
+  const descEl = document.getElementById("s2-desc");
+  if (descEl) descEl.value = descBase;
 
   // Prazo sugerido: 2 dias antes do evento
   const prazoEl = document.getElementById("s2-prazo");
@@ -1327,12 +1409,26 @@ function _iniciarStep2(agendaId, protocolo, titulo, ticket) {
 }
 
 async function _enviarArteDigital() {
+  const resp    = document.getElementById("s2-resp")?.value?.trim();
+  const tel     = document.getElementById("s2-tel")?.value?.trim()  || null;
+  const min     = document.getElementById("s2-min")?.value          || null;
   const desc    = document.getElementById("s2-desc")?.value?.trim();
+  const areas   = [...document.querySelectorAll("input[name='s2-area']:checked")].map(e => e.value);
   const formatos = [...document.querySelectorAll("input[name='s2-fmt']:checked")].map(e => e.value);
   const prazo   = document.getElementById("s2-prazo")?.value || null;
   const info    = document.getElementById("s2-info")?.value?.trim() || null;
   const errEl   = document.getElementById("err-step2");
 
+  if (!resp) {
+    if (errEl) errEl.textContent = "Informe o nome do responsável.";
+    document.getElementById("s2-resp").focus();
+    return;
+  }
+  if (!min) {
+    if (errEl) errEl.textContent = "Selecione o ministério ou grupo.";
+    document.getElementById("s2-min").focus();
+    return;
+  }
   if (!desc) {
     if (errEl) errEl.textContent = "Descreva o que precisa ser criado.";
     document.getElementById("s2-desc").focus();
@@ -1341,19 +1437,18 @@ async function _enviarArteDigital() {
   if (errEl) errEl.textContent = "";
 
   // Valida prazo <= data do evento
-  const dataEvt = document.getElementById("f-ag-data")?.value;
-  if (prazo && dataEvt && prazo > dataEvt) {
-    if (errEl) errEl.textContent = "O prazo de entrega não pode ser posterior à data da programação.";
+  if (prazo && _arteDataEvt && prazo > _arteDataEvt) {
+    const avEl = document.getElementById("s2-prazo-aviso");
+    if (avEl) avEl.style.display = "";
     document.getElementById("s2-prazo").focus();
     return;
   }
+  const avEl2 = document.getElementById("s2-prazo-aviso");
+  if (avEl2) avEl2.style.display = "none";
 
   const btn = document.getElementById("btn-step2-enviar");
   btn.disabled    = true;
   btn.textContent = "Enviando…";
-
-  const nome = document.getElementById("f-nome")?.value?.trim() || null;
-  const tel  = document.getElementById("f-tel")?.value?.trim()  || null;
 
   try {
     const res = await fetch(`${SB_URL}/rest/v1/rpc/criar_sol_comunicacao_publica`, {
@@ -1362,13 +1457,17 @@ async function _enviarArteDigital() {
       body: JSON.stringify({
         p_agenda_id:        _arteAgendaId,
         p_agenda_protocolo: _arteProtocolo,
-        p_responsavel:      nome,
+        p_responsavel:      resp,
         p_telefone:         tel,
         p_descricao:        desc,
-        p_ministerio:       null,
+        p_ministerio:       min,
+        p_areas:            areas.length    ? areas    : null,
         p_formatos:         formatos.length ? formatos : null,
         p_prazo:            prazo,
         p_informacoes:      info || null,
+        p_data_evento:      _arteDataEvt   || null,
+        p_horario_evento:   _arteHoraEvt   || null,
+        p_local_evento:     _arteLocal     || null,
       }),
     });
     if (!res.ok) throw new Error(await res.text());
@@ -1383,7 +1482,7 @@ async function _enviarArteDigital() {
       okProtoEl.innerHTML =
         (_arteProtocolo ? `Reserva provisória: <strong>${_arteProtocolo}</strong><br>` : "") +
         `Arte digital: <strong style="color:#3aaa5c">solicitação registrada ✅</strong>`;
-      okProtoEl.style.display = "";
+      okProtoEl.style.display    = "";
       okProtoEl.style.background = "rgba(58,170,92,.09)";
       okProtoEl.style.borderColor = "rgba(58,170,92,.3)";
       okProtoEl.style.color = "#1d6b38";
@@ -1589,7 +1688,16 @@ function novoEnvio() {
   _arteProtocolo = null;
   _arteTitulo    = null;
   _arteTicket    = null;
+  _arteDataEvt   = null;
+  _arteHoraEvt   = null;
+  _arteLocal     = null;
   document.querySelectorAll("input[name='ag-arte']").forEach(r => r.checked = false);
+  ["s2-resp","s2-tel","s2-desc","s2-prazo","s2-info"].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = "";
+  });
+  const s2min = document.getElementById("s2-min"); if (s2min) s2min.value = "";
+  document.querySelectorAll("input[name='s2-area'],input[name='s2-fmt']").forEach(cb => cb.checked = false);
+  const s2av = document.getElementById("s2-prazo-aviso"); if (s2av) s2av.style.display = "none";
   document.getElementById("screen-step2").style.display = "none";
   const okProt = document.getElementById("ok-protocolo");
   const okConf = document.getElementById("ok-aviso-conflito");
