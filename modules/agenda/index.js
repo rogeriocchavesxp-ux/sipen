@@ -755,14 +755,6 @@ async function carregarHistorico() {
 async function carregarConfigAgenda() {
   try {
     const rows = await getAgenda();
-    // Espaços únicos
-    const espacos = [...new Set(rows.map(r=>r.espaco).filter(Boolean))].sort();
-    const esEl = document.getElementById("ag-config-espacos");
-    if (esEl) esEl.innerHTML = espacos.map(e=>`
-      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd1)">
-        <span style="font-size:11.5px;color:var(--tx1)">${escapeHtml(e)}</span>
-        <span style="font-size:10px;color:var(--tx3);font-family:var(--mono)">${rows.filter(r=>r.espaco===e).length} eventos</span>
-      </div>`).join("");
     // Organizadores únicos
     const orgs = [...new Set(rows.map(r=>r.organizador).filter(Boolean))].sort();
     const orEl = document.getElementById("ag-config-orgs");
@@ -772,9 +764,75 @@ async function carregarConfigAgenda() {
         <span style="font-size:10px;color:var(--tx3);font-family:var(--mono)">${rows.filter(r=>r.organizador===o).length} eventos</span>
       </div>`).join("");
   } catch(e) { console.warn("Config agenda:", e.message); }
+  await carregarGerenciamentoEspacos();
 }
 
-window.carregarSolicitacoesAgenda = carregarSolicitacoesAgenda;
+async function carregarGerenciamentoEspacos() {
+  const el = document.getElementById("ag-config-espacos");
+  if (!el) return;
+  el.innerHTML = `<div style="font-size:11px;color:var(--tx3)">Carregando espaços...</div>`;
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/espacos?order=ordem.asc`, { headers: apiHeaders() });
+    if (!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+
+    if (!rows.length) {
+      el.innerHTML = `<div style="font-size:11.5px;color:var(--tx3);text-align:center;padding:20px">Nenhum espaço cadastrado. Execute a migration <strong>espacos-config.sql</strong> no Supabase.</div>`;
+      return;
+    }
+
+    const grupos = {};
+    rows.forEach(r => {
+      if (!grupos[r.grupo]) grupos[r.grupo] = [];
+      grupos[r.grupo].push(r);
+    });
+
+    const publicos  = rows.filter(r => r.disponivel_publico && r.ativo).length;
+    const restritos = rows.filter(r => !r.disponivel_publico && r.ativo).length;
+
+    let html = `
+      <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+        <div style="padding:6px 14px;border-radius:20px;background:rgba(58,170,92,.1);border:1px solid rgba(58,170,92,.3);font-size:11px;font-weight:700;color:var(--gr)">✓ ${publicos} disponíveis ao público</div>
+        <div style="padding:6px 14px;border-radius:20px;background:rgba(74,156,245,.1);border:1px solid rgba(74,156,245,.25);font-size:11px;font-weight:700;color:var(--sky)">${restritos} uso interno</div>
+      </div>`;
+
+    Object.entries(grupos).forEach(([grupo, itens]) => {
+      html += `<div style="font-size:9.5px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;padding:12px 0 6px;border-top:1px solid var(--bd1);margin-top:4px">${escapeHtml(grupo)}</div>`;
+      itens.forEach(r => {
+        const pub = r.disponivel_publico && r.ativo;
+        html += `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:8px;margin-bottom:4px;background:${pub ? 'rgba(58,170,92,.06)' : 'var(--bg-surface)'}">
+            <span style="font-size:12px;color:var(--tx1)">${escapeHtml(r.nome)}</span>
+            <button
+              onclick="agToggleEspacoPublico('${r.id}', ${!r.disponivel_publico})"
+              style="padding:4px 12px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid ${pub ? 'rgba(58,170,92,.4)' : 'var(--bd2)'};background:${pub ? 'rgba(58,170,92,.12)' : 'var(--bg-card)'};color:${pub ? 'var(--gr)' : 'var(--tx3)'};white-space:nowrap">
+              ${pub ? '✓ Público' : 'Interno'}
+            </button>
+          </div>`;
+      });
+    });
+
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = `<div style="color:var(--rose);font-size:11.5px">Erro: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+async function agToggleEspacoPublico(id, novoValor) {
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/espacos?id=eq.${id}`, {
+      method: "PATCH",
+      headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+      body: JSON.stringify({ disponivel_publico: novoValor }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    carregarGerenciamentoEspacos();
+  } catch(e) { T("Erro", e.message); }
+}
+
+window.carregarGerenciamentoEspacos = carregarGerenciamentoEspacos;
+window.agToggleEspacoPublico        = agToggleEspacoPublico;
+window.carregarSolicitacoesAgenda   = carregarSolicitacoesAgenda;
 window.agEmAnalise                = agEmAnalise;
 window.agRecusarSolicitacao       = agRecusarSolicitacao;
 window.agAprovarSolicitacao       = agAprovarSolicitacao;

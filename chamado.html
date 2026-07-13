@@ -579,7 +579,7 @@ function onSubChange() {
     if (sub === "Solicitação de pagamento") _show("fin-pag");
     if (sub === "Reembolso")               _show("fin-reimb");
   }
-  if (cat === "Agendamentos" && PROG_SUBS.has(sub)) _show("agend-prog");
+  if (cat === "Agendamentos" && PROG_SUBS.has(sub)) { _show("agend-prog"); _ensureEspacos(); }
 }
 
 function _ocultarFinanceiro() {
@@ -741,43 +741,51 @@ function _coletarFinanceiro(cat, sub) {
 }
 
 /* ── Coleta dados de agendamento de programação ────────────── */
-const SPACES_GROUPS = [
-  { grupo: "Bloco A — Penha Kids", itens: [
-    "Sala A01","Sala A02","Sala A03","Sala A04","Sala A05","Sala A06",
-    "Sala A07 — Estoque","Sala A08 — Dentista","Sala A09 — Copa","Banheiro",
-    "Templo — Penha Kids",
-  ]},
-  { grupo: "Bloco B — Prédio Principal", itens: [
-    "Auditório Principal","Auditório Penha Kids",
-    "Sala B2 — Adolescentes",
-    "Pátio — Salão Social","Cozinha","Casa de Apoio","Sala B3","Sala B4",
-    "Sala B06","Sala B07","Sala B08","Sala B09",
-    "Sala B10","Sala B11","Sala B12","Sala B13","Sala B14",
-  ]},
-  { grupo: "Bloco C — Estacionamento e Apoio", itens: [
-    "Estacionamento",
-  ]},
-  { grupo: "Bloco D — Administrativo e Pastoral", itens: [
-    "Sala D1 — Secretaria","Sala D2 — Sala de Gestão","Sala D3 — Hebron / Ação Social",
-    "Sala D4 — Bazar da Ação Social","Sala D5 — Estoque de Cestas","Sala D6 — Estoque de Produtos de Limpeza",
-    "Sala D7 — Gabinete Pr. Amauri","Sala D8 — Gabinete Pr. Felipe","Sala D9 — Gabinete Pr. Fábio",
-  ]},
-];
-(function () {
+async function carregarEspacosPublicos() {
   const grid = document.getElementById("f-ag-spaces");
-  SPACES_GROUPS.forEach(grp => {
-    const hdr = document.createElement("div");
-    hdr.style.cssText = "grid-column:1/-1;font-size:10px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.08em;padding:8px 0 3px;border-bottom:1px solid var(--bd);margin-top:6px";
-    hdr.textContent = grp.grupo;
-    grid.appendChild(hdr);
-    grp.itens.forEach(s => {
-      const lbl = document.createElement("label");
-      lbl.className = "space-chk";
-      lbl.innerHTML = `<input type="checkbox" value="${s}"> ${s}`;
-      grid.appendChild(lbl);
+  if (!grid) return;
+  grid.innerHTML = `<div style="grid-column:1/-1;font-size:11px;color:var(--tx3)">Carregando espaços...</div>`;
+  try {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/espacos?disponivel_publico=eq.true&ativo=eq.true&order=ordem.asc`,
+      { headers: HDRS }
+    );
+    if (!res.ok) throw new Error("Erro ao carregar espaços");
+    const rows = await res.json();
+    grid.innerHTML = "";
+    if (!rows.length) {
+      grid.innerHTML = `<div style="grid-column:1/-1;font-size:11px;color:var(--tx3)">Nenhum espaço disponível.</div>`;
+      return;
+    }
+    // Agrupa por grupo mantendo a ordem recebida
+    const grupos = {};
+    rows.forEach(r => {
+      if (!grupos[r.grupo]) grupos[r.grupo] = [];
+      grupos[r.grupo].push(r.nome);
     });
-  });
-})();
+    Object.entries(grupos).forEach(([grupo, itens]) => {
+      const hdr = document.createElement("div");
+      hdr.style.cssText = "grid-column:1/-1;font-size:10px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.08em;padding:8px 0 3px;border-bottom:1px solid var(--bd);margin-top:6px";
+      hdr.textContent = grupo;
+      grid.appendChild(hdr);
+      itens.forEach(nome => {
+        const lbl = document.createElement("label");
+        lbl.className = "space-chk";
+        lbl.innerHTML = `<input type="checkbox" value="${nome}"> ${nome}`;
+        grid.appendChild(lbl);
+      });
+    });
+  } catch (e) {
+    grid.innerHTML = `<div style="grid-column:1/-1;font-size:11px;color:var(--rose)">Não foi possível carregar os espaços. Descreva o local na descrição da solicitação.</div>`;
+  }
+}
+
+// Carrega quando o card de agendamento é exibido pela primeira vez
+let _espacosCarregados = false;
+const _origShowAgend = window.agSincronizarDataFim;
+function _ensureEspacos() {
+  if (!_espacosCarregados) { _espacosCarregados = true; carregarEspacosPublicos(); }
+}
 
 function agSincronizarDataFim() {
   const di = document.getElementById("f-ag-data");
