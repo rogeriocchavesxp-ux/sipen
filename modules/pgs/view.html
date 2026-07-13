@@ -13,6 +13,7 @@
       <div class="bni" onclick="go('pgs-estudos')">Estudos</div>
       <div class="bni" onclick="go('pgs-relatorios')">Relatórios</div>
       <div class="bni" onclick="go('pgs-oracao')">Oração</div>
+      <div class="bni" onclick="go('pgs-sorteio')">Família de Oração</div>
       <div class="bni" onclick="go('pgs-historico')">Histórico</div>
     </div>
     <div class="ct">
@@ -74,6 +75,7 @@
       <div class="bni" onclick="go('pgs-estudos')">Estudos</div>
       <div class="bni" onclick="go('pgs-relatorios')">Relatórios</div>
       <div class="bni" onclick="go('pgs-oracao')">Oração</div>
+      <div class="bni" onclick="go('pgs-sorteio')">Família de Oração</div>
       <div class="bni" onclick="go('pgs-historico')">Histórico</div>
     </div>
     <div class="ct">
@@ -97,6 +99,7 @@
       <div class="bni" onclick="go('pgs-estudos')">Estudos</div>
       <div class="bni" onclick="go('pgs-relatorios')">Relatórios</div>
       <div class="bni" onclick="go('pgs-oracao')">Oração</div>
+      <div class="bni" onclick="go('pgs-sorteio')">Família de Oração</div>
       <div class="bni" onclick="go('pgs-historico')">Histórico</div>
     </div>
     <div class="ct">
@@ -120,6 +123,7 @@
       <div class="bni" onclick="go('pgs-estudos')">Estudos</div>
       <div class="bni" onclick="go('pgs-relatorios')">Relatórios</div>
       <div class="bni" onclick="go('pgs-oracao')">Oração</div>
+      <div class="bni" onclick="go('pgs-sorteio')">Família de Oração</div>
       <div class="bni" onclick="go('pgs-historico')">Histórico</div>
     </div>
     <div class="ct"><div class="card"><div class="ctit">Encontros <span class="cact" onclick="listarModulo('PG_ENCONTROS','pgs-enc-list')">↻</span></div><div id="pgs-enc-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
@@ -136,6 +140,7 @@
       <div class="bni" onclick="go('pgs-estudos')">Estudos</div>
       <div class="bni" onclick="go('pgs-relatorios')">Relatórios</div>
       <div class="bni" onclick="go('pgs-oracao')">Oração</div>
+      <div class="bni" onclick="go('pgs-sorteio')">Família de Oração</div>
       <div class="bni" onclick="go('pgs-historico')">Histórico</div>
     </div>
     <div class="ct"><div class="card"><div class="ctit">Participantes <span class="cact" onclick="listarModulo('PG_PARTICIPANTES','pgs-part-list')">↻</span></div><div id="pgs-part-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
@@ -152,6 +157,7 @@
       <div class="bni" onclick="go('pgs-estudos')">Estudos</div>
       <div class="bni" onclick="go('pgs-relatorios')">Relatórios</div>
       <div class="bni" onclick="go('pgs-oracao')">Oração</div>
+      <div class="bni" onclick="go('pgs-sorteio')">Família de Oração</div>
       <div class="bni" onclick="go('pgs-historico')">Histórico</div>
     </div>
     <div class="ct"><div class="card"><div class="ctit">Estudos <span class="cact" onclick="listarModulo('ESTUDOS','pgs-est-list')">↻</span></div><div id="pgs-est-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
@@ -168,6 +174,7 @@
       <div class="bni" onclick="go('pgs-estudos')">Estudos</div>
       <div class="bni" onclick="go('pgs-relatorios')">Relatórios</div>
       <div class="bni" onclick="go('pgs-oracao')">Oração</div>
+      <div class="bni" onclick="go('pgs-sorteio')">Família de Oração</div>
       <div class="bni" onclick="go('pgs-historico')">Histórico</div>
     </div>
     <div class="ct"><div class="card"><div class="ctit">Relatórios <span class="cact" onclick="listarModulo('PG_RELATORIOS','pgs-rel-list')">↻</span></div><div id="pgs-rel-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
@@ -184,6 +191,7 @@
       <div class="bni" onclick="go('pgs-estudos')">Estudos</div>
       <div class="bni" onclick="go('pgs-relatorios')">Relatórios</div>
       <div class="bni" onclick="go('pgs-oracao')">Oração</div>
+      <div class="bni" onclick="go('pgs-sorteio')">Família de Oração</div>
       <div class="bni" onclick="go('pgs-historico')">Histórico</div>
     </div>
     <div class="ct"><div class="card"><div class="ctit">Pedidos de Oração <span class="cact" onclick="listarModulo('DEMANDAS','pgs-ora-list',{area:'PGs'})">↻</span></div><div id="pgs-ora-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
@@ -200,9 +208,75 @@
       <div class="bni" onclick="go('pgs-estudos')">Estudos</div>
       <div class="bni" onclick="go('pgs-relatorios')">Relatórios</div>
       <div class="bni" onclick="go('pgs-oracao')">Oração</div>
+      <div class="bni" onclick="go('pgs-sorteio')">Família de Oração</div>
       <div class="bni" onclick="go('pgs-historico')">Histórico</div>
     </div>
     <div class="ct"><div class="card"><div class="ctit">Histórico de PGs <span class="cact" onclick="listarModulo('PGS','pgs-hist-list')">↻</span></div><div id="pgs-hist-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+  </div>
+
+  <!-- ════ FAMÍLIA DE ORAÇÃO — SORTEIO ════════════ -->
+
+  <div class="view" id="v-pgs-sorteio">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(82,196,110,0.12);border-color:rgba(82,196,110,0.28)">🙏</div>
+      <div>
+        <div class="hero-lbl">Pequenos Grupos</div>
+        <div class="hero-ttl">Família de Oração</div>
+        <div class="hero-dsc">Sorteio semanal — cada família ora por outra. Gere os pares e notifique os responsáveis pelo WhatsApp.</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="pgsGerarSorteio()">+ Novo sorteio</button>
+      </div>
+    </div>
+
+    <div class="bnav" style="--mc:var(--gbr)">
+      <div class="bni" onclick="go('pgs-dash')">Dashboard</div>
+      <div class="bni" onclick="go('pgs-lista')">Lista de PGs</div>
+      <div class="bni" onclick="go('pgs-encontros')">Encontros</div>
+      <div class="bni" onclick="go('pgs-participantes')">Participantes</div>
+      <div class="bni" onclick="go('pgs-visitantes')">Visitantes</div>
+      <div class="bni" onclick="go('pgs-estudos')">Estudos</div>
+      <div class="bni" onclick="go('pgs-relatorios')">Relatórios</div>
+      <div class="bni" onclick="go('pgs-oracao')">Oração</div>
+      <div class="bni" onclick="go('pgs-sorteio')">Família de Oração</div>
+      <div class="bni" onclick="go('pgs-historico')">Histórico</div>
+    </div>
+
+    <div class="ct">
+
+      <!-- Preview do novo sorteio (oculto até gerar) -->
+      <div id="pgs-sorteio-preview" style="display:none">
+        <div class="card" style="border-color:rgba(82,196,110,.35)">
+          <div class="card-title" style="color:var(--gbr)">Pré-visualização do sorteio</div>
+          <div style="font-size:12px;color:var(--tx2);margin-bottom:14px" id="pgs-sorteio-preview-info"></div>
+          <div id="pgs-sorteio-preview-table"></div>
+          <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+            <button class="tbt pri" onclick="pgsSalvarESendWA()" id="btn-sorteio-salvar-wa" style="background:var(--gbr)">
+              Salvar e enviar WhatsApp para todos
+            </button>
+            <button class="tbt" onclick="pgsSalvarSorteio(false)" id="btn-sorteio-salvar">
+              Só salvar (sem WhatsApp)
+            </button>
+            <button class="tbt" onclick="pgsCancelarSorteio()" style="color:var(--tx3)">
+              Cancelar
+            </button>
+          </div>
+          <div id="pgs-sorteio-preview-err" class="err-msg" style="margin-top:10px"></div>
+        </div>
+      </div>
+
+      <!-- Rodadas salvas -->
+      <div class="card">
+        <div class="ctit">
+          Rodadas anteriores
+          <span class="cact" onclick="pgsSorteioLoad()">↻ Atualizar</span>
+        </div>
+        <div id="pgs-sorteio-lista">
+          <div style="color:var(--tx3);font-size:11.5px">Carregando...</div>
+        </div>
+      </div>
+
+    </div>
   </div>
 
   <!-- ════ CONGREGAÇÕES DASHBOARD ════════════════ -->
