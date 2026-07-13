@@ -330,7 +330,7 @@ function hdrs(extra={}) {
 let _cache = null;
 async function getDados() {
   if (_cache) return _cache;
-  const r = await fetch(`${SUPA_URL}/rest/v1/agenda?select=*&order=data.asc&limit=1000`, { headers: hdrs() });
+  const r = await fetch(`${SUPA_URL}/rest/v1/agenda?select=*&status=eq.confirmado&order=data.asc&limit=1000`, { headers: hdrs() });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   _cache = await r.json();
   return _cache;

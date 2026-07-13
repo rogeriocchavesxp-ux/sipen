@@ -422,9 +422,13 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
       <div class="ok-icon">✅</div>
       <div class="ok-title">Solicitação registrada</div>
       <div class="ok-ticket" id="ok-numero">—</div>
+      <div id="ok-protocolo" style="display:none;margin-top:8px;padding:8px 16px;background:rgba(214,148,0,.12);border:1px solid rgba(214,148,0,.3);border-radius:8px;font-size:12px;font-weight:700;color:#8A6010;text-align:center"></div>
+      <div id="ok-aviso-conflito" style="display:none;margin-top:10px;padding:10px 14px;background:rgba(224,85,85,.09);border:1px solid rgba(224,85,85,.28);border-radius:8px;font-size:12px;color:#C03030;text-align:center">
+        ⚠️ Já existe uma solicitação para este espaço e horário. A administração entrará em contato para verificar disponibilidade.
+      </div>
       <div class="ok-msg">
-        Nossa equipe analisará sua solicitação em breve e entrará em contato caso necessário.<br><br>
-        Guarde o número acima para referência.<br><br>
+        Nossa equipe analisará sua solicitação em breve e entrará em contato.<br><br>
+        Guarde os números acima para referência.<br><br>
         <strong>Obrigado pelo contato!</strong>
       </div>
       <button class="btn-novo" onclick="novoEnvio()">Registrar outra solicitação</button>
@@ -854,7 +858,53 @@ async function enviarChamado() {
 
     try { localStorage.setItem(_RL_KEY, String(Date.now())); } catch(_) {}
 
-    document.getElementById("ok-numero").textContent     = ticket;
+    // Se for solicitação de espaço, cria reserva provisória na agenda
+    let protocolo = null;
+    if (cat === "Agendamentos" && PROG_SUBS.has(sub)) {
+      const agData  = document.getElementById("f-ag-data")?.value || null;
+      const agHi    = document.getElementById("f-ag-inicio")?.value || null;
+      const agHf    = document.getElementById("f-ag-fim")?.value   || null;
+      const agPart  = parseInt(document.getElementById("f-ag-part")?.value || "0", 10) || null;
+      const espacos = [...document.querySelectorAll("#f-ag-spaces input:checked")].map(c => c.value);
+      const espaco  = espacos.join(", ") || null;
+
+      if (agData && agHi && espaco) {
+        const rpcRes = await fetch(`${SB_URL}/rest/v1/rpc/solicitar_agendamento`, {
+          method:  "POST",
+          headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            p_titulo:        titulo,
+            p_data:          agData,
+            p_hora_inicio:   agHi,
+            p_hora_fim:      agHf || null,
+            p_espaco:        espaco,
+            p_subcategoria:  sub,
+            p_observacao:    desc || null,
+            p_nome:          nome,
+            p_telefone:      tel,
+            p_participantes: agPart,
+            p_origem:        "link_publico",
+          }),
+        });
+        if (rpcRes.ok) {
+          const rpcData = await rpcRes.json().catch(() => ({}));
+          if (rpcData.ok) {
+            protocolo = rpcData.protocolo;
+          } else if (rpcData.conflito) {
+            // Conflito detectado — avisa mas não bloqueia (chamado já foi criado)
+            const avEl = document.getElementById("ok-aviso-conflito");
+            if (avEl) avEl.style.display = "";
+          }
+        }
+      }
+    }
+
+    document.getElementById("ok-numero").textContent = ticket;
+    const okProtoEl = document.getElementById("ok-protocolo");
+    if (okProtoEl) {
+      okProtoEl.textContent = protocolo ? `Reserva provisória: ${protocolo}` : "";
+      okProtoEl.style.display = protocolo ? "" : "none";
+    }
     document.getElementById("screen-form").style.display = "none";
     document.getElementById("screen-ok").style.display   = "block";
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -868,6 +918,10 @@ async function enviarChamado() {
 
 /* ── Novo envio ────────────────────────────────────────────── */
 function novoEnvio() {
+  const okProt = document.getElementById("ok-protocolo");
+  const okConf = document.getElementById("ok-aviso-conflito");
+  if (okProt) { okProt.textContent = ""; okProt.style.display = "none"; }
+  if (okConf) okConf.style.display = "none";
   ["f-nome","f-tel","f-titulo","f-desc","f-local",
    "f-fin-tipo","f-fin-valor","f-fin-venc","f-fin-benefic","f-fin-cpf",
    "f-fin-forma","f-fin-pix","f-fin-banco","f-fin-ag","f-fin-conta","f-fin-obs",
