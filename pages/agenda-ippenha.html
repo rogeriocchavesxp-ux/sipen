@@ -365,17 +365,24 @@ function renderEvs(rows, id) {
     el.innerHTML = `<div style="text-align:center;padding:28px;color:var(--tx3)"><div style="font-size:28px;margin-bottom:8px">📭</div><div>Nenhum evento encontrado</div></div>`;
     return;
   }
-  el.innerHTML = rows.map(e => `
+  el.innerHTML = rows.map(e => {
+    const multiDia = e.data_encerramento && e.data_encerramento !== e.data;
+    const fmtD = d => { if(!d) return ""; const [y,m,dia] = d.split("-"); return `${dia}/${m}/${y}`; };
+    const fmtDC = d => { if(!d) return ""; const [,m,dia] = d.split("-"); return `${dia}/${m}`; };
+    return `
     <div class="ev">
-      <div class="ev-dt">
+      <div class="ev-dt" style="${multiDia ? 'border-left:3px solid var(--acc)' : ''}">
         <div class="m">${(e.mes||"").slice(0,3)}</div>
         <div class="d">${(e.data||"").slice(8)||"—"}</div>
         <div class="w">${ds(e.dia_semana)}</div>
+        ${multiDia ? `<div style="font-size:8px;color:var(--acc);font-weight:700;margin-top:2px">→ ${fmtDC(e.data_encerramento)}</div>` : ""}
       </div>
       <div class="ev-body">
         <div class="ev-title">${esc(e.titulo||"—")}</div>
         <div class="ev-meta">
-          ${e.hora_inicio?`<span>🕐 ${e.hora_inicio.slice(0,5)}${e.hora_fim?" → "+e.hora_fim.slice(0,5):""}</span>`:""}
+          ${multiDia
+            ? `<span>📅 ${fmtD(e.data)} → ${fmtD(e.data_encerramento)}</span>`
+            : e.hora_inicio ? `<span>🕐 ${e.hora_inicio.slice(0,5)}${e.hora_fim?" → "+e.hora_fim.slice(0,5):""}</span>` : ""}
           ${e.espaco?`<span>📍 ${esc(e.espaco)}</span>`:""}
           ${e.organizador?`<span>👥 ${esc(e.organizador)}</span>`:""}
           ${e.responsavel?`<span>👤 ${esc(e.responsavel)}</span>`:""}
@@ -384,7 +391,8 @@ function renderEvs(rows, id) {
         </div>
         ${e.observacao?`<div style="font-size:10px;color:var(--tx3);margin-top:4px">${esc(e.observacao)}</div>`:""}
       </div>
-    </div>`).join("");
+    </div>`;
+  }).join("");
 }
 
 function sbadge(s) {
@@ -406,7 +414,16 @@ async function renderMes() {
   if (!mes) return;
   sv("l-mes", spin());
   const rows = await getDados();
-  const f = rows.filter(r=>r.mes===mes).sort((a,b)=>a.data.localeCompare(b.data));
+  const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const idx = meses.indexOf(mes);
+  if (idx < 0) return;
+  const ano = new Date().getFullYear();
+  const primeiroDia = `${ano}-${String(idx+1).padStart(2,"0")}-01`;
+  const ultimoDia   = `${ano}-${String(idx+1).padStart(2,"0")}-${new Date(ano,idx+1,0).getDate()}`;
+  // Inclui eventos que abrangem qualquer dia do mês (multi-dia incluso)
+  const f = rows.filter(r =>
+    r.data <= ultimoDia && (r.data_encerramento || r.data) >= primeiroDia
+  ).sort((a,b)=>a.data.localeCompare(b.data));
   renderEvs(f,"l-mes");
 }
 

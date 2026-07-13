@@ -65,6 +65,13 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 @media (max-width: 520px) { .row3 { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 380px) { .row3 { grid-template-columns: 1fr; } }
 
+.ag-periodo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px; }
+.ag-bloco { background: var(--bg); border: 1px solid var(--bd); border-radius: 10px; padding: 14px 14px 10px; }
+.ag-bloco-label { font-size: 9.5px; font-weight: 700; color: var(--tx3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+.ag-bloco .row2 { gap: 8px; }
+.ag-bloco .field { margin-bottom: 0; }
+@media (max-width: 520px) { .ag-periodo { grid-template-columns: 1fr; } }
+
 /* honeypot */
 .hp { position: absolute; left: -9999px; top: -9999px; opacity: 0; height: 0; overflow: hidden; }
 
@@ -382,19 +389,36 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
       <div class="card" id="agend-prog" style="display:none">
         <div class="card-title">📅 Dados da Programação</div>
 
-        <div class="row3">
-          <div class="field">
-            <label for="f-ag-data">Data <span class="req">*</span></label>
-            <input type="date" id="f-ag-data">
+        <div class="ag-periodo">
+          <div class="ag-bloco">
+            <div class="ag-bloco-label">Início da programação</div>
+            <div class="row2">
+              <div class="field">
+                <label for="f-ag-data">Data <span class="req">*</span></label>
+                <input type="date" id="f-ag-data" onchange="agSincronizarDataFim()">
+              </div>
+              <div class="field">
+                <label for="f-ag-inicio">Horário</label>
+                <input type="time" id="f-ag-inicio">
+              </div>
+            </div>
           </div>
-          <div class="field">
-            <label for="f-ag-inicio">Horário de início</label>
-            <input type="time" id="f-ag-inicio">
+          <div class="ag-bloco">
+            <div class="ag-bloco-label">Encerramento</div>
+            <div class="row2">
+              <div class="field">
+                <label for="f-ag-data-fim">Data</label>
+                <input type="date" id="f-ag-data-fim" onchange="agValidarPeriodo()">
+              </div>
+              <div class="field">
+                <label for="f-ag-fim">Horário</label>
+                <input type="time" id="f-ag-fim" onchange="agValidarPeriodo()">
+              </div>
+            </div>
           </div>
-          <div class="field">
-            <label for="f-ag-fim">Horário de encerramento</label>
-            <input type="time" id="f-ag-fim">
-          </div>
+        </div>
+        <div id="ag-periodo-erro" style="display:none;font-size:11.5px;color:var(--rose);margin-top:-6px;margin-bottom:10px;padding:8px 12px;background:rgba(224,85,85,.08);border-radius:7px;border:1px solid rgba(224,85,85,.25)">
+          O encerramento precisa ocorrer após o início da programação.
         </div>
 
         <div class="field">
@@ -768,19 +792,46 @@ const SPACES_GROUPS = [
   });
 })();
 
+function agSincronizarDataFim() {
+  const di = document.getElementById("f-ag-data");
+  const df = document.getElementById("f-ag-data-fim");
+  if (di && df && !df.value) df.value = di.value;
+  agValidarPeriodo();
+}
+
+function agValidarPeriodo() {
+  const di    = document.getElementById("f-ag-data")?.value;
+  const df    = document.getElementById("f-ag-data-fim")?.value;
+  const hi    = document.getElementById("f-ag-inicio")?.value;
+  const hf    = document.getElementById("f-ag-fim")?.value;
+  const erEl  = document.getElementById("ag-periodo-erro");
+  if (!erEl) return true;
+  if (!di || !df) { erEl.style.display = "none"; return true; }
+  const inicio = di + "T" + (hi || "00:00");
+  const fim    = df + "T" + (hf || "23:59");
+  const invalido = fim <= inicio && (df < di || (df === di && hf && hi && hf <= hi));
+  erEl.style.display = invalido ? "" : "none";
+  return !invalido;
+}
+
 function _coletarAgendamento(cat, sub) {
   if (cat !== "Agendamentos" || !PROG_SUBS.has(sub)) return { ok: true, extra: "" };
-  const data   = g("f-ag-data");
+  const dataI  = g("f-ag-data");
+  const dataF  = g("f-ag-data-fim") || dataI;
   const inicio = g("f-ag-inicio");
   const fim    = g("f-ag-fim");
   const part   = g("f-ag-part");
-  if (!data) return { ok: false, msg: "Informe a data da programação." };
+  if (!dataI) return { ok: false, msg: "Informe a data de início da programação." };
+  if (!agValidarPeriodo()) return { ok: false, msg: "O encerramento precisa ocorrer após o início da programação." };
+  const multiDia = dataF && dataF !== dataI;
   const espacos = [...document.querySelectorAll("#f-ag-spaces input:checked")].map(c => c.value);
   const linhas = [
     "━━━ Dados da Programação ━━━",
-    `Data: ${fmtDataBR(data)}`,
-    inicio   ? `Horário de início: ${inicio}`        : null,
-    fim      ? `Horário de encerramento: ${fim}`      : null,
+    multiDia
+      ? `Período: ${fmtDataBR(dataI)}${inicio ? " às " + inicio : ""} até ${fmtDataBR(dataF)}${fim ? " às " + fim : ""}`
+      : `Data: ${fmtDataBR(dataI)}`,
+    !multiDia && inicio ? `Horário de início: ${inicio}`    : null,
+    !multiDia && fim    ? `Horário de encerramento: ${fim}` : null,
     part     ? `Participantes estimados: ${part}`     : null,
     espacos.length ? `Espaços: ${espacos.join(", ")}` : null,
   ].filter(Boolean).join("\n");
@@ -862,6 +913,7 @@ async function enviarChamado() {
     let protocolo = null;
     if (cat === "Agendamentos" && PROG_SUBS.has(sub)) {
       const agData  = document.getElementById("f-ag-data")?.value || null;
+      const agDataF = document.getElementById("f-ag-data-fim")?.value || agData;
       const agHi    = document.getElementById("f-ag-inicio")?.value || null;
       const agHf    = document.getElementById("f-ag-fim")?.value   || null;
       const agPart  = parseInt(document.getElementById("f-ag-part")?.value || "0", 10) || null;
@@ -873,17 +925,18 @@ async function enviarChamado() {
           method:  "POST",
           headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" },
           body: JSON.stringify({
-            p_titulo:        titulo,
-            p_data:          agData,
-            p_hora_inicio:   agHi,
-            p_hora_fim:      agHf || null,
-            p_espaco:        espaco,
-            p_subcategoria:  sub,
-            p_observacao:    desc || null,
-            p_nome:          nome,
-            p_telefone:      tel,
-            p_participantes: agPart,
-            p_origem:        "link_publico",
+            p_titulo:            titulo,
+            p_data:              agData,
+            p_hora_inicio:       agHi,
+            p_hora_fim:          agHf || null,
+            p_espaco:            espaco,
+            p_subcategoria:      sub,
+            p_observacao:        desc || null,
+            p_nome:              nome,
+            p_telefone:          tel,
+            p_participantes:     agPart,
+            p_origem:            "link_publico",
+            p_data_encerramento: agDataF || null,
           }),
         });
         if (rpcRes.ok) {

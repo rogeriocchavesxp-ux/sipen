@@ -14,6 +14,7 @@ VIEW_AUTOLOAD["agenda-config"]        = null;
 
 
 /* ── AGENDA FUNCTIONS ─────────────────────── */
+const fmtDataBrCurto = d => { if(!d) return ""; const [,m,dia] = String(d).slice(0,10).split("-"); return `${dia}/${m}`; };
 let _agendaCache = null;
 
 async function getAgenda() {
@@ -79,7 +80,7 @@ async function carregarAgendaDash() {
             </div>
             <div style="flex:1;min-width:0">
               <div style="font-size:11.5px;font-weight:600;color:var(--tx1);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(e.titulo||"—")}</div>
-              <div style="font-size:10px;color:var(--tx3)">${e.hora_inicio?e.hora_inicio.slice(0,5):""} ${e.hora_fim?"→ "+e.hora_fim.slice(0,5):""}</div>
+              <div style="font-size:10px;color:var(--tx3)">${e.hora_inicio?e.hora_inicio.slice(0,5):""} ${e.hora_fim?"→ "+e.hora_fim.slice(0,5):""}${e.data_encerramento&&e.data_encerramento!==e.data?" · até "+fmtDataBrCurto(e.data_encerramento):""}</div>
               <div style="font-size:10px;color:var(--teal);margin-top:1px">${escapeHtml(e.espaco||"")}${e.organizador?" · "+escapeHtml(e.organizador):""}</div>
             </div>
             <button onclick='openCrudForm("AGENDA",${safeJsonForHtml(e)})' style="background:none;border:1px solid var(--bd1);border-radius:4px;color:var(--tx3);font-size:10px;padding:3px 6px;cursor:pointer;flex-shrink:0">✏️</button>
@@ -198,8 +199,21 @@ function agRenderMiniCal(rows, ano, mes) {
   const eventosPorDia = {};
   rows.forEach(r => {
     if(!r.data) return;
-    const [y,m,dia] = r.data.split("-").map(Number);
-    if(y===ano && m===mes+1) { if(!eventosPorDia[dia]) eventosPorDia[dia]=[]; eventosPorDia[dia].push(r); }
+    const dataIni = r.data;
+    const dataFim = r.data_encerramento || r.data;
+    // Expande evento em todos os dias que abrange dentro do mês exibido
+    const mesStr  = String(mes+1).padStart(2,"0");
+    const primeiroDiaMes = `${ano}-${mesStr}-01`;
+    const ultimoDiaMesN  = new Date(ano, mes+1, 0).getDate();
+    const ultimoDiaMes   = `${ano}-${mesStr}-${String(ultimoDiaMesN).padStart(2,"0")}`;
+    if(dataFim < primeiroDiaMes || dataIni > ultimoDiaMes) return;
+    const inicio = new Date(Math.max(new Date(dataIni), new Date(primeiroDiaMes)));
+    const fim    = new Date(Math.min(new Date(dataFim),  new Date(ultimoDiaMes)));
+    for(let d = new Date(inicio); d <= fim; d.setDate(d.getDate()+1)) {
+      const dia = d.getDate();
+      if(!eventosPorDia[dia]) eventosPorDia[dia] = [];
+      eventosPorDia[dia].push(r);
+    }
   });
 
   const primeiroDia = new Date(ano, mes, 1).getDay();
@@ -243,8 +257,7 @@ async function agVerDia(ano, mes, dia) {
   const rows = await getAgenda();
   const m = String(mes).padStart(2,"0"); const d = String(dia).padStart(2,"0");
   const dataStr = `${ano}-${m}-${d}`;
-  const evsDia = rows.filter(r=>r.data===dataStr);
-  const nomes = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const evsDia = rows.filter(r => r.data <= dataStr && (r.data_encerramento || r.data) >= dataStr);
   agMostrarExpandido(`${evsDia.length} evento${evsDia.length!==1?"s":""} em ${d}/${m}/${ano}`, evsDia);
 }
 
@@ -684,13 +697,13 @@ async function detectarConflitos() {
       for (let j = i+1; j < rows.length; j++) {
         const a = rows[i], b = rows[j];
         if (!a.espaco || !b.espaco) continue;
-        if (a.data !== b.data) continue;
         if (a.espaco.toLowerCase() !== b.espaco.toLowerCase()) continue;
-        if (!a.hora_inicio || !b.hora_inicio) continue;
-        // Check overlap
-        const aI = a.hora_inicio, aF = a.hora_fim||"23:59";
-        const bI = b.hora_inicio, bF = b.hora_fim||"23:59";
-        if (aI < bF && bI < aF) conflitos.push([a,b]);
+        // Verifica sobreposição de períodos (data + hora)
+        const aIni = (a.data || "") + "T" + (a.hora_inicio || "00:00");
+        const aFim = (a.data_encerramento || a.data || "") + "T" + (a.hora_fim || "23:59");
+        const bIni = (b.data || "") + "T" + (b.hora_inicio || "00:00");
+        const bFim = (b.data_encerramento || b.data || "") + "T" + (b.hora_fim || "23:59");
+        if (aIni < bFim && bIni < aFim) conflitos.push([a,b]);
       }
     }
     if (!conflitos.length) {
