@@ -523,6 +523,42 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
         </div>
       </div>
 
+      <!-- ── Comunicação: Solicitação de Arte / Produção ──────── -->
+      <div class="card" id="com-sol-sec" style="display:none">
+        <div class="card-title">📢 Detalhes da Solicitação</div>
+
+        <div class="field">
+          <label>Áreas de comunicação necessárias</label>
+          <div class="spaces-grid" id="com-areas-grid" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))">
+            <!-- preenchido via JS -->
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Formatos de divulgação</label>
+          <div class="s2-fmt-grid" id="com-fmt-grid">
+            <!-- preenchido via JS -->
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-com-data">Data do evento</label>
+            <input type="date" id="f-com-data" onchange="_comSugPrazo()">
+          </div>
+          <div class="field">
+            <label for="f-com-hora">Horário do evento</label>
+            <input type="time" id="f-com-hora">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-com-prazo">Prazo de entrega</label>
+          <input type="date" id="f-com-prazo" onchange="_comValidarPrazo()">
+          <div id="com-prazo-aviso" style="display:none;font-size:11px;color:var(--rose);margin-top:4px"></div>
+        </div>
+      </div>
+
       <button type="button" class="btn-submit" id="btn-enviar" onclick="enviarChamado()">
         Enviar Solicitação
       </button>
@@ -648,6 +684,11 @@ const CATS = [
   { nome:"Oração",                   icon:"🙏", resp:"Pastores / Liderança",             subcats:["Pedido de oração"] },
   { nome:"Financeiro",               icon:"💰", resp:"Tesouraria / Financeiro",          subcats:["Solicitação de pagamento","Reembolso","Prestação de contas","Solicitação de verba","Orçamento de despesas"] },
   { nome:"Ação Social / Hebron",     icon:"🤝", resp:"Hebron / Ação Social",             subcats:["Solicitação de ajuda","Projetos sociais","Distribuição de recursos","Cadastro em programas sociais"] },
+  { nome:"Comunicação",             icon:"📢", resp:"Ministério de Comunicação",          subcats:[
+    { grupo:"Arte Digital",  itens:["Banner e Redes Sociais","Arte para WhatsApp","Story / Reels","Apresentação e Slides","Material Impresso"] },
+    { grupo:"Produção AV",   itens:["Transmissão ao Vivo","Sonorização","Projeção","Iluminação Especial"] },
+    { grupo:"Geral",         itens:["Comunicação Geral"] },
+  ]},
 ];
 
 /* ── Preenche categorias ───────────────────────────────────── */
@@ -739,20 +780,134 @@ document.addEventListener("click", function(e) {
 
 const PROG_SUBS = new Set(["Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"]);
 
+/* ── Comunicação: mapeamentos ──────────────────────────────── */
+const COM_SUBS = new Set([
+  "Banner e Redes Sociais","Arte para WhatsApp","Story / Reels",
+  "Apresentação e Slides","Material Impresso",
+  "Transmissão ao Vivo","Sonorização","Projeção","Iluminação Especial",
+  "Comunicação Geral",
+]);
+
+const COM_AREAS_ALL = ["Transmissão ao vivo","Mídias","Iluminação","Projeção","Sonorização"];
+
+const COM_SUB_AREAS = {
+  "Banner e Redes Sociais":  ["Mídias"],
+  "Arte para WhatsApp":      ["Mídias"],
+  "Story / Reels":           ["Mídias"],
+  "Apresentação e Slides":   ["Mídias","Projeção"],
+  "Material Impresso":       ["Mídias"],
+  "Transmissão ao Vivo":     ["Transmissão ao vivo"],
+  "Sonorização":             ["Sonorização"],
+  "Projeção":                ["Projeção"],
+  "Iluminação Especial":     ["Iluminação"],
+  "Comunicação Geral":       [],
+};
+
+const COM_SUB_FORMATOS = {
+  "Banner e Redes Sociais":  ["1:1 WhatsApp","16:9 avisos","Banner digital"],
+  "Arte para WhatsApp":      ["1:1 WhatsApp"],
+  "Story / Reels":           ["Story Instagram"],
+  "Apresentação e Slides":   ["16:9 avisos"],
+  "Material Impresso":       ["Faixa","Panfleto"],
+  "Transmissão ao Vivo":     [],
+  "Sonorização":             [],
+  "Projeção":                [],
+  "Iluminação Especial":     [],
+  "Comunicação Geral":       [],
+};
+
+function _ensureComSol(sub) {
+  // Monta áreas (uma vez)
+  const areasEl = document.getElementById("com-areas-grid");
+  if (areasEl && !areasEl.dataset.built) {
+    areasEl.dataset.built = "1";
+    areasEl.innerHTML = COM_AREAS_ALL.map(a =>
+      `<label class="space-chk">
+        <input type="checkbox" name="com-area" value="${a}"> ${a}
+      </label>`
+    ).join("");
+  }
+  // Monta formatos (uma vez)
+  const fmtsEl = document.getElementById("com-fmt-grid");
+  if (fmtsEl && !fmtsEl.dataset.built) {
+    fmtsEl.dataset.built = "1";
+    fmtsEl.innerHTML = S2_FORMATOS.map(f =>
+      `<label class="s2-fmt-lbl"><input type="checkbox" name="com-fmt" value="${f.label}"> ${f.label}</label>`
+    ).join("");
+  }
+  // Pré-seleciona baseado na subcategoria
+  document.querySelectorAll("input[name='com-area']").forEach(cb => {
+    cb.checked = (COM_SUB_AREAS[sub] || []).includes(cb.value);
+  });
+  document.querySelectorAll("input[name='com-fmt']").forEach(cb => {
+    cb.checked = (COM_SUB_FORMATOS[sub] || []).includes(cb.value);
+  });
+}
+
+function _comSugPrazo() {
+  const dataEvt = document.getElementById("f-com-data")?.value;
+  const prazoEl = document.getElementById("f-com-prazo");
+  if (prazoEl && dataEvt && !prazoEl.value) {
+    const d = new Date(dataEvt + "T12:00:00");
+    d.setDate(d.getDate() - 2);
+    prazoEl.value = d.toISOString().slice(0, 10);
+  }
+  _comValidarPrazo();
+}
+
+function _comValidarPrazo() {
+  const data  = document.getElementById("f-com-data")?.value;
+  const prazo = document.getElementById("f-com-prazo")?.value;
+  const av    = document.getElementById("com-prazo-aviso");
+  if (!av) return;
+  if (prazo && data && prazo > data) {
+    av.textContent   = "O prazo de entrega não pode ser posterior à data do evento.";
+    av.style.display = "";
+  } else {
+    av.style.display = "none";
+  }
+}
+
+function _coletarComunicacao(cat, sub) {
+  if (cat !== "Comunicação" || !COM_SUBS.has(sub)) return { ok: true, extra: "" };
+  const areas    = [...document.querySelectorAll("input[name='com-area']:checked")].map(e => e.value);
+  const formatos = [...document.querySelectorAll("input[name='com-fmt']:checked")].map(e => e.value);
+  const dataEvt  = document.getElementById("f-com-data")?.value  || null;
+  const hora     = document.getElementById("f-com-hora")?.value  || null;
+  const prazo    = document.getElementById("f-com-prazo")?.value || null;
+  if (prazo && dataEvt && prazo > dataEvt)
+    return { ok: false, msg: "O prazo de entrega não pode ser posterior à data do evento." };
+  const linhas = [
+    "━━━ Comunicação ━━━",
+    areas.length    ? `Áreas: ${areas.join(", ")}`     : null,
+    formatos.length ? `Formatos: ${formatos.join(", ")}` : null,
+    dataEvt         ? `Data do evento: ${fmtDataBR(dataEvt)}${hora ? " · " + hora : ""}` : null,
+    prazo           ? `Prazo de entrega: ${fmtDataBR(prazo)}`  : null,
+  ].filter(Boolean).join("\n");
+  return {
+    ok: true,
+    extra: linhas ? "\n\n" + linhas : "",
+    comPayload: { areas, formatos, data_evento: dataEvt, horario_evento: hora, prazo_entrega: prazo },
+  };
+}
+
 function onSubChange() {
   const cat = document.getElementById("f-cat").value;
   const sub = document.getElementById("f-sub").value;
-  _ocultarFinanceiro();
+  _ocultarExtras();
   if (cat === "Financeiro") {
     if (sub === "Solicitação de pagamento") _show("fin-pag");
     if (sub === "Reembolso")               _show("fin-reimb");
   }
-  if (cat === "Agendamentos" && PROG_SUBS.has(sub)) { _show("agend-prog"); _ensureEspacos(); }
+  if (cat === "Agendamentos"  && PROG_SUBS.has(sub)) { _show("agend-prog"); _ensureEspacos(); }
+  if (cat === "Comunicação"   && COM_SUBS.has(sub))  { _show("com-sol-sec"); _ensureComSol(sub); }
 }
 
-function _ocultarFinanceiro() {
-  ["fin-pag","fin-reimb","fin-pix-sec","fin-ted-sec","agend-prog"].forEach(_hide);
+function _ocultarExtras() {
+  ["fin-pag","fin-reimb","fin-pix-sec","fin-ted-sec","agend-prog","com-sol-sec"].forEach(_hide);
 }
+
+function _ocultarFinanceiro() { _ocultarExtras(); }
 
 function onFormaChange() {
   const forma = document.getElementById("f-fin-forma").value;
@@ -1285,11 +1440,13 @@ async function enviarChamado() {
   if (!fin.ok)   { mostrarErro(fin.msg);   return; }
   const agend = _coletarAgendamento(cat, sub);
   if (!agend.ok) { mostrarErro(agend.msg); return; }
+  const com   = _coletarComunicacao(cat, sub);
+  if (!com.ok)   { mostrarErro(com.msg);   return; }
 
   const catObj  = CATS.find(c => c.nome === cat);
   const resp    = catObj?.resp || "Administração Geral";
   const hoje    = new Date().toISOString().split("T")[0];
-  const descFinal = desc + fin.extra + agend.extra;
+  const descFinal = desc + fin.extra + agend.extra + com.extra;
 
   const newId = crypto.randomUUID();
 
@@ -1373,6 +1530,28 @@ async function enviarChamado() {
       }
     }
 
+    // Se for categoria Comunicação, cria solicitação de arte no módulo
+    if (cat === "Comunicação" && com.comPayload) {
+      const cp = com.comPayload;
+      fetch(`${SB_URL}/rest/v1/rpc/criar_sol_comunicacao_direta`, {
+        method:  "POST",
+        headers: HDRS,
+        body: JSON.stringify({
+          p_responsavel:    nome,
+          p_telefone:       tel,
+          p_descricao:      desc + com.extra,
+          p_titulo:         titulo,
+          p_areas:          cp.areas.length    ? cp.areas    : null,
+          p_formatos:       cp.formatos.length ? cp.formatos : null,
+          p_data_evento:    cp.data_evento    || null,
+          p_horario_evento: cp.horario_evento || null,
+          p_local_evento:   local             || null,
+          p_prazo:          cp.prazo_entrega  || null,
+          p_subcategoria:   sub,
+        }),
+      }).catch(() => {});
+    }
+
     // Verifica se usuário quer arte digital (só quando é agendamento de programação)
     const arteVal = document.querySelector("input[name='ag-arte']:checked")?.value;
     const querArte = cat === "Agendamentos" && PROG_SUBS.has(sub) && arteVal === "sim" && agendaId;
@@ -1416,6 +1595,12 @@ function novoEnvio() {
   const okConf = document.getElementById("ok-aviso-conflito");
   if (okProt) { okProt.innerHTML = ""; okProt.style.display = "none"; okProt.style.background = ""; okProt.style.borderColor = ""; okProt.style.color = ""; }
   if (okConf) okConf.style.display = "none";
+  // Reseta campos de comunicação
+  ["f-com-data","f-com-hora","f-com-prazo"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+  document.querySelectorAll("input[name='com-area'],input[name='com-fmt']").forEach(cb => cb.checked = false);
+  const comAv = document.getElementById("com-prazo-aviso");
+  if (comAv) comAv.style.display = "none";
+  // Reseta campos gerais
   ["f-nome","f-tel","f-titulo","f-desc","f-local",
    "f-fin-tipo","f-fin-valor","f-fin-venc","f-fin-benefic","f-fin-cpf",
    "f-fin-forma","f-fin-pix","f-fin-banco","f-fin-ag","f-fin-conta","f-fin-obs",
