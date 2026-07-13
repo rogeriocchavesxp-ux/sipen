@@ -157,6 +157,24 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 }
 .space-chk:has(input:checked) { border-color: var(--acc); background: var(--accbg); color: var(--acc); }
 .space-chk input[type="checkbox"] { accent-color: var(--acc); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
+/* Espaço indisponível */
+.space-chk.sc-indisponivel {
+  opacity: .5; cursor: not-allowed; pointer-events: none;
+  border-color: var(--inpbd); background: var(--bg); color: var(--tx3);
+}
+.space-chk.sc-indisponivel input { cursor: not-allowed; }
+.sc-lock { font-size: 10px; margin-left: auto; flex-shrink: 0; color: var(--tx3); }
+/* Status de disponibilidade */
+.ag-disp-info {
+  font-size: 11px; color: var(--tx3); padding: 7px 10px;
+  border-radius: 7px; border: 1px solid var(--bd); background: var(--inp);
+  display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+}
+.ag-disp-aviso {
+  font-size: 11.5px; color: #8A4000; padding: 8px 12px;
+  border-radius: 7px; border: 1px solid rgba(214,148,0,.35);
+  background: rgba(214,148,0,.09); margin-bottom: 8px; display: none;
+}
 </style>
 </head>
 <body>
@@ -393,15 +411,15 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
           </div>
           <div class="field">
             <label for="f-ag-inicio">Hora início</label>
-            <input type="time" id="f-ag-inicio">
+            <input type="time" id="f-ag-inicio" onchange="agValidarPeriodo();verificarDisponibilidade()">
           </div>
           <div class="field">
             <label for="f-ag-data-fim">Data final</label>
-            <input type="date" id="f-ag-data-fim" onchange="agValidarPeriodo()">
+            <input type="date" id="f-ag-data-fim" onchange="agValidarPeriodo();verificarDisponibilidade()">
           </div>
           <div class="field">
             <label for="f-ag-fim">Hora final</label>
-            <input type="time" id="f-ag-fim" onchange="agValidarPeriodo()">
+            <input type="time" id="f-ag-fim" onchange="agValidarPeriodo();verificarDisponibilidade()">
           </div>
         </div>
         <div id="ag-periodo-erro" style="display:none;font-size:11.5px;color:var(--rose);margin-top:-6px;margin-bottom:10px;padding:8px 12px;background:rgba(224,85,85,.08);border-radius:7px;border:1px solid rgba(224,85,85,.25)">
@@ -415,6 +433,13 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 
         <div class="field">
           <label>Espaços necessários</label>
+          <div id="ag-disp-hint" class="ag-disp-info">
+            ℹ️ Informe data e horário de início para consultar a disponibilidade.
+          </div>
+          <div id="ag-disp-status" class="ag-disp-info" style="display:none">
+            <span id="ag-disp-status-txt">Verificando disponibilidade...</span>
+          </div>
+          <div id="ag-disp-aviso" class="ag-disp-aviso"></div>
           <div class="spaces-grid" id="f-ag-spaces"></div>
         </div>
       </div>
@@ -771,10 +796,13 @@ async function carregarEspacosPublicos() {
       itens.forEach(nome => {
         const lbl = document.createElement("label");
         lbl.className = "space-chk";
-        lbl.innerHTML = `<input type="checkbox" value="${nome}"> ${nome}`;
+        lbl.dataset.espaco = nome;
+        lbl.innerHTML = `<input type="checkbox" value="${nome}"><span class="sc-nome">${nome}</span><span class="sc-lock" style="display:none">🔒</span>`;
         grid.appendChild(lbl);
       });
     });
+    // Se o período já estiver preenchido quando os espaços carregarem, verifica imediatamente
+    verificarDisponibilidade();
   } catch (e) {
     grid.innerHTML = `<div style="grid-column:1/-1;font-size:11px;color:var(--rose)">Não foi possível carregar os espaços. Descreva o local na descrição da solicitação.</div>`;
   }
@@ -792,6 +820,7 @@ function agSincronizarDataFim() {
   const df = document.getElementById("f-ag-data-fim");
   if (di && df && !df.value) df.value = di.value;
   agValidarPeriodo();
+  verificarDisponibilidade();
 }
 
 function agValidarPeriodo() {
@@ -807,6 +836,97 @@ function agValidarPeriodo() {
   const invalido = fim <= inicio && (df < di || (df === di && hf && hi && hf <= hi));
   erEl.style.display = invalido ? "" : "none";
   return !invalido;
+}
+
+/* ── Disponibilidade de espaços ──────────────────────────── */
+let _dispTimer = null;
+function verificarDisponibilidade() {
+  clearTimeout(_dispTimer);
+  _dispTimer = setTimeout(_doVerificarDisp, 350);
+}
+
+async function _doVerificarDisp() {
+  const di = document.getElementById("f-ag-data")?.value;
+  const hi = document.getElementById("f-ag-inicio")?.value;
+  const df = document.getElementById("f-ag-data-fim")?.value;
+  const hf = document.getElementById("f-ag-fim")?.value;
+
+  const grid    = document.getElementById("f-ag-spaces");
+  const hint    = document.getElementById("ag-disp-hint");
+  const status  = document.getElementById("ag-disp-status");
+  const stTxt   = document.getElementById("ag-disp-status-txt");
+  const aviso   = document.getElementById("ag-disp-aviso");
+
+  const lbls = grid ? [...grid.querySelectorAll(".space-chk")] : [];
+
+  // Sem período: restaura estado neutro
+  if (!di || !hi) {
+    if (hint)   hint.style.display   = "";
+    if (status) status.style.display = "none";
+    lbls.forEach(lbl => {
+      lbl.classList.remove("sc-indisponivel");
+      const inp = lbl.querySelector("input");
+      if (inp) inp.disabled = false;
+      const lock = lbl.querySelector(".sc-lock");
+      if (lock) lock.style.display = "none";
+    });
+    return;
+  }
+
+  if (hint)   hint.style.display   = "none";
+  if (status) { status.style.display = ""; if (stTxt) stTxt.textContent = "Verificando disponibilidade..."; }
+
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/rpc/espacos_disponibilidade`, {
+      method:  "POST",
+      headers: HDRS,
+      body: JSON.stringify({
+        p_data_inicio: di,
+        p_hora_inicio: hi,
+        p_data_fim:    df || di,
+        p_hora_fim:    hf || null,
+      }),
+    });
+    if (!res.ok) throw new Error();
+    const dados = await res.json();
+
+    const dispMap = {};
+    dados.forEach(item => { dispMap[item.nome] = item.disponivel; });
+
+    const removidos = [];
+    lbls.forEach(lbl => {
+      const inp  = lbl.querySelector("input");
+      const lock = lbl.querySelector(".sc-lock");
+      const nome = lbl.dataset.espaco || inp?.value;
+      if (!(nome in dispMap)) return;
+
+      const disp = dispMap[nome];
+      if (!disp) {
+        if (inp?.checked) { inp.checked = false; removidos.push(nome); }
+        inp.disabled = true;
+        lbl.classList.add("sc-indisponivel");
+        if (lock) lock.style.display = "";
+      } else {
+        inp.disabled = false;
+        lbl.classList.remove("sc-indisponivel");
+        if (lock) lock.style.display = "none";
+      }
+    });
+
+    const livres     = dados.filter(d => d.disponivel).length;
+    const ocupados   = dados.filter(d => !d.disponivel).length;
+    if (stTxt) stTxt.textContent = ocupados > 0
+      ? `✓ ${livres} disponível${livres !== 1 ? "s" : ""} · 🔒 ${ocupados} indisponível${ocupados !== 1 ? "s" : ""} neste período`
+      : `✓ Todos os espaços disponíveis para o período informado`;
+
+    if (removidos.length && aviso) {
+      aviso.textContent = `⚠️ ${removidos.join(", ")} ficou indisponível e foi desmarcado automaticamente.`;
+      aviso.style.display = "";
+      setTimeout(() => { aviso.style.display = "none"; }, 7000);
+    }
+  } catch (_) {
+    if (stTxt) stTxt.textContent = "Não foi possível verificar disponibilidade.";
+  }
 }
 
 function _coletarAgendamento(cat, sub) {

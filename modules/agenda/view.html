@@ -422,9 +422,34 @@
       <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Novo Evento</button></div>
     </div>
     <div class="ct">
+      <!-- Mapa de ocupação -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="ctit">Mapa de Ocupação — Consultar Disponibilidade</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">
+          <div>
+            <div style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Data início</div>
+            <input type="date" id="ag-disp-di" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-input);color:var(--tx1);font-size:12.5px;font-family:inherit;outline:none">
+          </div>
+          <div>
+            <div style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Hora início</div>
+            <input type="time" id="ag-disp-hi" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-input);color:var(--tx1);font-size:12.5px;font-family:inherit;outline:none">
+          </div>
+          <div>
+            <div style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Data final</div>
+            <input type="date" id="ag-disp-df" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-input);color:var(--tx1);font-size:12.5px;font-family:inherit;outline:none">
+          </div>
+          <div>
+            <div style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Hora final</div>
+            <input type="time" id="ag-disp-hf" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-input);color:var(--tx1);font-size:12.5px;font-family:inherit;outline:none">
+          </div>
+        </div>
+        <button onclick="agVerificarOcupacao()" style="padding:8px 20px;border-radius:7px;border:none;background:var(--teal);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;margin-bottom:14px">Verificar disponibilidade</button>
+        <div id="ag-mapa-ocupacao" style="min-height:40px"></div>
+      </div>
+
       <div class="g2">
         <div class="card">
-          <div class="ctit">Espaços Cadastrados</div>
+          <div class="ctit">Espaços — Visibilidade no Formulário Público</div>
           <div id="ag-config-espacos"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
         </div>
         <div class="card">
