@@ -10,18 +10,23 @@
 -- Pares: cada linha = família A ora por família B (texto puro).
 -- ═══════════════════════════════════════════════════════════════
 
+-- Remove versão anterior (schema diferente — sem evento_id, usava UUIDs de familias)
+DROP TABLE IF EXISTS public.fo_sorteio_pares   CASCADE;
+DROP TABLE IF EXISTS public.fo_sorteio_rodadas CASCADE;
+DROP TABLE IF EXISTS public.familias_oracao     CASCADE;
+
 -- Rodadas de sorteio (uma por evento por semana)
-CREATE TABLE IF NOT EXISTS public.fo_sorteio_rodadas (
+CREATE TABLE public.fo_sorteio_rodadas (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   evento_id   UUID NOT NULL REFERENCES public.eventos(id) ON DELETE CASCADE,
   data        DATE NOT NULL DEFAULT CURRENT_DATE,
   criado_em   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_fo_rodadas_evento ON public.fo_sorteio_rodadas(evento_id);
+CREATE INDEX idx_fo_rodadas_evento ON public.fo_sorteio_rodadas(evento_id);
 
 -- Pares gerados por rodada (texto puro — sem FK para inscrições)
-CREATE TABLE IF NOT EXISTS public.fo_sorteio_pares (
+CREATE TABLE public.fo_sorteio_pares (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   rodada_id       UUID NOT NULL REFERENCES public.fo_sorteio_rodadas(id) ON DELETE CASCADE,
   familia_nome    TEXT NOT NULL,
@@ -32,7 +37,7 @@ CREATE TABLE IF NOT EXISTS public.fo_sorteio_pares (
   wa_enviado_em   TIMESTAMPTZ
 );
 
-CREATE INDEX IF NOT EXISTS idx_fo_pares_rodada ON public.fo_sorteio_pares(rodada_id);
+CREATE INDEX idx_fo_pares_rodada ON public.fo_sorteio_pares(rodada_id);
 
 -- RLS
 ALTER TABLE public.fo_sorteio_rodadas ENABLE ROW LEVEL SECURITY;
