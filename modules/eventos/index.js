@@ -628,7 +628,7 @@
       ...rest,
       titulo:     rest.titulo + " (cópia)",
       status:     "rascunho",
-      data_inicio: null,
+      data_inicio: new Date().toISOString().slice(0, 10),
       data_fim:    null,
       criado_por:      _authUserId(),
       criado_por_nome: _userName(),
