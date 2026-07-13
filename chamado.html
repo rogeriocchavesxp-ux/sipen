@@ -175,6 +175,67 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
   border-radius: 7px; border: 1px solid rgba(214,148,0,.35);
   background: rgba(214,148,0,.09); margin-bottom: 8px; display: none;
 }
+
+/* ── Arte Digital / Step 2 ─────────────────────────────────── */
+.ag-arte-sep {
+  margin-top: 18px; padding-top: 18px;
+  border-top: 1px solid var(--bd);
+}
+.ag-arte-title {
+  font-size: 10.5px; font-weight: 700; color: #7057ad;
+  text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px;
+}
+.ag-arte-desc {
+  font-size: 11.5px; color: var(--tx3); margin-bottom: 12px; line-height: 1.5;
+}
+.ag-arte-radios { display: flex; gap: 20px; }
+.ag-arte-radios label {
+  display: flex; align-items: center; gap: 7px;
+  cursor: pointer; font-size: 13px; color: var(--tx1); font-weight: 400;
+}
+
+/* Stepper */
+.ag-stepper {
+  display: flex; align-items: center; margin-bottom: 20px;
+}
+.ag-step { display: flex; align-items: center; gap: 7px; }
+.ag-step-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800; flex-shrink: 0;
+}
+.ag-step-num.done   { background: var(--gr);   color: #fff; }
+.ag-step-num.active { background: #7057ad;      color: #fff; }
+.ag-step-num.idle   { background: var(--bd);    color: var(--tx3); }
+.ag-step-label { font-size: 12px; font-weight: 600; }
+.ag-step-label.done   { color: var(--gr); }
+.ag-step-label.active { color: #7057ad; }
+.ag-step-label.idle   { color: var(--tx3); }
+.ag-step-sep { flex: 1; height: 2px; background: var(--bd); margin: 0 10px; }
+.ag-step-sep.done { background: var(--gr); }
+
+/* Formatos tags (step 2) */
+.s2-fmt-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.s2-fmt-lbl {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 20px;
+  border: 1.5px solid var(--inpbd); cursor: pointer;
+  font-size: 12.5px; background: var(--inp); color: var(--tx2);
+  user-select: none; transition: border-color .1s, background .1s, color .1s;
+}
+.s2-fmt-lbl:has(input:checked) {
+  border-color: #7057ad;
+  background: rgba(112,87,173,.12);
+  color: #7057ad;
+}
+
+/* Step 2 aviso programação pendente */
+.s2-aviso-pend {
+  display: none; font-size: 11.5px; color: #8A6010;
+  padding: 9px 13px; background: rgba(214,148,0,.1);
+  border: 1px solid rgba(214,148,0,.35); border-radius: 8px;
+  margin-bottom: 16px; line-height: 1.5;
+}
 </style>
 </head>
 <body>
@@ -442,6 +503,24 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
           <div id="ag-disp-aviso" class="ag-disp-aviso"></div>
           <div class="spaces-grid" id="f-ag-spaces"></div>
         </div>
+
+        <!-- Arte Digital -->
+        <div class="ag-arte-sep">
+          <div class="ag-arte-title">📢 Comunicação e Divulgação</div>
+          <div class="ag-arte-desc">
+            Esta programação precisará de arte digital? (banner, arte para WhatsApp, redes sociais, avisos, etc.)
+          </div>
+          <div class="ag-arte-radios">
+            <label>
+              <input type="radio" name="ag-arte" value="sim" style="accent-color:#7057ad;width:15px;height:15px">
+              Sim, vou precisar de arte
+            </label>
+            <label>
+              <input type="radio" name="ag-arte" value="nao" style="accent-color:#7057ad;width:15px;height:15px">
+              Não, obrigado
+            </label>
+          </div>
+        </div>
       </div>
 
       <button type="button" class="btn-submit" id="btn-enviar" onclick="enviarChamado()">
@@ -469,6 +548,70 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
       </div>
       <button class="btn-novo" onclick="novoEnvio()">Registrar outra solicitação</button>
     </div>
+  </div>
+
+  <!-- ── Etapa 2: Solicitação de Arte Digital ────────────── -->
+  <div id="screen-step2" style="display:none">
+
+    <!-- Stepper -->
+    <div class="ag-stepper">
+      <div class="ag-step">
+        <div class="ag-step-num done">✓</div>
+        <span class="ag-step-label done">Programação</span>
+      </div>
+      <div class="ag-step-sep done"></div>
+      <div class="ag-step">
+        <div class="ag-step-num active">2</div>
+        <span class="ag-step-label active">Comunicação</span>
+      </div>
+    </div>
+
+    <!-- Resumo da etapa 1 -->
+    <div id="s2-resumo" style="font-size:12px;color:var(--tx2);padding:11px 15px;background:var(--card);border:1px solid var(--bd);border-radius:10px;margin-bottom:16px;line-height:1.6"></div>
+
+    <div class="card" style="border-color:rgba(112,87,173,.3)">
+      <div class="card-title" style="color:#7057ad">Etapa 2 de 2 — Arte Digital</div>
+
+      <div id="s2-aviso-pend" class="s2-aviso-pend">
+        ⚠️ Esta programação ainda aguarda aprovação administrativa. Você pode registrar a solicitação de arte agora; a equipe de Comunicação acompanhará desde o início.
+      </div>
+
+      <div class="field">
+        <label for="s2-desc">O que precisa ser criado? <span class="req">*</span></label>
+        <textarea id="s2-desc" rows="4" placeholder="Descreva o que precisa ser criado: tema, textos, referências visuais, onde será divulgado..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>Formatos desejados</label>
+        <div class="s2-fmt-grid" id="s2-formatos">
+          <!-- preenchido via JS -->
+        </div>
+      </div>
+
+      <div class="row2" style="margin-top:2px">
+        <div class="field">
+          <label for="s2-prazo">Prazo de entrega</label>
+          <input type="date" id="s2-prazo">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="s2-info">Informações adicionais</label>
+        <textarea id="s2-info" style="min-height:70px" placeholder="Cores, logos, textos específicos, referências de artes anteriores..."></textarea>
+      </div>
+    </div>
+
+    <button type="button" class="btn-submit" id="btn-step2-enviar" onclick="_enviarArteDigital()"
+      style="background:#7057ad">
+      Enviar Solicitação de Arte
+    </button>
+    <div style="text-align:center;margin-top:12px">
+      <button type="button" onclick="_pularArteDigital()"
+        style="background:none;border:none;color:var(--tx3);font-size:12.5px;cursor:pointer;text-decoration:underline">
+        Pular esta etapa — registrar somente a programação
+      </button>
+    </div>
+    <div class="err-msg" id="err-step2" style="margin-top:10px"></div>
   </div>
 
   <div class="footer-note">
@@ -953,6 +1096,167 @@ function _coletarAgendamento(cat, sub) {
   return { ok: true, extra: "\n\n" + linhas };
 }
 
+/* ── Arte Digital — Estado e funções ───────────────────────── */
+let _arteAgendaId  = null;
+let _arteProtocolo = null;
+let _arteTitulo    = null;
+let _arteTicket    = null;
+
+const S2_FORMATOS = [
+  { label: "1:1 WhatsApp",    digital: true  },
+  { label: "16:9 avisos",     digital: true  },
+  { label: "Story Instagram", digital: true  },
+  { label: "Banner digital",  digital: true  },
+  { label: "Faixa",           digital: false },
+  { label: "Panfleto",        digital: false },
+  { label: "Outro",           digital: false },
+];
+
+function _iniciarStep2(agendaId, protocolo, titulo, ticket) {
+  _arteAgendaId  = agendaId;
+  _arteProtocolo = protocolo;
+  _arteTitulo    = titulo;
+  _arteTicket    = ticket;
+
+  // Resumo da etapa 1
+  const resumoEl = document.getElementById("s2-resumo");
+  if (resumoEl) {
+    resumoEl.innerHTML =
+      `<strong>Programação registrada</strong> ✅<br>` +
+      (titulo ? `<span style="color:var(--tx1)">${titulo}</span><br>` : "") +
+      (protocolo ? `Protocolo: <strong style="color:var(--gr)">${protocolo}</strong><br>` : "") +
+      `<span style="font-size:11px;color:var(--tx3)">Aguardando aprovação — a equipe de Comunicação já pode acompanhar.</span>`;
+  }
+
+  // Aviso sobre aprovação pendente
+  const avisoEl = document.getElementById("s2-aviso-pend");
+  if (avisoEl) avisoEl.style.display = "block";
+
+  // Descrição pré-preenchida
+  const dataI  = document.getElementById("f-ag-data")?.value || "";
+  const hiVal  = document.getElementById("f-ag-inicio")?.value || "";
+  const locais = [...document.querySelectorAll("#f-ag-spaces input:checked")].map(c => c.value);
+  const dFmt   = dataI ? fmtDataBR(dataI) : "data informada";
+  const locTxt = locais.length ? `, no espaço ${locais.join(", ")}` : "";
+  const horaTxt = hiVal ? `, às ${hiVal}` : "";
+  const descBase =
+    `Produção de arte digital para a programação "${titulo || protocolo}", ` +
+    `agendada para ${dFmt}${horaTxt}${locTxt}.`;
+  const descEl = document.getElementById("s2-desc");
+  if (descEl) descEl.value = descBase;
+
+  // Formatos (digitais pré-selecionados)
+  const grid = document.getElementById("s2-formatos");
+  if (grid) {
+    grid.innerHTML = S2_FORMATOS.map(f =>
+      `<label class="s2-fmt-lbl">
+        <input type="checkbox" name="s2-fmt" value="${f.label}" ${f.digital ? "checked" : ""}>
+        ${f.label}
+      </label>`
+    ).join("");
+  }
+
+  // Prazo sugerido: 2 dias antes do evento
+  const prazoEl = document.getElementById("s2-prazo");
+  if (prazoEl && dataI) {
+    const d = new Date(dataI + "T12:00:00");
+    d.setDate(d.getDate() - 2);
+    prazoEl.value = d.toISOString().slice(0, 10);
+  }
+
+  // Troca de tela
+  document.getElementById("screen-form").style.display   = "none";
+  document.getElementById("screen-ok").style.display     = "none";
+  document.getElementById("screen-step2").style.display  = "";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+async function _enviarArteDigital() {
+  const desc    = document.getElementById("s2-desc")?.value?.trim();
+  const formatos = [...document.querySelectorAll("input[name='s2-fmt']:checked")].map(e => e.value);
+  const prazo   = document.getElementById("s2-prazo")?.value || null;
+  const info    = document.getElementById("s2-info")?.value?.trim() || null;
+  const errEl   = document.getElementById("err-step2");
+
+  if (!desc) {
+    if (errEl) errEl.textContent = "Descreva o que precisa ser criado.";
+    document.getElementById("s2-desc").focus();
+    return;
+  }
+  if (errEl) errEl.textContent = "";
+
+  // Valida prazo <= data do evento
+  const dataEvt = document.getElementById("f-ag-data")?.value;
+  if (prazo && dataEvt && prazo > dataEvt) {
+    if (errEl) errEl.textContent = "O prazo de entrega não pode ser posterior à data da programação.";
+    document.getElementById("s2-prazo").focus();
+    return;
+  }
+
+  const btn = document.getElementById("btn-step2-enviar");
+  btn.disabled    = true;
+  btn.textContent = "Enviando…";
+
+  const nome = document.getElementById("f-nome")?.value?.trim() || null;
+  const tel  = document.getElementById("f-tel")?.value?.trim()  || null;
+
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/rpc/criar_sol_comunicacao_publica`, {
+      method:  "POST",
+      headers: HDRS,
+      body: JSON.stringify({
+        p_agenda_id:        _arteAgendaId,
+        p_agenda_protocolo: _arteProtocolo,
+        p_responsavel:      nome,
+        p_telefone:         tel,
+        p_descricao:        desc,
+        p_ministerio:       null,
+        p_formatos:         formatos.length ? formatos : null,
+        p_prazo:            prazo,
+        p_informacoes:      info || null,
+      }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    if (!data.ok && !data.duplicado) throw new Error(data.erro || "Erro ao registrar solicitação.");
+
+    // Sucesso — mostra tela final
+    document.getElementById("screen-step2").style.display = "none";
+    if (_arteTicket) document.getElementById("ok-numero").textContent = _arteTicket;
+    const okProtoEl = document.getElementById("ok-protocolo");
+    if (okProtoEl) {
+      okProtoEl.innerHTML =
+        (_arteProtocolo ? `Reserva provisória: <strong>${_arteProtocolo}</strong><br>` : "") +
+        `Arte digital: <strong style="color:#3aaa5c">solicitação registrada ✅</strong>`;
+      okProtoEl.style.display = "";
+      okProtoEl.style.background = "rgba(58,170,92,.09)";
+      okProtoEl.style.borderColor = "rgba(58,170,92,.3)";
+      okProtoEl.style.color = "#1d6b38";
+    }
+    document.getElementById("screen-ok").style.display = "block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch (e) {
+    if (errEl) errEl.textContent = e.message || "Falha ao enviar. Tente novamente.";
+    btn.disabled    = false;
+    btn.textContent = "Enviar Solicitação de Arte";
+  }
+}
+
+function _pularArteDigital() {
+  document.getElementById("screen-step2").style.display = "none";
+  if (_arteTicket) document.getElementById("ok-numero").textContent = _arteTicket;
+  const okProtoEl = document.getElementById("ok-protocolo");
+  if (okProtoEl && _arteProtocolo) {
+    okProtoEl.textContent    = `Reserva provisória: ${_arteProtocolo}`;
+    okProtoEl.style.display  = "";
+    okProtoEl.style.background = "";
+    okProtoEl.style.borderColor = "";
+    okProtoEl.style.color = "";
+  }
+  document.getElementById("screen-ok").style.display = "block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
 /* ── Envio ─────────────────────────────────────────────────── */
 async function enviarChamado() {
   if (document.getElementById("_gotcha").value) return;
@@ -1026,6 +1330,7 @@ async function enviarChamado() {
 
     // Se for solicitação de espaço, cria reserva provisória na agenda
     let protocolo = null;
+    let agendaId  = null;
     if (cat === "Agendamentos" && PROG_SUBS.has(sub)) {
       const agData  = document.getElementById("f-ag-data")?.value || null;
       const agDataF = document.getElementById("f-ag-data-fim")?.value || agData;
@@ -1057,7 +1362,8 @@ async function enviarChamado() {
         if (rpcRes.ok) {
           const rpcData = await rpcRes.json().catch(() => ({}));
           if (rpcData.ok) {
-            protocolo = rpcData.protocolo;
+            protocolo    = rpcData.protocolo;
+            agendaId     = rpcData.agenda_id || null;
           } else if (rpcData.conflito) {
             // Conflito detectado — avisa mas não bloqueia (chamado já foi criado)
             const avEl = document.getElementById("ok-aviso-conflito");
@@ -1067,11 +1373,24 @@ async function enviarChamado() {
       }
     }
 
+    // Verifica se usuário quer arte digital (só quando é agendamento de programação)
+    const arteVal = document.querySelector("input[name='ag-arte']:checked")?.value;
+    const querArte = cat === "Agendamentos" && PROG_SUBS.has(sub) && arteVal === "sim" && agendaId;
+
+    if (querArte) {
+      // Salva ticket para usar na etapa 2
+      _iniciarStep2(agendaId, protocolo, titulo, ticket);
+      return; // não mostra screen-ok ainda
+    }
+
     document.getElementById("ok-numero").textContent = ticket;
     const okProtoEl = document.getElementById("ok-protocolo");
     if (okProtoEl) {
       okProtoEl.textContent = protocolo ? `Reserva provisória: ${protocolo}` : "";
       okProtoEl.style.display = protocolo ? "" : "none";
+      okProtoEl.style.background = "";
+      okProtoEl.style.borderColor = "";
+      okProtoEl.style.color = "";
     }
     document.getElementById("screen-form").style.display = "none";
     document.getElementById("screen-ok").style.display   = "block";
@@ -1086,9 +1405,16 @@ async function enviarChamado() {
 
 /* ── Novo envio ────────────────────────────────────────────── */
 function novoEnvio() {
+  // Reseta estado de arte digital
+  _arteAgendaId  = null;
+  _arteProtocolo = null;
+  _arteTitulo    = null;
+  _arteTicket    = null;
+  document.querySelectorAll("input[name='ag-arte']").forEach(r => r.checked = false);
+  document.getElementById("screen-step2").style.display = "none";
   const okProt = document.getElementById("ok-protocolo");
   const okConf = document.getElementById("ok-aviso-conflito");
-  if (okProt) { okProt.textContent = ""; okProt.style.display = "none"; }
+  if (okProt) { okProt.innerHTML = ""; okProt.style.display = "none"; okProt.style.background = ""; okProt.style.borderColor = ""; okProt.style.color = ""; }
   if (okConf) okConf.style.display = "none";
   ["f-nome","f-tel","f-titulo","f-desc","f-local",
    "f-fin-tipo","f-fin-valor","f-fin-venc","f-fin-benefic","f-fin-cpf",

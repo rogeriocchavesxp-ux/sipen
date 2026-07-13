@@ -1090,6 +1090,47 @@ async function agMarcarEmAnalise(id) {
   } catch (e) { T("Erro", e.message); }
 }
 
+async function _comSyncStatus(agendaId, acao, motivo) {
+  try {
+    const sol = await fetch(
+      `${apiBaseUrl()}/rest/v1/com_solicitacoes_arte?agenda_id=eq.${agendaId}&status=neq.Cancelada&select=id&limit=10`,
+      { headers: apiHeaders() }
+    );
+    if (!sol.ok) return;
+    const rows = await sol.json();
+    for (const r of rows) {
+      if (acao === "recusar") {
+        await fetch(`${apiBaseUrl()}/rest/v1/com_solicitacoes_arte?id=eq.${r.id}`, {
+          method: "PATCH",
+          headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+          body: JSON.stringify({ status: "Cancelada", atualizado_em: new Date().toISOString() }),
+        });
+        await fetch(`${apiBaseUrl()}/rest/v1/com_andamentos`, {
+          method: "POST",
+          headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+          body: JSON.stringify({
+            sol_id: r.id,
+            texto: `Programação vinculada foi recusada. Produção cancelada automaticamente.${motivo ? "\nMotivo: " + motivo : ""}`,
+            automatico: true,
+            criado_em: new Date().toISOString(),
+          }),
+        });
+      } else {
+        await fetch(`${apiBaseUrl()}/rest/v1/com_andamentos`, {
+          method: "POST",
+          headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+          body: JSON.stringify({
+            sol_id: r.id,
+            texto: "Programação vinculada foi aprovada. Produção pode ser iniciada.",
+            automatico: true,
+            criado_em: new Date().toISOString(),
+          }),
+        });
+      }
+    }
+  } catch (_) {}
+}
+
 async function agAprovarAgendamento(id) {
   const aprovador = typeof USUARIO_ATUAL !== "undefined" ? (USUARIO_ATUAL?.nome || "Administrador") : "Administrador";
   try {
@@ -1131,6 +1172,8 @@ async function agAprovarAgendamento(id) {
       }).catch(() => {});
     }
 
+    // Notifica comunicação sobre aprovação
+    _comSyncStatus(id, "aprovar");
     agCarregarAprovacoes();
   } catch (e) { T("Erro ao aprovar", e.message); }
 }
@@ -1173,6 +1216,9 @@ async function agConfirmarRecusaAgendamento(id) {
     _agendaCache = null;
     T("Solicitação recusada.", motivo ? `Motivo registrado.` : "");
 
+    // Cancela solicitações de arte vinculadas
+    _comSyncStatus(id, "recusar", motivo);
+
     if (data.telefone && typeof WA !== "undefined") {
       const msg = `Olá${data.solicitante ? `, ${data.solicitante.split(" ")[0]}` : ""}! Infelizmente seu pedido de agendamento *não foi aprovado*.\n\n`
         + (data.protocolo ? `🔖 Protocolo: ${data.protocolo}\n` : "")
@@ -1201,3 +1247,4 @@ window.agMarcarEmAnalise             = agMarcarEmAnalise;
 window.agAprovarAgendamento          = agAprovarAgendamento;
 window.agRejeitarAgendamento         = agRejeitarAgendamento;
 window.agConfirmarRecusaAgendamento  = agConfirmarRecusaAgendamento;
+window._comSyncStatus                = _comSyncStatus;
