@@ -236,6 +236,66 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
   border: 1px solid rgba(214,148,0,.35); border-radius: 8px;
   margin-bottom: 16px; line-height: 1.5;
 }
+
+/* ── screen-agend: tipo de solicitação ──────────────────────── */
+.ag-tipo-grid { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px 0; }
+.ag2-tipo-lbl {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 16px; border-radius: 20px;
+  border: 1.5px solid var(--inpbd); cursor: pointer;
+  font-size: 13.5px; background: var(--inp); color: var(--tx2);
+  user-select: none; transition: border-color .12s, background .12s, color .12s;
+}
+.ag2-tipo-lbl input[type="radio"] { display: none; }
+.ag2-tipo-lbl.sel, .ag2-tipo-lbl:has(input:checked) {
+  border-color: var(--acc); background: var(--accbg); color: var(--acc); font-weight: 600;
+}
+.ag2-tipo-lbl:not(.sel):hover { border-color: var(--acc); color: var(--tx1); }
+
+/* ── screen-agend: botão verificar disponibilidade ──────────── */
+.btn-verif {
+  width: 100%; padding: 12px; border-radius: 9px; border: none;
+  background: var(--acc); color: #fff; font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: inherit; margin-top: 10px; transition: opacity .15s;
+}
+.btn-verif:hover { opacity: .88; }
+.btn-verif:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── screen-agend: loading ───────────────────────────────────── */
+.ag2-loading {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12.5px; color: var(--tx3); margin-top: 10px;
+}
+.ag2-spinner {
+  width: 16px; height: 16px; flex-shrink: 0;
+  border: 2px solid var(--bd); border-top-color: var(--acc);
+  border-radius: 50%; animation: ag2-spin .7s linear infinite;
+}
+@keyframes ag2-spin { to { transform: rotate(360deg); } }
+
+/* ── screen-agend: aviso invalidação ────────────────────────── */
+.ag2-disp-aviso {
+  font-size: 11.5px; color: var(--amber); padding: 8px 12px;
+  border-radius: 7px; border: 1px solid rgba(208,144,64,.3);
+  background: rgba(208,144,64,.08); margin-top: 10px;
+}
+
+/* ── screen-agend: cards de espaço ──────────────────────────── */
+.ag2-espaco-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; margin-bottom: 6px;
+  border-radius: 9px; border: 1.5px solid var(--inpbd);
+  background: var(--inp); cursor: pointer; font-size: 13.5px; font-weight: 500; color: var(--tx1);
+  transition: border-color .12s, background .12s, box-shadow .12s;
+}
+.ag2-espaco-card:hover:not(.ag2-espaco-indisp) {
+  border-color: var(--gr); background: rgba(58,170,92,.07);
+}
+.ag2-espaco-card.ag2-espaco-sel {
+  border-color: var(--gr); background: rgba(58,170,92,.1);
+  box-shadow: 0 0 0 2px rgba(58,170,92,.2);
+}
+.ag2-espaco-indisp { opacity: .5; cursor: not-allowed; pointer-events: none; }
 </style>
 </head>
 <body>
@@ -692,6 +752,126 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
     <div class="err-msg" id="err-step2" style="margin-top:10px"></div>
   </div>
 
+  <!-- ══ SCREEN: Reserva de Espaço — fluxo availability-first ══ -->
+  <div id="screen-agend" style="display:none">
+
+    <header class="page-header">
+      <img src="/icons/logo-ippenha.svg" class="page-logo" alt="Igreja Presbiteriana da Penha"
+           onerror="this.style.display='none'">
+      <div class="page-title">Reservar Espaço</div>
+      <div class="page-sub">Verifique a disponibilidade antes de preencher os dados da solicitação.</div>
+    </header>
+
+    <!-- Passo 1: Tipo de solicitação -->
+    <div class="card">
+      <div class="card-title">Tipo de solicitação</div>
+      <div class="ag-tipo-grid" id="ag2-tipo-grid"></div>
+    </div>
+
+    <!-- Passo 2: Data, horário e participantes -->
+    <div class="card">
+      <div class="card-title">Data e horário</div>
+      <div class="row4">
+        <div class="field">
+          <label for="ag2-data-i">Data início <span class="req">*</span></label>
+          <input type="date" id="ag2-data-i" oninput="ag2SincDataFim()">
+        </div>
+        <div class="field">
+          <label for="ag2-hora-i">Hora início</label>
+          <input type="time" id="ag2-hora-i" oninput="ag2InvalidarDisp()">
+        </div>
+        <div class="field">
+          <label for="ag2-data-f">Data final</label>
+          <input type="date" id="ag2-data-f" oninput="ag2InvalidarDisp()">
+        </div>
+        <div class="field">
+          <label for="ag2-hora-f">Hora final</label>
+          <input type="time" id="ag2-hora-f" oninput="ag2InvalidarDisp()">
+        </div>
+      </div>
+      <div id="ag2-periodo-erro" style="display:none;font-size:11.5px;color:var(--rose);margin-top:-6px;margin-bottom:10px;padding:8px 12px;background:rgba(224,85,85,.08);border-radius:7px;border:1px solid rgba(224,85,85,.25)">
+        O encerramento precisa ocorrer após o início da programação.
+      </div>
+      <div class="field" style="margin-top:2px">
+        <label for="ag2-part">Quantidade estimada de participantes</label>
+        <input type="number" id="ag2-part" placeholder="Ex: 50" min="1" inputmode="numeric">
+      </div>
+      <div id="ag2-disp-invalido" class="ag2-disp-aviso" style="display:none">
+        A disponibilidade mudou. Clique em "Verificar Disponibilidade" novamente.
+      </div>
+      <button type="button" class="btn-verif" id="ag2-btn-verif" onclick="ag2VerificarDisp()">
+        Verificar Disponibilidade
+      </button>
+      <div id="ag2-checking" class="ag2-loading" style="display:none">
+        <div class="ag2-spinner"></div>
+        Consultando disponibilidade dos espaços...
+      </div>
+    </div>
+
+    <!-- Passo 3–5: Espaços disponíveis -->
+    <div class="card" id="ag2-card-espacos" style="display:none">
+      <div class="card-title">Espaços disponíveis</div>
+      <div id="ag2-espacos-grid"></div>
+    </div>
+
+    <!-- Passo 6: Formulário (expande após escolha do espaço) -->
+    <div id="ag2-card-form" style="display:none">
+      <div class="card">
+        <div class="card-title">Seus dados</div>
+        <div class="row2">
+          <div class="field">
+            <label for="ag2-nome">Nome completo <span class="req">*</span></label>
+            <input type="text" id="ag2-nome" placeholder="Seu nome completo" maxlength="120" autocomplete="name">
+          </div>
+          <div class="field">
+            <label for="ag2-tel">Telefone / WhatsApp <span class="req">*</span></label>
+            <input type="tel" id="ag2-tel" placeholder="(11) 99999-9999"
+              oninput="fmtTel(this)" onblur="fmtTel(this)" maxlength="16">
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Dados da programação</div>
+        <div class="field">
+          <label for="ag2-titulo">Título <span class="req">*</span></label>
+          <input type="text" id="ag2-titulo" placeholder="Descreva brevemente o evento" maxlength="200">
+        </div>
+        <div class="field">
+          <label for="ag2-desc">Descrição</label>
+          <textarea id="ag2-desc" placeholder="Informações adicionais sobre a programação..."></textarea>
+        </div>
+        <div class="ag-arte-sep">
+          <div class="ag-arte-title">📢 Comunicação e Divulgação</div>
+          <div class="ag-arte-desc">
+            Esta programação precisará de arte digital? (banner, arte para WhatsApp, redes sociais, avisos, etc.)
+          </div>
+          <div class="ag-arte-radios">
+            <label>
+              <input type="radio" name="ag2-arte" value="sim" style="accent-color:#7057ad;width:15px;height:15px">
+              Sim, vou precisar de arte
+            </label>
+            <label>
+              <input type="radio" name="ag2-arte" value="nao" style="accent-color:#7057ad;width:15px;height:15px">
+              Não, obrigado
+            </label>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="btn-submit" id="ag2-btn-enviar" onclick="ag2Enviar()">
+        Enviar Solicitação
+      </button>
+      <div class="err-msg" id="ag2-err"></div>
+    </div>
+
+    <div style="text-align:center;margin-top:20px;margin-bottom:4px">
+      <button type="button" onclick="ag2Voltar()"
+        style="background:none;border:none;color:var(--tx3);font-size:12.5px;cursor:pointer;text-decoration:underline">
+        ← Voltar ao menu principal
+      </button>
+    </div>
+
+  </div>
+
   <div class="footer-note">
     SIPEN - Sistema Integrado da IPPenha
   </div>
@@ -941,7 +1121,7 @@ function onSubChange() {
     if (sub === "Solicitação de pagamento") _show("fin-pag");
     if (sub === "Reembolso")               _show("fin-reimb");
   }
-  if (cat === "Agendamentos"  && PROG_SUBS.has(sub)) { _show("agend-prog"); _ensureEspacos(); }
+  if (cat === "Agendamentos"  && PROG_SUBS.has(sub)) { agIniciar(sub); return; }
   if (cat === "Comunicação"   && COM_SUBS.has(sub))  { _show("com-sol-sec"); _ensureComSol(sub); }
 }
 
@@ -1681,6 +1861,372 @@ async function enviarChamado() {
   }
 }
 
+/* ══ screen-agend: novo fluxo availability-first ════════════ */
+let _ag2Tipo = "";
+let _ag2DispVerificada = false;
+let _ag2EspacoSelecionado = "";
+
+function agIniciar(tipo) {
+  _ag2Tipo = tipo || "";
+  _ag2DispVerificada = false;
+  _ag2EspacoSelecionado = "";
+
+  // Monta tipo grid
+  const tipoGrid = document.getElementById("ag2-tipo-grid");
+  if (tipoGrid) {
+    const tipos = ["Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"];
+    tipoGrid.innerHTML = tipos.map(t => {
+      const sel = t === _ag2Tipo;
+      return `<label class="ag2-tipo-lbl${sel ? " sel" : ""}">
+        <input type="radio" name="ag2-tipo" value="${t}"${sel ? " checked" : ""} onchange="ag2TipoChange(this.value)">
+        ${t}
+      </label>`;
+    }).join("");
+  }
+
+  // Reset visual
+  ["ag2-card-espacos","ag2-card-form","ag2-checking","ag2-disp-invalido","ag2-periodo-erro"].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display = "none";
+  });
+  const espGrid = document.getElementById("ag2-espacos-grid");
+  if (espGrid) espGrid.innerHTML = "";
+
+  // Limpa campos de período
+  ["ag2-data-i","ag2-hora-i","ag2-data-f","ag2-hora-f","ag2-part"].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = "";
+  });
+
+  // Limpa campos do formulário
+  ["ag2-nome","ag2-tel","ag2-titulo","ag2-desc"].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = "";
+  });
+  document.querySelectorAll("input[name='ag2-arte']").forEach(r => r.checked = false);
+
+  const errEl = document.getElementById("ag2-err");
+  if (errEl) { errEl.textContent = ""; errEl.classList.remove("show"); }
+
+  // Troca de tela
+  document.getElementById("screen-form").style.display  = "none";
+  document.getElementById("screen-agend").style.display = "";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function ag2Voltar() {
+  document.getElementById("screen-agend").style.display = "none";
+  document.getElementById("screen-form").style.display  = "";
+  csubReset();
+  _ocultarFinanceiro();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function ag2TipoChange(tipo) {
+  _ag2Tipo = tipo;
+  document.querySelectorAll(".ag2-tipo-lbl").forEach(lbl => {
+    lbl.classList.toggle("sel", lbl.querySelector("input").value === tipo);
+  });
+}
+
+function ag2SincDataFim() {
+  const di = document.getElementById("ag2-data-i");
+  const df = document.getElementById("ag2-data-f");
+  if (di && df && !df.value) df.value = di.value;
+  ag2ValidarPeriodo();
+  ag2InvalidarDisp();
+}
+
+function ag2ValidarPeriodo() {
+  const di   = document.getElementById("ag2-data-i")?.value;
+  const df   = document.getElementById("ag2-data-f")?.value;
+  const hi   = document.getElementById("ag2-hora-i")?.value;
+  const hf   = document.getElementById("ag2-hora-f")?.value;
+  const erEl = document.getElementById("ag2-periodo-erro");
+  if (!erEl || !di || !df) { if (erEl) erEl.style.display = "none"; return true; }
+  const inicio   = di + "T" + (hi || "00:00");
+  const fim      = df + "T" + (hf || "23:59");
+  const invalido = fim <= inicio && (df < di || (df === di && hf && hi && hf <= hi));
+  erEl.style.display = invalido ? "" : "none";
+  return !invalido;
+}
+
+function ag2InvalidarDisp() {
+  if (!_ag2DispVerificada) return;
+  _ag2DispVerificada    = false;
+  _ag2EspacoSelecionado = "";
+  const aviso    = document.getElementById("ag2-disp-invalido");
+  const espCard  = document.getElementById("ag2-card-espacos");
+  const formCard = document.getElementById("ag2-card-form");
+  if (aviso)    aviso.style.display    = "";
+  if (espCard)  espCard.style.display  = "none";
+  if (formCard) formCard.style.display = "none";
+}
+
+async function ag2VerificarDisp() {
+  if (!ag2ValidarPeriodo()) return;
+  const di = document.getElementById("ag2-data-i")?.value;
+  if (!di) {
+    const erEl = document.getElementById("ag2-periodo-erro");
+    if (erEl) { erEl.textContent = "Informe a data de início."; erEl.style.display = ""; }
+    return;
+  }
+  const hi = document.getElementById("ag2-hora-i")?.value || null;
+  const df = document.getElementById("ag2-data-f")?.value || di;
+  const hf = document.getElementById("ag2-hora-f")?.value || null;
+
+  const btn      = document.getElementById("ag2-btn-verif");
+  const checking = document.getElementById("ag2-checking");
+  const aviso    = document.getElementById("ag2-disp-invalido");
+  const espCard  = document.getElementById("ag2-card-espacos");
+  const formCard = document.getElementById("ag2-card-form");
+
+  if (btn)     btn.disabled = true;
+  if (checking) checking.style.display = "";
+  if (aviso)   aviso.style.display    = "none";
+  if (espCard) espCard.style.display  = "none";
+  if (formCard) formCard.style.display = "none";
+  _ag2EspacoSelecionado = "";
+
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/rpc/espacos_disponibilidade`, {
+      method:  "POST",
+      headers: HDRS,
+      body: JSON.stringify({
+        p_data_inicio: di,
+        p_hora_inicio: hi || "00:00",
+        p_data_fim:    df,
+        p_hora_fim:    hf || null,
+      }),
+    });
+    if (!res.ok) throw new Error("Erro ao consultar disponibilidade");
+    const dados = await res.json();
+    _ag2DispVerificada = true;
+    ag2MostrarEspacos(dados);
+  } catch (_) {
+    const espGrid = document.getElementById("ag2-espacos-grid");
+    if (espGrid) espGrid.innerHTML = `<div style="color:var(--rose);font-size:12px;padding:6px 0">Não foi possível verificar disponibilidade. Verifique sua conexão e tente novamente.</div>`;
+    if (espCard) espCard.style.display = "";
+  } finally {
+    if (btn)     btn.disabled = false;
+    if (checking) checking.style.display = "none";
+  }
+}
+
+function ag2MostrarEspacos(dados) {
+  const espCard = document.getElementById("ag2-card-espacos");
+  const grid    = document.getElementById("ag2-espacos-grid");
+  if (!espCard || !grid) return;
+  grid.innerHTML = "";
+
+  if (!dados || !dados.length) {
+    grid.innerHTML = `<div style="font-size:13px;color:var(--tx3);padding:8px 0">Nenhum espaço cadastrado para consulta.</div>`;
+    espCard.style.display = "";
+    return;
+  }
+
+  const dispCount   = dados.filter(d => d.disponivel).length;
+  const indispCount = dados.length - dispCount;
+
+  const sumEl = document.createElement("div");
+  sumEl.style.cssText = "font-size:12px;color:var(--tx3);margin-bottom:10px;padding:8px 12px;background:var(--bg);border-radius:8px;border:1px solid var(--bd)";
+  sumEl.textContent = dispCount > 0
+    ? `${dispCount} espaço${dispCount !== 1 ? "s" : ""} disponível${dispCount !== 1 ? "is" : ""} · ${indispCount} ocupado${indispCount !== 1 ? "s" : ""} — selecione um espaço para continuar`
+    : "Nenhum espaço disponível para este período. Tente outro horário.";
+  grid.appendChild(sumEl);
+
+  const sorted = [...dados].sort((a, b) => (b.disponivel ? 1 : 0) - (a.disponivel ? 1 : 0));
+
+  sorted.forEach(item => {
+    const el = document.createElement("div");
+    el.className  = "ag2-espaco-card" + (item.disponivel ? "" : " ag2-espaco-indisp");
+    el.dataset.espaco = item.nome;
+    el.innerHTML  = `
+      <span style="font-size:16px;flex-shrink:0">${item.disponivel ? "✅" : "❌"}</span>
+      <span style="flex:1">${item.nome}</span>
+      ${!item.disponivel ? `<span style="font-size:10.5px;color:var(--rose)">ocupado</span>` : ""}
+    `;
+    if (item.disponivel) el.onclick = () => ag2SelecionarEspaco(item.nome);
+    grid.appendChild(el);
+  });
+
+  espCard.style.display = "";
+  setTimeout(() => espCard.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50);
+}
+
+function ag2SelecionarEspaco(nome) {
+  _ag2EspacoSelecionado = nome;
+  document.querySelectorAll(".ag2-espaco-card:not(.ag2-espaco-indisp)").forEach(el => {
+    el.classList.toggle("ag2-espaco-sel", el.dataset.espaco === nome);
+  });
+  const formCard = document.getElementById("ag2-card-form");
+  if (formCard) {
+    formCard.style.display = "";
+    setTimeout(() => formCard.scrollIntoView({ behavior: "smooth", block: "nearest" }), 80);
+  }
+}
+
+async function ag2Enviar() {
+  if (document.getElementById("_gotcha")?.value) return;
+
+  const rlMsg = _checarRateLimit();
+  if (rlMsg) { ag2MostrarErro(rlMsg); return; }
+
+  const tipo   = _ag2Tipo || document.querySelector("input[name='ag2-tipo']:checked")?.value || "";
+  const di     = document.getElementById("ag2-data-i")?.value  || "";
+  const hi     = document.getElementById("ag2-hora-i")?.value  || null;
+  const df     = document.getElementById("ag2-data-f")?.value  || di;
+  const hf     = document.getElementById("ag2-hora-f")?.value  || null;
+  const part   = parseInt(document.getElementById("ag2-part")?.value || "0", 10) || null;
+  const espaco = _ag2EspacoSelecionado;
+  const nome   = (document.getElementById("ag2-nome")?.value   || "").trim();
+  const tel    = (document.getElementById("ag2-tel")?.value    || "").trim();
+  const titulo = (document.getElementById("ag2-titulo")?.value || "").trim();
+  const desc   = (document.getElementById("ag2-desc")?.value   || "").trim();
+
+  if (!tipo)   { ag2MostrarErro("Selecione o tipo de solicitação."); return; }
+  if (!di)     { ag2MostrarErro("Informe a data de início."); return; }
+  if (!espaco) { ag2MostrarErro("Selecione um espaço disponível antes de continuar."); return; }
+  if (!nome)   { ag2MostrarErro("Informe seu nome completo.");   document.getElementById("ag2-nome")?.focus();   return; }
+  if (!tel)    { ag2MostrarErro("Informe seu telefone ou WhatsApp."); document.getElementById("ag2-tel")?.focus(); return; }
+  if (!titulo) { ag2MostrarErro("Informe o título da programação."); document.getElementById("ag2-titulo")?.focus(); return; }
+  if (!ag2ValidarPeriodo()) { ag2MostrarErro("Verifique as datas e horários informados."); return; }
+
+  ag2LimparErro();
+
+  const catObj    = CATS.find(c => c.nome === "Agendamentos");
+  const resp      = catObj?.resp || "Secretaria / Liderança";
+  const hoje      = new Date().toISOString().split("T")[0];
+  const multiDia  = df && df !== di;
+  const descFinal = [
+    desc,
+    "━━━ Dados da Programação ━━━",
+    multiDia
+      ? `Período: ${fmtDataBR(di)}${hi ? " às " + hi : ""} até ${fmtDataBR(df)}${hf ? " às " + hf : ""}`
+      : `Data: ${fmtDataBR(di)}`,
+    !multiDia && hi ? `Horário início: ${hi}` : null,
+    !multiDia && hf ? `Horário fim: ${hf}`    : null,
+    `Espaço: ${espaco}`,
+    part ? `Participantes estimados: ${part}` : null,
+  ].filter(Boolean).join("\n");
+
+  const newId = crypto.randomUUID();
+  const btn   = document.getElementById("ag2-btn-enviar");
+  if (btn) { btn.disabled = true; btn.textContent = "Enviando…"; }
+
+  try {
+    // 1. Criar chamado
+    const res = await fetch(`${SB_URL}/functions/v1/chamado-publico`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + SB_KEY },
+      body: JSON.stringify({
+        id:              newId,
+        area:            "Agendamentos",
+        subcategoria:    tipo,
+        titulo:          titulo,
+        descricao:       descFinal,
+        local:           espaco,
+        solicitante:     nome,
+        solicitante_txt: tel ? `${nome} · ${tel}` : nome,
+        telefone:        tel,
+        responsavel:     resp,
+        responsavel_txt: resp,
+        financial_data:  null,
+        data_abertura:   hoje,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || err.message || `Erro ${res.status}`);
+    }
+    const data   = await res.json().catch(() => ({}));
+    const ticket = data.numero_chamado || "—";
+    try { localStorage.setItem(_RL_KEY, String(Date.now())); } catch(_) {}
+
+    // 2. Criar reserva provisória na agenda
+    let protocolo = null;
+    let agendaId  = null;
+    const rpcRes  = await fetch(`${SB_URL}/rest/v1/rpc/solicitar_agendamento`, {
+      method:  "POST",
+      headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        p_titulo:            titulo,
+        p_data:              di,
+        p_hora_inicio:       hi    || null,
+        p_hora_fim:          hf    || null,
+        p_espaco:            espaco,
+        p_subcategoria:      tipo,
+        p_observacao:        desc  || null,
+        p_nome:              nome,
+        p_telefone:          tel,
+        p_participantes:     part,
+        p_origem:            "link_publico",
+        p_data_encerramento: df    || null,
+      }),
+    });
+    if (rpcRes.ok) {
+      const rpcData = await rpcRes.json().catch(() => ({}));
+      if (rpcData.ok) {
+        protocolo = rpcData.protocolo;
+        agendaId  = rpcData.agenda_id || null;
+      } else if (rpcData.conflito) {
+        const avEl = document.getElementById("ok-aviso-conflito");
+        if (avEl) avEl.style.display = "";
+      }
+    }
+
+    // 3. Arte digital?
+    const arteVal = document.querySelector("input[name='ag2-arte']:checked")?.value;
+    if (arteVal === "sim" && agendaId) {
+      // Pré-preenche campos antigos para compatibilidade com _iniciarStep2
+      const _fi = id => document.getElementById(id);
+      if (_fi("f-nome"))     _fi("f-nome").value     = nome;
+      if (_fi("f-tel"))      _fi("f-tel").value       = tel;
+      if (_fi("f-ag-data"))  _fi("f-ag-data").value   = di;
+      if (_fi("f-ag-inicio")) _fi("f-ag-inicio").value = hi || "";
+      document.getElementById("screen-agend").style.display = "none";
+      _iniciarStep2(agendaId, protocolo, titulo, ticket);
+      // Corrige local (sem checkboxes no novo fluxo)
+      _arteLocal = espaco || null;
+      const progEl = document.getElementById("s2-prog-info");
+      if (progEl && espaco && !progEl.innerHTML.includes("Local:")) {
+        progEl.innerHTML += ` · Local: ${espaco}`;
+      }
+      return;
+    }
+
+    // 4. Sucesso sem arte digital
+    document.getElementById("ok-numero").textContent = ticket;
+    const okProtoEl = document.getElementById("ok-protocolo");
+    if (okProtoEl) {
+      okProtoEl.textContent   = protocolo ? `Reserva provisória: ${protocolo}` : "";
+      okProtoEl.style.display = protocolo ? "" : "none";
+      okProtoEl.style.background = "";
+      okProtoEl.style.borderColor = "";
+      okProtoEl.style.color = "";
+    }
+    document.getElementById("screen-agend").style.display = "none";
+    document.getElementById("screen-ok").style.display    = "block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = "Enviar Solicitação"; }
+    ag2MostrarErro(e.message || "Falha ao enviar. Tente novamente.");
+  }
+}
+
+function ag2MostrarErro(msg) {
+  const el = document.getElementById("ag2-err");
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add("show");
+  el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function ag2LimparErro() {
+  const el = document.getElementById("ag2-err");
+  if (!el) return;
+  el.textContent = "";
+  el.classList.remove("show");
+}
+
 /* ── Novo envio ────────────────────────────────────────────── */
 function novoEnvio() {
   // Reseta estado de arte digital
@@ -1699,6 +2245,7 @@ function novoEnvio() {
   document.querySelectorAll("input[name='s2-area'],input[name='s2-fmt']").forEach(cb => cb.checked = false);
   const s2av = document.getElementById("s2-prazo-aviso"); if (s2av) s2av.style.display = "none";
   document.getElementById("screen-step2").style.display = "none";
+  document.getElementById("screen-agend").style.display = "none";
   const okProt = document.getElementById("ok-protocolo");
   const okConf = document.getElementById("ok-aviso-conflito");
   if (okProt) { okProt.innerHTML = ""; okProt.style.display = "none"; okProt.style.background = ""; okProt.style.borderColor = ""; okProt.style.color = ""; }
