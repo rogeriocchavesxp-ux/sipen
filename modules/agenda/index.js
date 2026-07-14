@@ -11,7 +11,6 @@ VIEW_AUTOLOAD["agenda-solicitacoes"]  = null;
 VIEW_AUTOLOAD["agenda-conflitos"]     = null;
 VIEW_AUTOLOAD["agenda-historico"]     = null;
 VIEW_AUTOLOAD["agenda-config"]        = null;
-VIEW_AUTOLOAD["agenda-requisicoes"]   = { fn: () => carregarRequisicoesEspaco() };
 
 
 /* ── SALAS DA IGREJA — carregadas do cadastro central ──────── */
@@ -646,7 +645,12 @@ function _agRenderSolTabela() {
       })
     : _agSolRows;
 
-  if (!rows.length) {
+  // Requisições pendentes (não finalizadas) — exibidas com destaque
+  const reqPendentes = !_agSolFiltro
+    ? _agReqRows.filter(r => !REQ_FINAL.includes(r.status))
+    : [];
+
+  if (!rows.length && !reqPendentes.length) {
     el.innerHTML = `<div style="text-align:center;padding:28px;color:var(--tx3)">
       <div style="font-size:28px;margin-bottom:8px">📭</div>
       <div style="font-size:12px">Nenhuma solicitação ${_agSolFiltro ? "com esse status " : ""}encontrada.</div>
@@ -656,14 +660,55 @@ function _agRenderSolTabela() {
 
   const pendente = s => ["pendente","aguardando_aprovacao","em_analise","ajuste_solicitado"].includes(s);
 
-  el.innerHTML = `<div style="overflow-x:auto">
+  const thStyle = `text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)`;
+
+  // Bloco de requisições de espaço (topo, destaque laranja)
+  const reqHtml = reqPendentes.length ? `
+    <div style="margin-bottom:16px;border:1px solid rgba(249,115,22,.35);border-radius:10px;overflow:hidden">
+      <div style="background:rgba(249,115,22,.08);padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(249,115,22,.25)">
+        <span style="font-size:13px">📨</span>
+        <span style="font-size:11px;font-weight:700;color:var(--orange)">Requisições de espaço ocupado</span>
+        <span style="font-size:10px;color:var(--tx3);margin-left:auto">${reqPendentes.length} pendente${reqPendentes.length !== 1 ? "s" : ""}</span>
+      </div>
+      <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:11.5px;min-width:780px">
+        <thead><tr style="border-bottom:1px solid rgba(249,115,22,.2);background:rgba(249,115,22,.04)">
+          <th style="${thStyle}">Protocolo</th>
+          <th style="${thStyle}">Título</th>
+          <th style="${thStyle}">Solicitante</th>
+          <th style="${thStyle}">Espaço / Data</th>
+          <th style="${thStyle}">Status</th>
+          <th style="text-align:right;padding:7px 10px;font-size:9.5px;color:var(--tx3)">Ações</th>
+        </tr></thead>
+        <tbody>${reqPendentes.map(r => {
+          const h = t => { const [hh,mm] = (t||"").split(":"); return hh && mm ? `${hh}:${mm}` : ""; };
+          const horario = [h(r.hora_inicio_sol), h(r.hora_fim_sol)].filter(Boolean).join("–");
+          return `<tr style="border-bottom:1px solid rgba(249,115,22,.12)" onmouseover="this.style.background='rgba(249,115,22,.04)'" onmouseout="this.style.background=''">
+            <td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:var(--orange)">${escapeHtml(r.protocolo||"—")}</td>
+            <td style="padding:8px 10px;color:var(--tx1);font-weight:600;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.titulo||"—")}</td>
+            <td style="padding:8px 10px;color:var(--tx2);font-size:11px">${escapeHtml(r.solicitante_nome||"—")}</td>
+            <td style="padding:8px 10px;color:var(--tx2);font-size:11px;white-space:nowrap">
+              ${escapeHtml(r.espaco_nome||"—")}
+              <div style="font-size:10px;color:var(--tx3)">${fmtD(r.data_solicitada)}${horario ? " · "+horario : ""}</div>
+            </td>
+            <td style="padding:8px 10px">${_agReqPill(r.status)}</td>
+            <td style="padding:8px 10px;text-align:right;white-space:nowrap">
+              <button onclick='agAnalisarRequisicao("${r.id}")' style="padding:3px 9px;border-radius:4px;border:1px solid rgba(249,115,22,.4);background:rgba(249,115,22,.08);color:var(--orange);font-size:10px;cursor:pointer">Analisar</button>
+            </td>
+          </tr>`;
+        }).join("")}</tbody>
+      </table></div>
+    </div>` : "";
+
+  // Bloco de solicitações regulares
+  const solHtml = rows.length ? `<div style="overflow-x:auto">
     <table style="width:100%;border-collapse:collapse;font-size:11.5px;min-width:780px">
       <thead><tr style="border-bottom:1px solid var(--bd2);background:var(--bg-surface)">
-        <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Protocolo</th>
-        <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Título</th>
-        <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Solicitante</th>
-        <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Data / Espaço</th>
-        <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Status</th>
+        <th style="${thStyle}">Protocolo</th>
+        <th style="${thStyle}">Título</th>
+        <th style="${thStyle}">Solicitante</th>
+        <th style="${thStyle}">Data / Espaço</th>
+        <th style="${thStyle}">Status</th>
         <th style="text-align:right;padding:7px 10px;font-size:9.5px;color:var(--tx3)">Ações</th>
       </tr></thead>
       <tbody>${rows.map(r => {
@@ -686,7 +731,9 @@ function _agRenderSolTabela() {
           </td>
         </tr>`;
       }).join("")}</tbody>
-    </table></div>`;
+    </table></div>` : "";
+
+  el.innerHTML = reqHtml + solHtml;
 }
 
 async function carregarSolicitacoesAgenda() {
@@ -694,13 +741,15 @@ async function carregarSolicitacoesAgenda() {
   if (!el) return;
   el.innerHTML = `<div style="color:var(--tx3);font-size:11px">${spinner()} Carregando...</div>`;
   try {
-    const res = await fetch(
-      `${apiBaseUrl()}/rest/v1/agenda?select=*&order=created_at.desc&limit=300`,
-      { headers: apiHeaders() }
-    );
-    if (!res.ok) throw new Error(await res.text());
-    _agSolRows = await res.json();
+    const [resAg, resReq] = await Promise.all([
+      fetch(`${apiBaseUrl()}/rest/v1/agenda?select=*&order=created_at.desc&limit=300`, { headers: apiHeaders() }),
+      fetch(`${apiBaseUrl()}/rest/v1/requisicoes_espaco?deleted_at=is.null&select=*&order=created_at.desc&limit=200`, { headers: apiHeaders() }),
+    ]);
+    if (!resAg.ok) throw new Error(await resAg.text());
+    _agSolRows = await resAg.json();
+    _agReqRows = resReq.ok ? await resReq.json() : [];
     _agKpiSol(_agSolRows);
+    _agKpiReq(_agReqRows);
     _agRenderSolTabela();
   } catch(e) {
     el.innerHTML = `<div style="color:var(--rose);font-size:11.5px">Erro: ${escapeHtml(e.message)}</div>`;

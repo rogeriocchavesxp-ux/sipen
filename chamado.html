@@ -353,6 +353,120 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 .ag2-occ-outros { color: var(--tx3); font-weight: 400; }
 .ag2-occ-outros .ag2-occ-item { color: var(--tx3); }
 
+/* ── req de espaço: menu ⋮ ─────────────────────────────────────── */
+.ag2-menu-btn {
+  pointer-events: auto; cursor: pointer;
+  background: none; border: none;
+  font-size: 15px; line-height: 1; color: var(--tx3);
+  padding: 0 3px; border-radius: 4px; flex-shrink: 0;
+  margin-left: auto;
+}
+.ag2-menu-btn:hover { background: rgba(0,0,0,.08); color: var(--tx1); }
+
+.ag2-menu-popup {
+  position: fixed; z-index: 9000;
+  background: var(--bg-card); border: 1px solid var(--bd2);
+  border-radius: 9px; box-shadow: 0 6px 24px rgba(0,0,0,.18);
+  min-width: 170px; padding: 5px;
+  display: none;
+}
+.ag2-menu-popup.aberto { display: block; }
+.ag2-menu-popup button {
+  display: block; width: 100%; text-align: left;
+  padding: 8px 13px; border: none; background: none;
+  border-radius: 6px; font-size: 12.5px; color: var(--tx1);
+  font-weight: 500; cursor: pointer;
+}
+.ag2-menu-popup button:hover { background: var(--bg-hover); }
+
+/* ── req de espaço: modal ────────────────────────────────────────── */
+.ag2-req-overlay {
+  position: fixed; inset: 0; z-index: 9500;
+  background: rgba(0,0,0,.48); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.ag2-req-box {
+  background: var(--bg-card); border-radius: 13px;
+  max-width: 580px; width: 100%; max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 10px 50px rgba(0,0,0,.25);
+  display: flex; flex-direction: column;
+}
+.ag2-req-hdr {
+  display: flex; align-items: center; gap: 10px;
+  padding: 16px 20px; border-bottom: 1px solid var(--bd);
+  position: sticky; top: 0; background: var(--bg-card); z-index: 1;
+}
+.ag2-req-hdr-txt { flex: 1; }
+.ag2-req-hdr-txt h3 { font-size: 14.5px; font-weight: 700; color: var(--tx1); margin: 0; }
+.ag2-req-hdr-txt p  { font-size: 11px; color: var(--tx3); margin: 2px 0 0; }
+.ag2-req-close {
+  background: none; border: none; font-size: 18px; color: var(--tx3);
+  cursor: pointer; padding: 3px 7px; border-radius: 6px; line-height: 1;
+}
+.ag2-req-close:hover { background: var(--bg-hover); color: var(--tx1); }
+.ag2-req-body { padding: 18px 20px; flex: 1; }
+.ag2-req-resumo {
+  background: rgba(220,53,69,.05); border: 1px solid rgba(220,53,69,.2);
+  border-radius: 8px; padding: 12px 14px; margin-bottom: 18px;
+  font-size: 12px; color: var(--tx2);
+}
+.ag2-req-resumo strong { color: var(--tx1); }
+.ag2-req-resumo ul { margin: 6px 0 0; padding-left: 16px; }
+.ag2-req-resumo li { margin-bottom: 2px; }
+.ag2-req-sec {
+  margin-bottom: 18px; padding-bottom: 18px;
+  border-bottom: 1px solid var(--bd);
+}
+.ag2-req-sec:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.ag2-req-sec-ttl {
+  font-size: 10px; font-weight: 800; color: var(--tx3);
+  text-transform: uppercase; letter-spacing: .1em; margin-bottom: 12px;
+}
+.ag2-req-row { display: flex; gap: 10px; margin-bottom: 10px; }
+.ag2-req-field { flex: 1; }
+.ag2-req-field label {
+  display: block; font-size: 10.5px; font-weight: 600; color: var(--tx3);
+  margin-bottom: 5px;
+}
+.ag2-req-field input,
+.ag2-req-field select,
+.ag2-req-field textarea {
+  width: 100%; box-sizing: border-box;
+  border: 1.5px solid var(--inpbd); border-radius: 7px;
+  padding: 8px 10px; font-size: 12.5px; color: var(--tx1);
+  background: var(--inp); outline: none; font-family: inherit;
+}
+.ag2-req-field textarea { min-height: 72px; resize: vertical; }
+.ag2-req-field input:focus, .ag2-req-field select:focus, .ag2-req-field textarea:focus {
+  border-color: var(--teal);
+}
+.ag2-req-radios { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; margin-top: 4px; }
+.ag2-req-radios label { display: flex; align-items: center; gap: 5px; cursor: pointer; color: var(--tx2); }
+.ag2-req-alt { margin-top: 10px; display: none; }
+.ag2-req-aviso {
+  background: rgba(234,88,12,.07); border: 1px solid rgba(234,88,12,.25);
+  border-radius: 8px; padding: 12px 14px; font-size: 12px; color: var(--tx2);
+  margin-bottom: 16px; line-height: 1.5;
+}
+.ag2-req-aviso strong { color: var(--orange); }
+.ag2-req-ftr {
+  display: flex; gap: 10px; justify-content: flex-end;
+  padding: 14px 20px; border-top: 1px solid var(--bd);
+  position: sticky; bottom: 0; background: var(--bg-card);
+}
+.ag2-req-ftr button { padding: 9px 18px; border-radius: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer; border: none; }
+.ag2-req-btn-cancel { background: var(--bg); border: 1px solid var(--bd2) !important; color: var(--tx2); }
+.ag2-req-btn-cancel:hover { background: var(--bg-hover); }
+.ag2-req-btn-next { background: var(--teal); color: #fff; }
+.ag2-req-btn-next:hover { opacity: .88; }
+.ag2-req-btn-submit { background: var(--orange); color: #fff; }
+.ag2-req-btn-submit:hover { opacity: .88; }
+@media (max-width: 480px) {
+  .ag2-req-row { flex-direction: column; }
+  .ag2-req-box { border-radius: 10px; }
+}
+
 /* ── screen-agend: contador ─────────────────────────────────── */
 .ag2-contador {
   display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
@@ -2220,13 +2334,17 @@ function ag2MostrarEspacos(dados) {
       card.className    = "ag2-espaco-card" +
         (!item.disponivel ? " ag2-espaco-indisp" : "") +
         (temOcc ? " ag2-espaco-com-occ" : "");
-      card.dataset.espaco = item.nome;
+      card.dataset.espaco   = item.nome;
+      card.dataset.ocupacoes = JSON.stringify(occs);
       card.title = item.disponivel
         ? item.nome
         : `${item.nome} — ocupado no horário solicitado`;
 
       if (temOcc) {
         const lockHTML = !item.disponivel ? `<span class="ag2-lock">🔒</span>` : "";
+        const menuHTML = !item.disponivel
+          ? `<button class="ag2-menu-btn" onclick="ag2AbrirMenu(event,this)" aria-label="Mais opções">⋮</button>`
+          : "";
         const occItems = occs.map(o => `<span class="ag2-occ-item">${ag2FormatarIntervalo(o)}</span>`).join("");
         const occClass = item.disponivel ? "ag2-ocupacoes ag2-occ-outros" : "ag2-ocupacoes";
         const occPrefix = item.disponivel
@@ -2236,14 +2354,18 @@ function ag2MostrarEspacos(dados) {
           `<div class="ag2-card-hdr">` +
             `<div class="ag2-chk"></div>` +
             `<span class="ag2-card-nome">${item.nome}</span>` +
-            lockHTML +
+            lockHTML + menuHTML +
           `</div>` +
           `<div class="${occClass}">${occPrefix}${occItems}</div>`;
       } else {
+        const menuHTML = !item.disponivel
+          ? `<button class="ag2-menu-btn" onclick="ag2AbrirMenu(event,this)" aria-label="Mais opções">⋮</button>`
+          : "";
         card.innerHTML =
           `<div class="ag2-chk"></div>` +
           `<span class="ag2-card-nome">${item.nome}</span>` +
-          (!item.disponivel ? `<span class="ag2-lock">🔒</span>` : "");
+          (!item.disponivel ? `<span class="ag2-lock">🔒</span>` : "") +
+          menuHTML;
       }
 
       if (item.disponivel) card.onclick = () => ag2ToggleEspaco(item.nome);
@@ -2567,6 +2689,323 @@ function novoEnvio() {
   document.getElementById("screen-form").style.display = "";
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
+
+// ═══════════════════════════════════════════════════════════════
+// REQUISIÇÃO DE ESPAÇO OCUPADO
+// ═══════════════════════════════════════════════════════════════
+
+let _ag2ReqCtx = null; // { espaco, ocupacoes, di, hi, hf }
+const _esc = s => String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+function ag2AbrirMenu(evt, btn) {
+  evt.stopPropagation();
+  const card = btn.closest("[data-espaco]");
+  const nome  = card?.dataset.espaco || "";
+  const occs  = card?.dataset.ocupacoes ? JSON.parse(card.dataset.ocupacoes) : [];
+  _ag2ReqCtx = {
+    espaco: nome, ocupacoes: occs,
+    di: document.getElementById("ag2-data-i")?.value || "",
+    hi: document.getElementById("ag2-hora-i")?.value || "",
+    hf: document.getElementById("ag2-hora-f")?.value || "",
+  };
+  const popup = document.getElementById("ag2-menu-popup");
+  if (!popup) return;
+  const r = btn.getBoundingClientRect();
+  popup.style.top  = (r.bottom + 4) + "px";
+  popup.style.left = Math.min(r.right - popup.offsetWidth, window.innerWidth - 180) + "px";
+  popup.classList.add("aberto");
+}
+
+document.addEventListener("click", () => {
+  document.getElementById("ag2-menu-popup")?.classList.remove("aberto");
+});
+
+function ag2AbrirModalReq() {
+  document.getElementById("ag2-menu-popup")?.classList.remove("aberto");
+  if (!_ag2ReqCtx) return;
+  const ctx = _ag2ReqCtx;
+
+  // Pré-preencher com dados já no formulário principal
+  const preNome = (document.getElementById("ag2-nome")?.value || "").trim();
+  const preTel  = (document.getElementById("ag2-tel")?.value  || "").trim();
+  const preTipo = _ag2Tipo || document.querySelector("input[name='ag2-tipo']:checked")?.value || "";
+  const preTit  = (document.getElementById("ag2-titulo")?.value || "").trim();
+
+  const fmtH = h => h ? String(h).slice(0,5) : null;
+  const fmtD = d => { if (!d) return "—"; const p = d.split("-"); return `${p[2]}/${p[1]}/${p[0]}`; };
+  const occsHtml = ctx.ocupacoes.length
+    ? ctx.ocupacoes.map(o => `<li>${ag2FormatarIntervalo(o)}</li>`).join("")
+    : "<li>Horário ocupado (detalhes não disponíveis)</li>";
+
+  const horSol = ctx.hi && ctx.hf ? `${fmtH(ctx.hi)} às ${fmtH(ctx.hf)}`
+               : ctx.hi ? `a partir das ${fmtH(ctx.hi)}`
+               : "Não informado";
+
+  document.getElementById("ag2-req-overlay")?.remove();
+
+  const el = document.createElement("div");
+  el.id        = "ag2-req-overlay";
+  el.className = "ag2-req-overlay";
+  el.innerHTML = `
+  <div class="ag2-req-box" role="dialog" aria-modal="true">
+    <div class="ag2-req-hdr">
+      <div class="ag2-req-hdr-txt">
+        <h3>Requisitar espaço ocupado</h3>
+        <p>A requisição será analisada pela Administração. Não garante liberação do espaço.</p>
+      </div>
+      <button class="ag2-req-close" onclick="document.getElementById('ag2-req-overlay').remove()" aria-label="Fechar">×</button>
+    </div>
+
+    <!-- PASSO 1: Formulário -->
+    <div id="ag2-req-step1">
+      <div class="ag2-req-body">
+
+        <!-- Resumo da ocupação -->
+        <div class="ag2-req-resumo">
+          <strong>🔒 ${_esc(ctx.espaco)}</strong>
+          &nbsp;·&nbsp; ${fmtD(ctx.di)}
+          &nbsp;·&nbsp; Horário solicitado: ${_esc(horSol)}<br>
+          <strong>Ocupado atualmente:</strong>
+          <ul>${occsHtml}</ul>
+        </div>
+
+        <!-- Dados do solicitante -->
+        <div class="ag2-req-sec">
+          <div class="ag2-req-sec-ttl">Seus dados</div>
+          <div class="ag2-req-row">
+            <div class="ag2-req-field">
+              <label>Nome completo *</label>
+              <input id="req-nome" type="text" placeholder="Seu nome completo" value="${_esc(preNome)}">
+            </div>
+            <div class="ag2-req-field">
+              <label>Telefone / WhatsApp *</label>
+              <input id="req-tel" type="tel" placeholder="(11) 99999-9999" value="${_esc(preTel)}">
+            </div>
+          </div>
+        </div>
+
+        <!-- Programação pretendida -->
+        <div class="ag2-req-sec">
+          <div class="ag2-req-sec-ttl">Programação pretendida</div>
+          <div class="ag2-req-row">
+            <div class="ag2-req-field" style="flex:0 0 160px">
+              <label>Tipo de programação</label>
+              <input id="req-tipo" type="text" placeholder="Ex: Culto, Ensaio, Evento" value="${_esc(preTipo)}">
+            </div>
+            <div class="ag2-req-field">
+              <label>Título *</label>
+              <input id="req-titulo" type="text" placeholder="Nome da programação" value="${_esc(preTit)}">
+            </div>
+          </div>
+          <div class="ag2-req-row">
+            <div class="ag2-req-field" style="flex:0 0 100px">
+              <label>Participantes estimados</label>
+              <input id="req-part" type="number" min="1" placeholder="0">
+            </div>
+            <div class="ag2-req-field">
+              <label>Horário pretendido</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input id="req-hi" type="time" value="${_esc(ctx.hi)}" style="width:120px">
+                <span style="font-size:11px;color:var(--tx3)">às</span>
+                <input id="req-hf" type="time" value="${_esc(ctx.hf)}" style="width:120px">
+              </div>
+            </div>
+          </div>
+          <div class="ag2-req-field" style="margin-bottom:10px">
+            <label>Descrição resumida</label>
+            <textarea id="req-desc" placeholder="Descrição breve da programação"></textarea>
+          </div>
+        </div>
+
+        <!-- Justificativa -->
+        <div class="ag2-req-sec">
+          <div class="ag2-req-sec-ttl">Justificativa *</div>
+          <div class="ag2-req-field">
+            <label>Por que esta programação precisa deste espaço?</label>
+            <textarea id="req-just" rows="4" placeholder="Explique a finalidade, o número de participantes, as necessidades da programação e por que outro espaço não atenderia adequadamente."></textarea>
+          </div>
+        </div>
+
+        <!-- Flexibilidade -->
+        <div class="ag2-req-sec">
+          <div class="ag2-req-sec-ttl">Flexibilidade</div>
+          <div style="margin-bottom:12px">
+            <div style="font-size:11px;font-weight:600;color:var(--tx3);margin-bottom:6px">Pode utilizar outro espaço?</div>
+            <div class="ag2-req-radios">
+              <label><input type="radio" name="req-outro-esp" value="Sim" onchange="ag2ReqToggleAlt('esp',this.value)"> Sim</label>
+              <label><input type="radio" name="req-outro-esp" value="Não" checked onchange="ag2ReqToggleAlt('esp',this.value)"> Não</label>
+              <label><input type="radio" name="req-outro-esp" value="Talvez" onchange="ag2ReqToggleAlt('esp',this.value)"> Talvez, mediante avaliação</label>
+            </div>
+            <div id="req-alt-esp" class="ag2-req-alt">
+              <input id="req-espacos-alt" type="text" placeholder="Quais espaços alternativos seriam possíveis?">
+            </div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--tx3);margin-bottom:6px">Pode alterar o horário?</div>
+            <div class="ag2-req-radios">
+              <label><input type="radio" name="req-outro-hor" value="Sim" onchange="ag2ReqToggleAlt('hor',this.value)"> Sim</label>
+              <label><input type="radio" name="req-outro-hor" value="Não" checked onchange="ag2ReqToggleAlt('hor',this.value)"> Não</label>
+              <label><input type="radio" name="req-outro-hor" value="Talvez" onchange="ag2ReqToggleAlt('hor',this.value)"> Talvez, mediante avaliação</label>
+            </div>
+            <div id="req-alt-hor" class="ag2-req-alt">
+              <input id="req-horarios-alt" type="text" placeholder="Quais horários alternativos seriam possíveis?">
+            </div>
+          </div>
+          <div style="margin-top:10px" id="req-obs-container">
+            <div style="font-size:11px;font-weight:600;color:var(--tx3);margin-bottom:6px">Observações adicionais</div>
+            <textarea id="req-obs" rows="2" placeholder="Informações complementares para a Administração"></textarea>
+          </div>
+        </div>
+
+      </div>
+      <div class="ag2-req-ftr">
+        <button class="ag2-req-btn-cancel" onclick="document.getElementById('ag2-req-overlay').remove()">Cancelar</button>
+        <button class="ag2-req-btn-next" onclick="ag2ReqConfirmar()">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- PASSO 2: Confirmação -->
+    <div id="ag2-req-step2" style="display:none">
+      <div class="ag2-req-body">
+        <div class="ag2-req-aviso">
+          <strong>⚠️ Atenção antes de enviar</strong><br><br>
+          Esta requisição <strong>não garante a liberação do espaço</strong>.<br><br>
+          A reserva existente permanecerá válida até que a Administração analise o conflito e comunique a decisão.<br><br>
+          Você receberá um protocolo de acompanhamento.
+        </div>
+        <div style="font-size:12px;color:var(--tx2);background:var(--bg);border-radius:8px;padding:12px 14px;border:1px solid var(--bd)">
+          <strong>Espaço:</strong> <span id="req-conf-espaco"></span><br>
+          <strong>Data:</strong> <span id="req-conf-data"></span><br>
+          <strong>Horário solicitado:</strong> <span id="req-conf-horario"></span><br>
+          <strong>Programação:</strong> <span id="req-conf-titulo"></span><br>
+          <strong>Solicitante:</strong> <span id="req-conf-nome"></span>
+        </div>
+        <div id="req-erro" style="display:none;margin-top:12px;color:var(--rose);font-size:12px;background:rgba(220,53,69,.07);border-radius:7px;padding:10px 13px"></div>
+      </div>
+      <div class="ag2-req-ftr">
+        <button class="ag2-req-btn-cancel" onclick="ag2ReqVoltar()">← Voltar</button>
+        <button class="ag2-req-btn-submit" id="req-btn-enviar" onclick="ag2EnviarRequisicao()">Enviar Requisição</button>
+      </div>
+    </div>
+  </div>`;
+
+  document.body.appendChild(el);
+  document.getElementById("req-nome")?.focus();
+}
+
+function ag2ReqToggleAlt(tipo, valor) {
+  const id = tipo === "esp" ? "req-alt-esp" : "req-alt-hor";
+  const el = document.getElementById(id);
+  if (el) el.style.display = (valor === "Sim" || valor === "Talvez") ? "block" : "none";
+}
+
+function ag2ReqConfirmar() {
+  const nome  = (document.getElementById("req-nome")?.value  || "").trim();
+  const tel   = (document.getElementById("req-tel")?.value   || "").trim();
+  const tit   = (document.getElementById("req-titulo")?.value || "").trim();
+  const just  = (document.getElementById("req-just")?.value  || "").trim();
+
+  if (!nome) { document.getElementById("req-nome")?.focus(); return; }
+  if (!tel)  { document.getElementById("req-tel")?.focus();  return; }
+  if (!tit)  { document.getElementById("req-titulo")?.focus(); return; }
+  if (!just) { document.getElementById("req-just")?.focus(); return; }
+
+  const fmtH = h => h ? String(h).slice(0,5) : null;
+  const fmtD = d => { if (!d) return "—"; const p = d.split("-"); return `${p[2]}/${p[1]}/${p[0]}`; };
+  const ctx  = _ag2ReqCtx;
+  const hi   = document.getElementById("req-hi")?.value || ctx?.hi || "";
+  const hf   = document.getElementById("req-hf")?.value || ctx?.hf || "";
+
+  document.getElementById("req-conf-espaco").textContent  = ctx?.espaco || "—";
+  document.getElementById("req-conf-data").textContent    = fmtD(ctx?.di || "");
+  document.getElementById("req-conf-horario").textContent = hi && hf ? `${fmtH(hi)} – ${fmtH(hf)}` : fmtH(hi) || "Não informado";
+  document.getElementById("req-conf-titulo").textContent  = tit;
+  document.getElementById("req-conf-nome").textContent    = nome;
+
+  document.getElementById("ag2-req-step1").style.display = "none";
+  document.getElementById("ag2-req-step2").style.display = "";
+}
+
+function ag2ReqVoltar() {
+  document.getElementById("ag2-req-step1").style.display = "";
+  document.getElementById("ag2-req-step2").style.display = "none";
+  document.getElementById("req-erro").style.display = "none";
+}
+
+async function ag2EnviarRequisicao() {
+  const ctx   = _ag2ReqCtx;
+  if (!ctx) return;
+  const btn = document.getElementById("req-btn-enviar");
+  if (btn) { btn.disabled = true; btn.textContent = "Enviando…"; }
+
+  const fmtH = h => h ? String(h).slice(0,5) : null;
+  const val  = id => (document.getElementById(id)?.value || "").trim();
+  const radio = name => document.querySelector(`input[name='${name}']:checked`)?.value || "Não";
+
+  const payload = {
+    p_espaco_nome:      ctx.espaco,
+    p_data:             ctx.di,
+    p_hora_ini:         fmtH(val("req-hi") || ctx.hi),
+    p_hora_fim:         fmtH(val("req-hf") || ctx.hf),
+    p_ocupacoes:        ctx.ocupacoes,
+    p_solicitante_nome: val("req-nome"),
+    p_solicitante_tel:  val("req-tel"),
+    p_tipo:             val("req-tipo")  || null,
+    p_titulo:           val("req-titulo"),
+    p_descricao:        val("req-desc")  || null,
+    p_participantes:    parseInt(val("req-part")) || null,
+    p_justificativa:    val("req-just"),
+    p_aceita_outro_esp: radio("req-outro-esp"),
+    p_espacos_alt:      val("req-espacos-alt") || null,
+    p_aceita_outro_hor: radio("req-outro-hor"),
+    p_horarios_alt:     val("req-horarios-alt") || null,
+    p_obs_alt:          val("req-obs") || null,
+  };
+
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/rpc/requisitar_espaco_ocupado`, {
+      method: "POST",
+      headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    const rpc  = Array.isArray(data) ? data[0] : data;
+
+    if (!res.ok || !rpc?.ok) {
+      if (rpc?.duplicado) {
+        const errEl = document.getElementById("req-erro");
+        if (errEl) {
+          errEl.textContent = `Já existe uma requisição em análise para este espaço e período. Protocolo: ${rpc.protocolo || ""}`;
+          errEl.style.display = "";
+        }
+      } else {
+        throw new Error(rpc?.erro || `Erro ${res.status}`);
+      }
+      if (btn) { btn.disabled = false; btn.textContent = "Enviar Requisição"; }
+      return;
+    }
+
+    // Sucesso
+    document.getElementById("ag2-req-overlay")?.remove();
+    const prot = rpc.protocolo || "";
+    const msgEl = document.createElement("div");
+    msgEl.style.cssText = "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:14px 20px;box-shadow:0 6px 24px rgba(0,0,0,.18);font-size:12.5px;max-width:340px;text-align:center;line-height:1.5";
+    msgEl.innerHTML = `<strong style="color:var(--teal)">Requisição registrada</strong><br>Sua requisição foi registrada e será analisada pela Administração. O espaço permanece reservado até a decisão.<br><span style="font-size:10px;color:var(--tx3);font-family:var(--mono)">${prot}</span>`;
+    document.body.appendChild(msgEl);
+    setTimeout(() => msgEl.remove(), 7000);
+
+  } catch(e) {
+    const errEl = document.getElementById("req-erro");
+    if (errEl) { errEl.textContent = e.message || "Erro ao enviar. Tente novamente."; errEl.style.display = ""; }
+    if (btn) { btn.disabled = false; btn.textContent = "Enviar Requisição"; }
+  }
+}
 </script>
+
+<!-- Menu popup singleton (requisição de espaço) -->
+<div id="ag2-menu-popup" class="ag2-menu-popup">
+  <button onclick="ag2AbrirModalReq()">Requisitar espaço</button>
+</div>
+
 </body>
 </html>
