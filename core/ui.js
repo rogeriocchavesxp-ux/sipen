@@ -112,6 +112,46 @@ function submitTask() {
   }).catch(e => T("Erro ao criar", e.message));
 }
 
+const _COL_PT_UI = {
+  titulo:"Título", data:"Data", mes:"Mês", dia_semana:"Dia da Semana",
+  hora_inicio:"Horário de Início", hora_fim:"Horário de Fim",
+  recorrencia:"Recorrência", espaco:"Espaço / Ambiente",
+  organizador:"Organizador", observacao:"Observação", status:"Status",
+  tipo:"Tipo", nome:"Nome", email:"E-mail", telefone:"Telefone",
+  cargo:"Cargo", ministerio:"Ministério", area:"Área",
+  descricao:"Descrição", valor:"Valor", quantidade:"Qtd",
+  responsavel:"Responsável", solicitante:"Solicitante",
+  item:"Item", unidade:"Unidade", localizacao:"Localização",
+  data_batismo:"Batismo", data_membro:"Membro desde",
+  data_entrada:"Entrada", data_saida:"Saída",
+  categoria:"Categoria", prioridade:"Prioridade",
+};
+const _colLabelUI = c => _COL_PT_UI[c] || c.replace(/_/g," ").replace(/\b\w/g, l => l.toUpperCase());
+
+async function _popularSelectEspacosCrud(el) {
+  const val = el.dataset.valorAtual || "";
+  try {
+    const r = await fetch(`${apiBaseUrl()}/rest/v1/espacos?ativo=eq.true&order=grupo.asc,ordem.asc,nome.asc`, { headers: apiHeaders() });
+    const rows = r.ok ? await r.json() : [];
+    const grupos = {};
+    rows.forEach(e => { const g = e.grupo || "Outros"; if (!grupos[g]) grupos[g] = []; grupos[g].push(e); });
+    el.innerHTML = `<option value="">— Selecione o espaço —</option>`;
+    Object.entries(grupos).forEach(([g, items]) => {
+      const grp = document.createElement("optgroup");
+      grp.label = g;
+      items.forEach(e => {
+        const opt = document.createElement("option");
+        opt.value = e.id;
+        opt.dataset.nome = e.nome;
+        opt.textContent = e.nome;
+        if (e.id === val || e.nome === val) opt.selected = true;
+        grp.appendChild(opt);
+      });
+      el.appendChild(grp);
+    });
+  } catch (_) {}
+}
+
 function openCrudForm(tab, preset = null) {
   if (["MEMBROS","VISITANTES"].includes(tab)) {
     const nivel = (permissoesUsuario || {})["MEMBRESIA"] || "SEM_ACESSO";
@@ -133,7 +173,8 @@ function openCrudForm(tab, preset = null) {
   function renderField(f) {
     const val = preset && preset[f] !== undefined ? preset[f] : "";
     const req = obrig.includes(f) ? ' <span style="color:var(--rose)">*</span>' : "";
-    const label = `<label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">${escapeHtml(f)}${req}</label>`;
+    const lbl = _colLabelUI(f);
+    const label = `<label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">${escapeHtml(lbl)}${req}</label>`;
     const tipo = tipos[f] || "";
     const isLong = /descricao|observacoes|solucao|detalhes/i.test(f);
     const inputStyle = `width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none`;
@@ -142,14 +183,22 @@ function openCrudForm(tab, preset = null) {
       const checked = val === true || val === "true" ? "checked" : "";
       return `<div style="grid-column:auto"><label style="font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);display:flex;align-items:center;gap:8px;cursor:pointer">
         <input type="checkbox" data-field="${escapeHtmlAttr(f)}" data-type="boolean" ${checked} style="width:14px;height:14px;accent-color:var(--gr)">
-        ${escapeHtml(f)}</label></div>`;
+        ${escapeHtml(lbl)}</label></div>`;
+    }
+    if (tipo === "espacos-select") {
+      // Select populado assincronamente do cadastro central de espaços
+      // valorAtual pode ser o nome (legado) ou UUID (novo) — _popularSelectEspacosCrud lida com os dois
+      const valorAtual = (preset?.espaco_id || val || "");
+      return `<div>${label}<select data-field="${escapeHtmlAttr(f)}" data-tipo-async="espacos" data-valor-atual="${escapeHtmlAttr(String(valorAtual))}" style="${inputStyle}">
+        <option value="">Carregando espaços…</option>
+      </select></div>`;
     }
     if (tipo.startsWith("select:")) {
       const opts = tipo.replace("select:","").split(",").map(o => {
         const sep = o.indexOf("=");
         return sep === -1 ? { value: o, label: o } : { value: o.slice(0, sep), label: o.slice(sep + 1) };
       });
-      return `<div><label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">${escapeHtml(f)}${req}</label>
+      return `<div><label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">${escapeHtml(lbl)}${req}</label>
         <select data-field="${escapeHtmlAttr(f)}" style="${inputStyle}">
           ${opts.map(o=>`<option value="${escapeHtmlAttr(o.value)}" ${String(val)===o.value?"selected":""}>${escapeHtml(o.label)}</option>`).join("")}
         </select></div>`;
@@ -169,12 +218,12 @@ function openCrudForm(tab, preset = null) {
     return `<div>${label}<input type="text" data-field="${escapeHtmlAttr(f)}" value="${escapeHtmlAttr(String(val))}" style="${inputStyle}"></div>`;
   }
 
+  const tituloLabel = SCHEMA.labels[tab] ? tcPT(SCHEMA.labels[tab]) : tab;
   modal.innerHTML = `
     <div style="width:min(760px,92vw);max-height:88vh;overflow:hidden;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;display:flex;flex-direction:column">
       <div style="padding:14px 16px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between">
         <div>
-          <div style="font-size:14px;font-weight:700;color:var(--tx1)">${preset ? "Editar" : "Novo"} · ${SCHEMA.labels[tab] || tab}</div>
-          <div style="font-size:10px;color:var(--tx3)">${tab}</div>
+          <div style="font-size:14px;font-weight:700;color:var(--tx1)">${preset ? "Editar" : "Novo"} · ${escapeHtml(tituloLabel)}</div>
         </div>
         <button onclick="document.getElementById('crud-modal').remove()" style="background:none;border:none;color:var(--tx3);font-size:16px;cursor:pointer">✕</button>
       </div>
@@ -189,6 +238,9 @@ function openCrudForm(tab, preset = null) {
         <button onclick='salvarRegistro(${JSON.stringify(tab)}, ${preset ? JSON.stringify(preset.id || null) : "null"})' style="background:var(--gr);border:none;border-radius:6px;padding:8px 16px;color:#fff;font-weight:600;cursor:pointer">💾 Salvar</button>
       </div>
     </div>`;
+
+  // População assíncrona de selects de espaços
+  modal.querySelectorAll('[data-tipo-async="espacos"]').forEach(el => _popularSelectEspacosCrud(el));
 }
 
 async function salvarRegistro(tab, recordId = null) {
@@ -211,6 +263,15 @@ async function salvarRegistro(tab, recordId = null) {
   for (const f of obrig) {
     if (!data[f] || String(data[f]).trim() === "") {
       return T("Campo obrigatório", `Preencha o campo: ${f}`);
+    }
+  }
+  // Dual-write para AGENDA: espaco (UUID do select) → espaco_id + espaco (nome legível)
+  if (tab === "AGENDA" && data.espaco) {
+    const espEl = modal.querySelector("[data-field='espaco'][data-tipo-async='espacos']");
+    const espNome = espEl?.selectedOptions?.[0]?.dataset?.nome;
+    if (espNome) {
+      data.espaco_id = data.espaco; // UUID vem do value do select
+      data.espaco    = espNome;     // nome legível vem do data-nome
     }
   }
   if (tab === "DEMANDAS") {
