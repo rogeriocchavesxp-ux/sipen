@@ -2221,6 +2221,24 @@ function ag2AtualizarSelecao() {
   }
 }
 
+function ag2MarcarConflitos(nomes) {
+  nomes.forEach(n => _ag2EspacosSelecionados.delete(n));
+  document.querySelectorAll("[data-espaco]").forEach(card => {
+    if (!nomes.includes(card.dataset.espaco)) return;
+    card.classList.remove("ag2-espaco-sel");
+    card.classList.add("ag2-espaco-indisp");
+    card.onclick = null;
+    card.title   = `${card.dataset.espaco} — reservado`;
+    if (!card.querySelector(".ag2-lock")) {
+      card.insertAdjacentHTML("beforeend",
+        `<span class="ag2-lock">🔒</span><span class="ag2-tag-ocupado">Conflito</span>`);
+    }
+  });
+  ag2AtualizarSelecao();
+  const espCard = document.getElementById("ag2-card-espacos");
+  if (espCard) espCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
 async function ag2Enviar() {
   if (document.getElementById("_gotcha")?.value) return;
 
@@ -2233,8 +2251,9 @@ async function ag2Enviar() {
   const df     = document.getElementById("ag2-data-f")?.value  || di;
   const hf     = document.getElementById("ag2-hora-f")?.value  || null;
   const part   = parseInt(document.getElementById("ag2-part")?.value || "0", 10) || null;
-  const espaco = [..._ag2EspacosSelecionados].join(", ");
-  const nome   = (document.getElementById("ag2-nome")?.value   || "").trim();
+  const espacosList = [..._ag2EspacosSelecionados];
+  const espaco      = espacosList.join(", ");
+  const nome        = (document.getElementById("ag2-nome")?.value   || "").trim();
   const tel    = (document.getElementById("ag2-tel")?.value    || "").trim();
   const titulo = (document.getElementById("ag2-titulo")?.value || "").trim();
   const desc   = (document.getElementById("ag2-desc")?.value   || "").trim();
@@ -2270,6 +2289,38 @@ async function ag2Enviar() {
   if (btn) { btn.disabled = true; btn.textContent = "Enviando…"; }
 
   try {
+    // 0. Pré-verificação de conflito antes de criar o chamado
+    try {
+      const preRes = await fetch(`${SB_URL}/rest/v1/rpc/espacos_disponibilidade`, {
+        method:  "POST",
+        headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          p_data_inicio: di,
+          p_hora_inicio: hi || "00:00",
+          p_data_fim:    df,
+          p_hora_fim:    hf || null,
+        }),
+      });
+      if (preRes.ok) {
+        const raw = await preRes.json();
+        const arr = Array.isArray(raw) && Array.isArray(raw[0]) ? raw[0] : raw;
+        if (Array.isArray(arr) && arr.length > 0) {
+          const conflitantes = espacosList.filter(sp => {
+            const d = arr.find(x => x.nome === sp);
+            return d && !d.disponivel;
+          });
+          if (conflitantes.length > 0) {
+            if (btn) { btn.disabled = false; btn.textContent = "Enviar Solicitação"; }
+            ag2MarcarConflitos(conflitantes);
+            ag2MostrarErro(
+              `Conflito: ${conflitantes.join(", ")} não está mais disponível para este período. Selecione outro espaço.`
+            );
+            return;
+          }
+        }
+      }
+    } catch (_) { /* RPC indisponível — prossegue; DB verifica */ }
+
     // 1. Criar chamado
     const res = await fetch(`${SB_URL}/functions/v1/chamado-publico`, {
       method:  "POST",
@@ -2325,8 +2376,10 @@ async function ag2Enviar() {
         protocolo = rpcData.protocolo;
         agendaId  = rpcData.agenda_id || null;
       } else if (rpcData.conflito) {
-        const avEl = document.getElementById("ok-aviso-conflito");
-        if (avEl) avEl.style.display = "";
+        if (btn) { btn.disabled = false; btn.textContent = "Enviar Solicitação"; }
+        _ag2DispVerificada = false;
+        ag2MostrarErro("Conflito de reserva: o espaço foi reservado por outra pessoa neste período. Selecione outro espaço ou horário.");
+        return;
       }
     }
 
