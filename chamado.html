@@ -293,6 +293,7 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 6px;
+  align-items: start;
 }
 
 /* ── screen-agend: cards de espaço ──────────────────────────── */
@@ -329,9 +330,28 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
   transform: rotate(45deg);
 }
 .ag2-espaco-indisp .ag2-chk { background: var(--bd); border-color: var(--bd); }
-.ag2-espaco-indisp { opacity: .46; cursor: not-allowed; pointer-events: none; color: var(--tx3); }
-.ag2-lock { font-size: 10px; margin-left: auto; flex-shrink: 0; }
-.ag2-tag-ocupado { font-size: 10px; color: var(--rose); margin-left: auto; flex-shrink: 0; }
+.ag2-espaco-indisp {
+  cursor: not-allowed; pointer-events: none;
+  border-color: var(--rose); background: rgba(220,53,69,.05);
+}
+.ag2-espaco-indisp .ag2-card-nome { color: var(--tx2); }
+.ag2-lock { font-size: 11px; flex-shrink: 0; margin-left: auto; }
+.ag2-tag-ocupado { font-size: 10px; color: var(--rose); flex-shrink: 0; }
+
+/* Cards com informação de ocupação (layout em coluna) */
+.ag2-espaco-com-occ { flex-direction: column; align-items: stretch; gap: 5px; }
+.ag2-card-hdr { display: flex; align-items: center; gap: 9px; width: 100%; }
+.ag2-card-nome { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Lista de intervalos ocupados dentro do card */
+.ag2-ocupacoes {
+  display: flex; flex-direction: column; gap: 2px;
+  padding-left: 25px;
+  font-size: 10.5px; font-weight: 500;
+}
+.ag2-ocupacoes .ag2-occ-item { color: var(--rose); }
+.ag2-occ-outros { color: var(--tx3); font-weight: 400; }
+.ag2-occ-outros .ag2-occ-item { color: var(--tx3); }
 
 /* ── screen-agend: contador ─────────────────────────────────── */
 .ag2-contador {
@@ -2078,16 +2098,22 @@ async function ag2VerificarDisp() {
         const raw = await dispRes.json();
         // PostgREST pode retornar [[...]] (JSONB scalar) ou [...] (TABLE)
         const arr = Array.isArray(raw) && Array.isArray(raw[0]) ? raw[0] : raw;
-        if (Array.isArray(arr)) arr.forEach(d => { if (d?.nome) dispMap[d.nome] = d.disponivel; });
+        if (Array.isArray(arr)) arr.forEach(d => {
+          if (d?.nome) dispMap[d.nome] = { disponivel: d.disponivel, ocupacoes: d.ocupacoes || [] };
+        });
       }
     } catch (_) { /* RPC indisponível: continua sem marcação */ }
 
-    // 3. Mescla: espaços + disponibilidade
-    const dados = espacos.map(e => ({
-      nome:       e.nome,
-      grupo:      e.grupo || "",
-      disponivel: Object.prototype.hasOwnProperty.call(dispMap, e.nome) ? dispMap[e.nome] : true,
-    }));
+    // 3. Mescla: espaços + disponibilidade + intervalos
+    const dados = espacos.map(e => {
+      const info = dispMap[e.nome];
+      return {
+        nome:       e.nome,
+        grupo:      e.grupo || "",
+        disponivel: info ? info.disponivel : true,
+        ocupacoes:  info ? info.ocupacoes  : [],
+      };
+    });
 
     _ag2DispVerificada = true;
     ag2MostrarEspacos(dados);
@@ -2099,6 +2125,39 @@ async function ag2VerificarDisp() {
     if (btn)      btn.disabled = false;
     if (checking) checking.style.display = "none";
   }
+}
+
+function ag2ConsolidarIntervalos(occs) {
+  if (!occs || !occs.length) return [];
+  const sorted = [...occs].sort((a, b) => {
+    const ai = (a.data || "") + "T" + (a.hora_inicio || "00:00");
+    const bi = (b.data || "") + "T" + (b.hora_inicio || "00:00");
+    return ai < bi ? -1 : ai > bi ? 1 : 0;
+  });
+  const res = [{ ...sorted[0] }];
+  for (let i = 1; i < sorted.length; i++) {
+    const last = res[res.length - 1];
+    const curr = sorted[i];
+    const lastEnd   = (last.data_enc || last.data || "") + "T" + (last.hora_fim   || "23:59");
+    const currStart = (curr.data     || "")             + "T" + (curr.hora_inicio || "00:00");
+    if (currStart <= lastEnd) {
+      const currEnd = (curr.data_enc || curr.data || "") + "T" + (curr.hora_fim || "23:59");
+      if (currEnd > lastEnd) { last.hora_fim = curr.hora_fim; last.data_enc = curr.data_enc || curr.data; }
+    } else {
+      res.push({ ...curr });
+    }
+  }
+  return res;
+}
+
+function ag2FormatarIntervalo(occ) {
+  const hi  = (occ.hora_inicio || "00:00").slice(0, 5);
+  const hf  = (occ.hora_fim    || "23:59").slice(0, 5);
+  const datI = occ.data     || "";
+  const datF = occ.data_enc || occ.data || "";
+  if (datI === datF) return `das ${hi} às ${hf}`;
+  const fmt = d => { const p = d.split("-"); return p.length === 3 ? `${p[2]}/${p[1]}` : d; };
+  return `de ${fmt(datI)} às ${hi} até ${fmt(datF)} às ${hf}`;
 }
 
 function ag2MostrarEspacos(dados) {
@@ -2154,14 +2213,39 @@ function ag2MostrarEspacos(dados) {
     gGrid.className = "ag2-grupo-grid";
 
     ordenado.forEach(item => {
-      const card = document.createElement("div");
-      card.className    = "ag2-espaco-card" + (item.disponivel ? "" : " ag2-espaco-indisp");
+      const card  = document.createElement("div");
+      const occs  = ag2ConsolidarIntervalos(item.ocupacoes || []);
+      const temOcc = occs.length > 0;
+
+      card.className    = "ag2-espaco-card" +
+        (!item.disponivel ? " ag2-espaco-indisp" : "") +
+        (temOcc ? " ag2-espaco-com-occ" : "");
       card.dataset.espaco = item.nome;
-      card.title        = item.disponivel ? item.nome : `${item.nome} — ocupado`;
-      card.innerHTML    =
-        `<div class="ag2-chk"></div>` +
-        `<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.nome}</span>` +
-        (item.disponivel ? "" : `<span class="ag2-lock">🔒</span><span class="ag2-tag-ocupado">Ocupado</span>`);
+      card.title = item.disponivel
+        ? item.nome
+        : `${item.nome} — ocupado no horário solicitado`;
+
+      if (temOcc) {
+        const lockHTML = !item.disponivel ? `<span class="ag2-lock">🔒</span>` : "";
+        const occItems = occs.map(o => `<span class="ag2-occ-item">${ag2FormatarIntervalo(o)}</span>`).join("");
+        const occClass = item.disponivel ? "ag2-ocupacoes ag2-occ-outros" : "ag2-ocupacoes";
+        const occPrefix = item.disponivel
+          ? `<span style="font-size:10px;color:var(--tx3);display:block;margin-bottom:1px">Também ocupado:</span>`
+          : "";
+        card.innerHTML =
+          `<div class="ag2-card-hdr">` +
+            `<div class="ag2-chk"></div>` +
+            `<span class="ag2-card-nome">${item.nome}</span>` +
+            lockHTML +
+          `</div>` +
+          `<div class="${occClass}">${occPrefix}${occItems}</div>`;
+      } else {
+        card.innerHTML =
+          `<div class="ag2-chk"></div>` +
+          `<span class="ag2-card-nome">${item.nome}</span>` +
+          (!item.disponivel ? `<span class="ag2-lock">🔒</span>` : "");
+      }
+
       if (item.disponivel) card.onclick = () => ag2ToggleEspaco(item.nome);
       gGrid.appendChild(card);
     });
@@ -2230,7 +2314,8 @@ function ag2MarcarConflitos(nomes) {
     card.onclick = null;
     card.title   = `${card.dataset.espaco} — reservado`;
     if (!card.querySelector(".ag2-lock")) {
-      card.insertAdjacentHTML("beforeend",
+      const hdr = card.querySelector(".ag2-card-hdr") || card;
+      hdr.insertAdjacentHTML("beforeend",
         `<span class="ag2-lock">🔒</span><span class="ag2-tag-ocupado">Conflito</span>`);
     }
   });
