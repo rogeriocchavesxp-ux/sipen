@@ -20,31 +20,42 @@
     </div>
 
     <!-- KPIs -->
-    <div class="ct" style="grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:0">
-      <div class="card" style="padding:16px 18px;cursor:pointer" onclick="go('com-solicitacoes')">
-        <div style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Total</div>
-        <div id="com-kpi-total" style="font-size:26px;font-weight:800;color:var(--tx1);line-height:1">—</div>
-        <div style="font-size:10px;color:var(--tx3);margin-top:4px">solicitações</div>
+    <style>
+      #com-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:12px}
+      .ck{background:var(--bg-card);border:1px solid var(--bd1);border-radius:12px;padding:14px 18px 13px;cursor:pointer;position:relative;overflow:hidden;transition:box-shadow .15s,transform .12s}
+      .ck::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ck-c,var(--bd2))}
+      .ck:hover{box-shadow:0 3px 16px rgba(0,0,0,.08);transform:translateY(-1px)}
+      .ck-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);line-height:1.3;margin-bottom:2px}
+      .ck-val{font-size:38px;font-weight:800;line-height:1;color:var(--ck-c,var(--tx1));font-variant-numeric:tabular-nums;margin-bottom:2px}
+      .ck-dsc{font-size:11px;color:var(--tx4,var(--tx3));line-height:1.3}
+      @media(max-width:900px){#com-kpis{grid-template-columns:repeat(3,1fr)}}
+      @media(max-width:540px){#com-kpis{grid-template-columns:1fr}}
+    </style>
+    <div id="com-kpis">
+      <div class="ck" onclick="go('com-solicitacoes')">
+        <div class="ck-lbl">Total</div>
+        <div class="ck-val" id="com-kpi-total" style="color:var(--tx1)">—</div>
+        <div class="ck-dsc">solicitações</div>
       </div>
-      <div class="card" style="padding:16px 18px;cursor:pointer;border-color:rgba(245,158,11,.3)" onclick="comFiltrarStatus('Aguardando aprovação da Administração')">
-        <div style="font-size:9.5px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">🟡 Ag. Administração</div>
-        <div id="com-kpi-aguard" style="font-size:26px;font-weight:800;color:var(--amber);line-height:1">—</div>
-        <div style="font-size:10px;color:var(--tx3);margin-top:4px">reserva pendente</div>
+      <div class="ck" style="--ck-c:var(--amber)" onclick="comFiltrarStatus('Aguardando aprovação da Administração')">
+        <div class="ck-lbl">Aguardando Administração</div>
+        <div class="ck-val" id="com-kpi-aguard">—</div>
+        <div class="ck-dsc">reserva pendente</div>
       </div>
-      <div class="card" style="padding:16px 18px;cursor:pointer;border-color:rgba(14,165,233,.3)" onclick="comFiltrarStatus('Aprovada para produção')">
-        <div style="font-size:9.5px;font-weight:700;color:var(--sky);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">🔵 Aprovadas</div>
-        <div id="com-kpi-aprov" style="font-size:26px;font-weight:800;color:var(--sky);line-height:1">—</div>
-        <div style="font-size:10px;color:var(--tx3);margin-top:4px">prontas para produção</div>
+      <div class="ck" style="--ck-c:var(--sky)" onclick="comFiltrarStatus('Aprovada para produção')">
+        <div class="ck-lbl">Aprovadas</div>
+        <div class="ck-val" id="com-kpi-aprov">—</div>
+        <div class="ck-dsc">para produção</div>
       </div>
-      <div class="card" style="padding:16px 18px;cursor:pointer;border-color:rgba(139,111,212,.3)" onclick="comFiltrarStatus('Em produção')">
-        <div style="font-size:9.5px;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">🟣 Em Produção</div>
-        <div id="com-kpi-prod" style="font-size:26px;font-weight:800;color:var(--violet);line-height:1">—</div>
-        <div style="font-size:10px;color:var(--tx3);margin-top:4px">sendo executadas</div>
+      <div class="ck" style="--ck-c:var(--violet)" onclick="comFiltrarStatus('Em produção')">
+        <div class="ck-lbl">Em Produção</div>
+        <div class="ck-val" id="com-kpi-prod">—</div>
+        <div class="ck-dsc">sendo executadas</div>
       </div>
-      <div class="card" style="padding:16px 18px;cursor:pointer;border-color:rgba(34,197,94,.3)" onclick="comFiltrarStatus('Concluída')">
-        <div style="font-size:9.5px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">🟢 Finalizadas</div>
-        <div id="com-kpi-conc" style="font-size:26px;font-weight:800;color:var(--gr);line-height:1">—</div>
-        <div style="font-size:10px;color:var(--tx3);margin-top:4px">concluídas</div>
+      <div class="ck" style="--ck-c:var(--gr)" onclick="comFiltrarStatus('Concluída')">
+        <div class="ck-lbl">Finalizadas</div>
+        <div class="ck-val" id="com-kpi-conc">—</div>
+        <div class="ck-dsc">concluídas</div>
       </div>
     </div>
 
