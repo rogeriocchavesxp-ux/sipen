@@ -1321,7 +1321,25 @@ function fmtD(d) {
   window.demExcluirDemanda = async function(id) {
     if (!confirm("Confirmar exclusão desta demanda? Esta ação não pode ser desfeita.")) return;
     try {
+      // Busca vínculo com agenda antes de deletar
+      let agendaRefId = null;
+      try {
+        const refRes = await fetch(`${apiBaseUrl()}/rest/v1/demandas?id=eq.${id}&select=agenda_ref_id&limit=1`, { headers: apiHeaders() });
+        const [dem] = await refRes.json();
+        agendaRefId = dem?.agenda_ref_id || null;
+      } catch(_) {}
+
       await apiWrite("delete", "DEMANDAS", { _row: id });
+
+      // Cancela a agenda vinculada (se existir)
+      if (agendaRefId) {
+        fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${agendaRefId}`, {
+          method: "PATCH",
+          headers: { ...apiHeaders(), "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "cancelado" }),
+        }).catch(() => {});
+      }
+
       if (typeof T === "function") T("Demanda excluída", "Registro removido com sucesso");
       _invalidate();
       _atualizarBadge();

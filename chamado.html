@@ -1988,6 +1988,7 @@ async function enviarChamado() {
             p_participantes:     agPart,
             p_origem:            "link_publico",
             p_data_encerramento: agDataF || null,
+            p_demanda_id:        newId,
           }),
         });
         if (rpcRes.ok) {
@@ -2569,6 +2570,7 @@ async function ag2Enviar() {
         p_participantes:     part,
         p_origem:            "link_publico",
         p_data_encerramento: df    || null,
+        p_demanda_id:        newId,
       }),
     });
     if (rpcRes.ok) {

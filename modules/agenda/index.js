@@ -1496,6 +1496,7 @@ async function agAprovarAgendamento(id) {
 
     // Notifica comunicação sobre aprovação
     _comSyncStatus(id, "aprovar");
+    _syncDemandaStatus(id, "CONCLUIDA");
     agCarregarAprovacoes();
   } catch (e) { T("Erro ao aprovar", e.message); }
 }
@@ -1557,8 +1558,25 @@ async function agConfirmarRecusaAgendamento(id) {
       }).catch(() => {});
     }
 
+    _syncDemandaStatus(id, "CANCELADA");
     agCarregarAprovacoes();
   } catch (e) { T("Erro ao recusar", e.message); }
+}
+
+async function _syncDemandaStatus(agendaId, status) {
+  try {
+    const res = await fetch(
+      `${apiBaseUrl()}/rest/v1/demandas?agenda_ref_id=eq.${agendaId}&select=id&limit=1`,
+      { headers: apiHeaders() }
+    );
+    const rows = await res.json();
+    if (!rows?.length) return;
+    await fetch(`${apiBaseUrl()}/rest/v1/demandas?id=eq.${rows[0].id}`, {
+      method: "PATCH",
+      headers: { ...apiHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+  } catch(_) {}
 }
 
 window.agCarregarAprovacoes          = agCarregarAprovacoes;
