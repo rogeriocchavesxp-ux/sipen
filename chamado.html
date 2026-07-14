@@ -1978,34 +1978,58 @@ async function ag2VerificarDisp() {
   const espCard  = document.getElementById("ag2-card-espacos");
   const formCard = document.getElementById("ag2-card-form");
 
-  if (btn)     btn.disabled = true;
-  if (checking) checking.style.display = "";
-  if (aviso)   aviso.style.display    = "none";
-  if (espCard) espCard.style.display  = "none";
-  if (formCard) formCard.style.display = "none";
+  if (btn)      btn.disabled = true;
+  if (checking) checking.style.display  = "";
+  if (aviso)    aviso.style.display     = "none";
+  if (espCard)  espCard.style.display   = "none";
+  if (formCard) formCard.style.display  = "none";
   _ag2EspacoSelecionado = "";
 
   try {
-    const res = await fetch(`${SB_URL}/rest/v1/rpc/espacos_disponibilidade`, {
-      method:  "POST",
-      headers: HDRS,
-      body: JSON.stringify({
-        p_data_inicio: di,
-        p_hora_inicio: hi || "00:00",
-        p_data_fim:    df,
-        p_hora_fim:    hf || null,
-      }),
-    });
-    if (!res.ok) throw new Error("Erro ao consultar disponibilidade");
-    const dados = await res.json();
+    // 1. Lista de espaços públicos (leitura direta da tabela — sempre funciona)
+    const listaRes = await fetch(
+      `${SB_URL}/rest/v1/espacos?disponivel_publico=eq.true&ativo=eq.true&order=ordem.asc`,
+      { headers: HDRS }
+    );
+    if (!listaRes.ok) throw new Error("Não foi possível carregar os espaços. Tente novamente.");
+    const espacos = await listaRes.json();
+
+    // 2. Mapa de disponibilidade via RPC (graceful: se falhar, assume disponível)
+    let dispMap = {};
+    try {
+      const dispRes = await fetch(`${SB_URL}/rest/v1/rpc/espacos_disponibilidade`, {
+        method:  "POST",
+        headers: HDRS,
+        body: JSON.stringify({
+          p_data_inicio: di,
+          p_hora_inicio: hi || "00:00",
+          p_data_fim:    df,
+          p_hora_fim:    hf || null,
+        }),
+      });
+      if (dispRes.ok) {
+        const raw = await dispRes.json();
+        // PostgREST pode retornar [[...]] (JSONB scalar) ou [...] (TABLE)
+        const arr = Array.isArray(raw) && Array.isArray(raw[0]) ? raw[0] : raw;
+        if (Array.isArray(arr)) arr.forEach(d => { if (d?.nome) dispMap[d.nome] = d.disponivel; });
+      }
+    } catch (_) { /* RPC indisponível: continua sem marcação */ }
+
+    // 3. Mescla: espaços + disponibilidade
+    const dados = espacos.map(e => ({
+      nome:       e.nome,
+      grupo:      e.grupo || "",
+      disponivel: Object.prototype.hasOwnProperty.call(dispMap, e.nome) ? dispMap[e.nome] : true,
+    }));
+
     _ag2DispVerificada = true;
     ag2MostrarEspacos(dados);
-  } catch (_) {
+  } catch (e) {
     const espGrid = document.getElementById("ag2-espacos-grid");
-    if (espGrid) espGrid.innerHTML = `<div style="color:var(--rose);font-size:12px;padding:6px 0">Não foi possível verificar disponibilidade. Verifique sua conexão e tente novamente.</div>`;
+    if (espGrid) espGrid.innerHTML = `<div style="color:var(--rose);font-size:12px;padding:6px 0">${e.message || "Não foi possível carregar os espaços. Tente novamente."}</div>`;
     if (espCard) espCard.style.display = "";
   } finally {
-    if (btn)     btn.disabled = false;
+    if (btn)      btn.disabled = false;
     if (checking) checking.style.display = "none";
   }
 }
