@@ -101,7 +101,8 @@ SELECT
   d.financial_data,
   d.nome_solicitante_externo,
   d.telefone_solicitante,
-  d.origem
+  d.origem,
+  d.numero_chamado
 FROM public.demandas d
 WHERE d.deleted_at IS NULL;
 

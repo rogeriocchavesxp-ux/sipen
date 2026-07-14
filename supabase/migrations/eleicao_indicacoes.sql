@@ -70,11 +70,14 @@ DROP POLICY IF EXISTS "ei_insert"   ON public.eleicao_indicacoes;
 DROP POLICY IF EXISTS "ei_sel_anon" ON public.eleicao_indicacoes;
 DROP POLICY IF EXISTS "ei_ins_anon" ON public.eleicao_indicacoes;
 
--- Admin: lê e insere
+-- Admin: lê, insere e exclui
 CREATE POLICY "ei_select" ON public.eleicao_indicacoes
   FOR SELECT TO authenticated USING (deleted_at IS NULL);
 CREATE POLICY "ei_insert" ON public.eleicao_indicacoes
   FOR INSERT TO authenticated WITH CHECK (true);
+DROP POLICY IF EXISTS "ei_delete" ON public.eleicao_indicacoes;
+CREATE POLICY "ei_delete" ON public.eleicao_indicacoes
+  FOR DELETE TO authenticated USING (true);
 
 -- Formulário público (anon): lê (para checar duplicata) e insere
 CREATE POLICY "ei_sel_anon" ON public.eleicao_indicacoes
@@ -83,7 +86,7 @@ CREATE POLICY "ei_ins_anon" ON public.eleicao_indicacoes
   FOR INSERT TO anon WITH CHECK (true);
 
 GRANT SELECT, INSERT ON public.eleicao_indicacoes TO anon;
-GRANT SELECT, INSERT ON public.eleicao_indicacoes TO authenticated;
+GRANT SELECT, INSERT, DELETE ON public.eleicao_indicacoes TO authenticated;
 
 -- ── 3. View pública de membros ────────────────────────────────
 CREATE OR REPLACE VIEW public.v_eleicao_form_membros

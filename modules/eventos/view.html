@@ -375,6 +375,70 @@
     <div class="ct" id="wa-tab-EVENTOS"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
   </div>
 
+  <!-- ════ PROGRAMAÇÕES — Família de Oração ══════════════════ -->
+  <div class="view" id="v-eve-sorteio">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.14);border-color:rgba(74,156,245,0.25);color:var(--sky)">🙏</div>
+      <div>
+        <div class="hero-lbl">Programações</div>
+        <div class="hero-ttl" id="fo-evt-titulo">Família de Oração</div>
+        <div class="hero-dsc" id="fo-evt-sub">Sorteio semanal — cada família ora por outra. Gere os pares e notifique pelo WhatsApp.</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="foGerarSorteio()">Gerar Sorteio</button>
+        <button class="tbt" onclick="go('eve-todos')">← Voltar</button>
+      </div>
+    </div>
+    <div id="eve-sorteio-nav"></div>
+
+    <div class="ct">
+
+      <!-- Preview do sorteio (oculto até gerar) -->
+      <div id="fo-preview" style="display:none">
+        <div class="card" style="border-color:rgba(74,156,245,.35)">
+          <div class="card-title" style="color:var(--sky)">Pré-visualização do sorteio</div>
+          <div id="fo-preview-table"></div>
+          <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+            <button class="tbt pri" id="btn-fo-salvar-wa" onclick="foSalvarESendWA()">
+              Salvar e enviar WhatsApp para todos
+            </button>
+            <button class="tbt" id="btn-fo-salvar" onclick="foSalvarSorteio(false)">
+              Só salvar (sem WhatsApp)
+            </button>
+            <button class="tbt" onclick="foCancelarSorteio()" style="color:var(--tx3)">
+              Cancelar
+            </button>
+          </div>
+          <div id="fo-preview-err" style="margin-top:10px;font-size:12px;color:var(--rose)"></div>
+        </div>
+      </div>
+
+      <!-- Famílias inscritas no evento -->
+      <div class="card">
+        <div class="ctit">
+          Famílias inscritas
+          <span class="cact" onclick="foRenderInscritos()">↻</span>
+        </div>
+        <div id="fo-inscritos-lista">
+          <div style="color:var(--tx3);font-size:11.5px">Carregando...</div>
+        </div>
+      </div>
+
+      <!-- Histórico de rodadas -->
+      <div class="card">
+        <div class="ctit">
+          Rodadas de oração
+          <span class="cact" onclick="foCarregarRodadas(_foEventoId)">↻ Atualizar</span>
+        </div>
+        <div id="fo-rodadas-lista">
+          <div style="color:var(--tx3);font-size:11.5px">Carregando...</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
   <!-- ════ PROGRAMAÇÕES — Reuniões ════════════════════════════ -->
   <div class="view" id="v-eve-reunioes">
     <div class="hero">

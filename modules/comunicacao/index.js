@@ -26,13 +26,30 @@
   ];
 
   const STATUS_CFG = {
-    "Recebida":             { cls: "pn",  cor: "var(--blue)"   },
-    "Em análise":           { cls: "po",  cor: "var(--amber)"  },
-    "Em produção":          { cls: "pp",  cor: "var(--violet)" },
-    "Aguardando aprovação": { cls: "pv",  cor: "var(--gold)"   },
-    "Concluída":            { cls: "pd",  cor: "var(--gr)"     },
-    "Cancelada":            { cls: "pz",  cor: "var(--tx3)"    },
+    "Aguardando aprovação da Administração": { cls: "po", cor: "var(--amber)"  },
+    "Aprovada para produção":                { cls: "pn", cor: "var(--sky)"    },
+    "Em análise":                            { cls: "pb", cor: "var(--blue)"   },
+    "Em produção":                           { cls: "pp", cor: "var(--violet)" },
+    "Programação não aprovada":              { cls: "pr", cor: "var(--rose)"   },
+    "Concluída":                             { cls: "pd", cor: "var(--gr)"     },
+    "Recebida":                              { cls: "pn", cor: "var(--blue)"   },
+    "Cancelada":                             { cls: "pz", cor: "var(--tx3)"    },
   };
+
+  // Status da programação vinculada (agenda)
+  const STATUS_AG_CFG = {
+    "aguardando_aprovacao": { label: "Aguardando aprovação", cor: "var(--amber)"  },
+    "em_analise":           { label: "Em análise",           cor: "var(--blue)"   },
+    "ajuste_solicitado":    { label: "Ajuste solicitado",    cor: "var(--amber)"  },
+    "confirmado":           { label: "Aprovada",             cor: "var(--gr)"     },
+    "recusado":             { label: "Recusada",             cor: "var(--rose)"   },
+    "cancelado":            { label: "Cancelada",            cor: "var(--tx3)"    },
+  };
+
+  function _pillAg(status) {
+    const cfg = STATUS_AG_CFG[status] || { label: status || "—", cor: "var(--tx3)" };
+    return `<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:${cfg.cor}20;color:${cfg.cor};border:1px solid ${cfg.cor}40">${_eh(cfg.label)}</span>`;
+  }
 
   /* ── Estado ─────────────────────────────────────────── */
 
@@ -107,7 +124,10 @@
 
   async function _carregar() {
     try {
-      const url = `${_api()}/rest/v1/com_solicitacoes_arte?select=*&order=criado_em.desc&limit=500`;
+      // join com agenda para obter status e dados da programação vinculada
+      const url = `${_api()}/rest/v1/com_solicitacoes_arte`
+        + `?select=*,agenda_info:agenda_id(id,titulo,status,data,hora_inicio,espaco,organizador,protocolo)`
+        + `&order=criado_em.desc&limit=500`;
       _cache = await _fetch(url) || [];
       _renderLista();
       _renderDash();
@@ -153,7 +173,8 @@
           <th>Responsável</th>
           <th>Evento</th>
           <th>Prazo</th>
-          <th>Status</th>
+          <th>Status Arte</th>
+          <th>Prog.</th>
           <th>Criado</th>
         </tr></thead>
         <tbody>${rows.map(_trLinha).join("")}</tbody>
@@ -181,6 +202,7 @@
       <td style="padding:10px 8px;font-size:11px;color:var(--tx3);white-space:nowrap">${eventoTxt}</td>
       <td style="padding:10px 8px;font-size:11px;white-space:nowrap;color:${prazoVencido ? "var(--rose)" : "var(--tx3)"};font-weight:${prazoVencido ? "700" : "400"}">${_fmtD(r.prazo_entrega)}</td>
       <td style="padding:10px 8px">${_pill(r.status)}</td>
+      <td style="padding:10px 8px">${r.agenda_info ? _pillAg(r.agenda_info.status) : '<span style="color:var(--tx4);font-size:10px">—</span>'}</td>
       <td style="padding:10px 8px;font-size:11px;color:var(--tx3);white-space:nowrap">${_fmtD(r.criado_em)}</td>
     </tr>`;
   }
@@ -189,11 +211,11 @@
 
   function _renderDash() {
     const s = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-    s("com-kpi-total", _cache.length);
-    s("com-kpi-receb", _cache.filter(r => r.status === "Recebida").length);
-    s("com-kpi-prod",  _cache.filter(r => r.status === "Em produção").length);
-    s("com-kpi-conc",  _cache.filter(r => r.status === "Concluída").length);
-    s("com-kpi-pend",  _cache.filter(r => !["Concluída","Cancelada"].includes(r.status)).length);
+    s("com-kpi-total",   _cache.length);
+    s("com-kpi-aguard",  _cache.filter(r => r.status === "Aguardando aprovação da Administração").length);
+    s("com-kpi-aprov",   _cache.filter(r => r.status === "Aprovada para produção").length);
+    s("com-kpi-prod",    _cache.filter(r => r.status === "Em produção").length);
+    s("com-kpi-conc",    _cache.filter(r => r.status === "Concluída").length);
 
     // Recentes
     const elR = document.getElementById("com-dash-recentes");
@@ -211,6 +233,35 @@
             </div>
             ${_pill(r.status)}
           </div>`).join("");
+      }
+    }
+
+    // Programações com demanda de comunicação
+    const elProg = document.getElementById("com-dash-programacoes");
+    if (elProg) {
+      const vinculados = _cache.filter(r => r.agenda_id && r.agenda_info);
+      if (!vinculados.length) {
+        elProg.innerHTML = `<div style="color:var(--tx3);font-size:12px;padding:6px 0">Nenhuma programação com demanda de arte.</div>`;
+      } else {
+        const hoje = new Date().toISOString().slice(0, 10);
+        elProg.innerHTML = vinculados.slice(0, 8).map(r => {
+          const ag     = r.agenda_info;
+          const agCfg  = STATUS_AG_CFG[ag.status] || { label: ag.status, cor: "var(--tx3)" };
+          const venceu = r.prazo_entrega && r.prazo_entrega < hoje && !["Concluída","Cancelada"].includes(r.status);
+          const agPend = ["aguardando_aprovacao","em_analise","ajuste_solicitado"].includes(ag.status);
+          return `<div onclick="comAbrirDetalhe('${_ea(r.id)}')" style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:9px 4px;border-bottom:1px solid var(--bd1);transition:background .12s">
+            <div style="width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px;background:${STATUS_CFG[r.status]?.cor || "var(--tx4)"}"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_eh(ag.titulo || "—")}</div>
+              <div style="font-size:10.5px;color:var(--tx3);margin-top:1px">${ag.data ? _fmtD(ag.data) : ""}${ag.hora_inicio ? " · " + String(ag.hora_inicio).slice(0,5) : ""}${ag.espaco ? " · " + _eh(ag.espaco) : ""}</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap">
+                ${agPend ? `<span style="font-size:9.5px;font-weight:700;color:${agCfg.cor};background:${agCfg.cor}18;border:1px solid ${agCfg.cor}30;padding:1px 6px;border-radius:8px">⏳ ${_eh(agCfg.label)}</span>` : `<span style="font-size:9.5px;font-weight:700;color:${agCfg.cor};padding:1px 6px;border:1px solid ${agCfg.cor}30;background:${agCfg.cor}18;border-radius:8px">${_eh(agCfg.label)}</span>`}
+                ${_pill(r.status)}
+                ${venceu ? `<span style="font-size:9.5px;color:var(--rose);font-weight:700">Prazo vencido</span>` : ""}
+              </div>
+            </div>
+          </div>`;
+        }).join("") + (vinculados.length > 8 ? `<div style="font-size:11px;color:var(--tx3);padding:6px 0;text-align:right">+ ${vinculados.length - 8} mais</div>` : "");
       }
     }
 
@@ -348,6 +399,29 @@
           <button onclick="comSalvarObsInternas('${_ea(sol.id)}')" style="margin-top:6px;padding:7px 14px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx1);font-size:12px;cursor:pointer">Salvar</button>
         </div>
         ` : ""}
+
+        ${sol.agenda_id ? (() => {
+          const ag    = sol.agenda_info || {};
+          const agCfg = STATUS_AG_CFG[ag.status] || { label: ag.status || "—", cor: "var(--tx3)" };
+          const agPend = ["aguardando_aprovacao","em_analise","ajuste_solicitado"].includes(ag.status);
+          return `
+        <!-- Programação vinculada -->
+        <div class="card" style="${agPend ? "border-color:rgba(214,148,0,.35);background:rgba(214,148,0,.04)" : ""}">
+          <div class="ctit" style="color:var(--violet)">Programação Vinculada</div>
+          ${agPend ? `<div style="font-size:11.5px;color:#8A6010;padding:8px 12px;background:rgba(214,148,0,.1);border:1px solid rgba(214,148,0,.3);border-radius:8px;margin-bottom:14px">⚠️ Esta programação ainda aguarda aprovação administrativa. A equipe pode organizar a fila, mas a produção definitiva depende da aprovação.</div>` : ""}
+          <div style="display:flex;flex-wrap:wrap;gap:16px">
+            ${field("Título", ag.titulo)}
+            <div style="flex:1;min-width:160px">
+              ${lbl("Status da Programação")}
+              <div style="font-size:13px;font-weight:700;color:${agCfg.cor}">${_eh(agCfg.label)}</div>
+            </div>
+            ${ag.data ? field("Data", _fmtD(ag.data) + (ag.hora_inicio ? " · " + String(ag.hora_inicio).slice(0,5) : "")) : ""}
+            ${ag.espaco ? field("Local", ag.espaco) : ""}
+            ${ag.organizador ? field("Organizador", ag.organizador) : ""}
+            ${ag.protocolo ? field("Protocolo", ag.protocolo) : (sol.agenda_protocolo ? field("Protocolo", sol.agenda_protocolo) : "")}
+          </div>
+        </div>`;
+        })() : ""}
 
         <!-- Histórico -->
         <div class="card" style="grid-column:1 / -1">
@@ -667,10 +741,16 @@
 
     const isNew = !editId || editId === "null";
     if (isNew) {
-      payload.status         = "Recebida";
-      payload.criado_por     = _userId();
+      // Se vinculada a uma programação ainda pendente → status específico
+      const agendaId = g("com-f-agenda");
+      const agendaStatus = agendaId
+        ? _cache.find(r => r.agenda_id === agendaId)?.agenda_info?.status
+        : null;
+      const agendaPendente = ["aguardando_aprovacao","em_analise","ajuste_solicitado"].includes(agendaStatus);
+      payload.status          = agendaPendente ? "Aguardando aprovação da Administração" : "Recebida";
+      payload.criado_por      = _userId();
       payload.criado_por_nome = _userName();
-      payload.criado_em      = new Date().toISOString();
+      payload.criado_em       = new Date().toISOString();
     }
 
     try {
@@ -730,6 +810,40 @@
   };
 
   window.comCarregarDash = function () { _carregar(); };
+
+  window.comFiltrarVinculadas = function () {
+    go("com-solicitacoes");
+    // pequeno delay para a view estar pronta
+    setTimeout(() => {
+      // limpa filtros e filtra somente as que têm agenda vinculada no cache
+      _fBusca = _fStatus = _fMin = "";
+      const el = document.getElementById("com-f-busca");
+      if (el) el.value = "";
+      // renderiza somente vinculadas
+      const el2 = document.getElementById("com-sol-lista");
+      const vinculadas = _cache.filter(r => r.agenda_id);
+      if (!el2) return;
+      if (!vinculadas.length) {
+        el2.innerHTML = `<div style="padding:32px;text-align:center;color:var(--tx3);font-size:13px">Nenhuma solicitação com programação vinculada.</div>`;
+        return;
+      }
+      el2.innerHTML = `
+        <table class="tbl" style="width:100%">
+          <thead><tr>
+            <th style="width:8px;padding:10px 8px"></th>
+            <th>Demanda</th>
+            <th>Ministério</th>
+            <th>Responsável</th>
+            <th>Evento</th>
+            <th>Prazo</th>
+            <th>Status Arte</th>
+            <th>Prog.</th>
+            <th>Criado</th>
+          </tr></thead>
+          <tbody>${vinculadas.map(_trLinha).join("")}</tbody>
+        </table>`;
+    }, 200);
+  };
 
   /* ── Autoload ───────────────────────────────────────── */
 

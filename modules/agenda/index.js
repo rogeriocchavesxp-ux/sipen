@@ -58,6 +58,7 @@ function agSalasSelect(id, valorAtual = "") {
 }
 
 /* ── AGENDA FUNCTIONS ─────────────────────── */
+const fmtDataBrCurto = d => { if(!d) return ""; const [,m,dia] = String(d).slice(0,10).split("-"); return `${dia}/${m}`; };
 let _agendaCache = null;
 
 async function getAgenda() {
@@ -123,7 +124,7 @@ async function carregarAgendaDash() {
             </div>
             <div style="flex:1;min-width:0">
               <div style="font-size:11.5px;font-weight:600;color:var(--tx1);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(e.titulo||"—")}</div>
-              <div style="font-size:10px;color:var(--tx3)">${e.hora_inicio?e.hora_inicio.slice(0,5):""} ${e.hora_fim?"→ "+e.hora_fim.slice(0,5):""}</div>
+              <div style="font-size:10px;color:var(--tx3)">${e.hora_inicio?e.hora_inicio.slice(0,5):""} ${e.hora_fim?"→ "+e.hora_fim.slice(0,5):""}${e.data_encerramento&&e.data_encerramento!==e.data?" · até "+fmtDataBrCurto(e.data_encerramento):""}</div>
               <div style="font-size:10px;color:var(--teal);margin-top:1px">${escapeHtml(e.espaco||"")}${e.organizador?" · "+escapeHtml(e.organizador):""}</div>
             </div>
             <button onclick='openCrudForm("AGENDA",${safeJsonForHtml(e)})' style="background:none;border:1px solid var(--bd1);border-radius:4px;color:var(--tx3);font-size:10px;padding:3px 6px;cursor:pointer;flex-shrink:0">✏️</button>
@@ -242,8 +243,21 @@ function agRenderMiniCal(rows, ano, mes) {
   const eventosPorDia = {};
   rows.forEach(r => {
     if(!r.data) return;
-    const [y,m,dia] = r.data.split("-").map(Number);
-    if(y===ano && m===mes+1) { if(!eventosPorDia[dia]) eventosPorDia[dia]=[]; eventosPorDia[dia].push(r); }
+    const dataIni = r.data;
+    const dataFim = r.data_encerramento || r.data;
+    // Expande evento em todos os dias que abrange dentro do mês exibido
+    const mesStr  = String(mes+1).padStart(2,"0");
+    const primeiroDiaMes = `${ano}-${mesStr}-01`;
+    const ultimoDiaMesN  = new Date(ano, mes+1, 0).getDate();
+    const ultimoDiaMes   = `${ano}-${mesStr}-${String(ultimoDiaMesN).padStart(2,"0")}`;
+    if(dataFim < primeiroDiaMes || dataIni > ultimoDiaMes) return;
+    const inicio = new Date(Math.max(new Date(dataIni), new Date(primeiroDiaMes)));
+    const fim    = new Date(Math.min(new Date(dataFim),  new Date(ultimoDiaMes)));
+    for(let d = new Date(inicio); d <= fim; d.setDate(d.getDate()+1)) {
+      const dia = d.getDate();
+      if(!eventosPorDia[dia]) eventosPorDia[dia] = [];
+      eventosPorDia[dia].push(r);
+    }
   });
 
   const primeiroDia = new Date(ano, mes, 1).getDay();
@@ -287,8 +301,7 @@ async function agVerDia(ano, mes, dia) {
   const rows = await getAgenda();
   const m = String(mes).padStart(2,"0"); const d = String(dia).padStart(2,"0");
   const dataStr = `${ano}-${m}-${d}`;
-  const evsDia = rows.filter(r=>r.data===dataStr);
-  const nomes = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const evsDia = rows.filter(r => r.data <= dataStr && (r.data_encerramento || r.data) >= dataStr);
   agMostrarExpandido(`${evsDia.length} evento${evsDia.length!==1?"s":""} em ${d}/${m}/${ano}`, evsDia);
 }
 
@@ -546,75 +559,257 @@ Object.assign(CRUMB, {
 });
 
 
+// ── Mapa de status para exibição ──────────────────────────────
+const AG_STATUS = {
+  "pendente":             { label: "Aguardando aprovação", cor: "var(--amber)"  },
+  "aguardando_aprovacao": { label: "Aguardando aprovação", cor: "var(--amber)"  },
+  "em_analise":           { label: "Em análise",           cor: "var(--sky)"    },
+  "ajuste_solicitado":    { label: "Ajuste solicitado",    cor: "var(--orange)" },
+  "confirmado":           { label: "Aprovada",             cor: "var(--gr)"     },
+  "recusado":             { label: "Recusada",             cor: "var(--rose)"   },
+  "cancelado":            { label: "Cancelada",            cor: "var(--tx3)"    },
+};
+function _agPill(status) {
+  const cfg = AG_STATUS[status] || { label: status || "—", cor: "var(--tx3)" };
+  return `<span style="font-size:9.5px;padding:2px 9px;border-radius:10px;background:${cfg.cor}18;color:${cfg.cor};border:1px solid ${cfg.cor}33;font-weight:700;white-space:nowrap">${escapeHtml(cfg.label)}</span>`;
+}
+
+let _agSolFiltro = "";   // filtro de status ativo na aba Solicitações
+let _agSolRows   = [];   // cache local para o filtro
+
+window.agFiltrarSolStatus = function(status) {
+  _agSolFiltro = _agSolFiltro === status ? "" : status;
+  _agRenderSolTabela();
+};
+
+function _agKpiSol(rows) {
+  const s = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  s("sol-aguard",  rows.filter(r => ["pendente","aguardando_aprovacao"].includes(r.status)).length);
+  s("sol-analise", rows.filter(r => r.status === "em_analise").length);
+  s("sol-ajuste",  rows.filter(r => r.status === "ajuste_solicitado").length);
+  s("sol-aprov",   rows.filter(r => r.status === "confirmado").length);
+  s("sol-recus",   rows.filter(r => r.status === "recusado").length);
+}
+
+function _agRenderSolTabela() {
+  const el = document.getElementById("agenda-sol-list");
+  if (!el) return;
+  const fmtD = d => { if (!d) return "—"; const [y,m,dia] = String(d).slice(0,10).split("-"); return `${dia}/${m}/${y}`; };
+  const rows = _agSolFiltro
+    ? _agSolRows.filter(r => {
+        if (_agSolFiltro === "aguardando") return ["pendente","aguardando_aprovacao"].includes(r.status);
+        return r.status === _agSolFiltro;
+      })
+    : _agSolRows;
+
+  if (!rows.length) {
+    el.innerHTML = `<div style="text-align:center;padding:28px;color:var(--tx3)">
+      <div style="font-size:28px;margin-bottom:8px">📭</div>
+      <div style="font-size:12px">Nenhuma solicitação ${_agSolFiltro ? "com esse status " : ""}encontrada.</div>
+    </div>`;
+    return;
+  }
+
+  const pendente = s => ["pendente","aguardando_aprovacao","em_analise","ajuste_solicitado"].includes(s);
+
+  el.innerHTML = `<div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:11.5px;min-width:780px">
+      <thead><tr style="border-bottom:1px solid var(--bd2);background:var(--bg-surface)">
+        <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Protocolo</th>
+        <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Título</th>
+        <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Solicitante</th>
+        <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Data / Espaço</th>
+        <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Status</th>
+        <th style="text-align:right;padding:7px 10px;font-size:9.5px;color:var(--tx3)">Ações</th>
+      </tr></thead>
+      <tbody>${rows.map(r => {
+        const ativa = pendente(r.status);
+        return `<tr style="border-bottom:1px solid var(--bd1)" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+          <td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:var(--tx3)">${escapeHtml(r.protocolo||"—")}</td>
+          <td style="padding:8px 10px;color:var(--tx1);font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(r.titulo||'')}">${escapeHtml(r.titulo||"—")}</td>
+          <td style="padding:8px 10px;color:var(--tx2);font-size:11px">${escapeHtml(r.solicitante_txt||r.solicitante||"—")}</td>
+          <td style="padding:8px 10px;color:var(--tx2);font-size:11px;white-space:nowrap">
+            ${r.data ? fmtD(r.data) : "—"}${r.hora_inicio ? " " + String(r.hora_inicio).slice(0,5) : ""}
+            ${r.espaco ? `<div style="font-size:10px;color:var(--tx3)">${escapeHtml(r.espaco)}</div>` : ""}
+          </td>
+          <td style="padding:8px 10px">${_agPill(r.status)}</td>
+          <td style="padding:8px 10px;text-align:right;white-space:nowrap;display:flex;gap:4px;justify-content:flex-end;align-items:center">
+            <button onclick='agAnalisarSolicitacao("${r.id}")' style="padding:3px 9px;border-radius:4px;border:1px solid var(--bd1);background:var(--bg-card);color:var(--tx2);font-size:10px;cursor:pointer">Analisar</button>
+            ${ativa ? `
+              <button onclick='agAprovarAgendamento("${r.id}")' style="padding:3px 9px;border-radius:4px;border:1px solid rgba(58,170,92,.4);background:rgba(58,170,92,.1);color:var(--gr);font-size:10px;font-weight:700;cursor:pointer">✓ Aprovar</button>
+              <button onclick='agRejeitarAgendamento("${r.id}")' style="padding:3px 9px;border-radius:4px;border:1px solid rgba(224,85,85,.35);background:rgba(224,85,85,.08);color:var(--rose);font-size:10px;font-weight:700;cursor:pointer">✕ Recusar</button>
+            ` : ""}
+          </td>
+        </tr>`;
+      }).join("")}</tbody>
+    </table></div>`;
+}
+
 async function carregarSolicitacoesAgenda() {
   const el = document.getElementById("agenda-sol-list");
   if (!el) return;
   el.innerHTML = `<div style="color:var(--tx3);font-size:11px">${spinner()} Carregando...</div>`;
   try {
     const res = await fetch(
-      `${apiBaseUrl()}/rest/v1/demandas?area=eq.Agendamentos&order=criado_em.desc&limit=200`,
+      `${apiBaseUrl()}/rest/v1/agenda?select=*&order=created_at.desc&limit=300`,
       { headers: apiHeaders() }
     );
     if (!res.ok) throw new Error(await res.text());
-    const rows = await res.json();
-
-    const pend = rows.filter(r => ["Pendente","Em Andamento"].includes(r.status)).length;
-    const conc = rows.filter(r => String(r.status||"").toLowerCase().includes("conc")).length;
-    const canc = rows.filter(r => String(r.status||"").toLowerCase().includes("canc")).length;
-    const sp = document.getElementById("sol-pend"); if(sp) sp.textContent = pend;
-    const sc = document.getElementById("sol-conc"); if(sc) sc.textContent = conc;
-    const sk = document.getElementById("sol-canc"); if(sk) sk.textContent = canc;
-
-    if (!rows.length) {
-      el.innerHTML = `<div style="text-align:center;padding:28px;color:var(--tx3)">
-        <div style="font-size:28px;margin-bottom:8px">📭</div>
-        <div style="font-size:12px">Nenhuma solicitação de agendamento encontrada</div>
-        <div style="font-size:10.5px;margin-top:4px">Crie uma demanda com categoria "Agendamentos" para que apareça aqui</div>
-      </div>`;
-      return;
-    }
-
-    el.innerHTML = `<div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:11.5px;min-width:760px">
-        <thead><tr style="border-bottom:1px solid var(--bd2);background:var(--bg-surface)">
-          <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Evento / Título</th>
-          <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Subcategoria</th>
-          <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Solicitante</th>
-          <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Abertura</th>
-          <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Status</th>
-          <th style="text-align:right;padding:7px 10px;font-size:9.5px;color:var(--tx3)">Ações</th>
-        </tr></thead>
-        <tbody>${rows.map(r => {
-          const status = r.status || "Pendente";
-          const cor = status === "Pendente" ? "var(--gold)"
-            : status === "Em Andamento" ? "var(--blue)"
-            : status.toLowerCase().includes("conc") ? "var(--gr)"
-            : status.toLowerCase().includes("canc") ? "var(--rose)"
-            : "var(--tx2)";
-          const ativa = ["Pendente","Em Andamento"].includes(status);
-          return `<tr style="border-bottom:1px solid var(--bd1)" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
-            <td style="padding:8px 10px;color:var(--tx1);font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(r.titulo||'')}">${escapeHtml(r.titulo||"—")}</td>
-            <td style="padding:8px 10px;color:var(--tx2);font-size:11px">${escapeHtml(r.subcategoria||"—")}</td>
-            <td style="padding:8px 10px;color:var(--tx2)">${nomePropio(r.solicitante||r.solicitante_txt) || "—"}</td>
-            <td style="padding:8px 10px;color:var(--tx2);white-space:nowrap;font-family:var(--mono);font-size:11px">${r.data_abertura||"—"}</td>
-            <td style="padding:8px 10px">
-              <span style="font-size:9.5px;padding:2px 8px;border-radius:10px;background:${cor}18;color:${cor};border:1px solid ${cor}33;font-weight:700">${escapeHtml(status)}</span>
-            </td>
-            <td style="padding:8px 10px;text-align:right;white-space:nowrap">
-              ${ativa ? `
-                <button onclick='agEmAnalise("${r.id}")' style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:4px;color:var(--blue);font-size:10px;font-weight:700;padding:3px 7px;cursor:pointer;margin-right:3px">Em análise</button>
-                <button onclick='agAprovarSolicitacao(${safeJsonForHtml(r)})' style="background:rgba(58,170,92,.1);border:1px solid rgba(58,170,92,.35);border-radius:4px;color:var(--gr);font-size:10px;font-weight:700;padding:3px 7px;cursor:pointer;margin-right:3px">✓ Aprovar</button>
-                <button onclick='agRecusarSolicitacao("${r.id}")' style="background:rgba(224,85,85,.08);border:1px solid rgba(224,85,85,.3);border-radius:4px;color:var(--rose);font-size:10px;font-weight:700;padding:3px 7px;cursor:pointer">✕ Recusar</button>
-              ` : `
-                <button onclick='openCrudForm("DEMANDAS",${safeJsonForHtml(r)})' style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:10px;padding:3px 8px;cursor:pointer">Ver</button>
-              `}
-            </td>
-          </tr>`;
-        }).join("")}</tbody>
-      </table></div>`;
+    _agSolRows = await res.json();
+    _agKpiSol(_agSolRows);
+    _agRenderSolTabela();
   } catch(e) {
     el.innerHTML = `<div style="color:var(--rose);font-size:11.5px">Erro: ${escapeHtml(e.message)}</div>`;
   }
+}
+
+// ── Modal: Analisar Solicitação de Agendamento ─────────────────
+async function agAnalisarSolicitacao(id) {
+  let r = _agSolRows.find(x => x.id === id);
+  if (!r) {
+    try {
+      const res = await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${id}&select=*&limit=1`, { headers: apiHeaders() });
+      const data = await res.json();
+      r = Array.isArray(data) ? data[0] : data;
+    } catch (e) { T("Erro", e.message); return; }
+  }
+  if (!r) { T("Não encontrado", "Agendamento não encontrado."); return; }
+
+  const fmtD = d => { if (!d) return "—"; const [y,m,dia] = String(d).slice(0,10).split("-"); return `${dia}/${m}/${y}`; };
+  const fmtH = h => h ? String(h).slice(0,5) : null;
+  const lbl  = (titulo, val) => val ? `<div style="flex:1;min-width:160px"><div style="font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">${titulo}</div><div style="font-size:12.5px;color:var(--tx1)">${escapeHtml(String(val))}</div></div>` : "";
+
+  const pendente = ["pendente","aguardando_aprovacao","em_analise","ajuste_solicitado"].includes(r.status);
+  const cfg      = AG_STATUS[r.status] || { label: r.status, cor: "var(--tx3)" };
+
+  let modal = document.getElementById("ag-analisar-modal");
+  if (!modal) { modal = document.createElement("div"); modal.id = "ag-analisar-modal"; document.body.appendChild(modal); }
+  modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:340;display:flex;align-items:flex-start;justify-content:center;padding:24px 0;overflow-y:auto";
+
+  modal.innerHTML = `
+    <div style="width:min(680px,96vw);background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;box-shadow:0 10px 50px rgba(0,0,0,.3)">
+
+      <!-- Cabeçalho -->
+      <div style="padding:20px 24px 16px;border-bottom:1px solid var(--bd1);display:flex;align-items:flex-start;gap:14px">
+        <div style="flex:1">
+          <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Analisar Solicitação de Agendamento</div>
+          <div style="font-size:17px;font-weight:800;color:var(--tx1);line-height:1.3">${escapeHtml(r.titulo || "—")}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">
+            ${_agPill(r.status)}
+            ${r.protocolo ? `<span style="font-size:10px;font-family:var(--mono);color:var(--tx3);background:var(--bg-surface);padding:2px 8px;border-radius:6px;border:1px solid var(--bd1)">${escapeHtml(r.protocolo)}</span>` : ""}
+            <span style="font-size:10px;color:var(--tx3)">Recebida em ${fmtD(r.created_at||r.criado_em)}</span>
+          </div>
+        </div>
+        <button onclick="document.getElementById('ag-analisar-modal')?.remove()" style="background:none;border:none;color:var(--tx3);font-size:20px;cursor:pointer;padding:0;line-height:1">✕</button>
+      </div>
+
+      <!-- Corpo -->
+      <div style="padding:20px 24px;display:flex;flex-direction:column;gap:18px">
+
+        <!-- Solicitante -->
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Solicitante</div>
+          <div style="display:flex;flex-wrap:wrap;gap:12px">
+            ${lbl("Nome", r.solicitante_txt || r.solicitante || r.organizador)}
+            ${lbl("WhatsApp", r.solicitante_tel || r.telefone)}
+            ${lbl("Ministério / Origem", r.organizador || r.origem)}
+          </div>
+        </div>
+
+        <!-- Data e espaço -->
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Agendamento solicitado</div>
+          <div style="display:flex;flex-wrap:wrap;gap:12px">
+            ${lbl("Data", fmtD(r.data))}
+            ${lbl("Horário início", fmtH(r.hora_inicio))}
+            ${lbl("Horário fim", fmtH(r.hora_fim))}
+            ${lbl("Espaço / Ambiente", r.espaco)}
+            ${lbl("Recorrência", r.recorrencia)}
+          </div>
+        </div>
+
+        <!-- Descrição -->
+        ${r.descricao ? `<div>
+          <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Descrição</div>
+          <div style="font-size:12.5px;color:var(--tx1);white-space:pre-wrap;background:var(--bg-surface);border:1px solid var(--bd1);border-radius:8px;padding:12px 14px;line-height:1.6">${escapeHtml(r.descricao)}</div>
+        </div>` : ""}
+
+        <!-- Aprovação / recusa (quando já decidido) -->
+        ${r.status === "confirmado" ? `<div style="background:rgba(58,170,92,.1);border:1px solid rgba(58,170,92,.3);border-radius:8px;padding:12px 14px">
+          <div style="font-size:11px;font-weight:700;color:var(--gr);margin-bottom:4px">✅ Aprovada por ${escapeHtml(r.aprovado_por_nome||"—")}</div>
+          <div style="font-size:11px;color:var(--tx2)">${r.aprovado_em ? fmtD(r.aprovado_em) : "—"}</div>
+        </div>` : ""}
+        ${r.status === "recusado" ? `<div style="background:rgba(224,85,85,.08);border:1px solid rgba(224,85,85,.3);border-radius:8px;padding:12px 14px">
+          <div style="font-size:11px;font-weight:700;color:var(--rose);margin-bottom:4px">🚫 Recusada</div>
+          ${r.motivo_rejeicao ? `<div style="font-size:11.5px;color:var(--tx2)">${escapeHtml(r.motivo_rejeicao)}</div>` : ""}
+        </div>` : ""}
+        ${r.status === "ajuste_solicitado" ? `<div style="background:rgba(234,88,12,.08);border:1px solid rgba(234,88,12,.3);border-radius:8px;padding:12px 14px">
+          <div style="font-size:11px;font-weight:700;color:var(--orange)">🔄 Aguardando ajuste do solicitante</div>
+        </div>` : ""}
+      </div>
+
+      <!-- Rodapé com ações -->
+      <div style="padding:14px 24px 20px;border-top:1px solid var(--bd1);display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+        <button onclick="document.getElementById('ag-analisar-modal')?.remove()" style="padding:8px 16px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:12.5px;cursor:pointer">Fechar</button>
+        ${pendente ? `
+          <button onclick="document.getElementById('ag-analisar-modal')?.remove();agSolicitarAjuste('${r.id}')" style="padding:8px 16px;border-radius:7px;border:1px solid rgba(234,88,12,.4);background:rgba(234,88,12,.08);color:var(--orange);font-size:12.5px;font-weight:600;cursor:pointer">🔄 Solicitar ajuste</button>
+          <button onclick="document.getElementById('ag-analisar-modal')?.remove();agRejeitarAgendamento('${r.id}')" style="padding:8px 16px;border-radius:7px;border:1px solid rgba(224,85,85,.4);background:rgba(224,85,85,.08);color:var(--rose);font-size:12.5px;font-weight:600;cursor:pointer">🚫 Recusar</button>
+          <button onclick="document.getElementById('ag-analisar-modal')?.remove();agAprovarAgendamento('${r.id}')" style="padding:8px 18px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer">✅ Aprovar agendamento</button>
+        ` : ""}
+      </div>
+    </div>`;
+}
+
+// ── Solicitar ajuste ───────────────────────────────────────────
+async function agSolicitarAjuste(id) {
+  let modal = document.getElementById("ag-ajuste-modal");
+  if (!modal) { modal = document.createElement("div"); modal.id = "ag-ajuste-modal"; document.body.appendChild(modal); }
+  modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:350;display:flex;align-items:center;justify-content:center";
+  modal.innerHTML = `
+    <div style="width:min(460px,94vw);background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="font-size:15px;font-weight:700;color:var(--tx1);margin-bottom:6px">Solicitar ajuste</div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:16px">Informe o que precisa ser corrigido ou complementado pelo solicitante. Ele receberá a orientação via WhatsApp.</div>
+      <label style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em">Orientação ao solicitante *</label>
+      <textarea id="ag-ajuste-texto" rows="4" placeholder="Ex.: Por favor, informe o horário exato de início e término, e se haverá uso de sonorização." style="width:100%;margin-top:6px;padding:9px 11px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-input);color:var(--tx1);font-size:12.5px;font-family:inherit;resize:vertical;outline:none;box-sizing:border-box"></textarea>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+        <button onclick="document.getElementById('ag-ajuste-modal')?.remove()" style="padding:8px 16px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:12.5px;cursor:pointer">Cancelar</button>
+        <button onclick="agConfirmarAjuste('${id}')" style="padding:8px 18px;border-radius:7px;border:none;background:var(--orange);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer">Enviar orientação</button>
+      </div>
+    </div>`;
+}
+
+async function agConfirmarAjuste(id) {
+  const texto = document.getElementById("ag-ajuste-texto")?.value?.trim();
+  if (!texto) { T("Campo obrigatório", "Informe a orientação antes de enviar."); return; }
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${id}`, {
+      method: "PATCH",
+      headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=representation" },
+      body: JSON.stringify({ status: "ajuste_solicitado", atualizado_em: new Date().toISOString() }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+    const r    = Array.isArray(rows) ? rows[0] : rows;
+
+    // Notifica Comunicação se houver solicitação vinculada
+    _comSyncStatus(id, "ajuste", texto);
+
+    // WA ao solicitante
+    const tel = r?.telefone || r?.solicitante_tel;
+    const nome = r?.solicitante_txt || r?.solicitante || "";
+    if (tel && typeof WA !== "undefined") {
+      WA.send({
+        para: tel, nome,
+        mensagem: `Olá${nome ? ", " + nome.split(" ")[0] : ""}! Sua solicitação de agendamento *"${r?.titulo || ""}"* precisa de ajustes.\n\n📋 Orientação: ${texto}\n\n${r?.protocolo ? "🔖 Protocolo: " + r.protocolo : ""}`,
+        modulo: "AGENDA", referenciaT: "agenda", referenciaId: id, chave: `AG_AJUSTE_${id}`,
+      }).catch(() => {});
+    }
+
+    document.getElementById("ag-ajuste-modal")?.remove();
+    T("Ajuste solicitado.", "O solicitante será notificado.");
+    _agendaCache = null;
+    carregarSolicitacoesAgenda();
+  } catch(e) { T("Erro", e.message); }
 }
 
 async function agEmAnalise(id) {
@@ -728,13 +923,13 @@ async function detectarConflitos() {
       for (let j = i+1; j < rows.length; j++) {
         const a = rows[i], b = rows[j];
         if (!a.espaco || !b.espaco) continue;
-        if (a.data !== b.data) continue;
         if (a.espaco.toLowerCase() !== b.espaco.toLowerCase()) continue;
-        if (!a.hora_inicio || !b.hora_inicio) continue;
-        // Check overlap
-        const aI = a.hora_inicio, aF = a.hora_fim||"23:59";
-        const bI = b.hora_inicio, bF = b.hora_fim||"23:59";
-        if (aI < bF && bI < aF) conflitos.push([a,b]);
+        // Verifica sobreposição de períodos (data + hora)
+        const aIni = (a.data || "") + "T" + (a.hora_inicio || "00:00");
+        const aFim = (a.data_encerramento || a.data || "") + "T" + (a.hora_fim || "23:59");
+        const bIni = (b.data || "") + "T" + (b.hora_inicio || "00:00");
+        const bFim = (b.data_encerramento || b.data || "") + "T" + (b.hora_fim || "23:59");
+        if (aIni < bFim && bIni < aFim) conflitos.push([a,b]);
       }
     }
     if (!conflitos.length) {
@@ -786,14 +981,6 @@ async function carregarHistorico() {
 async function carregarConfigAgenda() {
   try {
     const rows = await getAgenda();
-    // Espaços únicos
-    const espacos = [...new Set(rows.map(r=>r.espaco).filter(Boolean))].sort();
-    const esEl = document.getElementById("ag-config-espacos");
-    if (esEl) esEl.innerHTML = espacos.map(e=>`
-      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd1)">
-        <span style="font-size:11.5px;color:var(--tx1)">${escapeHtml(e)}</span>
-        <span style="font-size:10px;color:var(--tx3);font-family:var(--mono)">${rows.filter(r=>r.espaco===e).length} eventos</span>
-      </div>`).join("");
     // Organizadores únicos
     const orgs = [...new Set(rows.map(r=>r.organizador).filter(Boolean))].sort();
     const orEl = document.getElementById("ag-config-orgs");
@@ -803,9 +990,145 @@ async function carregarConfigAgenda() {
         <span style="font-size:10px;color:var(--tx3);font-family:var(--mono)">${rows.filter(r=>r.organizador===o).length} eventos</span>
       </div>`).join("");
   } catch(e) { console.warn("Config agenda:", e.message); }
+  await carregarGerenciamentoEspacos();
 }
 
-window.carregarSolicitacoesAgenda = carregarSolicitacoesAgenda;
+async function carregarGerenciamentoEspacos() {
+  const el = document.getElementById("ag-config-espacos");
+  if (!el) return;
+  el.innerHTML = `<div style="font-size:11px;color:var(--tx3)">Carregando espaços...</div>`;
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/espacos?order=ordem.asc`, { headers: apiHeaders() });
+    if (!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+
+    if (!rows.length) {
+      el.innerHTML = `<div style="font-size:11.5px;color:var(--tx3);text-align:center;padding:20px">Nenhum espaço cadastrado. Execute a migration <strong>espacos-config.sql</strong> no Supabase.</div>`;
+      return;
+    }
+
+    const grupos = {};
+    rows.forEach(r => {
+      if (!grupos[r.grupo]) grupos[r.grupo] = [];
+      grupos[r.grupo].push(r);
+    });
+
+    const publicos  = rows.filter(r => r.disponivel_publico && r.ativo).length;
+    const restritos = rows.filter(r => !r.disponivel_publico && r.ativo).length;
+
+    let html = `
+      <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+        <div style="padding:6px 14px;border-radius:20px;background:rgba(58,170,92,.1);border:1px solid rgba(58,170,92,.3);font-size:11px;font-weight:700;color:var(--gr)">✓ ${publicos} disponíveis ao público</div>
+        <div style="padding:6px 14px;border-radius:20px;background:rgba(74,156,245,.1);border:1px solid rgba(74,156,245,.25);font-size:11px;font-weight:700;color:var(--sky)">${restritos} uso interno</div>
+      </div>`;
+
+    Object.entries(grupos).forEach(([grupo, itens]) => {
+      html += `<div style="font-size:9.5px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;padding:12px 0 6px;border-top:1px solid var(--bd1);margin-top:4px">${escapeHtml(grupo)}</div>`;
+      itens.forEach(r => {
+        const pub = r.disponivel_publico && r.ativo;
+        html += `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:8px;margin-bottom:4px;background:${pub ? 'rgba(58,170,92,.06)' : 'var(--bg-surface)'}">
+            <span style="font-size:12px;color:var(--tx1)">${escapeHtml(r.nome)}</span>
+            <button
+              onclick="agToggleEspacoPublico('${r.id}', ${!r.disponivel_publico})"
+              style="padding:4px 12px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid ${pub ? 'rgba(58,170,92,.4)' : 'var(--bd2)'};background:${pub ? 'rgba(58,170,92,.12)' : 'var(--bg-card)'};color:${pub ? 'var(--gr)' : 'var(--tx3)'};white-space:nowrap">
+              ${pub ? '✓ Público' : 'Interno'}
+            </button>
+          </div>`;
+      });
+    });
+
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = `<div style="color:var(--rose);font-size:11.5px">Erro: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+async function agToggleEspacoPublico(id, novoValor) {
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/espacos?id=eq.${id}`, {
+      method: "PATCH",
+      headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+      body: JSON.stringify({ disponivel_publico: novoValor }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    carregarGerenciamentoEspacos();
+  } catch(e) { T("Erro", e.message); }
+}
+
+async function agVerificarOcupacao() {
+  const el = document.getElementById("ag-mapa-ocupacao");
+  if (!el) return;
+
+  const di = document.getElementById("ag-disp-di")?.value;
+  const hi = document.getElementById("ag-disp-hi")?.value;
+  const df = document.getElementById("ag-disp-df")?.value;
+  const hf = document.getElementById("ag-disp-hf")?.value;
+
+  if (!di || !hi) { el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px">Informe ao menos data e hora de início.</div>`; return; }
+
+  el.innerHTML = `<div style="color:var(--tx3);font-size:11px">${spinner()} Verificando...</div>`;
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/rpc/espacos_disponibilidade_admin`, {
+      method: "POST",
+      headers: { ...apiHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ p_data_inicio: di, p_hora_inicio: hi, p_data_fim: df || di, p_hora_fim: hf || null }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const dados = await res.json();
+
+    const livres   = dados.filter(d => d.disponivel);
+    const ocupados = dados.filter(d => !d.disponivel);
+
+    const fmtH = h => h ? String(h).slice(0,5) : "—";
+    const fmtD = d => { if(!d) return ""; const [y,m,dia]=d.split("-"); return `${dia}/${m}/${y}`; };
+
+    let html = `<div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <span style="padding:4px 12px;border-radius:20px;background:rgba(58,170,92,.1);border:1px solid rgba(58,170,92,.3);font-size:11px;font-weight:700;color:var(--gr)">✓ ${livres.length} livre${livres.length!==1?"s":""}</span>
+      <span style="padding:4px 12px;border-radius:20px;background:rgba(224,85,85,.09);border:1px solid rgba(224,85,85,.25);font-size:11px;font-weight:700;color:var(--rose)">🔒 ${ocupados.length} ocupado${ocupados.length!==1?"s":""}</span>
+    </div>`;
+
+    if (ocupados.length) {
+      html += `<div style="font-size:10px;font-weight:700;color:var(--rose);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Espaços ocupados</div>`;
+      ocupados.forEach(d => {
+        const c = d.conflito || {};
+        html += `<div style="padding:10px 14px;border-radius:8px;border:1px solid rgba(224,85,85,.2);background:rgba(224,85,85,.05);margin-bottom:6px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+            <span style="font-size:12px;font-weight:700;color:var(--tx1)">🔒 ${escapeHtml(d.nome)}</span>
+            ${c.status ? `<span style="font-size:9.5px;padding:2px 8px;border-radius:6px;background:rgba(214,148,0,.15);color:#8A6010;font-weight:700">${c.status.replace(/_/g," ")}</span>` : ""}
+          </div>
+          ${c.titulo ? `<div style="font-size:11.5px;color:var(--tx2);margin-top:5px">${escapeHtml(c.titulo)}</div>` : ""}
+          <div style="font-size:10.5px;color:var(--tx3);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap">
+            ${c.data ? `<span>📅 ${fmtD(c.data)}${c.data_encerramento&&c.data_encerramento!==c.data?" → "+fmtD(c.data_encerramento):""}</span>` : ""}
+            ${c.hora_inicio ? `<span>🕐 ${fmtH(c.hora_inicio)}${c.hora_fim?" → "+fmtH(c.hora_fim):""}</span>` : ""}
+            ${c.organizador ? `<span>👤 ${escapeHtml(c.organizador)}</span>` : ""}
+            ${c.solicitante ? `<span>📋 ${escapeHtml(c.solicitante)}</span>` : ""}
+          </div>
+        </div>`;
+      });
+    }
+
+    if (livres.length) {
+      html += `<div style="font-size:10px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.07em;margin:12px 0 8px">Espaços disponíveis</div>`;
+      html += `<div style="display:flex;flex-wrap:wrap;gap:6px">${livres.map(d =>
+        `<span style="padding:5px 12px;border-radius:20px;background:rgba(58,170,92,.09);border:1px solid rgba(58,170,92,.25);font-size:11.5px;color:var(--gr)">✓ ${escapeHtml(d.nome)}</span>`
+      ).join("")}</div>`;
+    }
+
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = `<div style="color:var(--rose);font-size:11.5px">Erro: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+window.agVerificarOcupacao          = agVerificarOcupacao;
+window.carregarGerenciamentoEspacos = carregarGerenciamentoEspacos;
+window.agToggleEspacoPublico        = agToggleEspacoPublico;
+window.carregarSolicitacoesAgenda   = carregarSolicitacoesAgenda;
+window.agAnalisarSolicitacao        = agAnalisarSolicitacao;
+window.agSolicitarAjuste            = agSolicitarAjuste;
+window.agConfirmarAjuste            = agConfirmarAjuste;
+// legado (demandas)
 window.agEmAnalise                = agEmAnalise;
 window.agRecusarSolicitacao       = agRecusarSolicitacao;
 window.agAprovarSolicitacao       = agAprovarSolicitacao;
@@ -819,7 +1142,7 @@ async function agCarregarAprovacoes() {
   el.innerHTML = `<div style="color:var(--tx3);font-size:11px">${spinner()} Carregando...</div>`;
   try {
     const res = await fetch(
-      `${apiBaseUrl()}/rest/v1/agenda?status=eq.pendente&select=*&order=created_at.desc&limit=200`,
+      `${apiBaseUrl()}/rest/v1/agenda?status=in.(pendente,aguardando_aprovacao,em_analise)&select=*&order=created_at.desc&limit=200`,
       { headers: apiHeaders() }
     );
     if (!res.ok) throw new Error(await res.text());
@@ -866,9 +1189,39 @@ async function agCarregarAprovacoes() {
         </div>`).join("");
     }
 
-    if (manuais.length) {
-      if (deEvento.length) html += `<div style="margin-top:20px;margin-bottom:10px;border-top:1px solid var(--bd2);padding-top:16px"></div>`;
-      html += `<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Solicitações Manuais — ${manuais.length}</div>`;
+    // Separa solicitações públicas (com protocolo) das manuais (sem protocolo)
+    const solPublicas = manuais.filter(r => r.protocolo || r.origem_sol === "link_publico" || r.origem === "solicitacao");
+    const solManuais  = manuais.filter(r => !r.protocolo && r.origem_sol !== "link_publico" && r.origem !== "solicitacao");
+
+    if (solPublicas.length) {
+      if (deEvento.length) html += `<div style="margin-top:20px;margin-bottom:12px;border-top:1px solid var(--bd2);padding-top:16px"></div>`;
+      html += `<div style="font-size:10px;font-weight:700;color:#8A6010;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">📋 Solicitações Públicas — ${solPublicas.length} aguardando</div>`;
+      html += solPublicas.map(r => `
+        <div style="background:var(--bg-card);border:1.5px solid rgba(214,148,0,.35);border-left:4px solid #D49000;border-radius:10px;padding:14px 16px;margin-bottom:10px">
+          <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
+            <div style="flex:1;min-width:180px">
+              <div style="font-size:13px;font-weight:700;color:var(--tx1)">${escapeHtml(r.titulo || "—")}</div>
+              <div style="font-size:11px;color:var(--tx3);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap">
+                <span>📅 ${fmtD(r.data)}${r.hora_inicio ? " · " + String(r.hora_inicio).slice(0,5) + (r.hora_fim ? " → " + String(r.hora_fim).slice(0,5) : "") : ""}</span>
+                ${r.espaco   ? `<span>📍 ${escapeHtml(r.espaco)}</span>` : ""}
+                ${r.solicitante_txt  ? `<span>👤 ${escapeHtml(r.solicitante_txt)}</span>` : ""}
+                ${r.solicitante_tel  ? `<span>📞 ${escapeHtml(r.solicitante_tel)}</span>` : ""}
+              </div>
+              ${r.protocolo ? `<div style="margin-top:5px"><span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(214,148,0,.15);color:#8A6010;font-family:monospace">${r.protocolo}</span></div>` : ""}
+              ${r.status === "em_analise" ? `<div style="margin-top:5px"><span style="font-size:9.5px;padding:2px 7px;border-radius:6px;background:rgba(74,156,245,.12);color:var(--sky);font-weight:700">Em análise</span></div>` : ""}
+            </div>
+            <div style="display:flex;gap:6px;align-self:flex-start;flex-shrink:0;flex-wrap:wrap">
+              ${r.status !== "em_analise" ? `<button onclick="agMarcarEmAnalise('${r.id}')" style="padding:5px 11px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--sky);font-size:10px;font-weight:700;cursor:pointer">Em análise</button>` : ""}
+              <button onclick="agAprovarAgendamento('${r.id}')" style="padding:5px 12px;border-radius:6px;border:1px solid rgba(58,170,92,.35);background:rgba(58,170,92,.1);color:var(--gr);font-size:10px;font-weight:700;cursor:pointer">✓ Aprovar</button>
+              <button onclick="agRejeitarAgendamento('${r.id}')" style="padding:5px 11px;border-radius:6px;border:1px solid rgba(224,85,85,.3);background:rgba(224,85,85,.08);color:var(--rose);font-size:10px;font-weight:700;cursor:pointer">✕ Recusar</button>
+            </div>
+          </div>
+        </div>`).join("");
+    }
+
+    if (solManuais.length) {
+      if (deEvento.length || solPublicas.length) html += `<div style="margin-top:20px;margin-bottom:10px;border-top:1px solid var(--bd2);padding-top:16px"></div>`;
+      html += `<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Pendentes Internos — ${solManuais.length}</div>`;
       html += `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px">
         <thead><tr style="border-bottom:1px solid var(--bd2);background:var(--bg-surface)">
           <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Título</th>
@@ -876,7 +1229,7 @@ async function agCarregarAprovacoes() {
           <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Espaço</th>
           <th style="text-align:right;padding:7px 10px"></th>
         </tr></thead>
-        <tbody>${manuais.map(r => `<tr style="border-bottom:1px solid var(--bd1)">
+        <tbody>${solManuais.map(r => `<tr style="border-bottom:1px solid var(--bd1)">
           <td style="padding:8px 10px;color:var(--tx1);font-weight:600">${escapeHtml(r.titulo || "—")}</td>
           <td style="padding:8px 10px;color:var(--tx2);white-space:nowrap">${fmtD(r.data)}</td>
           <td style="padding:8px 10px;color:var(--tx2)">${escapeHtml(r.espaco || "—")}</td>
@@ -955,7 +1308,173 @@ async function agConfirmarRejeicao(agendaId, eventoId) {
   } catch (e) { T("Erro ao rejeitar", e.message); }
 }
 
-window.agCarregarAprovacoes = agCarregarAprovacoes;
-window.agAprovarEntrada     = agAprovarEntrada;
-window.agRejeitarEntrada    = agRejeitarEntrada;
-window.agConfirmarRejeicao  = agConfirmarRejeicao;
+async function agMarcarEmAnalise(id) {
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${id}`, {
+      method: "PATCH",
+      headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+      body: JSON.stringify({ status: "em_analise" }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    agCarregarAprovacoes();
+  } catch (e) { T("Erro", e.message); }
+}
+
+async function _comSyncStatus(agendaId, acao, motivo) {
+  try {
+    const sol = await fetch(
+      `${apiBaseUrl()}/rest/v1/com_solicitacoes_arte?agenda_id=eq.${agendaId}&status=not.in.(Cancelada,Concluída,Programação não aprovada)&select=id,status&limit=10`,
+      { headers: apiHeaders() }
+    );
+    if (!sol.ok) return;
+    const rows = await sol.json();
+
+    for (const r of rows) {
+      let novoStatus = null;
+      let texto = "";
+
+      if (acao === "aprovar") {
+        novoStatus = "Aprovada para produção";
+        texto = "Programação aprovada pela Administração. Produção liberada.";
+      } else if (acao === "recusar") {
+        novoStatus = "Programação não aprovada";
+        texto = `Programação recusada pela Administração. Produção bloqueada.${motivo ? "\nMotivo: " + motivo : ""}`;
+      } else if (acao === "ajuste") {
+        texto = `Ajuste solicitado na programação pela Administração.${motivo ? "\nDetalhe: " + motivo : ""} Verifique se datas, horários ou local foram alterados.`;
+      }
+
+      if (novoStatus) {
+        await fetch(`${apiBaseUrl()}/rest/v1/com_solicitacoes_arte?id=eq.${r.id}`, {
+          method: "PATCH",
+          headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+          body: JSON.stringify({ status: novoStatus, atualizado_em: new Date().toISOString() }),
+        });
+      }
+      if (texto) {
+        await fetch(`${apiBaseUrl()}/rest/v1/com_andamentos`, {
+          method: "POST",
+          headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+          body: JSON.stringify({ sol_id: r.id, texto, automatico: true, criado_em: new Date().toISOString() }),
+        });
+      }
+    }
+  } catch (_) {}
+}
+
+async function agAprovarAgendamento(id) {
+  const aprovador = typeof USUARIO_ATUAL !== "undefined" ? (USUARIO_ATUAL?.nome || "Administrador") : "Administrador";
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/rpc/aprovar_agendamento`, {
+      method: "POST",
+      headers: { ...apiHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ p_agenda_id: id, p_aprovador: aprovador }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.erro || "Erro ao aprovar");
+
+    _agendaCache = null;
+    T("Agendamento aprovado!", data.protocolo ? `Protocolo ${data.protocolo} confirmado.` : "Reserva confirmada na agenda.");
+
+    if (data.telefone && typeof WA !== "undefined") {
+      const fmtData = d => {
+        if (!d) return "";
+        const [y, m, dia] = String(d).slice(0, 10).split("-");
+        return `${dia}/${m}/${y}`;
+      };
+      const horario = data.hora_inicio
+        ? String(data.hora_inicio).slice(0, 5) + (data.hora_fim ? ` → ${String(data.hora_fim).slice(0, 5)}` : "")
+        : "";
+      const msg = `Olá${data.solicitante ? `, ${data.solicitante.split(" ")[0]}` : ""}! Seu pedido de agendamento foi *aprovado* ✅\n\n`
+        + `📋 *${data.titulo || "Agendamento"}*\n`
+        + (fmtData(data.data) ? `📅 ${fmtData(data.data)}${horario ? " · " + horario : ""}\n` : "")
+        + (data.espaco ? `📍 ${data.espaco}\n` : "")
+        + (data.protocolo ? `🔖 Protocolo: ${data.protocolo}\n` : "")
+        + `\nQualquer dúvida, entre em contato com a secretaria.`;
+      WA.send({
+        para:        data.telefone,
+        nome:        data.solicitante || "Solicitante",
+        mensagem:    msg,
+        modulo:      "AGENDA",
+        referenciaT: "agenda",
+        referenciaId: id,
+        chave:       `AG_APROV_${id}`,
+      }).catch(() => {});
+    }
+
+    // Notifica comunicação sobre aprovação
+    _comSyncStatus(id, "aprovar");
+    agCarregarAprovacoes();
+  } catch (e) { T("Erro ao aprovar", e.message); }
+}
+
+function agRejeitarAgendamento(id) {
+  let modal = document.getElementById("ag-rejeitar-sol-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "ag-rejeitar-sol-modal";
+    modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:340;display:flex;align-items:center;justify-content:center";
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `
+    <div style="width:min(440px,94vw);background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="font-size:15px;font-weight:700;color:var(--tx1);margin-bottom:6px">Recusar solicitação</div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:16px">O solicitante receberá uma notificação via WhatsApp se houver número cadastrado.</div>
+      <label style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em">Motivo da recusa</label>
+      <textarea id="ag-rejeitar-sol-motivo" rows="3" placeholder="Ex.: Espaço já reservado, Conflito de horário, Data indisponível..." style="width:100%;margin-top:6px;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-input);color:var(--tx1);font-size:12.5px;font-family:inherit;resize:vertical;outline:none;box-sizing:border-box"></textarea>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+        <button onclick="document.getElementById('ag-rejeitar-sol-modal')?.remove()" style="padding:8px 16px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:12.5px;cursor:pointer">Cancelar</button>
+        <button onclick="agConfirmarRecusaAgendamento('${id}')" style="padding:8px 18px;border-radius:7px;border:none;background:var(--rose);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer">Recusar</button>
+      </div>
+    </div>`;
+}
+
+async function agConfirmarRecusaAgendamento(id) {
+  const motivo   = document.getElementById("ag-rejeitar-sol-motivo")?.value?.trim() || "Indisponibilidade de espaço ou horário";
+  const aprovador = typeof USUARIO_ATUAL !== "undefined" ? (USUARIO_ATUAL?.nome || "Administrador") : "Administrador";
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/rpc/recusar_agendamento`, {
+      method: "POST",
+      headers: { ...apiHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ p_agenda_id: id, p_motivo: motivo, p_aprovador: aprovador }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.erro || "Erro ao recusar");
+
+    document.getElementById("ag-rejeitar-sol-modal")?.remove();
+    _agendaCache = null;
+    T("Solicitação recusada.", motivo ? `Motivo registrado.` : "");
+
+    // Cancela solicitações de arte vinculadas
+    _comSyncStatus(id, "recusar", motivo);
+
+    if (data.telefone && typeof WA !== "undefined") {
+      const msg = `Olá${data.solicitante ? `, ${data.solicitante.split(" ")[0]}` : ""}! Infelizmente seu pedido de agendamento *não foi aprovado*.\n\n`
+        + (data.protocolo ? `🔖 Protocolo: ${data.protocolo}\n` : "")
+        + (data.titulo ? `📋 ${data.titulo}\n` : "")
+        + `\n❌ *Motivo:* ${motivo}\n\nPara mais informações, entre em contato com a secretaria.`;
+      WA.send({
+        para:        data.telefone,
+        nome:        data.solicitante || "Solicitante",
+        mensagem:    msg,
+        modulo:      "AGENDA",
+        referenciaT: "agenda",
+        referenciaId: id,
+        chave:       `AG_RECUS_${id}`,
+      }).catch(() => {});
+    }
+
+    agCarregarAprovacoes();
+  } catch (e) { T("Erro ao recusar", e.message); }
+}
+
+window.agCarregarAprovacoes          = agCarregarAprovacoes;
+window.agAprovarEntrada              = agAprovarEntrada;
+window.agRejeitarEntrada             = agRejeitarEntrada;
+window.agConfirmarRejeicao           = agConfirmarRejeicao;
+window.agMarcarEmAnalise             = agMarcarEmAnalise;
+window.agAprovarAgendamento          = agAprovarAgendamento;
+window.agRejeitarAgendamento         = agRejeitarAgendamento;
+window.agConfirmarRecusaAgendamento  = agConfirmarRecusaAgendamento;
+window._comSyncStatus                = _comSyncStatus;

@@ -61,9 +61,14 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.row4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+/* Separador visual dentro de .row4 entre par de campos */
+.row4-sep { display: none; }
 @media (max-width: 480px) { .row2 { grid-template-columns: 1fr; } }
 @media (max-width: 520px) { .row3 { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 380px) { .row3 { grid-template-columns: 1fr; } }
+@media (max-width: 580px) { .row4 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 360px) { .row4 { grid-template-columns: 1fr; } }
 
 /* honeypot */
 .hp { position: absolute; left: -9999px; top: -9999px; opacity: 0; height: 0; overflow: hidden; }
@@ -105,6 +110,259 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 .btn-novo:hover { background: var(--acc); color: #fff; }
 
 .footer-note { text-align: center; font-size: 11px; color: var(--tx3); margin-top: 32px; line-height: 1.7; }
+
+/* ── Custom subcategoria dropdown ─────────────────────────── */
+.csub { position: relative; }
+.csub-btn {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--inpbd);
+  background: var(--inp); color: var(--tx3); font-size: 13.5px; font-family: inherit;
+  cursor: pointer; text-align: left; width: 100%; min-height: 42px;
+  outline: none; transition: border-color .15s;
+}
+.csub-btn.has-val { color: var(--tx1); }
+.csub-btn:focus, .csub-btn.open { border-color: var(--acc); }
+.csub-btn svg { flex-shrink: 0; color: var(--tx3); transition: transform .2s; }
+.csub-btn.open svg { transform: rotate(180deg); }
+.csub-panel {
+  display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 300;
+  background: var(--card); border: 1.5px solid var(--acc); border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.14); overflow: hidden; max-height: 280px; overflow-y: auto;
+}
+.csub-panel.open { display: block; }
+.csub-glabel {
+  padding: 9px 12px 5px;
+  font-size: 10px; font-weight: 800; color: var(--acc);
+  text-transform: uppercase; letter-spacing: .09em;
+  border-top: 1px solid var(--bd);
+}
+.csub-glabel:first-child { border-top: none; padding-top: 11px; }
+.csub-opt {
+  padding: 8px 16px; font-size: 13.5px; color: var(--tx1);
+  cursor: pointer; transition: background .1s;
+}
+.csub-opt:hover { background: var(--accbg); color: var(--acc); }
+.csub-opt.sel   { background: var(--accbg); color: var(--acc); font-weight: 600; }
+
+/* ── Agendamentos: Programação ─────────────────────────────── */
+.spaces-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 6px 8px;
+  padding: 4px 0;
+}
+.space-chk {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 10px; border-radius: 7px; border: 1.5px solid var(--inpbd);
+  background: var(--inp); cursor: pointer; font-size: 13px; color: var(--tx1);
+  user-select: none; transition: border-color .12s, background .12s;
+}
+.space-chk:has(input:checked) { border-color: var(--acc); background: var(--accbg); color: var(--acc); }
+.space-chk input[type="checkbox"] { accent-color: var(--acc); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
+/* Espaço indisponível */
+.space-chk.sc-indisponivel {
+  opacity: .5; cursor: not-allowed; pointer-events: none;
+  border-color: var(--inpbd); background: var(--bg); color: var(--tx3);
+}
+.space-chk.sc-indisponivel input { cursor: not-allowed; }
+.sc-lock { font-size: 10px; margin-left: auto; flex-shrink: 0; color: var(--tx3); }
+/* Status de disponibilidade */
+.ag-disp-info {
+  font-size: 11px; color: var(--tx3); padding: 7px 10px;
+  border-radius: 7px; border: 1px solid var(--bd); background: var(--inp);
+  display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+}
+.ag-disp-aviso {
+  font-size: 11.5px; color: #8A4000; padding: 8px 12px;
+  border-radius: 7px; border: 1px solid rgba(214,148,0,.35);
+  background: rgba(214,148,0,.09); margin-bottom: 8px; display: none;
+}
+
+/* ── Arte Digital / Step 2 ─────────────────────────────────── */
+.ag-arte-sep {
+  margin-top: 18px; padding-top: 18px;
+  border-top: 1px solid var(--bd);
+}
+.ag-arte-title {
+  font-size: 10.5px; font-weight: 700; color: #7057ad;
+  text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px;
+}
+.ag-arte-desc {
+  font-size: 11.5px; color: var(--tx3); margin-bottom: 12px; line-height: 1.5;
+}
+.ag-arte-radios { display: flex; gap: 20px; }
+.ag-arte-radios label {
+  display: flex; align-items: center; gap: 7px;
+  cursor: pointer; font-size: 13px; color: var(--tx1); font-weight: 400;
+}
+
+/* Stepper */
+.ag-stepper {
+  display: flex; align-items: center; margin-bottom: 20px;
+}
+.ag-step { display: flex; align-items: center; gap: 7px; }
+.ag-step-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800; flex-shrink: 0;
+}
+.ag-step-num.done   { background: var(--gr);   color: #fff; }
+.ag-step-num.active { background: #7057ad;      color: #fff; }
+.ag-step-num.idle   { background: var(--bd);    color: var(--tx3); }
+.ag-step-label { font-size: 12px; font-weight: 600; }
+.ag-step-label.done   { color: var(--gr); }
+.ag-step-label.active { color: #7057ad; }
+.ag-step-label.idle   { color: var(--tx3); }
+.ag-step-sep { flex: 1; height: 2px; background: var(--bd); margin: 0 10px; }
+.ag-step-sep.done { background: var(--gr); }
+
+/* Formatos tags (step 2) */
+.s2-fmt-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.s2-fmt-lbl {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 20px;
+  border: 1.5px solid var(--inpbd); cursor: pointer;
+  font-size: 12.5px; background: var(--inp); color: var(--tx2);
+  user-select: none; transition: border-color .1s, background .1s, color .1s;
+}
+.s2-fmt-lbl:has(input:checked) {
+  border-color: #7057ad;
+  background: rgba(112,87,173,.12);
+  color: #7057ad;
+}
+
+/* Step 2 aviso programação pendente */
+.s2-aviso-pend {
+  display: none; font-size: 11.5px; color: #8A6010;
+  padding: 9px 13px; background: rgba(214,148,0,.1);
+  border: 1px solid rgba(214,148,0,.35); border-radius: 8px;
+  margin-bottom: 16px; line-height: 1.5;
+}
+
+/* ── screen-agend: tipo de solicitação ──────────────────────── */
+.ag-tipo-grid { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px 0; }
+.ag2-tipo-lbl {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 16px; border-radius: 20px;
+  border: 1.5px solid var(--inpbd); cursor: pointer;
+  font-size: 13.5px; background: var(--inp); color: var(--tx2);
+  user-select: none; transition: border-color .12s, background .12s, color .12s;
+}
+.ag2-tipo-lbl input[type="radio"] { display: none; }
+.ag2-tipo-lbl.sel, .ag2-tipo-lbl:has(input:checked) {
+  border-color: var(--acc); background: var(--accbg); color: var(--acc); font-weight: 600;
+}
+.ag2-tipo-lbl:not(.sel):hover { border-color: var(--acc); color: var(--tx1); }
+
+/* ── screen-agend: botão verificar disponibilidade ──────────── */
+.btn-verif {
+  width: 100%; padding: 12px; border-radius: 9px; border: none;
+  background: var(--acc); color: #fff; font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: inherit; margin-top: 10px; transition: opacity .15s;
+}
+.btn-verif:hover { opacity: .88; }
+.btn-verif:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── screen-agend: loading ───────────────────────────────────── */
+.ag2-loading {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12.5px; color: var(--tx3); margin-top: 10px;
+}
+.ag2-spinner {
+  width: 16px; height: 16px; flex-shrink: 0;
+  border: 2px solid var(--bd); border-top-color: var(--acc);
+  border-radius: 50%; animation: ag2-spin .7s linear infinite;
+}
+@keyframes ag2-spin { to { transform: rotate(360deg); } }
+
+/* ── screen-agend: aviso invalidação ────────────────────────── */
+.ag2-disp-aviso {
+  font-size: 11.5px; color: var(--amber); padding: 8px 12px;
+  border-radius: 7px; border: 1px solid rgba(208,144,64,.3);
+  background: rgba(208,144,64,.08); margin-top: 10px;
+}
+
+/* ── screen-agend: agrupamento ───────────────────────────────── */
+.ag2-grupo { margin-bottom: 20px; }
+.ag2-grupo:last-child { margin-bottom: 0; }
+.ag2-grupo-hdr {
+  font-size: 10px; font-weight: 800; color: var(--acc);
+  text-transform: uppercase; letter-spacing: .09em;
+  padding-bottom: 7px; margin-bottom: 8px;
+  border-bottom: 1px solid var(--bd);
+}
+.ag2-grupo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 6px;
+}
+
+/* ── screen-agend: cards de espaço ──────────────────────────── */
+.ag2-espaco-card {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 11px;
+  border-radius: 8px; border: 1.5px solid var(--inpbd);
+  background: var(--inp); cursor: pointer;
+  font-size: 13px; font-weight: 500; color: var(--tx1);
+  transition: border-color .12s, background .12s;
+  user-select: none;
+}
+.ag2-espaco-card:not(.ag2-espaco-indisp):hover {
+  border-color: var(--gr); background: rgba(58,170,92,.05);
+}
+.ag2-espaco-card.ag2-espaco-sel {
+  border-color: var(--gr); background: rgba(58,170,92,.1); color: #1a6b35;
+}
+
+/* checkbox visual */
+.ag2-chk {
+  width: 16px; height: 16px; flex-shrink: 0;
+  border: 1.5px solid var(--inpbd); border-radius: 4px;
+  background: var(--inp); position: relative;
+  transition: border-color .12s, background .12s;
+}
+.ag2-espaco-card.ag2-espaco-sel .ag2-chk {
+  background: var(--gr); border-color: var(--gr);
+}
+.ag2-espaco-card.ag2-espaco-sel .ag2-chk::after {
+  content: ''; position: absolute;
+  left: 3px; top: 0px; width: 5px; height: 9px;
+  border: 2px solid #fff; border-top: none; border-left: none;
+  transform: rotate(45deg);
+}
+.ag2-espaco-indisp .ag2-chk { background: var(--bd); border-color: var(--bd); }
+.ag2-espaco-indisp { opacity: .46; cursor: not-allowed; pointer-events: none; color: var(--tx3); }
+.ag2-lock { font-size: 10px; margin-left: auto; flex-shrink: 0; }
+.ag2-tag-ocupado { font-size: 10px; color: var(--rose); margin-left: auto; flex-shrink: 0; }
+
+/* ── screen-agend: contador ─────────────────────────────────── */
+.ag2-contador {
+  display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+  font-size: 11.5px; color: var(--tx3);
+  padding: 9px 13px; background: var(--bg);
+  border-radius: 8px; border: 1px solid var(--bd); margin-bottom: 16px;
+}
+.ag2-cnt-disp  { color: var(--gr);   font-weight: 600; }
+.ag2-cnt-indisp { color: var(--rose); font-weight: 600; }
+
+/* ── screen-agend: resumo seleção ────────────────────────────── */
+.ag2-resumo {
+  margin-top: 18px; padding: 12px 14px;
+  border: 1.5px solid var(--gr);
+  border-radius: 10px; background: rgba(58,170,92,.06);
+}
+.ag2-resumo-titulo {
+  font-size: 10px; font-weight: 800; color: var(--gr);
+  text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px;
+}
+.ag2-resumo-item {
+  font-size: 13px; color: var(--tx1);
+  display: flex; align-items: center; gap: 7px; padding: 2px 0;
+}
+.ag2-resumo-item::before { content: "✔"; color: var(--gr); font-size: 10px; font-weight: 700; flex-shrink: 0; }
+.ag2-resumo-total {
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid rgba(58,170,92,.22);
+  font-size: 11.5px; color: var(--gr); font-weight: 600;
+}
 </style>
 </head>
 <body>
@@ -155,10 +413,17 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
             </select>
           </div>
           <div class="field">
-            <label for="f-sub">Tipo de solicitação <span class="req">*</span></label>
-            <select id="f-sub" onchange="onSubChange()">
-              <option value="">Selecione a área primeiro</option>
-            </select>
+            <label>Tipo de solicitação <span class="req">*</span></label>
+            <div class="csub">
+              <button type="button" id="f-sub-btn" class="csub-btn" onclick="csubToggle()" aria-haspopup="listbox" aria-expanded="false">
+                <span id="f-sub-lbl">Selecione a área primeiro</span>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 5l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div class="csub-panel" id="f-sub-panel" role="listbox"></div>
+              <select id="f-sub" style="display:none" onchange="onSubChange()">
+                <option value="">Selecione a área primeiro</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -202,6 +467,10 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
             <label for="f-fin-venc">Data de vencimento</label>
             <input type="date" id="f-fin-venc">
           </div>
+          <div class="field">
+            <label for="f-fin-centro">Centro de custo</label>
+            <input type="text" id="f-fin-centro" placeholder="Ex: Ministério de Louvor">
+          </div>
         </div>
 
         <div class="row2">
@@ -227,6 +496,7 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
             <option value="Transferência Bancária">Transferência Bancária</option>
             <option value="Débito em Conta">Débito em Conta</option>
             <option value="Cheque">Cheque</option>
+            <option value="Reembolso">Reembolso</option>
             <option value="Outro">Outro</option>
           </select>
         </div>
@@ -291,6 +561,7 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
             <option value="Transferência Bancária">Transferência Bancária</option>
             <option value="Débito em Conta">Débito em Conta</option>
             <option value="Cheque">Cheque</option>
+            <option value="Reembolso">Reembolso</option>
             <option value="Outro">Outro</option>
           </select>
         </div>
@@ -307,13 +578,111 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
         </div>
 
         <div class="field">
-          <label for="f-reimb-pastor">Pastor / líder ciente ou aprovador</label>
+          <label for="f-reimb-pastor">Aprovador (pastor ou líder)</label>
           <input type="text" id="f-reimb-pastor" placeholder="Nome do aprovador">
         </div>
 
         <div class="field">
           <label for="f-reimb-obs">Observações</label>
           <textarea id="f-reimb-obs" placeholder="Informações adicionais..." style="min-height:70px"></textarea>
+        </div>
+      </div>
+
+      <!-- ── Agendamentos: Programação ─────────────────── -->
+      <div class="card" id="agend-prog" style="display:none">
+        <div class="card-title">📅 Dados da Programação</div>
+
+        <div class="row4">
+          <div class="field">
+            <label for="f-ag-data">Data início <span class="req">*</span></label>
+            <input type="date" id="f-ag-data" onchange="agSincronizarDataFim()">
+          </div>
+          <div class="field">
+            <label for="f-ag-inicio">Hora início</label>
+            <input type="time" id="f-ag-inicio" onchange="agValidarPeriodo();verificarDisponibilidade()">
+          </div>
+          <div class="field">
+            <label for="f-ag-data-fim">Data final</label>
+            <input type="date" id="f-ag-data-fim" onchange="agValidarPeriodo();verificarDisponibilidade()">
+          </div>
+          <div class="field">
+            <label for="f-ag-fim">Hora final</label>
+            <input type="time" id="f-ag-fim" onchange="agValidarPeriodo();verificarDisponibilidade()">
+          </div>
+        </div>
+        <div id="ag-periodo-erro" style="display:none;font-size:11.5px;color:var(--rose);margin-top:-6px;margin-bottom:10px;padding:8px 12px;background:rgba(224,85,85,.08);border-radius:7px;border:1px solid rgba(224,85,85,.25)">
+          O encerramento precisa ocorrer após o início da programação.
+        </div>
+
+        <div class="field">
+          <label for="f-ag-part">Quantidade estimada de participantes</label>
+          <input type="number" id="f-ag-part" placeholder="Ex: 50" min="1" inputmode="numeric">
+        </div>
+
+        <div class="field">
+          <label>Espaços necessários</label>
+          <div id="ag-disp-hint" class="ag-disp-info">
+            ℹ️ Informe data e horário de início para consultar a disponibilidade.
+          </div>
+          <div id="ag-disp-status" class="ag-disp-info" style="display:none">
+            <span id="ag-disp-status-txt">Verificando disponibilidade...</span>
+          </div>
+          <div id="ag-disp-aviso" class="ag-disp-aviso"></div>
+          <div class="spaces-grid" id="f-ag-spaces"></div>
+        </div>
+
+        <!-- Arte Digital -->
+        <div class="ag-arte-sep">
+          <div class="ag-arte-title">📢 Comunicação e Divulgação</div>
+          <div class="ag-arte-desc">
+            Esta programação precisará de arte digital? (banner, arte para WhatsApp, redes sociais, avisos, etc.)
+          </div>
+          <div class="ag-arte-radios">
+            <label>
+              <input type="radio" name="ag-arte" value="sim" style="accent-color:#7057ad;width:15px;height:15px">
+              Sim, vou precisar de arte
+            </label>
+            <label>
+              <input type="radio" name="ag-arte" value="nao" style="accent-color:#7057ad;width:15px;height:15px">
+              Não, obrigado
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Comunicação: Solicitação de Arte / Produção ──────── -->
+      <div class="card" id="com-sol-sec" style="display:none">
+        <div class="card-title">📢 Detalhes da Solicitação</div>
+
+        <div class="field">
+          <label>Áreas de comunicação necessárias</label>
+          <div class="spaces-grid" id="com-areas-grid" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))">
+            <!-- preenchido via JS -->
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Formatos de divulgação</label>
+          <div class="s2-fmt-grid" id="com-fmt-grid">
+            <!-- preenchido via JS -->
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-com-data">Data do evento</label>
+            <input type="date" id="f-com-data" onchange="_comSugPrazo()">
+          </div>
+          <div class="field">
+            <label for="f-com-hora">Horário do evento</label>
+            <input type="time" id="f-com-hora">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-com-prazo">Prazo de entrega</label>
+          <input type="date" id="f-com-prazo" onchange="_comValidarPrazo()">
+          <div id="com-prazo-aviso" style="display:none;font-size:11px;color:var(--rose);margin-top:4px"></div>
         </div>
       </div>
 
@@ -331,13 +700,243 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
       <div class="ok-icon">✅</div>
       <div class="ok-title">Solicitação registrada</div>
       <div class="ok-ticket" id="ok-numero">—</div>
+      <div id="ok-protocolo" style="display:none;margin-top:8px;padding:8px 16px;background:rgba(214,148,0,.12);border:1px solid rgba(214,148,0,.3);border-radius:8px;font-size:12px;font-weight:700;color:#8A6010;text-align:center"></div>
+      <div id="ok-aviso-conflito" style="display:none;margin-top:10px;padding:10px 14px;background:rgba(224,85,85,.09);border:1px solid rgba(224,85,85,.28);border-radius:8px;font-size:12px;color:#C03030;text-align:center">
+        ⚠️ Já existe uma solicitação para este espaço e horário. A administração entrará em contato para verificar disponibilidade.
+      </div>
       <div class="ok-msg">
-        Nossa equipe analisará sua solicitação em breve e entrará em contato caso necessário.<br><br>
-        Guarde o número acima para referência.<br><br>
+        Nossa equipe analisará sua solicitação em breve e entrará em contato.<br><br>
+        Guarde os números acima para referência.<br><br>
         <strong>Obrigado pelo contato!</strong>
       </div>
       <button class="btn-novo" onclick="novoEnvio()">Registrar outra solicitação</button>
     </div>
+  </div>
+
+  <!-- ── Etapa 2: Solicitação de Arte Digital ────────────── -->
+  <div id="screen-step2" style="display:none">
+
+    <!-- Stepper -->
+    <div class="ag-stepper">
+      <div class="ag-step">
+        <div class="ag-step-num done">✓</div>
+        <span class="ag-step-label done">Programação</span>
+      </div>
+      <div class="ag-step-sep done"></div>
+      <div class="ag-step">
+        <div class="ag-step-num active">2</div>
+        <span class="ag-step-label active">Comunicação</span>
+      </div>
+    </div>
+
+    <!-- Resumo da etapa 1 -->
+    <div id="s2-resumo" style="font-size:12px;color:var(--tx2);padding:11px 15px;background:var(--card);border:1px solid var(--bd);border-radius:10px;margin-bottom:16px;line-height:1.6"></div>
+
+    <div class="card" style="border-color:rgba(112,87,173,.3)">
+      <div class="card-title" style="color:#7057ad">Etapa 2 de 2 — Arte Digital</div>
+
+      <div id="s2-aviso-pend" class="s2-aviso-pend">
+        ⚠️ Esta programação ainda aguarda aprovação administrativa. Você pode registrar a solicitação de arte agora; a equipe de Comunicação acompanhará desde o início.
+      </div>
+
+      <!-- Solicitante -->
+      <div style="font-size:9.5px;font-weight:700;color:#7057ad;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Solicitante</div>
+      <div class="row2">
+        <div class="field">
+          <label for="s2-resp">Nome do responsável <span class="req">*</span></label>
+          <input type="text" id="s2-resp" placeholder="Nome completo">
+        </div>
+        <div class="field">
+          <label for="s2-tel">WhatsApp de contato</label>
+          <input type="tel" id="s2-tel" placeholder="(11) 99999-9999">
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:18px">
+        <label for="s2-min">Ministério / Grupo <span class="req">*</span></label>
+        <select id="s2-min">
+          <option value="">Selecione…</option>
+          <option>UPA (SOS)</option>
+          <option>UMP (Movimento)</option>
+          <option>SAF</option>
+          <option>UPH</option>
+          <option>GAM</option>
+          <option>Casais (Lar Cristão)</option>
+          <option>Coral Jovem</option>
+          <option>Coral João Calvino</option>
+          <option>Música</option>
+          <option>Liderança / Conselho</option>
+          <option>Outro</option>
+        </select>
+      </div>
+
+      <!-- Programação vinculada (info) -->
+      <div style="font-size:9.5px;font-weight:700;color:#7057ad;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Programação</div>
+      <div id="s2-prog-info" style="font-size:12.5px;color:var(--tx2);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 14px;margin-bottom:18px;line-height:1.75"></div>
+
+      <!-- Demanda -->
+      <div style="font-size:9.5px;font-weight:700;color:#7057ad;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Demanda</div>
+      <div class="field">
+        <label for="s2-desc">O que precisa ser criado? <span class="req">*</span></label>
+        <textarea id="s2-desc" rows="4" placeholder="Descreva o que precisa ser criado: tema, textos, referências visuais, onde será divulgado…"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Áreas da comunicação</label>
+        <div class="s2-fmt-grid" id="s2-areas"><!-- preenchido via JS --></div>
+      </div>
+
+      <div class="field">
+        <label>Formatos desejados</label>
+        <div class="s2-fmt-grid" id="s2-formatos"><!-- preenchido via JS --></div>
+      </div>
+
+      <div class="row2" style="margin-top:2px">
+        <div class="field">
+          <label for="s2-prazo">Prazo de entrega</label>
+          <input type="date" id="s2-prazo">
+        </div>
+      </div>
+      <div id="s2-prazo-aviso" style="display:none;font-size:11.5px;color:var(--rose);margin:-6px 0 12px;padding:6px 10px;background:rgba(239,68,68,.08);border-radius:6px;border:1px solid rgba(239,68,68,.2)">
+        O prazo não pode ser posterior à data da programação.
+      </div>
+
+      <div class="field">
+        <label for="s2-info">Informações adicionais</label>
+        <textarea id="s2-info" style="min-height:70px" placeholder="Cores, logos, textos específicos, referências de artes anteriores…"></textarea>
+      </div>
+    </div>
+
+    <button type="button" class="btn-submit" id="btn-step2-enviar" onclick="_enviarArteDigital()"
+      style="background:#7057ad">
+      Enviar Solicitação de Arte
+    </button>
+    <div style="text-align:center;margin-top:12px">
+      <button type="button" onclick="_pularArteDigital()"
+        style="background:none;border:none;color:var(--tx3);font-size:12.5px;cursor:pointer;text-decoration:underline">
+        Pular esta etapa — registrar somente a programação
+      </button>
+    </div>
+    <div class="err-msg" id="err-step2" style="margin-top:10px"></div>
+  </div>
+
+  <!-- ══ SCREEN: Reserva de Espaço — fluxo availability-first ══ -->
+  <div id="screen-agend" style="display:none">
+
+    <header class="page-header">
+      <img src="/icons/logo-ippenha.svg" class="page-logo" alt="Igreja Presbiteriana da Penha"
+           onerror="this.style.display='none'">
+      <div class="page-title">Reservar Espaço</div>
+      <div class="page-sub">Verifique a disponibilidade antes de preencher os dados da solicitação.</div>
+    </header>
+
+    <!-- Passo 1: Tipo de solicitação -->
+    <div class="card">
+      <div class="card-title">Tipo de solicitação</div>
+      <div class="ag-tipo-grid" id="ag2-tipo-grid"></div>
+    </div>
+
+    <!-- Passo 2: Data, horário e participantes -->
+    <div class="card">
+      <div class="card-title">Data e horário</div>
+      <div class="row4">
+        <div class="field">
+          <label for="ag2-data-i">Data início <span class="req">*</span></label>
+          <input type="date" id="ag2-data-i" oninput="ag2SincDataFim()">
+        </div>
+        <div class="field">
+          <label for="ag2-hora-i">Hora início</label>
+          <input type="time" id="ag2-hora-i" oninput="ag2InvalidarDisp()">
+        </div>
+        <div class="field">
+          <label for="ag2-data-f">Data final</label>
+          <input type="date" id="ag2-data-f" oninput="ag2InvalidarDisp()">
+        </div>
+        <div class="field">
+          <label for="ag2-hora-f">Hora final</label>
+          <input type="time" id="ag2-hora-f" oninput="ag2InvalidarDisp()">
+        </div>
+      </div>
+      <div id="ag2-periodo-erro" style="display:none;font-size:11.5px;color:var(--rose);margin-top:-6px;margin-bottom:10px;padding:8px 12px;background:rgba(224,85,85,.08);border-radius:7px;border:1px solid rgba(224,85,85,.25)">
+        O encerramento precisa ocorrer após o início da programação.
+      </div>
+      <div class="field" style="margin-top:2px">
+        <label for="ag2-part">Quantidade estimada de participantes</label>
+        <input type="number" id="ag2-part" placeholder="Ex: 50" min="1" inputmode="numeric">
+      </div>
+      <div id="ag2-disp-invalido" class="ag2-disp-aviso" style="display:none">
+        A disponibilidade mudou. Clique em "Verificar Disponibilidade" novamente.
+      </div>
+      <button type="button" class="btn-verif" id="ag2-btn-verif" onclick="ag2VerificarDisp()">
+        Verificar Disponibilidade
+      </button>
+      <div id="ag2-checking" class="ag2-loading" style="display:none">
+        <div class="ag2-spinner"></div>
+        Consultando disponibilidade dos espaços...
+      </div>
+    </div>
+
+    <!-- Passo 3–5: Espaços disponíveis -->
+    <div class="card" id="ag2-card-espacos" style="display:none">
+      <div class="card-title">Espaços disponíveis</div>
+      <div id="ag2-espacos-grid"></div>
+    </div>
+
+    <!-- Passo 6: Formulário (expande após escolha do espaço) -->
+    <div id="ag2-card-form" style="display:none">
+      <div class="card">
+        <div class="card-title">Seus dados</div>
+        <div class="row2">
+          <div class="field">
+            <label for="ag2-nome">Nome completo <span class="req">*</span></label>
+            <input type="text" id="ag2-nome" placeholder="Seu nome completo" maxlength="120" autocomplete="name">
+          </div>
+          <div class="field">
+            <label for="ag2-tel">Telefone / WhatsApp <span class="req">*</span></label>
+            <input type="tel" id="ag2-tel" placeholder="(11) 99999-9999"
+              oninput="fmtTel(this)" onblur="fmtTel(this)" maxlength="16">
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Dados da programação</div>
+        <div class="field">
+          <label for="ag2-titulo">Título <span class="req">*</span></label>
+          <input type="text" id="ag2-titulo" placeholder="Descreva brevemente o evento" maxlength="200">
+        </div>
+        <div class="field">
+          <label for="ag2-desc">Descrição</label>
+          <textarea id="ag2-desc" placeholder="Informações adicionais sobre a programação..."></textarea>
+        </div>
+        <div class="ag-arte-sep">
+          <div class="ag-arte-title">📢 Comunicação e Divulgação</div>
+          <div class="ag-arte-desc">
+            Esta programação precisará de arte digital? (banner, arte para WhatsApp, redes sociais, avisos, etc.)
+          </div>
+          <div class="ag-arte-radios">
+            <label>
+              <input type="radio" name="ag2-arte" value="sim" style="accent-color:#7057ad;width:15px;height:15px">
+              Sim, vou precisar de arte
+            </label>
+            <label>
+              <input type="radio" name="ag2-arte" value="nao" style="accent-color:#7057ad;width:15px;height:15px">
+              Não, obrigado
+            </label>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="btn-submit" id="ag2-btn-enviar" onclick="ag2Enviar()">
+        Enviar Solicitação
+      </button>
+      <div class="err-msg" id="ag2-err"></div>
+    </div>
+
+    <div style="text-align:center;margin-top:20px;margin-bottom:4px">
+      <button type="button" onclick="ag2Voltar()"
+        style="background:none;border:none;color:var(--tx3);font-size:12.5px;cursor:pointer;text-decoration:underline">
+        ← Voltar ao menu principal
+      </button>
+    </div>
+
   </div>
 
   <div class="footer-note">
@@ -366,12 +965,19 @@ const CATS = [
     { grupo:"Geral",                    itens:["Equipamentos","Pequenos reparos"] },
   ]},
   { nome:"Limpeza e Organização",    icon:"🧹", resp:"Equipe de Limpeza / Zeladoria",   subcats:["Limpeza geral","Limpeza pós-evento","Organização de espaços","Solicitação de materiais de limpeza"] },
-  { nome:"Agendamentos",             icon:"📅", resp:"Secretaria / Administração",       subcats:["Solicitação de uso de sala","Agendamento de culto/evento","Reserva de espaço","Inclusão em calendário oficial","Cancelamento/alteração de agenda"] },
+  { nome:"Agendamentos",             icon:"📅", resp:"Secretaria / Liderança",           subcats:[
+    { grupo:"Programação / Espaços", itens:["Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"] },
+    { grupo:"Agenda Pastoral",       itens:["Aconselhamento pastoral","Atendimento pastoral","Visita hospitalar","Visita no Lar","Visita na Empresa","Visita Carcerária"] },
+  ]},
   { nome:"Secretaria",               icon:"📄", resp:"Secretaria / Conselho",            subcats:["Emissão de documentos","Elaboração de relatórios","Solicitação ao Conselho","Protocolos oficiais","Registro de atas/documentos"] },
-  { nome:"Oração e Aconselhamento",  icon:"🙏", resp:"Pastores / Liderança",             subcats:["Pedido de oração","Aconselhamento pastoral","Visita espiritual","Atendimento pastoral"] },
+  { nome:"Oração",                   icon:"🙏", resp:"Pastores / Liderança",             subcats:["Pedido de oração"] },
   { nome:"Financeiro",               icon:"💰", resp:"Tesouraria / Financeiro",          subcats:["Solicitação de pagamento","Reembolso","Prestação de contas","Solicitação de verba","Orçamento de despesas"] },
   { nome:"Ação Social / Hebron",     icon:"🤝", resp:"Hebron / Ação Social",             subcats:["Solicitação de ajuda","Projetos sociais","Distribuição de recursos","Cadastro em programas sociais"] },
-  { nome:"Administrativo Geral",     icon:"🧾", resp:"Administração Geral",              subcats:["Demandas gerais","Apoio administrativo","Solicitações internas","Processos institucionais"] },
+  { nome:"Comunicação",             icon:"📢", resp:"Ministério de Comunicação",          subcats:[
+    { grupo:"Arte Digital",  itens:["Banner e Redes Sociais","Arte para WhatsApp","Story / Reels","Apresentação e Slides","Material Impresso"] },
+    { grupo:"Produção AV",   itens:["Transmissão ao Vivo","Sonorização","Projeção","Iluminação Especial"] },
+    { grupo:"Geral",         itens:["Comunicação Geral"] },
+  ]},
 ];
 
 /* ── Preenche categorias ───────────────────────────────────── */
@@ -390,36 +996,207 @@ function _hide(id) { const el = document.getElementById(id); if (el) el.style.di
 
 function onCatChange() {
   const catNome = document.getElementById("f-cat").value;
-  const subSel  = document.getElementById("f-sub");
   const cat     = CATS.find(c => c.nome === catNome);
   _ocultarFinanceiro();
-  if (!cat) {
-    subSel.innerHTML = "<option value=''>Selecione a área primeiro</option>";
-    return;
-  }
+  csubReset();
+  if (!cat) return;
+  const panel   = document.getElementById("f-sub-panel");
+  const nSel    = document.getElementById("f-sub");
   const primeiro = cat.subcats[0];
   if (primeiro && typeof primeiro === "object" && primeiro.grupo) {
-    subSel.innerHTML = cat.subcats
-      .map(g => `<optgroup label="${g.grupo}">${g.itens.map(s => `<option value="${s}">${s}</option>`).join("")}</optgroup>`)
+    nSel.innerHTML = "<option value=''>Selecione</option>" + cat.subcats
+      .map(grp => `<optgroup label="${grp.grupo}">${grp.itens.map(s => `<option value="${s}">${s}</option>`).join("")}</optgroup>`)
       .join("");
+    panel.innerHTML = cat.subcats.map(grp =>
+      `<div class="csub-glabel">${grp.grupo}</div>` +
+      grp.itens.map(s => `<div class="csub-opt" data-val="${s.replace(/"/g,'&quot;')}" onclick="csubSelect(this)">${s}</div>`).join("")
+    ).join("");
   } else {
-    subSel.innerHTML = cat.subcats.map(s => `<option value="${s}">${s}</option>`).join("");
+    nSel.innerHTML = "<option value=''>Selecione</option>" + cat.subcats.map(s => `<option value="${s}">${s}</option>`).join("");
+    panel.innerHTML = cat.subcats.map(s =>
+      `<div class="csub-opt" data-val="${s.replace(/"/g,'&quot;')}" onclick="csubSelect(this)">${s}</div>`
+    ).join("");
   }
   onSubChange();
+}
+
+/* ── Custom subcategoria dropdown ─────────────────────────── */
+function csubReset() {
+  const btn   = document.getElementById("f-sub-btn");
+  const lbl   = document.getElementById("f-sub-lbl");
+  const sel   = document.getElementById("f-sub");
+  const panel = document.getElementById("f-sub-panel");
+  if (btn)   { btn.className = "csub-btn"; btn.setAttribute("aria-expanded","false"); }
+  if (lbl)   lbl.textContent = "Selecione o tipo de solicitação";
+  if (sel)   { sel.innerHTML = "<option value=''>Selecione</option>"; sel.value = ""; }
+  if (panel) { panel.className = "csub-panel"; panel.innerHTML = ""; }
+}
+
+function csubToggle() {
+  const panel = document.getElementById("f-sub-panel");
+  if (!panel.innerHTML) return;
+  const btn  = document.getElementById("f-sub-btn");
+  const open = panel.classList.toggle("open");
+  btn.classList.toggle("open", open);
+  btn.setAttribute("aria-expanded", String(open));
+}
+
+function csubSelect(el) {
+  const val   = el.dataset.val;
+  const btn   = document.getElementById("f-sub-btn");
+  const lbl   = document.getElementById("f-sub-lbl");
+  const sel   = document.getElementById("f-sub");
+  const panel = document.getElementById("f-sub-panel");
+  panel.querySelectorAll(".csub-opt").forEach(o => o.classList.remove("sel"));
+  el.classList.add("sel");
+  lbl.textContent = val;
+  btn.classList.remove("open");
+  btn.classList.add("has-val");
+  btn.setAttribute("aria-expanded","false");
+  panel.classList.remove("open");
+  sel.value = val;
+  onSubChange();
+}
+
+document.addEventListener("click", function(e) {
+  if (!e.target.closest(".csub")) {
+    const panel = document.getElementById("f-sub-panel");
+    const btn   = document.getElementById("f-sub-btn");
+    if (panel) panel.classList.remove("open");
+    if (btn)   { btn.classList.remove("open"); btn.setAttribute("aria-expanded","false"); }
+  }
+});
+
+const PROG_SUBS = new Set(["Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"]);
+
+/* ── Comunicação: mapeamentos ──────────────────────────────── */
+const COM_SUBS = new Set([
+  "Banner e Redes Sociais","Arte para WhatsApp","Story / Reels",
+  "Apresentação e Slides","Material Impresso",
+  "Transmissão ao Vivo","Sonorização","Projeção","Iluminação Especial",
+  "Comunicação Geral",
+]);
+
+const COM_AREAS_ALL = ["Transmissão ao vivo","Mídias","Iluminação","Projeção","Sonorização"];
+
+const COM_SUB_AREAS = {
+  "Banner e Redes Sociais":  ["Mídias"],
+  "Arte para WhatsApp":      ["Mídias"],
+  "Story / Reels":           ["Mídias"],
+  "Apresentação e Slides":   ["Mídias","Projeção"],
+  "Material Impresso":       ["Mídias"],
+  "Transmissão ao Vivo":     ["Transmissão ao vivo"],
+  "Sonorização":             ["Sonorização"],
+  "Projeção":                ["Projeção"],
+  "Iluminação Especial":     ["Iluminação"],
+  "Comunicação Geral":       [],
+};
+
+const COM_SUB_FORMATOS = {
+  "Banner e Redes Sociais":  ["1:1 WhatsApp","16:9 avisos","Banner digital"],
+  "Arte para WhatsApp":      ["1:1 WhatsApp"],
+  "Story / Reels":           ["Story Instagram"],
+  "Apresentação e Slides":   ["16:9 avisos"],
+  "Material Impresso":       ["Faixa","Panfleto"],
+  "Transmissão ao Vivo":     [],
+  "Sonorização":             [],
+  "Projeção":                [],
+  "Iluminação Especial":     [],
+  "Comunicação Geral":       [],
+};
+
+function _ensureComSol(sub) {
+  // Monta áreas (uma vez)
+  const areasEl = document.getElementById("com-areas-grid");
+  if (areasEl && !areasEl.dataset.built) {
+    areasEl.dataset.built = "1";
+    areasEl.innerHTML = COM_AREAS_ALL.map(a =>
+      `<label class="space-chk">
+        <input type="checkbox" name="com-area" value="${a}"> ${a}
+      </label>`
+    ).join("");
+  }
+  // Monta formatos (uma vez)
+  const fmtsEl = document.getElementById("com-fmt-grid");
+  if (fmtsEl && !fmtsEl.dataset.built) {
+    fmtsEl.dataset.built = "1";
+    fmtsEl.innerHTML = S2_FORMATOS.map(f =>
+      `<label class="s2-fmt-lbl"><input type="checkbox" name="com-fmt" value="${f.label}"> ${f.label}</label>`
+    ).join("");
+  }
+  // Pré-seleciona baseado na subcategoria
+  document.querySelectorAll("input[name='com-area']").forEach(cb => {
+    cb.checked = (COM_SUB_AREAS[sub] || []).includes(cb.value);
+  });
+  document.querySelectorAll("input[name='com-fmt']").forEach(cb => {
+    cb.checked = (COM_SUB_FORMATOS[sub] || []).includes(cb.value);
+  });
+}
+
+function _comSugPrazo() {
+  const dataEvt = document.getElementById("f-com-data")?.value;
+  const prazoEl = document.getElementById("f-com-prazo");
+  if (prazoEl && dataEvt && !prazoEl.value) {
+    const d = new Date(dataEvt + "T12:00:00");
+    d.setDate(d.getDate() - 2);
+    prazoEl.value = d.toISOString().slice(0, 10);
+  }
+  _comValidarPrazo();
+}
+
+function _comValidarPrazo() {
+  const data  = document.getElementById("f-com-data")?.value;
+  const prazo = document.getElementById("f-com-prazo")?.value;
+  const av    = document.getElementById("com-prazo-aviso");
+  if (!av) return;
+  if (prazo && data && prazo > data) {
+    av.textContent   = "O prazo de entrega não pode ser posterior à data do evento.";
+    av.style.display = "";
+  } else {
+    av.style.display = "none";
+  }
+}
+
+function _coletarComunicacao(cat, sub) {
+  if (cat !== "Comunicação" || !COM_SUBS.has(sub)) return { ok: true, extra: "" };
+  const areas    = [...document.querySelectorAll("input[name='com-area']:checked")].map(e => e.value);
+  const formatos = [...document.querySelectorAll("input[name='com-fmt']:checked")].map(e => e.value);
+  const dataEvt  = document.getElementById("f-com-data")?.value  || null;
+  const hora     = document.getElementById("f-com-hora")?.value  || null;
+  const prazo    = document.getElementById("f-com-prazo")?.value || null;
+  if (prazo && dataEvt && prazo > dataEvt)
+    return { ok: false, msg: "O prazo de entrega não pode ser posterior à data do evento." };
+  const linhas = [
+    "━━━ Comunicação ━━━",
+    areas.length    ? `Áreas: ${areas.join(", ")}`     : null,
+    formatos.length ? `Formatos: ${formatos.join(", ")}` : null,
+    dataEvt         ? `Data do evento: ${fmtDataBR(dataEvt)}${hora ? " · " + hora : ""}` : null,
+    prazo           ? `Prazo de entrega: ${fmtDataBR(prazo)}`  : null,
+  ].filter(Boolean).join("\n");
+  return {
+    ok: true,
+    extra: linhas ? "\n\n" + linhas : "",
+    comPayload: { areas, formatos, data_evento: dataEvt, horario_evento: hora, prazo_entrega: prazo },
+  };
 }
 
 function onSubChange() {
   const cat = document.getElementById("f-cat").value;
   const sub = document.getElementById("f-sub").value;
-  _ocultarFinanceiro();
-  if (cat !== "Financeiro") return;
-  if (sub === "Solicitação de pagamento") _show("fin-pag");
-  if (sub === "Reembolso")               _show("fin-reimb");
+  _ocultarExtras();
+  if (cat === "Financeiro") {
+    if (sub === "Solicitação de pagamento") _show("fin-pag");
+    if (sub === "Reembolso")               _show("fin-reimb");
+  }
+  if (cat === "Agendamentos"  && PROG_SUBS.has(sub)) { agIniciar(sub); return; }
+  if (cat === "Comunicação"   && COM_SUBS.has(sub))  { _show("com-sol-sec"); _ensureComSol(sub); }
 }
 
-function _ocultarFinanceiro() {
-  ["fin-pag","fin-reimb","fin-pix-sec","fin-ted-sec"].forEach(_hide);
+function _ocultarExtras() {
+  ["fin-pag","fin-reimb","fin-pix-sec","fin-ted-sec","agend-prog","com-sol-sec"].forEach(_hide);
 }
+
+function _ocultarFinanceiro() { _ocultarExtras(); }
 
 function onFormaChange() {
   const forma = document.getElementById("f-fin-forma").value;
@@ -498,10 +1275,11 @@ function _coletarFinanceiro(cat, sub) {
     if (forma === "Transferência Bancária" && (!banco || !ag || !conta))
       return { ok: false, msg: "Informe banco, agência e conta para TED." };
 
-    const tipo  = g("f-fin-tipo") || "Pagamento";
-    const venc  = g("f-fin-venc");
-    const cpf   = g("f-fin-cpf");
-    const obs   = g("f-fin-obs");
+    const tipo   = g("f-fin-tipo") || "Pagamento";
+    const venc   = g("f-fin-venc");
+    const cpf    = g("f-fin-cpf");
+    const centro = g("f-fin-centro");
+    const obs    = g("f-fin-obs");
 
     const linhas = [
       "━━━ Dados Financeiros ━━━",
@@ -510,6 +1288,7 @@ function _coletarFinanceiro(cat, sub) {
       venc   ? `Vencimento: ${fmtDataBR(venc)}` : null,
       `Beneficiário: ${benefic}`,
       cpf    ? `CPF/CNPJ: ${cpf}` : null,
+      centro ? `Centro de custo / Ministério: ${centro}` : null,
       `Forma de pagamento: ${forma}`,
       forma === "PIX"                    ? `Chave PIX: ${pix}` : null,
       forma === "Transferência Bancária" ? `Banco: ${banco} · Ag: ${ag} · Conta: ${conta}` : null,
@@ -521,6 +1300,7 @@ function _coletarFinanceiro(cat, sub) {
     if (!isNaN(valorNum)) fd.valor = valorNum; else fd.valor = valor;
     if (venc)   fd.data_vencimento = venc;
     if (cpf)    fd.cpf_cnpj = cpf;
+    if (centro) fd.centro_custo = centro;
     if (pix)    fd.chave_pix = pix;
     if (banco)  fd.banco = banco;
     if (ag)     fd.agencia = ag;
@@ -572,6 +1352,412 @@ function _coletarFinanceiro(cat, sub) {
   return { ok: true, extra: "", fd: null };
 }
 
+/* ── Coleta dados de agendamento de programação ────────────── */
+async function carregarEspacosPublicos() {
+  const grid = document.getElementById("f-ag-spaces");
+  if (!grid) return;
+  grid.innerHTML = `<div style="grid-column:1/-1;font-size:11px;color:var(--tx3)">Carregando espaços...</div>`;
+  try {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/espacos?disponivel_publico=eq.true&ativo=eq.true&order=ordem.asc`,
+      { headers: HDRS }
+    );
+    if (!res.ok) throw new Error("Erro ao carregar espaços");
+    const rows = await res.json();
+    grid.innerHTML = "";
+    if (!rows.length) {
+      grid.innerHTML = `<div style="grid-column:1/-1;font-size:11px;color:var(--tx3)">Nenhum espaço disponível.</div>`;
+      return;
+    }
+    // Agrupa por grupo mantendo a ordem recebida
+    const grupos = {};
+    rows.forEach(r => {
+      if (!grupos[r.grupo]) grupos[r.grupo] = [];
+      grupos[r.grupo].push(r.nome);
+    });
+    Object.entries(grupos).forEach(([grupo, itens]) => {
+      const hdr = document.createElement("div");
+      hdr.style.cssText = "grid-column:1/-1;font-size:10px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.08em;padding:8px 0 3px;border-bottom:1px solid var(--bd);margin-top:6px";
+      hdr.textContent = grupo;
+      grid.appendChild(hdr);
+      itens.forEach(nome => {
+        const lbl = document.createElement("label");
+        lbl.className = "space-chk";
+        lbl.dataset.espaco = nome;
+        lbl.innerHTML = `<input type="checkbox" value="${nome}"><span class="sc-nome">${nome}</span><span class="sc-lock" style="display:none">🔒</span>`;
+        grid.appendChild(lbl);
+      });
+    });
+    // Se o período já estiver preenchido quando os espaços carregarem, verifica imediatamente
+    verificarDisponibilidade();
+  } catch (e) {
+    grid.innerHTML = `<div style="grid-column:1/-1;font-size:11px;color:var(--rose)">Não foi possível carregar os espaços. Descreva o local na descrição da solicitação.</div>`;
+  }
+}
+
+// Carrega quando o card de agendamento é exibido pela primeira vez
+let _espacosCarregados = false;
+const _origShowAgend = window.agSincronizarDataFim;
+function _ensureEspacos() {
+  if (!_espacosCarregados) { _espacosCarregados = true; carregarEspacosPublicos(); }
+}
+
+function agSincronizarDataFim() {
+  const di = document.getElementById("f-ag-data");
+  const df = document.getElementById("f-ag-data-fim");
+  if (di && df && !df.value) df.value = di.value;
+  agValidarPeriodo();
+  verificarDisponibilidade();
+}
+
+function agValidarPeriodo() {
+  const di    = document.getElementById("f-ag-data")?.value;
+  const df    = document.getElementById("f-ag-data-fim")?.value;
+  const hi    = document.getElementById("f-ag-inicio")?.value;
+  const hf    = document.getElementById("f-ag-fim")?.value;
+  const erEl  = document.getElementById("ag-periodo-erro");
+  if (!erEl) return true;
+  if (!di || !df) { erEl.style.display = "none"; return true; }
+  const inicio = di + "T" + (hi || "00:00");
+  const fim    = df + "T" + (hf || "23:59");
+  const invalido = fim <= inicio && (df < di || (df === di && hf && hi && hf <= hi));
+  erEl.style.display = invalido ? "" : "none";
+  return !invalido;
+}
+
+/* ── Disponibilidade de espaços ──────────────────────────── */
+let _dispTimer = null;
+function verificarDisponibilidade() {
+  clearTimeout(_dispTimer);
+  _dispTimer = setTimeout(_doVerificarDisp, 350);
+}
+
+async function _doVerificarDisp() {
+  const di = document.getElementById("f-ag-data")?.value;
+  const hi = document.getElementById("f-ag-inicio")?.value;
+  const df = document.getElementById("f-ag-data-fim")?.value;
+  const hf = document.getElementById("f-ag-fim")?.value;
+
+  const grid    = document.getElementById("f-ag-spaces");
+  const hint    = document.getElementById("ag-disp-hint");
+  const status  = document.getElementById("ag-disp-status");
+  const stTxt   = document.getElementById("ag-disp-status-txt");
+  const aviso   = document.getElementById("ag-disp-aviso");
+
+  const lbls = grid ? [...grid.querySelectorAll(".space-chk")] : [];
+
+  // Sem período: restaura estado neutro
+  if (!di || !hi) {
+    if (hint)   hint.style.display   = "";
+    if (status) status.style.display = "none";
+    lbls.forEach(lbl => {
+      lbl.classList.remove("sc-indisponivel");
+      const inp = lbl.querySelector("input");
+      if (inp) inp.disabled = false;
+      const lock = lbl.querySelector(".sc-lock");
+      if (lock) lock.style.display = "none";
+    });
+    return;
+  }
+
+  if (hint)   hint.style.display   = "none";
+  if (status) { status.style.display = ""; if (stTxt) stTxt.textContent = "Verificando disponibilidade..."; }
+
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/rpc/espacos_disponibilidade`, {
+      method:  "POST",
+      headers: HDRS,
+      body: JSON.stringify({
+        p_data_inicio: di,
+        p_hora_inicio: hi,
+        p_data_fim:    df || di,
+        p_hora_fim:    hf || null,
+      }),
+    });
+    if (!res.ok) throw new Error();
+    const dados = await res.json();
+
+    const dispMap = {};
+    dados.forEach(item => { dispMap[item.nome] = item.disponivel; });
+
+    const removidos = [];
+    lbls.forEach(lbl => {
+      const inp  = lbl.querySelector("input");
+      const lock = lbl.querySelector(".sc-lock");
+      const nome = lbl.dataset.espaco || inp?.value;
+      if (!(nome in dispMap)) return;
+
+      const disp = dispMap[nome];
+      if (!disp) {
+        if (inp?.checked) { inp.checked = false; removidos.push(nome); }
+        inp.disabled = true;
+        lbl.classList.add("sc-indisponivel");
+        if (lock) lock.style.display = "";
+      } else {
+        inp.disabled = false;
+        lbl.classList.remove("sc-indisponivel");
+        if (lock) lock.style.display = "none";
+      }
+    });
+
+    const livres     = dados.filter(d => d.disponivel).length;
+    const ocupados   = dados.filter(d => !d.disponivel).length;
+    if (stTxt) stTxt.textContent = ocupados > 0
+      ? `✓ ${livres} disponível${livres !== 1 ? "s" : ""} · 🔒 ${ocupados} indisponível${ocupados !== 1 ? "s" : ""} neste período`
+      : `✓ Todos os espaços disponíveis para o período informado`;
+
+    if (removidos.length && aviso) {
+      aviso.textContent = `⚠️ ${removidos.join(", ")} ficou indisponível e foi desmarcado automaticamente.`;
+      aviso.style.display = "";
+      setTimeout(() => { aviso.style.display = "none"; }, 7000);
+    }
+  } catch (_) {
+    if (stTxt) stTxt.textContent = "Não foi possível verificar disponibilidade.";
+  }
+}
+
+function _coletarAgendamento(cat, sub) {
+  if (cat !== "Agendamentos" || !PROG_SUBS.has(sub)) return { ok: true, extra: "" };
+  const dataI  = g("f-ag-data");
+  const dataF  = g("f-ag-data-fim") || dataI;
+  const inicio = g("f-ag-inicio");
+  const fim    = g("f-ag-fim");
+  const part   = g("f-ag-part");
+  if (!dataI) return { ok: false, msg: "Informe a data de início da programação." };
+  if (!agValidarPeriodo()) return { ok: false, msg: "O encerramento precisa ocorrer após o início da programação." };
+  const multiDia = dataF && dataF !== dataI;
+  const espacos = [...document.querySelectorAll("#f-ag-spaces input:checked")].map(c => c.value);
+  const linhas = [
+    "━━━ Dados da Programação ━━━",
+    multiDia
+      ? `Período: ${fmtDataBR(dataI)}${inicio ? " às " + inicio : ""} até ${fmtDataBR(dataF)}${fim ? " às " + fim : ""}`
+      : `Data: ${fmtDataBR(dataI)}`,
+    !multiDia && inicio ? `Horário de início: ${inicio}`    : null,
+    !multiDia && fim    ? `Horário de encerramento: ${fim}` : null,
+    part     ? `Participantes estimados: ${part}`     : null,
+    espacos.length ? `Espaços: ${espacos.join(", ")}` : null,
+  ].filter(Boolean).join("\n");
+  return { ok: true, extra: "\n\n" + linhas };
+}
+
+/* ── Arte Digital — Estado e funções ───────────────────────── */
+let _arteAgendaId  = null;
+let _arteProtocolo = null;
+let _arteTitulo    = null;
+let _arteTicket    = null;
+let _arteDataEvt   = null;
+let _arteHoraEvt   = null;
+let _arteLocal     = null;
+
+const S2_FORMATOS = [
+  { label: "1:1 WhatsApp",    digital: true  },
+  { label: "16:9 avisos",     digital: true  },
+  { label: "Story Instagram", digital: true  },
+  { label: "Banner digital",  digital: true  },
+  { label: "Faixa",           digital: false },
+  { label: "Panfleto",        digital: false },
+  { label: "Outro",           digital: false },
+];
+
+function _iniciarStep2(agendaId, protocolo, titulo, ticket) {
+  _arteAgendaId  = agendaId;
+  _arteProtocolo = protocolo;
+  _arteTitulo    = titulo;
+  _arteTicket    = ticket;
+
+  // Captura dados da etapa 1
+  const dataI  = document.getElementById("f-ag-data")?.value || "";
+  const hiVal  = document.getElementById("f-ag-inicio")?.value || "";
+  const locais = [...document.querySelectorAll("#f-ag-spaces input:checked")].map(c => c.value);
+  _arteDataEvt  = dataI || null;
+  _arteHoraEvt  = hiVal || null;
+  _arteLocal    = locais.length ? locais.join(", ") : null;
+
+  // Resumo da etapa 1 (banner superior)
+  const resumoEl = document.getElementById("s2-resumo");
+  if (resumoEl) {
+    resumoEl.innerHTML =
+      `<strong>Programação registrada</strong> ✅<br>` +
+      (titulo ? `<span style="color:var(--tx1)">${titulo}</span><br>` : "") +
+      (protocolo ? `Protocolo: <strong style="color:var(--gr)">${protocolo}</strong><br>` : "") +
+      `<span style="font-size:11px;color:var(--tx3)">Aguardando aprovação — a equipe de Comunicação já pode acompanhar.</span>`;
+  }
+
+  // Aviso aprovação pendente
+  const avisoEl = document.getElementById("s2-aviso-pend");
+  if (avisoEl) avisoEl.style.display = "block";
+
+  // Pré-preenche solicitante
+  const nomeBase = document.getElementById("f-nome")?.value?.trim() || "";
+  const telBase  = document.getElementById("f-tel")?.value?.trim()  || "";
+  const s2resp = document.getElementById("s2-resp");
+  const s2tel  = document.getElementById("s2-tel");
+  if (s2resp) s2resp.value = nomeBase;
+  if (s2tel)  s2tel.value  = telBase;
+
+  // Bloco de info da programação
+  const dFmt   = dataI ? fmtDataBR(dataI) : "";
+  const progEl = document.getElementById("s2-prog-info");
+  if (progEl) {
+    const partes = [
+      titulo    ? `<strong>${titulo}</strong>` : null,
+      protocolo ? `Protocolo: <strong>${protocolo}</strong>` : null,
+      dFmt      ? `Data: ${dFmt}` : null,
+      hiVal     ? `Horário: ${hiVal}` : null,
+      locais.length ? `Local: ${locais.join(", ")}` : null,
+    ].filter(Boolean);
+    progEl.innerHTML = partes.join(" · ");
+  }
+
+  // Áreas (Mídias pré-selecionada)
+  const areasGrid = document.getElementById("s2-areas");
+  if (areasGrid) {
+    areasGrid.innerHTML = COM_AREAS_ALL.map(a =>
+      `<label class="s2-fmt-lbl">
+        <input type="checkbox" name="s2-area" value="${a}" ${a === "Mídias" ? "checked" : ""}>
+        ${a}
+      </label>`
+    ).join("");
+  }
+
+  // Formatos (digitais pré-selecionados)
+  const grid = document.getElementById("s2-formatos");
+  if (grid) {
+    grid.innerHTML = S2_FORMATOS.map(f =>
+      `<label class="s2-fmt-lbl">
+        <input type="checkbox" name="s2-fmt" value="${f.label}" ${f.digital ? "checked" : ""}>
+        ${f.label}
+      </label>`
+    ).join("");
+  }
+
+  // Descrição pré-preenchida
+  const locTxt  = locais.length ? `, no espaço ${locais.join(", ")}` : "";
+  const horaTxt = hiVal ? `, às ${hiVal}` : "";
+  const descBase =
+    `Produção de arte digital para a programação "${titulo || protocolo}", ` +
+    `agendada para ${dFmt || "data informada"}${horaTxt}${locTxt}.`;
+  const descEl = document.getElementById("s2-desc");
+  if (descEl) descEl.value = descBase;
+
+  // Prazo sugerido: 2 dias antes do evento
+  const prazoEl = document.getElementById("s2-prazo");
+  if (prazoEl && dataI) {
+    const d = new Date(dataI + "T12:00:00");
+    d.setDate(d.getDate() - 2);
+    prazoEl.value = d.toISOString().slice(0, 10);
+  }
+
+  // Troca de tela
+  document.getElementById("screen-form").style.display   = "none";
+  document.getElementById("screen-ok").style.display     = "none";
+  document.getElementById("screen-step2").style.display  = "";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+async function _enviarArteDigital() {
+  const resp    = document.getElementById("s2-resp")?.value?.trim();
+  const tel     = document.getElementById("s2-tel")?.value?.trim()  || null;
+  const min     = document.getElementById("s2-min")?.value          || null;
+  const desc    = document.getElementById("s2-desc")?.value?.trim();
+  const areas   = [...document.querySelectorAll("input[name='s2-area']:checked")].map(e => e.value);
+  const formatos = [...document.querySelectorAll("input[name='s2-fmt']:checked")].map(e => e.value);
+  const prazo   = document.getElementById("s2-prazo")?.value || null;
+  const info    = document.getElementById("s2-info")?.value?.trim() || null;
+  const errEl   = document.getElementById("err-step2");
+
+  if (!resp) {
+    if (errEl) errEl.textContent = "Informe o nome do responsável.";
+    document.getElementById("s2-resp").focus();
+    return;
+  }
+  if (!min) {
+    if (errEl) errEl.textContent = "Selecione o ministério ou grupo.";
+    document.getElementById("s2-min").focus();
+    return;
+  }
+  if (!desc) {
+    if (errEl) errEl.textContent = "Descreva o que precisa ser criado.";
+    document.getElementById("s2-desc").focus();
+    return;
+  }
+  if (errEl) errEl.textContent = "";
+
+  // Valida prazo <= data do evento
+  if (prazo && _arteDataEvt && prazo > _arteDataEvt) {
+    const avEl = document.getElementById("s2-prazo-aviso");
+    if (avEl) avEl.style.display = "";
+    document.getElementById("s2-prazo").focus();
+    return;
+  }
+  const avEl2 = document.getElementById("s2-prazo-aviso");
+  if (avEl2) avEl2.style.display = "none";
+
+  const btn = document.getElementById("btn-step2-enviar");
+  btn.disabled    = true;
+  btn.textContent = "Enviando…";
+
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/rpc/criar_sol_comunicacao_publica`, {
+      method:  "POST",
+      headers: HDRS,
+      body: JSON.stringify({
+        p_agenda_id:        _arteAgendaId,
+        p_agenda_protocolo: _arteProtocolo,
+        p_responsavel:      resp,
+        p_telefone:         tel,
+        p_descricao:        desc,
+        p_ministerio:       min,
+        p_areas:            areas.length    ? areas    : null,
+        p_formatos:         formatos.length ? formatos : null,
+        p_prazo:            prazo,
+        p_informacoes:      info || null,
+        p_data_evento:      _arteDataEvt   || null,
+        p_horario_evento:   _arteHoraEvt   || null,
+        p_local_evento:     _arteLocal     || null,
+      }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    if (!data.ok && !data.duplicado) throw new Error(data.erro || "Erro ao registrar solicitação.");
+
+    // Sucesso — mostra tela final
+    document.getElementById("screen-step2").style.display = "none";
+    if (_arteTicket) document.getElementById("ok-numero").textContent = _arteTicket;
+    const okProtoEl = document.getElementById("ok-protocolo");
+    if (okProtoEl) {
+      okProtoEl.innerHTML =
+        (_arteProtocolo ? `Reserva provisória: <strong>${_arteProtocolo}</strong><br>` : "") +
+        `Arte digital: <strong style="color:#3aaa5c">solicitação registrada ✅</strong>`;
+      okProtoEl.style.display    = "";
+      okProtoEl.style.background = "rgba(58,170,92,.09)";
+      okProtoEl.style.borderColor = "rgba(58,170,92,.3)";
+      okProtoEl.style.color = "#1d6b38";
+    }
+    document.getElementById("screen-ok").style.display = "block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch (e) {
+    if (errEl) errEl.textContent = e.message || "Falha ao enviar. Tente novamente.";
+    btn.disabled    = false;
+    btn.textContent = "Enviar Solicitação de Arte";
+  }
+}
+
+function _pularArteDigital() {
+  document.getElementById("screen-step2").style.display = "none";
+  if (_arteTicket) document.getElementById("ok-numero").textContent = _arteTicket;
+  const okProtoEl = document.getElementById("ok-protocolo");
+  if (okProtoEl && _arteProtocolo) {
+    okProtoEl.textContent    = `Reserva provisória: ${_arteProtocolo}`;
+    okProtoEl.style.display  = "";
+    okProtoEl.style.background = "";
+    okProtoEl.style.borderColor = "";
+    okProtoEl.style.color = "";
+  }
+  document.getElementById("screen-ok").style.display = "block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
 /* ── Envio ─────────────────────────────────────────────────── */
 async function enviarChamado() {
   if (document.getElementById("_gotcha").value) return;
@@ -592,17 +1778,21 @@ async function enviarChamado() {
   if (!nome)   { mostrarErro("Informe seu nome completo.");        document.getElementById("f-nome").focus();   return; }
   if (!tel)    { mostrarErro("Informe seu telefone ou WhatsApp."); document.getElementById("f-tel").focus();    return; }
   if (!cat)    { mostrarErro("Selecione a área de atendimento.");  document.getElementById("f-cat").focus();    return; }
-  if (!sub)    { mostrarErro("Selecione o tipo de solicitação.");  document.getElementById("f-sub").focus();    return; }
+  if (!sub)    { mostrarErro("Selecione o tipo de solicitação.");  document.getElementById("f-sub-btn").focus(); return; }
   if (!titulo) { mostrarErro("Informe o título da solicitação.");  document.getElementById("f-titulo").focus(); return; }
   if (!desc)   { mostrarErro("Informe a descrição detalhada.");    document.getElementById("f-desc").focus();   return; }
 
-  const fin = _coletarFinanceiro(cat, sub);
-  if (!fin.ok) { mostrarErro(fin.msg); return; }
+  const fin   = _coletarFinanceiro(cat, sub);
+  if (!fin.ok)   { mostrarErro(fin.msg);   return; }
+  const agend = _coletarAgendamento(cat, sub);
+  if (!agend.ok) { mostrarErro(agend.msg); return; }
+  const com   = _coletarComunicacao(cat, sub);
+  if (!com.ok)   { mostrarErro(com.msg);   return; }
 
   const catObj  = CATS.find(c => c.nome === cat);
   const resp    = catObj?.resp || "Administração Geral";
   const hoje    = new Date().toISOString().split("T")[0];
-  const descFinal = desc + fin.extra;
+  const descFinal = desc + fin.extra + agend.extra + com.extra;
 
   const newId = crypto.randomUUID();
 
@@ -641,7 +1831,92 @@ async function enviarChamado() {
 
     try { localStorage.setItem(_RL_KEY, String(Date.now())); } catch(_) {}
 
-    document.getElementById("ok-numero").textContent     = ticket;
+    // Se for solicitação de espaço, cria reserva provisória na agenda
+    let protocolo = null;
+    let agendaId  = null;
+    if (cat === "Agendamentos" && PROG_SUBS.has(sub)) {
+      const agData  = document.getElementById("f-ag-data")?.value || null;
+      const agDataF = document.getElementById("f-ag-data-fim")?.value || agData;
+      const agHi    = document.getElementById("f-ag-inicio")?.value || null;
+      const agHf    = document.getElementById("f-ag-fim")?.value   || null;
+      const agPart  = parseInt(document.getElementById("f-ag-part")?.value || "0", 10) || null;
+      const espacos = [...document.querySelectorAll("#f-ag-spaces input:checked")].map(c => c.value);
+      const espaco  = espacos.join(", ") || null;
+
+      if (agData && agHi && espaco) {
+        const rpcRes = await fetch(`${SB_URL}/rest/v1/rpc/solicitar_agendamento`, {
+          method:  "POST",
+          headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            p_titulo:            titulo,
+            p_data:              agData,
+            p_hora_inicio:       agHi,
+            p_hora_fim:          agHf || null,
+            p_espaco:            espaco,
+            p_subcategoria:      sub,
+            p_observacao:        desc || null,
+            p_nome:              nome,
+            p_telefone:          tel,
+            p_participantes:     agPart,
+            p_origem:            "link_publico",
+            p_data_encerramento: agDataF || null,
+          }),
+        });
+        if (rpcRes.ok) {
+          const rpcData = await rpcRes.json().catch(() => ({}));
+          if (rpcData.ok) {
+            protocolo    = rpcData.protocolo;
+            agendaId     = rpcData.agenda_id || null;
+          } else if (rpcData.conflito) {
+            // Conflito detectado — avisa mas não bloqueia (chamado já foi criado)
+            const avEl = document.getElementById("ok-aviso-conflito");
+            if (avEl) avEl.style.display = "";
+          }
+        }
+      }
+    }
+
+    // Se for categoria Comunicação, cria solicitação de arte no módulo
+    if (cat === "Comunicação" && com.comPayload) {
+      const cp = com.comPayload;
+      fetch(`${SB_URL}/rest/v1/rpc/criar_sol_comunicacao_direta`, {
+        method:  "POST",
+        headers: HDRS,
+        body: JSON.stringify({
+          p_responsavel:    nome,
+          p_telefone:       tel,
+          p_descricao:      desc + com.extra,
+          p_titulo:         titulo,
+          p_areas:          cp.areas.length    ? cp.areas    : null,
+          p_formatos:       cp.formatos.length ? cp.formatos : null,
+          p_data_evento:    cp.data_evento    || null,
+          p_horario_evento: cp.horario_evento || null,
+          p_local_evento:   local             || null,
+          p_prazo:          cp.prazo_entrega  || null,
+          p_subcategoria:   sub,
+        }),
+      }).catch(() => {});
+    }
+
+    // Verifica se usuário quer arte digital (só quando é agendamento de programação)
+    const arteVal = document.querySelector("input[name='ag-arte']:checked")?.value;
+    const querArte = cat === "Agendamentos" && PROG_SUBS.has(sub) && arteVal === "sim" && agendaId;
+
+    if (querArte) {
+      // Salva ticket para usar na etapa 2
+      _iniciarStep2(agendaId, protocolo, titulo, ticket);
+      return; // não mostra screen-ok ainda
+    }
+
+    document.getElementById("ok-numero").textContent = ticket;
+    const okProtoEl = document.getElementById("ok-protocolo");
+    if (okProtoEl) {
+      okProtoEl.textContent = protocolo ? `Reserva provisória: ${protocolo}` : "";
+      okProtoEl.style.display = protocolo ? "" : "none";
+      okProtoEl.style.background = "";
+      okProtoEl.style.borderColor = "";
+      okProtoEl.style.color = "";
+    }
     document.getElementById("screen-form").style.display = "none";
     document.getElementById("screen-ok").style.display   = "block";
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -653,8 +1928,545 @@ async function enviarChamado() {
   }
 }
 
+/* ══ screen-agend: novo fluxo availability-first ════════════ */
+let _ag2Tipo = "";
+let _ag2DispVerificada = false;
+let _ag2EspacosSelecionados = new Set();
+
+function agIniciar(tipo) {
+  _ag2Tipo = tipo || "";
+  _ag2DispVerificada = false;
+  _ag2EspacosSelecionados = new Set();
+
+  // Monta tipo grid
+  const tipoGrid = document.getElementById("ag2-tipo-grid");
+  if (tipoGrid) {
+    const tipos = ["Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"];
+    tipoGrid.innerHTML = tipos.map(t => {
+      const sel = t === _ag2Tipo;
+      return `<label class="ag2-tipo-lbl${sel ? " sel" : ""}">
+        <input type="radio" name="ag2-tipo" value="${t}"${sel ? " checked" : ""} onchange="ag2TipoChange(this.value)">
+        ${t}
+      </label>`;
+    }).join("");
+  }
+
+  // Reset visual
+  ["ag2-card-espacos","ag2-card-form","ag2-checking","ag2-disp-invalido","ag2-periodo-erro"].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display = "none";
+  });
+  const espGrid = document.getElementById("ag2-espacos-grid");
+  if (espGrid) espGrid.innerHTML = "";
+
+  // Limpa campos de período
+  ["ag2-data-i","ag2-hora-i","ag2-data-f","ag2-hora-f","ag2-part"].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = "";
+  });
+
+  // Limpa campos do formulário
+  ["ag2-nome","ag2-tel","ag2-titulo","ag2-desc"].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = "";
+  });
+  document.querySelectorAll("input[name='ag2-arte']").forEach(r => r.checked = false);
+
+  const errEl = document.getElementById("ag2-err");
+  if (errEl) { errEl.textContent = ""; errEl.classList.remove("show"); }
+
+  // Troca de tela
+  document.getElementById("screen-form").style.display  = "none";
+  document.getElementById("screen-agend").style.display = "";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function ag2Voltar() {
+  document.getElementById("screen-agend").style.display = "none";
+  document.getElementById("screen-form").style.display  = "";
+  csubReset();
+  _ocultarFinanceiro();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function ag2TipoChange(tipo) {
+  _ag2Tipo = tipo;
+  document.querySelectorAll(".ag2-tipo-lbl").forEach(lbl => {
+    lbl.classList.toggle("sel", lbl.querySelector("input").value === tipo);
+  });
+}
+
+function ag2SincDataFim() {
+  const di = document.getElementById("ag2-data-i");
+  const df = document.getElementById("ag2-data-f");
+  if (di && df && !df.value) df.value = di.value;
+  ag2ValidarPeriodo();
+  ag2InvalidarDisp();
+}
+
+function ag2ValidarPeriodo() {
+  const di   = document.getElementById("ag2-data-i")?.value;
+  const df   = document.getElementById("ag2-data-f")?.value;
+  const hi   = document.getElementById("ag2-hora-i")?.value;
+  const hf   = document.getElementById("ag2-hora-f")?.value;
+  const erEl = document.getElementById("ag2-periodo-erro");
+  if (!erEl || !di || !df) { if (erEl) erEl.style.display = "none"; return true; }
+  const inicio   = di + "T" + (hi || "00:00");
+  const fim      = df + "T" + (hf || "23:59");
+  const invalido = fim <= inicio && (df < di || (df === di && hf && hi && hf <= hi));
+  erEl.style.display = invalido ? "" : "none";
+  return !invalido;
+}
+
+function ag2InvalidarDisp() {
+  if (!_ag2DispVerificada) return;
+  _ag2DispVerificada       = false;
+  _ag2EspacosSelecionados  = new Set();
+  const aviso    = document.getElementById("ag2-disp-invalido");
+  const espCard  = document.getElementById("ag2-card-espacos");
+  const formCard = document.getElementById("ag2-card-form");
+  if (aviso)    aviso.style.display    = "";
+  if (espCard)  espCard.style.display  = "none";
+  if (formCard) formCard.style.display = "none";
+}
+
+async function ag2VerificarDisp() {
+  if (!ag2ValidarPeriodo()) return;
+  const di = document.getElementById("ag2-data-i")?.value;
+  if (!di) {
+    const erEl = document.getElementById("ag2-periodo-erro");
+    if (erEl) { erEl.textContent = "Informe a data de início."; erEl.style.display = ""; }
+    return;
+  }
+  const hi = document.getElementById("ag2-hora-i")?.value || null;
+  const df = document.getElementById("ag2-data-f")?.value || di;
+  const hf = document.getElementById("ag2-hora-f")?.value || null;
+
+  const btn      = document.getElementById("ag2-btn-verif");
+  const checking = document.getElementById("ag2-checking");
+  const aviso    = document.getElementById("ag2-disp-invalido");
+  const espCard  = document.getElementById("ag2-card-espacos");
+  const formCard = document.getElementById("ag2-card-form");
+
+  if (btn)      btn.disabled = true;
+  if (checking) checking.style.display  = "";
+  if (aviso)    aviso.style.display     = "none";
+  if (espCard)  espCard.style.display   = "none";
+  if (formCard) formCard.style.display  = "none";
+  _ag2EspacosSelecionados = new Set();
+
+  try {
+    // 1. Lista de espaços públicos (leitura direta da tabela — sempre funciona)
+    const listaRes = await fetch(
+      `${SB_URL}/rest/v1/espacos?disponivel_publico=eq.true&ativo=eq.true&order=ordem.asc`,
+      { headers: HDRS }
+    );
+    if (!listaRes.ok) throw new Error("Não foi possível carregar os espaços. Tente novamente.");
+    const espacos = await listaRes.json();
+
+    // 2. Mapa de disponibilidade via RPC (graceful: se falhar, assume disponível)
+    let dispMap = {};
+    try {
+      const dispRes = await fetch(`${SB_URL}/rest/v1/rpc/espacos_disponibilidade`, {
+        method:  "POST",
+        headers: HDRS,
+        body: JSON.stringify({
+          p_data_inicio: di,
+          p_hora_inicio: hi || "00:00",
+          p_data_fim:    df,
+          p_hora_fim:    hf || null,
+        }),
+      });
+      if (dispRes.ok) {
+        const raw = await dispRes.json();
+        // PostgREST pode retornar [[...]] (JSONB scalar) ou [...] (TABLE)
+        const arr = Array.isArray(raw) && Array.isArray(raw[0]) ? raw[0] : raw;
+        if (Array.isArray(arr)) arr.forEach(d => { if (d?.nome) dispMap[d.nome] = d.disponivel; });
+      }
+    } catch (_) { /* RPC indisponível: continua sem marcação */ }
+
+    // 3. Mescla: espaços + disponibilidade
+    const dados = espacos.map(e => ({
+      nome:       e.nome,
+      grupo:      e.grupo || "",
+      disponivel: Object.prototype.hasOwnProperty.call(dispMap, e.nome) ? dispMap[e.nome] : true,
+    }));
+
+    _ag2DispVerificada = true;
+    ag2MostrarEspacos(dados);
+  } catch (e) {
+    const espGrid = document.getElementById("ag2-espacos-grid");
+    if (espGrid) espGrid.innerHTML = `<div style="color:var(--rose);font-size:12px;padding:6px 0">${e.message || "Não foi possível carregar os espaços. Tente novamente."}</div>`;
+    if (espCard) espCard.style.display = "";
+  } finally {
+    if (btn)      btn.disabled = false;
+    if (checking) checking.style.display = "none";
+  }
+}
+
+function ag2MostrarEspacos(dados) {
+  const espCard = document.getElementById("ag2-card-espacos");
+  const grid    = document.getElementById("ag2-espacos-grid");
+  if (!espCard || !grid) return;
+  grid.innerHTML = "";
+  _ag2EspacosSelecionados = new Set();
+
+  if (!dados || !dados.length) {
+    grid.innerHTML = `<div style="font-size:13px;color:var(--tx3);padding:8px 0">Nenhum espaço cadastrado para consulta.</div>`;
+    espCard.style.display = "";
+    return;
+  }
+
+  const dispCount   = dados.filter(d => d.disponivel).length;
+  const indispCount = dados.length - dispCount;
+
+  // Contador
+  const cntEl = document.createElement("div");
+  cntEl.className = "ag2-contador";
+  cntEl.innerHTML =
+    `<span><strong>${dados.length}</strong> espaços</span>` +
+    `<span class="ag2-cnt-disp">● ${dispCount} disponíve${dispCount !== 1 ? "is" : "l"}</span>` +
+    (indispCount > 0 ? `<span class="ag2-cnt-indisp">● ${indispCount} ocupado${indispCount !== 1 ? "s" : ""}</span>` : "") +
+    (dispCount > 0 ? `<span style="font-size:11px;color:var(--tx3)">— selecione um ou mais espaços</span>` : "");
+  grid.appendChild(cntEl);
+
+  // Agrupa por grupo mantendo ordem de chegada
+  const gruposMap = new Map();
+  dados.forEach(d => {
+    const g = d.grupo || "Geral";
+    if (!gruposMap.has(g)) gruposMap.set(g, []);
+    gruposMap.get(g).push(d);
+  });
+
+  gruposMap.forEach((items, grupoNome) => {
+    // Dentro do grupo: disponíveis primeiro
+    const ordenado = [
+      ...items.filter(d => d.disponivel),
+      ...items.filter(d => !d.disponivel),
+    ];
+
+    const grupoEl = document.createElement("div");
+    grupoEl.className = "ag2-grupo";
+
+    const hdr = document.createElement("div");
+    hdr.className   = "ag2-grupo-hdr";
+    hdr.textContent = grupoNome;
+    grupoEl.appendChild(hdr);
+
+    const gGrid = document.createElement("div");
+    gGrid.className = "ag2-grupo-grid";
+
+    ordenado.forEach(item => {
+      const card = document.createElement("div");
+      card.className    = "ag2-espaco-card" + (item.disponivel ? "" : " ag2-espaco-indisp");
+      card.dataset.espaco = item.nome;
+      card.title        = item.disponivel ? item.nome : `${item.nome} — ocupado`;
+      card.innerHTML    =
+        `<div class="ag2-chk"></div>` +
+        `<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.nome}</span>` +
+        (item.disponivel ? "" : `<span class="ag2-lock">🔒</span><span class="ag2-tag-ocupado">Ocupado</span>`);
+      if (item.disponivel) card.onclick = () => ag2ToggleEspaco(item.nome);
+      gGrid.appendChild(card);
+    });
+
+    grupoEl.appendChild(gGrid);
+    grid.appendChild(grupoEl);
+  });
+
+  // Resumo de seleção (injetado no final do grid, inicialmente oculto)
+  const resumoEl = document.createElement("div");
+  resumoEl.id        = "ag2-resumo-sel";
+  resumoEl.className = "ag2-resumo";
+  resumoEl.style.display = "none";
+  resumoEl.innerHTML =
+    `<div class="ag2-resumo-titulo">Espaços selecionados</div>` +
+    `<div id="ag2-resumo-lista"></div>` +
+    `<div class="ag2-resumo-total" id="ag2-resumo-total"></div>`;
+  grid.appendChild(resumoEl);
+
+  espCard.style.display = "";
+  setTimeout(() => espCard.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50);
+}
+
+function ag2ToggleEspaco(nome) {
+  if (_ag2EspacosSelecionados.has(nome)) {
+    _ag2EspacosSelecionados.delete(nome);
+  } else {
+    _ag2EspacosSelecionados.add(nome);
+  }
+  ag2AtualizarSelecao();
+}
+
+function ag2AtualizarSelecao() {
+  // Atualiza visual dos cards
+  document.querySelectorAll(".ag2-espaco-card:not(.ag2-espaco-indisp)").forEach(el => {
+    el.classList.toggle("ag2-espaco-sel", _ag2EspacosSelecionados.has(el.dataset.espaco));
+  });
+
+  const selecionados = [..._ag2EspacosSelecionados];
+  const resumoEl     = document.getElementById("ag2-resumo-sel");
+  const listaEl      = document.getElementById("ag2-resumo-lista");
+  const totalEl      = document.getElementById("ag2-resumo-total");
+
+  if (selecionados.length > 0) {
+    if (listaEl) listaEl.innerHTML = selecionados.map(n => `<div class="ag2-resumo-item">${n}</div>`).join("");
+    if (totalEl) totalEl.textContent = `Total: ${selecionados.length} espaço${selecionados.length !== 1 ? "s" : ""}`;
+    if (resumoEl) resumoEl.style.display = "";
+    // Expande formulário apenas na primeira seleção
+    const formCard = document.getElementById("ag2-card-form");
+    if (formCard && formCard.style.display === "none") {
+      formCard.style.display = "";
+      setTimeout(() => formCard.scrollIntoView({ behavior: "smooth", block: "nearest" }), 80);
+    }
+  } else {
+    if (resumoEl) resumoEl.style.display = "none";
+    if (listaEl) listaEl.innerHTML = "";
+  }
+}
+
+function ag2MarcarConflitos(nomes) {
+  nomes.forEach(n => _ag2EspacosSelecionados.delete(n));
+  document.querySelectorAll("[data-espaco]").forEach(card => {
+    if (!nomes.includes(card.dataset.espaco)) return;
+    card.classList.remove("ag2-espaco-sel");
+    card.classList.add("ag2-espaco-indisp");
+    card.onclick = null;
+    card.title   = `${card.dataset.espaco} — reservado`;
+    if (!card.querySelector(".ag2-lock")) {
+      card.insertAdjacentHTML("beforeend",
+        `<span class="ag2-lock">🔒</span><span class="ag2-tag-ocupado">Conflito</span>`);
+    }
+  });
+  ag2AtualizarSelecao();
+  const espCard = document.getElementById("ag2-card-espacos");
+  if (espCard) espCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+async function ag2Enviar() {
+  if (document.getElementById("_gotcha")?.value) return;
+
+  const rlMsg = _checarRateLimit();
+  if (rlMsg) { ag2MostrarErro(rlMsg); return; }
+
+  const tipo   = _ag2Tipo || document.querySelector("input[name='ag2-tipo']:checked")?.value || "";
+  const di     = document.getElementById("ag2-data-i")?.value  || "";
+  const hi     = document.getElementById("ag2-hora-i")?.value  || null;
+  const df     = document.getElementById("ag2-data-f")?.value  || di;
+  const hf     = document.getElementById("ag2-hora-f")?.value  || null;
+  const part   = parseInt(document.getElementById("ag2-part")?.value || "0", 10) || null;
+  const espacosList = [..._ag2EspacosSelecionados];
+  const espaco      = espacosList.join(", ");
+  const nome        = (document.getElementById("ag2-nome")?.value   || "").trim();
+  const tel    = (document.getElementById("ag2-tel")?.value    || "").trim();
+  const titulo = (document.getElementById("ag2-titulo")?.value || "").trim();
+  const desc   = (document.getElementById("ag2-desc")?.value   || "").trim();
+
+  if (!tipo)   { ag2MostrarErro("Selecione o tipo de solicitação."); return; }
+  if (!di)     { ag2MostrarErro("Informe a data de início."); return; }
+  if (!espaco) { ag2MostrarErro("Selecione ao menos um espaço disponível antes de continuar."); return; }
+  if (!nome)   { ag2MostrarErro("Informe seu nome completo.");   document.getElementById("ag2-nome")?.focus();   return; }
+  if (!tel)    { ag2MostrarErro("Informe seu telefone ou WhatsApp."); document.getElementById("ag2-tel")?.focus(); return; }
+  if (!titulo) { ag2MostrarErro("Informe o título da programação."); document.getElementById("ag2-titulo")?.focus(); return; }
+  if (!ag2ValidarPeriodo()) { ag2MostrarErro("Verifique as datas e horários informados."); return; }
+
+  ag2LimparErro();
+
+  const catObj    = CATS.find(c => c.nome === "Agendamentos");
+  const resp      = catObj?.resp || "Secretaria / Liderança";
+  const hoje      = new Date().toISOString().split("T")[0];
+  const multiDia  = df && df !== di;
+  const descFinal = [
+    desc,
+    "━━━ Dados da Programação ━━━",
+    multiDia
+      ? `Período: ${fmtDataBR(di)}${hi ? " às " + hi : ""} até ${fmtDataBR(df)}${hf ? " às " + hf : ""}`
+      : `Data: ${fmtDataBR(di)}`,
+    !multiDia && hi ? `Horário início: ${hi}` : null,
+    !multiDia && hf ? `Horário fim: ${hf}`    : null,
+    `Espaço: ${espaco}`,
+    part ? `Participantes estimados: ${part}` : null,
+  ].filter(Boolean).join("\n");
+
+  const newId = crypto.randomUUID();
+  const btn   = document.getElementById("ag2-btn-enviar");
+  if (btn) { btn.disabled = true; btn.textContent = "Enviando…"; }
+
+  try {
+    // 0. Pré-verificação de conflito antes de criar o chamado
+    try {
+      const preRes = await fetch(`${SB_URL}/rest/v1/rpc/espacos_disponibilidade`, {
+        method:  "POST",
+        headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          p_data_inicio: di,
+          p_hora_inicio: hi || "00:00",
+          p_data_fim:    df,
+          p_hora_fim:    hf || null,
+        }),
+      });
+      if (preRes.ok) {
+        const raw = await preRes.json();
+        const arr = Array.isArray(raw) && Array.isArray(raw[0]) ? raw[0] : raw;
+        if (Array.isArray(arr) && arr.length > 0) {
+          const conflitantes = espacosList.filter(sp => {
+            const d = arr.find(x => x.nome === sp);
+            return d && !d.disponivel;
+          });
+          if (conflitantes.length > 0) {
+            if (btn) { btn.disabled = false; btn.textContent = "Enviar Solicitação"; }
+            ag2MarcarConflitos(conflitantes);
+            ag2MostrarErro(
+              `Conflito: ${conflitantes.join(", ")} não está mais disponível para este período. Selecione outro espaço.`
+            );
+            return;
+          }
+        }
+      }
+    } catch (_) { /* RPC indisponível — prossegue; DB verifica */ }
+
+    // 1. Criar chamado
+    const res = await fetch(`${SB_URL}/functions/v1/chamado-publico`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + SB_KEY },
+      body: JSON.stringify({
+        id:              newId,
+        area:            "Agendamentos",
+        subcategoria:    tipo,
+        titulo:          titulo,
+        descricao:       descFinal,
+        local:           espaco,
+        solicitante:     nome,
+        solicitante_txt: tel ? `${nome} · ${tel}` : nome,
+        telefone:        tel,
+        responsavel:     resp,
+        responsavel_txt: resp,
+        financial_data:  null,
+        data_abertura:   hoje,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || err.message || `Erro ${res.status}`);
+    }
+    const data   = await res.json().catch(() => ({}));
+    const ticket = data.numero_chamado || "—";
+    try { localStorage.setItem(_RL_KEY, String(Date.now())); } catch(_) {}
+
+    // 2. Criar reserva provisória na agenda
+    let protocolo = null;
+    let agendaId  = null;
+    const rpcRes  = await fetch(`${SB_URL}/rest/v1/rpc/solicitar_agendamento`, {
+      method:  "POST",
+      headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        p_titulo:            titulo,
+        p_data:              di,
+        p_hora_inicio:       hi    || null,
+        p_hora_fim:          hf    || null,
+        p_espaco:            espaco,
+        p_subcategoria:      tipo,
+        p_observacao:        desc  || null,
+        p_nome:              nome,
+        p_telefone:          tel,
+        p_participantes:     part,
+        p_origem:            "link_publico",
+        p_data_encerramento: df    || null,
+      }),
+    });
+    if (rpcRes.ok) {
+      const rpcData = await rpcRes.json().catch(() => ({}));
+      if (rpcData.ok) {
+        protocolo = rpcData.protocolo;
+        agendaId  = rpcData.agenda_id || null;
+      } else if (rpcData.conflito) {
+        if (btn) { btn.disabled = false; btn.textContent = "Enviar Solicitação"; }
+        _ag2DispVerificada = false;
+        ag2MostrarErro("Conflito de reserva: o espaço foi reservado por outra pessoa neste período. Selecione outro espaço ou horário.");
+        return;
+      }
+    }
+
+    // 3. Arte digital?
+    const arteVal = document.querySelector("input[name='ag2-arte']:checked")?.value;
+    if (arteVal === "sim" && agendaId) {
+      // Pré-preenche campos antigos para compatibilidade com _iniciarStep2
+      const _fi = id => document.getElementById(id);
+      if (_fi("f-nome"))     _fi("f-nome").value     = nome;
+      if (_fi("f-tel"))      _fi("f-tel").value       = tel;
+      if (_fi("f-ag-data"))  _fi("f-ag-data").value   = di;
+      if (_fi("f-ag-inicio")) _fi("f-ag-inicio").value = hi || "";
+      document.getElementById("screen-agend").style.display = "none";
+      _iniciarStep2(agendaId, protocolo, titulo, ticket);
+      // Corrige local (sem checkboxes no novo fluxo)
+      _arteLocal = espaco || null;
+      const progEl = document.getElementById("s2-prog-info");
+      if (progEl && espaco && !progEl.innerHTML.includes("Local:")) {
+        progEl.innerHTML += ` · Local: ${espaco}`;
+      }
+      return;
+    }
+
+    // 4. Sucesso sem arte digital
+    document.getElementById("ok-numero").textContent = ticket;
+    const okProtoEl = document.getElementById("ok-protocolo");
+    if (okProtoEl) {
+      okProtoEl.textContent   = protocolo ? `Reserva provisória: ${protocolo}` : "";
+      okProtoEl.style.display = protocolo ? "" : "none";
+      okProtoEl.style.background = "";
+      okProtoEl.style.borderColor = "";
+      okProtoEl.style.color = "";
+    }
+    document.getElementById("screen-agend").style.display = "none";
+    document.getElementById("screen-ok").style.display    = "block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = "Enviar Solicitação"; }
+    ag2MostrarErro(e.message || "Falha ao enviar. Tente novamente.");
+  }
+}
+
+function ag2MostrarErro(msg) {
+  const el = document.getElementById("ag2-err");
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add("show");
+  el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function ag2LimparErro() {
+  const el = document.getElementById("ag2-err");
+  if (!el) return;
+  el.textContent = "";
+  el.classList.remove("show");
+}
+
 /* ── Novo envio ────────────────────────────────────────────── */
 function novoEnvio() {
+  // Reseta estado de arte digital
+  _arteAgendaId  = null;
+  _arteProtocolo = null;
+  _arteTitulo    = null;
+  _arteTicket    = null;
+  _arteDataEvt   = null;
+  _arteHoraEvt   = null;
+  _arteLocal     = null;
+  document.querySelectorAll("input[name='ag-arte']").forEach(r => r.checked = false);
+  ["s2-resp","s2-tel","s2-desc","s2-prazo","s2-info"].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = "";
+  });
+  const s2min = document.getElementById("s2-min"); if (s2min) s2min.value = "";
+  document.querySelectorAll("input[name='s2-area'],input[name='s2-fmt']").forEach(cb => cb.checked = false);
+  const s2av = document.getElementById("s2-prazo-aviso"); if (s2av) s2av.style.display = "none";
+  document.getElementById("screen-step2").style.display = "none";
+  document.getElementById("screen-agend").style.display = "none";
+  const okProt = document.getElementById("ok-protocolo");
+  const okConf = document.getElementById("ok-aviso-conflito");
+  if (okProt) { okProt.innerHTML = ""; okProt.style.display = "none"; okProt.style.background = ""; okProt.style.borderColor = ""; okProt.style.color = ""; }
+  if (okConf) okConf.style.display = "none";
+  // Reseta campos de comunicação
+  ["f-com-data","f-com-hora","f-com-prazo"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+  document.querySelectorAll("input[name='com-area'],input[name='com-fmt']").forEach(cb => cb.checked = false);
+  const comAv = document.getElementById("com-prazo-aviso");
+  if (comAv) comAv.style.display = "none";
+  // Reseta campos gerais
   ["f-nome","f-tel","f-titulo","f-desc","f-local",
    "f-fin-tipo","f-fin-valor","f-fin-venc","f-fin-benefic","f-fin-cpf",
    "f-fin-forma","f-fin-pix","f-fin-banco","f-fin-ag","f-fin-conta","f-fin-obs",

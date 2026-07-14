@@ -309,6 +309,7 @@
       } catch (e) { _T("Erro", e.message); return; }
     }
     if (!_eventoAtivo) { _T("Não encontrado", "Evento não encontrado."); return; }
+
     await go("eve-detalhe");
     const ttl = document.getElementById("eve-det-titulo");
     if (ttl) ttl.textContent = _eventoAtivo.titulo || "Evento";
@@ -471,6 +472,12 @@
           <div class="ctit">Inscrições <span class="cact" onclick="eveAbrirDetalhe('${_ea(evt.id)}')">↻</span></div>
           ${_tabelaInscricoes(inscricoes, evt)}
         </div>
+
+        ${evt.titulo?.toLowerCase().includes("família de oração") ? `
+        <!-- Sorteio de Família de Oração -->
+        <div style="grid-column:1 / -1" id="fo-detalhe-wrap">
+          ${_foRenderSecao(evt, inscricoes)}
+        </div>` : ""}
       </div>`;
   }
 
@@ -614,7 +621,7 @@
       ...rest,
       titulo:     rest.titulo + " (cópia)",
       status:     "rascunho",
-      data_inicio: null,
+      data_inicio: new Date().toISOString().slice(0, 10),
       data_fim:    null,
       criado_por:      _authUserId(),
       criado_por_nome: _userName(),
@@ -2009,5 +2016,316 @@ tr:nth-child(even) td{background:#f9fafb}
   VIEW_AUTOLOAD["eve-config"]        = { fn: () => _carregarConfigTab() };
   VIEW_AUTOLOAD["eve-demandas"]      = { fn: () => _carregarDemandasTab() };
   VIEW_AUTOLOAD["eve-whatsapp"]      = { fn: () => _carregarWhatsappTab() };
-
 })();
+
+/* ══════════════════════════════════════════════════════════
+   FAMÍLIA DE ORAÇÃO — Sorteio dentro do detalhe do evento
+══════════════════════════════════════════════════════════ */
+
+let _foRascunho    = [];
+let _foEventoId    = null;
+let _foInscricoes  = [];
+
+// Monta o HTML da seção de sorteio (chamado dentro do IIFE via _renderDetalhe)
+function _foRenderSecao(evt, inscricoes) {
+  _foEventoId   = evt.id;
+  _foInscricoes = inscricoes || [];
+  const ativos  = _foInscricoes.filter(i => i.status !== "cancelada");
+
+  const linhasInscritos = ativos.length
+    ? ativos.map(i => `
+        <tr style="border-bottom:1px solid var(--bd)">
+          <td style="padding:6px 8px;font-weight:600">${_foEh(i.familia || i.nome)}</td>
+          <td style="padding:6px 8px;color:var(--tx2)">${_foEh(i.nome)}</td>
+          <td style="padding:6px 8px;text-align:center;font-size:11.5px">
+            ${i.telefone ? `<span style="color:var(--gr)">✓</span>` : `<span style="color:var(--tx3)">—</span>`}
+          </td>
+        </tr>`).join("")
+    : `<tr><td colspan="3" style="padding:12px 8px;color:var(--tx3);font-size:12px">Nenhuma inscrição ativa.</td></tr>`;
+
+  // Carrega rodadas de forma assíncrona após render
+  setTimeout(() => foCarregarRodadas(_foEventoId), 0);
+
+  return `
+    <div class="card" style="border-color:rgba(74,156,245,.3)">
+      <div class="ctit" style="color:var(--sky)">Sorteio — Família de Oração
+        <button class="tbt pri" style="margin-left:auto;font-size:11.5px;padding:4px 14px" onclick="foGerarSorteio()">Gerar Sorteio</button>
+      </div>
+
+      <!-- Famílias inscritas -->
+      <div style="margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">
+          Famílias inscritas (${ativos.length})
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+          <thead><tr style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:11px">
+            <th style="padding:5px 8px;text-align:left;font-weight:500">Família</th>
+            <th style="padding:5px 8px;text-align:left;font-weight:500">Responsável</th>
+            <th style="padding:5px 8px;text-align:center;font-weight:500">WhatsApp</th>
+          </tr></thead>
+          <tbody>${linhasInscritos}</tbody>
+        </table>
+      </div>
+
+      <!-- Preview do sorteio (oculto até gerar) -->
+      <div id="fo-preview" style="display:none;margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Pré-visualização</div>
+        <div id="fo-preview-table"></div>
+        <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+          <button class="tbt pri" id="btn-fo-salvar-wa" onclick="foSalvarESendWA()">Salvar e enviar WhatsApp para todos</button>
+          <button class="tbt" id="btn-fo-salvar" onclick="foSalvarSorteio(false)">Só salvar (sem WhatsApp)</button>
+          <button class="tbt" onclick="foCancelarSorteio()" style="color:var(--tx3)">Cancelar</button>
+        </div>
+        <div id="fo-preview-err" style="margin-top:8px;font-size:12px;color:var(--rose)"></div>
+      </div>
+
+      <!-- Histórico de rodadas -->
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">
+          Rodadas anteriores
+          <span style="cursor:pointer;font-weight:400;text-transform:none;margin-left:8px;color:var(--sky)" onclick="foCarregarRodadas('${_foEh(evt.id)}')">↻</span>
+        </div>
+        <div id="fo-rodadas-lista"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      </div>
+    </div>`;
+}
+
+// Helpers locais (fora do IIFE do módulo)
+function _foEh(s) {
+  return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function _foFmtD(iso) {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+function _foShuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function _foFmtData(iso) {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+// Gera sorteio usando os inscritos armazenados em _foInscricoes
+function foGerarSorteio() {
+  const prevEl = document.getElementById("fo-preview");
+  const tabEl  = document.getElementById("fo-preview-table");
+  const errEl  = document.getElementById("fo-preview-err");
+  if (!prevEl) return;
+
+  const familias = _foInscricoes.filter(i => i.status !== "cancelada");
+  if (familias.length < 2) {
+    if (errEl) errEl.textContent = "É necessário ao menos 2 famílias inscritas para gerar o sorteio.";
+    prevEl.style.display = "";
+    return;
+  }
+
+  const emb = _foShuffle(familias);
+  // Circular: posição i ora pela (i+1) % n
+  _foRascunho = emb.map((f, i) => ({
+    familia_nome: f.familia || f.nome,
+    resp_nome:    f.nome,
+    resp_tel:     f.telefone || null,
+    ora_por_nome: emb[(i + 1) % emb.length].familia || emb[(i + 1) % emb.length].nome,
+  }));
+
+  if (errEl) errEl.textContent = "";
+  prevEl.style.display = "";
+  prevEl.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  const semTel = _foRascunho.filter(p => !p.resp_tel).length;
+  if (tabEl) {
+    tabEl.innerHTML =
+      `<div style="font-size:12px;color:var(--tx2);margin-bottom:12px">${familias.length} famílias — sorteio circular gerado.</div>
+      ${semTel ? `<div style="font-size:11.5px;color:var(--amber);margin-bottom:10px">⚠ ${semTel} família(s) sem WhatsApp — não receberão a mensagem.</div>` : ""}
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+        <thead><tr style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:11px">
+          <th style="padding:6px 8px;text-align:left;font-weight:500">Família</th>
+          <th style="padding:6px 4px"></th>
+          <th style="padding:6px 8px;text-align:left;font-weight:500">Ora por</th>
+          <th style="padding:6px 8px;text-align:left;font-weight:500">Responsável</th>
+          <th style="padding:6px 8px;text-align:center;font-weight:500">WhatsApp</th>
+        </tr></thead>
+        <tbody>
+          ${_foRascunho.map(p => `
+            <tr style="border-bottom:1px solid var(--bd)">
+              <td style="padding:7px 8px">${_foEh(p.familia_nome)}</td>
+              <td style="padding:7px 4px;color:var(--tx3);font-size:11px">→</td>
+              <td style="padding:7px 8px"><strong>${_foEh(p.ora_por_nome)}</strong></td>
+              <td style="padding:7px 8px;color:var(--tx2);font-size:12px">${_foEh(p.resp_nome)}</td>
+              <td style="padding:7px 8px;text-align:center;font-size:11.5px">
+                ${p.resp_tel ? `<span style="color:var(--gr)">✓</span>` : `<span style="color:var(--rose)">Sem número</span>`}
+              </td>
+            </tr>`).join("")}
+        </tbody>
+      </table>`;
+  }
+}
+
+function foCancelarSorteio() {
+  _foRascunho = [];
+  const el = document.getElementById("fo-preview");
+  if (el) el.style.display = "none";
+}
+
+async function foSalvarSorteio(enviarWA = false) {
+  if (!_foRascunho.length || !_foEventoId) return;
+  const errEl = document.getElementById("fo-preview-err");
+  const btnSW = document.getElementById("btn-fo-salvar-wa");
+  const btnS  = document.getElementById("btn-fo-salvar");
+  if (btnSW) btnSW.disabled = true;
+  if (btnS)  btnS.disabled  = true;
+  if (errEl) { errEl.style.color = "var(--tx3)"; errEl.textContent = "Salvando..."; }
+
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/rpc/fo_salvar_sorteio`, {
+      method: "POST",
+      headers: { ...apiHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({
+        p_evento_id: _foEventoId,
+        p_pares: _foRascunho.map(p => ({
+          familia_nome: p.familia_nome,
+          resp_nome:    p.resp_nome,
+          resp_tel:     p.resp_tel || null,
+          ora_por_nome: p.ora_por_nome,
+        })),
+      }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    if (!data.ok) throw new Error("Falha ao salvar rodada.");
+
+    if (enviarWA) await _foEnviarTodosWA(data.rodada_id);
+
+    foCancelarSorteio();
+    foCarregarRodadas(_foEventoId);
+  } catch (e) {
+    if (errEl) { errEl.style.color = "var(--rose)"; errEl.textContent = e.message; }
+    if (btnSW) btnSW.disabled = false;
+    if (btnS)  btnS.disabled  = false;
+  }
+}
+
+async function foSalvarESendWA() { await foSalvarSorteio(true); }
+
+async function _foEnviarTodosWA(rodadaId) {
+  for (const p of _foRascunho) {
+    if (!p.resp_tel) continue;
+    const primeiroNome = p.resp_nome.split(" ")[0];
+    const msg =
+      `Olá ${primeiroNome}! Esta semana a família *${p.familia_nome}* irá orar pela família *${p.ora_por_nome}*. ` +
+      `Que Deus abençoe essa corrente de oração!`;
+    try {
+      await WA.send({
+        para:        p.resp_tel,
+        nome:        p.resp_nome,
+        mensagem:    msg,
+        modulo:      "EVENTOS",
+        referenciaT: "fo_sorteio_pares",
+        chave:       `FO_${rodadaId}_${p.familia_nome}`,
+      });
+    } catch (_) {}
+  }
+}
+
+async function foEnviarWAPar(parId, respNome, famNome, oraNome, tel) {
+  if (!tel) { T("Sem número", "Este responsável não tem WhatsApp cadastrado."); return; }
+  const primeiroNome = respNome.split(" ")[0];
+  const msg =
+    `Olá ${primeiroNome}! Esta semana a família *${famNome}* irá orar pela família *${oraNome}*. ` +
+    `Que Deus abençoe essa corrente de oração!`;
+  try {
+    await WA.send({
+      para: tel, nome: respNome, mensagem: msg,
+      modulo: "EVENTOS", referenciaT: "fo_sorteio_pares",
+      referenciaId: parId, chave: `FO_PAR_${parId}`,
+    });
+    await fetch(`${apiBaseUrl()}/rest/v1/rpc/fo_marcar_wa_enviado`, {
+      method: "POST",
+      headers: { ...apiHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ p_par_id: parId }),
+    });
+    foCarregarRodadas(_foEventoId);
+  } catch (e) { T("Erro", e.message); }
+}
+
+async function foCarregarRodadas(eventoId) {
+  const el = document.getElementById("fo-rodadas-lista");
+  if (!el) return;
+  if (!eventoId || eventoId === "undefined") {
+    el.innerHTML = `<div style="color:var(--tx3);font-size:12px">Nenhum evento selecionado.</div>`;
+    return;
+  }
+  el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px">Carregando...</div>`;
+  try {
+    const url = `${apiBaseUrl()}/rest/v1/fo_sorteio_rodadas`
+      + `?evento_id=eq.${eventoId}`
+      + `&select=id,data,criado_em,pares:fo_sorteio_pares(id,familia_nome,resp_nome,resp_tel,ora_por_nome,wa_enviado)`
+      + `&order=criado_em.desc&limit=20`;
+    const res = await fetch(url, { headers: apiHeaders() });
+    if (!res.ok) throw new Error(await res.text());
+    const rodadas = await res.json();
+
+    if (!rodadas.length) {
+      el.innerHTML = `<div style="color:var(--tx3);font-size:12px;padding:8px 0">Nenhum sorteio realizado ainda.</div>`;
+      return;
+    }
+
+    el.innerHTML = rodadas.map(r => {
+      const total    = r.pares?.length || 0;
+      const enviados = r.pares?.filter(p => p.wa_enviado).length || 0;
+      const linhas   = (r.pares || []).map(p => {
+        const fN  = _foEh(p.familia_nome || "—");
+        const oN  = _foEh(p.ora_por_nome || "—");
+        const rN  = _foEh(p.resp_nome    || "—");
+        const tel = p.resp_tel || "";
+        return `<tr style="border-bottom:1px solid var(--bd)">
+          <td style="padding:6px 8px">${fN}</td>
+          <td style="padding:6px 4px;color:var(--tx3);font-size:11px">→</td>
+          <td style="padding:6px 8px"><strong>${oN}</strong></td>
+          <td style="padding:6px 8px;font-size:12px;color:var(--tx2)">${rN}</td>
+          <td style="padding:6px 8px;text-align:center;font-size:11px">
+            ${p.wa_enviado ? `<span style="color:var(--gr)">✓ Enviado</span>` : `<span style="color:var(--tx3)">Pendente</span>`}
+          </td>
+          <td style="padding:6px 8px;text-align:right">
+            ${!p.wa_enviado && tel
+              ? `<button class="tbt" style="font-size:11px;padding:3px 8px"
+                  onclick="foEnviarWAPar('${p.id}','${rN.replace(/'/g,"\\'")}','${fN.replace(/'/g,"\\'")}','${oN.replace(/'/g,"\\'")}','${tel.replace(/'/g,"\\'")}')">WhatsApp</button>`
+              : ""}
+          </td>
+        </tr>`;
+      }).join("");
+
+      return `<details style="margin-bottom:10px;border:1px solid var(--bd);border-radius:8px;overflow:hidden">
+        <summary style="padding:10px 14px;cursor:pointer;font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;background:var(--bg);list-style:none">
+          <span>Rodada de ${_foFmtData(r.data)}</span>
+          <span style="font-size:11.5px;font-weight:400;color:${enviados===total&&total>0?"var(--gr)":"var(--tx3)"}">
+            ${enviados}/${total} WhatsApp enviados
+          </span>
+        </summary>
+        <div style="padding:0 8px 10px">
+          <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+            <thead><tr style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:11px">
+              <th style="padding:5px 8px;text-align:left;font-weight:500">Família</th><th></th>
+              <th style="padding:5px 8px;text-align:left;font-weight:500">Ora por</th>
+              <th style="padding:5px 8px;text-align:left;font-weight:500">Responsável</th>
+              <th style="padding:5px 8px;text-align:center;font-weight:500">Status</th><th></th>
+            </tr></thead>
+            <tbody>${linhas}</tbody>
+          </table>
+        </div>
+      </details>`;
+    }).join("");
+  } catch (e) {
+    el.innerHTML = `<div style="color:var(--rose);font-size:12px">Erro: ${e.message}</div>`;
+  }
+}
