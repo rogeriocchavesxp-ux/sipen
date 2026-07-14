@@ -137,7 +137,7 @@
     <div class="hero">
       <div class="hero-ic" style="background:rgba(42,181,192,0.12)">📋</div>
       <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Solicitações de Agendamento</div><div class="hero-dsc">Solicitações recebidas via página pública de agenda</div></div>
-      <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova Solicitação</button></div>
+      <div class="hero-act"><button class="tbt" onclick="carregarSolicitacoesAgenda()">↻ Atualizar</button></div>
     </div>
     <div class="bnav" style="--mc:var(--teal)">
       <div class="bni" onclick="go('agenda-dash')">Dashboard</div>
@@ -153,10 +153,12 @@
       <div class="bni" onclick="go('agenda-whatsapp')">WhatsApp</div>
     </div>
     <div class="ct">
-      <div class="kpis c3" style="margin-bottom:16px">
-        <div class="kpi"><div class="kpi-ico" style="background:var(--goldbg)">⏳</div><div class="kpi-body"><div class="kpi-lbl">Pendentes</div><div class="kpi-val" id="sol-pend">—</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.12)">✅</div><div class="kpi-body"><div class="kpi-lbl">Concluídas</div><div class="kpi-val" id="sol-conc">—</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg)">❌</div><div class="kpi-body"><div class="kpi-lbl">Canceladas</div><div class="kpi-val" id="sol-canc">—</div></div></div>
+      <div class="kpis" style="grid-template-columns:repeat(5,1fr);margin-bottom:16px">
+        <div class="kpi" style="cursor:pointer" onclick="agFiltrarSolStatus('aguardando')"><div class="kpi-ico" style="background:var(--goldbg)">⏳</div><div class="kpi-body"><div class="kpi-lbl">Aguardando aprovação</div><div class="kpi-val" id="sol-aguard">—</div></div></div>
+        <div class="kpi" style="cursor:pointer" onclick="agFiltrarSolStatus('em_analise')"><div class="kpi-ico" style="background:rgba(14,165,233,.12)">🔍</div><div class="kpi-body"><div class="kpi-lbl">Em análise</div><div class="kpi-val" id="sol-analise">—</div></div></div>
+        <div class="kpi" style="cursor:pointer" onclick="agFiltrarSolStatus('ajuste_solicitado')"><div class="kpi-ico" style="background:rgba(234,88,12,.1)">🔄</div><div class="kpi-body"><div class="kpi-lbl">Ajuste solicitado</div><div class="kpi-val" id="sol-ajuste">—</div></div></div>
+        <div class="kpi" style="cursor:pointer" onclick="agFiltrarSolStatus('confirmado')"><div class="kpi-ico" style="background:rgba(58,170,92,0.12)">✅</div><div class="kpi-body"><div class="kpi-lbl">Aprovadas</div><div class="kpi-val" id="sol-aprov">—</div></div></div>
+        <div class="kpi" style="cursor:pointer" onclick="agFiltrarSolStatus('recusado')"><div class="kpi-ico" style="background:var(--rosebg)">🚫</div><div class="kpi-body"><div class="kpi-lbl">Recusadas</div><div class="kpi-val" id="sol-recus">—</div></div></div>
       </div>
       <div class="card">
         <div class="ctit">Solicitações de Agendamento <span class="cact" onclick="carregarSolicitacoesAgenda()">↻ Atualizar</span></div>

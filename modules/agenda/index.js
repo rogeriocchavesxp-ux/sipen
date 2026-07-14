@@ -515,75 +515,257 @@ Object.assign(CRUMB, {
 });
 
 
+// ── Mapa de status para exibição ──────────────────────────────
+const AG_STATUS = {
+  "pendente":             { label: "Aguardando aprovação", cor: "var(--amber)"  },
+  "aguardando_aprovacao": { label: "Aguardando aprovação", cor: "var(--amber)"  },
+  "em_analise":           { label: "Em análise",           cor: "var(--sky)"    },
+  "ajuste_solicitado":    { label: "Ajuste solicitado",    cor: "var(--orange)" },
+  "confirmado":           { label: "Aprovada",             cor: "var(--gr)"     },
+  "recusado":             { label: "Recusada",             cor: "var(--rose)"   },
+  "cancelado":            { label: "Cancelada",            cor: "var(--tx3)"    },
+};
+function _agPill(status) {
+  const cfg = AG_STATUS[status] || { label: status || "—", cor: "var(--tx3)" };
+  return `<span style="font-size:9.5px;padding:2px 9px;border-radius:10px;background:${cfg.cor}18;color:${cfg.cor};border:1px solid ${cfg.cor}33;font-weight:700;white-space:nowrap">${escapeHtml(cfg.label)}</span>`;
+}
+
+let _agSolFiltro = "";   // filtro de status ativo na aba Solicitações
+let _agSolRows   = [];   // cache local para o filtro
+
+window.agFiltrarSolStatus = function(status) {
+  _agSolFiltro = _agSolFiltro === status ? "" : status;
+  _agRenderSolTabela();
+};
+
+function _agKpiSol(rows) {
+  const s = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  s("sol-aguard",  rows.filter(r => ["pendente","aguardando_aprovacao"].includes(r.status)).length);
+  s("sol-analise", rows.filter(r => r.status === "em_analise").length);
+  s("sol-ajuste",  rows.filter(r => r.status === "ajuste_solicitado").length);
+  s("sol-aprov",   rows.filter(r => r.status === "confirmado").length);
+  s("sol-recus",   rows.filter(r => r.status === "recusado").length);
+}
+
+function _agRenderSolTabela() {
+  const el = document.getElementById("agenda-sol-list");
+  if (!el) return;
+  const fmtD = d => { if (!d) return "—"; const [y,m,dia] = String(d).slice(0,10).split("-"); return `${dia}/${m}/${y}`; };
+  const rows = _agSolFiltro
+    ? _agSolRows.filter(r => {
+        if (_agSolFiltro === "aguardando") return ["pendente","aguardando_aprovacao"].includes(r.status);
+        return r.status === _agSolFiltro;
+      })
+    : _agSolRows;
+
+  if (!rows.length) {
+    el.innerHTML = `<div style="text-align:center;padding:28px;color:var(--tx3)">
+      <div style="font-size:28px;margin-bottom:8px">📭</div>
+      <div style="font-size:12px">Nenhuma solicitação ${_agSolFiltro ? "com esse status " : ""}encontrada.</div>
+    </div>`;
+    return;
+  }
+
+  const pendente = s => ["pendente","aguardando_aprovacao","em_analise","ajuste_solicitado"].includes(s);
+
+  el.innerHTML = `<div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:11.5px;min-width:780px">
+      <thead><tr style="border-bottom:1px solid var(--bd2);background:var(--bg-surface)">
+        <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Protocolo</th>
+        <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Título</th>
+        <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Solicitante</th>
+        <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Data / Espaço</th>
+        <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Status</th>
+        <th style="text-align:right;padding:7px 10px;font-size:9.5px;color:var(--tx3)">Ações</th>
+      </tr></thead>
+      <tbody>${rows.map(r => {
+        const ativa = pendente(r.status);
+        return `<tr style="border-bottom:1px solid var(--bd1)" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+          <td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:var(--tx3)">${escapeHtml(r.protocolo||"—")}</td>
+          <td style="padding:8px 10px;color:var(--tx1);font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(r.titulo||'')}">${escapeHtml(r.titulo||"—")}</td>
+          <td style="padding:8px 10px;color:var(--tx2);font-size:11px">${escapeHtml(r.solicitante_txt||r.solicitante||"—")}</td>
+          <td style="padding:8px 10px;color:var(--tx2);font-size:11px;white-space:nowrap">
+            ${r.data ? fmtD(r.data) : "—"}${r.hora_inicio ? " " + String(r.hora_inicio).slice(0,5) : ""}
+            ${r.espaco ? `<div style="font-size:10px;color:var(--tx3)">${escapeHtml(r.espaco)}</div>` : ""}
+          </td>
+          <td style="padding:8px 10px">${_agPill(r.status)}</td>
+          <td style="padding:8px 10px;text-align:right;white-space:nowrap;display:flex;gap:4px;justify-content:flex-end;align-items:center">
+            <button onclick='agAnalisarSolicitacao("${r.id}")' style="padding:3px 9px;border-radius:4px;border:1px solid var(--bd1);background:var(--bg-card);color:var(--tx2);font-size:10px;cursor:pointer">Analisar</button>
+            ${ativa ? `
+              <button onclick='agAprovarAgendamento("${r.id}")' style="padding:3px 9px;border-radius:4px;border:1px solid rgba(58,170,92,.4);background:rgba(58,170,92,.1);color:var(--gr);font-size:10px;font-weight:700;cursor:pointer">✓ Aprovar</button>
+              <button onclick='agRejeitarAgendamento("${r.id}")' style="padding:3px 9px;border-radius:4px;border:1px solid rgba(224,85,85,.35);background:rgba(224,85,85,.08);color:var(--rose);font-size:10px;font-weight:700;cursor:pointer">✕ Recusar</button>
+            ` : ""}
+          </td>
+        </tr>`;
+      }).join("")}</tbody>
+    </table></div>`;
+}
+
 async function carregarSolicitacoesAgenda() {
   const el = document.getElementById("agenda-sol-list");
   if (!el) return;
   el.innerHTML = `<div style="color:var(--tx3);font-size:11px">${spinner()} Carregando...</div>`;
   try {
     const res = await fetch(
-      `${apiBaseUrl()}/rest/v1/demandas?area=eq.Agendamentos&order=criado_em.desc&limit=200`,
+      `${apiBaseUrl()}/rest/v1/agenda?select=*&order=created_at.desc&limit=300`,
       { headers: apiHeaders() }
     );
     if (!res.ok) throw new Error(await res.text());
-    const rows = await res.json();
-
-    const pend = rows.filter(r => ["Pendente","Em Andamento"].includes(r.status)).length;
-    const conc = rows.filter(r => String(r.status||"").toLowerCase().includes("conc")).length;
-    const canc = rows.filter(r => String(r.status||"").toLowerCase().includes("canc")).length;
-    const sp = document.getElementById("sol-pend"); if(sp) sp.textContent = pend;
-    const sc = document.getElementById("sol-conc"); if(sc) sc.textContent = conc;
-    const sk = document.getElementById("sol-canc"); if(sk) sk.textContent = canc;
-
-    if (!rows.length) {
-      el.innerHTML = `<div style="text-align:center;padding:28px;color:var(--tx3)">
-        <div style="font-size:28px;margin-bottom:8px">📭</div>
-        <div style="font-size:12px">Nenhuma solicitação de agendamento encontrada</div>
-        <div style="font-size:10.5px;margin-top:4px">Crie uma demanda com categoria "Agendamentos" para que apareça aqui</div>
-      </div>`;
-      return;
-    }
-
-    el.innerHTML = `<div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:11.5px;min-width:760px">
-        <thead><tr style="border-bottom:1px solid var(--bd2);background:var(--bg-surface)">
-          <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Evento / Título</th>
-          <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Subcategoria</th>
-          <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Solicitante</th>
-          <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Abertura</th>
-          <th style="text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Status</th>
-          <th style="text-align:right;padding:7px 10px;font-size:9.5px;color:var(--tx3)">Ações</th>
-        </tr></thead>
-        <tbody>${rows.map(r => {
-          const status = r.status || "Pendente";
-          const cor = status === "Pendente" ? "var(--gold)"
-            : status === "Em Andamento" ? "var(--blue)"
-            : status.toLowerCase().includes("conc") ? "var(--gr)"
-            : status.toLowerCase().includes("canc") ? "var(--rose)"
-            : "var(--tx2)";
-          const ativa = ["Pendente","Em Andamento"].includes(status);
-          return `<tr style="border-bottom:1px solid var(--bd1)" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
-            <td style="padding:8px 10px;color:var(--tx1);font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(r.titulo||'')}">${escapeHtml(r.titulo||"—")}</td>
-            <td style="padding:8px 10px;color:var(--tx2);font-size:11px">${escapeHtml(r.subcategoria||"—")}</td>
-            <td style="padding:8px 10px;color:var(--tx2)">${nomePropio(r.solicitante||r.solicitante_txt) || "—"}</td>
-            <td style="padding:8px 10px;color:var(--tx2);white-space:nowrap;font-family:var(--mono);font-size:11px">${r.data_abertura||"—"}</td>
-            <td style="padding:8px 10px">
-              <span style="font-size:9.5px;padding:2px 8px;border-radius:10px;background:${cor}18;color:${cor};border:1px solid ${cor}33;font-weight:700">${escapeHtml(status)}</span>
-            </td>
-            <td style="padding:8px 10px;text-align:right;white-space:nowrap">
-              ${ativa ? `
-                <button onclick='agEmAnalise("${r.id}")' style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:4px;color:var(--blue);font-size:10px;font-weight:700;padding:3px 7px;cursor:pointer;margin-right:3px">Em análise</button>
-                <button onclick='agAprovarSolicitacao(${safeJsonForHtml(r)})' style="background:rgba(58,170,92,.1);border:1px solid rgba(58,170,92,.35);border-radius:4px;color:var(--gr);font-size:10px;font-weight:700;padding:3px 7px;cursor:pointer;margin-right:3px">✓ Aprovar</button>
-                <button onclick='agRecusarSolicitacao("${r.id}")' style="background:rgba(224,85,85,.08);border:1px solid rgba(224,85,85,.3);border-radius:4px;color:var(--rose);font-size:10px;font-weight:700;padding:3px 7px;cursor:pointer">✕ Recusar</button>
-              ` : `
-                <button onclick='openCrudForm("DEMANDAS",${safeJsonForHtml(r)})' style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:10px;padding:3px 8px;cursor:pointer">Ver</button>
-              `}
-            </td>
-          </tr>`;
-        }).join("")}</tbody>
-      </table></div>`;
+    _agSolRows = await res.json();
+    _agKpiSol(_agSolRows);
+    _agRenderSolTabela();
   } catch(e) {
     el.innerHTML = `<div style="color:var(--rose);font-size:11.5px">Erro: ${escapeHtml(e.message)}</div>`;
   }
+}
+
+// ── Modal: Analisar Solicitação de Agendamento ─────────────────
+async function agAnalisarSolicitacao(id) {
+  let r = _agSolRows.find(x => x.id === id);
+  if (!r) {
+    try {
+      const res = await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${id}&select=*&limit=1`, { headers: apiHeaders() });
+      const data = await res.json();
+      r = Array.isArray(data) ? data[0] : data;
+    } catch (e) { T("Erro", e.message); return; }
+  }
+  if (!r) { T("Não encontrado", "Agendamento não encontrado."); return; }
+
+  const fmtD = d => { if (!d) return "—"; const [y,m,dia] = String(d).slice(0,10).split("-"); return `${dia}/${m}/${y}`; };
+  const fmtH = h => h ? String(h).slice(0,5) : null;
+  const lbl  = (titulo, val) => val ? `<div style="flex:1;min-width:160px"><div style="font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">${titulo}</div><div style="font-size:12.5px;color:var(--tx1)">${escapeHtml(String(val))}</div></div>` : "";
+
+  const pendente = ["pendente","aguardando_aprovacao","em_analise","ajuste_solicitado"].includes(r.status);
+  const cfg      = AG_STATUS[r.status] || { label: r.status, cor: "var(--tx3)" };
+
+  let modal = document.getElementById("ag-analisar-modal");
+  if (!modal) { modal = document.createElement("div"); modal.id = "ag-analisar-modal"; document.body.appendChild(modal); }
+  modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:340;display:flex;align-items:flex-start;justify-content:center;padding:24px 0;overflow-y:auto";
+
+  modal.innerHTML = `
+    <div style="width:min(680px,96vw);background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;box-shadow:0 10px 50px rgba(0,0,0,.3)">
+
+      <!-- Cabeçalho -->
+      <div style="padding:20px 24px 16px;border-bottom:1px solid var(--bd1);display:flex;align-items:flex-start;gap:14px">
+        <div style="flex:1">
+          <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Analisar Solicitação de Agendamento</div>
+          <div style="font-size:17px;font-weight:800;color:var(--tx1);line-height:1.3">${escapeHtml(r.titulo || "—")}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">
+            ${_agPill(r.status)}
+            ${r.protocolo ? `<span style="font-size:10px;font-family:var(--mono);color:var(--tx3);background:var(--bg-surface);padding:2px 8px;border-radius:6px;border:1px solid var(--bd1)">${escapeHtml(r.protocolo)}</span>` : ""}
+            <span style="font-size:10px;color:var(--tx3)">Recebida em ${fmtD(r.created_at||r.criado_em)}</span>
+          </div>
+        </div>
+        <button onclick="document.getElementById('ag-analisar-modal')?.remove()" style="background:none;border:none;color:var(--tx3);font-size:20px;cursor:pointer;padding:0;line-height:1">✕</button>
+      </div>
+
+      <!-- Corpo -->
+      <div style="padding:20px 24px;display:flex;flex-direction:column;gap:18px">
+
+        <!-- Solicitante -->
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Solicitante</div>
+          <div style="display:flex;flex-wrap:wrap;gap:12px">
+            ${lbl("Nome", r.solicitante_txt || r.solicitante || r.organizador)}
+            ${lbl("WhatsApp", r.solicitante_tel || r.telefone)}
+            ${lbl("Ministério / Origem", r.organizador || r.origem)}
+          </div>
+        </div>
+
+        <!-- Data e espaço -->
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Agendamento solicitado</div>
+          <div style="display:flex;flex-wrap:wrap;gap:12px">
+            ${lbl("Data", fmtD(r.data))}
+            ${lbl("Horário início", fmtH(r.hora_inicio))}
+            ${lbl("Horário fim", fmtH(r.hora_fim))}
+            ${lbl("Espaço / Ambiente", r.espaco)}
+            ${lbl("Recorrência", r.recorrencia)}
+          </div>
+        </div>
+
+        <!-- Descrição -->
+        ${r.descricao ? `<div>
+          <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Descrição</div>
+          <div style="font-size:12.5px;color:var(--tx1);white-space:pre-wrap;background:var(--bg-surface);border:1px solid var(--bd1);border-radius:8px;padding:12px 14px;line-height:1.6">${escapeHtml(r.descricao)}</div>
+        </div>` : ""}
+
+        <!-- Aprovação / recusa (quando já decidido) -->
+        ${r.status === "confirmado" ? `<div style="background:rgba(58,170,92,.1);border:1px solid rgba(58,170,92,.3);border-radius:8px;padding:12px 14px">
+          <div style="font-size:11px;font-weight:700;color:var(--gr);margin-bottom:4px">✅ Aprovada por ${escapeHtml(r.aprovado_por_nome||"—")}</div>
+          <div style="font-size:11px;color:var(--tx2)">${r.aprovado_em ? fmtD(r.aprovado_em) : "—"}</div>
+        </div>` : ""}
+        ${r.status === "recusado" ? `<div style="background:rgba(224,85,85,.08);border:1px solid rgba(224,85,85,.3);border-radius:8px;padding:12px 14px">
+          <div style="font-size:11px;font-weight:700;color:var(--rose);margin-bottom:4px">🚫 Recusada</div>
+          ${r.motivo_rejeicao ? `<div style="font-size:11.5px;color:var(--tx2)">${escapeHtml(r.motivo_rejeicao)}</div>` : ""}
+        </div>` : ""}
+        ${r.status === "ajuste_solicitado" ? `<div style="background:rgba(234,88,12,.08);border:1px solid rgba(234,88,12,.3);border-radius:8px;padding:12px 14px">
+          <div style="font-size:11px;font-weight:700;color:var(--orange)">🔄 Aguardando ajuste do solicitante</div>
+        </div>` : ""}
+      </div>
+
+      <!-- Rodapé com ações -->
+      <div style="padding:14px 24px 20px;border-top:1px solid var(--bd1);display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+        <button onclick="document.getElementById('ag-analisar-modal')?.remove()" style="padding:8px 16px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:12.5px;cursor:pointer">Fechar</button>
+        ${pendente ? `
+          <button onclick="document.getElementById('ag-analisar-modal')?.remove();agSolicitarAjuste('${r.id}')" style="padding:8px 16px;border-radius:7px;border:1px solid rgba(234,88,12,.4);background:rgba(234,88,12,.08);color:var(--orange);font-size:12.5px;font-weight:600;cursor:pointer">🔄 Solicitar ajuste</button>
+          <button onclick="document.getElementById('ag-analisar-modal')?.remove();agRejeitarAgendamento('${r.id}')" style="padding:8px 16px;border-radius:7px;border:1px solid rgba(224,85,85,.4);background:rgba(224,85,85,.08);color:var(--rose);font-size:12.5px;font-weight:600;cursor:pointer">🚫 Recusar</button>
+          <button onclick="document.getElementById('ag-analisar-modal')?.remove();agAprovarAgendamento('${r.id}')" style="padding:8px 18px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer">✅ Aprovar agendamento</button>
+        ` : ""}
+      </div>
+    </div>`;
+}
+
+// ── Solicitar ajuste ───────────────────────────────────────────
+async function agSolicitarAjuste(id) {
+  let modal = document.getElementById("ag-ajuste-modal");
+  if (!modal) { modal = document.createElement("div"); modal.id = "ag-ajuste-modal"; document.body.appendChild(modal); }
+  modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:350;display:flex;align-items:center;justify-content:center";
+  modal.innerHTML = `
+    <div style="width:min(460px,94vw);background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="font-size:15px;font-weight:700;color:var(--tx1);margin-bottom:6px">Solicitar ajuste</div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:16px">Informe o que precisa ser corrigido ou complementado pelo solicitante. Ele receberá a orientação via WhatsApp.</div>
+      <label style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em">Orientação ao solicitante *</label>
+      <textarea id="ag-ajuste-texto" rows="4" placeholder="Ex.: Por favor, informe o horário exato de início e término, e se haverá uso de sonorização." style="width:100%;margin-top:6px;padding:9px 11px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-input);color:var(--tx1);font-size:12.5px;font-family:inherit;resize:vertical;outline:none;box-sizing:border-box"></textarea>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+        <button onclick="document.getElementById('ag-ajuste-modal')?.remove()" style="padding:8px 16px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:12.5px;cursor:pointer">Cancelar</button>
+        <button onclick="agConfirmarAjuste('${id}')" style="padding:8px 18px;border-radius:7px;border:none;background:var(--orange);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer">Enviar orientação</button>
+      </div>
+    </div>`;
+}
+
+async function agConfirmarAjuste(id) {
+  const texto = document.getElementById("ag-ajuste-texto")?.value?.trim();
+  if (!texto) { T("Campo obrigatório", "Informe a orientação antes de enviar."); return; }
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${id}`, {
+      method: "PATCH",
+      headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=representation" },
+      body: JSON.stringify({ status: "ajuste_solicitado", atualizado_em: new Date().toISOString() }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+    const r    = Array.isArray(rows) ? rows[0] : rows;
+
+    // Notifica Comunicação se houver solicitação vinculada
+    _comSyncStatus(id, "ajuste", texto);
+
+    // WA ao solicitante
+    const tel = r?.telefone || r?.solicitante_tel;
+    const nome = r?.solicitante_txt || r?.solicitante || "";
+    if (tel && typeof WA !== "undefined") {
+      WA.send({
+        para: tel, nome,
+        mensagem: `Olá${nome ? ", " + nome.split(" ")[0] : ""}! Sua solicitação de agendamento *"${r?.titulo || ""}"* precisa de ajustes.\n\n📋 Orientação: ${texto}\n\n${r?.protocolo ? "🔖 Protocolo: " + r.protocolo : ""}`,
+        modulo: "AGENDA", referenciaT: "agenda", referenciaId: id, chave: `AG_AJUSTE_${id}`,
+      }).catch(() => {});
+    }
+
+    document.getElementById("ag-ajuste-modal")?.remove();
+    T("Ajuste solicitado.", "O solicitante será notificado.");
+    _agendaCache = null;
+    carregarSolicitacoesAgenda();
+  } catch(e) { T("Erro", e.message); }
 }
 
 async function agEmAnalise(id) {
@@ -899,6 +1081,10 @@ window.agVerificarOcupacao          = agVerificarOcupacao;
 window.carregarGerenciamentoEspacos = carregarGerenciamentoEspacos;
 window.agToggleEspacoPublico        = agToggleEspacoPublico;
 window.carregarSolicitacoesAgenda   = carregarSolicitacoesAgenda;
+window.agAnalisarSolicitacao        = agAnalisarSolicitacao;
+window.agSolicitarAjuste            = agSolicitarAjuste;
+window.agConfirmarAjuste            = agConfirmarAjuste;
+// legado (demandas)
 window.agEmAnalise                = agEmAnalise;
 window.agRecusarSolicitacao       = agRecusarSolicitacao;
 window.agAprovarSolicitacao       = agAprovarSolicitacao;
