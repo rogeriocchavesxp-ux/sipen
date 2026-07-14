@@ -1,8 +1,27 @@
 -- ═══════════════════════════════════════════════════════════════
 -- SIPEN — Comunicação: upgrade de status
--- Migra solicitações "Recebida" vinculadas a programações pendentes
 -- Execute no Supabase SQL Editor
 -- ═══════════════════════════════════════════════════════════════
+
+-- 1. Atualizar o CHECK constraint para aceitar os novos status
+ALTER TABLE public.com_solicitacoes_arte
+  DROP CONSTRAINT IF EXISTS com_solicitacoes_arte_status_check;
+
+ALTER TABLE public.com_solicitacoes_arte
+  ADD CONSTRAINT com_solicitacoes_arte_status_check
+  CHECK (status IN (
+    'Recebida',
+    'Em análise',
+    'Em produção',
+    'Aguardando aprovação',
+    'Aguardando aprovação da Administração',
+    'Aprovada para produção',
+    'Programação não aprovada',
+    'Concluída',
+    'Cancelada'
+  ));
+
+-- 2. Migrar registros existentes
 
 -- Solicitações vinculadas a programações ainda pendentes de aprovação
 UPDATE public.com_solicitacoes_arte c
