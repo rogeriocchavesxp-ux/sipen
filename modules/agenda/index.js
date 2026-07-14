@@ -1774,6 +1774,7 @@ async function agAnalisarRequisicao(id) {
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px">
           <button onclick="document.getElementById('ag-req-anal-overlay').remove()" style="padding:7px 16px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx2);font-size:12px;cursor:pointer">Fechar</button>
+          <button onclick='agAprovarRequisicao("${r.id}")' style="padding:7px 18px;border-radius:7px;border:1px solid rgba(58,170,92,.4);background:rgba(58,170,92,.12);color:var(--gr);font-size:12px;font-weight:700;cursor:pointer">✓ Liberar Espaço</button>
           <button onclick='agConfirmarDecisaoReq("${r.id}")' style="padding:7px 18px;border-radius:7px;border:none;background:var(--orange);color:#fff;font-size:12px;font-weight:700;cursor:pointer">Salvar decisão</button>
         </div>
       </div>
@@ -1811,6 +1812,24 @@ async function agConfirmarDecisaoReq(id) {
   } catch(e) { T("Erro ao salvar", e.message); }
 }
 
+async function agAprovarRequisicao(id) {
+  if (!confirm("Confirmar liberação do espaço para este solicitante?")) return;
+  try {
+    const just = document.getElementById("req-anal-just")?.value?.trim() || null;
+    const alt  = document.getElementById("req-anal-alt")?.value?.trim()  || null;
+    const res  = await fetch(`${apiBaseUrl()}/rest/v1/rpc/admin_atualizar_requisicao`, {
+      method: "POST",
+      headers: { ...apiHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ p_id: id, p_status: "ESPACO_LIBERADO", p_justificativa: just, p_espaco_alt: alt })
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.erro || "Erro ao aprovar");
+    document.getElementById("ag-req-anal-overlay")?.remove();
+    T("Espaço liberado", "Requisição aprovada com sucesso.");
+    agCarregarAprovacoes();
+  } catch(e) { T("Erro", e.message); }
+}
+
 async function agAtualizarRequisicao(id, status) {
   if (!confirm(`Confirmar status: ${REQ_STATUS[status]?.label || status}?`)) return;
   try {
@@ -1830,4 +1849,5 @@ window.carregarRequisicoesEspaco  = carregarRequisicoesEspaco;
 window.agAnalisarRequisicao       = agAnalisarRequisicao;
 window.agFiltrarReqStatus         = agFiltrarReqStatus;
 window.agConfirmarDecisaoReq      = agConfirmarDecisaoReq;
+window.agAprovarRequisicao        = agAprovarRequisicao;
 window.agAtualizarRequisicao      = agAtualizarRequisicao;
