@@ -281,6 +281,41 @@ async function salvarRegistro(tab, recordId = null) {
     const _pv = ["Baixa","Média","Alta","Urgente"];
     data.prioridade = _pv.includes(data.prioridade) ? data.prioridade : "Média";
   }
+
+  // Verificação de conflito de espaço antes de salvar evento de agenda
+  if (tab === "AGENDA" && data.espaco && data.data && data.hora_inicio
+      && !["cancelado","recusado","arquivado"].includes(data.status)) {
+    try {
+      const resDisp = await fetch(`${apiBaseUrl()}/rest/v1/rpc/espacos_disponibilidade_admin`, {
+        method: "POST",
+        headers: { ...apiHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({
+          p_data_inicio: data.data,
+          p_hora_inicio: data.hora_inicio,
+          p_data_fim:    data.data_encerramento || data.data,
+          p_hora_fim:    data.hora_fim || "23:59",
+          p_excluir_id:  recordId || null
+        })
+      });
+      if (resDisp.ok) {
+        const listaDisp = await resDisp.json();
+        const conflito = Array.isArray(listaDisp)
+          ? listaDisp.find(d => !d.disponivel && d.nome === data.espaco)
+          : null;
+        if (conflito) {
+          const c = conflito.conflito;
+          const detalhe = c
+            ? `\n"${c.titulo}"${c.hora_inicio ? " · " + c.hora_inicio + (c.hora_fim ? "–" + c.hora_fim : "") : ""}${c.organizador ? " · " + c.organizador : ""}`
+            : "";
+          const prosseguir = confirm(
+            `Conflito de espaço: ${data.espaco} já está reservado neste horário.${detalhe}\n\nSalvar mesmo assim?`
+          );
+          if (!prosseguir) return;
+        }
+      }
+    } catch (_) { /* não bloqueia se a verificação falhar */ }
+  }
+
   try {
     if (tab === "MEMBROS" && recordId) {
       const pessoaId = data.__pessoa_id;
