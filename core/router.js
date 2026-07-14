@@ -30,6 +30,7 @@ const CRUMB={
   "admin-facial":           ["Administrativo","Acesso Facial","/ controle administrativo de acesso"],
   "pext-lista":             ["Administrativo","Participantes Externos","/ pessoas sem membresia"],
   "admin-pessoas":          ["Administrativo","Cadastro de Pessoas","/ registro geral"],
+  "admin-espacos":          ["Administrativo","Espaços","/ cadastro centralizado de ambientes"],
   "conselho-dash":["Conselho e Governança","Dashboard",""],
   "conselho-nomeados":["Conselho e Governança","Nomeados","/ funções temporárias"],
   "conselho-ordenados":["Conselho e Governança","Ordenados","/ ofícios permanentes"],

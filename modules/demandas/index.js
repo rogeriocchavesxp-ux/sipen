@@ -1139,43 +1139,8 @@ function fmtD(d) {
             </div>
             <div>
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Localização / Sala</label>
-              <select id="dem-edit-local" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
-                <option value="">— Selecione a sala —</option>
-                <optgroup label="Bloco A — Penha Kids">
-                  <option ${dem.local==='Sala A01'?'selected':''}>Sala A01</option>
-                  <option ${dem.local==='Sala A02'?'selected':''}>Sala A02</option>
-                  <option ${dem.local==='Sala A03'?'selected':''}>Sala A03</option>
-                  <option ${dem.local==='Sala A04'?'selected':''}>Sala A04</option>
-                  <option ${dem.local==='Sala A05'?'selected':''}>Sala A05</option>
-                  <option ${dem.local==='Sala A06'?'selected':''}>Sala A06</option>
-                  <option ${dem.local==='Sala A07 — Estoque'?'selected':''}>Sala A07 — Estoque</option>
-                  <option ${dem.local==='Sala A08 — Dentista'?'selected':''}>Sala A08 — Dentista</option>
-                  <option ${dem.local==='Sala A09 — Copa'?'selected':''}>Sala A09 — Copa</option>
-                  <option ${dem.local==='Banheiro — Bloco A'?'selected':''}>Banheiro — Bloco A</option>
-                  <option ${dem.local==='Templo — Penha Kids'?'selected':''}>Templo — Penha Kids</option>
-                </optgroup>
-                <optgroup label="Bloco B — Prédio Principal">
-                  <option ${dem.local==='Auditório Principal'?'selected':''}>Auditório Principal</option>
-                  <option ${dem.local==='Auditório Penha Kids'?'selected':''}>Auditório Penha Kids</option>
-                  <option ${dem.local==='Sala B2 — Adolescentes'?'selected':''}>Sala B2 — Adolescentes</option>
-                  <option ${dem.local==='Pátio — Salão Social'?'selected':''}>Pátio — Salão Social</option>
-                  <option ${dem.local==='Cozinha'?'selected':''}>Cozinha</option>
-                  <option ${dem.local==='Casa de Apoio'?'selected':''}>Casa de Apoio</option>
-                  <option ${dem.local==='Sala B3'?'selected':''}>Sala B3</option>
-                  <option ${dem.local==='Sala B4'?'selected':''}>Sala B4</option>
-                  <option ${dem.local==='Sala B06'?'selected':''}>Sala B06</option>
-                  <option ${dem.local==='Sala B07'?'selected':''}>Sala B07</option>
-                  <option ${dem.local==='Sala B08'?'selected':''}>Sala B08</option>
-                  <option ${dem.local==='Sala B09'?'selected':''}>Sala B09</option>
-                  <option ${dem.local==='Sala B10'?'selected':''}>Sala B10</option>
-                  <option ${dem.local==='Sala B11'?'selected':''}>Sala B11</option>
-                  <option ${dem.local==='Sala B12'?'selected':''}>Sala B12</option>
-                  <option ${dem.local==='Sala B13'?'selected':''}>Sala B13</option>
-                  <option ${dem.local==='Sala B14'?'selected':''}>Sala B14</option>
-                </optgroup>
-                <optgroup label="Bloco C — Estacionamento e Apoio">
-                  <option ${dem.local==='Estacionamento'?'selected':''}>Estacionamento</option>
-                </optgroup>
+              <select id="dem-edit-local" data-valor-atual="${dem.local||''}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+                <option value="">Carregando espaços…</option>
               </select>
             </div>
             <div>
@@ -1254,6 +1219,7 @@ function fmtD(d) {
         </div>
       </div>`;
     _carregarAndamentos(id, dem);
+    _popularSelectEspacos("dem-edit-local");
   }
 
   /* ── Atualizar status ───────────────────────────────── */
@@ -1489,6 +1455,7 @@ function fmtD(d) {
     const _tRow = m.querySelector("#dem-f-boleto-total-row");
     if (_tRow) _tRow.style.display = "none";
     m.style.display = "flex";
+    _popularSelectEspacos("dem-f-local");
   };
 
   window.fecharModalNovaDemanda = function() {
@@ -1552,6 +1519,33 @@ function fmtD(d) {
   window.demOnSubChange      = _toggleFinanceiroSection;
 
   /* ── Agendamentos: Programações ─────────────────────── */
+  /* Popula qualquer <select id="..."> com espaços do cadastro central */
+  async function _popularSelectEspacos(elId, valorAtual) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const val = valorAtual ?? el.dataset.valorAtual ?? "";
+    try {
+      const r = await fetch(`${apiBaseUrl()}/rest/v1/espacos?ativo=eq.true&order=grupo.asc,ordem.asc,nome.asc`, { headers: apiHeaders() });
+      const rows = r.ok ? await r.json() : [];
+      const grupos = {};
+      rows.forEach(e => { const g = e.grupo || "Outros"; if (!grupos[g]) grupos[g] = []; grupos[g].push(e.nome); });
+      el.innerHTML = `<option value="">— Selecione o espaço —</option>`;
+      Object.entries(grupos).forEach(([g, nomes]) => {
+        const grp = document.createElement("optgroup");
+        grp.label = g;
+        nomes.forEach(nome => {
+          const opt = document.createElement("option");
+          opt.value = nome; opt.textContent = nome;
+          if (nome === val) opt.selected = true;
+          grp.appendChild(opt);
+        });
+        el.appendChild(grp);
+      });
+    } catch (_) {
+      el.innerHTML = `<option value="${val}">${val || "— Selecione o espaço —"}</option>`;
+    }
+  }
+
   const _PROG_SUBS_INT = new Set(["Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"]);
   async function _carregarEspacosGrid() {
     const grid = document.getElementById("dem-f-ag-spaces");

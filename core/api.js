@@ -153,7 +153,7 @@ const SCHEMA = {
   },
   /* Tipos especiais para renderizar inputs corretos */
   tipos: {
-    AGENDA:     { data:"date", hora_inicio:"time", hora_fim:"time", status:"select:confirmado,pendente,cancelado,reagendado", recorrencia:"select:Semanal,Quinzenal,Mensal,Anual", espaco:"select:=— Selecione a sala —,Sala A01,Sala A02,Sala A03,Sala A04,Sala A05,Sala A06,Sala A07 — Estoque,Sala A08 — Dentista,Sala A09 — Copa,Banheiro — Bloco A,Templo — Penha Kids,Auditório Principal,Auditório Penha Kids,Sala B2 — Adolescentes,Pátio — Salão Social,Cozinha,Casa de Apoio,Sala B3,Sala B4,Sala B06,Sala B07,Sala B08,Sala B09,Sala B10,Sala B11,Sala B12,Sala B13,Sala B14,Estacionamento" },
+    AGENDA:     { data:"date", hora_inicio:"time", hora_fim:"time", status:"select:confirmado,pendente,cancelado,reagendado", recorrencia:"select:Semanal,Quinzenal,Mensal,Anual", espaco:"text" },
     MEMBROS:    { status:"select:ativo,inativo,transferido,falecido,disciplinado,afastado", tipo_membro:"select:COMUNGANTE=Comungante,NAO_COMUNGANTE=Não Comungante", data_nascimento:"date", data_ingresso:"date", data_saida:"date", data_batismo:"date", batizado:"boolean", casado_na_igreja:"boolean", tipo_ingresso:"select:batismo,transferência,profissão de fé,restauração,outro" },
     VISITANTES: { data_primeira_visita:"date", interesse_nivel:"select:baixo,médio,alto,convertido" },
     DEMANDAS:   { data_abertura: "date", data_conclusao: "date", status: "select:ABERTA=Aberta,EM_ANALISE=Em Análise,EM_ANDAMENTO=Em Andamento,PENDENTE=Pendente,CONCLUIDA=Concluída,CANCELADA=Cancelada", prioridade: "select:Baixa,Média,Alta,Urgente" },

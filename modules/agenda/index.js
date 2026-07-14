@@ -13,48 +13,44 @@ VIEW_AUTOLOAD["agenda-historico"]     = null;
 VIEW_AUTOLOAD["agenda-config"]        = null;
 
 
-/* ── SALAS DA IGREJA ─────────────────────── */
+/* ── SALAS DA IGREJA — carregadas do cadastro central ──────── */
 function agSalasSelect(id, valorAtual = "") {
-  const sel = (v, l) => `<option value="${v}"${valorAtual === v ? " selected" : ""}>${l}</option>`;
   const inputStyle = `width:100%;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none`;
-  return `<select id="${id}" class="fi2" style="${inputStyle}">
-    ${sel("","— Selecione a sala —")}
-    <optgroup label="Bloco A — Penha Kids">
-      ${sel("Sala A01","Sala A01")}
-      ${sel("Sala A02","Sala A02")}
-      ${sel("Sala A03","Sala A03")}
-      ${sel("Sala A04","Sala A04")}
-      ${sel("Sala A05","Sala A05")}
-      ${sel("Sala A06","Sala A06")}
-      ${sel("Sala A07 — Estoque","Sala A07 — Estoque")}
-      ${sel("Sala A08 — Dentista","Sala A08 — Dentista")}
-      ${sel("Sala A09 — Copa","Sala A09 — Copa")}
-      ${sel("Banheiro — Bloco A","Banheiro — Bloco A")}
-      ${sel("Templo — Penha Kids","Templo — Penha Kids")}
-    </optgroup>
-    <optgroup label="Bloco B — Prédio Principal">
-      ${sel("Auditório Principal","Auditório Principal")}
-      ${sel("Auditório Penha Kids","Auditório Penha Kids")}
-      ${sel("Sala B2 — Adolescentes","Sala B2 — Adolescentes")}
-      ${sel("Pátio — Salão Social","Pátio — Salão Social")}
-      ${sel("Cozinha","Cozinha")}
-      ${sel("Casa de Apoio","Casa de Apoio")}
-      ${sel("Sala B3","Sala B3")}
-      ${sel("Sala B4","Sala B4")}
-      ${sel("Sala B06","Sala B06")}
-      ${sel("Sala B07","Sala B07")}
-      ${sel("Sala B08","Sala B08")}
-      ${sel("Sala B09","Sala B09")}
-      ${sel("Sala B10","Sala B10")}
-      ${sel("Sala B11","Sala B11")}
-      ${sel("Sala B12","Sala B12")}
-      ${sel("Sala B13","Sala B13")}
-      ${sel("Sala B14","Sala B14")}
-    </optgroup>
-    <optgroup label="Bloco C — Estacionamento e Apoio">
-      ${sel("Estacionamento","Estacionamento")}
-    </optgroup>
+  // Skeleton preenchido imediatamente; populado pelo banco após render
+  return `<select id="${id}" class="fi2" style="${inputStyle}" data-valor-atual="${valorAtual}">
+    <option value="">Carregando espaços…</option>
   </select>`;
+}
+
+async function agSalasSelectPopular(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const valorAtual = el.dataset.valorAtual || "";
+  try {
+    const r = await fetch(`${apiBaseUrl()}/rest/v1/espacos?ativo=eq.true&order=grupo.asc,ordem.asc,nome.asc`, { headers: apiHeaders() });
+    const rows = r.ok ? await r.json() : [];
+    const grupos = {};
+    rows.forEach(e => {
+      const g = e.grupo || "Outros";
+      if (!grupos[g]) grupos[g] = [];
+      grupos[g].push(e.nome);
+    });
+    el.innerHTML = `<option value="">— Selecione o espaço —</option>`;
+    Object.entries(grupos).forEach(([g, nomes]) => {
+      const grp = document.createElement("optgroup");
+      grp.label = g;
+      nomes.forEach(nome => {
+        const opt = document.createElement("option");
+        opt.value = nome;
+        opt.textContent = nome;
+        if (nome === valorAtual) opt.selected = true;
+        grp.appendChild(opt);
+      });
+      el.appendChild(grp);
+    });
+  } catch (_) {
+    el.innerHTML = `<option value="${valorAtual}">${valorAtual || "— Selecione o espaço —"}</option>`;
+  }
 }
 
 /* ── AGENDA FUNCTIONS ─────────────────────── */
@@ -870,6 +866,7 @@ function agAprovarSolicitacao(r) {
       <button class="btn btn-p" onclick="agConfirmarAprovacao('${r.id}')">Confirmar e criar evento</button>
     </div>
   </div>`;
+  agSalasSelectPopular("ag-ap-esp");
 }
 
 async function agConfirmarAprovacao(demandaId) {
