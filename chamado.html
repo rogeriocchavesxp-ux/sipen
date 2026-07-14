@@ -2985,14 +2985,29 @@ async function ag2EnviarRequisicao() {
       return;
     }
 
-    // Sucesso
+    // Sucesso — fechar modal e mostrar tela de conclusão
     document.getElementById("ag2-req-overlay")?.remove();
     const prot = rpc.protocolo || "";
-    const msgEl = document.createElement("div");
-    msgEl.style.cssText = "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:14px 20px;box-shadow:0 6px 24px rgba(0,0,0,.18);font-size:12.5px;max-width:340px;text-align:center;line-height:1.5";
-    msgEl.innerHTML = `<strong style="color:var(--teal)">Requisição registrada</strong><br>Sua requisição foi registrada e será analisada pela Administração. O espaço permanece reservado até a decisão.<br><span style="font-size:10px;color:var(--tx3);font-family:var(--mono)">${prot}</span>`;
-    document.body.appendChild(msgEl);
-    setTimeout(() => msgEl.remove(), 7000);
+
+    // Ocultar todas as telas e mostrar screen-ok adaptada para requisição
+    ["screen-form","screen-agend","screen-step2"].forEach(id => {
+      const s = document.getElementById(id); if (s) s.style.display = "none";
+    });
+    const okTitle = document.querySelector(".ok-title");
+    if (okTitle) okTitle.textContent = "Requisição registrada";
+    const okMsg = document.querySelector(".ok-msg");
+    if (okMsg) okMsg.innerHTML = `Sua requisição foi registrada e será analisada pela Administração.<br><br>
+      O espaço permanece reservado até a decisão.<br><br>
+      <strong>Obrigado!</strong>`;
+    const okNum = document.getElementById("ok-numero");
+    if (okNum) okNum.textContent = prot;
+    const okIcon = document.querySelector(".ok-icon");
+    if (okIcon) okIcon.textContent = "📨";
+    document.getElementById("ok-protocolo").style.display  = "none";
+    document.getElementById("ok-aviso-conflito").style.display = "none";
+    const okScreen = document.getElementById("screen-ok");
+    if (okScreen) { okScreen.style.display = ""; }
+    window.scrollTo({ top: 0, behavior: "smooth" });
 
   } catch(e) {
     const errEl = document.getElementById("req-erro");
