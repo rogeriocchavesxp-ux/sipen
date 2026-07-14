@@ -329,7 +329,7 @@ async function agVerDia(ano, mes, dia) {
   const m = String(mes).padStart(2,"0"); const d = String(dia).padStart(2,"0");
   const dataStr = `${ano}-${m}-${d}`;
   const evsDia = rows.filter(r => agTemOcorrenciaNaData(r, dataStr));
-  agMostrarExpandido(`${evsDia.length} evento${evsDia.length!==1?"s":""} em ${d}/${m}/${ano}`, evsDia);
+  agMostrarExpandido(`${evsDia.length} evento${evsDia.length!==1?"s":""} em ${d}/${m}/${ano}`, evsDia, dataStr);
 }
 
 async function agVerMes(mes, el) {
@@ -370,21 +370,23 @@ async function agVerEspaco(espaco) {
   agMostrarExpandido(`${evs.length} eventos · ${espaco}`, evs);
 }
 
-function agMostrarExpandido(titulo, evs) {
+function agMostrarExpandido(titulo, evs, occurrenceDate) {
   const expEl = document.getElementById("ag-mes-expandido");
   const titEl = document.getElementById("ag-mes-exp-titulo");
   const listEl = document.getElementById("ag-mes-exp-list");
   if(!expEl||!listEl) return;
   if(titEl) titEl.textContent = titulo;
   expEl.style.display = "block";
-  listEl.innerHTML = agRenderEventList(evs);
+  listEl.innerHTML = agRenderEventList(evs, occurrenceDate);
   expEl.scrollIntoView({behavior:"smooth", block:"nearest"});
 }
 
-function agRenderEventList(evs) {
+function agRenderEventList(evs, occurrenceDate) {
   if(!evs.length) return `<div style="color:var(--tx3);font-size:11.5px;text-align:center;padding:20px">Nenhum evento</div>`;
   const byDate = {};
-  evs.forEach(e => { const k=e.data||"sem-data"; if(!byDate[k]) byDate[k]=[]; byDate[k].push(e); });
+  // occurrenceDate: quando fornecido (agVerDia), agrupa tudo sob a data da ocorrência
+  // e não sob a data original do evento (que pode ser de meses atrás para recorrentes)
+  evs.forEach(e => { const k = occurrenceDate || e.data || "sem-data"; if(!byDate[k]) byDate[k]=[]; byDate[k].push(e); });
   const nomeDias = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
   return Object.entries(byDate).sort(([a],[b])=>a.localeCompare(b)).map(([data,evsDia]) => {
     const [,, dd] = data.split("-");
@@ -399,6 +401,7 @@ function agRenderEventList(evs) {
           <div style="flex:1;min-width:0">
             <div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${escapeHtml(e.titulo||"—")}</div>
             <div style="font-size:10px;color:var(--tx3);margin-top:1px">${e.espaco?'<span style="color:var(--teal)">'+escapeHtml(e.espaco)+"</span>":""} ${e.organizador?"· "+escapeHtml(e.organizador):""}</div>
+            ${occurrenceDate && e.recorrencia && e.data !== occurrenceDate ? `<div style="font-size:9px;color:var(--tx4);margin-top:1px">início: ${fmtDataBrCurto(e.data)}${e.data_encerramento&&e.data_encerramento!==e.data?" · até "+fmtDataBrCurto(e.data_encerramento):""}</div>` : ""}
           </div>
           ${e.recorrencia?`<span style="font-size:9px;background:rgba(42,181,192,.1);color:var(--teal);border-radius:3px;padding:1px 5px;flex-shrink:0;white-space:nowrap">${e.recorrencia}</span>`:""}
           <button onclick='openCrudForm("AGENDA",${safeJsonForHtml(e)})' style="background:none;border:1px solid var(--bd1);border-radius:4px;color:var(--tx3);font-size:10px;padding:2px 6px;cursor:pointer;flex-shrink:0">✏️</button>
