@@ -1516,44 +1516,33 @@ function fmtD(d) {
 
   /* ── Agendamentos: Programações ─────────────────────── */
   const _PROG_SUBS_INT = new Set(["Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"]);
-  const _SPACES_GROUPS = [
-    { grupo: "Bloco A — Penha Kids", itens: [
-      "Sala A01","Sala A02","Sala A03","Sala A04","Sala A05","Sala A06",
-      "Sala A07 — Estoque","Sala A08 — Dentista","Sala A09 — Copa","Banheiro",
-      "Templo — Penha Kids",
-    ]},
-    { grupo: "Bloco B — Prédio Principal", itens: [
-      "Auditório Principal","Auditório Penha Kids",
-      "Sala B2 — Adolescentes",
-      "Pátio — Salão Social","Cozinha","Casa de Apoio","Sala B3","Sala B4",
-      "Sala B06","Sala B07","Sala B08","Sala B09",
-      "Sala B10","Sala B11","Sala B12","Sala B13","Sala B14",
-    ]},
-    { grupo: "Bloco C — Estacionamento e Apoio", itens: [
-      "Estacionamento",
-    ]},
-    { grupo: "Bloco D — Administrativo e Pastoral", itens: [
-      "Sala D1 — Secretaria","Sala D2 — Sala de Gestão","Sala D3 — Hebron / Ação Social",
-      "Sala D4 — Bazar da Ação Social","Sala D5 — Estoque de Cestas","Sala D6 — Estoque de Produtos de Limpeza",
-      "Sala D7 — Gabinete Pr. Amauri","Sala D8 — Gabinete Pr. Felipe","Sala D9 — Gabinete Pr. Fábio",
-    ]},
-  ];
-  (function() {
+  async function _carregarEspacosGrid() {
     const grid = document.getElementById("dem-f-ag-spaces");
     if (!grid || grid.children.length) return;
-    _SPACES_GROUPS.forEach(grp => {
-      const hdr = document.createElement("div");
-      hdr.style.cssText = "grid-column:1/-1;font-size:10px;font-weight:700;color:var(--teal,#0d9488);text-transform:uppercase;letter-spacing:.07em;padding:8px 0 3px;border-bottom:1px solid var(--bd2);margin-top:6px";
-      hdr.textContent = grp.grupo;
-      grid.appendChild(hdr);
-      grp.itens.forEach(s => {
-        const lbl = document.createElement("label");
-        lbl.style.cssText = "display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));cursor:pointer;font-size:12.5px;color:var(--tx1);user-select:none";
-        lbl.innerHTML = `<input type="checkbox" value="${s}" style="accent-color:var(--teal);width:14px;height:14px;cursor:pointer;flex-shrink:0"> ${s}`;
-        grid.appendChild(lbl);
+    try {
+      const r = await fetch(`${apiBaseUrl()}/rest/v1/espacos?ativo=eq.true&reservavel=eq.true&order=grupo.asc,ordem.asc,nome.asc`, { headers: apiHeaders() });
+      const rows = r.ok ? await r.json() : [];
+      const grupos = {};
+      rows.forEach(e => {
+        const g = e.grupo || "Outros";
+        if (!grupos[g]) grupos[g] = [];
+        grupos[g].push(e.nome);
       });
-    });
-  })();
+      Object.entries(grupos).forEach(([g, nomes]) => {
+        const hdr = document.createElement("div");
+        hdr.style.cssText = "grid-column:1/-1;font-size:10px;font-weight:700;color:var(--teal,#0d9488);text-transform:uppercase;letter-spacing:.07em;padding:8px 0 3px;border-bottom:1px solid var(--bd2);margin-top:6px";
+        hdr.textContent = g;
+        grid.appendChild(hdr);
+        nomes.forEach(s => {
+          const lbl = document.createElement("label");
+          lbl.style.cssText = "display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));cursor:pointer;font-size:12.5px;color:var(--tx1);user-select:none";
+          lbl.innerHTML = `<input type="checkbox" value="${s}" style="accent-color:var(--teal);width:14px;height:14px;cursor:pointer;flex-shrink:0"> ${s}`;
+          grid.appendChild(lbl);
+        });
+      });
+    } catch (_) {}
+  }
+  _carregarEspacosGrid();
   window.demOnFormaPagChange = _toggleFormaPagamento;
 
   /* ── Upload de anexos financeiros ───────────────────── */

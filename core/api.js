@@ -272,6 +272,7 @@ const VIEW_AUTOLOAD = {
   "min-adm":      { fn: () => typeof DEPT_ADM          !== "undefined" && DEPT_ADM.load() },
   "conselho-com": { fn: () => typeof minComLoad         === "function"  && minComLoad() },
   "diac-escalas": { fn: () => typeof diacEscalaLoad     === "function"  && diacEscalaLoad() },
+  "admin-espacos":{ fn: () => typeof admEspacosLoad     === "function"  && admEspacosLoad() },
 };
 
 
