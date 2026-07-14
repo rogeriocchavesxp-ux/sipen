@@ -61,7 +61,10 @@ let _agendaCache = null;
 
 async function getAgenda() {
   if (_agendaCache) return _agendaCache;
-  const agRes = await fetch(`${apiBaseUrl()}/rest/v1/agenda?select=*&order=data.asc,hora_inicio.asc&limit=2000`, { method:"GET", headers:apiHeaders() });
+  const agRes = await fetch(
+    `${apiBaseUrl()}/rest/v1/agenda?deleted_at=is.null&status=not.in.(cancelado,recusado,arquivado)&select=*&order=data.asc,hora_inicio.asc&limit=2000`,
+    { method:"GET", headers:apiHeaders() }
+  );
   if (!agRes.ok) throw new Error(await agRes.text());
   const agData = await agRes.json();
   _agendaCache = Array.isArray(agData) ? agData.map(r=>({...r,_row:r.id})) : [];
@@ -249,6 +252,8 @@ function agTemOcorrenciaNaData(r, dataStr) {
   if (!rec || rec === "Único" || rec === "Eventual" || rec === "Esporádico") {
     return dataStr <= (r.data_encerramento || r.data);
   }
+  // Para recorrentes: respeita data_encerramento quando definida além da data inicial
+  if (r.data_encerramento && r.data_encerramento > r.data && dataStr > r.data_encerramento) return false;
   const base = new Date(r.data + "T12:00:00");
   const alvo = new Date(dataStr   + "T12:00:00");
   if (alvo < base) return false;
