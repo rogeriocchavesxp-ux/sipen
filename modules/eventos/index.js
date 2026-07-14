@@ -2067,6 +2067,13 @@ function _foRenderSecao(evt, inscricoes) {
         </table>
       </div>
 
+      <!-- Template da mensagem WhatsApp -->
+      <div style="margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Mensagem WhatsApp</div>
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">Variáveis: <code>{NOME}</code> = primeiro nome do responsável · <code>{FAMILIA}</code> = família que ora · <code>{ORA_POR}</code> = família orada</div>
+        <textarea id="fo-msg-template" rows="3" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-input);color:var(--tx1);font-size:12.5px;font-family:inherit;resize:vertical;outline:none;box-sizing:border-box">Olá {NOME}! Esta semana a família *{FAMILIA}* irá orar pela família *{ORA_POR}*. Que Deus abençoe essa corrente de oração!</textarea>
+      </div>
+
       <!-- Preview do sorteio (oculto até gerar) -->
       <div id="fo-preview" style="display:none;margin-bottom:16px">
         <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Pré-visualização</div>
@@ -2217,13 +2224,25 @@ async function foSalvarSorteio(enviarWA = false) {
 
 async function foSalvarESendWA() { await foSalvarSorteio(true); }
 
+function _foMontarMensagem(template, primeiroNome, famNome, oraNome) {
+  return template
+    .replace(/\{NOME\}/g,     primeiroNome)
+    .replace(/\{FAMILIA\}/g,  famNome)
+    .replace(/\{ORA_POR\}/g,  oraNome);
+}
+
+function _foGetTemplate() {
+  const el = document.getElementById("fo-msg-template");
+  return el?.value?.trim()
+    || "Olá {NOME}! Esta semana a família *{FAMILIA}* irá orar pela família *{ORA_POR}*. Que Deus abençoe essa corrente de oração!";
+}
+
 async function _foEnviarTodosWA(rodadaId) {
+  const template = _foGetTemplate();
   for (const p of _foRascunho) {
     if (!p.resp_tel) continue;
     const primeiroNome = p.resp_nome.split(" ")[0];
-    const msg =
-      `Olá ${primeiroNome}! Esta semana a família *${p.familia_nome}* irá orar pela família *${p.ora_por_nome}*. ` +
-      `Que Deus abençoe essa corrente de oração!`;
+    const msg = _foMontarMensagem(template, primeiroNome, p.familia_nome, p.ora_por_nome);
     try {
       await WA.send({
         para:        p.resp_tel,
@@ -2240,9 +2259,7 @@ async function _foEnviarTodosWA(rodadaId) {
 async function foEnviarWAPar(parId, respNome, famNome, oraNome, tel) {
   if (!tel) { T("Sem número", "Este responsável não tem WhatsApp cadastrado."); return; }
   const primeiroNome = respNome.split(" ")[0];
-  const msg =
-    `Olá ${primeiroNome}! Esta semana a família *${famNome}* irá orar pela família *${oraNome}*. ` +
-    `Que Deus abençoe essa corrente de oração!`;
+  const msg = _foMontarMensagem(_foGetTemplate(), primeiroNome, famNome, oraNome);
   try {
     await WA.send({
       para: tel, nome: respNome, mensagem: msg,
