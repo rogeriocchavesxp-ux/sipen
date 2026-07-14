@@ -153,7 +153,7 @@ const SCHEMA = {
   },
   /* Tipos especiais para renderizar inputs corretos */
   tipos: {
-    AGENDA:     { data:"date", hora_inicio:"time", hora_fim:"time", dia_semana:"select:Domingo,Segunda-feira,Terça-feira,Quarta-feira,Quinta-feira,Sexta-feira,Sábado", status:"select:confirmado,pendente,cancelado,reagendado", recorrencia:"select:Único,Semanal,Quinzenal,Mensal,Anual", espaco:"espacos-select" },
+    AGENDA:     { data:"date", hora_inicio:"time", hora_fim:"time", dia_semana:"select:Domingo,Segunda-feira,Terça-feira,Quarta-feira,Quinta-feira,Sexta-feira,Sábado", mes:"select:Janeiro,Fevereiro,Março,Abril,Maio,Junho,Julho,Agosto,Setembro,Outubro,Novembro,Dezembro", status:"select:confirmado,pendente,cancelado,reagendado", recorrencia:"select:Único,Semanal,Quinzenal,Mensal,Anual", espaco:"espacos-select" },
     MEMBROS:    { status:"select:ativo,inativo,transferido,falecido,disciplinado,afastado", tipo_membro:"select:COMUNGANTE=Comungante,NAO_COMUNGANTE=Não Comungante", data_nascimento:"date", data_ingresso:"date", data_saida:"date", data_batismo:"date", batizado:"boolean", casado_na_igreja:"boolean", tipo_ingresso:"select:batismo,transferência,profissão de fé,restauração,outro" },
     VISITANTES: { data_primeira_visita:"date", interesse_nivel:"select:baixo,médio,alto,convertido" },
     DEMANDAS:   { data_abertura: "date", data_conclusao: "date", status: "select:ABERTA=Aberta,EM_ANALISE=Em Análise,EM_ANDAMENTO=Em Andamento,PENDENTE=Pendente,CONCLUIDA=Concluída,CANCELADA=Cancelada", prioridade: "select:Baixa,Média,Alta,Urgente" },

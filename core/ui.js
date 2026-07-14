@@ -171,7 +171,7 @@ function openCrudForm(tab, preset = null) {
   }
 
   function renderField(f) {
-    const val = preset && preset[f] !== undefined ? preset[f] : "";
+    const val = preset && preset[f] != null ? preset[f] : "";
     const req = obrig.includes(f) ? ' <span style="color:var(--rose)">*</span>' : "";
     const lbl = _colLabelUI(f);
     const label = `<label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">${escapeHtml(lbl)}${req}</label>`;
@@ -354,6 +354,7 @@ async function salvarRegistro(tab, recordId = null) {
     T("✅ Registro salvo!", recordId ? "Alteração gravada no Supabase" : "Novo registro criado no Supabase");
     modal.remove();
     if (["MEMBROS","VISITANTES"].includes(tab)) _invalidarCacheMembresia();
+    if (tab === "AGENDA" && typeof window.carregarAgendaDash === "function") await window.carregarAgendaDash();
     if (currentListTab === tab) await listarAba(tab);
     await loadKPIs();
   } catch (e) {

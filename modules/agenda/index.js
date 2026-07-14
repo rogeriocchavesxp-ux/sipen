@@ -1886,3 +1886,4 @@ window.agFiltrarReqStatus         = agFiltrarReqStatus;
 window.agConfirmarDecisaoReq      = agConfirmarDecisaoReq;
 window.agAprovarRequisicao        = agAprovarRequisicao;
 window.agAtualizarRequisicao      = agAtualizarRequisicao;
+window.carregarAgendaDash         = carregarAgendaDash;
