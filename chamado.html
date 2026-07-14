@@ -280,22 +280,89 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
   background: rgba(208,144,64,.08); margin-top: 10px;
 }
 
+/* ── screen-agend: agrupamento ───────────────────────────────── */
+.ag2-grupo { margin-bottom: 20px; }
+.ag2-grupo:last-child { margin-bottom: 0; }
+.ag2-grupo-hdr {
+  font-size: 10px; font-weight: 800; color: var(--acc);
+  text-transform: uppercase; letter-spacing: .09em;
+  padding-bottom: 7px; margin-bottom: 8px;
+  border-bottom: 1px solid var(--bd);
+}
+.ag2-grupo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 6px;
+}
+
 /* ── screen-agend: cards de espaço ──────────────────────────── */
 .ag2-espaco-card {
-  display: flex; align-items: center; gap: 10px;
-  padding: 11px 14px; margin-bottom: 6px;
-  border-radius: 9px; border: 1.5px solid var(--inpbd);
-  background: var(--inp); cursor: pointer; font-size: 13.5px; font-weight: 500; color: var(--tx1);
-  transition: border-color .12s, background .12s, box-shadow .12s;
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 11px;
+  border-radius: 8px; border: 1.5px solid var(--inpbd);
+  background: var(--inp); cursor: pointer;
+  font-size: 13px; font-weight: 500; color: var(--tx1);
+  transition: border-color .12s, background .12s;
+  user-select: none;
 }
-.ag2-espaco-card:hover:not(.ag2-espaco-indisp) {
-  border-color: var(--gr); background: rgba(58,170,92,.07);
+.ag2-espaco-card:not(.ag2-espaco-indisp):hover {
+  border-color: var(--gr); background: rgba(58,170,92,.05);
 }
 .ag2-espaco-card.ag2-espaco-sel {
-  border-color: var(--gr); background: rgba(58,170,92,.1);
-  box-shadow: 0 0 0 2px rgba(58,170,92,.2);
+  border-color: var(--gr); background: rgba(58,170,92,.1); color: #1a6b35;
 }
-.ag2-espaco-indisp { opacity: .5; cursor: not-allowed; pointer-events: none; }
+
+/* checkbox visual */
+.ag2-chk {
+  width: 16px; height: 16px; flex-shrink: 0;
+  border: 1.5px solid var(--inpbd); border-radius: 4px;
+  background: var(--inp); position: relative;
+  transition: border-color .12s, background .12s;
+}
+.ag2-espaco-card.ag2-espaco-sel .ag2-chk {
+  background: var(--gr); border-color: var(--gr);
+}
+.ag2-espaco-card.ag2-espaco-sel .ag2-chk::after {
+  content: ''; position: absolute;
+  left: 3px; top: 0px; width: 5px; height: 9px;
+  border: 2px solid #fff; border-top: none; border-left: none;
+  transform: rotate(45deg);
+}
+.ag2-espaco-indisp .ag2-chk { background: var(--bd); border-color: var(--bd); }
+.ag2-espaco-indisp { opacity: .46; cursor: not-allowed; pointer-events: none; color: var(--tx3); }
+.ag2-lock { font-size: 10px; margin-left: auto; flex-shrink: 0; }
+.ag2-tag-ocupado { font-size: 10px; color: var(--rose); margin-left: auto; flex-shrink: 0; }
+
+/* ── screen-agend: contador ─────────────────────────────────── */
+.ag2-contador {
+  display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+  font-size: 11.5px; color: var(--tx3);
+  padding: 9px 13px; background: var(--bg);
+  border-radius: 8px; border: 1px solid var(--bd); margin-bottom: 16px;
+}
+.ag2-cnt-disp  { color: var(--gr);   font-weight: 600; }
+.ag2-cnt-indisp { color: var(--rose); font-weight: 600; }
+
+/* ── screen-agend: resumo seleção ────────────────────────────── */
+.ag2-resumo {
+  margin-top: 18px; padding: 12px 14px;
+  border: 1.5px solid var(--gr);
+  border-radius: 10px; background: rgba(58,170,92,.06);
+}
+.ag2-resumo-titulo {
+  font-size: 10px; font-weight: 800; color: var(--gr);
+  text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px;
+}
+.ag2-resumo-item {
+  font-size: 13px; color: var(--tx1);
+  display: flex; align-items: center; gap: 7px; padding: 2px 0;
+}
+.ag2-resumo-item::before { content: "✔"; color: var(--gr); font-size: 10px; font-weight: 700; flex-shrink: 0; }
+.ag2-resumo-total {
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid rgba(58,170,92,.22);
+  font-size: 11.5px; color: var(--gr); font-weight: 600;
+}
 </style>
 </head>
 <body>
@@ -1864,12 +1931,12 @@ async function enviarChamado() {
 /* ══ screen-agend: novo fluxo availability-first ════════════ */
 let _ag2Tipo = "";
 let _ag2DispVerificada = false;
-let _ag2EspacoSelecionado = "";
+let _ag2EspacosSelecionados = new Set();
 
 function agIniciar(tipo) {
   _ag2Tipo = tipo || "";
   _ag2DispVerificada = false;
-  _ag2EspacoSelecionado = "";
+  _ag2EspacosSelecionados = new Set();
 
   // Monta tipo grid
   const tipoGrid = document.getElementById("ag2-tipo-grid");
@@ -1950,8 +2017,8 @@ function ag2ValidarPeriodo() {
 
 function ag2InvalidarDisp() {
   if (!_ag2DispVerificada) return;
-  _ag2DispVerificada    = false;
-  _ag2EspacoSelecionado = "";
+  _ag2DispVerificada       = false;
+  _ag2EspacosSelecionados  = new Set();
   const aviso    = document.getElementById("ag2-disp-invalido");
   const espCard  = document.getElementById("ag2-card-espacos");
   const formCard = document.getElementById("ag2-card-form");
@@ -1983,7 +2050,7 @@ async function ag2VerificarDisp() {
   if (aviso)    aviso.style.display     = "none";
   if (espCard)  espCard.style.display   = "none";
   if (formCard) formCard.style.display  = "none";
-  _ag2EspacoSelecionado = "";
+  _ag2EspacosSelecionados = new Set();
 
   try {
     // 1. Lista de espaços públicos (leitura direta da tabela — sempre funciona)
@@ -2039,6 +2106,7 @@ function ag2MostrarEspacos(dados) {
   const grid    = document.getElementById("ag2-espacos-grid");
   if (!espCard || !grid) return;
   grid.innerHTML = "";
+  _ag2EspacosSelecionados = new Set();
 
   if (!dados || !dados.length) {
     grid.innerHTML = `<div style="font-size:13px;color:var(--tx3);padding:8px 0">Nenhum espaço cadastrado para consulta.</div>`;
@@ -2049,41 +2117,107 @@ function ag2MostrarEspacos(dados) {
   const dispCount   = dados.filter(d => d.disponivel).length;
   const indispCount = dados.length - dispCount;
 
-  const sumEl = document.createElement("div");
-  sumEl.style.cssText = "font-size:12px;color:var(--tx3);margin-bottom:10px;padding:8px 12px;background:var(--bg);border-radius:8px;border:1px solid var(--bd)";
-  sumEl.textContent = dispCount > 0
-    ? `${dispCount} espaço${dispCount !== 1 ? "s" : ""} disponível${dispCount !== 1 ? "is" : ""} · ${indispCount} ocupado${indispCount !== 1 ? "s" : ""} — selecione um espaço para continuar`
-    : "Nenhum espaço disponível para este período. Tente outro horário.";
-  grid.appendChild(sumEl);
+  // Contador
+  const cntEl = document.createElement("div");
+  cntEl.className = "ag2-contador";
+  cntEl.innerHTML =
+    `<span><strong>${dados.length}</strong> espaços</span>` +
+    `<span class="ag2-cnt-disp">● ${dispCount} disponíve${dispCount !== 1 ? "is" : "l"}</span>` +
+    (indispCount > 0 ? `<span class="ag2-cnt-indisp">● ${indispCount} ocupado${indispCount !== 1 ? "s" : ""}</span>` : "") +
+    (dispCount > 0 ? `<span style="font-size:11px;color:var(--tx3)">— selecione um ou mais espaços</span>` : "");
+  grid.appendChild(cntEl);
 
-  const sorted = [...dados].sort((a, b) => (b.disponivel ? 1 : 0) - (a.disponivel ? 1 : 0));
-
-  sorted.forEach(item => {
-    const el = document.createElement("div");
-    el.className  = "ag2-espaco-card" + (item.disponivel ? "" : " ag2-espaco-indisp");
-    el.dataset.espaco = item.nome;
-    el.innerHTML  = `
-      <span style="font-size:16px;flex-shrink:0">${item.disponivel ? "✅" : "❌"}</span>
-      <span style="flex:1">${item.nome}</span>
-      ${!item.disponivel ? `<span style="font-size:10.5px;color:var(--rose)">ocupado</span>` : ""}
-    `;
-    if (item.disponivel) el.onclick = () => ag2SelecionarEspaco(item.nome);
-    grid.appendChild(el);
+  // Agrupa por grupo mantendo ordem de chegada
+  const gruposMap = new Map();
+  dados.forEach(d => {
+    const g = d.grupo || "Geral";
+    if (!gruposMap.has(g)) gruposMap.set(g, []);
+    gruposMap.get(g).push(d);
   });
+
+  gruposMap.forEach((items, grupoNome) => {
+    // Dentro do grupo: disponíveis primeiro
+    const ordenado = [
+      ...items.filter(d => d.disponivel),
+      ...items.filter(d => !d.disponivel),
+    ];
+
+    const grupoEl = document.createElement("div");
+    grupoEl.className = "ag2-grupo";
+
+    const hdr = document.createElement("div");
+    hdr.className   = "ag2-grupo-hdr";
+    hdr.textContent = grupoNome;
+    grupoEl.appendChild(hdr);
+
+    const gGrid = document.createElement("div");
+    gGrid.className = "ag2-grupo-grid";
+
+    ordenado.forEach(item => {
+      const card = document.createElement("div");
+      card.className    = "ag2-espaco-card" + (item.disponivel ? "" : " ag2-espaco-indisp");
+      card.dataset.espaco = item.nome;
+      card.title        = item.disponivel ? item.nome : `${item.nome} — ocupado`;
+      card.innerHTML    =
+        `<div class="ag2-chk"></div>` +
+        `<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.nome}</span>` +
+        (item.disponivel ? "" : `<span class="ag2-lock">🔒</span><span class="ag2-tag-ocupado">Ocupado</span>`);
+      if (item.disponivel) card.onclick = () => ag2ToggleEspaco(item.nome);
+      gGrid.appendChild(card);
+    });
+
+    grupoEl.appendChild(gGrid);
+    grid.appendChild(grupoEl);
+  });
+
+  // Resumo de seleção (injetado no final do grid, inicialmente oculto)
+  const resumoEl = document.createElement("div");
+  resumoEl.id        = "ag2-resumo-sel";
+  resumoEl.className = "ag2-resumo";
+  resumoEl.style.display = "none";
+  resumoEl.innerHTML =
+    `<div class="ag2-resumo-titulo">Espaços selecionados</div>` +
+    `<div id="ag2-resumo-lista"></div>` +
+    `<div class="ag2-resumo-total" id="ag2-resumo-total"></div>`;
+  grid.appendChild(resumoEl);
 
   espCard.style.display = "";
   setTimeout(() => espCard.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50);
 }
 
-function ag2SelecionarEspaco(nome) {
-  _ag2EspacoSelecionado = nome;
+function ag2ToggleEspaco(nome) {
+  if (_ag2EspacosSelecionados.has(nome)) {
+    _ag2EspacosSelecionados.delete(nome);
+  } else {
+    _ag2EspacosSelecionados.add(nome);
+  }
+  ag2AtualizarSelecao();
+}
+
+function ag2AtualizarSelecao() {
+  // Atualiza visual dos cards
   document.querySelectorAll(".ag2-espaco-card:not(.ag2-espaco-indisp)").forEach(el => {
-    el.classList.toggle("ag2-espaco-sel", el.dataset.espaco === nome);
+    el.classList.toggle("ag2-espaco-sel", _ag2EspacosSelecionados.has(el.dataset.espaco));
   });
-  const formCard = document.getElementById("ag2-card-form");
-  if (formCard) {
-    formCard.style.display = "";
-    setTimeout(() => formCard.scrollIntoView({ behavior: "smooth", block: "nearest" }), 80);
+
+  const selecionados = [..._ag2EspacosSelecionados];
+  const resumoEl     = document.getElementById("ag2-resumo-sel");
+  const listaEl      = document.getElementById("ag2-resumo-lista");
+  const totalEl      = document.getElementById("ag2-resumo-total");
+
+  if (selecionados.length > 0) {
+    if (listaEl) listaEl.innerHTML = selecionados.map(n => `<div class="ag2-resumo-item">${n}</div>`).join("");
+    if (totalEl) totalEl.textContent = `Total: ${selecionados.length} espaço${selecionados.length !== 1 ? "s" : ""}`;
+    if (resumoEl) resumoEl.style.display = "";
+    // Expande formulário apenas na primeira seleção
+    const formCard = document.getElementById("ag2-card-form");
+    if (formCard && formCard.style.display === "none") {
+      formCard.style.display = "";
+      setTimeout(() => formCard.scrollIntoView({ behavior: "smooth", block: "nearest" }), 80);
+    }
+  } else {
+    if (resumoEl) resumoEl.style.display = "none";
+    if (listaEl) listaEl.innerHTML = "";
   }
 }
 
@@ -2099,7 +2233,7 @@ async function ag2Enviar() {
   const df     = document.getElementById("ag2-data-f")?.value  || di;
   const hf     = document.getElementById("ag2-hora-f")?.value  || null;
   const part   = parseInt(document.getElementById("ag2-part")?.value || "0", 10) || null;
-  const espaco = _ag2EspacoSelecionado;
+  const espaco = [..._ag2EspacosSelecionados].join(", ");
   const nome   = (document.getElementById("ag2-nome")?.value   || "").trim();
   const tel    = (document.getElementById("ag2-tel")?.value    || "").trim();
   const titulo = (document.getElementById("ag2-titulo")?.value || "").trim();
@@ -2107,7 +2241,7 @@ async function ag2Enviar() {
 
   if (!tipo)   { ag2MostrarErro("Selecione o tipo de solicitação."); return; }
   if (!di)     { ag2MostrarErro("Informe a data de início."); return; }
-  if (!espaco) { ag2MostrarErro("Selecione um espaço disponível antes de continuar."); return; }
+  if (!espaco) { ag2MostrarErro("Selecione ao menos um espaço disponível antes de continuar."); return; }
   if (!nome)   { ag2MostrarErro("Informe seu nome completo.");   document.getElementById("ag2-nome")?.focus();   return; }
   if (!tel)    { ag2MostrarErro("Informe seu telefone ou WhatsApp."); document.getElementById("ag2-tel")?.focus(); return; }
   if (!titulo) { ag2MostrarErro("Informe o título da programação."); document.getElementById("ag2-titulo")?.focus(); return; }
