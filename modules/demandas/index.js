@@ -1139,7 +1139,7 @@ function fmtD(d) {
             </div>
             <div>
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Localização / Sala</label>
-              <select id="dem-edit-local" data-valor-atual="${dem.local||''}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+              <select id="dem-edit-local" data-valor-atual="${dem.local_id || dem.local || ''}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
                 <option value="">Carregando espaços…</option>
               </select>
             </div>
@@ -1261,7 +1261,9 @@ function fmtD(d) {
   window.demSalvarEdicao = async function(id) {
     const titulo          = document.getElementById("dem-edit-titulo")?.value?.trim();
     const desc            = document.getElementById("dem-edit-desc")?.value?.trim();
-    const local           = document.getElementById("dem-edit-local")?.value?.trim() || null;
+    const localEditEl     = document.getElementById("dem-edit-local");
+    const local_id        = localEditEl?.value?.trim() || null;
+    const local           = localEditEl?.selectedOptions[0]?.dataset?.nome || null;
     const prioEl          = document.getElementById("dem-edit-prio");
     const resp            = document.getElementById("dem-edit-resp")?.value?.trim();
     const venc            = document.getElementById("dem-edit-venc")?.value || null;
@@ -1273,7 +1275,7 @@ function fmtD(d) {
     }
 
     try {
-      const payload = { titulo, descricao: desc || "", local, responsavel: resp || "", data_conclusao: venc };
+      const payload = { titulo, descricao: desc || "", local, local_id, responsavel: resp || "", data_conclusao: venc };
       if (prioEl && _podeEditarPrioridade()) payload.prioridade = prioEl.value;
       if (_podeEditarPrioridade()) {
         const solNome = document.getElementById("dem-edit-sol-nome")?.value?.trim();
@@ -1528,15 +1530,16 @@ function fmtD(d) {
       const r = await fetch(`${apiBaseUrl()}/rest/v1/espacos?ativo=eq.true&order=grupo.asc,ordem.asc,nome.asc`, { headers: apiHeaders() });
       const rows = r.ok ? await r.json() : [];
       const grupos = {};
-      rows.forEach(e => { const g = e.grupo || "Outros"; if (!grupos[g]) grupos[g] = []; grupos[g].push(e.nome); });
+      rows.forEach(e => { const g = e.grupo || "Outros"; if (!grupos[g]) grupos[g] = []; grupos[g].push(e); });
       el.innerHTML = `<option value="">— Selecione o espaço —</option>`;
-      Object.entries(grupos).forEach(([g, nomes]) => {
+      Object.entries(grupos).forEach(([g, items]) => {
         const grp = document.createElement("optgroup");
         grp.label = g;
-        nomes.forEach(nome => {
+        items.forEach(e => {
           const opt = document.createElement("option");
-          opt.value = nome; opt.textContent = nome;
-          if (nome === val) opt.selected = true;
+          opt.value = e.id; opt.dataset.nome = e.nome; opt.textContent = e.nome;
+          // compatível com UUID (novo) e nome texto (legado via data-valor-atual)
+          if (e.id === val || e.nome === val) opt.selected = true;
           grp.appendChild(opt);
         });
         el.appendChild(grp);
@@ -1777,7 +1780,9 @@ function fmtD(d) {
     const sub    = document.getElementById("dem-f-sub")?.value;
     const titulo = document.getElementById("dem-f-titulo")?.value?.trim();
     const desc   = document.getElementById("dem-f-desc")?.value?.trim();
-    const local  = document.getElementById("dem-f-local")?.value?.trim() || null;
+    const localCriarEl = document.getElementById("dem-f-local");
+    const local_id = localCriarEl?.value?.trim() || null;
+    const local    = localCriarEl?.selectedOptions[0]?.dataset?.nome || null;
     const sol    = document.getElementById("dem-f-sol")?.value?.trim();
     const resp   = document.getElementById("dem-f-resp")?.value?.trim();
     const venc   = document.getElementById("dem-f-venc")?.value || null;
@@ -1932,6 +1937,7 @@ function fmtD(d) {
       titulo,
       descricao:      (desc || "") + agend_extra,
       local,
+      local_id,
       prioridade:     "Média",    // definida por triagem — nunca pelo solicitante
       status:         "ABERTA",
       solicitante:    sol || "",

@@ -33,17 +33,19 @@ async function agSalasSelectPopular(id) {
     rows.forEach(e => {
       const g = e.grupo || "Outros";
       if (!grupos[g]) grupos[g] = [];
-      grupos[g].push(e.nome);
+      grupos[g].push(e);
     });
     el.innerHTML = `<option value="">— Selecione o espaço —</option>`;
-    Object.entries(grupos).forEach(([g, nomes]) => {
+    Object.entries(grupos).forEach(([g, items]) => {
       const grp = document.createElement("optgroup");
       grp.label = g;
-      nomes.forEach(nome => {
+      items.forEach(e => {
         const opt = document.createElement("option");
-        opt.value = nome;
-        opt.textContent = nome;
-        if (nome === valorAtual) opt.selected = true;
+        opt.value = e.id;
+        opt.dataset.nome = e.nome;
+        opt.textContent = e.nome;
+        // compatível com UUID (novo) e nome texto (legado via data-valor-atual)
+        if (e.id === valorAtual || e.nome === valorAtual) opt.selected = true;
         grp.appendChild(opt);
       });
       el.appendChild(grp);
@@ -857,7 +859,7 @@ function agAprovarSolicitacao(r) {
       <div><label class="flb">Data *</label><input id="ag-ap-data" type="date" class="fi2"></div>
       <div><label class="flb">Horário início *</label><input id="ag-ap-hi" type="time" class="fi2" value="08:00"></div>
       <div><label class="flb">Horário fim</label><input id="ag-ap-hf" type="time" class="fi2" value="10:00"></div>
-      <div><label class="flb">Espaço / Ambiente</label>${agSalasSelect("ag-ap-esp", r.local||"")}</div>
+      <div><label class="flb">Espaço / Ambiente</label>${agSalasSelect("ag-ap-esp", r.local_id || r.local || "")}</div>
       <div style="grid-column:1/-1"><label class="flb">Organizador</label><input id="ag-ap-org" class="fi2" value="${escapeHtml(r.responsavel||r.solicitante||'')}" placeholder="Responsável pelo evento"></div>
       <div style="grid-column:1/-1"><label class="flb">Descrição</label><textarea id="ag-ap-desc" class="fi2" rows="3" placeholder="Detalhes do evento">${escapeHtml(r.descricao||'')}</textarea></div>
     </div>
@@ -874,7 +876,9 @@ async function agConfirmarAprovacao(demandaId) {
   const data   = document.getElementById("ag-ap-data")?.value || "";
   const hi     = document.getElementById("ag-ap-hi")?.value || "";
   const hf     = document.getElementById("ag-ap-hf")?.value || null;
-  const esp    = (document.getElementById("ag-ap-esp")?.value || "").trim() || null;
+  const espEl   = document.getElementById("ag-ap-esp");
+  const espId   = espEl?.value?.trim() || null;
+  const espNome = espEl?.selectedOptions[0]?.dataset?.nome || null;
   const org    = (document.getElementById("ag-ap-org")?.value || "").trim() || null;
   const desc   = (document.getElementById("ag-ap-desc")?.value || "").trim() || null;
 
@@ -890,7 +894,7 @@ async function agConfirmarAprovacao(demandaId) {
     const resAg = await fetch(`${apiBaseUrl()}/rest/v1/agenda`, {
       method: "POST",
       headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
-      body: JSON.stringify({ titulo, data, hora_inicio: hi, hora_fim: hf, espaco: esp, organizador: org, descricao: desc, status: "confirmado", mes, dia_semana: diaSemana, recorrencia: "Único" })
+      body: JSON.stringify({ titulo, data, hora_inicio: hi, hora_fim: hf, espaco: espNome, espaco_id: espId, organizador: org, descricao: desc, status: "confirmado", mes, dia_semana: diaSemana, recorrencia: "Único" })
     });
     if (!resAg.ok) throw new Error(await resAg.text());
 
