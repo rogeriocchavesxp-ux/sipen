@@ -41,24 +41,15 @@
   let _pastores = [];
   const _escala = new Map(); // "YYYY-MM-DD-culto_tipo" → {id, pastor_id, local, observacoes, status, origem}
 
-  const _SEED_PASTORES = [
-    {id:"p1",nome_completo:"Rev. Amauri Oliveira",  nome_exibicao:"Rev. Amauri",    funcao:"Pastor Presidente", ativo:true},
-    {id:"p2",nome_completo:"Rev. Carlos Henrique",  nome_exibicao:"Rev. C. Henrique",funcao:"Pastor",           ativo:true},
-    {id:"p3",nome_completo:"Rev. Carlos Lima",       nome_exibicao:"Rev. C. Lima",   funcao:"Pastor",            ativo:true},
-    {id:"p4",nome_completo:"Rev. Cornélio Castro",   nome_exibicao:"Rev. Cornélio",  funcao:"Pastor",            ativo:true},
-    {id:"p5",nome_completo:"Rev. Fábio Carvalho",   nome_exibicao:"Rev. Fábio",     funcao:"Pastor",            ativo:true},
-    {id:"p6",nome_completo:"Rev. Flávio Ramos",      nome_exibicao:"Rev. Flávio",    funcao:"Pastor",            ativo:true},
-  ];
-
   /* ── Supabase ────────────────────────────────────────────────── */
   async function _loadAll() {
     if (_st.loading) return;
     _st.loading = true;
     try {
       const r = await fetch(`${apiBaseUrl()}/rest/v1/pastores?select=*&order=nome_completo.asc`, {headers:apiHeaders()});
-      if (r.ok) { const d=await r.json(); if(Array.isArray(d)&&d.length){_pastores=d;}else{console.warn("pastores: tabela vazia, usando seed");_pastores=_SEED_PASTORES;} }
-      else { console.warn("pastores: HTTP",r.status,"usando seed"); _pastores=_SEED_PASTORES; }
-    } catch(e) { console.warn("pastores: erro de rede, usando seed",e); _pastores=_SEED_PASTORES; }
+      if (r.ok) { const d=await r.json(); if(Array.isArray(d)&&d.length){_pastores=d;}else{console.warn("pastores: tabela vazia");_pastores=[];} }
+      else { console.warn("pastores: HTTP",r.status); _pastores=[]; }
+    } catch(e) { console.warn("pastores: erro de rede",e); _pastores=[]; }
     try {
       const r = await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao?select=*&order=data.asc&limit=3000`, {headers:apiHeaders()});
       if (r.ok) {
@@ -677,18 +668,7 @@
     h+=`</div>`;
 
     /* Atividade recente pastoral */
-    const atv=[
-      {i:"📅",d:"Disponibilidade informada",   m:"Rev. Fábio · Dom Manhã, 04/05",            t:"há 1h"},
-      {i:"✏️",d:"Escala alterada",             m:"Dom Noite 27/04 → Rev. Flávio p/ Rev. Carlos", t:"ontem"},
-      {i:"🎙",d:"Escala confirmada",            m:"Conexão com Deus 28/04 · Rev. Amauri",    t:"ontem"},
-      {i:"⚠️",d:"Culto ficou sem pregador",    m:"Tarde da Esperança 30/04",                 t:"há 2 dias"},
-      {i:"📅",d:"Disponibilidade informada",   m:"Rev. Flávio · Quarta 07/05",               t:"há 3 dias"},
-    ];
-    h+=`<div class="card"><div class="ctit">Atividade Recente<span class="csub">/ escala e disponibilidade</span></div>`;
-    atv.forEach(a=>{
-      h+=`<div class="trow"><div style="font-size:15px;min-width:20px;text-align:center">${a.i}</div><div class="tbody"><div class="ttitle">${a.d}</div><div class="tmeta">${a.m}</div></div><div style="font-size:10px;color:var(--tx3);white-space:nowrap;padding-left:8px">${a.t}</div></div>`;
-    });
-    h+=`</div>`;
+    h+=`<div class="card"><div class="ctit">Atividade Recente<span class="csub">/ escala e disponibilidade</span></div><div class="empty-state">Nenhum registro encontrado.</div></div>`;
 
     cont.innerHTML=h;
   }
@@ -848,14 +828,6 @@
 	  let _disps = []; // registros derivados de escala_pregacao
   let _pastoresDp = [];
   let _pastoresLoading = null;
-  const _PASTORES_PADRAO = [
-    {nome_completo:"Rev. Amauri Oliveira",nome_exibicao:"Rev. Amauri",funcao:"Pastor Presidente",ativo:true},
-    {nome_completo:"Rev. Carlos Henrique",nome_exibicao:"Rev. C. Henrique",funcao:"Pastor",ativo:true},
-    {nome_completo:"Rev. Carlos Lima",nome_exibicao:"Rev. C. Lima",funcao:"Pastor",ativo:true},
-    {nome_completo:"Rev. Cornélio Castro",nome_exibicao:"Rev. Cornélio",funcao:"Pastor",ativo:true},
-    {nome_completo:"Rev. Fábio Carvalho",nome_exibicao:"Rev. Fábio",funcao:"Pastor",ativo:true},
-    {nome_completo:"Rev. Flávio Ramos",nome_exibicao:"Rev. Flávio",funcao:"Pastor",ativo:true},
-  ];
   let _loaded = false;
 
   /* ── Helpers ──────────────────────────────────────────────────── */
@@ -952,24 +924,6 @@
 	  }
 
 	  /* ── API Supabase ─────────────────────────────────────────────── */
-	  async function _criarPastoresPadrao(){
-	    try {
-	      const r=await fetch(`${apiBaseUrl()}/rest/v1/pastores`,{method:"POST",headers:apiHeaders({"Prefer":"return=representation"}),body:JSON.stringify(_PASTORES_PADRAO)});
-	      if(r.ok){
-	        const d=await r.json();
-	        _pastoresDp=_normalizarPastores(d);
-	        return _pastoresDp;
-	      }
-	      const err=await r.text().catch(()=>"");
-	      console.error("dp_: erro ao criar pastores padrão",r.status,err);
-	      T("Pastores","Os pastores padrão não foram encontrados. Contate o administrador.");
-	    } catch(e){
-	      console.error("dp_: erro de rede ao criar pastores padrão",e);
-	      T("Pastores","A tabela de pastores está vazia e não foi possível cadastrar os pastores padrão agora.");
-	    }
-	    return [];
-	  }
-
 	  async function _loadPastores(force=false){
 	    if(_pastoresLoading&&!force) return _pastoresLoading;
 	    if(_pastoresDp.length&&!force) return _pastoresDp;
@@ -979,10 +933,6 @@
 	        if(r.ok){
 	          const d=await r.json();
 	          _pastoresDp=_normalizarPastores(d);
-	          if(!_pastoresDp.length){
-	            console.warn("dp_: tabela pastores vazia ou sem UUID real; criando pastores padrão");
-	            return await _criarPastoresPadrao();
-	          }
 	          return _pastoresDp;
 	        }
 	        const err=await r.text().catch(()=>"");

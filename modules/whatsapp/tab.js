@@ -149,44 +149,40 @@ const WA_TAB = (function () {
       const tel  = r.pessoas?.whatsapp || r.pessoas?.celular || r.pessoas?.telefone || "";
       const apto = r.ativo && !!tel;
       return `
-        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd2)">
-          <div style="width:30px;height:30px;border-radius:50%;background:var(--bg1);border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--tx2);flex-shrink:0">${_esc(nome.trim()[0]?.toUpperCase() || "?")}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(nome)}</div>
-            <div style="font-size:10.5px;color:var(--tx3)">${tel ? _esc(tel) : "⚠ Sem número"}</div>
+        <div class="trow">
+          <div class="tdot" style="background:${apto ? "var(--gr)" : (r.ativo ? "var(--gold)" : "var(--rose)")}"></div>
+          <div class="tbody">
+            <div class="ttitle">${_esc(nome)}</div>
+            <div class="tmeta">${tel ? _esc(tel) : "Sem número cadastrado"}</div>
           </div>
-          <span style="font-size:11px">${apto ? "✅" : (!r.ativo ? "⛔" : "⚠")}</span>
+          <span style="font-size:10px;color:${apto ? "var(--gr)" : "var(--tx3)"}">${apto ? "Apto" : (!r.ativo ? "Inativo" : "Sem número")}</span>
         </div>`;
     }).join("");
 
-    const vazio = `
-      <div style="padding:12px;background:var(--bg2);border-radius:8px;font-size:11px;color:var(--gold);cursor:pointer"
-           onclick="WA_CFG.abrirResponsaveisModal('${_esc(key)}')">
-        ⚠ Nenhum responsável — clique em "Gerenciar" para adicionar
-      </div>`;
+    const vazio = `<div class="empty-state" style="cursor:pointer;color:var(--gold)"
+         onclick="WA_CFG.abrirResponsaveisModal('${_esc(key)}')">
+      Nenhum responsável — clique para adicionar
+    </div>`;
 
     return `
       <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div class="ctit" style="margin:0">Receberão mensagens</div>
-          <span style="font-size:11.5px;color:var(--sky);cursor:pointer;font-weight:600"
-                onclick="WA_CFG.abrirResponsaveisModal('${_esc(key)}')">+ Gerenciar</span>
-        </div>
+        <div class="ctit">Receberão mensagens <span class="cact" onclick="WA_CFG.abrirResponsaveisModal('${_esc(key)}')">+ Gerenciar</span></div>
         ${resps.length ? linhas : vazio}
       </div>`;
   }
 
   function _renderTemplates(key, tpls, cfg) {
     const linhas = tpls.map(t => `
-      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bd2)">
-        <span style="color:${t.ativo ? "var(--gr)" : "var(--tx3)"};font-size:12px">${t.ativo ? "✅" : "⬜"}</span>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${_esc(t.titulo || t.chave)}</div>
-          <div style="font-size:10px;color:var(--tx3);font-family:var(--mono)">${_esc(t.chave)}</div>
+      <div class="trow">
+        <div class="tdot" style="background:${t.ativo ? "var(--gr)" : "var(--tx4)"}"></div>
+        <div class="tbody">
+          <div class="ttitle">${_esc(t.titulo || t.chave)}</div>
+          <div class="tmeta" style="font-family:var(--mono)">${_esc(t.chave)}</div>
         </div>
+        <span style="font-size:10px;color:${t.ativo ? "var(--gr)" : "var(--tx3)"}">${t.ativo ? "Ativo" : "Inativo"}</span>
       </div>`).join("");
 
-    const vazio = `<div style="font-size:11px;color:var(--tx3)">Nenhum template cadastrado para este módulo</div>`;
+    const vazio = `<div class="empty-state">Nenhum template cadastrado para este módulo</div>`;
 
     const toggleHtml = cfg ? `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--bd1);margin-top:8px">
@@ -202,10 +198,7 @@ const WA_TAB = (function () {
 
     return `
       <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div class="ctit" style="margin:0">Tipos de mensagem</div>
-          <span style="font-size:11.5px;color:var(--sky);cursor:pointer;font-weight:600" onclick="go('config-whatsapp')">↗ Templates</span>
-        </div>
+        <div class="ctit">Notificações <span class="cact" onclick="go('config-whatsapp')">↗ Templates</span></div>
         ${tpls.length ? linhas : vazio}
         ${toggleHtml}
       </div>`;
@@ -214,44 +207,30 @@ const WA_TAB = (function () {
   /* ── Logs de envio ────────────────────────────────── */
 
   function _renderLogs(logs) {
-    if (!logs.length) return `
-      <div class="card">
-        <div class="ctit">Últimos envios</div>
-        <div style="color:var(--tx3);font-size:12px;padding:16px 0;text-align:center">Nenhuma mensagem enviada ainda</div>
-      </div>`;
-
     const SC = { enviado: "var(--gr)", pendente: "var(--gold)", erro: "var(--rose)" };
     const SL = { enviado: "Enviado",   pendente: "Pendente",    erro: "Erro" };
 
-    const linhas = logs.map(r => `
-      <tr style="border-bottom:1px solid var(--bd2)">
-        <td style="padding:7px 10px;color:var(--tx3);font-size:11px;white-space:nowrap">${_dt(r.criado_em)}</td>
-        <td style="padding:7px 10px;font-size:11.5px;font-family:var(--mono)">${_esc(r.para_numero || "—")}</td>
-        <td style="padding:7px 10px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--tx2)" title="${_esc(r.mensagem || "")}">${_esc((r.mensagem || "").slice(0, 80))}</td>
-        <td style="padding:7px 10px;text-align:center">
-          <span style="font-size:10.5px;font-weight:700;color:${SC[r.status] || "var(--tx3)"}">${SL[r.status] || _esc(r.status || "—")}</span>
-        </td>
-      </tr>`).join("");
-
     return `
       <div class="card">
-        <div class="ctit" style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-          <span>Últimos envios</span>
-          <span style="font-size:11px;color:var(--tx3)">(últimos 20)</span>
-        </div>
-        <div style="overflow-x:auto">
-          <table style="width:100%;border-collapse:collapse;font-size:11.5px">
-            <thead>
-              <tr style="border-bottom:1px solid var(--bd2)">
-                <th style="text-align:left;padding:6px 10px;color:var(--tx3);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap">Data/Hora</th>
-                <th style="text-align:left;padding:6px 10px;color:var(--tx3);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em">Número</th>
-                <th style="text-align:left;padding:6px 10px;color:var(--tx3);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em">Mensagem</th>
-                <th style="text-align:center;padding:6px 10px;color:var(--tx3);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em">Status</th>
-              </tr>
-            </thead>
-            <tbody>${linhas}</tbody>
-          </table>
-        </div>
+        <div class="ctit">Últimos envios <span class="csub">(${logs.length})</span></div>
+        ${!logs.length
+          ? `<div class="empty-state">Nenhuma mensagem enviada ainda</div>`
+          : `<div class="tbl-wrap"><table class="tbl">
+            <thead><tr>
+              <th style="white-space:nowrap">Data/Hora</th>
+              <th>Número</th>
+              <th>Mensagem</th>
+              <th class="r">Status</th>
+            </tr></thead>
+            <tbody>${logs.map(r => `
+              <tr>
+                <td class="wa" style="color:var(--tx3)">${_dt(r.criado_em)}</td>
+                <td class="mono">${_esc(r.para_numero || "—")}</td>
+                <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${_esc(r.mensagem || "")}">${_esc((r.mensagem || "").slice(0, 60))}${(r.mensagem || "").length > 60 ? "…" : ""}</td>
+                <td class="r"><span style="font-size:10.5px;font-weight:700;color:${SC[r.status] || "var(--tx3)"}">${SL[r.status] || _esc(r.status || "—")}</span></td>
+              </tr>`).join("")}
+            </tbody>
+          </table></div>`}
       </div>`;
   }
 
