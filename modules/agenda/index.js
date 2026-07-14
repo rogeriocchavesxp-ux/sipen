@@ -232,29 +232,45 @@ async function carregarAgendaDash() {
   }
 }
 
+/* ── Verifica se um evento tem ocorrência em uma data específica ─────────
+   Suporta recorrências: Semanal (÷7), Quinzenal (÷14), Mensal (mesmo dia),
+   Anual (mesmo dia e mês). Eventos sem recorrência usam o range data→data_encerramento. */
+function agTemOcorrenciaNaData(r, dataStr) {
+  if (!r.data || r.data > dataStr) return false;
+  const rec = r.recorrencia || "Único";
+  if (!rec || rec === "Único" || rec === "Eventual" || rec === "Esporádico") {
+    return dataStr <= (r.data_encerramento || r.data);
+  }
+  const base = new Date(r.data + "T12:00:00");
+  const alvo = new Date(dataStr   + "T12:00:00");
+  if (alvo < base) return false;
+  const diffDias = Math.round((alvo - base) / 86400000);
+  switch (rec) {
+    case "Semanal":   return diffDias % 7  === 0;
+    case "Quinzenal": return diffDias % 14 === 0;
+    case "Mensal":    return alvo.getDate() === base.getDate();
+    case "Anual":     return alvo.getDate() === base.getDate() && alvo.getMonth() === base.getMonth();
+    default:          return false;
+  }
+}
+
 function agRenderMiniCal(rows, ano, mes) {
   const nomes = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
   const nomeMes = nomes[mes];
   const titulo = document.getElementById("ag-cal-titulo");
   if(titulo) titulo.innerHTML = `Calendário <span class="csub">· ${nomeMes} ${ano}</span>`;
 
+  const mesStr = String(mes+1).padStart(2,"0");
+  const ultimoDiaMesN = new Date(ano, mes+1, 0).getDate();
   const eventosPorDia = {};
   rows.forEach(r => {
     if(!r.data) return;
-    const dataIni = r.data;
-    const dataFim = r.data_encerramento || r.data;
-    // Expande evento em todos os dias que abrange dentro do mês exibido
-    const mesStr  = String(mes+1).padStart(2,"0");
-    const primeiroDiaMes = `${ano}-${mesStr}-01`;
-    const ultimoDiaMesN  = new Date(ano, mes+1, 0).getDate();
-    const ultimoDiaMes   = `${ano}-${mesStr}-${String(ultimoDiaMesN).padStart(2,"0")}`;
-    if(dataFim < primeiroDiaMes || dataIni > ultimoDiaMes) return;
-    const inicio = new Date(Math.max(new Date(dataIni), new Date(primeiroDiaMes)));
-    const fim    = new Date(Math.min(new Date(dataFim),  new Date(ultimoDiaMes)));
-    for(let d = new Date(inicio); d <= fim; d.setDate(d.getDate()+1)) {
-      const dia = d.getDate();
-      if(!eventosPorDia[dia]) eventosPorDia[dia] = [];
-      eventosPorDia[dia].push(r);
+    for(let dia = 1; dia <= ultimoDiaMesN; dia++) {
+      const dataStr = `${ano}-${mesStr}-${String(dia).padStart(2,"0")}`;
+      if(agTemOcorrenciaNaData(r, dataStr)) {
+        if(!eventosPorDia[dia]) eventosPorDia[dia] = [];
+        eventosPorDia[dia].push(r);
+      }
     }
   });
 
@@ -299,7 +315,7 @@ async function agVerDia(ano, mes, dia) {
   const rows = await getAgenda();
   const m = String(mes).padStart(2,"0"); const d = String(dia).padStart(2,"0");
   const dataStr = `${ano}-${m}-${d}`;
-  const evsDia = rows.filter(r => r.data <= dataStr && (r.data_encerramento || r.data) >= dataStr);
+  const evsDia = rows.filter(r => agTemOcorrenciaNaData(r, dataStr));
   agMostrarExpandido(`${evsDia.length} evento${evsDia.length!==1?"s":""} em ${d}/${m}/${ano}`, evsDia);
 }
 
@@ -310,7 +326,28 @@ async function agVerMes(mes, el) {
   }
   _agMesElAtivo = el;
   const rows = await getAgenda();
-  const evsMes = rows.filter(r=>r.mes===mes).sort((a,b)=>a.data?.localeCompare(b.data)||0||(a.hora_inicio||"").localeCompare(b.hora_inicio||""));
+  // Coleta todos os dias do mês nomeado e expande recorrências
+  const nomeMeses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const mesIdx = nomeMeses.indexOf(mes);
+  const anoRef = new Date().getFullYear();
+  const evsMesSet = new Set();
+  const evsMes = [];
+  if (mesIdx >= 0) {
+    const ultimoDia = new Date(anoRef, mesIdx + 1, 0).getDate();
+    const mesStr = String(mesIdx + 1).padStart(2, "0");
+    for (let dia = 1; dia <= ultimoDia; dia++) {
+      const dataStr = `${anoRef}-${mesStr}-${String(dia).padStart(2, "0")}`;
+      rows.forEach(r => {
+        if (!evsMesSet.has(r.id || r._row) && agTemOcorrenciaNaData(r, dataStr)) {
+          evsMesSet.add(r.id || r._row);
+          evsMes.push(r);
+        }
+      });
+    }
+  } else {
+    rows.filter(r => r.mes === mes).forEach(r => evsMes.push(r));
+  }
+  evsMes.sort((a,b) => (a.data||"").localeCompare(b.data||"") || (a.hora_inicio||"").localeCompare(b.hora_inicio||""));
   agMostrarExpandido(`${evsMes.length} eventos em ${mes}`, evsMes);
 }
 
