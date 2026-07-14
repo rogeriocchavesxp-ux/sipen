@@ -69,11 +69,12 @@ const WA_TAB = (function () {
 
     const hoje = new Date().toISOString().split("T")[0];
 
-    const [config, responsaveis, templates, envios] = await Promise.all([
+    const [config, responsaveis, templates, envios, countHoje] = await Promise.all([
       _fetch(`/rest/v1/whatsapp_modulo_config?modulo=eq.${encodeURIComponent(key)}&select=*`),
       _fetch(`/rest/v1/whatsapp_modulo_responsaveis?modulo=eq.${encodeURIComponent(key)}&select=id,ativo,pessoas(nome,celular,whatsapp,telefone)&order=pessoas(nome)`),
       _fetch(`/rest/v1/whatsapp_templates?modulo=eq.${encodeURIComponent(key)}&select=titulo,chave,ativo&order=titulo`),
-      _fetch(`/rest/v1/whatsapp_mensagens?modulo=eq.${encodeURIComponent(key)}&select=para_numero,mensagem,status,criado_em&order=criado_em.desc&limit=20`),
+      _fetch(`/rest/v1/whatsapp_mensagens?modulo=eq.${encodeURIComponent(key)}&select=para_numero,mensagem,status,criado_em&order=criado_em.desc&limit=500`),
+      _fetch(`/rest/v1/whatsapp_mensagens?modulo=eq.${encodeURIComponent(key)}&select=id&status=eq.enviado&criado_em=gte.${hoje}T00:00:00`),
     ]);
 
     const cfg        = Array.isArray(config) ? config[0] : null;
@@ -81,7 +82,7 @@ const WA_TAB = (function () {
     const tpls       = Array.isArray(templates) ? templates : [];
     const logs       = Array.isArray(envios) ? envios : [];
     const aptos      = resps.filter(r => r.ativo && (r.pessoas?.whatsapp || r.pessoas?.celular || r.pessoas?.telefone)).length;
-    const enviodHoje = logs.filter(l => l.criado_em?.startsWith(hoje)).length;
+    const enviodHoje = Array.isArray(countHoje) ? countHoje.length : logs.filter(l => l.criado_em?.startsWith(hoje)).length;
     const tplsAtivos = tpls.filter(t => t.ativo).length;
 
     el.innerHTML = `
@@ -212,7 +213,7 @@ const WA_TAB = (function () {
 
     return `
       <div class="card">
-        <div class="ctit">Últimos envios <span class="csub">(${logs.length})</span></div>
+        <div class="ctit">Histórico de envios <span class="csub">(${logs.length})</span></div>
         ${!logs.length
           ? `<div class="empty-state">Nenhuma mensagem enviada ainda</div>`
           : `<div class="tbl-wrap"><table class="tbl">
