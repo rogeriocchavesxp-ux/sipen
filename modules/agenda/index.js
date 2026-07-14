@@ -645,12 +645,7 @@ function _agRenderSolTabela() {
       })
     : _agSolRows;
 
-  // Requisições pendentes (não finalizadas) — exibidas com destaque
-  const reqPendentes = !_agSolFiltro
-    ? _agReqRows.filter(r => !REQ_FINAL.includes(r.status))
-    : [];
-
-  if (!rows.length && !reqPendentes.length) {
+  if (!rows.length) {
     el.innerHTML = `<div style="text-align:center;padding:28px;color:var(--tx3)">
       <div style="font-size:28px;margin-bottom:8px">📭</div>
       <div style="font-size:12px">Nenhuma solicitação ${_agSolFiltro ? "com esse status " : ""}encontrada.</div>
@@ -661,44 +656,6 @@ function _agRenderSolTabela() {
   const pendente = s => ["pendente","aguardando_aprovacao","em_analise","ajuste_solicitado"].includes(s);
 
   const thStyle = `text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)`;
-
-  // Bloco de requisições de espaço (topo, destaque laranja)
-  const reqHtml = reqPendentes.length ? `
-    <div style="margin-bottom:16px;border:1px solid rgba(249,115,22,.35);border-radius:10px;overflow:hidden">
-      <div style="background:rgba(249,115,22,.08);padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(249,115,22,.25)">
-        <span style="font-size:13px">📨</span>
-        <span style="font-size:11px;font-weight:700;color:var(--orange)">Requisições de espaço ocupado</span>
-        <span style="font-size:10px;color:var(--tx3);margin-left:auto">${reqPendentes.length} pendente${reqPendentes.length !== 1 ? "s" : ""}</span>
-      </div>
-      <div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:11.5px;min-width:780px">
-        <thead><tr style="border-bottom:1px solid rgba(249,115,22,.2);background:rgba(249,115,22,.04)">
-          <th style="${thStyle}">Protocolo</th>
-          <th style="${thStyle}">Título</th>
-          <th style="${thStyle}">Solicitante</th>
-          <th style="${thStyle}">Espaço / Data</th>
-          <th style="${thStyle}">Status</th>
-          <th style="text-align:right;padding:7px 10px;font-size:9.5px;color:var(--tx3)">Ações</th>
-        </tr></thead>
-        <tbody>${reqPendentes.map(r => {
-          const h = t => { const [hh,mm] = (t||"").split(":"); return hh && mm ? `${hh}:${mm}` : ""; };
-          const horario = [h(r.hora_inicio_sol), h(r.hora_fim_sol)].filter(Boolean).join("–");
-          return `<tr style="border-bottom:1px solid rgba(249,115,22,.12)" onmouseover="this.style.background='rgba(249,115,22,.04)'" onmouseout="this.style.background=''">
-            <td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:var(--orange)">${escapeHtml(r.protocolo||"—")}</td>
-            <td style="padding:8px 10px;color:var(--tx1);font-weight:600;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.titulo||"—")}</td>
-            <td style="padding:8px 10px;color:var(--tx2);font-size:11px">${escapeHtml(r.solicitante_nome||"—")}</td>
-            <td style="padding:8px 10px;color:var(--tx2);font-size:11px;white-space:nowrap">
-              ${escapeHtml(r.espaco_nome||"—")}
-              <div style="font-size:10px;color:var(--tx3)">${fmtD(r.data_solicitada)}${horario ? " · "+horario : ""}</div>
-            </td>
-            <td style="padding:8px 10px">${_agReqPill(r.status)}</td>
-            <td style="padding:8px 10px;text-align:right;white-space:nowrap">
-              <button onclick='agAnalisarRequisicao("${r.id}")' style="padding:3px 9px;border-radius:4px;border:1px solid rgba(249,115,22,.4);background:rgba(249,115,22,.08);color:var(--orange);font-size:10px;cursor:pointer">Analisar</button>
-            </td>
-          </tr>`;
-        }).join("")}</tbody>
-      </table></div>
-    </div>` : "";
 
   // Bloco de solicitações regulares
   const solHtml = rows.length ? `<div style="overflow-x:auto">
@@ -733,7 +690,7 @@ function _agRenderSolTabela() {
       }).join("")}</tbody>
     </table></div>` : "";
 
-  el.innerHTML = reqHtml + solHtml;
+  el.innerHTML = solHtml;
 }
 
 async function carregarSolicitacoesAgenda() {
@@ -1237,14 +1194,16 @@ async function agCarregarAprovacoes() {
   if (!el) return;
   el.innerHTML = `<div style="color:var(--tx3);font-size:11px">${spinner()} Carregando...</div>`;
   try {
-    const res = await fetch(
-      `${apiBaseUrl()}/rest/v1/agenda?status=in.(pendente,aguardando_aprovacao,em_analise)&select=*&order=created_at.desc&limit=200`,
-      { headers: apiHeaders() }
-    );
+    const [res, resReq] = await Promise.all([
+      fetch(`${apiBaseUrl()}/rest/v1/agenda?status=in.(pendente,aguardando_aprovacao,em_analise)&select=*&order=created_at.desc&limit=200`, { headers: apiHeaders() }),
+      fetch(`${apiBaseUrl()}/rest/v1/requisicoes_espaco?deleted_at=is.null&select=*&order=created_at.desc&limit=200`, { headers: apiHeaders() }),
+    ]);
     if (!res.ok) throw new Error(await res.text());
-    const rows = await res.json();
+    const rows    = await res.json();
+    const reqRows = resReq.ok ? await resReq.json() : [];
+    const reqPend = reqRows.filter(r => !REQ_FINAL.includes(r.status));
 
-    if (!rows.length) {
+    if (!rows.length && !reqPend.length) {
       el.innerHTML = `<div style="text-align:center;padding:36px;color:var(--tx3)">
         <div style="font-size:28px;margin-bottom:8px">✅</div>
         <div style="font-size:12px;font-weight:600">Nenhuma aprovação pendente</div>
@@ -1261,7 +1220,44 @@ async function agCarregarAprovacoes() {
     const deEvento = rows.filter(r => r.origem === "evento");
     const manuais  = rows.filter(r => r.origem !== "evento");
 
-    let html = "";
+    const thR = `text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)`;
+
+    let html = reqPend.length ? `
+      <div style="margin-bottom:20px;border:1px solid rgba(249,115,22,.35);border-radius:10px;overflow:hidden">
+        <div style="background:rgba(249,115,22,.08);padding:10px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(249,115,22,.25)">
+          <span style="font-size:15px">📨</span>
+          <span style="font-size:11.5px;font-weight:700;color:var(--orange)">Requisições de Espaço Ocupado</span>
+          <span style="font-size:10px;color:var(--tx3);margin-left:auto">${reqPend.length} pendente${reqPend.length !== 1 ? "s" : ""}</span>
+        </div>
+        <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:11.5px;min-width:780px">
+          <thead><tr style="border-bottom:1px solid rgba(249,115,22,.2);background:rgba(249,115,22,.04)">
+            <th style="${thR}">Protocolo</th>
+            <th style="${thR}">Título</th>
+            <th style="${thR}">Solicitante</th>
+            <th style="${thR}">Espaço / Data</th>
+            <th style="${thR}">Status</th>
+            <th style="text-align:right;padding:7px 10px;font-size:9.5px;color:var(--tx3)">Ações</th>
+          </tr></thead>
+          <tbody>${reqPend.map(r => {
+            const h = t => { const [hh,mm] = (t||"").split(":"); return hh && mm ? `${hh}:${mm}` : ""; };
+            const horario = [h(r.hora_inicio_sol), h(r.hora_fim_sol)].filter(Boolean).join("–");
+            return `<tr style="border-bottom:1px solid rgba(249,115,22,.12)" onmouseover="this.style.background='rgba(249,115,22,.04)'" onmouseout="this.style.background=''">
+              <td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:var(--orange)">${escapeHtml(r.protocolo||"—")}</td>
+              <td style="padding:8px 10px;color:var(--tx1);font-weight:600;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.titulo||"—")}</td>
+              <td style="padding:8px 10px;color:var(--tx2);font-size:11px">${escapeHtml(r.solicitante_nome||"—")}</td>
+              <td style="padding:8px 10px;color:var(--tx2);font-size:11px;white-space:nowrap">
+                ${escapeHtml(r.espaco_nome||"—")}
+                <div style="font-size:10px;color:var(--tx3)">${fmtD(r.data_solicitada)}${horario ? " · "+horario : ""}</div>
+              </td>
+              <td style="padding:8px 10px">${_agReqPill(r.status)}</td>
+              <td style="padding:8px 10px;text-align:right;white-space:nowrap">
+                <button onclick='agAnalisarRequisicao("${r.id}")' style="padding:5px 12px;border-radius:5px;border:1px solid rgba(249,115,22,.4);background:rgba(249,115,22,.08);color:var(--orange);font-size:10px;font-weight:600;cursor:pointer">Analisar</button>
+              </td>
+            </tr>`;
+          }).join("")}</tbody>
+        </table></div>
+      </div>` : "";
 
     if (deEvento.length) {
       html += `<div style="font-size:10px;font-weight:700;color:var(--sky);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Do Módulo Eventos — ${deEvento.length} pendente${deEvento.length !== 1 ? "s" : ""}</div>`;
