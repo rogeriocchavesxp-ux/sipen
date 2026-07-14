@@ -1857,7 +1857,7 @@ async function _enviarArteDigital() {
 
     // Sucesso — mostra tela final
     document.getElementById("screen-step2").style.display = "none";
-    if (_arteTicket) document.getElementById("ok-numero").textContent = _arteTicket;
+    document.getElementById("ok-numero").textContent = _arteProtocolo || _arteTicket || "";
     const okProtoEl = document.getElementById("ok-protocolo");
     if (okProtoEl) {
       okProtoEl.innerHTML =
@@ -1879,15 +1879,9 @@ async function _enviarArteDigital() {
 
 function _pularArteDigital() {
   document.getElementById("screen-step2").style.display = "none";
-  if (_arteTicket) document.getElementById("ok-numero").textContent = _arteTicket;
+  document.getElementById("ok-numero").textContent = _arteProtocolo || _arteTicket || "";
   const okProtoEl = document.getElementById("ok-protocolo");
-  if (okProtoEl && _arteProtocolo) {
-    okProtoEl.textContent    = `Reserva provisória: ${_arteProtocolo}`;
-    okProtoEl.style.display  = "";
-    okProtoEl.style.background = "";
-    okProtoEl.style.borderColor = "";
-    okProtoEl.style.color = "";
-  }
+  if (okProtoEl) okProtoEl.style.display = "none";
   document.getElementById("screen-ok").style.display = "block";
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -2610,15 +2604,11 @@ async function ag2Enviar() {
       return;
     }
 
-    // 4. Sucesso sem arte digital
-    document.getElementById("ok-numero").textContent = ticket;
+    // 4. Sucesso sem arte digital — exibe protocolo da agenda como referência principal
+    document.getElementById("ok-numero").textContent = protocolo || ticket;
     const okProtoEl = document.getElementById("ok-protocolo");
     if (okProtoEl) {
-      okProtoEl.textContent   = protocolo ? `Reserva provisória: ${protocolo}` : "";
-      okProtoEl.style.display = protocolo ? "" : "none";
-      okProtoEl.style.background = "";
-      okProtoEl.style.borderColor = "";
-      okProtoEl.style.color = "";
+      okProtoEl.style.display = "none";
     }
     document.getElementById("screen-agend").style.display = "none";
     document.getElementById("screen-ok").style.display    = "block";
