@@ -249,13 +249,22 @@ async function carregarAgendaDash() {
 function agTemOcorrenciaNaData(r, dataStr) {
   if (!r.data || r.data > dataStr) return false;
   const rec = r.recorrencia || "Único";
-  if (!rec || rec === "Único" || rec === "Eventual" || rec === "Esporádico") {
-    return dataStr <= (r.data_encerramento || r.data);
+
+  // Evento de dia único: data_encerramento ausente ou igual a data.
+  // A recorrência neste caso é apenas um rótulo informativo — não expande.
+  if (!r.data_encerramento || r.data_encerramento <= r.data) {
+    return r.data === dataStr;
   }
-  // Para recorrentes: respeita data_encerramento quando definida além da data inicial
-  if (r.data_encerramento && r.data_encerramento > r.data && dataStr > r.data_encerramento) return false;
+
+  // Evento com intervalo explícito (data_encerramento > data)
+  if (!rec || rec === "Único" || rec === "Eventual" || rec === "Esporádico") {
+    return dataStr <= r.data_encerramento;
+  }
+
+  // Evento genuinamente recorrente com data de encerramento definida
+  if (dataStr > r.data_encerramento) return false;
   const base = new Date(r.data + "T12:00:00");
-  const alvo = new Date(dataStr   + "T12:00:00");
+  const alvo = new Date(dataStr + "T12:00:00");
   if (alvo < base) return false;
   const diffDias = Math.round((alvo - base) / 86400000);
   switch (rec) {
