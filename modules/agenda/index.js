@@ -136,7 +136,7 @@ async function carregarAgendaDash() {
           const isHoje = e.data===hoje;
           return `<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd1);align-items:flex-start">
             <div style="background:${isHoje?'var(--teal)':'var(--bg-surface)'};border:1px solid ${isHoje?'var(--teal)':'var(--bd1)'};border-radius:6px;padding:5px 8px;text-align:center;min-width:42px;flex-shrink:0">
-              <div style="font-size:8px;color:${isHoje?'rgba(255,255,255,.75)':'var(--teal)'};text-transform:uppercase;font-weight:700;letter-spacing:.05em">${e.mes?.slice(0,3)||""}</div>
+              <div style="font-size:8px;color:${isHoje?'rgba(255,255,255,.75)':'var(--teal)'};text-transform:uppercase;font-weight:700;letter-spacing:.05em">${e.data?["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"][parseInt(e.data.slice(5,7))-1]:""}</div>
               <div style="font-size:17px;font-weight:700;color:${isHoje?'#fff':'var(--tx1)'};font-family:var(--mono);line-height:1">${e.data?.slice(8)||"—"}</div>
             </div>
             <div style="flex:1;min-width:0">
@@ -264,7 +264,7 @@ function agGerarOcorrencias(r, de, ate) {
     return (r.data >= de && r.data <= ate) ? [r] : [];
   }
   if (rec === "Único" || rec === "Eventual" || rec === "Esporádico") {
-    return (r.data <= ate && fimSerie >= de) ? [r] : [];
+    return (r.data >= de && r.data <= ate) ? [r] : [];
   }
   if (fimSerie < de) return [];
   const base = new Date(r.data + "T12:00:00");
