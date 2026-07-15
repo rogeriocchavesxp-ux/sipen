@@ -2629,7 +2629,18 @@ async function ag2Enviar() {
         _ag2DispVerificada = false;
         ag2MostrarErro("Conflito de reserva: o espaço foi reservado por outra pessoa neste período. Selecione outro espaço ou horário.");
         return;
+      } else {
+        // Falha sem conflito (erro na função ou validação)
+        if (btn) { btn.disabled = false; btn.textContent = "Enviar Solicitação"; }
+        ag2MostrarErro(rpcData.erro || "Não foi possível registrar o agendamento. Tente novamente.");
+        return;
       }
+    } else {
+      // Erro HTTP na chamada RPC
+      const errBody = await rpcRes.json().catch(() => ({}));
+      if (btn) { btn.disabled = false; btn.textContent = "Enviar Solicitação"; }
+      ag2MostrarErro(errBody.message || errBody.error || `Erro ao registrar agendamento (${rpcRes.status}).`);
+      return;
     }
 
     // 3. Arte digital?
