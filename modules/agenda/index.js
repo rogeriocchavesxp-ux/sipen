@@ -84,17 +84,25 @@ async function carregarAgendaDash() {
     const prox7 = d7.toISOString().split("T")[0];
     const d30 = new Date(); d30.setDate(d30.getDate()+30);
     const prox30str = d30.toISOString().split("T")[0];
+    const anoAtual = new Date().getFullYear();
+    const anoInicio = `${anoAtual}-01-01`;
+    const anoFim    = `${anoAtual}-12-31`;
+
+    // Expandir ocorrências (eventos recorrentes → instâncias individuais)
+    const todasAnuais = rows.flatMap(r => agGerarOcorrencias(r, anoInicio, anoFim));
+    const ocorrSemana = rows.flatMap(r => agGerarOcorrencias(r, hoje, prox7));
+    const ocorrP30    = rows.flatMap(r => agGerarOcorrencias(r, hoje, prox30str));
 
     // --- KPIs ---
-    const total = rows.length;
-    const semana = rows.filter(r=>r.data>=hoje && r.data<=prox7).length;
-    const p30 = rows.filter(r=>r.data>=hoje && r.data<=prox30str).length;
-    const conf = rows.filter(r=>r.status==="confirmado").length;
-    const recorrentes = rows.filter(r=>r.recorrencia && r.recorrencia!=="Único").length;
-    const espacosSet = new Set(rows.map(r=>r.espaco).filter(Boolean));
-    const orgs = new Set(rows.map(r=>r.organizador).filter(Boolean)).size;
-    const espCount = {};
-    rows.forEach(r=>{if(r.espaco) espCount[r.espaco]=(espCount[r.espaco]||0)+1;});
+    const total      = todasAnuais.length;
+    const semana     = ocorrSemana.length;
+    const p30        = ocorrP30.length;
+    const conf       = todasAnuais.filter(r=>r.status==="confirmado").length;
+    const recorrentes= rows.filter(r=>r.recorrencia && r.recorrencia!=="Único").length;
+    const espacosSet = new Set(todasAnuais.map(r=>r.espaco).filter(Boolean));
+    const orgs       = new Set(todasAnuais.map(r=>r.organizador).filter(Boolean)).size;
+    const espCount   = {};
+    todasAnuais.forEach(r=>{if(r.espaco) espCount[r.espaco]=(espCount[r.espaco]||0)+1;});
     const topEsp = Object.entries(espCount).sort((a,b)=>b[1]-a[1])[0]?.[0] || "—";
 
     const setV = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
@@ -115,10 +123,10 @@ async function carregarAgendaDash() {
       setV("ag-req-pendentes", Array.isArray(data) ? data.length : 0);
     }).catch(() => {});
 
-    // --- Próximos eventos ---
-    const proximos = rows.filter(r=>r.data>=hoje).slice(0,8);
+    // --- Próximos eventos (ocorrências expandidas, ordenadas) ---
+    const proximos = [...ocorrP30].sort((a,b)=>a.data.localeCompare(b.data)).slice(0,8);
     const proxCount = document.getElementById("ag-prox-count");
-    if(proxCount) proxCount.textContent = `· ${rows.filter(r=>r.data>=hoje).length} futuros`;
+    if(proxCount) proxCount.textContent = `· ${ocorrP30.length} futuros`;
     const proxEl = document.getElementById("agenda-proximos");
     if(proxEl) {
       if(!proximos.length) {
@@ -148,8 +156,12 @@ async function carregarAgendaDash() {
     // --- Gráfico por mês (barras clicáveis, 2 colunas) ---
     const ordem = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
     const cores = ["#2ab5c0","#4a9cf5","#8b6fd4","#52c46e","#f5a623","#e05555","#2ab5c0","#4a9cf5","#8b6fd4","#52c46e","#f5a623","#e05555"];
+    const mNomes = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
     const porMes = {};
-    rows.forEach(r=>{if(r.mes) porMes[r.mes]=(porMes[r.mes]||0)+1;});
+    todasAnuais.forEach(r=>{
+      const mNome = r.mes || mNomes[parseInt(r.data.slice(5,7))-1];
+      if(mNome) porMes[mNome]=(porMes[mNome]||0)+1;
+    });
     const maxVal = Math.max(...Object.values(porMes), 1);
     const mesEl = document.getElementById("agenda-por-mes");
     if(mesEl) {
@@ -170,7 +182,7 @@ async function carregarAgendaDash() {
     const diasSemana = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
     const abrevDia = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
     const contDia = {}; diasSemana.forEach(d=>contDia[d]=0);
-    rows.forEach(r=>{if(r.dia_semana && contDia.hasOwnProperty(r.dia_semana)) contDia[r.dia_semana]++;});
+    todasAnuais.forEach(r=>{if(r.dia_semana && contDia.hasOwnProperty(r.dia_semana)) contDia[r.dia_semana]++;});
     const maxDia = Math.max(...Object.values(contDia), 1);
     const diasEl = document.getElementById("ag-chart-diasemana");
     if(diasEl) {
@@ -223,7 +235,7 @@ async function carregarAgendaDash() {
 
     // --- Top organizadores ---
     const orgCount = {};
-    rows.forEach(r=>{if(r.organizador) orgCount[r.organizador]=(orgCount[r.organizador]||0)+1;});
+    todasAnuais.forEach(r=>{if(r.organizador) orgCount[r.organizador]=(orgCount[r.organizador]||0)+1;});
     const orgSorted = Object.entries(orgCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
     const maxOrg = orgSorted[0]?.[1]||1;
     const orgEl = document.getElementById("ag-chart-orgs");
@@ -241,6 +253,48 @@ async function carregarAgendaDash() {
   } catch(e) {
     T("Erro na Agenda", e.message);
   }
+}
+
+/* ── Expande um evento recorrente em todas as ocorrências dentro de [de, ate] ─ */
+function agGerarOcorrencias(r, de, ate) {
+  if (!r.data || r.data > ate) return [];
+  const fimSerie = r.data_encerramento || r.data;
+  const rec = r.recorrencia || "Único";
+  if (!r.data_encerramento || fimSerie <= r.data) {
+    return (r.data >= de && r.data <= ate) ? [r] : [];
+  }
+  if (rec === "Único" || rec === "Eventual" || rec === "Esporádico") {
+    return (r.data <= ate && fimSerie >= de) ? [r] : [];
+  }
+  if (fimSerie < de) return [];
+  const base = new Date(r.data + "T12:00:00");
+  const rangeStart = new Date(de + "T12:00:00");
+  const rangeEnd = new Date(Math.min(
+    new Date(fimSerie + "T12:00:00").getTime(),
+    new Date(ate + "T12:00:00").getTime()
+  ));
+  const result = [];
+  let cursor = new Date(base);
+  if (rec === "Semanal" || rec === "Quinzenal") {
+    const step = rec === "Semanal" ? 7 : 14;
+    const diff = Math.round((rangeStart - base) / 86400000);
+    if (diff > 0) cursor = new Date(base.getTime() + Math.ceil(diff / step) * step * 86400000);
+  } else {
+    while (cursor < rangeStart) {
+      if (rec === "Mensal")      cursor.setMonth(cursor.getMonth() + 1);
+      else if (rec === "Anual")  cursor.setFullYear(cursor.getFullYear() + 1);
+      else break;
+    }
+  }
+  while (cursor <= rangeEnd) {
+    result.push({ ...r, data: cursor.toISOString().split("T")[0] });
+    if (rec === "Semanal")        cursor = new Date(cursor.getTime() + 7 * 86400000);
+    else if (rec === "Quinzenal") cursor = new Date(cursor.getTime() + 14 * 86400000);
+    else if (rec === "Mensal")  { cursor = new Date(cursor); cursor.setMonth(cursor.getMonth() + 1); }
+    else if (rec === "Anual")   { cursor = new Date(cursor); cursor.setFullYear(cursor.getFullYear() + 1); }
+    else break;
+  }
+  return result;
 }
 
 /* ── Verifica se um evento tem ocorrência em uma data específica ─────────
