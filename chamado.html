@@ -284,10 +284,11 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 .ag2-grupo { margin-bottom: 20px; }
 .ag2-grupo:last-child { margin-bottom: 0; }
 .ag2-grupo-hdr {
-  font-size: 10px; font-weight: 800; color: var(--acc);
-  text-transform: uppercase; letter-spacing: .09em;
-  padding-bottom: 7px; margin-bottom: 8px;
+  font-size: 12px; font-weight: 800; color: var(--acc);
+  text-transform: uppercase; letter-spacing: .07em;
+  padding-bottom: 8px; margin-bottom: 10px;
   border-bottom: 1px solid var(--bd);
+  display: flex; align-items: center; gap: 8px;
 }
 .ag2-grupo-grid {
   display: grid;
@@ -370,8 +371,9 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 /* Grupo recolhível */
 .ag2-grupo-hdr { cursor: pointer; user-select: none; }
 .ag2-grupo-chevron {
-  float: right; font-size: 10px; color: var(--tx3);
-  transition: transform .2s; display: inline-block; margin-left: 6px;
+  font-size: 15px; color: var(--acc);
+  transition: transform .2s; display: inline-block;
+  flex-shrink: 0; line-height: 1;
 }
 .ag2-grupo.collapsed .ag2-grupo-chevron { transform: rotate(-90deg); }
 .ag2-grupo.collapsed .ag2-grupo-grid { display: none; }
@@ -2335,7 +2337,7 @@ function ag2MostrarEspacos(dados) {
     gruposMap.get(g).push(d);
   });
 
-  gruposMap.forEach((items, grupoNome) => {
+  [...gruposMap.entries()].sort(([a], [b]) => a.localeCompare(b, "pt-BR")).forEach(([grupoNome, items]) => {
     // Dentro do grupo: disponíveis primeiro
     const ordenado = [
       ...items.filter(d => d.disponivel),
@@ -2347,7 +2349,7 @@ function ag2MostrarEspacos(dados) {
 
     const hdr = document.createElement("div");
     hdr.className = "ag2-grupo-hdr";
-    hdr.innerHTML = grupoNome + `<span class="ag2-grupo-chevron">▾</span>`;
+    hdr.innerHTML = `<span class="ag2-grupo-chevron">▼</span>` + grupoNome;
     hdr.onclick = () => grupoEl.classList.toggle("collapsed");
     grupoEl.appendChild(hdr);
 
