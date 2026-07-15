@@ -190,6 +190,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch(_) {}
   await _shellReady;
   window.renderThemeToggle?.();
+  sbsInit();
   _ensureViewLoaded("geral").then(() => go("geral"));
 
   document.querySelectorAll(".bf").forEach(b => {

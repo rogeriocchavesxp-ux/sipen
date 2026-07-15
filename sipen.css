@@ -200,13 +200,37 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 }
 .l1.on .l1-ic{background:rgba(58,170,92,0.15);border-color:rgba(58,170,92,0.25);color:var(--gr)}
 
-/* Section label */
+/* Section label (legacy, kept for compatibility) */
 .slbl{
   padding:16px 14px 4px;font-size:10px;letter-spacing:.06em;
   text-transform:uppercase;color:var(--tx3);user-select:none;
   display:flex;align-items:center;gap:8px;font-weight:600;
 }
 .slbl::after{display:none}
+
+/* Section accordion */
+.sb-section{margin:0 0 2px}
+.sb-section-hdr{
+  display:flex;align-items:center;gap:7px;
+  padding:12px 14px 5px;
+  font-size:10px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--tx3);
+  font-weight:700;cursor:pointer;user-select:none;
+  transition:color .12s;
+}
+.sb-section-hdr:hover{color:var(--tx2)}
+.sb-section-chv{
+  font-size:8px;color:var(--tx3);
+  transition:transform .22s ease;
+  display:inline-block;flex-shrink:0;line-height:1;
+}
+.sb-section.collapsed .sb-section-chv{transform:rotate(-90deg)}
+.sb-section-body{
+  overflow:hidden;
+  max-height:1800px;
+  transition:max-height .3s ease;
+}
+.sb-section.collapsed .sb-section-body{max-height:0}
 
 /* Module wrapper */
 .mwrap{margin:1px 8px;border-radius:var(--rl);overflow:hidden}

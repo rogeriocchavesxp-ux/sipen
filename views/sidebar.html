@@ -15,315 +15,347 @@
     </div>
 
     <!-- ── GOVERNANÇA ─────────────────────────────────── -->
-    <div class="slbl">Governança</div>
+    <div class="sb-section" id="sbs-gov">
+      <div class="sb-section-hdr" onclick="sbsToggle('gov')">
+        <span class="sb-section-chv">▼</span>
+        Governança
+      </div>
+      <div class="sb-section-body">
 
-    <!-- Conselho e Governança -->
-    <div class="mwrap" id="mw-conselho" data-modulo="CONSELHO">
-      <div class="mhdr" onclick="tog('conselho')">
-        <div class="micon" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
-        <span class="mname">Conselho e Governança</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-conselho">
-        <div class="si" onclick="go('conselho-dash')">Dashboard do Conselho</div>
-        <div class="si" onclick="go('conselho-nomeados')">Nomeados</div>
-        <div class="si" onclick="go('conselho-ordenados')">Ordenados</div>
-        <div class="si" onclick="go('conselho-seminaristas')">Seminaristas</div>
-        <div class="si" onclick="go('conselho-doc')">Documentos do Conselho</div>
-        <div class="si" onclick="go('pautas-reunioes')">Reuniões do Conselho</div>
-        <div class="sdiv"></div>
-        <div class="si" onclick="go('conselho-demandas')">Demandas do Conselho</div>
-        <div class="si" onclick="go('conselho-com')">Comissões</div>
-        <div class="sdiv"></div>
-        <div class="si" onclick="go('conselho-eleicoes')">Eleições / Indicações</div>
-      </div>
-    </div>
+        <!-- Conselho e Governança -->
+        <div class="mwrap" id="mw-conselho" data-modulo="CONSELHO">
+          <div class="mhdr" onclick="tog('conselho')">
+            <div class="micon" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+            <span class="mname">Conselho e Governança</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-conselho">
+            <div class="si" onclick="go('conselho-dash')">Dashboard do Conselho</div>
+            <div class="si" onclick="go('conselho-nomeados')">Nomeados</div>
+            <div class="si" onclick="go('conselho-ordenados')">Ordenados</div>
+            <div class="si" onclick="go('conselho-seminaristas')">Seminaristas</div>
+            <div class="si" onclick="go('conselho-doc')">Documentos do Conselho</div>
+            <div class="si" onclick="go('pautas-reunioes')">Reuniões do Conselho</div>
+            <div class="sdiv"></div>
+            <div class="si" onclick="go('conselho-demandas')">Demandas do Conselho</div>
+            <div class="si" onclick="go('conselho-com')">Comissões</div>
+            <div class="sdiv"></div>
+            <div class="si" onclick="go('conselho-eleicoes')">Eleições / Indicações</div>
+          </div>
+        </div>
 
-    <!-- Pastoral -->
-    <div class="mwrap" id="mw-pastoral" data-modulo="PASTORAL">
-      <div class="mhdr mhdr-noexpand" onclick="go('pastoral-dash')">
-        <div class="micon" style="background:rgba(58,176,184,0.14);border-color:rgba(58,176,184,0.25);color:var(--teal)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66"/><path d="m18 15-2-2"/><path d="m15 18-2-2"/></svg></div>
-        <span class="mname">Pastoral</span>
-        <span class="mbadge" style="background:rgba(208,104,104,0.12);color:var(--rose);border:1px solid rgba(208,104,104,0.2)">🔒</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-pastoral">
-        <div class="si" onclick="go('pastoral-dash')">Dashboard Pastoral</div>
-        <div class="si" onclick="go('pastoral-preg')">Escala de Pregação</div>
-        <div class="si" onclick="go('pastoral-pastores')">Cadastro de Pastores</div>
-        <div class="sdiv"></div>
-        <div class="si" onclick="go('pastoral-ate')">Atendimentos</div>
-        <div class="si" onclick="go('pastoral-ora')">Pedidos de Oração</div>
-        <div class="si" onclick="go('pastoral-aco')">Acompanhamentos</div>
-        <div class="si" onclick="go('pastoral-pri')">Casos Prioritários</div>
-        <div class="si" onclick="go('pastoral-rede')">Rede de Cuidado</div>
-        <div class="sdiv"></div>
-        <div class="si" onclick="go('pastoral-demandas')">Demandas Pastorais</div>
-      </div>
-    </div>
+        <!-- Pastoral -->
+        <div class="mwrap" id="mw-pastoral" data-modulo="PASTORAL">
+          <div class="mhdr mhdr-noexpand" onclick="go('pastoral-dash')">
+            <div class="micon" style="background:rgba(58,176,184,0.14);border-color:rgba(58,176,184,0.25);color:var(--teal)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66"/><path d="m18 15-2-2"/><path d="m15 18-2-2"/></svg></div>
+            <span class="mname">Pastoral</span>
+            <span class="mbadge" style="background:rgba(208,104,104,0.12);color:var(--rose);border:1px solid rgba(208,104,104,0.2)">🔒</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-pastoral">
+            <div class="si" onclick="go('pastoral-dash')">Dashboard Pastoral</div>
+            <div class="si" onclick="go('pastoral-preg')">Escala de Pregação</div>
+            <div class="si" onclick="go('pastoral-pastores')">Cadastro de Pastores</div>
+            <div class="sdiv"></div>
+            <div class="si" onclick="go('pastoral-ate')">Atendimentos</div>
+            <div class="si" onclick="go('pastoral-ora')">Pedidos de Oração</div>
+            <div class="si" onclick="go('pastoral-aco')">Acompanhamentos</div>
+            <div class="si" onclick="go('pastoral-pri')">Casos Prioritários</div>
+            <div class="si" onclick="go('pastoral-rede')">Rede de Cuidado</div>
+            <div class="sdiv"></div>
+            <div class="si" onclick="go('pastoral-demandas')">Demandas Pastorais</div>
+          </div>
+        </div>
 
-    <!-- Junta Diaconal -->
-    <div class="mwrap" id="mw-diac" data-modulo="JUNTA_DIACONAL">
-      <div class="mhdr" onclick="tog('diac')">
-        <div class="micon" style="background:rgba(184,122,86,0.14);border-color:rgba(184,122,86,0.25);color:var(--copper)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11c0-1.1-.9-2-2-2s-2 .9-2 2v2H8.5a2.5 2.5 0 0 0 0 5H14a6 6 0 0 0 6-6v-1"/><path d="M14 9V7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v2"/><path d="M10 9H7.5A2.5 2.5 0 0 0 5 11.5v0A2.5 2.5 0 0 0 7.5 14H14"/><path d="M20.5 8.5c.83-.83.83-2.17 0-3s-2.17-.83-3 0L16 7l-1.5-1.5c-.83-.83-2.17-.83-3 0"/></svg></div>
-        <span class="mname">Junta Diaconal</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-diac">
-        <div class="si" onclick="go('diac-dash')">Dashboard Diaconal</div>
-        <div class="si" onclick="go('diac-diaconos')">Diáconos</div>
-        <div class="si" onclick="go('diac-escalas')">Escalas de Serviço</div>
-        <div class="si" onclick="go('diac-visitacao')">Visitação Diaconal</div>
-        <div class="si" onclick="go('diac-relatorios')">Relatórios Diaconais</div>
-        <div class="si" onclick="go('diac-historico')">Histórico e Atas</div>
-        <div class="sdiv"></div>
-        <div class="si" onclick="go('dem-todas')">Todas as Demandas</div>
-      </div>
-    </div>
+        <!-- Junta Diaconal -->
+        <div class="mwrap" id="mw-diac" data-modulo="JUNTA_DIACONAL">
+          <div class="mhdr" onclick="tog('diac')">
+            <div class="micon" style="background:rgba(184,122,86,0.14);border-color:rgba(184,122,86,0.25);color:var(--copper)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11c0-1.1-.9-2-2-2s-2 .9-2 2v2H8.5a2.5 2.5 0 0 0 0 5H14a6 6 0 0 0 6-6v-1"/><path d="M14 9V7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v2"/><path d="M10 9H7.5A2.5 2.5 0 0 0 5 11.5v0A2.5 2.5 0 0 0 7.5 14H14"/><path d="M20.5 8.5c.83-.83.83-2.17 0-3s-2.17-.83-3 0L16 7l-1.5-1.5c-.83-.83-2.17-.83-3 0"/></svg></div>
+            <span class="mname">Junta Diaconal</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-diac">
+            <div class="si" onclick="go('diac-dash')">Dashboard Diaconal</div>
+            <div class="si" onclick="go('diac-diaconos')">Diáconos</div>
+            <div class="si" onclick="go('diac-escalas')">Escalas de Serviço</div>
+            <div class="si" onclick="go('diac-visitacao')">Visitação Diaconal</div>
+            <div class="si" onclick="go('diac-relatorios')">Relatórios Diaconais</div>
+            <div class="si" onclick="go('diac-historico')">Histórico e Atas</div>
+            <div class="sdiv"></div>
+            <div class="si" onclick="go('dem-todas')">Todas as Demandas</div>
+          </div>
+        </div>
 
-    <!-- Congregações -->
-    <div class="mwrap" id="mw-cong" data-modulo="CONGREGACOES">
-      <div class="mhdr" onclick="tog('cong')">
-        <div class="micon" style="background:rgba(58,170,92,0.14);border-color:rgba(58,170,92,0.25);color:var(--gr)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V12H2l10-10 10 10h-4v10"/><path d="M6 12h12"/><path d="M9 22v-4h6v4"/></svg></div>
-        <span class="mname">Congregações</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-cong">
-        <div class="si" id="sb-cong-dash-link" onclick="go('cong-dash')" style="display:none">Dashboard Geral</div>
-      </div>
-    </div>
+        <!-- Congregações -->
+        <div class="mwrap" id="mw-cong" data-modulo="CONGREGACOES">
+          <div class="mhdr" onclick="tog('cong')">
+            <div class="micon" style="background:rgba(58,170,92,0.14);border-color:rgba(58,170,92,0.25);color:var(--gr)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V12H2l10-10 10 10h-4v10"/><path d="M6 12h12"/><path d="M9 22v-4h6v4"/></svg></div>
+            <span class="mname">Congregações</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-cong">
+            <div class="si" id="sb-cong-dash-link" onclick="go('cong-dash')" style="display:none">Dashboard Geral</div>
+          </div>
+        </div>
 
-    <!-- Membresia -->
-    <div class="mwrap" id="mw-memb" data-modulo="MEMBRESIA">
-      <div class="mhdr" onclick="tog('memb')">
-        <div class="micon" style="background:rgba(82,196,110,0.14);border-color:rgba(82,196,110,0.25);color:var(--gbr)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-        <span class="mname">Membresia</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-memb">
-        <div class="si" data-memb-adm="1" onclick="go('memb-dash')">Dashboard de Membresia</div>
-        <div class="si" onclick="go('memb-cad')">Cadastro de Membros</div>
-        <div class="si si-mob" data-memb-adm="1" onclick="go('memb-com')">Comungantes</div>
-        <div class="si si-mob" data-memb-adm="1" onclick="go('memb-ncom')">Não Comungantes</div>
-        <div class="si si-mob" data-memb-adm="1" onclick="go('memb-vis')">Visitantes</div>
-        <div class="sdiv" data-memb-adm="1"></div>
-        <div class="si si-mob" data-memb-adm="1" onclick="go('memb-bat')">Batismos</div>
-        <div class="si si-mob" data-memb-adm="1" onclick="go('memb-prof')">Profissões de Fé</div>
-        <div class="si si-mob" data-memb-adm="1" onclick="go('memb-trans')">Transferências</div>
-        <div class="si si-mob" data-memb-adm="1" onclick="go('memb-hist')">Histórico de Membros</div>
-        <div class="si" onclick="go('memb-aniv')">Aniversariantes</div>
-      </div>
-    </div>
+        <!-- Membresia -->
+        <div class="mwrap" id="mw-memb" data-modulo="MEMBRESIA">
+          <div class="mhdr" onclick="tog('memb')">
+            <div class="micon" style="background:rgba(82,196,110,0.14);border-color:rgba(82,196,110,0.25);color:var(--gbr)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+            <span class="mname">Membresia</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-memb">
+            <div class="si" data-memb-adm="1" onclick="go('memb-dash')">Dashboard de Membresia</div>
+            <div class="si" onclick="go('memb-cad')">Cadastro de Membros</div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-com')">Comungantes</div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-ncom')">Não Comungantes</div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-vis')">Visitantes</div>
+            <div class="sdiv" data-memb-adm="1"></div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-bat')">Batismos</div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-prof')">Profissões de Fé</div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-trans')">Transferências</div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-hist')">Histórico de Membros</div>
+            <div class="si" onclick="go('memb-aniv')">Aniversariantes</div>
+          </div>
+        </div>
 
-    <!-- Projetos -->
-    <div class="mwrap" id="mw-proj" data-modulo="PROJETOS">
-      <div class="mhdr" onclick="tog('proj')">
-        <div class="micon" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="6" height="14" x="2" y="5" rx="2"/><rect width="6" height="10" x="9" y="9" rx="2"/><rect width="6" height="6" x="16" y="13" rx="2"/></svg></div>
-        <span class="mname">Projetos</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-proj">
-        <div class="si" onclick="go('proj-lista')">Projetos & Acompanhamento</div>
+        <!-- Projetos -->
+        <div class="mwrap" id="mw-proj" data-modulo="PROJETOS">
+          <div class="mhdr" onclick="tog('proj')">
+            <div class="micon" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="6" height="14" x="2" y="5" rx="2"/><rect width="6" height="10" x="9" y="9" rx="2"/><rect width="6" height="6" x="16" y="13" rx="2"/></svg></div>
+            <span class="mname">Projetos</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-proj">
+            <div class="si" onclick="go('proj-lista')">Projetos & Acompanhamento</div>
+          </div>
+        </div>
+
       </div>
     </div>
 
     <!-- ── OPERAÇÃO ──────────────────────────────────── -->
-    <div class="slbl">Operação</div>
+    <div class="sb-section" id="sbs-op">
+      <div class="sb-section-hdr" onclick="sbsToggle('op')">
+        <span class="sb-section-chv">▼</span>
+        Operação
+      </div>
+      <div class="sb-section-body">
 
-    <!-- Central de Demandas -->
-    <div class="mwrap" id="mw-dem" data-modulo="DEMANDAS">
-      <div class="mhdr mhdr-noexpand" onclick="go('dem-dash')">
-        <div class="micon" style="background:rgba(208,104,104,0.14);border-color:rgba(208,104,104,0.25);color:var(--rose)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>
-        <span class="mname">Central de Demandas</span>
-        <span class="mbadge" style="background:rgba(208,104,104,0.12);color:var(--rose);border:1px solid rgba(208,104,104,0.2)">47</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-dem">
-        <div class="si" data-demanda-admin onclick="go('dem-dash')">Dashboard de Demandas</div>
-        <div class="si" id="si-dem-todas" onclick="go('dem-todas')">Todas as Solicitações</div>
-        <div class="si" data-demanda-admin onclick="go('dem-analise')">Em Análise</div>
-        <div class="si" data-demanda-admin onclick="go('dem-and')">Em Andamento</div>
-        <div class="si" onclick="go('dem-conc')">Concluídas</div>
-        <div class="si" data-demanda-admin onclick="go('dem-pri')">Alta Prioridade</div>
-        <div class="si" onclick="go('dem-hist')">Histórico</div>
-      </div>
-    </div>
+        <!-- Central de Demandas -->
+        <div class="mwrap" id="mw-dem" data-modulo="DEMANDAS">
+          <div class="mhdr mhdr-noexpand" onclick="go('dem-dash')">
+            <div class="micon" style="background:rgba(208,104,104,0.14);border-color:rgba(208,104,104,0.25);color:var(--rose)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>
+            <span class="mname">Central de Demandas</span>
+            <span class="mbadge" style="background:rgba(208,104,104,0.12);color:var(--rose);border:1px solid rgba(208,104,104,0.2)">47</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-dem">
+            <div class="si" data-demanda-admin onclick="go('dem-dash')">Dashboard de Demandas</div>
+            <div class="si" id="si-dem-todas" onclick="go('dem-todas')">Todas as Solicitações</div>
+            <div class="si" data-demanda-admin onclick="go('dem-analise')">Em Análise</div>
+            <div class="si" data-demanda-admin onclick="go('dem-and')">Em Andamento</div>
+            <div class="si" onclick="go('dem-conc')">Concluídas</div>
+            <div class="si" data-demanda-admin onclick="go('dem-pri')">Alta Prioridade</div>
+            <div class="si" onclick="go('dem-hist')">Histórico</div>
+          </div>
+        </div>
 
-    <!-- Agenda -->
-    <div class="mwrap" id="mw-agenda" data-modulo="AGENDA">
-      <div class="mhdr mhdr-noexpand" onclick="go('agenda-dash')">
-        <div class="micon" style="background:rgba(42,181,192,0.14);border-color:rgba(42,181,192,0.25);color:var(--teal)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></div>
-        <span class="mname">Agenda</span>
-        <span class="mbadge" style="background:rgba(212,168,67,0.12);color:var(--gold);border:1px solid rgba(212,168,67,0.2)">12</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-agenda">
-        <div class="si" onclick="go('agenda-dash')">Dashboard da Agenda</div>
-        <div class="si" onclick="go('agenda-calendario')">Calendário Geral</div>
-        <div class="si" onclick="go('agenda-solicitacoes')">Solicitações de Agendamento</div>
-        <div class="si" onclick="go('agenda-aprovacoes')">Aprovações Pendentes</div>
-        <div class="si" onclick="go('agenda-confirmados')">Eventos Confirmados</div>
-        <div class="si" onclick="go('agenda-recusados')">Eventos Recusados</div>
-        <div class="si" onclick="go('agenda-reagendamentos')">Reagendamentos e Ajustes</div>
-        <div class="si" onclick="go('agenda-ambientes')">Ambientes e Recursos</div>
-        <div class="si" onclick="go('agenda-conflitos')">Conflitos de Agenda</div>
-        <div class="si" onclick="go('agenda-historico')">Histórico de Agendamentos</div>
-      </div>
-    </div>
+        <!-- Agenda -->
+        <div class="mwrap" id="mw-agenda" data-modulo="AGENDA">
+          <div class="mhdr mhdr-noexpand" onclick="go('agenda-dash')">
+            <div class="micon" style="background:rgba(42,181,192,0.14);border-color:rgba(42,181,192,0.25);color:var(--teal)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></div>
+            <span class="mname">Agenda</span>
+            <span class="mbadge" style="background:rgba(212,168,67,0.12);color:var(--gold);border:1px solid rgba(212,168,67,0.2)">12</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-agenda">
+            <div class="si" onclick="go('agenda-dash')">Dashboard da Agenda</div>
+            <div class="si" onclick="go('agenda-calendario')">Calendário Geral</div>
+            <div class="si" onclick="go('agenda-solicitacoes')">Solicitações de Agendamento</div>
+            <div class="si" onclick="go('agenda-aprovacoes')">Aprovações Pendentes</div>
+            <div class="si" onclick="go('agenda-confirmados')">Eventos Confirmados</div>
+            <div class="si" onclick="go('agenda-recusados')">Eventos Recusados</div>
+            <div class="si" onclick="go('agenda-reagendamentos')">Reagendamentos e Ajustes</div>
+            <div class="si" onclick="go('agenda-ambientes')">Ambientes e Recursos</div>
+            <div class="si" onclick="go('agenda-conflitos')">Conflitos de Agenda</div>
+            <div class="si" onclick="go('agenda-historico')">Histórico de Agendamentos</div>
+          </div>
+        </div>
 
-    <!-- Comunicação -->
-    <div class="mwrap" id="mw-com" data-modulo="COMUNICACAO">
-      <div class="mhdr mhdr-noexpand" onclick="go('com-dash')">
-        <div class="micon" style="background:rgba(139,111,212,0.14);border-color:rgba(139,111,212,0.25);color:var(--violet)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5.89A8 8 0 0 1 17 4h1v14h-1a8 8 0 0 1-6-1.89M3 10v4"/><path d="M7 9H3a2 2 0 0 0 0 4h4"/><path d="M7 9v6"/><path d="M7 15l2 4"/></svg></div>
-        <span class="mname">Comunicação</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-com">
-        <div class="si" onclick="go('com-dash')">Dashboard</div>
-        <div class="si" onclick="go('com-solicitacoes')">Solicitações de Arte</div>
-      </div>
-    </div>
+        <!-- Comunicação -->
+        <div class="mwrap" id="mw-com" data-modulo="COMUNICACAO">
+          <div class="mhdr mhdr-noexpand" onclick="go('com-dash')">
+            <div class="micon" style="background:rgba(139,111,212,0.14);border-color:rgba(139,111,212,0.25);color:var(--violet)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5.89A8 8 0 0 1 17 4h1v14h-1a8 8 0 0 1-6-1.89M3 10v4"/><path d="M7 9H3a2 2 0 0 0 0 4h4"/><path d="M7 9v6"/><path d="M7 15l2 4"/></svg></div>
+            <span class="mname">Comunicação</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-com">
+            <div class="si" onclick="go('com-dash')">Dashboard</div>
+            <div class="si" onclick="go('com-solicitacoes')">Solicitações de Arte</div>
+          </div>
+        </div>
 
-    <!-- Eventos -->
-    <div class="mwrap" id="mw-eve" data-modulo="EVENTOS">
-      <div class="mhdr mhdr-noexpand" onclick="go('eve-dash')">
-        <div class="micon" style="background:rgba(74,156,245,0.14);border-color:rgba(74,156,245,0.25);color:var(--sky)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg></div>
-        <span class="mname">Programações</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-eve">
-        <div class="si" onclick="go('eve-dash')">Dashboard</div>
-        <div class="si" onclick="go('eve-todos')">Todas as Programações</div>
-        <div class="si" onclick="go('eve-reunioes')">Reuniões</div>
-        <div class="si" onclick="go('eve-ensaios')">Ensaios</div>
-        <div class="si" onclick="go('eve-inscricoes')">Inscrições</div>
-        <div class="si" onclick="go('eve-pagamentos')">Pagamentos</div>
-        <div class="si" onclick="go('eve-credenciamento')">Credenciamento</div>
-        <div class="si" onclick="go('eve-presenca')">Lista de Presença</div>
-        <div class="si" onclick="go('eve-relatorios')">Relatórios</div>
-      </div>
-    </div>
+        <!-- Eventos -->
+        <div class="mwrap" id="mw-eve" data-modulo="EVENTOS">
+          <div class="mhdr mhdr-noexpand" onclick="go('eve-dash')">
+            <div class="micon" style="background:rgba(74,156,245,0.14);border-color:rgba(74,156,245,0.25);color:var(--sky)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg></div>
+            <span class="mname">Programações</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-eve">
+            <div class="si" onclick="go('eve-dash')">Dashboard</div>
+            <div class="si" onclick="go('eve-todos')">Todas as Programações</div>
+            <div class="si" onclick="go('eve-reunioes')">Reuniões</div>
+            <div class="si" onclick="go('eve-ensaios')">Ensaios</div>
+            <div class="si" onclick="go('eve-inscricoes')">Inscrições</div>
+            <div class="si" onclick="go('eve-pagamentos')">Pagamentos</div>
+            <div class="si" onclick="go('eve-credenciamento')">Credenciamento</div>
+            <div class="si" onclick="go('eve-presenca')">Lista de Presença</div>
+            <div class="si" onclick="go('eve-relatorios')">Relatórios</div>
+          </div>
+        </div>
 
-    <!-- Departamentos -->
-    <div class="mwrap" id="mw-min" data-modulo="MINISTERIAL">
-      <div class="mhdr" onclick="tog('min')">
-        <div class="micon" style="background:rgba(144,104,200,0.14);border-color:rgba(144,104,200,0.25);color:var(--violet)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
-        <span class="mname">Departamentos</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-min">
-        <div class="si" onclick="go('min-dash')">Dashboard de Departamentos</div>
-        <div class="si" onclick="go('min-soc')">Sociedades Internas</div>
-        <div class="si" onclick="go('min-adm')">Administração</div>
-      </div>
-    </div>
+        <!-- Departamentos -->
+        <div class="mwrap" id="mw-min" data-modulo="MINISTERIAL">
+          <div class="mhdr" onclick="tog('min')">
+            <div class="micon" style="background:rgba(144,104,200,0.14);border-color:rgba(144,104,200,0.25);color:var(--violet)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+            <span class="mname">Departamentos</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-min">
+            <div class="si" onclick="go('min-dash')">Dashboard de Departamentos</div>
+            <div class="si" onclick="go('min-soc')">Sociedades Internas</div>
+            <div class="si" onclick="go('min-adm')">Administração</div>
+          </div>
+        </div>
 
-    <!-- Ministérios -->
-    <div class="mwrap" id="mw-ministerios" data-modulo="MINISTERIOS">
-      <div class="mhdr mhdr-noexpand" onclick="go('min-min')">
-        <div class="micon" style="background:rgba(144,104,200,0.14);border-color:rgba(144,104,200,0.25);color:var(--violet)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-        <span class="mname">Ministérios</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-ministerios"></div>
-    </div>
+        <!-- Ministérios -->
+        <div class="mwrap" id="mw-ministerios" data-modulo="MINISTERIOS">
+          <div class="mhdr mhdr-noexpand" onclick="go('min-min')">
+            <div class="micon" style="background:rgba(144,104,200,0.14);border-color:rgba(144,104,200,0.25);color:var(--violet)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+            <span class="mname">Ministérios</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-ministerios"></div>
+        </div>
 
-    <!-- Pequenos Grupos -->
-    <div class="mwrap" id="mw-pgs" data-modulo="PGS">
-      <div class="mhdr mhdr-noexpand" onclick="go('pgs-dash')">
-        <div class="micon" style="background:rgba(82,196,110,0.14);border-color:rgba(82,196,110,0.25);color:var(--gbr)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-        <span class="mname">Pequenos Grupos</span>
-        <span class="mbadge" style="background:rgba(61,160,85,0.12);color:var(--gbr);border:1px solid rgba(61,160,85,0.2)">9</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-pgs">
-        <div class="si" onclick="go('pgs-dash')">Dashboard</div>
-        <div class="si" onclick="go('pgs-lista')">Lista de PGs</div>
-        <div class="si" onclick="go('pgs-encontros')">Encontros</div>
-        <div class="si" onclick="go('pgs-participantes')">Participantes</div>
-        <div class="si" onclick="go('pgs-visitantes')">Visitantes</div>
-        <div class="si" onclick="go('pgs-estudos')">Estudos</div>
-        <div class="si" onclick="go('pgs-relatorios')">Relatórios</div>
-        <div class="si" onclick="go('pgs-oracao')">Pedidos de Oração</div>
-        <div class="si" onclick="go('pgs-historico')">Histórico</div>
+        <!-- Pequenos Grupos -->
+        <div class="mwrap" id="mw-pgs" data-modulo="PGS">
+          <div class="mhdr mhdr-noexpand" onclick="go('pgs-dash')">
+            <div class="micon" style="background:rgba(82,196,110,0.14);border-color:rgba(82,196,110,0.25);color:var(--gbr)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+            <span class="mname">Pequenos Grupos</span>
+            <span class="mbadge" style="background:rgba(61,160,85,0.12);color:var(--gbr);border:1px solid rgba(61,160,85,0.2)">9</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-pgs">
+            <div class="si" onclick="go('pgs-dash')">Dashboard</div>
+            <div class="si" onclick="go('pgs-lista')">Lista de PGs</div>
+            <div class="si" onclick="go('pgs-encontros')">Encontros</div>
+            <div class="si" onclick="go('pgs-participantes')">Participantes</div>
+            <div class="si" onclick="go('pgs-visitantes')">Visitantes</div>
+            <div class="si" onclick="go('pgs-estudos')">Estudos</div>
+            <div class="si" onclick="go('pgs-relatorios')">Relatórios</div>
+            <div class="si" onclick="go('pgs-oracao')">Pedidos de Oração</div>
+            <div class="si" onclick="go('pgs-historico')">Histórico</div>
+          </div>
+        </div>
+
       </div>
     </div>
 
     <!-- ── ADMINISTRAÇÃO ─────────────────────────────── -->
-    <div class="slbl">Administração</div>
+    <div class="sb-section" id="sbs-adm">
+      <div class="sb-section-hdr" onclick="sbsToggle('adm')">
+        <span class="sb-section-chv">▼</span>
+        Administração
+      </div>
+      <div class="sb-section-body">
 
-    <!-- Administrativo -->
-    <div class="mwrap" id="mw-admin" data-modulo="ADMINISTRATIVO">
-      <div class="mhdr" onclick="go('admin-dash')">
-        <div class="micon" style="background:rgba(201,168,76,0.14);border-color:rgba(201,168,76,0.25);color:#c9a84c"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H9"/><path d="M14 17H3"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg></div>
-        <span class="mname">Administração</span>
-      </div>
-    </div>
+        <!-- Administrativo -->
+        <div class="mwrap" id="mw-admin" data-modulo="ADMINISTRATIVO">
+          <div class="mhdr" onclick="go('admin-dash')">
+            <div class="micon" style="background:rgba(201,168,76,0.14);border-color:rgba(201,168,76,0.25);color:#c9a84c"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H9"/><path d="M14 17H3"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg></div>
+            <span class="mname">Administração</span>
+          </div>
+        </div>
 
-    <!-- Financeiro -->
-    <div class="mwrap" id="mw-fin" data-modulo="FINANCEIRO">
-      <div class="mhdr" onclick="tog('fin')">
-        <div class="micon" style="background:rgba(61,160,85,0.14);border-color:rgba(61,160,85,0.25);color:var(--gr)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg></div>
-        <span class="mname">Financeiro</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-fin">
-        <div class="si" onclick="go('fin-demandas')">A Pagar</div>
-        <div class="sdiv"></div>
-        <div class="si" onclick="go('cnab-remessas')">CNAB 240 — Remessas</div>
-      </div>
-    </div>
+        <!-- Financeiro -->
+        <div class="mwrap" id="mw-fin" data-modulo="FINANCEIRO">
+          <div class="mhdr" onclick="tog('fin')">
+            <div class="micon" style="background:rgba(61,160,85,0.14);border-color:rgba(61,160,85,0.25);color:var(--gr)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg></div>
+            <span class="mname">Financeiro</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-fin">
+            <div class="si" onclick="go('fin-demandas')">A Pagar</div>
+            <div class="sdiv"></div>
+            <div class="si" onclick="go('cnab-remessas')">CNAB 240 — Remessas</div>
+          </div>
+        </div>
 
-    <!-- Infraestrutura e Conservação -->
-    <div class="mwrap" id="mw-infra" data-modulo="INFRAESTRUTURA">
-      <div class="mhdr" onclick="tog('infra')">
-        <div class="micon" style="background:rgba(208,144,64,0.14);border-color:rgba(208,144,64,0.25);color:var(--amber)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
-        <span class="mname">Infraestrutura e Conservação</span>
-        <span class="mbadge" style="background:rgba(208,104,104,0.12);color:var(--rose);border:1px solid rgba(208,104,104,0.2)">2</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-infra">
-        <div class="si" onclick="go('infra-dash')">Dashboard de Infraestrutura e Conservação</div>
-        <div class="si" onclick="go('infra-man')">Manutenção</div>
-        <div class="si" onclick="go('infra-lim')">Limpeza e Conservação</div>
-        <div class="si" onclick="go('infra-sol')">Solicitações Operacionais</div>
-        <div class="si" onclick="go('infra-pat')">Patrimônio</div>
-        <div class="sdiv"></div>
-        <div class="si" onclick="go('infra-demandas')">Demandas de Infraestrutura e Conservação</div>
-      </div>
-    </div>
+        <!-- Infraestrutura e Conservação -->
+        <div class="mwrap" id="mw-infra" data-modulo="INFRAESTRUTURA">
+          <div class="mhdr" onclick="tog('infra')">
+            <div class="micon" style="background:rgba(208,144,64,0.14);border-color:rgba(208,144,64,0.25);color:var(--amber)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+            <span class="mname">Infraestrutura e Conservação</span>
+            <span class="mbadge" style="background:rgba(208,104,104,0.12);color:var(--rose);border:1px solid rgba(208,104,104,0.2)">2</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-infra">
+            <div class="si" onclick="go('infra-dash')">Dashboard de Infraestrutura e Conservação</div>
+            <div class="si" onclick="go('infra-man')">Manutenção</div>
+            <div class="si" onclick="go('infra-lim')">Limpeza e Conservação</div>
+            <div class="si" onclick="go('infra-sol')">Solicitações Operacionais</div>
+            <div class="si" onclick="go('infra-pat')">Patrimônio</div>
+            <div class="sdiv"></div>
+            <div class="si" onclick="go('infra-demandas')">Demandas de Infraestrutura e Conservação</div>
+          </div>
+        </div>
 
-    <!-- Controle de Acesso -->
-    <div class="mwrap" id="mw-acesso" data-modulo="CONTROLE_ACESSO">
-      <div class="mhdr" onclick="tog('acesso','acesso-relatorio')">
-        <div class="micon" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-        <span class="mname">Controle de Acesso</span>
-        <span class="marr">▶</span>
-      </div>
-      <div class="msub" id="ms-acesso">
-        <div class="si" onclick="go('admin-parking-controls')">Estacionamento</div>
-        <div class="si" onclick="go('admin-facial')">Acesso Facial</div>
-        <div class="si" onclick="go('acesso-relatorio')">Relatório de Acessos</div>
+        <!-- Controle de Acesso -->
+        <div class="mwrap" id="mw-acesso" data-modulo="CONTROLE_ACESSO">
+          <div class="mhdr" onclick="tog('acesso','acesso-relatorio')">
+            <div class="micon" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <span class="mname">Controle de Acesso</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-acesso">
+            <div class="si" onclick="go('admin-parking-controls')">Estacionamento</div>
+            <div class="si" onclick="go('admin-facial')">Acesso Facial</div>
+            <div class="si" onclick="go('acesso-relatorio')">Relatório de Acessos</div>
+          </div>
+        </div>
+
       </div>
     </div>
 
     <!-- ── PORTAL DO MEMBRO ──────────────────────────── -->
-    <div class="slbl">Portal do Membro</div>
-
-    <!-- Área do Membro -->
-    <div class="mwrap" id="mw-area" data-modulo="AREA_MEMBRO">
-      <div class="mhdr" onclick="tog('area')">
-        <div class="micon" style="background:rgba(58,170,92,0.14);border-color:rgba(58,170,92,0.25);color:var(--gr)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg></div>
-        <span class="mname">Área do Membro</span>
-        <span class="marr">▶</span>
+    <div class="sb-section" id="sbs-portal">
+      <div class="sb-section-hdr" onclick="sbsToggle('portal')">
+        <span class="sb-section-chv">▼</span>
+        Portal do Membro
       </div>
-      <div class="msub" id="ms-area">
-        <div class="si" onclick="go('area-dash')">Painel Pessoal</div>
-        <div class="si" onclick="go('area-agenda')">Agenda</div>
-        <div class="si" onclick="go('area-min')">Meus Ministérios</div>
-        <div class="si" onclick="go('area-pgs')">Meu PG</div>
-        <div class="si" onclick="go('area-dem')">Minhas Solicitações</div>
-        <div class="si" onclick="go('memb-aniv')">Aniversariantes</div>
+      <div class="sb-section-body">
+
+        <!-- Área do Membro -->
+        <div class="mwrap" id="mw-area" data-modulo="AREA_MEMBRO">
+          <div class="mhdr" onclick="tog('area')">
+            <div class="micon" style="background:rgba(58,170,92,0.14);border-color:rgba(58,170,92,0.25);color:var(--gr)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg></div>
+            <span class="mname">Área do Membro</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-area">
+            <div class="si" onclick="go('area-dash')">Painel Pessoal</div>
+            <div class="si" onclick="go('area-agenda')">Agenda</div>
+            <div class="si" onclick="go('area-min')">Meus Ministérios</div>
+            <div class="si" onclick="go('area-pgs')">Meu PG</div>
+            <div class="si" onclick="go('area-dem')">Minhas Solicitações</div>
+            <div class="si" onclick="go('memb-aniv')">Aniversariantes</div>
+          </div>
+        </div>
+
       </div>
     </div>
 
