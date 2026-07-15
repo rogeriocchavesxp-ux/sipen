@@ -353,6 +353,23 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 .ag2-occ-outros { color: var(--tx3); font-weight: 400; }
 .ag2-occ-outros .ag2-occ-item { color: var(--tx3); }
 
+/* Sub-info: localização e capacidade */
+.ag2-card-info {
+  display: block; font-size: 10px; color: var(--tx3);
+  font-weight: 400; line-height: 1.3; margin-top: 1px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ag2-espaco-indisp .ag2-card-info { opacity: .6; }
+
+/* Grupo recolhível */
+.ag2-grupo-hdr { cursor: pointer; user-select: none; }
+.ag2-grupo-chevron {
+  float: right; font-size: 10px; color: var(--tx3);
+  transition: transform .2s; display: inline-block; margin-left: 6px;
+}
+.ag2-grupo.collapsed .ag2-grupo-chevron { transform: rotate(-90deg); }
+.ag2-grupo.collapsed .ag2-grupo-grid { display: none; }
+
 /* ── req de espaço: menu ⋮ ─────────────────────────────────────── */
 .ag2-menu-btn {
   pointer-events: auto; cursor: pointer;
@@ -2217,10 +2234,12 @@ async function ag2VerificarDisp() {
     const dados = espacos.map(e => {
       const info = dispMap[e.nome];
       return {
-        nome:       e.nome,
-        grupo:      e.grupo || "",
-        disponivel: info ? info.disponivel : true,
-        ocupacoes:  info ? info.ocupacoes  : [],
+        nome:        e.nome,
+        grupo:       e.grupo || "",
+        disponivel:  info ? info.disponivel : true,
+        ocupacoes:   info ? info.ocupacoes  : [],
+        localizacao: e.localizacao || "",
+        capacidade:  e.capacidade  || null,
       };
     });
 
@@ -2269,6 +2288,13 @@ function ag2FormatarIntervalo(occ) {
   return `de ${fmt(datI)} às ${hi} até ${fmt(datF)} às ${hf}`;
 }
 
+function _ag2InfoLine(item) {
+  const parts = [];
+  if (item.localizacao) parts.push(item.localizacao);
+  if (item.capacidade)  parts.push(item.capacidade + " pessoas");
+  return parts.join(" · ");
+}
+
 function ag2MostrarEspacos(dados) {
   const espCard = document.getElementById("ag2-card-espacos");
   const grid    = document.getElementById("ag2-espacos-grid");
@@ -2314,26 +2340,30 @@ function ag2MostrarEspacos(dados) {
     grupoEl.className = "ag2-grupo";
 
     const hdr = document.createElement("div");
-    hdr.className   = "ag2-grupo-hdr";
-    hdr.textContent = grupoNome;
+    hdr.className = "ag2-grupo-hdr";
+    hdr.innerHTML = grupoNome + `<span class="ag2-grupo-chevron">▾</span>`;
+    hdr.onclick = () => grupoEl.classList.toggle("collapsed");
     grupoEl.appendChild(hdr);
 
     const gGrid = document.createElement("div");
     gGrid.className = "ag2-grupo-grid";
 
     ordenado.forEach(item => {
-      const card  = document.createElement("div");
-      const occs  = ag2ConsolidarIntervalos(item.ocupacoes || []);
+      const card   = document.createElement("div");
+      const occs   = ag2ConsolidarIntervalos(item.ocupacoes || []);
       const temOcc = occs.length > 0;
+      const infoTxt = _ag2InfoLine(item);
 
       card.className    = "ag2-espaco-card" +
         (!item.disponivel ? " ag2-espaco-indisp" : "") +
         (temOcc ? " ag2-espaco-com-occ" : "");
-      card.dataset.espaco   = item.nome;
+      card.dataset.espaco    = item.nome;
       card.dataset.ocupacoes = JSON.stringify(occs);
       card.title = item.disponivel
-        ? item.nome
+        ? (infoTxt ? `${item.nome} · ${infoTxt}` : item.nome)
         : `${item.nome} — ocupado no horário solicitado`;
+
+      const infoHTML = infoTxt ? `<span class="ag2-card-info">${infoTxt}</span>` : "";
 
       if (temOcc) {
         const lockHTML = !item.disponivel ? `<span class="ag2-lock">🔒</span>` : "";
@@ -2348,7 +2378,10 @@ function ag2MostrarEspacos(dados) {
         card.innerHTML =
           `<div class="ag2-card-hdr">` +
             `<div class="ag2-chk"></div>` +
-            `<span class="ag2-card-nome">${item.nome}</span>` +
+            `<div style="flex:1;min-width:0">` +
+              `<span class="ag2-card-nome">${item.nome}</span>` +
+              infoHTML +
+            `</div>` +
             lockHTML + menuHTML +
           `</div>` +
           `<div class="${occClass}">${occPrefix}${occItems}</div>`;
@@ -2358,7 +2391,10 @@ function ag2MostrarEspacos(dados) {
           : "";
         card.innerHTML =
           `<div class="ag2-chk"></div>` +
-          `<span class="ag2-card-nome">${item.nome}</span>` +
+          `<div style="flex:1;min-width:0">` +
+            `<span class="ag2-card-nome">${item.nome}</span>` +
+            infoHTML +
+          `</div>` +
           (!item.disponivel ? `<span class="ag2-lock">🔒</span>` : "") +
           menuHTML;
       }
