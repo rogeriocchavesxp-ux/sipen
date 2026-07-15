@@ -178,7 +178,8 @@ const ADM_ESP = (() => {
     ).join("");
 
     const chk = (field, label, title = "") => {
-      const val = e ? e[field] : false;
+      const padraoNovo = field === "ativo" || field === "reservavel";
+      const val = e ? e[field] : padraoNovo;
       return `<label style="display:flex;align-items:center;gap:7px;padding:5px 0;font-size:12.5px;cursor:pointer" title="${title}">
         <input type="checkbox" id="adm-esp-f-${field}" ${val ? "checked" : ""} style="accent-color:var(--teal);width:14px;height:14px;cursor:pointer;flex-shrink:0"> ${label}</label>`;
     };
