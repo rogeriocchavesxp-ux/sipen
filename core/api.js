@@ -50,6 +50,7 @@ function getSupabase() {
 }
 
 function sipenToken() {
+  if (window._sipenFreshToken) return window._sipenFreshToken;
   try {
     const raw = localStorage.getItem('sipen_auth_session');
     if (!raw) return SUPABASE_ANON_KEY;

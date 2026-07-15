@@ -1406,6 +1406,15 @@ async function agCarregarAprovacoes() {
 
     el.innerHTML = html;
   } catch (e) {
+    const msg = e.message || "";
+    if (msg.includes("JWT expired") || msg.includes("PGRST303")) {
+      try {
+        const { data } = await getSupabase().auth.refreshSession();
+        if (data?.session?.access_token) window._sipenFreshToken = data.session.access_token;
+        await agCarregarAprovacoes();
+        return;
+      } catch (_) {}
+    }
     el.innerHTML = `<div style="color:var(--rose);font-size:11.5px">Erro: ${escapeHtml(e.message)}</div>`;
   }
 }

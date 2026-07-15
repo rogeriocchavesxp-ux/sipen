@@ -209,6 +209,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           abrirModalNovaSenha();
           return;
         }
+        // Token renovado automaticamente → mantém variável global atualizada
+        if (event === "TOKEN_REFRESHED" && session?.access_token) {
+          window._sipenFreshToken = session.access_token;
+        }
         // Token expirado / sessão encerrada externamente → volta para login
         if (event === "SIGNED_OUT" && USUARIO_ATUAL) {
           usuarioLogado = null;
@@ -218,6 +222,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           document.getElementById("login-screen").style.display = "flex";
           document.getElementById("login-password").value = "";
           document.getElementById("login-err").textContent = "Sessão encerrada. Faça login novamente.";
+        }
+      });
+
+      // Ao voltar para a aba após inatividade, renova o token proativamente
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden && USUARIO_ATUAL) {
+          getSupabase().auth.getSession().catch(() => {});
         }
       });
 
