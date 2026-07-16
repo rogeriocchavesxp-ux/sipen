@@ -1675,57 +1675,83 @@ async function _syncDemandaStatus(agendaId, status) {
 }
 
 // ── Confirmados com badge de status do Termo ───────────────────
+let _agConfRows = [];
+
 async function agCarregarConfirmados() {
   const el = document.getElementById("ag-conf-list");
   if (!el) return;
   el.innerHTML = `<div style="color:var(--tx3);font-size:11px">${typeof spinner==="function"?spinner():"⏳"} Carregando...</div>`;
   try {
-    const url = `${apiBaseUrl()}/rest/v1/agenda?status=eq.confirmado&deleted_at=is.null&order=data.asc&select=id,titulo,data,hora_inicio,hora_fim,espaco,solicitante_txt,protocolo,aprovado_por_nome,aprovado_em,status_termo,token_termo`;
+    const url = `${apiBaseUrl()}/rest/v1/agenda?status=eq.confirmado&deleted_at=is.null&order=data.desc&select=id,titulo,data,hora_inicio,hora_fim,espaco,solicitante_txt,protocolo,aprovado_por_nome,aprovado_em,status_termo,token_termo`;
     const res = await fetch(url, { headers: apiHeaders() });
     if (!res.ok) throw new Error(await res.text());
-    const rows = await res.json();
-    if (!rows.length) {
-      el.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--tx3)"><div style="font-size:28px;margin-bottom:8px">📭</div><div style="font-size:12px">Nenhum agendamento confirmado</div></div>`;
-      return;
-    }
-    const termoBadge = st => {
-      if (st === "aceito")     return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:9.5px;font-weight:700;background:rgba(42,158,82,.12);color:var(--gr);border:1px solid rgba(42,158,82,.3)">✅ Termo aceito</span>`;
-      if (st === "aguardando") return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:9.5px;font-weight:700;background:rgba(176,125,16,.10);color:#b07d10;border:1px solid rgba(176,125,16,.25)">⏳ Aguardando termo</span>`;
-      return `<span style="padding:2px 8px;border-radius:12px;font-size:9.5px;background:var(--bg-surface);color:var(--tx3);border:1px solid var(--bd1)">—</span>`;
-    };
-    const fmtD = d => { if(!d)return"—"; const[y,m,dia]=String(d).slice(0,10).split("-"); return`${dia}/${m}/${y}`; };
-    const fmtH = h => h ? String(h).slice(0,5) : "";
-    el.innerHTML = `
-      <div style="font-size:10px;color:var(--tx3);margin-bottom:10px">${rows.length} confirmado${rows.length!==1?"s":""}</div>
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:11.5px">
-          <thead>
-            <tr style="background:var(--bg-surface);border-bottom:2px solid var(--teal)">
-              <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Título</th>
-              <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Data</th>
-              <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Horário</th>
-              <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Espaço</th>
-              <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Responsável</th>
-              <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Termo</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.map(r => `
-              <tr style="border-bottom:1px solid var(--bd1);transition:background .1s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
-                <td style="padding:8px 10px;color:var(--tx1);font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.titulo||"—")}</td>
-                <td style="padding:8px 10px;color:var(--tx2);white-space:nowrap">${fmtD(r.data)}</td>
-                <td style="padding:8px 10px;color:var(--tx2);white-space:nowrap">${fmtH(r.hora_inicio)}${r.hora_fim?" → "+fmtH(r.hora_fim):""}</td>
-                <td style="padding:8px 10px;color:var(--tx2);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.espaco||"—")}</td>
-                <td style="padding:8px 10px;color:var(--tx2);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.solicitante_txt||"—")}</td>
-                <td style="padding:8px 10px">${termoBadge(r.status_termo)}</td>
-              </tr>`).join("")}
-          </tbody>
-        </table>
-      </div>`;
+    _agConfRows = await res.json();
+    _agRenderConfirmados();
   } catch(e) {
-    el.innerHTML = `<div style="color:var(--rose);font-size:11.5px">Erro: ${escapeHtml(e.message)}</div>`;
+    const el2 = document.getElementById("ag-conf-list");
+    if (el2) el2.innerHTML = `<div style="color:var(--rose);font-size:11.5px">Erro: ${escapeHtml(e.message)}</div>`;
   }
 }
+
+function _agRenderConfirmados() {
+  const el = document.getElementById("ag-conf-list");
+  if (!el) return;
+  const mesSel = (document.getElementById("ag-conf-mes-sel") || {}).value || "";
+  const rows = mesSel ? _agConfRows.filter(r => r.data && r.data.slice(0,7) === mesSel) : _agConfRows;
+
+  // meses disponíveis para o select
+  const meses = [...new Set(_agConfRows.map(r => r.data ? r.data.slice(0,7) : "").filter(Boolean))].sort().reverse();
+  const nomeMes = m => { const [y,mo] = m.split("-"); return ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][parseInt(mo)-1] + " " + y; };
+
+  if (!_agConfRows.length) {
+    el.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--tx3)"><div style="font-size:28px;margin-bottom:8px">📭</div><div style="font-size:12px">Nenhum agendamento confirmado</div></div>`;
+    return;
+  }
+
+  const termoBadge = st => {
+    if (st === "aceito")     return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:9.5px;font-weight:700;background:rgba(42,158,82,.12);color:var(--gr);border:1px solid rgba(42,158,82,.3)">✅ Termo aceito</span>`;
+    if (st === "aguardando") return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:9.5px;font-weight:700;background:rgba(176,125,16,.10);color:#b07d10;border:1px solid rgba(176,125,16,.25)">⏳ Aguardando termo</span>`;
+    return `<span style="padding:2px 8px;border-radius:12px;font-size:9.5px;background:var(--bg-surface);color:var(--tx3);border:1px solid var(--bd1)">—</span>`;
+  };
+  const fmtD = d => { if(!d)return"—"; const[y,m,dia]=String(d).slice(0,10).split("-"); return`${dia}/${m}/${y}`; };
+  const fmtH = h => h ? String(h).slice(0,5) : "";
+
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+      <div style="font-size:10px;color:var(--tx3)">${rows.length} de ${_agConfRows.length} confirmado${_agConfRows.length!==1?"s":""}</div>
+      <select id="ag-conf-mes-sel" onchange="_agRenderConfirmados()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:5px 10px;outline:none;cursor:pointer">
+        <option value="">Todos os meses</option>
+        ${meses.map(m => `<option value="${m}" ${m===mesSel?"selected":""}>${nomeMes(m)}</option>`).join("")}
+      </select>
+    </div>
+    ${rows.length ? `
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:11.5px">
+        <thead>
+          <tr style="background:var(--bg-surface);border-bottom:2px solid var(--teal)">
+            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Título</th>
+            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Data</th>
+            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Horário</th>
+            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Espaço</th>
+            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Responsável</th>
+            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Termo</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr style="border-bottom:1px solid var(--bd1);transition:background .1s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+              <td style="padding:8px 10px;color:var(--tx1);font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.titulo||"—")}</td>
+              <td style="padding:8px 10px;color:var(--tx2);white-space:nowrap">${fmtD(r.data)}</td>
+              <td style="padding:8px 10px;color:var(--tx2);white-space:nowrap">${fmtH(r.hora_inicio)}${r.hora_fim?" → "+fmtH(r.hora_fim):""}</td>
+              <td style="padding:8px 10px;color:var(--tx2);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.espaco||"—")}</td>
+              <td style="padding:8px 10px;color:var(--tx2);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.solicitante_txt||"—")}</td>
+              <td style="padding:8px 10px">${termoBadge(r.status_termo)}</td>
+            </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>` : `<div style="text-align:center;padding:24px 0;color:var(--tx3);font-size:12px">Nenhum evento neste mês.</div>`}`;
+}
+window._agRenderConfirmados = _agRenderConfirmados;
 
 // ── Kebab menu de solicitação ──────────────────────────────────
 function agSolKebab(btn, id) {
