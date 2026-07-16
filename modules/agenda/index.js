@@ -752,7 +752,8 @@ function _agRenderSolTabela() {
           <td style="padding:8px 10px;color:var(--tx1);font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(r.titulo||'')}">${escapeHtml(r.titulo||"—")}</td>
           <td style="padding:8px 10px;color:var(--tx2);font-size:11px">${escapeHtml(r.solicitante_txt||r.solicitante||"—")}</td>
           <td style="padding:8px 10px;color:var(--tx2);font-size:11px;white-space:nowrap">
-            ${r.data ? fmtD(r.data) : "—"}${r.hora_inicio ? " " + String(r.hora_inicio).slice(0,5) + (r.hora_fim ? " → " + String(r.hora_fim).slice(0,5) : "") : ""}
+            ${r.data ? fmtD(r.data) : "—"}
+            ${r.hora_inicio ? `<div style="font-size:10px;color:var(--tx3)">${String(r.hora_inicio).slice(0,5)}${r.hora_fim ? " → " + String(r.hora_fim).slice(0,5) : ""}</div>` : ""}
             ${r.espaco ? `<div style="font-size:10px;color:var(--tx3)">${escapeHtml(r.espaco)}</div>` : ""}
           </td>
           <td style="padding:8px 10px">${_agPill(r.status)}</td>
