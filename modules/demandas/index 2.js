@@ -20,11 +20,8 @@
   const CATS = [
     { id:"conselho",    nome:"Conselho",                icon:"🏛",  cor:"var(--sky)",    resp:"Conselho / Jurídico",
       subcats:["Envio de documentos ao Conselho","Solicitação de aprovação","Análise jurídica","Questões disciplinares"] },
-    { id:"agendamentos",nome:"Agendamentos",            icon:"📅",  cor:"var(--teal)",   resp:"Secretaria / Liderança",
-      subcats:[
-        { grupo:"Programações",         itens:["Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"] },
-        { grupo:"Atendimento Pastoral", itens:["Aconselhamento pastoral","Atendimento pastoral","Visita espiritual","Visitação"] },
-      ] },
+    { id:"agendamentos",nome:"Agendamentos",            icon:"📅",  cor:"var(--teal)",   resp:"Secretaria / Administração",
+      subcats:["Solicitação de uso de sala","Agendamento de culto/evento","Reserva de espaço","Inclusão em calendário oficial","Cancelamento/alteração de agenda"] },
     { id:"manutencao",  nome:"Manutenção",              icon:"🛠",  cor:"var(--amber)",  resp:"Departamento de Manutenção",
       subcats:[
         { grupo:"Infraestrutura Civil",     itens:["Elétrica","Hidráulica","Estrutural","Civil","Pintura","Marcenaria","Vidraçaria","Manutenção predial","Chaveiro","Elevador/Plataforma"] },
@@ -173,7 +170,7 @@
     return `<span style="font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;background:rgba(74,156,245,.12);color:var(--sky);margin-left:4px">🌐 Portal</span>`;
   }
 
-function fmtD(d) {
+  function fmtD(d) {
     if (!d) return "—";
     const s = d.split("T")[0].split("-");
     return `${s[2]}/${s[1]}/${s[0]}`;
@@ -427,29 +424,18 @@ function fmtD(d) {
         <div class="card">
           <div class="ctit">Solicitações recentes <span class="cact" onclick="demRecarregarDash()">↻ Atualizar</span></div>
           ${recentes.length === 0
-            ? '<div class="empty-state">Nenhuma demanda registrada</div>'
-            : recentes.map(r => {
-                const localPart = r.local ? ` · ${escapeHtml(r.local)}` : "";
-                const meta = [
-                  escapeHtml(r.area) || "—",
-                  r.subcategoria ? escapeHtml(r.subcategoria) : null,
-                  r.local        ? escapeHtml(r.local)        : null,
-                  nomePropio(r.solicitante || r.solicitante_txt) || "—",
-                  fmtD(r.data_abertura || r.criado_em),
-                ].filter(Boolean).join(" · ");
-                return `
-              <div onclick="demAbrirDetalhe('${r.id||r._row}','dem-dash')"
-                   style="cursor:pointer;border-bottom:1px solid var(--bd1);padding:9px 0"
-                   onmouseover="this.style.background='var(--bg-hover)'"
-                   onmouseout="this.style.background=''">
-                <div style="display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;padding:0 2px 5px">
-                  <span style="font-size:10.5px;font-weight:700;color:var(--blue);font-family:var(--mono);letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.numero_chamado ? escapeHtml(r.numero_chamado) : "—"}</span>
-                  <span style="font-size:12.5px;font-weight:600;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${catIcon(r.area)} ${escapeHtml(r.titulo) || "Sem título"}</span>
+            ? '<div style="color:var(--tx3);font-size:11.5px">Nenhuma demanda registrada</div>'
+            : recentes.map(r => `
+              <div class="trow" style="cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','dem-dash')">
+                <div class="tdot" style="background:${catCor(r.area)}"></div>
+                <div class="tbody">
+                  <div class="ttitle">${catIcon(r.area)} ${escapeHtml(r.titulo) || "Sem título"}${r.numero_chamado ? ` <span style="font-size:10px;font-weight:600;color:var(--acc,#4a9cf5);letter-spacing:.04em">${escapeHtml(r.numero_chamado)}</span>` : ""}</div>
+                  <div class="tmeta">${r.area||"—"}${r.subcategoria?" · "+r.subcategoria:""} · ${escapeHtml(r.solicitante || r.solicitante_txt) || "—"} · ${fmtD(r.data_abertura||r.criado_em)}</div>
+                </div>
+                <div class="tright" style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">
                   ${pillStatus(r.status)}
                 </div>
-                <div style="font-size:11px;color:var(--tx3);padding:0 2px;line-height:1.4">${meta}</div>
-              </div>`;
-              }).join("")}
+              </div>`).join("")}
         </div>
 
         <div style="display:flex;flex-direction:column;gap:16px">
@@ -569,8 +555,8 @@ function fmtD(d) {
                 </td>
                 <td style="padding:8px 6px;color:var(--tx2);font-size:11px">${r.subcategoria||"—"}</td>
                 <td style="padding:8px 6px;color:var(--tx1);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.titulo) || "—"}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${nomePropio(r.solicitante || r.solicitante_txt || r.nome_solicitante_externo) || "—"}${pillOrigem(r.origem)}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${nomePropio(r.responsavel || r.responsavel_txt) || "—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${escapeHtml(r.solicitante || r.solicitante_txt || r.nome_solicitante_externo) || "—"}${pillOrigem(r.origem)}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${escapeHtml(r.responsavel || r.responsavel_txt) || "—"}</td>
                 <td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--tx1);white-space:nowrap">${r.financial_data?.valor != null ? `R$ ${parseFloat(r.financial_data.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}</td>
                 <td style="padding:8px 6px">${pillStatus(r.status)}</td>
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${fmtD(r.data_abertura||r.criado_em)}</td>
@@ -1049,12 +1035,11 @@ function fmtD(d) {
     const detailRows = [
       ["Categoria",     `<span style="color:${catCor(dem.area)};font-weight:600">${catIcon(dem.area)} ${escapeHtml(dem.area)||"—"}</span>`],
       ["Subcategoria",  escapeHtml(dem.subcategoria)||"—"],
-      dem.local ? ["Localização", escapeHtml(dem.local)] : null,
-      ["Solicitante",   `${nomePropio(dem.solicitante || dem.solicitante_txt || dem.nome_solicitante_externo) || "—"}${pillOrigem(dem.origem)}${dem.telefone_solicitante ? `<br><span style="color:var(--tx3);font-size:11px">📞 ${escapeHtml(dem.telefone_solicitante)}</span>` : ""}`],
-      ["Responsável",   nomePropio(dem.responsavel || dem.responsavel_txt) || "—"],
+      ["Solicitante",   `${escapeHtml(dem.solicitante || dem.solicitante_txt || dem.nome_solicitante_externo) || "—"}${pillOrigem(dem.origem)}${dem.telefone_solicitante ? `<br><span style="color:var(--tx3);font-size:11px">📞 ${escapeHtml(dem.telefone_solicitante)}</span>` : ""}`],
+      ["Responsável",   escapeHtml(dem.responsavel || dem.responsavel_txt) || "—"],
       ["Abertura",      fmtD(dem.data_abertura||dem.criado_em)],
       ["Conclusão prev.",fmtD(dem.data_conclusao)],
-    ].filter(Boolean);
+    ];
     if (dem.numero_chamado) {
       detailRows.unshift(["N° do chamado", `<span style="font-weight:700;color:var(--acc,#4a9cf5);letter-spacing:.04em">${escapeHtml(dem.numero_chamado)}</span>`]);
     }
@@ -1138,12 +1123,6 @@ function fmtD(d) {
               <input id="dem-edit-resp" type="text" value="${escapeHtmlAttr(dem.responsavel || dem.responsavel_txt || '')}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>
             <div>
-              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Localização / Sala</label>
-              <select id="dem-edit-local" data-valor-atual="${dem.local_id || dem.local || ''}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
-                <option value="">Carregando espaços…</option>
-              </select>
-            </div>
-            <div>
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Conclusão prevista</label>
               <input id="dem-edit-venc" type="date" value="${dem.data_conclusao||''}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>
@@ -1219,7 +1198,6 @@ function fmtD(d) {
         </div>
       </div>`;
     _carregarAndamentos(id, dem);
-    _popularSelectEspacos("dem-edit-local");
   }
 
   /* ── Atualizar status ───────────────────────────────── */
@@ -1261,9 +1239,6 @@ function fmtD(d) {
   window.demSalvarEdicao = async function(id) {
     const titulo          = document.getElementById("dem-edit-titulo")?.value?.trim();
     const desc            = document.getElementById("dem-edit-desc")?.value?.trim();
-    const localEditEl     = document.getElementById("dem-edit-local");
-    const local_id        = localEditEl?.value?.trim() || null;
-    const local           = localEditEl?.selectedOptions[0]?.dataset?.nome || null;
     const prioEl          = document.getElementById("dem-edit-prio");
     const resp            = document.getElementById("dem-edit-resp")?.value?.trim();
     const venc            = document.getElementById("dem-edit-venc")?.value || null;
@@ -1275,7 +1250,7 @@ function fmtD(d) {
     }
 
     try {
-      const payload = { titulo, descricao: desc || "", local, local_id, responsavel: resp || "", data_conclusao: venc };
+      const payload = { titulo, descricao: desc || "", responsavel: resp || "", data_conclusao: venc };
       if (prioEl && _podeEditarPrioridade()) payload.prioridade = prioEl.value;
       if (_podeEditarPrioridade()) {
         const solNome = document.getElementById("dem-edit-sol-nome")?.value?.trim();
@@ -1321,25 +1296,7 @@ function fmtD(d) {
   window.demExcluirDemanda = async function(id) {
     if (!confirm("Confirmar exclusão desta demanda? Esta ação não pode ser desfeita.")) return;
     try {
-      // Busca vínculo com agenda antes de deletar
-      let agendaRefId = null;
-      try {
-        const refRes = await fetch(`${apiBaseUrl()}/rest/v1/demandas?id=eq.${id}&select=agenda_ref_id&limit=1`, { headers: apiHeaders() });
-        const [dem] = await refRes.json();
-        agendaRefId = dem?.agenda_ref_id || null;
-      } catch(_) {}
-
       await apiWrite("delete", "DEMANDAS", { _row: id });
-
-      // Cancela a agenda vinculada (se existir)
-      if (agendaRefId) {
-        fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${agendaRefId}`, {
-          method: "PATCH",
-          headers: { ...apiHeaders(), "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "cancelado" }),
-        }).catch(() => {});
-      }
-
       if (typeof T === "function") T("Demanda excluída", "Registro removido com sucesso");
       _invalidate();
       _atualizarBadge();
@@ -1426,22 +1383,15 @@ function fmtD(d) {
     }
     m.querySelector("#dem-f-titulo").value  = "";
     m.querySelector("#dem-f-desc").value    = "";
-    m.querySelector("#dem-f-local").value   = "";
     m.querySelector("#dem-f-sol").value     = usuario;
     m.querySelector("#dem-f-resp").value    = "";
     m.querySelector("#dem-f-venc").value    = "";
     /* Reset financial section */
     ["dem-f-financeiro-section","dem-f-pag-section","dem-f-reimb-section",
-     "dem-f-pix-section","dem-f-bank-section","dem-f-boleto-section","dem-f-agend-section"].forEach(id => {
+     "dem-f-pix-section","dem-f-bank-section","dem-f-boleto-section"].forEach(id => {
       const el = m.querySelector("#" + id);
       if (el) el.style.display = "none";
     });
-    /* Reset agendamento section */
-    ["dem-f-ag-data","dem-f-ag-inicio","dem-f-ag-fim","dem-f-ag-part"].forEach(id => {
-      const el = m.querySelector("#" + id);
-      if (el) el.value = "";
-    });
-    m.querySelectorAll("#dem-f-ag-spaces input[type=checkbox]").forEach(c => { c.checked = false; });
     ["dem-f-tipo-sol","dem-f-valor","dem-f-data-venc","dem-f-beneficiario","dem-f-cpf-cnpj",
      "dem-f-centro","dem-f-forma-pag","dem-f-chave-pix","dem-f-banco","dem-f-agencia",
      "dem-f-conta","dem-f-obs-fin","dem-f-reimb-nome","dem-f-reimb-valor",
@@ -1475,7 +1425,6 @@ function fmtD(d) {
     const _tRow = m.querySelector("#dem-f-boleto-total-row");
     if (_tRow) _tRow.style.display = "none";
     m.style.display = "flex";
-    _popularSelectEspacos("dem-f-local");
   };
 
   window.fecharModalNovaDemanda = function() {
@@ -1509,14 +1458,11 @@ function fmtD(d) {
     const cat      = document.getElementById("dem-f-cat")?.value;
     const sub      = document.getElementById("dem-f-sub")?.value;
     const sec      = document.getElementById("dem-f-financeiro-section");
-    const agSec    = document.getElementById("dem-f-agend-section");
     const pagSec   = document.getElementById("dem-f-pag-section");
     const reimbSec = document.getElementById("dem-f-reimb-section");
     if (!sec) return;
     const isFinanceiro = cat === "Financeiro";
-    const isAgendProg  = cat === "Agendamentos" && _PROG_SUBS_INT.has(sub);
-    sec.style.display             = isFinanceiro ? "" : "none";
-    if (agSec)    agSec.style.display    = isAgendProg ? "" : "none";
+    sec.style.display      = isFinanceiro ? "" : "none";
     if (pagSec)   pagSec.style.display   = (isFinanceiro && sub === "Solicitação de pagamento") ? "flex" : "none";
     if (reimbSec) reimbSec.style.display = (isFinanceiro && sub === "Reembolso")               ? "flex" : "none";
     if (isFinanceiro) _toggleFormaPagamento();
@@ -1537,64 +1483,6 @@ function fmtD(d) {
   }
 
   window.demOnSubChange      = _toggleFinanceiroSection;
-
-  /* ── Agendamentos: Programações ─────────────────────── */
-  /* Popula qualquer <select id="..."> com espaços do cadastro central */
-  async function _popularSelectEspacos(elId, valorAtual) {
-    const el = document.getElementById(elId);
-    if (!el) return;
-    const val = valorAtual ?? el.dataset.valorAtual ?? "";
-    try {
-      const r = await fetch(`${apiBaseUrl()}/rest/v1/espacos?ativo=eq.true&order=grupo.asc,ordem.asc,nome.asc`, { headers: apiHeaders() });
-      const rows = r.ok ? await r.json() : [];
-      const grupos = {};
-      rows.forEach(e => { const g = e.grupo || "Outros"; if (!grupos[g]) grupos[g] = []; grupos[g].push(e); });
-      el.innerHTML = `<option value="">— Selecione o espaço —</option>`;
-      Object.entries(grupos).forEach(([g, items]) => {
-        const grp = document.createElement("optgroup");
-        grp.label = g;
-        items.forEach(e => {
-          const opt = document.createElement("option");
-          opt.value = e.id; opt.dataset.nome = e.nome; opt.textContent = e.nome;
-          // compatível com UUID (novo) e nome texto (legado via data-valor-atual)
-          if (e.id === val || e.nome === val) opt.selected = true;
-          grp.appendChild(opt);
-        });
-        el.appendChild(grp);
-      });
-    } catch (_) {
-      el.innerHTML = `<option value="${val}">${val || "— Selecione o espaço —"}</option>`;
-    }
-  }
-
-  const _PROG_SUBS_INT = new Set(["Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"]);
-  async function _carregarEspacosGrid() {
-    const grid = document.getElementById("dem-f-ag-spaces");
-    if (!grid || grid.children.length) return;
-    try {
-      const r = await fetch(`${apiBaseUrl()}/rest/v1/espacos?ativo=eq.true&reservavel=eq.true&order=grupo.asc,ordem.asc,nome.asc`, { headers: apiHeaders() });
-      const rows = r.ok ? await r.json() : [];
-      const grupos = {};
-      rows.forEach(e => {
-        const g = e.grupo || "Outros";
-        if (!grupos[g]) grupos[g] = [];
-        grupos[g].push(e.nome);
-      });
-      Object.entries(grupos).forEach(([g, nomes]) => {
-        const hdr = document.createElement("div");
-        hdr.style.cssText = "grid-column:1/-1;font-size:10px;font-weight:700;color:var(--teal,#0d9488);text-transform:uppercase;letter-spacing:.07em;padding:8px 0 3px;border-bottom:1px solid var(--bd2);margin-top:6px";
-        hdr.textContent = g;
-        grid.appendChild(hdr);
-        nomes.forEach(s => {
-          const lbl = document.createElement("label");
-          lbl.style.cssText = "display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));cursor:pointer;font-size:12.5px;color:var(--tx1);user-select:none";
-          lbl.innerHTML = `<input type="checkbox" value="${s}" style="accent-color:var(--teal);width:14px;height:14px;cursor:pointer;flex-shrink:0"> ${s}`;
-          grid.appendChild(lbl);
-        });
-      });
-    } catch (_) {}
-  }
-  _carregarEspacosGrid();
   window.demOnFormaPagChange = _toggleFormaPagamento;
 
   /* ── Upload de anexos financeiros ───────────────────── */
@@ -1798,9 +1686,6 @@ function fmtD(d) {
     const sub    = document.getElementById("dem-f-sub")?.value;
     const titulo = document.getElementById("dem-f-titulo")?.value?.trim();
     const desc   = document.getElementById("dem-f-desc")?.value?.trim();
-    const localCriarEl = document.getElementById("dem-f-local");
-    const local_id = localCriarEl?.value?.trim() || null;
-    const local    = localCriarEl?.selectedOptions[0]?.dataset?.nome || null;
     const sol    = document.getElementById("dem-f-sol")?.value?.trim();
     const resp   = document.getElementById("dem-f-resp")?.value?.trim();
     const venc   = document.getElementById("dem-f-venc")?.value || null;
@@ -1923,29 +1808,6 @@ function fmtD(d) {
       };
     }
 
-    /* ── Coleta dados de agendamento de programação ────── */
-    let agend_extra = "";
-    if (cat === "Agendamentos" && _PROG_SUBS_INT.has(sub)) {
-      const agData   = document.getElementById("dem-f-ag-data")?.value || "";
-      const agInicio = document.getElementById("dem-f-ag-inicio")?.value || "";
-      const agFim    = document.getElementById("dem-f-ag-fim")?.value || "";
-      const agPart   = document.getElementById("dem-f-ag-part")?.value?.trim() || "";
-      if (!agData) {
-        if (typeof T === "function") T("Campo obrigatório", "Informe a data da programação");
-        return;
-      }
-      const agEspacos = [...document.querySelectorAll("#dem-f-ag-spaces input:checked")].map(c => c.value);
-      const agLinhas = [
-        "━━━ Dados da Programação ━━━",
-        `Data: ${agData}`,
-        agInicio ? `Horário de início: ${agInicio}`    : null,
-        agFim    ? `Horário de encerramento: ${agFim}` : null,
-        agPart   ? `Participantes estimados: ${agPart}` : null,
-        agEspacos.length ? `Espaços: ${agEspacos.join(", ")}` : null,
-      ].filter(Boolean).join("\n");
-      agend_extra = "\n\n" + agLinhas;
-    }
-
     const u = typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL : null;
     const pessoaId = u?.id || u?.pessoa_id || null;
 
@@ -1953,9 +1815,7 @@ function fmtD(d) {
       area:           cat,
       subcategoria:   sub,
       titulo,
-      descricao:      (desc || "") + agend_extra,
-      local,
-      local_id,
+      descricao:      desc || "",
       prioridade:     "Média",    // definida por triagem — nunca pelo solicitante
       status:         "ABERTA",
       solicitante:    sol || "",
@@ -2035,7 +1895,7 @@ function fmtD(d) {
   /* ── Notificação WhatsApp ao criar demanda ───────────── */
 
   function _montarMsgWA(dem) {
-    const link = "https://www.sipen.com.br";
+    const link = "https://sipen.com.br";
     const fd   = (dem.financial_data && typeof dem.financial_data === "object") ? dem.financial_data : null;
     const fmtValor = v => v != null && !isNaN(v)
       ? "R$ " + parseFloat(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 })
@@ -2173,7 +2033,7 @@ function fmtD(d) {
       return `<tr style="border-bottom:1px solid var(--bd1);cursor:pointer" onclick="window.demAbrirDetalhe('${r.id||r._row}','infra-dash')">
         <td style="padding:7px 6px;font-weight:600;color:var(--tx1);max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(r.titulo) || "—"}</td>
         <td style="padding:7px 6px">${pillStatus(r.status)}</td>
-        <td style="padding:7px 4px;color:var(--tx3);font-size:11px">${nomePropio(r.responsavel || r.responsavel_txt) || "—"}</td>
+        <td style="padding:7px 4px;color:var(--tx3);font-size:11px">${escapeHtml(r.responsavel || r.responsavel_txt) || "—"}</td>
       </tr>`;
     }
     function _miniTable(list) {
@@ -2212,20 +2072,37 @@ function fmtD(d) {
     if (!elDem) return;
     const recentes = [..._cache].sort((a,b) => (b.criado_em||"").localeCompare(a.criado_em||"")).slice(0,6);
     if (!recentes.length) {
-      elDem.innerHTML = `<div class="empty-state">Nenhuma solicitação registrada.</div>`;
+      elDem.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Nenhuma solicitação registrada.</div>`;
       return;
     }
 
-    elDem.innerHTML = recentes.map(r =>
-      `<div class="trow" style="cursor:pointer" onclick="window.demAbrirDetalhe('${r.id||r._row}','area-dem')">
-        <div class="tdot" style="background:${catCor(r.area)}"></div>
-        <div class="tbody">
-          <div class="ttitle">${catIcon(r.area)} ${escapeHtml(r.titulo||"—")}${r.numero_chamado ? ` <span style="font-size:10px;font-weight:600;color:var(--acc,#4a9cf5);letter-spacing:.04em">${escapeHtml(r.numero_chamado)}</span>` : ""}</div>
-          <div class="tmeta">${r.area||"—"}${r.subcategoria?" · "+r.subcategoria:""} · ${fmtD(r.criado_em)}</div>
-        </div>
-        <div class="tright">${pillStatus(r.status)}</div>
-      </div>`
-    ).join("") + `<div style="margin-top:10px"><button class="tbt" onclick="go('area-dem')">Ver todas →</button></div>`;
+    const isMobile = typeof window.matchMedia === "function" && window.matchMedia("(max-width: 768px)").matches;
+    if (isMobile) {
+      elDem.innerHTML = recentes.map(r =>
+        `<div style="padding:10px 0;border-bottom:1px solid var(--bd1);cursor:pointer" onclick="window.demAbrirDetalhe('${r.id||r._row}','area-dem')">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+            <div style="font-size:12px;font-weight:600;color:var(--tx1);line-height:1.4">${escapeHtml(r.titulo||"—")}</div>
+            ${pillStatus(r.status)}
+          </div>
+          <div style="font-size:10.5px;color:var(--tx3);margin-top:3px">${r.area||"—"} · ${fmtD(r.criado_em)}</div>
+        </div>`
+      ).join("") + `<div style="margin-top:10px"><button class="tbt" onclick="go('area-dem')">Ver todas →</button></div>`;
+    } else {
+      elDem.innerHTML = `<table style="width:100%;border-collapse:collapse">
+        <thead><tr>
+          <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Título</th>
+          <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Status</th>
+          <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Área</th>
+          <th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--tx3);font-weight:600">Data</th>
+        </tr></thead>
+        <tbody>${recentes.map(r => `<tr style="border-top:1px solid var(--bd1);cursor:pointer" onclick="window.demAbrirDetalhe('${r.id||r._row}','area-dem')">
+          <td style="padding:8px;font-size:11.5px;color:var(--tx1)"><strong>${escapeHtml(r.titulo)||"—"}</strong></td>
+          <td style="padding:8px">${pillStatus(r.status)}</td>
+          <td style="padding:8px;font-size:11px;color:var(--tx3)">${r.area||"—"}</td>
+          <td style="padding:8px;font-size:10.5px;color:var(--tx3);font-family:var(--mono)">${fmtD(r.criado_em)}</td>
+        </tr>`).join("")}</tbody>
+      </table>`;
+    }
   };
 
   document.addEventListener("sipen:navigate", async ({ detail: { id } }) => {
@@ -2458,10 +2335,10 @@ function fmtD(d) {
               const stCl  = ST_CL[c.status]          || '#888';
               const dtAb  = c.data_abertura ? c.data_abertura.slice(0,10) : '—';
               return `<tr style="border-bottom:1px solid var(--bd1)">
-                <td style="padding:8px 10px;color:var(--tx1);font-weight:500">${nomePropio(c.solicitante) || "—"}</td>
+                <td style="padding:8px 10px;color:var(--tx1);font-weight:500">${escapeHtml(c.solicitante || '—')}</td>
                 <td style="padding:8px 10px;color:var(--tx2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(c.titulo || '')}">${escapeHtml(c.titulo || '—')}</td>
                 <td style="padding:8px 10px"><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${stBg};color:${stCl}">${escapeHtml(stLbl)}</span></td>
-                <td style="padding:8px 10px;color:var(--tx2)">${nomePropio(c.responsavel) || "—"}</td>
+                <td style="padding:8px 10px;color:var(--tx2)">${escapeHtml(c.responsavel || '—')}</td>
                 <td style="padding:8px 10px;color:var(--tx3);font-size:11px">${dtAb}</td>
                 <td style="padding:8px 10px;text-align:right;white-space:nowrap">
                   <button onclick='abrirModalCasoPri(${JSON.stringify(c.id)},${safeJsonForHtml(c)})' style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:10px;padding:3px 8px;cursor:pointer;margin-right:4px">✏️</button>
@@ -2592,8 +2469,8 @@ function fmtD(d) {
                 </td>
                 <td style="padding:8px 6px;color:var(--tx2);font-size:11px;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${r.subcategoria||"—"}</td>
                 <td style="padding:8px 6px;color:var(--tx1);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${escapeHtml(r.titulo)||"—"}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${nomePropio(r.solicitante||r.solicitante_txt)||"—"}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${nomePropio(r.responsavel||r.responsavel_txt)||"—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${escapeHtml(r.solicitante||r.solicitante_txt)||"—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${escapeHtml(r.responsavel||r.responsavel_txt)||"—"}</td>
                 <td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--tx1);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${r.financial_data?.valor!=null?`R$ ${parseFloat(r.financial_data.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}`:"—"}</td>
                 <td style="padding:8px 6px;color:var(--tx2);font-size:11px;white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${escapeHtml(r.financial_data?.forma_pagamento||"—")}</td>
                 <td style="padding:8px 6px;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${pillStatus(r.status)}</td>
@@ -2683,8 +2560,8 @@ function fmtD(d) {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px 28px">
           <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Categoria</div><div style="font-size:11.5px;color:#1a1a1a">${r.area||"—"}</div></div>
           <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Subcategoria</div><div style="font-size:11.5px;color:#1a1a1a">${r.subcategoria||"—"}</div></div>
-          <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Solicitante</div><div style="font-size:11.5px;color:#1a1a1a">${nomePropio(r.solicitante||r.solicitante_txt) || "—"}</div></div>
-          <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Responsável</div><div style="font-size:11.5px;color:#1a1a1a">${nomePropio(r.responsavel||r.responsavel_txt) || "—"}</div></div>
+          <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Solicitante</div><div style="font-size:11.5px;color:#1a1a1a">${escapeHtml(r.solicitante||r.solicitante_txt||"—")}</div></div>
+          <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Responsável</div><div style="font-size:11.5px;color:#1a1a1a">${escapeHtml(r.responsavel||r.responsavel_txt||"—")}</div></div>
           <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Valor</div><div style="font-size:12px;font-weight:700;color:#1a1a1a">${fmtVal(r.financial_data)}</div></div>
           <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Forma de Pagamento</div><div style="font-size:11.5px;color:#1a1a1a">${escapeHtml(r.financial_data?.forma_pagamento||"—")}</div></div>
           ${r.financial_data?.chave_pix?`<div style="grid-column:1/-1"><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Chave PIX</div><div style="font-size:11.5px;color:#1a1a1a;font-weight:600">${escapeHtml(r.financial_data.chave_pix)}</div></div>`:""}
@@ -2839,8 +2716,8 @@ ${linhas}
                   onmouseout="this.style.background='${atrasada?"rgba(224,85,85,0.04)":""}'">
                 <td style="padding:8px 6px;color:var(--tx1);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${escapeHtml(r.titulo)||"—"}</td>
                 <td style="padding:8px 6px;color:var(--tx2);font-size:11px;white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${escapeHtml(r.subcategoria)||"—"}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${nomePropio(r.solicitante||r.solicitante_txt)||"—"}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${nomePropio(r.responsavel||r.responsavel_txt)||"—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${escapeHtml(r.solicitante||r.solicitante_txt)||"—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${escapeHtml(r.responsavel||r.responsavel_txt)||"—"}</td>
                 <td style="padding:4px 6px" onclick="event.stopPropagation()">
                   <select onchange="window.manStatusChange('${rid}',this.value)" style="font-size:11px;padding:3px 6px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);cursor:pointer">
                     ${["Aberta","Em Análise","Em Andamento","Pendente","Concluída","Cancelada"].map(s =>

@@ -55,7 +55,7 @@ const WA_TAB = (function () {
     INFRAESTRUTURA:{ label: "Infraestrutura",     ic: "🛠",  cor: "var(--amber)",  bg: "rgba(208,144,64,0.12)"   },
     JURIDICO:      { label: "Jurídico",           ic: "⚖",   cor: "var(--blue)",   bg: "rgba(74,156,245,0.12)"   },
     COMUNICACAO:   { label: "Comunicação",        ic: "📢",  cor: "var(--violet)", bg: "rgba(139,111,212,0.12)"  },
-    EVENTOS:       { label: "Eventos",            ic: "🎪",  cor: "var(--sky)",    bg: "rgba(74,156,245,0.12)"   },
+    EVENTOS:       { label: "Eventos",            ic: "🎉",  cor: "var(--sky)",    bg: "rgba(74,156,245,0.12)"   },
   };
 
   /* ── Carregar tudo ────────────────────────────────── */
