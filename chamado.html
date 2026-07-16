@@ -544,22 +544,6 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
         <input type="text" name="_gotcha" id="_gotcha" tabindex="-1" autocomplete="off">
       </div>
 
-      <!-- Dados do solicitante -->
-      <div class="card">
-        <div class="card-title">Seus dados</div>
-        <div class="row2">
-          <div class="field">
-            <label for="f-nome">Nome completo <span class="req">*</span></label>
-            <input type="text" id="f-nome" placeholder="Seu nome completo" autocomplete="name" maxlength="120">
-          </div>
-          <div class="field">
-            <label for="f-tel">Telefone / WhatsApp <span class="req">*</span></label>
-            <input type="tel" id="f-tel" placeholder="(11) 99999-9999"
-              oninput="fmtTel(this)" onblur="fmtTel(this)" maxlength="16">
-          </div>
-        </div>
-      </div>
-
       <!-- Detalhes da solicitação -->
       <div class="card">
         <div class="card-title">Solicitação</div>
@@ -845,6 +829,22 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
         </div>
       </div>
 
+      <!-- Dados do solicitante — aparece após os detalhes da solicitação -->
+      <div class="card" id="card-seus-dados">
+        <div class="card-title">Seus dados para contato</div>
+        <div class="row2">
+          <div class="field">
+            <label for="f-nome">Nome completo <span class="req">*</span></label>
+            <input type="text" id="f-nome" placeholder="Seu nome completo" autocomplete="name" maxlength="120">
+          </div>
+          <div class="field">
+            <label for="f-tel">Telefone / WhatsApp <span class="req">*</span></label>
+            <input type="tel" id="f-tel" placeholder="(11) 99999-9999"
+              oninput="fmtTel(this)" onblur="fmtTel(this)" maxlength="16">
+          </div>
+        </div>
+      </div>
+
       <button type="button" class="btn-submit" id="btn-enviar" onclick="enviarChamado()">
         Enviar Solicitação
       </button>
@@ -1043,20 +1043,6 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
     <!-- Passo 6: Formulário (expande após escolha do espaço) -->
     <div id="ag2-card-form" style="display:none">
       <div class="card">
-        <div class="card-title">Seus dados</div>
-        <div class="row2">
-          <div class="field">
-            <label for="ag2-nome">Nome completo <span class="req">*</span></label>
-            <input type="text" id="ag2-nome" placeholder="Seu nome completo" maxlength="120" autocomplete="name">
-          </div>
-          <div class="field">
-            <label for="ag2-tel">Telefone / WhatsApp <span class="req">*</span></label>
-            <input type="tel" id="ag2-tel" placeholder="(11) 99999-9999"
-              oninput="fmtTel(this)" onblur="fmtTel(this)" maxlength="16">
-          </div>
-        </div>
-      </div>
-      <div class="card">
         <div class="card-title">Dados da programação</div>
         <div class="field">
           <label for="ag2-titulo">Título <span class="req">*</span></label>
@@ -1080,6 +1066,20 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
               <input type="radio" name="ag2-arte" value="nao" style="accent-color:#7057ad;width:15px;height:15px">
               Não, obrigado
             </label>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Seus dados para contato</div>
+        <div class="row2">
+          <div class="field">
+            <label for="ag2-nome">Nome completo <span class="req">*</span></label>
+            <input type="text" id="ag2-nome" placeholder="Seu nome completo" maxlength="120" autocomplete="name">
+          </div>
+          <div class="field">
+            <label for="ag2-tel">Telefone / WhatsApp <span class="req">*</span></label>
+            <input type="tel" id="ag2-tel" placeholder="(11) 99999-9999"
+              oninput="fmtTel(this)" onblur="fmtTel(this)" maxlength="16">
           </div>
         </div>
       </div>
