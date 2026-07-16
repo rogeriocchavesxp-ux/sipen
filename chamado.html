@@ -2150,7 +2150,7 @@ function ag2TipoChange(tipo) {
 function ag2SincDataFim() {
   const di = document.getElementById("ag2-data-i");
   const df = document.getElementById("ag2-data-f");
-  if (di && df && !df.value) df.value = di.value;
+  if (di && df) df.value = di.value;
   ag2ValidarPeriodo();
   ag2InvalidarDisp();
 }
