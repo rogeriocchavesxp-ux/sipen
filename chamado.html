@@ -1152,7 +1152,7 @@ const CATS = [
 /* ── Preenche categorias ───────────────────────────────────── */
 (function () {
   const sel = document.getElementById("f-cat");
-  CATS.forEach(c => {
+  [...CATS].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")).forEach(c => {
     const o = document.createElement("option");
     o.value = c.nome;
     o.textContent = c.icon + " " + c.nome;
