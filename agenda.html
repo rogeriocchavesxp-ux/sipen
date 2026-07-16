@@ -198,8 +198,8 @@ let _view  = "cal";
 async function carregar() {
   try {
     const res = await fetch(
-      `${SB_URL}/rest/v1/agenda?status=eq.confirmado&deleted_at=is.null&order=data.asc,hora_inicio.asc&limit=1000&select=id,titulo,data,hora_inicio,hora_fim,espaco,organizador,descricao,recorrencia`,
-      { headers: HDR }
+      `${SB_URL}/rest/v1/rpc/agenda_publica`,
+      { method: "POST", headers: { ...HDR, "Content-Type": "application/json" }, body: "{}" }
     );
     _todos = res.ok ? await res.json() : [];
   } catch(_) { _todos = []; }
