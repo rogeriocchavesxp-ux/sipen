@@ -90,9 +90,8 @@ DECLARE
   v_nomeMes   TEXT;
   v_diaSem    TEXT;
 BEGIN
-  -- Gera protocolo único
-  v_protocolo := 'AG-' || to_char(p_data, 'YYYYMMDD') || '-'
-    || UPPER(SUBSTRING(gen_random_uuid()::TEXT FROM 1 FOR 6));
+  -- Gera protocolo sequencial AG-YYYY-000001
+  v_protocolo := public.gerar_protocolo_agenda();
 
   -- Verifica conflito de espaço e horário
   IF p_espaco IS NOT NULL AND p_hora_inicio IS NOT NULL THEN
