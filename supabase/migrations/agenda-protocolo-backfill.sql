@@ -1,6 +1,6 @@
 -- ══════════════════════════════════════════════════════════════
 -- SIPEN — Protocolo sequencial para agendamentos
--- Formato: AG-YYYY-000001  (mesmo padrão das demandas)
+-- Formato: AG-YYYY-0001
 -- Rode no SQL Editor do Supabase
 -- ══════════════════════════════════════════════════════════════
 
