@@ -838,7 +838,7 @@
     <div class="inav" style="--mc:var(--teal)">
       <div class="ini on">Dashboard</div>
       <div class="ini" onclick="go('agenda-calendario')">Calendário</div>
-      <div class="ini" onclick="go('agenda-solicitacoes')">Solicitações</div>
+      <div class="ini" onclick="go('agenda-solicitacoes')">Aprovações</div>
       <div class="ini" onclick="go('agenda-ambientes')">Por Espaço</div>
       <div class="ini" onclick="go('agenda-confirmados')">Confirmados</div>
       <div class="ini" onclick="go('agenda-whatsapp')">WhatsApp</div>
@@ -947,7 +947,7 @@
   <div class="view" id="v-agenda-solicitacoes">
     <div class="hero">
       <div class="hero-ic" style="background:rgba(42,181,192,0.12)">📋</div>
-      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Solicitações de Agendamento</div><div class="hero-dsc">Solicitações recebidas via página pública de agenda</div></div>
+      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Aprovações de Agendamento</div><div class="hero-dsc">Solicitações recebidas via página pública de agenda</div></div>
       <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova Solicitação</button></div>
     </div>
     <div class="ct">
@@ -957,7 +957,7 @@
         <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg)">❌</div><div class="kpi-body"><div class="kpi-lbl">Canceladas</div><div class="kpi-val" id="sol-canc">—</div></div></div>
       </div>
       <div class="card">
-        <div class="ctit">Solicitações de Agendamento <span class="cact" onclick="carregarSolicitacoesAgenda()">↻ Atualizar</span></div>
+        <div class="ctit">Aprovações de Agendamento <span class="cact" onclick="carregarSolicitacoesAgenda()">↻ Atualizar</span></div>
         <div id="agenda-sol-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
       </div>
     </div>
@@ -1030,7 +1030,7 @@
   <div class="view" id="v-agenda-aprovacoes">
     <div class="hero">
       <div class="hero-ic" style="background:rgba(212,168,67,0.12)">⏳</div>
-      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Aprovações Pendentes</div><div class="hero-dsc">Eventos aguardando confirmação</div></div>
+      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Solicitações Pendentes</div><div class="hero-dsc">Eventos aguardando confirmação</div></div>
       <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Novo Evento</button></div>
     </div>
     <div class="ct">
