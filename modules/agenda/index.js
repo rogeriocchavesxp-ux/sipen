@@ -1735,12 +1735,16 @@ function agSolKebab(btn, id) {
   const menu = document.createElement("div");
   menu.className = "ag-kebab-menu";
   menu.style.cssText = "position:absolute;right:0;top:calc(100% + 4px);z-index:200;background:var(--bg-card);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);min-width:180px;overflow:hidden";
+  const rJson = JSON.stringify(r||{}).replace(/'/g,"&#39;");
   menu.innerHTML = `
+    <button onclick='openCrudForm("AGENDA",JSON.parse(this.dataset.r))' data-r='${rJson}' style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:transparent;color:var(--tx1);font-size:12px;cursor:pointer;text-align:left" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='transparent'">
+      ✏️ Editar
+    </button>
     ${temTermo ? `
     <button onclick='agReenviarTermo("${id}")' style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:transparent;color:var(--tx1);font-size:12px;cursor:pointer;text-align:left" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='transparent'">
       📲 Reenviar Termo
-    </button>
-    <div style="height:1px;background:var(--bd1);margin:0 10px"></div>` : ""}
+    </button>` : ""}
+    <div style="height:1px;background:var(--bd1);margin:0 10px"></div>
     <button onclick='agExcluirSolicitacao("${id}")' style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:transparent;color:var(--rose);font-size:12px;cursor:pointer;text-align:left" onmouseover="this.style.background='rgba(224,85,85,.08)'" onmouseout="this.style.background='transparent'">
       🗑 Excluir
     </button>`;
