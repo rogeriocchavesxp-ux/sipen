@@ -2062,14 +2062,10 @@ async function enviarChamado() {
       return; // não mostra screen-ok ainda
     }
 
-    document.getElementById("ok-numero").textContent = ticket;
+    document.getElementById("ok-numero").textContent = protocolo || ticket;
     const okProtoEl = document.getElementById("ok-protocolo");
     if (okProtoEl) {
-      okProtoEl.textContent = protocolo ? `Reserva provisória: ${protocolo}` : "";
-      okProtoEl.style.display = protocolo ? "" : "none";
-      okProtoEl.style.background = "";
-      okProtoEl.style.borderColor = "";
-      okProtoEl.style.color = "";
+      okProtoEl.style.display = "none";
     }
     document.getElementById("screen-form").style.display = "none";
     document.getElementById("screen-ok").style.display   = "block";
