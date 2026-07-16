@@ -124,7 +124,7 @@ async function carregarAgendaDash() {
     }).catch(() => {});
 
     // --- Próximos eventos (ocorrências expandidas, ordenadas) ---
-    const proximos = [...ocorrP30].sort((a,b)=>a.data.localeCompare(b.data)).slice(0,8);
+    const proximos = [...ocorrP30].sort((a,b)=>(a.data+"|"+(a.hora_inicio||"")).localeCompare(b.data+"|"+(b.hora_inicio||""))).slice(0,8);
     const proxCount = document.getElementById("ag-prox-count");
     if(proxCount) proxCount.textContent = `· ${ocorrP30.length} futuros`;
     const proxEl = document.getElementById("agenda-proximos");
@@ -429,7 +429,7 @@ async function agVerMes(mes, el) {
 
 async function agVerEspaco(espaco) {
   const rows = await getAgenda();
-  const evs = rows.filter(r=>r.espaco===espaco).sort((a,b)=>a.data?.localeCompare(b.data)||0);
+  const evs = rows.filter(r=>r.espaco===espaco).sort((a,b)=>(a.data||"").localeCompare(b.data||"")||( a.hora_inicio||"").localeCompare(b.hora_inicio||""));
   agMostrarExpandido(`${evs.length} eventos · ${espaco}`, evs);
 }
 
@@ -490,7 +490,7 @@ async function carregarMes() {
   if (titulo) titulo.firstChild.textContent = `Eventos de ${mes} `;
   _agendaCache = null;
   const rows = await getAgenda();
-  const filtrados = rows.filter(r=>r.mes===mes).sort((a,b)=>a.data.localeCompare(b.data));
+  const filtrados = rows.filter(r=>r.mes===mes).sort((a,b)=>(a.data||"").localeCompare(b.data||"")||(a.hora_inicio||"").localeCompare(b.hora_inicio||""));
   renderModuloList(filtrados, "AGENDA", "agenda-mes-list");
 }
 
@@ -1108,7 +1108,7 @@ async function carregarHistorico() {
     _agendaCache = null;
     const rows = await getAgenda();
     const hoje = new Date().toISOString().split("T")[0];
-    const passados = rows.filter(r => r.data < hoje).sort((a,b) => b.data.localeCompare(a.data));
+    const passados = rows.filter(r => r.data < hoje).sort((a,b) => b.data.localeCompare(a.data)||(b.hora_inicio||"").localeCompare(a.hora_inicio||""));
     renderModuloList(passados, "AGENDA", "ag-hist-list");
   } catch(e) {
     el.innerHTML = `<div style="color:var(--rose)">Erro: ${escapeHtml(e.message)}</div>`;
