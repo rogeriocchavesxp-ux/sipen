@@ -2094,7 +2094,7 @@ function fmtD(d) {
       try {
         const res = await fetch(
           `${base}/rest/v1/whatsapp_modulo_responsaveis?modulo=eq.${encodeURIComponent(modulo)}&ativo=eq.true` +
-          `&select=pessoa_id,pessoas(id,nome,telefone,celular)`,
+          `&select=pessoa_id,pessoas(id,nome,whatsapp,telefone,celular)`,
           { headers: hdrs }
         );
         rows = res.ok ? await res.json() : [];
@@ -2106,7 +2106,7 @@ function fmtD(d) {
       try {
         const res = await fetch(
           `${base}/rest/v1/user_profiles?role=eq.admin&ativo=eq.true` +
-          `&select=pessoa_id,pessoas(id,nome,telefone,celular)`,
+          `&select=pessoa_id,pessoas(id,nome,whatsapp,telefone,celular)`,
           { headers: hdrs }
         );
         rows = res.ok ? await res.json() : [];
@@ -2119,7 +2119,7 @@ function fmtD(d) {
     for (const row of rows) {
       const p = row.pessoas;
       if (!p) continue;
-      const tel = p.celular || p.telefone;
+      const tel = p.whatsapp || p.celular || p.telefone;
       if (!tel) continue;
       WA.send({
         para:        tel,
