@@ -120,7 +120,7 @@ const _COL_PT_UI = {
   tipo:"Tipo", nome:"Nome", email:"E-mail", telefone:"Telefone",
   cargo:"Cargo", ministerio:"Ministério", area:"Área",
   descricao:"Descrição", valor:"Valor", quantidade:"Qtd",
-  responsavel:"Responsável", solicitante:"Solicitante",
+  responsavel:"Responsável", solicitante:"Solicitante", solicitante_tel:"Telefone do Solicitante",
   item:"Item", unidade:"Unidade", localizacao:"Localização",
   data_batismo:"Batismo", data_membro:"Membro desde",
   data_entrada:"Entrada", data_saida:"Saída",
@@ -170,13 +170,15 @@ function openCrudForm(tab, preset = null) {
     document.body.appendChild(modal);
   }
 
+  const _fullWidthFields = (SCHEMA.fullWidth || {})[tab] || [];
   function renderField(f) {
     const val = preset && preset[f] != null ? preset[f] : "";
     const req = obrig.includes(f) ? ' <span style="color:var(--rose)">*</span>' : "";
     const lbl = _colLabelUI(f);
     const label = `<label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">${escapeHtml(lbl)}${req}</label>`;
     const tipo = tipos[f] || "";
-    const isLong = /descricao|observacoes|solucao|detalhes/i.test(f);
+    const isLong = /descricao|observacoes|solucao|detalhes|observacao/i.test(f);
+    const spanFull = _fullWidthFields.includes(f) || isLong;
     const inputStyle = `width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none`;
 
     if (tipo === "boolean") {
@@ -185,11 +187,10 @@ function openCrudForm(tab, preset = null) {
         <input type="checkbox" data-field="${escapeHtmlAttr(f)}" data-type="boolean" ${checked} style="width:14px;height:14px;accent-color:var(--gr)">
         ${escapeHtml(lbl)}</label></div>`;
     }
+    const spanStyle = spanFull ? "grid-column:1 / -1" : "";
     if (tipo === "espacos-select") {
-      // Select populado assincronamente do cadastro central de espaços
-      // valorAtual pode ser o nome (legado) ou UUID (novo) — _popularSelectEspacosCrud lida com os dois
       const valorAtual = (preset?.espaco_id || val || "");
-      return `<div>${label}<select data-field="${escapeHtmlAttr(f)}" data-tipo-async="espacos" data-valor-atual="${escapeHtmlAttr(String(valorAtual))}" style="${inputStyle}">
+      return `<div style="${spanStyle}">${label}<select data-field="${escapeHtmlAttr(f)}" data-tipo-async="espacos" data-valor-atual="${escapeHtmlAttr(String(valorAtual))}" style="${inputStyle}">
         <option value="">Carregando espaços…</option>
       </select></div>`;
     }
@@ -198,26 +199,27 @@ function openCrudForm(tab, preset = null) {
         const sep = o.indexOf("=");
         return sep === -1 ? { value: o, label: o } : { value: o.slice(0, sep), label: o.slice(sep + 1) };
       });
-      return `<div><label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">${escapeHtml(lbl)}${req}</label>
+      return `<div style="${spanStyle}"><label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">${escapeHtml(lbl)}${req}</label>
         <select data-field="${escapeHtmlAttr(f)}" style="${inputStyle}">
           ${opts.map(o=>`<option value="${escapeHtmlAttr(o.value)}" ${String(val)===o.value?"selected":""}>${escapeHtml(o.label)}</option>`).join("")}
         </select></div>`;
     }
     if (tipo === "number") {
-      return `<div>${label}<input type="number" step="0.01" data-field="${escapeHtmlAttr(f)}" value="${escapeHtmlAttr(String(val))}" style="${inputStyle}"></div>`;
+      return `<div style="${spanStyle}">${label}<input type="number" step="0.01" data-field="${escapeHtmlAttr(f)}" value="${escapeHtmlAttr(String(val))}" style="${inputStyle}"></div>`;
     }
     if (tipo === "date") {
-      return `<div>${label}<input type="date" data-field="${escapeHtmlAttr(f)}" value="${escapeHtmlAttr(String(val))}" style="${inputStyle}"></div>`;
+      return `<div style="${spanStyle}">${label}<input type="date" data-field="${escapeHtmlAttr(f)}" value="${escapeHtmlAttr(String(val))}" style="${inputStyle}"></div>`;
     }
     if (tipo === "time") {
-      return `<div>${label}<input type="time" data-field="${escapeHtmlAttr(f)}" value="${escapeHtmlAttr(String(val))}" style="${inputStyle}"></div>`;
+      return `<div style="${spanStyle}">${label}<input type="time" data-field="${escapeHtmlAttr(f)}" value="${escapeHtmlAttr(String(val))}" style="${inputStyle}"></div>`;
     }
     if (isLong) {
       return `<div style="grid-column:1 / -1">${label}<textarea data-field="${escapeHtmlAttr(f)}" style="${inputStyle};min-height:84px;resize:vertical">${escapeHtml(String(val))}</textarea></div>`;
     }
-    return `<div>${label}<input type="text" data-field="${escapeHtmlAttr(f)}" value="${escapeHtmlAttr(String(val))}" style="${inputStyle}"></div>`;
+    return `<div style="${spanStyle}">${label}<input type="text" data-field="${escapeHtmlAttr(f)}" value="${escapeHtmlAttr(String(val))}" style="${inputStyle}"></div>`;
   }
 
+  const cols = (SCHEMA.gridCols || {})[tab] || 2;
   const tituloLabel = SCHEMA.labels[tab] ? tcPT(SCHEMA.labels[tab]) : tab;
   modal.innerHTML = `
     <div style="width:min(760px,92vw);max-height:88vh;overflow:hidden;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;display:flex;flex-direction:column">
@@ -228,7 +230,7 @@ function openCrudForm(tab, preset = null) {
         <button onclick="document.getElementById('crud-modal').remove()" style="background:none;border:none;color:var(--tx3);font-size:16px;cursor:pointer">✕</button>
       </div>
       <div style="padding:16px;overflow:auto">
-        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+        <div style="display:grid;grid-template-columns:repeat(${cols},minmax(0,1fr));gap:10px">
           ${fields.map(f => renderField(f)).join("")}
           ${tab === "MEMBROS" && preset?.pessoa_id ? `<input type="hidden" data-field="__pessoa_id" value="${escapeHtmlAttr(String(preset.pessoa_id))}">` : ""}
         </div>
