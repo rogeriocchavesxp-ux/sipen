@@ -737,10 +737,16 @@ function _agRenderSolTabela() {
         <th style="${thStyle}">Solicitante</th>
         <th style="${thStyle}">Data / Espaço</th>
         <th style="${thStyle}">Status</th>
+        <th style="${thStyle}">Termo</th>
         <th style="text-align:right;padding:7px 10px;font-size:9.5px;color:var(--tx3)">Ações</th>
       </tr></thead>
       <tbody>${rows.map(r => {
         const ativa = pendente(r.status);
+        const termoBadge = st => {
+          if (st === "aceito")     return `<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700;background:rgba(42,158,82,.12);color:var(--gr);border:1px solid rgba(42,158,82,.28)">✅ Aceito</span>`;
+          if (st === "aguardando") return `<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700;background:rgba(176,125,16,.10);color:#b07d10;border:1px solid rgba(176,125,16,.22)">⏳ Pendente</span>`;
+          return `<span style="color:var(--tx3);font-size:10px">—</span>`;
+        };
         return `<tr style="border-bottom:1px solid var(--bd1)" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
           <td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:var(--tx3)">${escapeHtml(r.protocolo||"—")}</td>
           <td style="padding:8px 10px;color:var(--tx1);font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(r.titulo||'')}">${escapeHtml(r.titulo||"—")}</td>
@@ -750,6 +756,7 @@ function _agRenderSolTabela() {
             ${r.espaco ? `<div style="font-size:10px;color:var(--tx3)">${escapeHtml(r.espaco)}</div>` : ""}
           </td>
           <td style="padding:8px 10px">${_agPill(r.status)}</td>
+          <td style="padding:8px 10px">${termoBadge(r.status_termo)}</td>
           <td style="padding:8px 10px;text-align:right;white-space:nowrap;display:flex;gap:4px;justify-content:flex-end;align-items:center">
             <button onclick='agAnalisarSolicitacao("${r.id}")' style="padding:3px 9px;border-radius:4px;border:1px solid var(--bd1);background:var(--bg-card);color:var(--tx2);font-size:10px;cursor:pointer">Analisar</button>
             ${ativa ? `
