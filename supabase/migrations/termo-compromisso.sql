@@ -40,10 +40,8 @@ ALTER TABLE public.agenda
 ALTER TABLE public.agenda_termos       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.agenda_termo_aceites ENABLE ROW LEVEL SECURITY;
 
-DO $$ BEGIN
-  BEGIN DROP POLICY "anon_read_termos" ON public.agenda_termos; EXCEPTION WHEN undefined_object THEN NULL; END;
-  BEGIN DROP POLICY "auth_read_aceites" ON public.agenda_termo_aceites; EXCEPTION WHEN undefined_object THEN NULL; END;
-END $$;
+DROP POLICY IF EXISTS "anon_read_termos"  ON public.agenda_termos;
+DROP POLICY IF EXISTS "auth_read_aceites" ON public.agenda_termo_aceites;
 
 CREATE POLICY "anon_read_termos"  ON public.agenda_termos        FOR SELECT TO anon, authenticated USING (true);
 CREATE POLICY "auth_read_aceites" ON public.agenda_termo_aceites  FOR SELECT TO authenticated       USING (true);
