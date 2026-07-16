@@ -73,10 +73,10 @@
   .scroll-hint { text-align: center; font-size: 11px; color: var(--tx3); padding: 6px 0 14px; }
 
   /* Aceite checkbox */
-  .aceite-row { display: flex; align-items: flex-start; gap: 12px; background: var(--card); border: 1.5px solid var(--bd); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; cursor: pointer; transition: border-color .15s; }
+  .aceite-row { display: flex; align-items: flex-start; gap: 12px; background: var(--card); border: 1.5px solid var(--bd); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; transition: border-color .15s; }
   .aceite-row:hover { border-color: var(--gr); }
-  .aceite-row input[type=checkbox] { margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px; accent-color: var(--gr); cursor: pointer; }
-  .aceite-row label { font-size: 13px; color: var(--tx2); cursor: pointer; line-height: 1.5; }
+  .aceite-row input[type=checkbox] { margin-top: 2px; flex-shrink: 0; width: 20px; height: 20px; min-width: 20px; accent-color: var(--gr); cursor: pointer; touch-action: manipulation; }
+  .aceite-row label { font-size: 13px; color: var(--tx2); cursor: pointer; line-height: 1.5; display: block; width: 100%; }
   .aceite-row label strong { color: var(--tx1); }
 
   /* Botões */
@@ -309,9 +309,9 @@
     <div class="scroll-hint no-print" id="scroll-hint">▼ Role até o final do termo antes de aceitar</div>
 
     <!-- Checkbox de aceite -->
-    <div class="aceite-row no-print" onclick="document.getElementById('cb-aceite').click()">
+    <div class="aceite-row no-print">
       <input type="checkbox" id="cb-aceite" onchange="atualizarBotao()">
-      <label for="cb-aceite" onclick="event.preventDefault()">
+      <label for="cb-aceite">
         Li integralmente o <strong>Termo de Compromisso e Responsabilidade</strong> e estou ciente de todas as condições estabelecidas pela Igreja Presbiteriana da Penha para utilização de seus espaços.
       </label>
     </div>
