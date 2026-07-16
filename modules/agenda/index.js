@@ -1757,7 +1757,7 @@ window._agRenderConfirmados = _agRenderConfirmados;
 function agSolKebab(btn, id) {
   document.querySelectorAll(".ag-kebab-menu").forEach(m => m.remove());
   const r = _agSolRows.find(x => x.id === id);
-  const temTermo = r?.token_termo && r?.solicitante_tel;
+  const temTermo = r?.token_termo && (r?.solicitante_tel || r?.telefone);
   const menu = document.createElement("div");
   menu.className = "ag-kebab-menu";
   menu.style.cssText = "position:absolute;right:0;top:calc(100% + 4px);z-index:200;background:var(--bg-card);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);min-width:180px;overflow:hidden";
@@ -1782,7 +1782,8 @@ function agSolKebab(btn, id) {
 function agReenviarTermo(id) {
   document.querySelectorAll(".ag-kebab-menu").forEach(m => m.remove());
   const r = _agSolRows.find(x => x.id === id);
-  if (!r?.token_termo || !r?.solicitante_tel) return T("Sem dados", "Telefone ou link do termo não disponível.");
+  const _tel = r?.solicitante_tel || r?.telefone;
+  if (!r?.token_termo || !_tel) return T("Sem dados", "Telefone ou link do termo não disponível.");
   const nome  = (r.solicitante_txt || "").split(" ")[0] || "";
   const fmtD  = s => { if (!s) return ""; const [y,m,d] = String(s).slice(0,10).split("-"); return `${d}/${m}/${y}`; };
   const msg = `Olá${nome ? `, ${nome}` : ""}! Segue novamente o link do *Termo de Compromisso e Responsabilidade* referente ao seu agendamento:\n\n`
@@ -1792,12 +1793,12 @@ function agReenviarTermo(id) {
     + (r.protocolo ? `🔖 Protocolo: ${r.protocolo}\n` : "")
     + `\n📄 *Termo de Compromisso:*\nhttps://sipen.com.br/termo?t=${r.token_termo}\n\n_Por favor, acesse o link acima, leia e assine para confirmar o uso do espaço._`;
   if (typeof WA !== "undefined") {
-    WA.send({ para: r.solicitante_tel, nome: r.solicitante_txt || "Solicitante", mensagem: msg, modulo: "AGENDA", origem_id: id });
+    WA.send({ para: _tel, nome: r.solicitante_txt || "Solicitante", mensagem: msg, modulo: "AGENDA", origem_id: id });
   } else {
-    const tel = r.solicitante_tel.replace(/\D/g, "");
+    const tel = _tel.replace(/\D/g, "");
     window.open(`https://wa.me/55${tel}?text=${encodeURIComponent(msg)}`, "_blank");
   }
-  T("Termo reenviado", `Link enviado para ${r.solicitante_tel}.`);
+  T("Termo reenviado", `Link enviado para ${_tel}.`);
 }
 
 async function agExcluirSolicitacao(id) {
