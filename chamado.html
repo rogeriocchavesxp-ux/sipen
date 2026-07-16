@@ -34,8 +34,13 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
   border-bottom: 1px solid var(--bd); text-align: center; gap: 12px;
 }
 .page-logo  { height: 104px; width: auto; }
-.page-title { font-size: 21px; font-weight: 800; color: var(--tx1); line-height: 1.2; }
-.page-sub   { font-size: 13px; color: var(--tx2); line-height: 1.55; max-width: 460px; }
+.page-title { font-size: 18px; font-weight: 700; color: var(--acc); line-height: 1.2; }
+.page-sub   { font-size: 12.5px; color: var(--tx2); line-height: 1.55; max-width: 460px; width: 100%; box-sizing: border-box; }
+@media (max-width: 480px) {
+  .page-logo  { height: 80px; }
+  .page-title { font-size: 16px; }
+  .page-sub   { font-size: 12px; padding: 0 8px; }
+}
 .page-agenda-link { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--acc); text-decoration: none; padding: 6px 14px; border: 1px solid var(--acc); border-radius: 20px; transition: background .15s, color .15s; }
 .page-agenda-link:hover { background: var(--acc); color: #fff; }
 
