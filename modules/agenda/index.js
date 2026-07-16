@@ -782,7 +782,7 @@ async function carregarSolicitacoesAgenda() {
   el.innerHTML = `<div style="color:var(--tx3);font-size:11px">${spinner()} Carregando...</div>`;
   try {
     const [resAg, resReq] = await Promise.all([
-      fetch(`${apiBaseUrl()}/rest/v1/agenda?select=*&order=created_at.desc&limit=300`, { headers: apiHeaders() }),
+      fetch(`${apiBaseUrl()}/rest/v1/agenda?deleted_at=is.null&select=*&order=created_at.desc&limit=300`, { headers: apiHeaders() }),
       fetch(`${apiBaseUrl()}/rest/v1/requisicoes_espaco?deleted_at=is.null&select=*&order=created_at.desc&limit=200`, { headers: apiHeaders() }),
     ]);
     if (!resAg.ok) throw new Error(await resAg.text());
