@@ -100,9 +100,10 @@
   /* ── API Supabase ───────────────────────────────────── */
 
   function _hdrs() {
+    const token = (typeof sipenToken === "function" ? sipenToken() : null) || SUPABASE_ANON_KEY;
     return {
       "apikey": SUPABASE_ANON_KEY,
-      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+      "Authorization": `Bearer ${token}`,
       "Content-Type": "application/json",
       "Prefer": "return=representation",
     };
