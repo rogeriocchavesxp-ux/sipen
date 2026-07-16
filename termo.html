@@ -323,7 +323,7 @@ function fmtD(s) {
 }
 function fmtH(h) { return h ? String(h).slice(0, 5) : ""; }
 function set(id, v) { const el = document.getElementById(id); if (el) el.textContent = v || "—"; }
-function show(id) { document.getElementById(id).style.display = ""; }
+function show(id) { document.getElementById(id).style.display = "block"; }
 function hide(id) { document.getElementById(id).style.display = "none"; }
 
 const token = new URLSearchParams(window.location.search).get("t") || "";
