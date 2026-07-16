@@ -757,12 +757,17 @@ function _agRenderSolTabela() {
           </td>
           <td style="padding:8px 10px">${_agPill(r.status)}</td>
           <td style="padding:8px 10px">${termoBadge(r.status_termo)}</td>
-          <td style="padding:8px 10px;text-align:right;white-space:nowrap;display:flex;gap:4px;justify-content:flex-end;align-items:center">
-            <button onclick='agAnalisarSolicitacao("${r.id}")' style="padding:3px 9px;border-radius:4px;border:1px solid var(--bd1);background:var(--bg-card);color:var(--tx2);font-size:10px;cursor:pointer">Analisar</button>
-            ${ativa ? `
-              <button onclick='agAprovarAgendamento("${r.id}")' style="padding:3px 9px;border-radius:4px;border:1px solid rgba(58,170,92,.4);background:rgba(58,170,92,.1);color:var(--gr);font-size:10px;font-weight:700;cursor:pointer">✓ Aprovar</button>
-              <button onclick='agRejeitarAgendamento("${r.id}")' style="padding:3px 9px;border-radius:4px;border:1px solid rgba(224,85,85,.35);background:rgba(224,85,85,.08);color:var(--rose);font-size:10px;font-weight:700;cursor:pointer">✕ Recusar</button>
-            ` : ""}
+          <td style="padding:8px 10px;text-align:right;white-space:nowrap">
+            <div style="display:flex;gap:4px;justify-content:flex-end;align-items:center">
+              <button onclick='agAnalisarSolicitacao("${r.id}")' style="padding:3px 9px;border-radius:4px;border:1px solid var(--bd1);background:var(--bg-card);color:var(--tx2);font-size:10px;cursor:pointer">Analisar</button>
+              ${ativa ? `
+                <button onclick='agAprovarAgendamento("${r.id}")' style="padding:3px 9px;border-radius:4px;border:1px solid rgba(58,170,92,.4);background:rgba(58,170,92,.1);color:var(--gr);font-size:10px;font-weight:700;cursor:pointer">✓ Aprovar</button>
+                <button onclick='agRejeitarAgendamento("${r.id}")' style="padding:3px 9px;border-radius:4px;border:1px solid rgba(224,85,85,.35);background:rgba(224,85,85,.08);color:var(--rose);font-size:10px;font-weight:700;cursor:pointer">✕ Recusar</button>
+              ` : ""}
+              <div style="position:relative;display:inline-block">
+                <button onclick='agSolKebab(this,"${r.id}")' style="padding:3px 7px;border-radius:4px;border:1px solid var(--bd1);background:var(--bg-card);color:var(--tx2);font-size:13px;cursor:pointer;line-height:1">⋯</button>
+              </div>
+            </div>
           </td>
         </tr>`;
       }).join("")}</tbody>
@@ -1721,6 +1726,42 @@ async function agCarregarConfirmados() {
   }
 }
 
+// ── Kebab menu de solicitação ──────────────────────────────────
+function agSolKebab(btn, id) {
+  document.querySelectorAll(".ag-kebab-menu").forEach(m => m.remove());
+  const menu = document.createElement("div");
+  menu.className = "ag-kebab-menu";
+  menu.style.cssText = "position:absolute;right:0;top:calc(100% + 4px);z-index:200;background:var(--bg-card);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);min-width:140px;overflow:hidden";
+  menu.innerHTML = `
+    <button onclick='agExcluirSolicitacao("${id}")' style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:transparent;color:var(--rose);font-size:12px;cursor:pointer;text-align:left" onmouseover="this.style.background='rgba(224,85,85,.08)'" onmouseout="this.style.background='transparent'">
+      🗑 Excluir
+    </button>`;
+  btn.parentElement.appendChild(menu);
+  const close = e => { if (!menu.contains(e.target) && e.target !== btn) { menu.remove(); document.removeEventListener("click", close); } };
+  setTimeout(() => document.addEventListener("click", close), 0);
+}
+
+async function agExcluirSolicitacao(id) {
+  document.querySelectorAll(".ag-kebab-menu").forEach(m => m.remove());
+  const r = _agSolRows.find(x => x.id === id);
+  const label = r?.titulo ? `"${r.titulo}"` : "esta solicitação";
+  if (!confirm(`Excluir ${label}? Esta ação não pode ser desfeita.`)) return;
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${id}`, {
+      method: "PATCH",
+      headers: { ...apiHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ deleted_at: new Date().toISOString() }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    _agSolRows = _agSolRows.filter(x => x.id !== id);
+    _agKpiSol(_agSolRows);
+    _agRenderSolTabela();
+    T("Excluído", `${label} foi removida.`);
+  } catch(e) { T("Erro ao excluir", e.message); }
+}
+
+window.agSolKebab                    = agSolKebab;
+window.agExcluirSolicitacao          = agExcluirSolicitacao;
 window.agCarregarAprovacoes          = agCarregarAprovacoes;
 window.agAprovarEntrada              = agAprovarEntrada;
 window.agRejeitarEntrada             = agRejeitarEntrada;
