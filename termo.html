@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Termo de Compromisso — IPPenha</title>
+<style>
+  :root {
+    --bg:    #f7f8fa;
+    --card:  #ffffff;
+    --bd:    #e2e5ea;
+    --tx1:   #111318;
+    --tx2:   #454a56;
+    --tx3:   #8a8f9a;
+    --gr:    #2a9e52;
+    --gr-bg: rgba(42,158,82,.10);
+    --gr-bd: rgba(42,158,82,.30);
+    --rose:  #d94040;
+    --gold:  #b07d10;
+    --mono:  'Courier New', monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1117; --card: #161922; --bd: #272c38;
+      --tx1: #e8e9ee; --tx2: #9ca3b0; --tx3: #555c6a;
+    }
+  }
+  :root[data-theme="light"] { --bg:#f7f8fa;--card:#fff;--bd:#e2e5ea;--tx1:#111318;--tx2:#454a56;--tx3:#8a8f9a; }
+  :root[data-theme="dark"]  { --bg:#0f1117;--card:#161922;--bd:#272c38;--tx1:#e8e9ee;--tx2:#9ca3b0;--tx3:#555c6a; }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--tx1); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; min-height: 100vh; }
+
+  .page { max-width: 760px; margin: 0 auto; padding: 32px 20px 60px; }
+
+  /* Header */
+  .hdr { text-align: center; margin-bottom: 32px; }
+  .hdr-logo { width: 56px; margin-bottom: 12px; }
+  .hdr-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--tx3); margin-bottom: 4px; }
+  .hdr-nome { font-size: 20px; font-weight: 800; color: var(--tx1); }
+
+  /* Estado card */
+  #state-loading, #state-error, #state-aceito, #state-form { display: none; }
+  .state-msg { background: var(--card); border: 1px solid var(--bd); border-radius: 12px; padding: 40px 24px; text-align: center; margin-bottom: 24px; }
+  .state-icon { font-size: 36px; margin-bottom: 12px; }
+  .state-title { font-size: 16px; font-weight: 700; color: var(--tx1); margin-bottom: 6px; }
+  .state-sub { font-size: 13px; color: var(--tx3); }
+
+  /* Dados do agendamento */
+  .dados { background: var(--card); border: 1px solid var(--bd); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+  .dados-title { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--tx3); margin-bottom: 14px; }
+  .dados-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 500px) { .dados-grid { grid-template-columns: 1fr; } }
+  .dado { }
+  .dado-lbl { font-size: 10px; font-weight: 600; color: var(--tx3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px; }
+  .dado-val { font-size: 13px; font-weight: 600; color: var(--tx1); }
+  .protocolo-badge { display: inline-block; font-family: var(--mono); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px; background: rgba(176,125,16,.10); color: var(--gold); border: 1px solid rgba(176,125,16,.25); }
+
+  /* Termo */
+  .termo-box { background: var(--card); border: 1px solid var(--bd); border-radius: 12px; padding: 28px 28px; margin-bottom: 20px; max-height: 540px; overflow-y: auto; }
+  @media (max-width: 500px) { .termo-box { padding: 18px 16px; } }
+  .termo-header { text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--bd); }
+  .termo-inst { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--tx3); margin-bottom: 4px; }
+  .termo-nome { font-size: 15px; font-weight: 800; color: var(--tx1); line-height: 1.3; }
+  .termo-h2 { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: var(--tx2); margin: 20px 0 8px; }
+  .termo-p { font-size: 13px; color: var(--tx2); margin-bottom: 8px; }
+  .termo-ul { font-size: 13px; color: var(--tx2); padding-left: 20px; margin-bottom: 8px; }
+  .termo-ul li { margin-bottom: 3px; }
+  .termo-fill { background: rgba(176,125,16,.07); border: 1px solid rgba(176,125,16,.2); border-radius: 6px; padding: 12px 14px; margin: 12px 0; font-size: 12.5px; color: var(--tx2); }
+  .termo-fill strong { color: var(--tx1); }
+
+  /* Scroll indicator */
+  .scroll-hint { text-align: center; font-size: 11px; color: var(--tx3); padding: 6px 0 14px; }
+
+  /* Aceite checkbox */
+  .aceite-row { display: flex; align-items: flex-start; gap: 12px; background: var(--card); border: 1.5px solid var(--bd); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; cursor: pointer; transition: border-color .15s; }
+  .aceite-row:hover { border-color: var(--gr); }
+  .aceite-row input[type=checkbox] { margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px; accent-color: var(--gr); cursor: pointer; }
+  .aceite-row label { font-size: 13px; color: var(--tx2); cursor: pointer; line-height: 1.5; }
+  .aceite-row label strong { color: var(--tx1); }
+
+  /* Botões */
+  .btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn { padding: 12px 20px; border-radius: 8px; font-size: 13.5px; font-weight: 700; cursor: pointer; border: none; transition: opacity .15s; flex: 1; min-width: 140px; text-align: center; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-primary { background: var(--gr); color: #fff; }
+  .btn-primary:not(:disabled):hover { opacity: .88; }
+  .btn-secondary { background: transparent; color: var(--tx2); border: 1px solid var(--bd); }
+  .btn-secondary:hover { background: var(--bd); }
+
+  /* Sucesso */
+  .ok-card { background: var(--gr-bg); border: 1.5px solid var(--gr-bd); border-radius: 12px; padding: 28px 24px; text-align: center; }
+  .ok-icon { font-size: 40px; margin-bottom: 10px; }
+  .ok-title { font-size: 17px; font-weight: 800; color: var(--gr); margin-bottom: 6px; }
+  .ok-sub { font-size: 12.5px; color: var(--tx2); margin-bottom: 16px; }
+  .ok-detail { font-size: 12px; color: var(--tx3); }
+
+  /* Print */
+  @media print {
+    body { background: #fff; color: #000; font-size: 12pt; }
+    .no-print { display: none !important; }
+    .termo-box { max-height: none; overflow: visible; border: none; padding: 0; }
+    .dados { border: 1px solid #ccc; }
+    .page { padding: 0; }
+    .hdr { margin-bottom: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="hdr no-print">
+    <svg class="hdr-logo" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="56" height="56" rx="12" fill="#2a9e52" fill-opacity=".12"/>
+      <path d="M28 10 L44 20 L44 36 L28 46 L12 36 L12 20 Z" stroke="#2a9e52" stroke-width="2" fill="none"/>
+      <circle cx="28" cy="28" r="6" fill="#2a9e52" fill-opacity=".5"/>
+    </svg>
+    <div class="hdr-title">Igreja Presbiteriana da Penha</div>
+    <div class="hdr-nome">Termo de Compromisso e Responsabilidade</div>
+  </div>
+
+  <!-- Loading -->
+  <div id="state-loading">
+    <div class="state-msg">
+      <div class="state-icon">⏳</div>
+      <div class="state-title">Carregando...</div>
+    </div>
+  </div>
+
+  <!-- Erro -->
+  <div id="state-error">
+    <div class="state-msg">
+      <div class="state-icon">⚠️</div>
+      <div class="state-title" id="err-title">Link inválido</div>
+      <div class="state-sub" id="err-sub">Este link pode ter expirado ou já foi utilizado.</div>
+    </div>
+  </div>
+
+  <!-- Já aceito -->
+  <div id="state-aceito">
+    <div class="ok-card">
+      <div class="ok-icon">✅</div>
+      <div class="ok-title">Termo já aceito</div>
+      <div class="ok-sub" id="aceito-msg">Você já aceitou este termo anteriormente.</div>
+      <div class="ok-detail" id="aceito-detail"></div>
+    </div>
+  </div>
+
+  <!-- Formulário principal -->
+  <div id="state-form">
+
+    <!-- Dados do agendamento -->
+    <div class="dados">
+      <div class="dados-title">Dados da Programação</div>
+      <div class="dados-grid">
+        <div class="dado">
+          <div class="dado-lbl">Protocolo</div>
+          <div class="dado-val"><span class="protocolo-badge" id="d-protocolo">—</span></div>
+        </div>
+        <div class="dado">
+          <div class="dado-lbl">Responsável</div>
+          <div class="dado-val" id="d-responsavel">—</div>
+        </div>
+        <div class="dado">
+          <div class="dado-lbl">Programação</div>
+          <div class="dado-val" id="d-titulo">—</div>
+        </div>
+        <div class="dado">
+          <div class="dado-lbl">Espaço(s)</div>
+          <div class="dado-val" id="d-espaco">—</div>
+        </div>
+        <div class="dado">
+          <div class="dado-lbl">Data</div>
+          <div class="dado-val" id="d-data">—</div>
+        </div>
+        <div class="dado">
+          <div class="dado-lbl">Horário</div>
+          <div class="dado-val" id="d-horario">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Termo (scrollable) -->
+    <div class="termo-box" id="termo-box">
+      <div class="termo-header">
+        <div class="termo-inst">Igreja Presbiteriana da Penha</div>
+        <div class="termo-nome">Termo de Compromisso e Responsabilidade<br>para Utilização de Espaços</div>
+      </div>
+
+      <div class="termo-p">Pelo presente instrumento, o(a) solicitante abaixo identificado(a), responsável pela programação aprovada no Sistema Integrado da Igreja Presbiteriana da Penha – SIPEN, declara estar ciente e concordar com as normas para utilização das dependências da Igreja.</div>
+
+      <div class="termo-fill" id="termo-identificacao">
+        <strong>Responsável:</strong> <span id="tf-responsavel">—</span><br>
+        <strong>Programação:</strong> <span id="tf-titulo">—</span><br>
+        <strong>Data:</strong> <span id="tf-data">—</span><br>
+        <strong>Horário:</strong> <span id="tf-horario">—</span><br>
+        <strong>Espaço(s):</strong> <span id="tf-espaco">—</span><br>
+        <strong>Protocolo:</strong> <span id="tf-protocolo">—</span>
+      </div>
+
+      <div class="termo-h2">1. Identificação</div>
+      <div class="termo-p">As informações acima foram preenchidas automaticamente pelo SIPEN com base na solicitação aprovada.</div>
+
+      <div class="termo-h2">2. Responsabilidade pela utilização</div>
+      <div class="termo-p">Declaro ser o(a) responsável pela utilização dos espaços autorizados durante todo o período da programação, comprometendo-me a zelar pelo patrimônio da Igreja Presbiteriana da Penha.</div>
+
+      <div class="termo-h2">3. Conservação do patrimônio</div>
+      <div class="termo-p">Comprometo-me a:</div>
+      <ul class="termo-ul">
+        <li>utilizar apenas os espaços autorizados;</li>
+        <li>preservar móveis, equipamentos e instalações;</li>
+        <li>não realizar alterações estruturais;</li>
+        <li>comunicar imediatamente qualquer dano ocorrido;</li>
+        <li>responder pelos prejuízos decorrentes de uso inadequado ou negligente.</li>
+      </ul>
+
+      <div class="termo-h2">4. Limpeza e organização</div>
+      <div class="termo-p">Ao término da programação, comprometo-me a entregar o ambiente:</div>
+      <ul class="termo-ul">
+        <li>organizado e limpo;</li>
+        <li>com mesas e cadeiras recolocadas;</li>
+        <li>equipamentos desligados;</li>
+        <li>portas e janelas fechadas;</li>
+        <li>luzes e aparelhos elétricos desligados;</li>
+        <li>lixo devidamente acondicionado.</li>
+      </ul>
+
+      <div class="termo-h2">5. Equipamentos</div>
+      <div class="termo-p">Caso sejam utilizados equipamentos da Igreja, comprometo-me a:</div>
+      <ul class="termo-ul">
+        <li>utilizá-los corretamente;</li>
+        <li>não permitir manuseio por pessoas não autorizadas;</li>
+        <li>devolver todos os equipamentos nas mesmas condições em que foram recebidos.</li>
+      </ul>
+
+      <div class="termo-h2">6. Horários</div>
+      <div class="termo-p">Comprometo-me a:</div>
+      <ul class="termo-ul">
+        <li>respeitar rigorosamente os horários aprovados;</li>
+        <li>iniciar e encerrar a programação dentro do período autorizado;</li>
+        <li>não permanecer utilizando o espaço após o horário previsto sem autorização da Administração.</li>
+      </ul>
+
+      <div class="termo-h2">7. Segurança</div>
+      <div class="termo-p">Comprometo-me a:</div>
+      <ul class="termo-ul">
+        <li>colaborar com as normas de segurança da Igreja;</li>
+        <li>manter corredores, portas e saídas de emergência desobstruídos;</li>
+        <li>comunicar imediatamente qualquer situação de risco.</li>
+      </ul>
+
+      <div class="termo-h2">8. Alterações</div>
+      <div class="termo-p">Reconheço que qualquer alteração de data, horário, espaços, quantidade de participantes ou estrutura utilizada deverá ser previamente autorizada pela Administração por meio do SIPEN.</div>
+
+      <div class="termo-h2">9. Cancelamento</div>
+      <div class="termo-p">Caso o evento seja cancelado, comprometo-me a informar imediatamente através do SIPEN para possibilitar a liberação da agenda.</div>
+
+      <div class="termo-h2">10. Descumprimento</div>
+      <div class="termo-p">Estou ciente de que o descumprimento deste termo poderá resultar em:</div>
+      <ul class="termo-ul">
+        <li>cancelamento da programação;</li>
+        <li>suspensão temporária da utilização dos espaços;</li>
+        <li>necessidade de ressarcimento por eventuais danos;</li>
+        <li>outras providências administrativas que a liderança entender cabíveis.</li>
+      </ul>
+
+      <div class="termo-h2">11. Declaração</div>
+      <div class="termo-p">Declaro que:</div>
+      <ul class="termo-ul">
+        <li>li integralmente este Termo;</li>
+        <li>compreendi todas as responsabilidades;</li>
+        <li>comprometo-me a cumprir integralmente as normas estabelecidas pela Igreja Presbiteriana da Penha para utilização de seus espaços.</li>
+      </ul>
+
+      <div class="termo-h2">Assinatura eletrônica</div>
+      <div class="termo-p">Ao clicar em <strong>"Li e Aceito o Termo"</strong>, declaro eletronicamente minha concordância com todas as condições acima. Este aceite é registrado com data, hora, endereço IP e identificador do dispositivo para fins de auditoria.</div>
+    </div>
+
+    <div class="scroll-hint no-print" id="scroll-hint">▼ Role até o final do termo antes de aceitar</div>
+
+    <!-- Checkbox de aceite -->
+    <div class="aceite-row no-print" onclick="document.getElementById('cb-aceite').click()">
+      <input type="checkbox" id="cb-aceite" onchange="atualizarBotao()">
+      <label for="cb-aceite" onclick="event.preventDefault()">
+        Li integralmente o <strong>Termo de Compromisso e Responsabilidade</strong> e estou ciente de todas as condições estabelecidas pela Igreja Presbiteriana da Penha para utilização de seus espaços.
+      </label>
+    </div>
+
+    <!-- Botões -->
+    <div class="btns no-print">
+      <button class="btn btn-secondary" onclick="imprimirTermo()">📄 Baixar PDF</button>
+      <button class="btn btn-primary" id="btn-aceitar" disabled onclick="aceitarTermo()">✅ Li e Aceito o Termo</button>
+    </div>
+
+  </div><!-- /state-form -->
+
+  <!-- Tela de sucesso pós-aceite -->
+  <div id="state-ok" style="display:none">
+    <div class="ok-card">
+      <div class="ok-icon">✅</div>
+      <div class="ok-title">Termo aceito com sucesso!</div>
+      <div class="ok-sub" id="ok-sub">Seu aceite foi registrado eletronicamente.</div>
+      <div class="ok-detail" id="ok-detail"></div>
+    </div>
+    <div style="margin-top:16px;text-align:center">
+      <button class="btn btn-secondary no-print" onclick="imprimirTermo()" style="max-width:220px;margin:0 auto">📄 Imprimir comprovante</button>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+const SB_URL = "https://erhwryfzpycahgsohhbh.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyaHdyeWZ6cHljYWhnc29oaGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg2MTUsImV4cCI6MjA5MTg0NDYxNX0.T0hp90Bmufj6a3oUPq1vYcLiGx9YjyMaZiE38S0e3_8";
+
+const HDR = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" };
+
+function fmtD(s) {
+  if (!s) return "—";
+  const [y, m, d] = String(s).slice(0, 10).split("-");
+  return `${d}/${m}/${y}`;
+}
+function fmtH(h) { return h ? String(h).slice(0, 5) : ""; }
+function set(id, v) { const el = document.getElementById(id); if (el) el.textContent = v || "—"; }
+function show(id) { document.getElementById(id).style.display = ""; }
+function hide(id) { document.getElementById(id).style.display = "none"; }
+
+const token = new URLSearchParams(window.location.search).get("t") || "";
+
+async function rpc(fn, body) {
+  const r = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, { method: "POST", headers: HDR, body: JSON.stringify(body) });
+  return r.json();
+}
+
+async function carregar() {
+  show("state-loading");
+  if (!token) {
+    hide("state-loading");
+    document.getElementById("err-title").textContent = "Link inválido";
+    document.getElementById("err-sub").textContent   = "Nenhum token encontrado no link.";
+    show("state-error");
+    return;
+  }
+  try {
+    const d = await rpc("carregar_termo", { p_token: token });
+    hide("state-loading");
+    if (!d.ok) {
+      document.getElementById("err-title").textContent = "Link inválido";
+      document.getElementById("err-sub").textContent   = d.erro || "Tente novamente.";
+      show("state-error");
+      return;
+    }
+    if (d.ja_aceito) {
+      document.getElementById("aceito-msg").textContent    = `Este termo já foi aceito em ${fmtD(d.aceito_em)} às ${fmtH(String(d.aceito_em).slice(11, 16))}.`;
+      document.getElementById("aceito-detail").textContent = `Protocolo: ${d.protocolo || "—"}  ·  ${d.titulo || ""}`;
+      show("state-aceito");
+      return;
+    }
+
+    // Preenche campos
+    const horario = fmtH(d.hora_inicio) + (d.hora_fim ? " → " + fmtH(d.hora_fim) : "");
+    const dataStr = d.data_enc && d.data_enc !== d.data ? fmtD(d.data) + " a " + fmtD(d.data_enc) : fmtD(d.data);
+    set("d-protocolo",   d.protocolo);
+    set("d-responsavel", d.solicitante);
+    set("d-titulo",      d.titulo);
+    set("d-espaco",      d.espaco);
+    set("d-data",        dataStr);
+    set("d-horario",     horario || "Não definido");
+    set("tf-responsavel", d.solicitante);
+    set("tf-titulo",      d.titulo);
+    set("tf-data",        dataStr);
+    set("tf-horario",     horario || "Não definido");
+    set("tf-espaco",      d.espaco);
+    set("tf-protocolo",   d.protocolo);
+
+    show("state-form");
+
+    // Scroll listener
+    const box = document.getElementById("termo-box");
+    const hint = document.getElementById("scroll-hint");
+    box.addEventListener("scroll", () => {
+      if (box.scrollTop + box.clientHeight >= box.scrollHeight - 40) {
+        hint.style.display = "none";
+      }
+    }, { passive: true });
+
+  } catch(e) {
+    hide("state-loading");
+    document.getElementById("err-title").textContent = "Erro ao carregar";
+    document.getElementById("err-sub").textContent   = e.message;
+    show("state-error");
+  }
+}
+
+function atualizarBotao() {
+  const cb  = document.getElementById("cb-aceite");
+  const btn = document.getElementById("btn-aceitar");
+  btn.disabled = !cb.checked;
+}
+
+async function aceitarTermo() {
+  const btn = document.getElementById("btn-aceitar");
+  btn.disabled = true;
+  btn.textContent = "Registrando...";
+  try {
+    const ip = await fetch("https://api.ipify.org?format=json").then(r => r.json()).then(d => d.ip).catch(() => null);
+    const d  = await rpc("aceitar_termo", {
+      p_token:      token,
+      p_ip:         ip || null,
+      p_user_agent: navigator.userAgent,
+    });
+    if (!d.ok) throw new Error(d.erro || "Erro ao registrar aceite.");
+    hide("state-form");
+    const now = new Date().toLocaleString("pt-BR");
+    document.getElementById("ok-sub").textContent    = `Aceite registrado em ${now}.`;
+    document.getElementById("ok-detail").textContent = `Protocolo: ${d.protocolo || "—"}  ·  ${d.titulo || ""}`;
+    show("state-ok");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = "✅ Li e Aceito o Termo";
+    alert("Erro ao registrar aceite: " + e.message);
+  }
+}
+
+function imprimirTermo() { window.print(); }
+
+carregar();
+</script>
+</body>
+</html>
