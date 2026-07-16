@@ -28,7 +28,7 @@ const AREA_MODULO: Record<string, string> = {
 function montarMsgWA(b: Record<string, string>, numero_chamado: string): string {
   const link = "https://sipen.com.br"
   const linhas = [
-    `📋 *Nova demanda — Portal Público*`,
+    `📋 *Nova Demanda - Portal Administrativo Externo*`,
     ``,
     `*N°:* ${numero_chamado}`,
     `*Título:* ${b.titulo}`,
