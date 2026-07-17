@@ -447,6 +447,85 @@
   </div>
 
   <!-- COMISSÕES -->
+  <!-- ════ RESOLUÇÕES DO CONSELHO ════════════ -->
+
+  <div class="view" id="v-conselho-resolucoes">
+    <div class="hero">
+      <div class="hero-ic" style="background:var(--skybg);border-color:rgba(88,152,212,0.25);color:var(--sky)">⊟</div>
+      <div>
+        <div class="hero-lbl">Conselho e Governança</div>
+        <div class="hero-ttl">Resoluções do Conselho</div>
+        <div class="hero-dsc">Repositório oficial de deliberações normativas — normas, procedimentos e diretrizes institucionais da IPPenha</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt" onclick="resExportarCSV()" title="Exportar CSV">⬇ Exportar</button>
+        <button class="tbt pri" onclick="resNovaResolucao()">+ Nova Resolução</button>
+      </div>
+    </div>
+
+    <div class="kpis c4" style="margin-bottom:14px">
+      <div class="kpi" style="--kc:var(--skybg)">
+        <div class="kpi-v" id="res-kpi-vigentes">—</div>
+        <div class="kpi-lbl">Vigentes</div>
+      </div>
+      <div class="kpi" style="--kc:var(--rosebg)">
+        <div class="kpi-v" id="res-kpi-revogadas">—</div>
+        <div class="kpi-lbl">Revogadas / Substituídas</div>
+      </div>
+      <div class="kpi" style="--kc:var(--goldbg)">
+        <div class="kpi-v" id="res-kpi-revisao">—</div>
+        <div class="kpi-lbl">Em revisão</div>
+      </div>
+      <div class="kpi" style="--kc:var(--tealbg)">
+        <div class="kpi-v" id="res-kpi-ano">—</div>
+        <div class="kpi-lbl">Publicadas este ano</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+      <input id="res-busca" type="text" placeholder="Buscar por título, assunto, texto ou ata…" oninput="resFiltrar()"
+        style="flex:1;min-width:200px;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:7px 10px;outline:none">
+      <select id="res-fil-ano" onchange="resFiltrar()"
+        style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:7px 10px;outline:none">
+        <option value="">Todos os anos</option>
+      </select>
+      <select id="res-fil-cat" onchange="resFiltrar()"
+        style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:7px 10px;outline:none">
+        <option value="">Todas as categorias</option>
+        <option value="administracao">Administração</option>
+        <option value="espacos">Espaços</option>
+        <option value="eventos">Eventos</option>
+        <option value="financas">Finanças</option>
+        <option value="comunicacao">Comunicação</option>
+        <option value="patrimonio">Patrimônio</option>
+        <option value="ministerio">Ministério</option>
+        <option value="missoes">Missões</option>
+        <option value="liturgia">Liturgia</option>
+        <option value="governanca">Governança</option>
+        <option value="seguranca">Segurança</option>
+        <option value="recursos_humanos">Recursos Humanos</option>
+        <option value="tecnologia">Tecnologia</option>
+        <option value="outros">Outros</option>
+      </select>
+      <select id="res-fil-status" onchange="resFiltrar()"
+        style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:7px 10px;outline:none">
+        <option value="">Todos os status</option>
+        <option value="rascunho">Rascunho</option>
+        <option value="em_analise">Em análise</option>
+        <option value="aprovada">Aprovada</option>
+        <option value="publicada">Publicada</option>
+        <option value="revogada">Revogada</option>
+        <option value="substituida">Substituída</option>
+      </select>
+    </div>
+
+    <div id="res-main-container">
+      <div style="padding:32px;text-align:center;color:var(--tx3)">Carregando resoluções…</div>
+    </div>
+  </div>
+
+  <!-- ════ COMISSÕES ════════════ -->
+
   <div class="view" id="v-conselho-com">
     <div class="hero">
       <div class="hero-ic" style="background:var(--skybg)">⚖</div>
