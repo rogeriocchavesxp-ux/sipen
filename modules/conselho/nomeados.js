@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
    SIPEN — Módulo Nomeações Anuais
-   nomeados.js · v2.1
+   nomeados.js · v2.4
    Conselho e Governança — Central de Nomeações da IPPenha
 ═══════════════════════════════════════════════════════════════ */
 
@@ -144,22 +144,22 @@
     Object.entries(kpiSubs).forEach(([id, v]) => _sv(id, v));
   }
 
-  /* ── Bloco colapsável genérico ────────────────────────────── */
+  /* ── Bloco colapsável (accordion nativo SIPEN) ───────────── */
 
-  function _bloco(uid, titulo, cor, bg, pessoas, renderLinha) {
+  function _bloco(uid, titulo, cor, _bg, pessoas, renderLinha) {
     const qtd = pessoas.length;
     return `
-      <div style="border-radius:8px;overflow:hidden;border:1px solid var(--bd1);margin-bottom:4px">
-        <div onclick="nomToggle('${uid}')" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--bg-surface);user-select:none" onmouseover="this.style.background='var(--bg-surface2)'" onmouseout="this.style.background='var(--bg-surface)'">
-          <div style="width:8px;height:8px;border-radius:50%;background:${cor};flex-shrink:0"></div>
-          <span style="flex:1;font-size:13px;font-weight:600;color:var(--tx1)">${titulo}</span>
-          <span style="font-size:10px;color:var(--tx3);margin-right:6px">${qtd} pessoa${qtd !== 1 ? 's' : ''}</span>
-          <span id="${uid}-chev" style="color:var(--tx4);font-size:14px;transition:transform .2s">›</span>
+      <div style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:var(--rl);overflow:hidden;margin-bottom:6px">
+        <div class="ctit" onclick="nomToggle('${uid}')" style="margin-bottom:0;padding:12px 16px;cursor:pointer;user-select:none">
+          <span style="width:6px;height:6px;border-radius:50%;background:${cor};flex-shrink:0;display:inline-block"></span>
+          ${titulo}
+          <span class="csub">${qtd} pessoa${qtd !== 1 ? 's' : ''}</span>
+          <span id="${uid}-chev" style="margin-left:auto;color:var(--tx3);font-size:13px;transition:transform .2s;line-height:1">›</span>
         </div>
         <div id="${uid}-body" style="display:none;border-top:1px solid var(--bd1)">
-          ${pessoas.length === 0
-            ? `<div style="padding:12px 14px;color:var(--tx4);font-size:11.5px">Nenhum registro.</div>`
-            : pessoas.map((p, i) => renderLinha(p, i, pessoas.length)).join('')
+          ${!qtd
+            ? `<p style="padding:10px 16px;color:var(--tx3);font-size:11.5px;margin:0">Nenhum registro.</p>`
+            : `<table class="tbl" style="margin:0">${pessoas.map(renderLinha).join('')}</table>`
           }
         </div>
       </div>`;
@@ -171,95 +171,69 @@
     if (!body) return;
     const open = body.style.display !== 'none';
     body.style.display = open ? 'none' : 'block';
-    if (chev) chev.textContent = open ? '›' : '⌄';
+    if (chev) chev.style.transform = open ? '' : 'rotate(90deg)';
+  }
+
+  /* ── Linhas de tabela (usa .tbl nativo) ──────────────────── */
+
+  function _linhaLider(r) {
+    const area = r.area || r.orgao || '';
+    const sub  = r.suborgao ? ` <span class="csub">› ${r.suborgao}</span>` : '';
+    return `<tr>
+      <td class="tx1b" style="padding-left:20px">${r.nome}</td>
+      <td><span style="color:var(--tx3);font-size:10.5px">${area}</span>${sub}</td>
+      <td style="text-align:right;white-space:nowrap;color:var(--sky);font-weight:600;font-size:11px">${r.cargo || ''}</td>
+    </tr>`;
+  }
+
+  function _linhaMembro(r) {
+    const sub = r.suborgao ? ` <span class="csub">· ${r.suborgao}</span>` : '';
+    return `<tr>
+      <td class="tx1b" style="padding-left:20px">${r.nome}${sub}</td>
+      <td style="text-align:right;white-space:nowrap;font-size:11px">${r.cargo || ''}</td>
+    </tr>`;
+  }
+
+  /* ── Sub-cabeçalho de seção ──────────────────────────────── */
+
+  function _subHeader(label, cor) {
+    return `<div class="kpi-lbl" style="color:${cor};margin:14px 0 6px">${label}</div>`;
   }
 
   /* ── Seção: LÍDERES ───────────────────────────────────────── */
 
-  function _linhaLider(r, i, total) {
-    const bdr = i < total - 1 ? 'border-bottom:1px solid var(--bd1)' : '';
-    const area = r.area || r.orgao || '';
-    const sub  = r.suborgao ? ` › ${r.suborgao}` : '';
-    return `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px 8px 32px;${bdr}">
-        <div>
-          <div style="font-size:12px;color:var(--tx1);font-weight:500">${r.nome}</div>
-          <div style="font-size:10px;color:var(--tx3)">${area}${sub}</div>
-        </div>
-        <div style="text-align:right">
-          <span style="font-size:10px;color:var(--sky);font-weight:600;white-space:nowrap">${r.cargo || ''}</span>
-        </div>
-      </div>`;
-  }
-
   function _renderSecaoLideres(rows) {
     const lideres = rows.filter(r => r.tipo_nomeacao === 'lider');
-    const porFuncao = {
-      supervisor:  lideres.filter(r => r.funcao_lider === 'supervisor'),
-      coordenador: lideres.filter(r => r.funcao_lider === 'coordenador'),
-      lider_area:  lideres.filter(r => r.funcao_lider === 'lider_area'),
-    };
-
-    const total = lideres.length;
-    if (total === 0) return `<div style="color:var(--tx3);font-size:12px;padding:16px">Nenhum líder cadastrado para este ano.</div>`;
-
+    if (!lideres.length) return `<p style="color:var(--tx3);font-size:11.5px;padding:4px 0">Nenhum líder cadastrado para este ano.</p>`;
     return `
-      ${_bloco('nom-sup', 'Supervisores', 'var(--rose)', 'rgba(224,85,85,.1)', porFuncao.supervisor, _linhaLider)}
-      ${_bloco('nom-coord', 'Coordenadores', 'var(--sky)', 'rgba(74,156,245,.1)', porFuncao.coordenador, _linhaLider)}
-      ${_bloco('nom-lider', 'Líderes de Área', 'var(--violet)', 'rgba(139,111,212,.1)', porFuncao.lider_area, _linhaLider)}
-    `;
+      ${_bloco('nom-sup',   'Supervisores',    'var(--rose)',   '', lideres.filter(r => r.funcao_lider === 'supervisor'),  _linhaLider)}
+      ${_bloco('nom-coord', 'Coordenadores',   'var(--sky)',    '', lideres.filter(r => r.funcao_lider === 'coordenador'), _linhaLider)}
+      ${_bloco('nom-lider', 'Líderes de Área', 'var(--violet)', '', lideres.filter(r => r.funcao_lider === 'lider_area'),  _linhaLider)}`;
   }
 
   /* ── Seção: MEMBROS ───────────────────────────────────────── */
-
-  function _linhaMembro(r, i, total) {
-    const bdr = i < total - 1 ? 'border-bottom:1px solid var(--bd1)' : '';
-    const sub = r.suborgao ? ` <span style="font-size:10px;color:var(--tx4)">· ${r.suborgao}</span>` : '';
-    return `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px 8px 32px;${bdr}">
-        <span style="font-size:12px;color:var(--tx1)">${r.nome}${sub}</span>
-        <span style="font-size:10px;color:var(--tx3);white-space:nowrap;margin-left:8px">${r.cargo || ''}</span>
-      </div>`;
-  }
-
-  function _grupoMembros(uid, orgao, pessoas, cor) {
-    return _bloco(uid, orgao, cor, '', pessoas, _linhaMembro);
-  }
 
   function _renderSecaoMembros(rows) {
     const membros = rows.filter(r => r.tipo_nomeacao === 'membro');
     const socs    = membros.filter(r => r.tipo_membro === 'sociedade');
     const mins    = membros.filter(r => r.tipo_membro === 'ministerio');
 
-    // Agrupa sociedades por orgao
     const bySoc = {};
     socs.forEach(r => { const k = r.orgao || r.area || '—'; (bySoc[k] = bySoc[k] || []).push(r); });
-
-    // Agrupa ministérios por orgao
     const byMin = {};
     mins.forEach(r => { const k = r.orgao || r.area || '—'; (byMin[k] = byMin[k] || []).push(r); });
 
-    const secSocs = Object.keys(bySoc).sort().map((orgao, i) =>
-      _grupoMembros(`nom-soc-${i}`, orgao, bySoc[orgao], 'var(--gold)')
-    ).join('');
-
-    const secMins = Object.keys(byMin).sort().map((orgao, i) =>
-      _grupoMembros(`nom-min-${i}`, orgao, byMin[orgao], 'var(--teal)')
-    ).join('');
+    const htmlSocs = Object.keys(bySoc).sort().map((o, i) => _bloco(`nom-soc-${i}`, o, 'var(--gold)', '', bySoc[o], _linhaMembro)).join('');
+    const htmlMins = Object.keys(byMin).sort().map((o, i) => _bloco(`nom-min-${i}`, o, 'var(--teal)', '', byMin[o], _linhaMembro)).join('');
 
     return `
-      <div style="margin-bottom:20px">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px;padding:0 2px">Sociedades Internas</div>
-        ${secSocs || '<div style="color:var(--tx3);font-size:12px;padding:8px">Nenhum registro.</div>'}
-      </div>
-      <div>
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--teal);margin-bottom:8px;padding:0 2px">Ministérios</div>
-        ${secMins || '<div style="color:var(--tx3);font-size:12px;padding:8px">Nenhum registro.</div>'}
-      </div>
-    `;
+      ${_subHeader('Sociedades Internas', 'var(--gold)')}
+      ${htmlSocs || '<p style="color:var(--tx3);font-size:11.5px;padding:4px 0">Nenhum registro.</p>'}
+      ${_subHeader('Ministérios', 'var(--teal)')}
+      ${htmlMins || '<p style="color:var(--tx3);font-size:11.5px;padding:4px 0">Nenhum registro.</p>'}`;
   }
 
-  /* ── Seção: OUTROS (governo, comissões, grupos, congregações) */
+  /* ── Seção: OUTROS ───────────────────────────────────────── */
 
   function _renderSecaoOutros(rows) {
     const outros = rows.filter(r => r.tipo_nomeacao === 'outro');
@@ -268,26 +242,20 @@
     const byTipo = {};
     outros.forEach(r => {
       const t = r.orgao_tipo || 'outros';
-      (byTipo[t] = byTipo[t] || {})[r.orgao || '—'] = byTipo[t][r.orgao || '—'] || [];
+      (byTipo[t] = byTipo[t] || {})[r.orgao || '—'] ||= [];
       byTipo[t][r.orgao || '—'].push(r);
     });
 
-    const labels = { governo:'Governo', comissao:'Comissões', grupo:'Grupos', congregacao:'Congregações', outros:'Outros' };
-    const cores  = { governo:'var(--sky)', comissao:'var(--violet)', grupo:'var(--amber)', congregacao:'var(--gr)', outros:'var(--tx3)' };
+    const LABELS = { governo:'Governo', comissao:'Comissões', grupo:'Grupos', congregacao:'Congregações', outros:'Outros' };
+    const CORES  = { governo:'var(--sky)', comissao:'var(--violet)', grupo:'var(--amber)', congregacao:'var(--gr)', outros:'var(--tx3)' };
 
-    let html = '';
-    Object.keys(byTipo).sort().forEach(tipo => {
-      const label = labels[tipo] || tipo;
-      const cor   = cores[tipo] || 'var(--tx3)';
-      const byOrgao = byTipo[tipo];
-      html += `<div style="margin-bottom:16px">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:${cor};margin-bottom:8px;padding:0 2px">${label}</div>`;
-      Object.keys(byOrgao).sort().forEach((orgao, i) => {
-        html += _bloco(`nom-out-${tipo}-${i}`, orgao, cor, '', byOrgao[orgao], _linhaMembro);
-      });
-      html += '</div>';
-    });
-    return html;
+    return Object.keys(byTipo).sort().map(tipo => {
+      const cor   = CORES[tipo] || 'var(--tx3)';
+      const blocos = Object.keys(byTipo[tipo]).sort().map((o, i) =>
+        _bloco(`nom-out-${tipo}-${i}`, o, cor, '', byTipo[tipo][o], _linhaMembro)
+      ).join('');
+      return `${_subHeader(LABELS[tipo] || tipo, cor)}${blocos}`;
+    }).join('');
   }
 
   /* ── Render principal: Nomeações ──────────────────────────── */
@@ -296,45 +264,45 @@
     const container = _el('nom-main-container');
     if (!container) return;
 
-    const rows   = _rows;
-    const anual  = _anuais.find(a => a.ano === _anoAtivo);
+    const rows  = _rows;
+    const anual = _anuais.find(a => a.ano === _anoAtivo);
     const outros = rows.filter(r => r.tipo_nomeacao === 'outro');
+
+    if (!rows.length) {
+      container.innerHTML = `<div class="card"><p style="color:var(--tx3);font-size:11.5px;margin:0">Nenhum registro para ${_anoAtivo}. Use <strong>+ Novo Registro</strong> para cadastrar ou <strong>Duplicar ano anterior</strong> para copiar de outro ano.</p></div>`;
+      return;
+    }
+
+    const _badge = (status) => {
+      const MAP = { publicada:'badge-presente', aprovada:'badge-online', em_preparacao:'badge-online', rascunho:'badge-justif', encerrada:'badge-justif', arquivada:'badge-justif' };
+      return `<span class="${MAP[status] || 'badge-justif'}">${_labelStatus(status)}</span>`;
+    };
 
     container.innerHTML = `
       ${anual ? `
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(58,170,92,.07);border:1px solid rgba(58,170,92,.2);border-radius:8px;margin-bottom:16px">
-          <span style="font-size:11px;color:var(--gr);font-weight:600">Nomeações ${anual.ano}</span>
-          ${anual.status ? `<span style="font-size:10px;padding:2px 7px;border-radius:4px;background:rgba(58,170,92,.15);color:var(--gr)">${_labelStatus(anual.status)}</span>` : ''}
-          ${anual.ata_origem ? `<span style="font-size:10px;color:var(--tx3)">· ${anual.ata_origem}</span>` : ''}
-          <span style="flex:1"></span>
-          ${anual.periodo_inicio ? `<span style="font-size:10px;color:var(--tx3)">${_fmtPeriodo(anual.periodo_inicio, anual.periodo_fim)}</span>` : ''}
+        <div class="alr" style="background:rgba(48,209,88,.06);border-color:rgba(48,209,88,.2)">
+          <span class="alr-i" style="color:var(--gr)">◎</span>
+          <div>
+            <strong style="color:var(--gr)">Nomeações ${anual.ano}</strong>
+            ${anual.status ? _badge(anual.status) : ''}
+            ${anual.ata_origem ? `<span class="csub" style="margin-left:6px">${anual.ata_origem}</span>` : ''}
+            ${anual.periodo_inicio ? `<span class="csub" style="margin-left:6px">${_fmtPeriodo(anual.periodo_inicio, anual.periodo_fim)}</span>` : ''}
+          </div>
         </div>` : ''}
 
-      <!-- LÍDERES -->
-      <div style="margin-bottom:24px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--rose)">Líderes</div>
-          <div style="flex:1;height:1px;background:var(--bd1)"></div>
-        </div>
+      <div class="card" style="margin-bottom:10px;padding:14px 16px">
+        <div class="ctit" style="margin-bottom:10px;color:var(--rose)">Líderes</div>
         ${_renderSecaoLideres(rows)}
       </div>
 
-      <!-- MEMBROS -->
-      <div style="margin-bottom:24px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--teal)">Membros</div>
-          <div style="flex:1;height:1px;background:var(--bd1)"></div>
-        </div>
+      <div class="card" style="margin-bottom:10px;padding:14px 16px">
+        <div class="ctit" style="margin-bottom:6px;color:var(--teal)">Membros</div>
         ${_renderSecaoMembros(rows)}
       </div>
 
-      <!-- OUTROS (gov, comissões, grupos, congregações) -->
       ${outros.length ? `
-        <div style="margin-bottom:24px">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3)">Demais Órgãos</div>
-            <div style="flex:1;height:1px;background:var(--bd1)"></div>
-          </div>
+        <div class="card" style="margin-bottom:10px;padding:14px 16px">
+          <div class="ctit" style="margin-bottom:6px;color:var(--tx2)">Demais Órgãos</div>
           ${_renderSecaoOutros(rows)}
         </div>` : ''}
     `;
@@ -347,58 +315,41 @@
     if (!container) return;
 
     if (!_anuais.length) {
-      container.innerHTML = `<div style="padding:24px;color:var(--tx3);font-size:12px">Nenhum histórico disponível. Execute a migration no Supabase.</div>`;
+      container.innerHTML = `<div class="card"><p style="color:var(--tx3);font-size:11.5px;margin:0">Nenhum histórico disponível.</p></div>`;
       return;
     }
 
-    const STATUS_COR = {
-      rascunho:      'var(--tx3)',
-      em_preparacao: 'var(--amber)',
-      aprovada:      'var(--sky)',
-      publicada:     'var(--gr)',
-      encerrada:     'var(--tx3)',
-      arquivada:     'var(--tx4)',
+    const STATUS_CLASS = {
+      publicada:     'badge-presente',
+      aprovada:      'badge-online',
+      em_preparacao: 'badge-online',
+      rascunho:      'badge-justif',
+      encerrada:     'badge-justif',
+      arquivada:     'badge-justif',
     };
 
-    let html = `
+    const rows = _anuais.map(a => `
+      <tr onclick="nomFiltrarAno(${a.ano}); nomTab('nomeacoes', _el('nom-tab-nomeacoes'))" style="cursor:pointer">
+        <td class="tx1b">${a.ano}</td>
+        <td class="tx1">${a.titulo}</td>
+        <td><span class="${STATUS_CLASS[a.status] || 'badge-justif'}">${_labelStatus(a.status)}</span></td>
+        <td>${_fmtPeriodo(a.periodo_inicio, a.periodo_fim)}</td>
+        <td>${a.ata_origem || '—'}</td>
+        <td class="r"><button class="tbt" onclick="event.stopPropagation(); nomFiltrarAno(${a.ano}); nomTab('nomeacoes', _el('nom-tab-nomeacoes'))">Ver</button></td>
+      </tr>`).join('');
+
+    container.innerHTML = `
       <div class="card">
         <div class="ctit">Histórico de Nomeações Anuais</div>
-        <div style="overflow-x:auto">
-          <table style="width:100%;border-collapse:collapse;font-size:12px">
-            <thead>
-              <tr style="border-bottom:1px solid var(--bd1)">
-                <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-size:10px;text-transform:uppercase;letter-spacing:.06em">Ano</th>
-                <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-size:10px;text-transform:uppercase;letter-spacing:.06em">Título</th>
-                <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-size:10px;text-transform:uppercase;letter-spacing:.06em">Status</th>
-                <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-size:10px;text-transform:uppercase;letter-spacing:.06em">Período</th>
-                <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-size:10px;text-transform:uppercase;letter-spacing:.06em">Ata</th>
-                <th style="text-align:right;padding:8px 10px;color:var(--tx3);font-size:10px;text-transform:uppercase;letter-spacing:.06em">Ações</th>
-              </tr>
-            </thead>
-            <tbody>`;
-
-    _anuais.forEach((a, i) => {
-      const cor   = STATUS_COR[a.status] || 'var(--tx3)';
-      const bdr   = i < _anuais.length - 1 ? 'border-bottom:1px solid var(--bd1)' : '';
-      html += `
-        <tr style="${bdr}" onmouseover="this.style.background='var(--bg-surface2)'" onmouseout="this.style.background=''" onclick="nomFiltrarAno(${a.ano}); nomTab('nomeacoes', document.getElementById('nom-tab-nomeacoes'))" style="cursor:pointer">
-          <td style="padding:10px 10px;font-weight:700;color:var(--tx1)">${a.ano}</td>
-          <td style="padding:10px 10px;color:var(--tx1)">${a.titulo}</td>
-          <td style="padding:10px 10px">
-            <span style="font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600;color:${cor};background:${cor.replace(')', ',.12)').replace('var(','rgba(').replace('--tx3','90,96,104').replace('--tx4','90,96,104').replace('--sky','74,156,245').replace('--gr','58,170,92').replace('--amber','212,168,67')}">
-              ${_labelStatus(a.status)}
-            </span>
-          </td>
-          <td style="padding:10px 10px;color:var(--tx2)">${_fmtPeriodo(a.periodo_inicio, a.periodo_fim)}</td>
-          <td style="padding:10px 10px;color:var(--tx3);font-size:11px">${a.ata_origem || '—'}</td>
-          <td style="padding:10px 10px;text-align:right">
-            <button onclick="event.stopPropagation(); nomFiltrarAno(${a.ano}); nomTab('nomeacoes', document.getElementById('nom-tab-nomeacoes'))" style="background:none;border:1px solid var(--bd1);border-radius:4px;padding:3px 8px;color:var(--tx2);cursor:pointer;font-size:11px">Ver</button>
-          </td>
-        </tr>`;
-    });
-
-    html += `</tbody></table></div></div>`;
-    container.innerHTML = html;
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th>Ano</th><th>Título</th><th>Status</th><th>Período</th><th>Ata</th><th class="r">Ações</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>`;
   }
 
   /* ── Helpers de formato ───────────────────────────────────── */
