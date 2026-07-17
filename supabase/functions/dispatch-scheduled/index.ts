@@ -122,10 +122,9 @@ async function resolverDestinatarios(
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204 });
 
-  // Aceita service role key no header Authorization
-  const auth = req.headers.get("Authorization") ?? "";
-  const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  if (auth !== `Bearer ${svcKey}`) {
+  // Auth via segredo simples no header x-cron-secret
+  const cronSecret = Deno.env.get("DISPATCH_SECRET");
+  if (!cronSecret || req.headers.get("x-cron-secret") !== cronSecret) {
     return new Response("Unauthorized", { status: 401 });
   }
 
