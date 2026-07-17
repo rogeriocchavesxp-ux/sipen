@@ -769,19 +769,19 @@ window.msgWzBack=function(){
   if(_wz&&_wz.passo>1){ _wz.passo--; _renderWzBody(); }
 };
 
+// Retorna o ID da campanha criada, ou null em caso de erro
 async function _wzSalvar(status){
-  if(!_wz) return false;
+  if(!_wz) return null;
   const tiEl=document.getElementById('msg-wz-titulo-camp')||document.getElementById('msg-wz-titulo-inp');
   if(tiEl) _wz.titulo=tiEl.value.trim();
-  if(!_wz.titulo){ T('Atenção','Informe um título para identificar esta mensagem.'); return false; }
+  if(!_wz.titulo){ T('Atenção','Informe um título para identificar esta mensagem.'); return null; }
   const isAgend=typeof _wz.agendado==='string'&&_wz.agendado;
   const filtrosDesc=[..._wz.filtros.map(f=>f.label),..._wz.individuais.map(p=>p.nome)].join(', ');
   const payload={
     titulo:_wz.titulo,canal:_wz.canal||'whatsapp',
     conteudo:_wz.conteudo,status,filtros_desc:filtrosDesc,
     agendado_para:isAgend?new Date(_wz.agendado).toISOString():null,
-    enviado_em:status==='enviada'?new Date().toISOString():null,
-    total_dest:_wz.individuais.length
+    total_dest:0
   };
   const r=await fetch(`${apiBaseUrl()}/rest/v1/msg_campanhas`,{
     method:'POST',
@@ -790,23 +790,14 @@ async function _wzSalvar(status){
   });
   if(!r.ok) throw new Error(await r.text());
   const [camp]=await r.json();
-  if(camp?.id){
-    if(_wz.filtros.length){
-      await fetch(`${apiBaseUrl()}/rest/v1/msg_filtros`,{
-        method:'POST',
-        headers:{...apiHeaders(),'Content-Type':'application/json'},
-        body:JSON.stringify(_wz.filtros.map(f=>({campanha_id:camp.id,tipo:f.tipo,valor:f.label})))
-      });
-    }
-    if(_wz.individuais.length){
-      await fetch(`${apiBaseUrl()}/rest/v1/msg_destinatarios`,{
-        method:'POST',
-        headers:{...apiHeaders(),'Content-Type':'application/json'},
-        body:JSON.stringify(_wz.individuais.map(p=>({campanha_id:camp.id,pessoa_id:p.pessoa_id,nome:p.nome,canal:_wz.canal})))
-      });
-    }
+  if(camp?.id && _wz.filtros.length){
+    await fetch(`${apiBaseUrl()}/rest/v1/msg_filtros`,{
+      method:'POST',
+      headers:{...apiHeaders(),'Content-Type':'application/json'},
+      body:JSON.stringify(_wz.filtros.map(f=>({campanha_id:camp.id,tipo:f.tipo,valor:f.label})))
+    }).catch(()=>{});
   }
-  return true;
+  return camp?.id||null;
 }
 
 window.msgWzEnviar=async function(){
@@ -818,11 +809,40 @@ window.msgWzEnviar=async function(){
   if(btn){btn.disabled=true;btn.textContent='Salvando...';}
   try{
     const isAgend=typeof _wz.agendado==='string'&&_wz.agendado;
-    const ok=await _wzSalvar(isAgend?'agendada':'enviada');
-    if(!ok){ if(btn){btn.disabled=false;btn.textContent=isAgend?'📅 Agendar Envio':'📢 Enviar Agora';} return; }
+
+    // Salva campanha
+    const statusInicial = isAgend ? 'agendada' : (_wz.canal==='whatsapp'||_wz.canal==='todos') ? 'enviando' : 'enviada';
+    const campanhaId = await _wzSalvar(statusInicial);
+    if(!campanhaId){ if(btn){btn.disabled=false;btn.textContent=isAgend?'📅 Agendar Envio':'📢 Enviar Agora';} return; }
+
     document.getElementById('msg-wz-overlay')?.remove();
-    T(isAgend?'Mensagem agendada':'Mensagem enviada',isAgend?'Agendamento registrado.':'Campanha registrada com sucesso.');
-    carregarMensagens();
+
+    if(isAgend){
+      T('Agendada','Mensagem agendada com sucesso.');
+      carregarMensagens();
+      return;
+    }
+
+    // Envio real via WhatsApp
+    if(_wz.canal==='whatsapp'||_wz.canal==='todos'){
+      if(typeof WA==='undefined'){
+        T('Erro','Módulo WhatsApp não carregado.');
+        await fetch(`${apiBaseUrl()}/rest/v1/msg_campanhas?id=eq.${campanhaId}`,{method:'PATCH',headers:{...apiHeaders(),'Content-Type':'application/json'},body:JSON.stringify({status:'falha'})});
+        return;
+      }
+      const pessoas = await _resolverDests(_wz);
+      if(!pessoas.length){
+        T('Atenção','Nenhum destinatário encontrado. Verifique os filtros selecionados.');
+        await fetch(`${apiBaseUrl()}/rest/v1/msg_campanhas?id=eq.${campanhaId}`,{method:'PATCH',headers:{...apiHeaders(),'Content-Type':'application/json'},body:JSON.stringify({status:'falha',total_dest:0})});
+        return;
+      }
+      const comTel = await _resolverTels(pessoas);
+      await _dispararWA(campanhaId, comTel, _wz.conteudo);
+    } else {
+      // E-mail / Notificação — integração pendente
+      T('Registrado','Canal '+(CANAL_LBL[_wz.canal]||_wz.canal)+' registrado. Integração de envio em breve.');
+      carregarMensagens();
+    }
   }catch(e){
     T('Erro',e.message);
     if(btn){btn.disabled=false;btn.textContent='Enviar Agora';}
@@ -831,13 +851,188 @@ window.msgWzEnviar=async function(){
 
 window.msgWzRascunho=async function(){
   try{
-    const ok=await _wzSalvar('rascunho');
-    if(!ok) return;
+    const id=await _wzSalvar('rascunho');
+    if(!id) return;
     document.getElementById('msg-wz-overlay')?.remove();
     T('Rascunho salvo','Continue depois em Mensagens.');
     carregarMensagens();
   }catch(e){ T('Erro',e.message); }
 };
+
+// ══════════════════════════════════════════════════════════════
+// ENVIO REAL VIA BOTCONVERSA
+// ══════════════════════════════════════════════════════════════
+
+// Resolve filtros → lista de { pessoa_id, nome }
+async function _resolverDests(wz){
+  const map = new Map(); // pessoa_id → nome (dedup)
+
+  for(const f of wz.filtros){
+    let rows = [];
+    if(f.tipo === 'todos_membros'){
+      const r = await fetch(`${apiBaseUrl()}/rest/v1/v_membros?status=eq.ativo&select=pessoa_id,nome&limit=1000`,{headers:apiHeaders()});
+      rows = await r.json();
+      rows.forEach(p => { if(p.pessoa_id && !map.has(p.pessoa_id)) map.set(p.pessoa_id, p.nome); });
+
+    } else if(f.tipo.startsWith('cong_')){
+      const congId = f.tipo.slice(5);
+      try{
+        const r = await fetch(`${apiBaseUrl()}/rest/v1/v_membros?congregacao_id=eq.${congId}&status=eq.ativo&select=pessoa_id,nome&limit=500`,{headers:apiHeaders()});
+        rows = await r.json();
+        if(Array.isArray(rows)) rows.forEach(p => { if(p.pessoa_id && !map.has(p.pessoa_id)) map.set(p.pessoa_id, p.nome); });
+      }catch(_){}
+
+    } else if(f.tipo.startsWith('min_')){
+      const minId = f.tipo.slice(4);
+      try{
+        const r = await fetch(`${apiBaseUrl()}/rest/v1/ministerio_membros?ministerio_id=eq.${minId}&ativo=eq.true&select=pessoa_id,pessoas(nome)&limit=500`,{headers:apiHeaders()});
+        rows = await r.json();
+        if(Array.isArray(rows)) rows.forEach(p => {
+          const pid = p.pessoa_id, nm = p.pessoas?.nome||'';
+          if(pid && nm && !map.has(pid)) map.set(pid, nm);
+        });
+      }catch(_){}
+
+    } else if(f.tipo === 'aniv_mes'){
+      const mes = new Date().getMonth()+1;
+      try{
+        const r = await fetch(`${apiBaseUrl()}/rest/v1/pessoas?select=id,nome&data_nascimento=not.is.null&order=nome`,{headers:apiHeaders()});
+        const all = await r.json();
+        if(Array.isArray(all)) all.filter(p=>{ const d=p.data_nascimento; return d&&(new Date(d).getMonth()+1)===mes; })
+          .forEach(p=>{ if(!map.has(p.id)) map.set(p.id, p.nome); });
+      }catch(_){}
+
+    }
+    // demais filtros: salvos como descrição mas não resolvidos automaticamente
+  }
+
+  // individuais adicionados manualmente
+  for(const ind of wz.individuais){
+    if(!map.has(ind.pessoa_id)) map.set(ind.pessoa_id, ind.nome);
+  }
+
+  return Array.from(map.entries()).map(([pessoa_id,nome])=>({pessoa_id,nome}));
+}
+
+// Busca telefone de cada pessoa_id
+async function _resolverTels(pessoas){
+  if(!pessoas.length) return [];
+  const ids = pessoas.map(p=>p.pessoa_id);
+  // PostgREST: id=in.(a,b,c)
+  const r = await fetch(
+    `${apiBaseUrl()}/rest/v1/pessoas?id=in.(${ids.join(',')})&select=id,nome,celular,whatsapp,telefone`,
+    {headers:apiHeaders()}
+  );
+  const rows = await r.json();
+  if(!Array.isArray(rows)) return [];
+  const byId = {};
+  rows.forEach(p => byId[p.id]=p);
+  return pessoas.map(p=>{
+    const d = byId[p.pessoa_id]||{};
+    const tel = d.whatsapp||d.celular||d.telefone||null;
+    return {...p, contato:tel};
+  }); // inclui sem telefone — filtrado depois
+}
+
+// Modal de progresso
+function _progressModal(total){
+  const ov=document.createElement('div');
+  ov.id='msg-prog-overlay';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9500;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.innerHTML=`<div style="background:var(--bg-card);border-radius:14px;border:1px solid var(--bd1);width:100%;max-width:420px;padding:28px 32px;text-align:center">
+    <div style="font-size:28px;margin-bottom:12px">📤</div>
+    <div style="font-weight:700;font-size:15px;margin-bottom:6px">Enviando mensagens</div>
+    <div id="msg-prog-atual" style="font-size:12px;color:var(--tx3);margin-bottom:16px">Preparando...</div>
+    <div style="background:var(--bd1);border-radius:99px;height:6px;overflow:hidden;margin-bottom:10px">
+      <div id="msg-prog-bar" style="height:100%;background:var(--violet);width:0%;transition:width .3s;border-radius:99px"></div>
+    </div>
+    <div id="msg-prog-cnt" style="font-size:11px;color:var(--tx3)">0 / ${total}</div>
+  </div>`;
+  document.getElementById('msg-prog-overlay')?.remove();
+  document.body.appendChild(ov);
+  return ov;
+}
+
+function _progressUpdate(ov, i, total, nome){
+  const pct = Math.round((i/total)*100);
+  const bar = ov.querySelector('#msg-prog-bar');
+  const atual = ov.querySelector('#msg-prog-atual');
+  const cnt = ov.querySelector('#msg-prog-cnt');
+  if(bar) bar.style.width = pct+'%';
+  if(atual) atual.textContent = `Enviando para ${escapeHtml(nome)}...`;
+  if(cnt) cnt.textContent = `${i} / ${total}`;
+}
+
+// Loop de envio via WA.send()
+async function _dispararWA(campanhaId, dests, conteudo){
+  const ov = _progressModal(dests.length);
+  let entregue=0, falha=0, semTel=0;
+
+  for(let i=0;i<dests.length;i++){
+    const d = dests[i];
+    _progressUpdate(ov, i+1, dests.length, d.nome);
+
+    if(!d.contato){
+      semTel++;
+      // Registra sem contato
+      await fetch(`${apiBaseUrl()}/rest/v1/msg_destinatarios`,{
+        method:'POST',
+        headers:{...apiHeaders(),'Content-Type':'application/json'},
+        body:JSON.stringify({campanha_id:campanhaId,pessoa_id:d.pessoa_id,nome:d.nome,contato:null,canal:'whatsapp',status:'falha',erro:'Sem número cadastrado'})
+      }).catch(()=>{});
+      falha++;
+      continue;
+    }
+
+    // Substitui {{nome}} pelo primeiro nome
+    const primeiroNome = (d.nome||'').split(' ')[0];
+    const mensagem = conteudo.replace(/\{\{nome\}\}/g, primeiroNome);
+
+    // Salva destinatário como enviando
+    const destR = await fetch(`${apiBaseUrl()}/rest/v1/msg_destinatarios`,{
+      method:'POST',
+      headers:{...apiHeaders(),'Content-Type':'application/json','Prefer':'return=representation'},
+      body:JSON.stringify({campanha_id:campanhaId,pessoa_id:d.pessoa_id,nome:d.nome,contato:d.contato,canal:'whatsapp',status:'enviando'})
+    }).catch(()=>null);
+    let destId = null;
+    try{ const rows=await destR?.json(); destId=rows?.[0]?.id; }catch(_){}
+
+    // Envia via BotConversa
+    const res = typeof WA !== 'undefined'
+      ? await WA.send({para:d.contato, nome:d.nome, mensagem, modulo:'COMUNICACAO'})
+      : {ok:false, status:'wa_nao_disponivel'};
+
+    const status = res.ok ? 'enviado' : 'falha';
+    if(res.ok) entregue++; else falha++;
+
+    // Atualiza destinatário
+    if(destId){
+      await fetch(`${apiBaseUrl()}/rest/v1/msg_destinatarios?id=eq.${destId}`,{
+        method:'PATCH',
+        headers:{...apiHeaders(),'Content-Type':'application/json'},
+        body:JSON.stringify({status, erro:res.error||null, enviado_em:new Date().toISOString()})
+      }).catch(()=>{});
+    }
+
+    // Intervalo para não ultrapassar rate limit do BotConversa
+    if(i<dests.length-1) await new Promise(r=>setTimeout(r,600));
+  }
+
+  // Atualiza totais da campanha
+  const finalStatus = falha===dests.length ? 'falha' : entregue===dests.length ? 'enviada' : 'parcial';
+  await fetch(`${apiBaseUrl()}/rest/v1/msg_campanhas?id=eq.${campanhaId}`,{
+    method:'PATCH',
+    headers:{...apiHeaders(),'Content-Type':'application/json'},
+    body:JSON.stringify({status:finalStatus,total_dest:dests.length,total_entregue:entregue,total_falha:falha,enviado_em:new Date().toISOString()})
+  }).catch(()=>{});
+
+  ov.remove();
+
+  const semTelMsg = semTel ? ` (${semTel} sem número)` : '';
+  T(entregue>0?'Mensagens enviadas':'Falha no envio',
+    `${entregue} entregues, ${falha} falhas${semTelMsg}.`);
+  carregarMensagens();
+}
 
 // ══════════════════════════════════════════════════════════════
 // AUTOLOAD
