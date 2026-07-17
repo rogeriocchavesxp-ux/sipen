@@ -130,6 +130,10 @@ const CRUMB={
   "config-whatsapp": ["Configurações","WhatsApp — BotConversa","/ status, histórico e templates"],
   "wa-listas":       ["Sistema","Listas de Comunicação","/ WhatsApp"],
   "com-dash":          ["Comunicação","Dashboard","/ solicitações e KPIs"],
+  "com-mensagens":     ["Comunicação","Mensagens","/ campanhas e envios segmentados"],
+  "com-modelos":       ["Comunicação","Modelos","/ templates reutilizáveis"],
+  "com-historico":     ["Comunicação","Histórico","/ todos os envios"],
+  "com-agendamentos":  ["Comunicação","Agendamentos","/ mensagens programadas"],
   "com-solicitacoes":  ["Comunicação","Solicitações de Arte","/ artes, campanhas e transmissões"],
   "com-detalhe":       ["Comunicação","Detalhe da Solicitação","/ visualização e edição"],
   "eve-dash":          ["Eventos","Dashboard","/ visão geral dos eventos"],
@@ -169,7 +173,7 @@ const _VIEW_MAP = {
   "proj":        "modules/projetos/view.html",
   "diac":        "modules/diaconal/view.html?v=6.45.13",
   "cong":        "modules/congregacoes/view.html",
-  "com":         "modules/comunicacao/view.html?v=6.45.13",
+  "com":         "modules/comunicacao/view.html?v=6.45.17",
   "eve":         "modules/eventos/view.html?v=6.45.13",
   "area":        "modules/area-membro/view.html?v=6.45.13",
   "config":      "modules/config/view.html",
@@ -237,6 +241,17 @@ async function go(id){
       document.querySelectorAll(".mhdr").forEach(h=>h.classList.remove("open"));
       consSub.classList.add("open");
       if(consHdr)consHdr.classList.add("open");
+    }
+  }
+  // com-* abre ms-com
+  if(mod==="com"){
+    const comSub=document.getElementById("ms-com");
+    const comHdr=document.querySelector("#mw-com .mhdr");
+    if(comSub&&!comSub.classList.contains("open")){
+      document.querySelectorAll(".msub").forEach(s=>s.classList.remove("open"));
+      document.querySelectorAll(".mhdr").forEach(h=>h.classList.remove("open"));
+      comSub.classList.add("open");
+      if(comHdr)comHdr.classList.add("open");
     }
   }
   // config-* e wa-* estão dentro de Sistema — garante que ms-sys está aberto

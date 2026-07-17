@@ -193,14 +193,22 @@
 
         <!-- Comunicação -->
         <div class="mwrap" id="mw-com" data-modulo="COMUNICACAO">
-          <div class="mhdr mhdr-noexpand" onclick="go('com-dash')">
+          <div class="mhdr" onclick="tog('com','com-mensagens')">
             <div class="micon" style="background:rgba(139,111,212,0.14);border-color:rgba(139,111,212,0.25);color:var(--violet)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5.89A8 8 0 0 1 17 4h1v14h-1a8 8 0 0 1-6-1.89M3 10v4"/><path d="M7 9H3a2 2 0 0 0 0 4h4"/><path d="M7 9v6"/><path d="M7 15l2 4"/></svg></div>
             <span class="mname">Comunicação</span>
             <span class="marr">▶</span>
           </div>
           <div class="msub" id="ms-com">
             <div class="si" onclick="go('com-dash')">Dashboard</div>
+            <div class="sdiv"></div>
+            <div class="si" onclick="msgNovaMensagem()">Nova Mensagem</div>
+            <div class="si" onclick="go('com-mensagens')">Mensagens</div>
+            <div class="si" onclick="go('com-agendamentos')">Agendamentos</div>
+            <div class="si" onclick="go('com-modelos')">Modelos</div>
+            <div class="si" onclick="go('com-historico')">Histórico</div>
+            <div class="sdiv"></div>
             <div class="si" onclick="go('com-solicitacoes')">Solicitações de Arte</div>
+            <div class="si" onclick="go('com-whatsapp')">WhatsApp</div>
           </div>
         </div>
 
