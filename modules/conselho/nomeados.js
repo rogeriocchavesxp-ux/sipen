@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
    SIPEN — Módulo Nomeações Anuais
-   nomeados.js · v2.0
+   nomeados.js · v2.1
    Conselho e Governança — Central de Nomeações da IPPenha
 ═══════════════════════════════════════════════════════════════ */
 
@@ -550,7 +550,7 @@
 
             <div style="grid-column:1/-1">
               <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Nome da Pessoa <span style="color:var(--rose)">*</span></label>
-              <input id="nom-f-nome" type="text" placeholder="Nome completo" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+              ${_htmlAutocomplete('nom-f-nome', 'Digite para buscar na membresia…')}
             </div>
 
             <div>
@@ -648,8 +648,10 @@
     if (!tipo)  { T('Campo obrigatório', 'Selecione o tipo de nomeação.'); return; }
     if (!orgao) { T('Campo obrigatório', 'Informe a área, ministério ou sociedade.'); return; }
 
+    const pidEl = document.getElementById('nom-f-nome-pid');
     const payload = {
       nome,
+      pessoa_id:     pidEl?.value || null,
       ano:           parseInt(v('nom-f-ano')) || _anoAtivo,
       tipo_nomeacao: tipo,
       funcao_lider:  tipo === 'lider'  ? v('nom-f-funcao')       : null,
@@ -666,6 +668,8 @@
       obs:           v('nom-f-obs'),
       status:        'ativo',
     };
+    // Remove campos nulos para não sobrescrever defaults do banco
+    Object.keys(payload).forEach(k => { if (payload[k] === null || payload[k] === '') delete payload[k]; });
 
     try {
       const res = await fetch(`${apiBaseUrl()}/rest/v1/nomeados`, {
@@ -682,19 +686,232 @@
     }
   }
 
+  /* ── Autocomplete de Membresia ────────────────────────────── */
+
+  function _htmlAutocomplete(inpId, placeholder) {
+    return `
+      <div style="position:relative">
+        <input id="${inpId}" type="text" placeholder="${placeholder}" autocomplete="off"
+          oninput="nomBuscarPessoa(this)"
+          onblur="setTimeout(()=>{ const l=document.getElementById('${inpId}-list'); if(l)l.style.display='none'; },180)"
+          style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none;box-sizing:border-box">
+        <input type="hidden" id="${inpId}-pid">
+        <div id="${inpId}-list" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:500;background:var(--bg-card);border:1px solid var(--bd2);border-radius:0 0 6px 6px;box-shadow:0 6px 20px rgba(0,0,0,.2);max-height:200px;overflow:auto"></div>
+      </div>`;
+  }
+
+  async function nomBuscarPessoa(inp) {
+    const termo = (inp.value || '').trim();
+    const list  = document.getElementById(inp.id + '-list');
+    const pid   = document.getElementById(inp.id + '-pid');
+    if (pid) pid.value = '';
+    if (!list) return;
+    if (termo.length < 2) { list.style.display = 'none'; return; }
+
+    list.innerHTML = `<div style="padding:8px 12px;color:var(--tx3);font-size:11px">Buscando…</div>`;
+    list.style.display = 'block';
+
+    try {
+      const t   = encodeURIComponent(`*${termo}*`);
+      const res = await fetch(
+        `${apiBaseUrl()}/rest/v1/pessoas?nome=ilike.${t}&deleted_at=is.null&select=id,nome&order=nome.asc&limit=15`,
+        { headers: apiHeaders() }
+      );
+      const pessoas = res.ok ? await res.json() : [];
+
+      if (!pessoas.length) {
+        list.innerHTML = `<div style="padding:8px 12px;color:var(--tx3);font-size:11px">Nenhum resultado para "<b>${escapeHtml(termo)}</b>". O nome será salvo como digitado.</div>`;
+        return;
+      }
+
+      list.innerHTML = pessoas.map(p => `
+        <div data-pid="${p.id}" data-nome="${escapeHtml(p.nome)}"
+          onclick="nomSelecionarPessoa('${inp.id}',this)"
+          style="padding:9px 12px;cursor:pointer;font-size:12px;color:var(--tx1);border-bottom:1px solid var(--bd1)"
+          onmouseover="this.style.background='var(--bg-surface2)'"
+          onmouseout="this.style.background=''">
+          ${escapeHtml(p.nome)}
+        </div>`).join('');
+    } catch {
+      list.innerHTML = `<div style="padding:8px 12px;color:var(--tx3);font-size:11px">Erro na busca.</div>`;
+    }
+  }
+
+  function nomSelecionarPessoa(inpId, div) {
+    const inp  = document.getElementById(inpId);
+    const pidEl = document.getElementById(inpId + '-pid');
+    const list  = document.getElementById(inpId + '-list');
+    if (inp)   inp.value   = div.dataset.nome;
+    if (pidEl) pidEl.value = div.dataset.pid;
+    if (list)  list.style.display = 'none';
+  }
+
+  /* ── Duplicar ano anterior ────────────────────────────────── */
+
+  async function nomDuplicarAno() {
+    const anoAnterior = _anoAtivo - 1;
+    const anoNovo     = _anoAtivo;
+
+    let modal = document.getElementById('nom-dup-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'nom-dup-modal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:320';
+      document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+      <div style="width:min(700px,92vw);max-height:88vh;overflow:hidden;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;display:flex;flex-direction:column">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:14px;font-weight:700;color:var(--tx1)">Duplicar ${anoAnterior} → ${anoNovo}</div>
+          <button onclick="document.getElementById('nom-dup-modal').remove()" style="background:none;border:none;color:var(--tx3);font-size:16px;cursor:pointer">✕</button>
+        </div>
+        <div style="padding:20px;text-align:center;color:var(--tx3);font-size:12px">
+          <span style="display:inline-block;width:14px;height:14px;border:2px solid var(--sky);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:8px"></span>
+          Carregando registros de ${anoAnterior}…
+        </div>
+      </div>`;
+
+    try {
+      const res = await fetch(
+        `${apiBaseUrl()}/rest/v1/nomeados?ano=eq.${anoAnterior}&deleted_at=is.null&status=eq.ativo&order=orgao_tipo.asc,orgao.asc,nome.asc&limit=2000`,
+        { headers: apiHeaders() }
+      );
+
+      let rows = res.ok ? await res.json() : [];
+
+      // Fallback: se não há resultados com filtro de ano (coluna pode não existir), usa todos
+      if (!rows.length) {
+        const r2 = await fetch(
+          `${apiBaseUrl()}/rest/v1/nomeados?deleted_at=is.null&status=eq.ativo&order=orgao_tipo.asc,orgao.asc,nome.asc&limit=2000`,
+          { headers: apiHeaders() }
+        );
+        rows = r2.ok ? await r2.json() : [];
+      }
+
+      if (!rows.length) {
+        modal.querySelector('div > div:last-child').innerHTML =
+          `<div style="padding:20px;color:var(--tx3);font-size:12px">Nenhum registro encontrado em ${anoAnterior}.</div>`;
+        return;
+      }
+
+      // Monta lista com checkboxes para remoção
+      const byOrgao = {};
+      rows.forEach(r => {
+        const k = (r.orgao_tipo || 'outro') + '||' + (r.orgao || '—');
+        (byOrgao[k] = byOrgao[k] || []).push(r);
+      });
+
+      let listaHtml = '';
+      Object.keys(byOrgao).sort().forEach(k => {
+        const [tipo, orgao] = k.split('||');
+        const pessoas = byOrgao[k];
+        listaHtml += `
+          <div style="margin-bottom:12px">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);margin-bottom:4px;padding:0 2px">${orgao}</div>
+            ${pessoas.map(p => `
+              <label style="display:flex;align-items:center;gap:8px;padding:6px 6px;border-radius:4px;cursor:pointer" onmouseover="this.style.background='var(--bg-surface2)'" onmouseout="this.style.background=''">
+                <input type="checkbox" data-id="${p.id}" checked style="width:14px;height:14px;accent-color:var(--gr);flex-shrink:0">
+                <span style="flex:1;font-size:12px;color:var(--tx1)">${p.nome}</span>
+                <span style="font-size:10px;color:var(--tx3)">${p.cargo || ''}</span>
+              </label>`).join('')}
+          </div>`;
+      });
+
+      modal.innerHTML = `
+        <div style="width:min(700px,92vw);max-height:88vh;overflow:hidden;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;display:flex;flex-direction:column">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--tx1)">Duplicar ${anoAnterior} → ${anoNovo}</div>
+              <div style="font-size:11px;color:var(--tx3);margin-top:2px">${rows.length} registros encontrados · Desmarque os que não devem ser copiados</div>
+            </div>
+            <button onclick="document.getElementById('nom-dup-modal').remove()" style="background:none;border:none;color:var(--tx3);font-size:16px;cursor:pointer">✕</button>
+          </div>
+          <div style="padding:14px 16px;border-bottom:1px solid var(--bd1);display:flex;gap:8px">
+            <button onclick="nomDupMarcarTodos(true)"  style="background:none;border:1px solid var(--bd1);border-radius:4px;padding:4px 10px;color:var(--tx2);cursor:pointer;font-size:11px">Marcar todos</button>
+            <button onclick="nomDupMarcarTodos(false)" style="background:none;border:1px solid var(--bd1);border-radius:4px;padding:4px 10px;color:var(--tx2);cursor:pointer;font-size:11px">Desmarcar todos</button>
+          </div>
+          <div style="padding:16px;overflow:auto;flex:1" id="nom-dup-lista">
+            ${listaHtml}
+          </div>
+          <div style="padding:14px 16px;border-top:1px solid var(--bd1);display:flex;justify-content:flex-end;gap:8px">
+            <button onclick="document.getElementById('nom-dup-modal').remove()" style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:8px 12px;color:var(--tx2);cursor:pointer">Cancelar</button>
+            <button onclick="nomConfirmarDuplicacao(${anoAnterior},${anoNovo})" style="background:var(--sky);border:none;border-radius:6px;padding:8px 16px;color:#fff;font-weight:600;cursor:pointer">Duplicar selecionados →</button>
+          </div>
+        </div>`;
+
+    } catch (e) {
+      modal.innerHTML = `<div style="padding:24px;color:var(--rose)">Erro: ${e.message}</div>`;
+    }
+  }
+
+  function nomDupMarcarTodos(checked) {
+    document.querySelectorAll('#nom-dup-lista input[type="checkbox"]').forEach(cb => { cb.checked = checked; });
+  }
+
+  async function nomConfirmarDuplicacao(anoAnterior, anoNovo) {
+    const selecionados = [...document.querySelectorAll('#nom-dup-lista input[type="checkbox"]:checked')]
+      .map(cb => cb.dataset.id);
+
+    if (!selecionados.length) { T('Nenhum selecionado', 'Marque ao menos um registro.'); return; }
+
+    // Busca registros originais
+    const ids = selecionados.join(',');
+    const res = await fetch(
+      `${apiBaseUrl()}/rest/v1/nomeados?id=in.(${ids})&deleted_at=is.null&limit=2000`,
+      { headers: apiHeaders() }
+    );
+    if (!res.ok) { T('Erro', 'Não foi possível buscar os registros.'); return; }
+    const originais = await res.json();
+
+    const copies = originais.map(r => {
+      const c = Object.assign({}, r);
+      delete c.id;
+      delete c.criado_em;
+      delete c.atualizado_em;
+      c.ano = anoNovo;
+      return c;
+    });
+
+    // Insere em lotes
+    const BATCH = 50;
+    let inseridos = 0;
+    for (let i = 0; i < copies.length; i += BATCH) {
+      const lote = copies.slice(i, i + BATCH);
+      const r = await fetch(`${apiBaseUrl()}/rest/v1/nomeados`, {
+        method:  'POST',
+        headers: { ...apiHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body:    JSON.stringify(lote),
+      });
+      if (r.ok || r.status === 201) inseridos += lote.length;
+    }
+
+    document.getElementById('nom-dup-modal')?.remove();
+    T('Duplicação concluída', `${inseridos} registros copiados para ${anoNovo}.`);
+    _anoAtivo = anoNovo;
+    const sel = document.getElementById('nom-ano-sel');
+    if (sel) sel.value = anoNovo;
+    carregarNomeados();
+  }
+
   /* ── Registro no router ───────────────────────────────────── */
 
   VIEW_AUTOLOAD['conselho-nomeados'] = { fn: carregarNomeados };
 
   /* ── Exposição global ─────────────────────────────────────── */
 
-  window.nomTab           = nomTab;
-  window.nomFiltrarAno    = nomFiltrarAno;
-  window.nomToggle        = nomToggle;
-  window.nomImprimir      = nomImprimir;
-  window.nomNovoRegistro  = nomNovoRegistro;
-  window.nomMostrarCampos = nomMostrarCampos;
-  window.nomSalvarRegistro = nomSalvarRegistro;
-  window._el              = window._el || ((id) => document.getElementById(id));
+  window.nomTab              = nomTab;
+  window.nomFiltrarAno       = nomFiltrarAno;
+  window.nomToggle           = nomToggle;
+  window.nomImprimir         = nomImprimir;
+  window.nomNovoRegistro     = nomNovoRegistro;
+  window.nomMostrarCampos    = nomMostrarCampos;
+  window.nomSalvarRegistro   = nomSalvarRegistro;
+  window.nomBuscarPessoa     = nomBuscarPessoa;
+  window.nomSelecionarPessoa = nomSelecionarPessoa;
+  window.nomDuplicarAno      = nomDuplicarAno;
+  window.nomDupMarcarTodos   = nomDupMarcarTodos;
+  window.nomConfirmarDuplicacao = nomConfirmarDuplicacao;
+  window._el                 = window._el || ((id) => document.getElementById(id));
 
 })();
