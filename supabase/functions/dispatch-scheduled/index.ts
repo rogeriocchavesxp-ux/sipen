@@ -217,10 +217,11 @@ Deno.serve(async (req) => {
 
       const finalStatus = enviados === 0 ? "falha" : falhas === 0 ? "enviada" : "parcial";
       await sb.from("msg_campanhas").update({
-        status:            finalStatus,
-        total_dest:        destinatarios.length,
-        total_enviados:    enviados,
-        total_falhas:      falhas,
+        status:         finalStatus,
+        total_dest:     destinatarios.length,
+        total_entregue: enviados,
+        total_falha:    falhas,
+        enviado_em:     new Date().toISOString(),
       }).eq("id", camp.id);
 
       processadas++;
