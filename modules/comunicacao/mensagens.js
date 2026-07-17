@@ -786,7 +786,10 @@ async function _wzD3EstimarTotal(){
 
 // ── Passo 3: Conteúdo ──────────────────────
 function _wzStep3(body){
-  const VARS=['{{nome}}','{{data}}','{{hora}}','{{local}}','{{ministerio}}','{{evento}}','{{mes}}'];
+  const VARS=[
+    {v:'{{nome}}',l:'Nome'},{v:'{{data}}',l:'Data'},{v:'{{hora}}',l:'Hora'},
+    {v:'{{local}}',l:'Local'},{v:'{{ministerio}}',l:'Ministério'},{v:'{{evento}}',l:'Evento'},{v:'{{mes}}',l:'Mês'}
+  ];
   const needTitle=_wz.canal==='email'||_wz.canal==='notificacao';
   body.innerHTML=`<div style="font-weight:600;margin-bottom:4px">Conteúdo da mensagem</div>
     <div style="font-size:12px;color:var(--tx3);margin-bottom:18px">Escreva a mensagem. Use variáveis para personalização individual.</div>
@@ -804,7 +807,7 @@ function _wzStep3(body){
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-bottom:${_modelos.length?'16px':'0'}">
       <span style="font-size:11px;color:var(--tx3)">Inserir:</span>
-      ${VARS.map(v=>`<button onclick="msgWzInsertVar('${v}')" style="padding:3px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--sky);font-size:11px;cursor:pointer;font-family:monospace">${v}</button>`).join('')}
+      ${VARS.map(v=>`<button onclick="msgWzInsertVar('${v.v}')" title="${v.v}" style="padding:4px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx2);font-size:12px;cursor:pointer">${v.l}</button>`).join('')}
     </div>
     ${_modelos.length?`<div style="border-top:1px solid var(--bd1);padding-top:13px">
       <div style="font-size:11px;color:var(--tx3);margin-bottom:7px">Aplicar modelo:</div>
