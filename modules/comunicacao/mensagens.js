@@ -386,7 +386,8 @@ window.msgCancelarAgendamento=async function(id){
 // ══════════════════════════════════════════════════════════════
 
 function _initWz(){
-  _wz={passo:1,canal:null,filtros:[],individuais:[],titulo:'',conteudo:'',agendado:null};
+  _wz={passo:1,canal:null,filtros:[],individuais:[],titulo:'',conteudo:'',agendado:null,
+    _d:{nivel:1,tipo:null,busca:''}};  // step 2 drill-down state
 }
 
 window.msgNovaMensagem=function(){
@@ -439,6 +440,8 @@ function _renderWzBody(){
   _renderWzSteps();
   const body=document.getElementById('msg-wz-body');
   if(!body) return;
+  body.style.padding=_wz.passo===2?'0':'24px';
+  body.style.minHeight=_wz.passo===2?'420px':'320px';
   const backBtn=document.getElementById('msg-wz-btn-back');
   const nextBtn=document.getElementById('msg-wz-btn-next');
   if(backBtn) backBtn.style.display=_wz.passo>1?'block':'none';
@@ -476,184 +479,309 @@ function _wzStep1(body){
 
 window.msgWzSetCanal=function(canal){ if(_wz){_wz.canal=canal;_renderWzBody();} };
 
-// ── Passo 2: Destinatários ─────────────────
+// ── Passo 2: Destinatários (progressive disclosure) ──────────────
 function _wzStep2(body){
-  body.innerHTML=`<div style="font-weight:600;margin-bottom:4px">Destinatários</div>
-    <div style="font-size:12px;color:var(--tx3);margin-bottom:18px">Escolha quais grupos ou pessoas receberão esta mensagem.</div>
-    <div style="display:flex;flex-direction:column;gap:18px">
-
-      <div>
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:8px">Grupos gerais</div>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          ${_wzItem('todos_membros','Todos os membros ativos')}
-          ${_wzItem('visitantes','Visitantes recentes')}
-          ${_wzItem('congregados','Congregados')}
-        </div>
+  const d=_wz._d;
+  const left=d.nivel===1?_wzD1():d.nivel===2?_wzD2():_wzD3();
+  body.innerHTML=`
+    <div style="display:flex;min-height:420px">
+      <div style="flex:1;padding:24px;overflow-y:auto;min-width:0;max-height:500px">${left}</div>
+      <div id="msg-wz-d-summary" style="width:200px;flex-shrink:0;border-left:1px solid var(--bd1);
+        padding:18px 14px;background:rgba(139,111,212,.025);display:flex;flex-direction:column">
+        ${_wzDSummary()}
       </div>
-
-      <div>
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:8px">Por função</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px">
-          ${_wzChip('funcao_pastor','Pastores')}${_wzChip('funcao_presbitero','Presbíteros')}${_wzChip('funcao_diacono','Diáconos')}
-          ${_wzChip('funcao_cooperador','Cooperadores')}${_wzChip('nomeados','Nomeados')}${_wzChip('seminaristas','Seminaristas')}
-        </div>
-      </div>
-
-      <div>
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:8px">Aniversariantes</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px">
-          ${_wzChip('aniv_hoje','Hoje')}${_wzChip('aniv_semana','Esta semana')}${_wzChip('aniv_mes','Este mês')}
-        </div>
-      </div>
-
-      <div>
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:8px">Por congregação</div>
-        <div id="msg-wz-congs" style="display:flex;flex-wrap:wrap;gap:6px"><span style="font-size:12px;color:var(--tx3)">Carregando...</span></div>
-      </div>
-
-      <div>
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:8px">Por ministério</div>
-        <div id="msg-wz-mins" style="display:flex;flex-wrap:wrap;gap:6px"><span style="font-size:12px;color:var(--tx3)">Carregando...</span></div>
-      </div>
-
-      <div>
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:8px">Pessoa individual</div>
-        <div style="position:relative">
-          <input id="msg-wz-ind-q" type="text" placeholder="Buscar membro pelo nome..."
-            oninput="msgWzBuscarInd(this.value)"
-            style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:13px;box-sizing:border-box">
-          <div id="msg-wz-ind-drop" style="position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--bg-card);border:1px solid var(--bd1);border-radius:8px;z-index:20;display:none;max-height:160px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.12)"></div>
-        </div>
-        <div id="msg-wz-inds" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
-          ${_wz.individuais.map(p=>`<span style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;background:rgba(139,111,212,.12);border:1px solid rgba(139,111,212,.25);font-size:12px;color:var(--violet)">
-            ${escapeHtml(p.nome)}
-            <button onclick="msgWzRemInd('${p.pessoa_id}')" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--violet);padding:0;line-height:1">✕</button>
-          </span>`).join('')}
-        </div>
-      </div>
-
-    </div>
-
-    <div id="msg-wz-dest-preview" style="margin-top:20px;padding:12px 16px;border-radius:10px;background:rgba(139,111,212,.06);border:1px solid rgba(139,111,212,.18);font-size:13px">
-      ${_wz.filtros.length||_wz.individuais.length
-        ?`<span style="color:var(--violet);font-weight:500">${[..._wz.filtros.map(f=>f.label),..._wz.individuais.map(p=>p.nome)].join(', ')}</span>`
-        :'<span style="color:var(--tx3)">Nenhum grupo selecionado ainda.</span>'}
     </div>`;
-  _wzLoadCongs();
-  _wzLoadMins();
+  if(d.nivel===3) _wzD3Carregar();
 }
 
-function _wzItem(tipo,label){
-  const sel=_wz.filtros.some(f=>f.tipo===tipo);
-  return `<div onclick="msgWzToggle('${tipo}','${label}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;
-    border:1px solid ${sel?'var(--violet)':'var(--bd1)'};background:${sel?'rgba(139,111,212,.07)':'transparent'};cursor:pointer;transition:.1s">
-    <div style="width:16px;height:16px;border-radius:4px;border:2px solid ${sel?'var(--violet)':'var(--bd2)'};
-      background:${sel?'var(--violet)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-      ${sel?'<span style="color:#fff;font-size:10px;font-weight:800">✓</span>':''}
+function _wzD1(){
+  const hasTodos=_wz.filtros.some(f=>f.tipo==='todos_membros');
+  const hasGrupo=_wz.filtros.some(f=>
+    ['min_','cong_','funcao_','aniv_'].some(p=>f.tipo.startsWith(p))||
+    ['visitantes','congregados','nomeados','seminaristas'].includes(f.tipo));
+  const hasInd=_wz.individuais.length>0;
+  return `<div style="font-size:12px;color:var(--tx3);margin-bottom:16px;font-weight:500">Para quem você quer enviar?</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${_wzD1Card('todos','Todos os membros','Toda a membresia ativa',hasTodos,false)}
+      ${_wzD1Card('grupo','Grupo específico','Por ministério, congregação, função...',hasGrupo,true)}
+      ${_wzD1Card('individual','Pessoas específicas','Adicionar membros individualmente',hasInd,true)}
+      ${_wzD1Card('avancado','Pesquisa avançada','Aniversariantes, visitantes, congregados...',false,true)}
+    </div>`;
+}
+
+function _wzD1Card(mode,title,desc,active,hasArrow){
+  return `<div onclick="msgWzD1('${mode}')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:12px;
+    border:2px solid ${active?'var(--violet)':'var(--bd1)'};
+    background:${active?'rgba(139,111,212,.06)':'transparent'};cursor:pointer;transition:.12s">
+    <div style="width:20px;height:20px;border-radius:50%;flex-shrink:0;
+      border:2px solid ${active?'var(--violet)':'var(--bd2)'};
+      background:${active?'var(--violet)':'transparent'};display:flex;align-items:center;justify-content:center">
+      ${active?'<div style="width:7px;height:7px;border-radius:50%;background:#fff"></div>':''}
     </div>
-    <span style="font-size:13px;${sel?'color:var(--violet);font-weight:500':''}">${label}</span>
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:600;font-size:13px;color:var(--tx1)">${title}</div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:2px">${desc}</div>
+    </div>
+    ${hasArrow?'<span style="color:var(--tx3);font-size:16px;flex-shrink:0">›</span>':''}
   </div>`;
 }
 
-function _wzChip(tipo,label){
-  const sel=_wz.filtros.some(f=>f.tipo===tipo);
-  return `<div onclick="msgWzToggle('${tipo}','${label}')" style="padding:5px 12px;border-radius:99px;cursor:pointer;font-size:12px;transition:.1s;
-    border:1px solid ${sel?'var(--violet)':'var(--bd2)'};
-    background:${sel?'rgba(139,111,212,.1)':'transparent'};
-    color:${sel?'var(--violet)':'var(--tx2)'}">${label}</div>`;
+function _wzD2(){
+  const tipos=[
+    {k:'ministerio',ic:'🎵',t:'Ministério',d:'Louvor, Comunicação, Infantil...'},
+    {k:'congregacao',ic:'⛪',t:'Congregação',d:'Penha, Aprisco, Vila Rosária...'},
+    {k:'funcao',ic:'👔',t:'Função / Ofício',d:'Pastores, Presbíteros, Diáconos...'},
+    {k:'pgs',ic:'🏠',t:'Pequeno Grupo',d:'Grupos de discipulado e comunhão'},
+  ];
+  return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:16px">
+    <button onclick="msgWzDBack()" style="background:none;border:none;cursor:pointer;color:var(--tx3);font-size:13px;padding:0">← Voltar</button>
+    <span style="color:var(--bd2);font-size:12px">/</span>
+    <span style="font-size:12px;font-weight:600;color:var(--tx2)">Grupo específico</span>
+  </div>
+  <div style="font-size:12px;color:var(--tx3);margin-bottom:14px">Escolha o tipo de grupo:</div>
+  <div style="display:flex;flex-direction:column;gap:7px">
+    ${tipos.map(t=>`<div onclick="msgWzD2('${t.k}')" style="display:flex;align-items:center;gap:12px;padding:12px 15px;border-radius:10px;
+      border:1px solid var(--bd1);cursor:pointer;transition:.1s"
+      onmouseover="this.style.background='rgba(139,111,212,.05)'"
+      onmouseout="this.style.background='transparent'">
+      <span style="font-size:20px;line-height:1">${t.ic}</span>
+      <div style="flex:1"><div style="font-weight:600;font-size:13px">${t.t}</div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:1px">${t.d}</div></div>
+      <span style="color:var(--tx3);font-size:16px">›</span>
+    </div>`).join('')}
+  </div>`;
 }
 
-async function _wzLoadCongs(){
-  const el=document.getElementById('msg-wz-congs');
-  if(!el) return;
-  try{
-    if(!_wzCongs.length){
-      const r=await fetch(`${apiBaseUrl()}/rest/v1/congregacoes?order=nome.asc&select=id,nome`,{headers:apiHeaders()});
-      _wzCongs=await r.json();
-    }
-    el.innerHTML=_wzCongs.length
-      ?_wzCongs.map(c=>_wzChip(`cong_${c.id}`,c.nome)).join('')
-      :'<span style="font-size:12px;color:var(--tx3)">Nenhuma congregação cadastrada.</span>';
-  }catch(_){ el.innerHTML='<span style="font-size:12px;color:var(--tx3)">—</span>'; }
+function _wzD3(){
+  const tipo=_wz._d.tipo;
+  const LABELS={ministerio:'Ministérios',congregacao:'Congregações',funcao:'Funções',pgs:'Pequenos Grupos',avancado:'Pesquisa avançada',individual:'Pessoas específicas'};
+  const PHOLDERS={ministerio:'Pesquisar ministério...',congregacao:'Pesquisar congregação...',funcao:'Pesquisar função...',pgs:'Pesquisar grupo...',individual:'Buscar membro pelo nome...'};
+  const showSearch=tipo!=='avancado'&&tipo!=='pgs';
+  return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:16px">
+    <button onclick="msgWzDBack()" style="background:none;border:none;cursor:pointer;color:var(--tx3);font-size:13px;padding:0">← Voltar</button>
+    <span style="color:var(--bd2);font-size:12px">/</span>
+    <span style="font-size:12px;font-weight:600;color:var(--tx2)">${LABELS[tipo]||tipo}</span>
+  </div>
+  ${showSearch?`<input id="msg-wz-d3-q" type="text" placeholder="${PHOLDERS[tipo]||'Pesquisar...'}"
+    value="${escapeHtml(_wz._d.busca||'')}" oninput="msgWzD3Search(this.value)"
+    style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:13px;box-sizing:border-box;margin-bottom:10px">`:''}
+  <div id="msg-wz-d3-list" style="display:flex;flex-direction:column;gap:3px;max-height:320px;overflow-y:auto">
+    <div style="color:var(--tx3);font-size:12px;padding:8px">Carregando...</div>
+  </div>`;
 }
 
-async function _wzLoadMins(){
-  const el=document.getElementById('msg-wz-mins');
-  if(!el) return;
-  try{
+async function _wzD3Carregar(){
+  const tipo=_wz._d?.tipo;
+  const el=document.getElementById('msg-wz-d3-list');
+  if(!tipo||!el) return;
+  const busca=(_wz._d.busca||'').toLowerCase().trim();
+
+  if(tipo==='ministerio'){
     if(!_wzMins.length){
-      const r=await fetch(`${apiBaseUrl()}/rest/v1/ministerios?ativo=eq.true&order=nome.asc&select=id,nome`,{headers:apiHeaders()});
-      _wzMins=await r.json();
+      try{ const r=await fetch(`${apiBaseUrl()}/rest/v1/ministerios?ativo=eq.true&order=nome.asc&select=id,nome`,{headers:apiHeaders()}); _wzMins=await r.json()||[]; }catch(_){_wzMins=[];}
     }
-    el.innerHTML=_wzMins.length
-      ?_wzMins.map(m=>_wzChip(`min_${m.id}`,m.nome)).join('')
-      :'<span style="font-size:12px;color:var(--tx3)">Nenhum ministério cadastrado.</span>';
-  }catch(_){ el.innerHTML='<span style="font-size:12px;color:var(--tx3)">—</span>'; }
+    const rows=busca?_wzMins.filter(m=>m.nome.toLowerCase().includes(busca)):_wzMins;
+    el.innerHTML=rows.length?rows.map(m=>_wzD3Item(`min_${m.id}`,m.nome)).join('')
+      :'<div style="color:var(--tx3);font-size:12px;padding:8px">Nenhum ministério encontrado.</div>';
+
+  } else if(tipo==='congregacao'){
+    if(!_wzCongs.length){
+      try{ const r=await fetch(`${apiBaseUrl()}/rest/v1/congregacoes?order=nome.asc&select=id,nome`,{headers:apiHeaders()}); _wzCongs=await r.json()||[]; }catch(_){_wzCongs=[];}
+    }
+    const rows=busca?_wzCongs.filter(c=>c.nome.toLowerCase().includes(busca)):_wzCongs;
+    el.innerHTML=rows.length?rows.map(c=>_wzD3Item(`cong_${c.id}`,c.nome)).join('')
+      :'<div style="color:var(--tx3);font-size:12px;padding:8px">Nenhuma congregação encontrada.</div>';
+
+  } else if(tipo==='funcao'){
+    const funcoes=[
+      {k:'funcao_pastor',l:'Pastores'},{k:'funcao_presbitero',l:'Presbíteros'},
+      {k:'funcao_diacono',l:'Diáconos'},{k:'funcao_cooperador',l:'Cooperadores'},
+      {k:'nomeados',l:'Nomeados'},{k:'seminaristas',l:'Seminaristas'},
+    ];
+    const rows=busca?funcoes.filter(f=>f.l.toLowerCase().includes(busca)):funcoes;
+    el.innerHTML=rows.map(f=>_wzD3Item(f.k,f.l)).join('');
+
+  } else if(tipo==='avancado'){
+    const opts=[
+      {k:'todos_membros',l:'Todos os membros ativos'},
+      {k:'visitantes',l:'Visitantes recentes'},
+      {k:'congregados',l:'Congregados'},
+      {k:'aniv_hoje',l:'Aniversariantes de hoje'},
+      {k:'aniv_semana',l:'Aniversariantes da semana'},
+      {k:'aniv_mes',l:'Aniversariantes do mês'},
+    ];
+    el.innerHTML=opts.map(o=>_wzD3Item(o.k,o.l)).join('');
+
+  } else if(tipo==='pgs'){
+    el.innerHTML='<div style="color:var(--tx3);font-size:12px;padding:8px">Integração com Pequenos Grupos em breve.</div>';
+
+  } else if(tipo==='individual'){
+    if(_wz._d.busca&&_wz._d.busca.length>=2){
+      await _wzD3BuscarInd(_wz._d.busca);
+      return;
+    }
+    el.innerHTML=_wz.individuais.length
+      ?_wz.individuais.map(p=>`<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;background:rgba(139,111,212,.06)">
+          <span style="font-size:13px;flex:1;color:var(--tx1)">${escapeHtml(p.nome)}</span>
+          <button onclick="msgWzRemInd('${p.pessoa_id}')" style="background:none;border:none;cursor:pointer;color:var(--tx3);font-size:14px;padding:0">✕</button>
+        </div>`).join('')
+      :'<div style="color:var(--tx3);font-size:12px;padding:8px">Digite o nome acima para pesquisar.</div>';
+  }
 }
 
-window.msgWzToggle=function(tipo,label){
+function _wzD3Item(tipo,label){
+  const sel=_wz.filtros.some(f=>f.tipo===tipo);
+  const esc=escapeHtml(label).replace(/'/g,"\\'");
+  return `<div onclick="msgWzToggleGrupo('${tipo}','${esc}')"
+    style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;transition:.1s;
+    background:${sel?'rgba(139,111,212,.07)':'transparent'}"
+    onmouseover="this.style.background='rgba(139,111,212,.${sel?'10':'04'})'"
+    onmouseout="this.style.background='${sel?'rgba(139,111,212,.07)':'transparent'}'">
+    <div style="width:16px;height:16px;border-radius:4px;flex-shrink:0;
+      border:2px solid ${sel?'var(--violet)':'var(--bd2)'};
+      background:${sel?'var(--violet)':'transparent'};display:flex;align-items:center;justify-content:center">
+      ${sel?'<span style="color:#fff;font-size:10px;font-weight:800;line-height:1">✓</span>':''}
+    </div>
+    <span style="font-size:13px;${sel?'color:var(--violet);font-weight:500':'color:var(--tx1)'}">${escapeHtml(label)}</span>
+  </div>`;
+}
+
+function _wzDSummary(){
+  const grupos=_wz.filtros;
+  const inds=_wz.individuais;
+  if(!grupos.length&&!inds.length){
+    return `<div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--tx3);margin-bottom:12px">Destinatários</div>
+      <div style="color:var(--tx3);font-size:12px;line-height:1.6">Nenhum grupo selecionado.</div>`;
+  }
+  const rows=[
+    ...grupos.map(f=>`<div style="display:flex;align-items:flex-start;gap:5px;margin-bottom:7px">
+      <span style="color:var(--violet);flex-shrink:0;font-size:11px;margin-top:2px">✓</span>
+      <span style="font-size:11px;flex:1;color:var(--tx1);line-height:1.4">${escapeHtml(f.label)}</span>
+      <button onclick="msgWzRemoveFiltro('${f.tipo}')" style="background:none;border:none;cursor:pointer;color:var(--tx3);font-size:11px;padding:0;flex-shrink:0;line-height:1">✕</button>
+    </div>`),
+    ...inds.map(p=>`<div style="display:flex;align-items:flex-start;gap:5px;margin-bottom:7px">
+      <span style="color:var(--violet);flex-shrink:0;font-size:11px;margin-top:2px">✓</span>
+      <span style="font-size:11px;flex:1;color:var(--tx1);line-height:1.4">${escapeHtml(p.nome)}</span>
+      <button onclick="msgWzRemInd('${p.pessoa_id}')" style="background:none;border:none;cursor:pointer;color:var(--tx3);font-size:11px;padding:0;flex-shrink:0;line-height:1">✕</button>
+    </div>`),
+  ];
+  return `<div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--tx3);margin-bottom:12px">Destinatários</div>
+    <div style="flex:1;overflow-y:auto">${rows.join('')}</div>
+    <div style="padding-top:14px;border-top:1px solid var(--bd1);margin-top:auto">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);margin-bottom:4px">Total estimado</div>
+      <div id="msg-wz-d-count" style="font-size:24px;font-weight:800;color:var(--violet);font-variant-numeric:tabular-nums">—</div>
+      <div style="font-size:11px;color:var(--tx3)">pessoas</div>
+    </div>`;
+}
+
+window.msgWzD1=function(mode){
   if(!_wz) return;
-  const searchVal=document.getElementById('msg-wz-ind-q')?.value||'';
+  if(mode==='todos'){
+    const idx=_wz.filtros.findIndex(f=>f.tipo==='todos_membros');
+    if(idx>=0) _wz.filtros.splice(idx,1);
+    else _wz.filtros.push({tipo:'todos_membros',label:'Todos os membros'});
+    _wzStep2(document.getElementById('msg-wz-body'));
+    _wzD3EstimarTotal();
+  } else {
+    _wz._d.nivel=mode==='grupo'?2:3;
+    _wz._d.tipo=mode==='individual'?'individual':mode==='avancado'?'avancado':null;
+    _wz._d.busca='';
+    _wzStep2(document.getElementById('msg-wz-body'));
+  }
+};
+
+window.msgWzD2=function(tipo){
+  if(!_wz) return;
+  _wz._d.nivel=3;
+  _wz._d.tipo=tipo;
+  _wz._d.busca='';
+  _wzStep2(document.getElementById('msg-wz-body'));
+};
+
+window.msgWzDBack=function(){
+  if(!_wz) return;
+  _wz._d.nivel=Math.max(1,_wz._d.nivel-1);
+  if(_wz._d.nivel<2) _wz._d.tipo=null;
+  _wz._d.busca='';
+  _wzStep2(document.getElementById('msg-wz-body'));
+};
+
+window.msgWzD3Search=function(q){
+  if(!_wz) return;
+  _wz._d.busca=q;
+  if(_wz._d.tipo==='individual') _wzD3BuscarInd(q);
+  else _wzD3Carregar();
+};
+
+window.msgWzToggleGrupo=function(tipo,label){
+  if(!_wz) return;
   const idx=_wz.filtros.findIndex(f=>f.tipo===tipo);
   if(idx>=0) _wz.filtros.splice(idx,1);
   else _wz.filtros.push({tipo,label});
-  _wzStep2(document.getElementById('msg-wz-body'));
-  const si=document.getElementById('msg-wz-ind-q');
-  if(si&&searchVal) si.value=searchVal;
+  const el=document.getElementById('msg-wz-d3-list');
+  if(el) _wzD3Carregar();
+  const sum=document.getElementById('msg-wz-d-summary');
+  if(sum) sum.innerHTML=_wzDSummary();
+  _wzD3EstimarTotal();
 };
 
-window.msgWzBuscarInd=async function(q){
-  const drop=document.getElementById('msg-wz-ind-drop');
-  if(!drop) return;
-  if(!q||q.length<2){drop.style.display='none';return;}
-  try{
-    const r=await fetch(
-      `${apiBaseUrl()}/rest/v1/v_membros?nome=ilike.*${encodeURIComponent(q)}*&status=eq.ativo&select=pessoa_id,nome&order=nome.asc&limit=8`,
-      {headers:apiHeaders()}
-    );
-    const rows=await r.json();
-    if(!rows.length){drop.style.display='none';return;}
-    drop.style.display='block';
-    drop.innerHTML=rows.map(p=>`<div
-      onclick="msgWzAddInd('${p.pessoa_id}','${escapeHtml(p.nome).replace(/'/g,"\\'")}',event)"
-      style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bd1)"
-      onmouseover="this.style.background='rgba(139,111,212,.07)'"
-      onmouseout="this.style.background='transparent'">${escapeHtml(p.nome)}</div>`).join('');
-  }catch(_){drop.style.display='none';}
+window.msgWzRemoveFiltro=function(tipo){
+  if(!_wz) return;
+  _wz.filtros=_wz.filtros.filter(f=>f.tipo!==tipo);
+  _wzStep2(document.getElementById('msg-wz-body'));
 };
 
 window.msgWzAddInd=function(pid,nome,ev){
   if(ev){ev.stopPropagation();ev.preventDefault();}
-  if(!_wz) return;
-  if(!_wz.individuais.some(p=>p.pessoa_id===pid)) _wz.individuais.push({pessoa_id:pid,nome});
-  const el=document.getElementById('msg-wz-ind-q');
-  if(el) el.value='';
-  const drop=document.getElementById('msg-wz-ind-drop');
-  if(drop) drop.style.display='none';
-  const indsEl=document.getElementById('msg-wz-inds');
-  if(indsEl) indsEl.innerHTML=_wz.individuais.map(p=>`<span style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;background:rgba(139,111,212,.12);border:1px solid rgba(139,111,212,.25);font-size:12px;color:var(--violet)">
-    ${escapeHtml(p.nome)}<button onclick="msgWzRemInd('${p.pessoa_id}')" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--violet);padding:0;line-height:1">✕</button>
-  </span>`).join('');
-  _wzUpdatePreview();
+  if(!_wz||_wz.individuais.some(p=>p.pessoa_id===pid)) return;
+  _wz.individuais.push({pessoa_id:pid,nome});
+  _wz._d.busca='';
+  _wzStep2(document.getElementById('msg-wz-body'));
 };
 
 window.msgWzRemInd=function(pid){
   if(!_wz) return;
   _wz.individuais=_wz.individuais.filter(p=>p.pessoa_id!==pid);
-  const indsEl=document.getElementById('msg-wz-inds');
-  if(indsEl) indsEl.innerHTML=_wz.individuais.map(p=>`<span style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;background:rgba(139,111,212,.12);border:1px solid rgba(139,111,212,.25);font-size:12px;color:var(--violet)">
-    ${escapeHtml(p.nome)}<button onclick="msgWzRemInd('${p.pessoa_id}')" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--violet);padding:0;line-height:1">✕</button>
-  </span>`).join('');
-  _wzUpdatePreview();
+  const el=document.getElementById('msg-wz-d3-list');
+  if(el) _wzD3Carregar();
+  const sum=document.getElementById('msg-wz-d-summary');
+  if(sum) sum.innerHTML=_wzDSummary();
 };
 
-function _wzUpdatePreview(){
-  const pv=document.getElementById('msg-wz-dest-preview');
-  if(!pv||!_wz) return;
-  const items=[..._wz.filtros.map(f=>f.label),..._wz.individuais.map(p=>p.nome)];
-  pv.innerHTML=items.length
-    ?`<span style="color:var(--violet);font-weight:500">${items.join(', ')}</span>`
-    :'<span style="color:var(--tx3)">Nenhum grupo selecionado ainda.</span>';
+async function _wzD3BuscarInd(q){
+  const el=document.getElementById('msg-wz-d3-list');
+  if(!el) return;
+  if(!q||q.length<2){ await _wzD3Carregar(); return; }
+  try{
+    const r=await fetch(
+      `${apiBaseUrl()}/rest/v1/v_membros?nome=ilike.*${encodeURIComponent(q)}*&status=eq.ativo&select=pessoa_id,nome&order=nome.asc&limit=10`,
+      {headers:apiHeaders()}
+    );
+    const rows=await r.json();
+    if(!rows.length){ el.innerHTML='<div style="color:var(--tx3);font-size:12px;padding:8px">Nenhum membro encontrado.</div>'; return; }
+    el.innerHTML=rows.map(p=>`<div onclick="msgWzAddInd('${p.pessoa_id}','${escapeHtml(p.nome).replace(/'/g,"\\'")}',event)"
+      style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;transition:.1s"
+      onmouseover="this.style.background='rgba(139,111,212,.06)'"
+      onmouseout="this.style.background='transparent'">
+      <span style="font-size:18px;color:var(--tx3)">👤</span>
+      <span style="font-size:13px;color:var(--tx1)">${escapeHtml(p.nome)}</span>
+    </div>`).join('');
+  }catch(_){el.innerHTML='<div style="color:var(--tx3);font-size:12px;padding:8px">Erro ao buscar.</div>';}
+}
+
+async function _wzD3EstimarTotal(){
+  const el=document.getElementById('msg-wz-d-count');
+  if(!el||!_wz) return;
+  if(!_wz.filtros.length&&!_wz.individuais.length){ el.textContent='—'; return; }
+  if(_wz.filtros.some(f=>f.tipo==='todos_membros')){
+    try{
+      const r=await fetch(`${apiBaseUrl()}/rest/v1/v_membros?status=eq.ativo`,
+        {method:'HEAD',headers:{...apiHeaders(),'Prefer':'count=exact','Range':'0-0'}});
+      const ct=r.headers.get('content-range');
+      const n=ct?ct.split('/')[1]:null;
+      if(n&&n!=='*') el.textContent=n;
+    }catch(_){}
+  }
 }
 
 // ── Passo 3: Conteúdo ──────────────────────
@@ -791,7 +919,10 @@ window.msgWzNext=function(){
 };
 
 window.msgWzBack=function(){
-  if(_wz&&_wz.passo>1){ _wz.passo--; _renderWzBody(); }
+  if(!_wz||_wz.passo<2) return;
+  if(_wz.passo===2) _wz._d={nivel:1,tipo:null,busca:''};
+  _wz.passo--;
+  _renderWzBody();
 };
 
 // Retorna o ID da campanha criada, ou null em caso de erro
