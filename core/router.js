@@ -227,15 +227,15 @@ async function go(id){
   document.getElementById("band").style.setProperty("--mc",MC[mod]||"var(--gmd)");
   document.querySelectorAll(".l1").forEach(e=>e.classList.remove("on"));
   if(id==="geral")document.getElementById("l1-geral").classList.add("on");
-  // Jurídico está dentro de Departamentos > Administração — garante que ms-min está aberto
-  if(mod==="jur"){
-    const minSub=document.getElementById("ms-min");
-    const minHdr=document.querySelector("#mw-min .mhdr");
-    if(minSub&&!minSub.classList.contains("open")){
+  // Departamentos e Jurídico estão dentro de Conselho e Governança
+  if(mod==="min"||mod==="jur"){
+    const consSub=document.getElementById("ms-conselho");
+    const consHdr=document.querySelector("#mw-conselho .mhdr");
+    if(consSub&&!consSub.classList.contains("open")){
       document.querySelectorAll(".msub").forEach(s=>s.classList.remove("open"));
       document.querySelectorAll(".mhdr").forEach(h=>h.classList.remove("open"));
-      minSub.classList.add("open");
-      if(minHdr)minHdr.classList.add("open");
+      consSub.classList.add("open");
+      if(consHdr)consHdr.classList.add("open");
     }
   }
   // config-* e wa-* estão dentro de Sistema — garante que ms-sys está aberto
