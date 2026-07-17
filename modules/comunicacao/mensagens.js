@@ -66,15 +66,40 @@ function _renderMensagens(rows){
   }
   el.innerHTML=`<div class="card" style="padding:0;overflow:hidden">
     <div class="tbl-wrap"><table class="tbl">
-      <thead><tr><th>Canal</th><th>Título</th><th>Status</th><th>Dest.</th><th>Data</th><th></th></tr></thead>
-      <tbody>${rows.map(r=>`<tr>
-        <td title="${CANAL_LBL[r.canal]||r.canal}">${CANAL_IC[r.canal]||'📢'}</td>
-        <td style="font-weight:500;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.titulo||'—')}</td>
-        <td>${_badge(r.status)}</td>
-        <td style="text-align:center;font-variant-numeric:tabular-nums">${r.total_dest||0}</td>
-        <td style="font-size:11px;color:var(--tx3)">${_fmtDt(r.criado_em)}</td>
-        <td><button onclick="msgAbrir('${r.id}')" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);cursor:pointer">Ver</button></td>
-      </tr>`).join('')}
+      <thead><tr>
+        <th style="width:130px">Canal</th>
+        <th>Mensagem</th>
+        <th style="width:90px">Status</th>
+        <th style="width:110px;text-align:center">Entregas</th>
+        <th style="width:100px">Data</th>
+        <th style="width:48px"></th>
+      </tr></thead>
+      <tbody>${rows.map(r=>{
+        const entregue = r.total_entregue||0;
+        const total    = r.total_dest||0;
+        const falha    = r.total_falha||0;
+        const entregaPct = total>0 ? Math.round((entregue/total)*100) : null;
+        const entregaClr = falha>0&&entregue===0 ? 'var(--rose)' : falha>0 ? 'var(--amber)' : 'var(--gr)';
+        const entregaStr = total>0
+          ? `<span style="font-weight:600;color:${entregaClr};font-variant-numeric:tabular-nums">${entregue}</span><span style="color:var(--tx3)">/${total}</span>${falha>0?`<span style="font-size:10px;color:var(--rose);margin-left:4px">${falha} ✗</span>`:''}`
+          : `<span style="color:var(--tx3)">—</span>`;
+        return `<tr style="cursor:pointer" onclick="msgAbrir('${r.id}')">
+          <td>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:16px;line-height:1">${CANAL_IC[r.canal]||'📢'}</span>
+              <span style="font-size:11px;color:var(--tx3);font-weight:500">${CANAL_LBL[r.canal]||r.canal}</span>
+            </div>
+          </td>
+          <td>
+            <div style="font-weight:500;font-size:13px">${escapeHtml(r.titulo||'—')}</div>
+            ${r.filtros_desc?`<div style="font-size:11px;color:var(--tx3);margin-top:2px;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">→ ${escapeHtml(r.filtros_desc)}</div>`:''}
+          </td>
+          <td>${_badge(r.status)}</td>
+          <td style="text-align:center;font-size:12px;font-variant-numeric:tabular-nums">${entregaStr}</td>
+          <td style="font-size:11px;color:var(--tx3);white-space:nowrap">${_fmtDt(r.criado_em)}</td>
+          <td><button onclick="event.stopPropagation();msgAbrir('${r.id}')" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);cursor:pointer">Ver</button></td>
+        </tr>`;
+      }).join('')}
       </tbody>
     </table></div>
   </div>`;
