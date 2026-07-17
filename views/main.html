@@ -449,9 +449,17 @@
   <div class="view" id="v-conselho-nomeados">
     <div class="hero">
       <div class="hero-ic" style="background:var(--skybg);border-color:rgba(88,152,212,0.25)">⌘</div>
-      <div><div class="hero-lbl">Conselho e Governança</div><div class="hero-ttl">Nomeados</div><div class="hero-dsc">Funções designadas e temporárias sempre vinculadas à membresia, com histórico, ata de origem e possibilidade de permissões derivadas.</div></div>
-      <div class="hero-act"><button class="tbt pri" onclick="T('Novo nomeado','Registro vinculado à membresia e à ata')">+ Novo Registro</button></div>
+      <div>
+        <div class="hero-lbl">Conselho e Governança</div>
+        <div class="hero-ttl">Nomeações Anuais</div>
+        <div class="hero-dsc">Central de nomeações da IPPenha — lideranças, ministérios e sociedades por ano</div>
+      </div>
+      <div class="hero-act" style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="tbt" onclick="nomImprimir()">🖨 Imprimir</button>
+        <button class="tbt pri" onclick="nomNovoRegistro()">+ Novo Registro</button>
+      </div>
     </div>
+
     <div class="secnav">
       <div class="sni on">Nomeados</div>
       <div class="sni-sep"></div>
@@ -461,22 +469,33 @@
       <div class="sni-sep"></div>
       <div class="sni" onclick="go('conselho-contratados')">Contratados</div>
     </div>
-    <div class="inav" style="--mc:var(--sky);margin-top:0" id="nom-inav">
-      <div class="ini on" onclick="switchNomTab('governo')">Governo</div>
-      <div class="ini" onclick="switchNomTab('comissao')">Comissões</div>
-      <div class="ini" onclick="switchNomTab('ministerio')">Ministérios</div>
-      <div class="ini" onclick="switchNomTab('sociedade')">Sociedades</div>
-      <div class="ini" onclick="switchNomTab('grupo')">Grupos</div>
-      <div class="ini" onclick="switchNomTab('congregacao')">Congregações</div>
+
+    <div class="inav" style="--mc:var(--sky);margin-top:0">
+      <div class="ini nom-tab-btn on" id="nom-tab-nomeacoes" onclick="nomTab('nomeacoes',this)">Nomeações</div>
+      <div class="ini nom-tab-btn" id="nom-tab-historico" onclick="nomTab('historico',this)">Histórico</div>
     </div>
+
     <div class="ct">
-      <div class="kpis c4">
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky);">◎</div><div class="kpi-body"><div class="kpi-lbl">Nomeados ativos</div><div class="kpi-val" id="nom-kpi-total">—</div><div class="kpi-d nu" id="nom-kpi-orgaos">carregando…</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,0.15);color:var(--violet);">◉</div><div class="kpi-body"><div class="kpi-lbl">Ministérios</div><div class="kpi-val" id="nom-kpi-min">—</div><div class="kpi-d nu">lideranças e apoio</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Governo / Comissões</div><div class="kpi-val" id="nom-kpi-gov">—</div><div class="kpi-d nu">governo e comissões</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Sociedades / Grupos</div><div class="kpi-val" id="nom-kpi-soc">—</div><div class="kpi-d nu">apoio e execução</div></div></div>
+      <!-- Controles: ano + KPIs -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)">Ano</span>
+          <select id="nom-ano-sel" onchange="nomFiltrarAno(this.value)" style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:5px 10px;cursor:pointer">
+            <option value="2026">2026</option>
+          </select>
+        </div>
       </div>
-      <div id="nomeados-list-container"><div style="color:var(--tx3);font-size:11px;padding:20px">Carregando…</div></div>
+
+      <div class="kpis c4" style="margin-bottom:16px">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky)">◎</div><div class="kpi-body"><div class="kpi-lbl">Total de Nomeados</div><div class="kpi-val" id="nom-kpi-total">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,85,85,0.15);color:var(--rose)">◉</div><div class="kpi-body"><div class="kpi-lbl">Líderes</div><div class="kpi-val" id="nom-kpi-lideres">—</div><div class="kpi-d nu" id="nom-kpi-sub-lideres">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal)">◆</div><div class="kpi-body"><div class="kpi-lbl">Membros</div><div class="kpi-val" id="nom-kpi-membros">—</div><div class="kpi-d nu" id="nom-kpi-sub-membros">—</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold)">⊞</div><div class="kpi-body"><div class="kpi-lbl">Sociedades</div><div class="kpi-val" id="nom-kpi-socs">—</div><div class="kpi-d nu">internas</div></div></div>
+      </div>
+
+      <div id="nom-main-container">
+        <div style="color:var(--tx3);font-size:11px;padding:20px">Carregando…</div>
+      </div>
     </div>
   </div>
 

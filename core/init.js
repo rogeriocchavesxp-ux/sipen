@@ -607,7 +607,7 @@ async function renderNomeados() {
     if (el) el.innerHTML = `<p style="color:var(--rose);font-size:12px;padding:20px">Erro: ${e.message}</p>`;
   }
 }
-VIEW_AUTOLOAD["conselho-nomeados"] = { fn: () => renderNomeados() };
+// VIEW_AUTOLOAD["conselho-nomeados"] substituído pelo módulo modules/conselho/nomeados.js
 
 /* ── SEMINARISTAS ──────────────────────────── */
 async function renderSeminaristas() {
