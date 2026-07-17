@@ -686,6 +686,157 @@
     }
   }
 
+  /* ── Exportação CSV ──────────────────────────────────────── */
+
+  function nomExportarCSV() {
+    const anual = _anuais.find(a => a.ano === _anoAtivo) || {};
+    const _esc  = v => {
+      if (v == null) return '';
+      const s = String(v);
+      return (s.includes(',') || s.includes('"') || s.includes('\n'))
+        ? '"' + s.replace(/"/g, '""') + '"' : s;
+    };
+    const _tipoLabel = r => r.tipo_nomeacao === 'lider' ? 'Líder' : r.tipo_nomeacao === 'membro' ? 'Membro' : 'Outro';
+    const _funcLabel = r => ({ supervisor:'Supervisor', coordenador:'Coordenador', lider_area:'Líder de Área' }[r.funcao_lider] || '');
+    const _membLabel = r => ({ sociedade:'Sociedade Interna', ministerio:'Ministério', comissao:'Comissão', grupo:'Grupo', congregacao:'Congregação' }[r.tipo_membro] || r.orgao_tipo || '');
+
+    const cab = ['Ano','Tipo','Função / Vínculo','Área / Ministério / Sociedade','Sub-área','Nome','Cargo','Ata de Origem'];
+    const linhas = [
+      cab.map(_esc).join(','),
+      ..._rows.map(r => [
+        r.ano || _anoAtivo,
+        _tipoLabel(r),
+        r.tipo_nomeacao === 'lider' ? _funcLabel(r) : _membLabel(r),
+        r.orgao || r.area || '',
+        r.suborgao || '',
+        r.nome || '',
+        r.cargo || '',
+        r.ata_origem || anual.ata_origem || '',
+      ].map(_esc).join(',')),
+    ];
+
+    const blob = new Blob(['﻿' + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `nomeacoes-${_anoAtivo}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  /* ── Exportação Excel (HTML table → .xls) ────────────────── */
+
+  function nomExportarExcel() {
+    const anual = _anuais.find(a => a.ano === _anoAtivo) || { titulo: `Nomeações ${_anoAtivo}` };
+    const rows  = _rows;
+
+    const _cel = (v, cls = '') => `<td class="${cls}">${v == null ? '' : String(v).replace(/</g,'&lt;')}</td>`;
+    const _row = (...tds) => `<tr>${tds.join('')}</tr>`;
+    const _cab = (label, cols, bg, fg = '#fff') =>
+      `<tr><td colspan="${cols}" style="background:${bg};color:${fg};font-weight:bold;font-size:11pt">${label}</td></tr>`;
+
+    const _headerRow = cols => `<tr>${cols.map(c => `<td style="background:#f0f0f0;font-weight:bold;border:1px solid #ccc;padding:4px 8px">${c}</td>`).join('')}</tr>`;
+    const _dataRow   = cols => `<tr>${cols.map(c => `<td style="border:1px solid #ddd;padding:4px 8px;font-size:10pt">${c == null ? '' : String(c).replace(/</g,'&lt;')}</td>`).join('')}</tr>`;
+
+    const lideres = rows.filter(r => r.tipo_nomeacao === 'lider');
+    const membros = rows.filter(r => r.tipo_nomeacao === 'membro');
+    const outros  = rows.filter(r => r.tipo_nomeacao === 'outro');
+
+    let body = `
+      <tr><td colspan="5" style="font-size:16pt;font-weight:bold">${anual.titulo.toUpperCase()}</td></tr>
+      <tr><td colspan="5" style="font-size:10pt;color:#555">Igreja Presbiteriana da Penha</td></tr>
+      ${anual.ata_origem ? `<tr><td colspan="5" style="font-size:10pt;color:#555">${anual.ata_origem}</td></tr>` : ''}
+      ${anual.periodo_inicio ? `<tr><td colspan="5" style="font-size:10pt;color:#555">${_fmtPeriodo(anual.periodo_inicio, anual.periodo_fim)}</td></tr>` : ''}
+      <tr></tr>`;
+
+    if (lideres.length) {
+      body += _cab('LÍDERES', 5, '#1a3a5c');
+      body += _headerRow(['Tipo', 'Nome', 'Área / Ministério', 'Sub-área', 'Cargo']);
+      [
+        { key: 'supervisor',  label: 'Supervisores'   },
+        { key: 'coordenador', label: 'Coordenadores'  },
+        { key: 'lider_area',  label: 'Líderes de Área' },
+      ].forEach(g => {
+        const ps = lideres.filter(r => r.funcao_lider === g.key);
+        if (!ps.length) return;
+        body += _cab(g.label, 5, '#2d6a9f');
+        ps.forEach(p => body += _dataRow([g.label, p.nome, p.orgao || p.area || '', p.suborgao || '', p.cargo || '']));
+      });
+      body += `<tr></tr>`;
+    }
+
+    if (membros.length) {
+      body += _cab('MEMBROS', 5, '#1a4a2e');
+      body += _headerRow(['Tipo', 'Nome', 'Área / Ministério', 'Sub-área', 'Cargo']);
+
+      const socs = membros.filter(r => r.tipo_membro === 'sociedade');
+      if (socs.length) {
+        body += _cab('Sociedades Internas', 5, '#2d7a4e');
+        const bySoc = {};
+        socs.forEach(r => { const k = r.orgao || '—'; (bySoc[k] = bySoc[k] || []).push(r); });
+        Object.keys(bySoc).sort().forEach(k => {
+          body += `<tr><td colspan="5" style="background:#d9f0e8;font-weight:bold;padding:3px 8px">${k}</td></tr>`;
+          bySoc[k].forEach(p => body += _dataRow(['Sociedade', p.nome, k, p.suborgao || '', p.cargo || '']));
+        });
+      }
+
+      const mins = membros.filter(r => r.tipo_membro === 'ministerio');
+      if (mins.length) {
+        body += _cab('Ministérios', 5, '#2d6a9f');
+        const byMin = {};
+        mins.forEach(r => { const k = r.orgao || '—'; (byMin[k] = byMin[k] || []).push(r); });
+        Object.keys(byMin).sort().forEach(k => {
+          body += `<tr><td colspan="5" style="background:#d9e8f5;font-weight:bold;padding:3px 8px">${k}</td></tr>`;
+          byMin[k].forEach(p => body += _dataRow(['Ministério', p.nome, k, p.suborgao || '', p.cargo || '']));
+        });
+      }
+      body += `<tr></tr>`;
+    }
+
+    if (outros.length) {
+      body += _cab('DEMAIS ÓRGÃOS', 5, '#4a3a1a');
+      body += _headerRow(['Tipo', 'Nome', 'Órgão', 'Sub-órgão', 'Cargo']);
+      outros.forEach(p => body += _dataRow([p.orgao_tipo || '', p.nome || '', p.orgao || '', p.suborgao || '', p.cargo || '']));
+    }
+
+    const xls = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
+      <head><meta charset="UTF-8"></head>
+      <body><table style="font-family:Arial;font-size:10pt;border-collapse:collapse">${body}</table></body></html>`;
+
+    const blob = new Blob(['﻿' + xls], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `nomeacoes-${_anoAtivo}.xls`; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  /* ── Menu dropdown de exportação ─────────────────────────── */
+
+  function nomMenuExportar(btn) {
+    const existing = document.getElementById('nom-export-menu');
+    if (existing) { existing.remove(); return; }
+
+    const menu = document.createElement('div');
+    menu.id = 'nom-export-menu';
+    const rect = btn.getBoundingClientRect();
+    menu.style.cssText = `position:fixed;top:${rect.bottom + 4}px;left:${rect.left}px;z-index:500;background:var(--bg-card);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.2);min-width:170px;overflow:hidden`;
+
+    const _item = (icon, label, fn) =>
+      `<div onclick="${fn};document.getElementById('nom-export-menu')?.remove()"
+        style="padding:10px 14px;cursor:pointer;font-size:12px;color:var(--tx1);display:flex;align-items:center;gap:8px"
+        onmouseover="this.style.background='var(--bg-surface2)'" onmouseout="this.style.background=''">
+        <span>${icon}</span><span>${label}</span></div>`;
+
+    menu.innerHTML =
+      _item('📄', 'Exportar CSV',   'nomExportarCSV()') +
+      `<div style="height:1px;background:var(--bd1)"></div>` +
+      _item('📊', 'Exportar Excel', 'nomExportarExcel()') +
+      `<div style="height:1px;background:var(--bd1)"></div>` +
+      _item('🖨',  'Imprimir / PDF',  'nomImprimir()');
+
+    document.body.appendChild(menu);
+    const close = e => { if (!menu.contains(e.target) && e.target !== btn) { menu.remove(); document.removeEventListener('click', close); } };
+    setTimeout(() => document.addEventListener('click', close), 0);
+  }
+
   /* ── Autocomplete de Membresia ────────────────────────────── */
 
   function _htmlAutocomplete(inpId, placeholder) {
@@ -904,6 +1055,9 @@
   window.nomFiltrarAno       = nomFiltrarAno;
   window.nomToggle           = nomToggle;
   window.nomImprimir         = nomImprimir;
+  window.nomExportarCSV      = nomExportarCSV;
+  window.nomExportarExcel    = nomExportarExcel;
+  window.nomMenuExportar     = nomMenuExportar;
   window.nomNovoRegistro     = nomNovoRegistro;
   window.nomMostrarCampos    = nomMostrarCampos;
   window.nomSalvarRegistro   = nomSalvarRegistro;
