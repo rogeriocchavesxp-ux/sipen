@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
    SIPEN — Módulo Nomeações Anuais
-   nomeados.js · v2.4
+   nomeados.js · v2.5
    Conselho e Governança — Central de Nomeações da IPPenha
 ═══════════════════════════════════════════════════════════════ */
 
@@ -506,7 +506,7 @@
 
             <div>
               <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Tipo de Nomeação <span style="color:var(--rose)">*</span></label>
-              <select id="nom-f-tipo" onchange="nomMostrarCampos()" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px">
+              <select id="nom-f-tipo" onchange="nomMostrarCampos()" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
                 <option value="">Selecione…</option>
                 <option value="lider">Líder</option>
                 <option value="membro">Membro</option>
@@ -514,42 +514,42 @@
             </div>
 
             <div id="nom-f-funcao-div" style="display:none">
-              <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Função</label>
-              <select id="nom-f-funcao" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px">
+              <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Função do Líder</label>
+              <select id="nom-f-funcao" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
                 <option value="supervisor">Supervisor</option>
                 <option value="coordenador">Coordenador</option>
                 <option value="lider_area">Líder de Área</option>
               </select>
             </div>
 
-            <div id="nom-f-tipo-membro-div" style="display:none">
-              <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Tipo de Vínculo</label>
-              <select id="nom-f-tipo-membro" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px">
-                <option value="sociedade">Sociedade Interna</option>
+            <div>
+              <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Categoria Institucional <span style="color:var(--rose)">*</span></label>
+              <select id="nom-f-categoria" onchange="nomCarregarOrgaos()" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+                <option value="">— Selecione o tipo de estrutura —</option>
                 <option value="ministerio">Ministério</option>
-                <option value="comissao">Comissão</option>
-                <option value="grupo">Grupo</option>
+                <option value="sociedade">Sociedade Interna</option>
+                <option value="departamento">Departamento</option>
               </select>
             </div>
 
             <div>
               <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Cargo / Função</label>
-              <input id="nom-f-cargo" type="text" placeholder="Ex: Coordenador, Equipe, Professor…" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+              <input id="nom-f-cargo" type="text" placeholder="Ex: Coordenador, Professor, Equipe…" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
             </div>
 
             <div style="grid-column:1/-1">
               <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Área / Ministério / Sociedade <span style="color:var(--rose)">*</span></label>
-              <input id="nom-f-orgao" type="text" placeholder="Ex: Ministério de Ensino, SAF…" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+              <select id="nom-f-orgao-sel" onchange="nomCarregarSetores()" disabled style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none;cursor:pointer">
+                <option value="">— Selecione uma Categoria Institucional primeiro —</option>
+              </select>
+              <input type="hidden" id="nom-f-orgao-nome">
             </div>
 
-            <div>
-              <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Sub-área / Grupo</label>
-              <input id="nom-f-suborgao" type="text" placeholder="Ex: EBD Geral, Penha Kids…" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
-            </div>
-
-            <div>
-              <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Departamento</label>
-              <input id="nom-f-depto" type="text" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+            <div id="nom-f-suborgao-wrap" style="grid-column:1/-1;display:none">
+              <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Subárea / Grupo</label>
+              <select id="nom-f-suborgao-sel" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none;cursor:pointer">
+                <option value="">— Nenhuma subárea —</option>
+              </select>
             </div>
 
             <div>
@@ -584,41 +584,150 @@
   function nomMostrarCampos() {
     const tipo = (_el('nom-f-tipo') || {}).value;
     const fDiv = _el('nom-f-funcao-div');
-    const mDiv = _el('nom-f-tipo-membro-div');
-    if (fDiv) fDiv.style.display = tipo === 'lider'  ? '' : 'none';
-    if (mDiv) mDiv.style.display = tipo === 'membro' ? '' : 'none';
+    if (fDiv) fDiv.style.display = tipo === 'lider' ? '' : 'none';
+    // Limpa seleções dependentes ao trocar o tipo
+    const catSel = _el('nom-f-categoria');
+    if (catSel) { catSel.value = ''; nomCarregarOrgaos(); }
   }
 
+  /* ── Campos institucionais: carregamento dinâmico ─────────── */
+
+  const _selSt = 'width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none;cursor:pointer';
+
+  async function nomCarregarOrgaos() {
+    const cat    = (_el('nom-f-categoria') || {}).value;
+    const sel    = _el('nom-f-orgao-sel');
+    const wSub   = _el('nom-f-suborgao-wrap');
+    const selSub = _el('nom-f-suborgao-sel');
+
+    if (!sel) return;
+
+    // Limpa dependentes
+    if (selSub) selSub.innerHTML = '<option value="">— Nenhuma subárea —</option>';
+    if (wSub) wSub.style.display = 'none';
+
+    if (!cat) {
+      sel.innerHTML = '<option value="">— Selecione uma Categoria Institucional primeiro —</option>';
+      sel.disabled = true;
+      return;
+    }
+
+    sel.disabled = true;
+    sel.innerHTML = '<option value="">Carregando…</option>';
+
+    try {
+      let items = [];
+      if (cat === 'ministerio') {
+        const r = await fetch(`${apiBaseUrl()}/rest/v1/ministerios?ativo=eq.true&select=id,nome&order=nome.asc`, { headers: apiHeaders() });
+        if (r.ok) items = await r.json();
+      } else if (cat === 'sociedade') {
+        const r = await fetch(`${apiBaseUrl()}/rest/v1/ministerios?ativo=eq.true&tipo=eq.SOCIEDADE&select=id,nome&order=nome.asc`, { headers: apiHeaders() });
+        if (r.ok) items = await r.json();
+      } else if (cat === 'departamento') {
+        const r = await fetch(`${apiBaseUrl()}/rest/v1/dept_administrativos?select=id,nome&order=nome.asc`, { headers: apiHeaders() });
+        if (r.ok) items = await r.json();
+      }
+
+      if (!items.length) {
+        sel.innerHTML = '<option value="" disabled>Nenhum registro ativo — cadastre no módulo Departamentos</option>';
+        sel.disabled = true;
+        return;
+      }
+
+      sel.innerHTML = '<option value="">— Selecione —</option>' +
+        items.map(i => `<option value="${i.id}" data-nome="${escapeHtml(i.nome)}">${escapeHtml(i.nome)}</option>`).join('');
+      sel.disabled = false;
+
+    } catch {
+      sel.innerHTML = '<option value="">Erro ao carregar — tente novamente</option>';
+      sel.disabled = true;
+    }
+  }
+
+  async function nomCarregarSetores() {
+    const sel    = _el('nom-f-orgao-sel');
+    const wSub   = _el('nom-f-suborgao-wrap');
+    const selSub = _el('nom-f-suborgao-sel');
+    const cat    = (_el('nom-f-categoria') || {}).value;
+
+    if (!sel || !wSub || !selSub) return;
+
+    // Armazena nome do orgão selecionado
+    const opt = sel.options[sel.selectedIndex];
+    const nomHid = _el('nom-f-orgao-nome');
+    if (nomHid) nomHid.value = opt?.getAttribute('data-nome') || opt?.textContent || '';
+
+    const orgaoId = sel.value;
+
+    if (!orgaoId || cat !== 'ministerio') {
+      wSub.style.display = 'none';
+      selSub.innerHTML = '<option value="">— Nenhuma subárea —</option>';
+      return;
+    }
+
+    selSub.innerHTML = '<option value="">Carregando subáreas…</option>';
+
+    try {
+      const r = await fetch(
+        `${apiBaseUrl()}/rest/v1/ministerio_setores?ministerio_id=eq.${orgaoId}&select=id,nome&order=nome.asc`,
+        { headers: apiHeaders() }
+      );
+      const setores = r.ok ? await r.json() : [];
+
+      if (!setores.length) {
+        wSub.style.display = 'none';
+        selSub.innerHTML = '<option value="">— Nenhuma subárea —</option>';
+        return;
+      }
+
+      wSub.style.display = '';
+      selSub.innerHTML = '<option value="">— Nenhuma / todas —</option>' +
+        setores.map(s => `<option value="${s.id}" data-nome="${escapeHtml(s.nome)}">${escapeHtml(s.nome)}</option>`).join('');
+
+    } catch {
+      wSub.style.display = 'none';
+    }
+  }
+
+  /* ── Salvar registro ─────────────────────────────────────── */
+
   async function nomSalvarRegistro() {
-    const v = (id) => (_el(id) || {}).value || null;
+    const v    = id => (_el(id) || {}).value || null;
     const nome = v('nom-f-nome');
     const tipo = v('nom-f-tipo');
-    const orgao = v('nom-f-orgao');
+    const cat  = v('nom-f-categoria');
 
-    if (!nome) { T('Campo obrigatório', 'Informe o nome da pessoa.'); return; }
-    if (!tipo)  { T('Campo obrigatório', 'Selecione o tipo de nomeação.'); return; }
-    if (!orgao) { T('Campo obrigatório', 'Informe a área, ministério ou sociedade.'); return; }
+    const orgaoSel  = _el('nom-f-orgao-sel');
+    const subSel    = _el('nom-f-suborgao-sel');
+    const orgaoId   = orgaoSel?.value || null;
+    const orgaoNome = (_el('nom-f-orgao-nome') || {}).value || orgaoSel?.options[orgaoSel.selectedIndex]?.getAttribute('data-nome') || null;
+    const subNome   = subSel?.value ? (subSel.options[subSel.selectedIndex]?.getAttribute('data-nome') || null) : null;
 
-    const pidEl = document.getElementById('nom-f-nome-pid');
+    if (!nome)    { T('Campo obrigatório', 'Informe o nome da pessoa.');              return; }
+    if (!tipo)    { T('Campo obrigatório', 'Selecione o tipo de nomeação.');           return; }
+    if (!cat)     { T('Campo obrigatório', 'Selecione a categoria institucional.');    return; }
+    if (!orgaoId) { T('Campo obrigatório', 'Selecione a área, ministério ou sociedade.'); return; }
+
+    const TIPO_MEMBRO_MAP = { ministerio:'ministerio', sociedade:'sociedade', departamento:'outro' };
+    const ORGAO_TIPO_MAP  = { ministerio:'ministerio', sociedade:'sociedade', departamento:'departamento' };
+
     const payload = {
       nome,
-      pessoa_id:     pidEl?.value || null,
+      pessoa_id:     (_el('nom-f-nome-pid') || {}).value || null,
       ano:           parseInt(v('nom-f-ano')) || _anoAtivo,
       tipo_nomeacao: tipo,
-      funcao_lider:  tipo === 'lider'  ? v('nom-f-funcao')       : null,
-      tipo_membro:   tipo === 'membro' ? v('nom-f-tipo-membro')   : null,
-      orgao_tipo:    tipo === 'membro' ? (v('nom-f-tipo-membro') || 'ministerio') : 'governo',
-      orgao,
-      suborgao:      v('nom-f-suborgao'),
-      departamento:  v('nom-f-depto'),
+      funcao_lider:  tipo === 'lider' ? v('nom-f-funcao') : null,
+      tipo_membro:   tipo === 'membro' ? (TIPO_MEMBRO_MAP[cat] || 'ministerio') : null,
+      orgao_tipo:    ORGAO_TIPO_MAP[cat] || 'ministerio',
+      orgao:         orgaoNome,
+      suborgao:      subNome,
+      area:          orgaoNome,
       cargo:         v('nom-f-cargo'),
-      area:          orgao,
       data_inicio:   v('nom-f-inicio'),
       data_fim:      v('nom-f-fim'),
       ata_origem:    v('nom-f-ata'),
       obs:           v('nom-f-obs'),
     };
-    // Remove campos nulos para não sobrescrever defaults do banco
     Object.keys(payload).forEach(k => { if (payload[k] === null || payload[k] === '') delete payload[k]; });
 
     try {
@@ -1010,6 +1119,8 @@
   window.nomMenuExportar     = nomMenuExportar;
   window.nomNovoRegistro     = nomNovoRegistro;
   window.nomMostrarCampos    = nomMostrarCampos;
+  window.nomCarregarOrgaos   = nomCarregarOrgaos;
+  window.nomCarregarSetores  = nomCarregarSetores;
   window.nomSalvarRegistro   = nomSalvarRegistro;
   window.nomBuscarPessoa     = nomBuscarPessoa;
   window.nomSelecionarPessoa = nomSelecionarPessoa;
