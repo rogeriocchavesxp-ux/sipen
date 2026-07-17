@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
    SIPEN — Módulo Nomeações Anuais
-   nomeados.js · v2.5
+   nomeados.js · v2.6
    Conselho e Governança — Central de Nomeações da IPPenha
 ═══════════════════════════════════════════════════════════════ */
 
@@ -924,18 +924,18 @@
     try {
       const t   = encodeURIComponent(`*${termo}*`);
       const res = await fetch(
-        `${apiBaseUrl()}/rest/v1/pessoas?nome=ilike.${t}&deleted_at=is.null&select=id,nome&order=nome.asc&limit=15`,
+        `${apiBaseUrl()}/rest/v1/v_membros?nome=ilike.${t}&status=eq.ativo&select=pessoa_id,nome&order=nome.asc&limit=15`,
         { headers: apiHeaders() }
       );
       const pessoas = res.ok ? await res.json() : [];
 
       if (!pessoas.length) {
-        list.innerHTML = `<div style="padding:8px 12px;color:var(--tx3);font-size:11px">Nenhum resultado para "<b>${escapeHtml(termo)}</b>". O nome será salvo como digitado.</div>`;
+        list.innerHTML = `<div style="padding:8px 12px;color:var(--tx3);font-size:11px">Nenhum membro ativo encontrado para "<b>${escapeHtml(termo)}</b>". O nome será salvo como digitado.</div>`;
         return;
       }
 
       list.innerHTML = pessoas.map(p => `
-        <div data-pid="${p.id}" data-nome="${escapeHtml(p.nome)}"
+        <div data-pid="${p.pessoa_id}" data-nome="${escapeHtml(p.nome)}"
           onclick="nomSelecionarPessoa('${inp.id}',this)"
           style="padding:9px 12px;cursor:pointer;font-size:12px;color:var(--tx1);border-bottom:1px solid var(--bd1)"
           onmouseover="this.style.background='var(--bg-surface2)'"
