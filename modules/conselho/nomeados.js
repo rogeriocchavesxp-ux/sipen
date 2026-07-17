@@ -70,7 +70,7 @@
 
     try {
       // Tenta buscar com filtro de ano; fallback sem filtro
-      let url = `${apiBaseUrl()}/rest/v1/nomeados?deleted_at=is.null&status=eq.ativo&order=orgao.asc,nome.asc&limit=2000`;
+      let url = `${apiBaseUrl()}/rest/v1/nomeados?deleted_at=is.null&order=orgao.asc,nome.asc&limit=2000`;
       try {
         const r = await fetch(url + `&ano=eq.${_anoAtivo}`, { headers: apiHeaders() });
         if (r.ok) {
@@ -666,7 +666,6 @@
       data_fim:      v('nom-f-fim'),
       ata_origem:    v('nom-f-ata'),
       obs:           v('nom-f-obs'),
-      status:        'ativo',
     };
     // Remove campos nulos para não sobrescrever defaults do banco
     Object.keys(payload).forEach(k => { if (payload[k] === null || payload[k] === '') delete payload[k]; });
@@ -925,7 +924,7 @@
 
     try {
       const res = await fetch(
-        `${apiBaseUrl()}/rest/v1/nomeados?ano=eq.${anoAnterior}&deleted_at=is.null&status=eq.ativo&order=orgao_tipo.asc,orgao.asc,nome.asc&limit=2000`,
+        `${apiBaseUrl()}/rest/v1/nomeados?ano=eq.${anoAnterior}&deleted_at=is.null&order=orgao_tipo.asc,orgao.asc,nome.asc&limit=2000`,
         { headers: apiHeaders() }
       );
 
