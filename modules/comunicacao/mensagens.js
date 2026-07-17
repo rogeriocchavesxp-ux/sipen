@@ -949,12 +949,18 @@ async function _wzSalvar(status){
   });
   if(!r.ok) throw new Error(await r.text());
   const [camp]=await r.json();
-  if(camp?.id && _wz.filtros.length){
-    await fetch(`${apiBaseUrl()}/rest/v1/msg_filtros`,{
-      method:'POST',
-      headers:{...apiHeaders(),'Content-Type':'application/json'},
-      body:JSON.stringify(_wz.filtros.map(f=>({campanha_id:camp.id,tipo:f.tipo,valor:f.label})))
-    }).catch(()=>{});
+  if(camp?.id){
+    const registros=[
+      ..._wz.filtros.map(f=>({campanha_id:camp.id,tipo:f.tipo,valor:f.label})),
+      ..._wz.individuais.map(p=>({campanha_id:camp.id,tipo:'individual',valor:p.nome,valor_id:p.pessoa_id}))
+    ];
+    if(registros.length){
+      await fetch(`${apiBaseUrl()}/rest/v1/msg_filtros`,{
+        method:'POST',
+        headers:{...apiHeaders(),'Content-Type':'application/json'},
+        body:JSON.stringify(registros)
+      }).catch(()=>{});
+    }
   }
   return camp?.id||null;
 }
