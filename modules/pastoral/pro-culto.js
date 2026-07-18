@@ -240,14 +240,17 @@
     _posCulto = data || null;
   }
 
-  async function _loadPessoas() {
+  async function _loadPastores() {
     if (_pessoas.length) return;
     const { data } = await _sb()
-      .from("v_membros")
-      .select("pessoa_id,nome")
-      .eq("status","ativo")
-      .limit(1500);
-    _pessoas = data || [];
+      .from("pastores")
+      .select("id,nome_completo,nome_exibicao")
+      .eq("ativo", true)
+      .order("nome_completo");
+    _pessoas = (data || []).map(p => ({
+      pessoa_id: p.id,
+      nome: p.nome_exibicao || p.nome_completo,
+    }));
   }
 
   /* ── Criação automática de blocos ────────────────────────── */
@@ -371,7 +374,6 @@
           ${c.tema ? `<div style="font-size:11px;color:var(--tx3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(c.tema)}</div>` : ""}
           <div style="font-size:11px;color:var(--tx3);margin-top:4px;display:flex;gap:12px;flex-wrap:wrap">
             ${c.pregador_nome ? `<span>Pregador: <strong style="color:var(--tx2)">${_esc(c.pregador_nome)}</strong></span>` : `<span style="color:var(--amber)">Pregador: a definir</span>`}
-            ${c.dirigente_nome ? `<span>Dirigente: <strong style="color:var(--tx2)">${_esc(c.dirigente_nome)}</strong></span>` : ""}
           </div>
         </div>
         <div style="font-size:10px;color:var(--tx4);flex-shrink:0">→</div>
@@ -384,7 +386,7 @@
   async function _renderForm() {
     const r = _root();
     if (!r) return;
-    await Promise.all([_loadTipos(), _loadPessoas()]);
+    await Promise.all([_loadTipos(), _loadPastores()]);
     const c = _culto || {};
     const inp = "width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:13px;box-sizing:border-box;outline:none;font-family:inherit";
     const lbl = "display:block;font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px";
@@ -394,8 +396,7 @@
     const dataFim    = c.data_encerramento ? c.data_encerramento.slice(0,16) : "";
     const evsSel     = c.eventos_especiais || [];
 
-    const optsPessoas = _pessoas.map(p => `<option value="${p.pessoa_id}" data-nm="${_esc(p.nome)}" ${c.pregador_id===p.pessoa_id?"selected":""}>${_esc(p.nome)}</option>`).join("");
-    const optsDirig   = _pessoas.map(p => `<option value="${p.pessoa_id}" data-nm="${_esc(p.nome)}" ${c.dirigente_id===p.pessoa_id?"selected":""}>${_esc(p.nome)}</option>`).join("");
+    const optsPastores = _pessoas.map(p => `<option value="${p.pessoa_id}" data-nm="${_esc(p.nome)}" ${c.pregador_nome===p.nome?"selected":""}>${_esc(p.nome)}</option>`).join("");
 
     r.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
@@ -422,18 +423,11 @@
           `<input id="pc-temames" style="${inp}" value="${_esc(c.tema_do_mes||"")}" placeholder="Ex: Vida Comunitária">`)}
         ${fld("Texto Bíblico",
           `<input id="pc-texto" style="${inp}" value="${_esc(c.texto_biblico||"")}" placeholder="Ex: João 17.20-23">`)}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          ${fld("Pregador",
-            `<select id="pc-preg" style="${inp}">
-              <option value="">— A definir —</option>
-              ${optsPessoas}
-            </select>`)}
-          ${fld("Dirigente",
-            `<select id="pc-dirig" style="${inp}">
-              <option value="">— A definir —</option>
-              ${optsDirig}
-            </select>`)}
-        </div>
+        ${fld("Pregador",
+          `<select id="pc-preg" style="${inp}">
+            <option value="">— A definir —</option>
+            ${optsPastores}
+          </select>`)}
         ${fld("Local",
           `<input id="pc-local" style="${inp}" value="${_esc(c.local_nome||"")}" placeholder="Ex: Templo Principal">`)}
         ${fld("Status",
@@ -478,9 +472,7 @@
     if (!dataI) { msgEl.textContent = "Data de início obrigatória."; msgEl.style.color = "var(--rose)"; return; }
 
     const pregs  = document.getElementById("pc-preg");
-    const dirigs = document.getElementById("pc-dirig");
     const pregNm = pregs?.options[pregs.selectedIndex]?.getAttribute("data-nm") || null;
-    const dirNm  = dirigs?.options[dirigs.selectedIndex]?.getAttribute("data-nm") || null;
     const evs    = EVENTOS_ESPECIAIS.filter(e => document.getElementById(`ev-${e.k}`)?.checked).map(e => e.k);
 
     const payload = {
@@ -491,10 +483,10 @@
       tema:               document.getElementById("pc-tema")?.value?.trim()   || null,
       tema_do_mes:        document.getElementById("pc-temames")?.value?.trim()|| null,
       texto_biblico:      document.getElementById("pc-texto")?.value?.trim()  || null,
-      pregador_id:        pregs?.value  || null,
+      pregador_id:        null,
       pregador_nome:      pregNm,
-      dirigente_id:       dirigs?.value || null,
-      dirigente_nome:     dirNm,
+      dirigente_id:       null,
+      dirigente_nome:     null,
       local_nome:         document.getElementById("pc-local")?.value?.trim()  || null,
       status:             document.getElementById("pc-status")?.value || "em_preparacao",
       eventos_especiais:  evs,
@@ -603,7 +595,6 @@
         ${c.tema_do_mes ? `<div><div style="font-size:9px;font-weight:700;color:var(--tx4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Tema do Mês</div><div style="font-size:12px;color:var(--tx1)">${_esc(c.tema_do_mes)}</div></div>` : ""}
         ${c.texto_biblico ? `<div><div style="font-size:9px;font-weight:700;color:var(--tx4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Texto Bíblico</div><div style="font-size:12px;color:var(--sky);font-weight:600">${_esc(c.texto_biblico)}</div></div>` : ""}
         <div><div style="font-size:9px;font-weight:700;color:var(--tx4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Pregador</div><div style="font-size:12px;color:${c.pregador_nome?"var(--tx1)":"var(--amber)"};font-weight:600">${_esc(c.pregador_nome||"A definir")}</div></div>
-        ${c.dirigente_nome ? `<div><div style="font-size:9px;font-weight:700;color:var(--tx4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Dirigente</div><div style="font-size:12px;color:var(--tx1);font-weight:600">${_esc(c.dirigente_nome)}</div></div>` : ""}
         ${c.data_encerramento ? `<div><div style="font-size:9px;font-weight:700;color:var(--tx4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Encerramento previsto</div><div style="font-size:12px;color:var(--tx1)">${_fmtHr(c.data_encerramento)}</div></div>` : ""}
       </div>`;
   }
@@ -665,7 +656,6 @@
           <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
             ${_progressRow("Liturgia", _itens.length ? 100 : 0, "itens estruturados")}
             ${_progressRow("Pregador", c.pregador_nome ? 100 : 0)}
-            ${_progressRow("Dirigente", c.dirigente_nome ? 100 : 0)}
             ${_progressRow("Checklists", pctCheck, `${doneCheck}/${totalCheck}`)}
           </div>
         </div>
@@ -676,7 +666,6 @@
             ${_infoRow("Tipo", c.culto_tipos?.nome || "—")}
             ${_infoRow("Local", c.local_nome || "—")}
             ${_infoRow("Pregador", c.pregador_nome || "A definir")}
-            ${_infoRow("Dirigente", c.dirigente_nome || "—")}
             ${_infoRow("Texto Bíblico", c.texto_biblico || "—")}
             ${_infoRow("Itens na liturgia", String(_itens.length))}
             ${_infoRow("Checklists", `${doneCheck}/${totalCheck} concluídos`)}
@@ -926,8 +915,7 @@
     el.innerHTML = `
       <div class="g2">
         ${_bloco("Pastoral", "var(--teal)", [
-          ["Pregador",  c.pregador_nome,  !c.pregador_nome],
-          ["Dirigente", c.dirigente_nome, !c.dirigente_nome],
+          ["Pregador", c.pregador_nome, !c.pregador_nome],
         ])}
         ${_bloco("Liturgia", "var(--sky)", [
           ["Texto Bíblico", c.texto_biblico, !c.texto_biblico],
