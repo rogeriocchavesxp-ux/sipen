@@ -900,24 +900,25 @@ ${_blocos.map(b => _renderBlocoSection(b, byBloco[b.id] || [])).join('')}`;
   </div>
 
   ${collapsed ? '' : `
-  <div style="border:1px solid var(--bd1);border-top:none;overflow-x:auto">
-    <table class="pc-tbl" ondragover="event.preventDefault()" ondrop="pcDropOnTable(event,'${b.id}')">
-      <thead>
-        <tr>
-          <th style="width:20px"></th>
-          <th style="width:58px">Horário</th>
-          <th style="width:52px">Dur.</th>
-          <th class="pc-col-tipo" style="width:126px">Tipo</th>
-          <th>Título / Tarefa</th>
-          <th style="width:130px">Responsável</th>
-          <th style="width:20px"></th>
-          <th style="width:36px"></th>
-        </tr>
-      </thead>
-      <tbody id="pc-tbody-${b.id}">
-        ${itens.length
-          ? itens.map(it => _planilhaRow(it)).join('')
-          : `<tr><td colspan="8"><div style="padding:24px;text-align:center">
+  <div style="border:1px solid var(--bd1);border-top:none;border-radius:0 0 8px 8px;overflow:hidden">
+    <div style="overflow-x:auto">
+      <table class="pc-tbl" ondragover="event.preventDefault()" ondrop="pcDropOnTable(event,'${b.id}')">
+        <thead>
+          <tr>
+            <th style="width:20px"></th>
+            <th style="width:58px">Horário</th>
+            <th style="width:52px">Dur.</th>
+            <th class="pc-col-tipo" style="width:126px">Tipo</th>
+            <th>Título / Tarefa</th>
+            <th style="width:130px">Responsável</th>
+            <th style="width:20px"></th>
+            <th style="width:36px"></th>
+          </tr>
+        </thead>
+        <tbody id="pc-tbody-${b.id}">
+          ${itens.length ? itens.map(it => _planilhaRow(it)).join('') : (!newRow?.show ? `
+          <tr><td colspan="8">
+            <div style="padding:28px;text-align:center">
               <div style="font-size:12px;color:var(--tx3);margin-bottom:12px">Este bloco ainda não possui itens.</div>
               <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
                 <button onclick="event.stopPropagation();pcAddRow('${b.id}')"
@@ -929,20 +930,22 @@ ${_blocos.map(b => _renderBlocoSection(b, byBloco[b.id] || [])).join('')}`;
                   Aplicar modelo
                 </button>` : ''}
               </div>
-            </div></td></tr>`}
-      </tbody>
-    </table>
-  </div>
+            </div>
+          </td></tr>` : '')}
+        </tbody>
+      </table>
+    </div>
 
-  <div id="pc-newrow-${b.id}">
-    ${newRow?.show ? _renderNewRow(b.id, b.nome, newRow) : ''}
-  </div>
+    <div id="pc-newrow-${b.id}">
+      ${newRow?.show ? _renderNewRow(b.id, b.nome, newRow) : ''}
+    </div>
 
-  ${newRow?.show ? '' : `
-  <div class="pc-add-btn" onclick="pcAddRow('${b.id}')">
-    <span style="font-size:15px;font-weight:700;line-height:1">+</span>
-    <span>Adicionar linha em ${_esc(b.nome)}</span>
-  </div>`}
+    ${newRow?.show ? '' : itens.length ? `
+    <div class="pc-add-btn" onclick="pcAddRow('${b.id}')">
+      <span style="font-size:15px;font-weight:700;line-height:1">+</span>
+      <span>Adicionar linha em ${_esc(b.nome)}</span>
+    </div>` : ''}
+  </div>
   `}
 </div>`;
   }
