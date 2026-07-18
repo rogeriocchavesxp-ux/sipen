@@ -19,17 +19,66 @@
   };
 
   const TIPO_ITEM_CFG = {
-    item:     { lbl: "Item",        cor: "var(--tx3)"   },
-    musica:   { lbl: "Música",      cor: "var(--violet)"},
-    leitura:  { lbl: "Leitura",     cor: "var(--teal)"  },
-    oracao:   { lbl: "Oração",      cor: "var(--gr)"    },
-    pregacao: { lbl: "Pregação",    cor: "var(--sky)"   },
-    anuncio:  { lbl: "Anúncio",     cor: "var(--amber)" },
-    oferta:   { lbl: "Oferta",      cor: "var(--gr)"    },
-    ceia:     { lbl: "Santa Ceia",  cor: "var(--teal)"  },
-    batismo:  { lbl: "Batismo",     cor: "var(--sky)"   },
-    outro:    { lbl: "Outro",       cor: "var(--tx3)"   },
+    preludio:     { lbl: "Prelúdio",          cor: "var(--tx3)"    },
+    inicio:       { lbl: "Início do Culto",   cor: "var(--sky)"    },
+    leitura:      { lbl: "Leitura Bíblica",   cor: "var(--teal)"   },
+    oracao:       { lbl: "Oração",            cor: "var(--gr)"     },
+    louvor:       { lbl: "Momento de Louvor", cor: "var(--violet)" },
+    musica:       { lbl: "Música",            cor: "var(--violet)" },
+    hino:         { lbl: "Hino",              cor: "var(--violet)" },
+    coral:        { lbl: "Coral",             cor: "var(--violet)" },
+    intercessao:  { lbl: "Intercessão",       cor: "var(--gr)"     },
+    oferta:       { lbl: "Dízimos e Ofertas", cor: "var(--amber)"  },
+    pregacao:     { lbl: "Pregação",          cor: "var(--sky)"    },
+    encerramento: { lbl: "Encerramento",      cor: "var(--teal)"   },
+    informativo:  { lbl: "Informativos",      cor: "var(--tx3)"    },
+    posludio:     { lbl: "Poslúdio",          cor: "var(--tx3)"    },
+    item:         { lbl: "Outro",             cor: "var(--tx3)"    },
+    anuncio:      { lbl: "Anúncio",           cor: "var(--amber)"  },
+    ceia:         { lbl: "Santa Ceia",        cor: "var(--teal)"   },
+    batismo:      { lbl: "Batismo",           cor: "var(--sky)"    },
+    outro:        { lbl: "Outro",             cor: "var(--tx3)"    },
   };
+
+  // Modelos por bloco (sugestões de itens pré-preenchidos)
+  const _MODELOS_BLOCO = {
+    "Vamos Contritos": [
+      { tipo:"preludio",    titulo:"Prelúdio",            dur:5,  resp:"Pianistas"        },
+      { tipo:"inicio",      titulo:"Início do Culto",     dur:3,  resp:""                 },
+      { tipo:"leitura",     titulo:"Leitura Bíblica",     dur:3,  resp:"Projeção / Áudio" },
+      { tipo:"oracao",      titulo:"Oração de Confissão", dur:4,  resp:""                 },
+      { tipo:"hino",        titulo:"Hino Inicial",        dur:4,  resp:"Congregação"      },
+      { tipo:"coral",       titulo:"Coral",               dur:8,  resp:"Coral"            },
+    ],
+    "Vamos Adorar": [
+      { tipo:"louvor",      titulo:"Momento de Louvor",   dur:15, resp:"Equipe de Louvor" },
+      { tipo:"musica",      titulo:"Música",              dur:4,  resp:"Equipe de Louvor" },
+      { tipo:"leitura",     titulo:"Leitura Bíblica",     dur:3,  resp:"Projeção / Áudio" },
+      { tipo:"intercessao", titulo:"Intercessão",         dur:5,  resp:""                 },
+      { tipo:"oferta",      titulo:"Dízimos e Ofertas",   dur:5,  resp:""                 },
+      { tipo:"hino",        titulo:"Hino",                dur:3,  resp:"Congregação"      },
+      { tipo:"coral",       titulo:"Coral",               dur:8,  resp:"Coral"            },
+    ],
+    "Vamos a Cristo": [
+      { tipo:"pregacao",    titulo:"Pregação",            dur:45, resp:"_pregador"        },
+      { tipo:"leitura",     titulo:"Texto da Pregação",   dur:3,  resp:""                 },
+      { tipo:"oracao",      titulo:"Oração",              dur:4,  resp:""                 },
+      { tipo:"musica",      titulo:"Música após a Mensagem", dur:4, resp:"Equipe de Louvor"},
+    ],
+    "Vamos Abençoar": [
+      { tipo:"encerramento",titulo:"Encerramento",        dur:3,  resp:""                 },
+      { tipo:"oracao",      titulo:"Oração Final",        dur:3,  resp:""                 },
+      { tipo:"hino",        titulo:"Tríplice Amém",       dur:2,  resp:"Congregação"      },
+      { tipo:"posludio",    titulo:"Poslúdio",            dur:5,  resp:"Pianistas"        },
+      { tipo:"informativo", titulo:"Informativos",        dur:3,  resp:""                 },
+      { tipo:"outro",       titulo:"Visitantes e Recados",dur:2,  resp:""                 },
+    ],
+  };
+
+  // Tipos disponíveis na planilha (excluindo legados)
+  const _TIPOS_PL = Object.entries(TIPO_ITEM_CFG)
+    .filter(([k]) => !['item','anuncio','ceia','batismo'].includes(k))
+    .map(([k,v]) => ({ k, l: v.lbl, cor: v.cor }));
 
   const BLOCOS_PADRAO = [
     { nome: "Vamos Contritos",  cor: "#4a9cf5" },
@@ -99,7 +148,12 @@
   let _filtroMes  = new Date().getMonth() + 1;
   let _editandoBlocoId = null;
   let _itemEditando    = null;
-  let _pessoas    = [];
+  let _pessoas         = [];
+  // Planilha de liturgia
+  let _collapsedBlocos = {};
+  let _expandedRows    = {};
+  let _newRowState     = {};
+  let _dragSrcId       = null;
 
   /* ── Helpers ─────────────────────────────────────────────── */
   const _sb  = () => (typeof getSupabase === "function" ? getSupabase() : null);
@@ -149,8 +203,64 @@
   }
 
   function _tipoBadge(tipo) {
-    const c = TIPO_ITEM_CFG[tipo] || TIPO_ITEM_CFG.item;
+    const c = TIPO_ITEM_CFG[tipo] || TIPO_ITEM_CFG.outro;
     return `<span style="font-size:9px;padding:1px 7px;border-radius:6px;border:1px solid ${c.cor}44;color:${c.cor};font-weight:700">${c.lbl}</span>`;
+  }
+
+  // Helpers de horário
+  function _hmToMin(s) {
+    if (!s) return null;
+    const [h, m] = s.slice(0, 5).split(':').map(Number);
+    return h * 60 + m;
+  }
+  function _minToHm(n) {
+    const h = Math.floor(n / 60) % 24;
+    const m = n % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  }
+  function _tipoPl(k) {
+    return TIPO_ITEM_CFG[k] || TIPO_ITEM_CFG.outro;
+  }
+
+  // Retorna todos os itens na ordem global (bloco_ordem, item_ordem)
+  function _itensOrdenados() {
+    const blocoOrder = Object.fromEntries(_blocos.map((b, i) => [b.id, i]));
+    return [..._itens].sort((a, b) => {
+      const ba = blocoOrder[a.bloco_id] ?? 99, bb = blocoOrder[b.bloco_id] ?? 99;
+      if (ba !== bb) return ba - bb;
+      return (a.ordem ?? 0) - (b.ordem ?? 0);
+    });
+  }
+
+  // Recalcula horarios em memória; retorna lista de {id, horario_previsto} alterados
+  function _recalcTimes() {
+    const sorted  = _itensOrdenados();
+    const changed = [];
+    let curMin    = null;
+    for (let i = 0; i < sorted.length; i++) {
+      const it = sorted[i];
+      if (curMin === null) {
+        curMin = _hmToMin(it.horario_previsto);
+      } else {
+        if (curMin !== null) {
+          const newHm  = _minToHm(curMin) + ':00';
+          const found  = _itens.find(x => x.id === it.id);
+          if (found && found.horario_previsto !== newHm) {
+            found.horario_previsto = newHm;
+            changed.push({ id: it.id, horario_previsto: newHm });
+          }
+        }
+      }
+      if (curMin !== null) curMin += (it.duracao_prevista || 0);
+    }
+    return changed;
+  }
+
+  async function _persistarHorarios(changed) {
+    for (const c of changed) {
+      await _sb().from('culto_liturgia_itens')
+        .update({ horario_previsto: c.horario_previsto }).eq('id', c.id);
+    }
   }
 
   function _evBadges(evs) {
@@ -697,201 +807,530 @@
       </div>`;
   }
 
-  /* ── Aba Liturgia ────────────────────────────────────────── */
+  /* ═══════════════════════════════════════════════════════════
+     ABA LITURGIA — PLANILHA DE CULTO
+  ═══════════════════════════════════════════════════════════ */
   function _renderLiturgiaTab() {
     const el = document.getElementById("pc-det-content");
     if (!el) return;
+    const page  = document.getElementById("page");
+    const scrollY = page?.scrollTop || 0;
 
-    // Agrupar itens por bloco
-    const blocoMap = {};
-    _blocos.forEach(b => { blocoMap[b.id] = { ...b, itens: [] }; });
-    const semBloco = [];
-    _itens.forEach(it => {
-      if (it.bloco_id && blocoMap[it.bloco_id]) blocoMap[it.bloco_id].itens.push(it);
-      else semBloco.push(it);
-    });
+    // Agrupa e ordena
+    const byBloco = {};
+    _blocos.forEach(b => { byBloco[b.id] = []; });
+    _itens.forEach(it => { if (it.bloco_id && byBloco[it.bloco_id]) byBloco[it.bloco_id].push(it); });
+    _blocos.forEach(b => byBloco[b.id]?.sort((a, c) => (a.ordem ?? 0) - (c.ordem ?? 0)));
 
-    const duracaoTotal = _itens.reduce((s, it) => s + (it.duracao_prevista || 0), 0);
-    const prevEnc = _culto?.data_inicio && duracaoTotal
-      ? _fmtHr(new Date(new Date(_culto.data_inicio).getTime() + duracaoTotal * 60000).toISOString())
-      : null;
+    const totalDur = _itens.reduce((s, it) => s + (it.duracao_prevista || 0), 0);
+    const sorted   = _itensOrdenados();
+    const hrIni    = sorted[0]?.horario_previsto?.slice(0, 5) || null;
+    const hrFim    = (hrIni && totalDur) ? _minToHm(_hmToMin(hrIni) + totalDur) : null;
+
+    const respSugs = [
+      ..._pessoas.map(p => p.nome),
+      "Pianistas","Organistas","Equipe de Louvor","Projeção / Áudio","Coral",
+      "Congregação","Junta Diaconal","Equipe Técnica","Secretaria",
+    ];
 
     el.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
-        <div style="font-size:12px;color:var(--tx3)">
-          ${_itens.length} itens · ${duracaoTotal} min previstos
-          ${prevEnc ? ` · Encerramento previsto: <strong style="color:var(--tx2)">${prevEnc}</strong>` : ""}
-        </div>
-        <div style="display:flex;gap:8px">
-          ${_btnPri("+ Adicionar Item", `pcAbrirItemForm(null,null)`)}
-        </div>
-      </div>
+<style>
+.pc-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.pc-tbl th{padding:5px 8px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx4);text-align:left;border-bottom:1.5px solid var(--bd2);white-space:nowrap;background:var(--bg-surface)}
+.pc-td{padding:8px 8px;color:var(--tx1);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.pc-td:hover{background:rgba(74,156,245,.07)}
+.pc-row:hover{background:var(--bg-surface)}
+.pc-tbl tr{border-bottom:1px solid var(--bd1)}
+.pc-drag{color:var(--bd2);cursor:grab;padding:8px 5px;font-size:11px;text-align:center;user-select:none}
+.pc-row:hover .pc-drag{color:var(--tx3)}
+.pc-row-over td{background:rgba(74,156,245,.1)!important;box-shadow:inset 0 2px 0 var(--sky)}
+.pc-exp-btn{color:var(--tx4);cursor:pointer;padding:8px 5px;text-align:center;font-size:12px;user-select:none;transition:color .15s}
+.pc-exp-btn:hover{color:var(--sky)}
+.pc-exp-row td{padding:12px 14px 14px;background:var(--bg-surface);border-bottom:2px solid var(--bd2)}
+.pc-acts button{background:none;border:none;cursor:pointer;padding:5px 7px;color:var(--tx3);font-size:14px;border-radius:4px;line-height:1;display:block}
+.pc-acts button:hover{color:var(--tx1);background:var(--bd1)}
+.pc-add-btn{display:flex;align-items:center;gap:6px;padding:9px 12px;font-size:11.5px;color:var(--tx3);cursor:pointer;border:1.5px dashed var(--bd2);border-top:none;border-radius:0 0 8px 8px;transition:all .15s;user-select:none}
+.pc-add-btn:hover{color:var(--teal);border-color:var(--teal);background:rgba(42,181,192,.04)}
+.pc-cel-inp{border:none;background:transparent;color:var(--tx1);font-size:12.5px;font-family:inherit;outline:none;width:100%;padding:0}
+.pc-bloco-hdr{display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--bg-card);border:1px solid var(--bd1);cursor:pointer;user-select:none;transition:background .15s}
+.pc-bloco-hdr:hover{background:var(--bg-surface)}
+@media(max-width:600px){
+  .pc-tbl thead{display:none}
+  .pc-tbl,.pc-tbl tbody,.pc-tbl tr{display:block;width:100%}
+  .pc-tbl td{display:block;border:none;padding:2px 10px}
+  .pc-row{border:1px solid var(--bd1)!important;border-radius:8px;margin-bottom:6px;overflow:hidden}
+  .pc-drag,.pc-col-tipo,.pc-exp-btn{display:none}
+  .pc-td-hr{font-size:13px;font-weight:700;color:var(--sky);padding-top:10px}
+  .pc-td-ttl{font-size:13px;font-weight:600}
+  .pc-acts{padding-bottom:8px}
+  .pc-acts button{display:inline-block}
+}
+</style>
+<datalist id="pc-resp-dl">${respSugs.map(s => `<option value="${_esc(s)}">`).join('')}</datalist>
 
-      ${_blocos.map(b => {
-        const bits = blocoMap[b.id]?.itens || [];
-        return `
-          <div style="margin-bottom:16px">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-              <div style="width:3px;height:18px;background:${b.cor||"var(--sky)"};border-radius:2px"></div>
-              <span style="font-size:12px;font-weight:700;color:var(--tx1)">${_esc(b.nome)}</span>
-              <button onclick="pcAbrirItemForm(null,'${b.id}')"
-                style="background:none;border:1px dashed var(--bd2);border-radius:5px;padding:2px 8px;font-size:10px;color:var(--tx3);cursor:pointer;margin-left:auto">
-                + item
-              </button>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:6px;padding-left:11px;border-left:1px solid var(--bd1)">
-              ${bits.length ? bits.map(it => _itemRow(it)).join("") : `<div style="font-size:11px;color:var(--tx4);padding:8px 0">Nenhum item neste bloco</div>`}
-            </div>
-          </div>`;
-      }).join("")}
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+  <div style="font-size:12px;color:var(--tx3)">
+    ${_itens.length} itens${totalDur ? ` · ${totalDur} min` : ''}${hrIni && hrFim ? ` · ${hrIni}–${hrFim}` : ''}
+  </div>
+  <button onclick="pcCopiarLiturgiaAnterior()" style="background:none;border:1px solid var(--bd2);border-radius:6px;padding:5px 12px;font-size:11px;color:var(--tx3);cursor:pointer">Copiar liturgia anterior</button>
+</div>
 
-      ${semBloco.length ? `
-        <div style="margin-bottom:16px">
-          <div style="font-size:12px;font-weight:700;color:var(--tx3);margin-bottom:8px">Sem bloco</div>
-          <div style="display:flex;flex-direction:column;gap:6px">
-            ${semBloco.map(it => _itemRow(it)).join("")}
-          </div>
-        </div>` : ""}
+${_blocos.map(b => _renderBlocoSection(b, byBloco[b.id] || [])).join('')}`;
 
-      <!-- Modal de item -->
-      <div id="pc-item-modal" style="display:none"></div>`;
+    if (page) page.scrollTop = scrollY;
   }
 
-  function _itemRow(it) {
-    const dur = it.duracao_prevista ? `${it.duracao_prevista}min` : "";
-    const hr  = it.horario_previsto ? it.horario_previsto.slice(0,5) : "";
-    const musicas = (it.culto_item_musicas || []);
+  function _renderBlocoSection(b, itens) {
+    const totalDur = itens.reduce((s, it) => s + (it.duracao_prevista || 0), 0);
+    const hrIni    = itens[0]?.horario_previsto?.slice(0, 5) || null;
+    const hrFim    = (hrIni && totalDur) ? _minToHm(_hmToMin(hrIni) + totalDur) : null;
+    const collapsed = !!_collapsedBlocos[b.id];
+    const newRow    = _newRowState[b.id];
+    const modelos   = _MODELOS_BLOCO[b.nome] || [];
+
     return `
-      <div style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:8px;padding:10px 14px">
-        <div style="display:flex;align-items:flex-start;gap:10px">
-          <div style="flex-shrink:0;text-align:center;min-width:36px">
-            ${hr ? `<div style="font-size:10px;font-weight:700;color:var(--sky)">${hr}</div>` : ""}
-            ${dur ? `<div style="font-size:9px;color:var(--tx4)">${dur}</div>` : ""}
-          </div>
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap">
-              ${_tipoBadge(it.tipo)}
-              <span style="font-size:13px;font-weight:600;color:var(--tx1)">${_esc(it.titulo)}</span>
-            </div>
-            ${it.responsavel_nome ? `<div style="font-size:11px;color:var(--tx3)">Responsável: ${_esc(it.responsavel_nome)}</div>` : ""}
-            ${it.texto_biblico ? `<div style="font-size:11px;color:var(--sky)">${_esc(it.texto_biblico)}</div>` : ""}
-            ${musicas.length ? `<div style="font-size:11px;color:var(--tx3);margin-top:3px">${musicas.map(m => _esc(m.titulo)).join(" · ")}</div>` : ""}
-            ${it.observacoes_tecnicas ? `<div style="font-size:10px;color:var(--amber);margin-top:3px;font-style:italic">${_esc(it.observacoes_tecnicas)}</div>` : ""}
-          </div>
-          <div style="flex-shrink:0;display:flex;gap:4px">
-            <button onclick="pcAbrirItemForm('${it.id}',null)"
-              style="background:none;border:1px solid var(--bd2);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--tx2);cursor:pointer">
-              ✏
-            </button>
-            <button onclick="pcExcluirItem('${it.id}')"
-              style="background:none;border:1px solid var(--bd2);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--rose);cursor:pointer">
-              ✕
-            </button>
-          </div>
-        </div>
-      </div>`;
+<div id="pc-bloco-${b.id}" style="margin-bottom:14px">
+  <div class="pc-bloco-hdr" style="border-radius:${collapsed ? '8px' : '8px 8px 0 0'}" onclick="pcToggleBloco('${b.id}')">
+    <div style="width:3px;height:16px;background:${b.cor || 'var(--sky)'};border-radius:2px;flex-shrink:0"></div>
+    <span style="font-size:11px;font-weight:700;color:var(--tx1);text-transform:uppercase;letter-spacing:.06em;flex:1">${_esc(b.nome)}</span>
+    <span style="font-size:11px;color:var(--tx3)">
+      ${itens.length} ${itens.length === 1 ? 'item' : 'itens'}${totalDur ? ` · ${totalDur} min` : ''}${hrIni && hrFim ? ` · ${hrIni}–${hrFim}` : ''}
+    </span>
+    <span style="font-size:13px;color:var(--tx3);margin-left:6px;transition:transform .2s;display:inline-block;transform:${collapsed ? 'rotate(-90deg)' : ''}">${collapsed ? '›' : '⌄'}</span>
+  </div>
+
+  ${collapsed ? '' : `
+  <div style="border:1px solid var(--bd1);border-top:none;overflow-x:auto">
+    <table class="pc-tbl" ondragover="event.preventDefault()" ondrop="pcDropOnTable(event,'${b.id}')">
+      <thead>
+        <tr>
+          <th style="width:20px"></th>
+          <th style="width:58px">Horário</th>
+          <th style="width:52px">Dur.</th>
+          <th class="pc-col-tipo" style="width:126px">Tipo</th>
+          <th>Título / Tarefa</th>
+          <th style="width:130px">Responsável</th>
+          <th style="width:20px"></th>
+          <th style="width:36px"></th>
+        </tr>
+      </thead>
+      <tbody id="pc-tbody-${b.id}">
+        ${itens.length
+          ? itens.map(it => _planilhaRow(it)).join('')
+          : `<tr><td colspan="8"><div style="padding:24px;text-align:center">
+              <div style="font-size:12px;color:var(--tx3);margin-bottom:12px">Este bloco ainda não possui itens.</div>
+              <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+                <button onclick="event.stopPropagation();pcAddRow('${b.id}')"
+                  style="padding:6px 14px;border-radius:6px;border:1.5px dashed var(--bd2);background:none;color:var(--tx2);font-size:12px;cursor:pointer">
+                  + Adicionar primeiro item
+                </button>
+                ${modelos.length ? `<button onclick="event.stopPropagation();pcApplyModelo('${b.id}',0)"
+                  style="padding:6px 14px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--tx2);font-size:12px;cursor:pointer">
+                  Aplicar modelo
+                </button>` : ''}
+              </div>
+            </div></td></tr>`}
+      </tbody>
+    </table>
+  </div>
+
+  <div id="pc-newrow-${b.id}">
+    ${newRow?.show ? _renderNewRow(b.id, b.nome, newRow) : ''}
+  </div>
+
+  ${newRow?.show ? '' : `
+  <div class="pc-add-btn" onclick="pcAddRow('${b.id}')">
+    <span style="font-size:15px;font-weight:700;line-height:1">+</span>
+    <span>Adicionar linha em ${_esc(b.nome)}</span>
+  </div>`}
+  `}
+</div>`;
   }
 
-  window.pcAbrirItemForm = function(itemId, blocoId) {
-    const modal = document.getElementById("pc-item-modal");
-    if (!modal) return;
+  function _planilhaRow(it) {
+    const hr    = it.horario_previsto ? it.horario_previsto.slice(0, 5) : '';
+    const dur   = it.duracao_prevista || '';
+    const tipo  = _tipoPl(it.tipo);
+    const exp   = !!_expandedRows[it.id];
+    const hasDet = it.texto_biblico || it.observacoes_tecnicas || it.descricao;
 
-    const it    = itemId ? _itens.find(i => i.id === itemId) : null;
-    const bId   = blocoId || it?.bloco_id || (_blocos[0]?.id || null);
-    const inp   = "width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box;outline:none;font-family:inherit";
-    const lbl2  = "display:block;font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px";
+    return `
+<tr id="pc-row-${it.id}" class="pc-row"
+    draggable="true"
+    ondragstart="pcDragStart(event,'${it.id}')"
+    ondragover="event.preventDefault();pcDragOver(event,'${it.id}')"
+    ondragleave="pcDragLeave(event,'${it.id}')"
+    ondrop="event.preventDefault();event.stopPropagation();pcDropOnRow(event,'${it.id}','${it.bloco_id}')">
+  <td class="pc-drag" title="Mover">⋮⋮</td>
+  <td id="pc-cell-${it.id}-horario_previsto" class="pc-td pc-td-hr"
+    onclick="event.stopPropagation();pcEditCell('${it.id}','horario_previsto')"
+    style="font-size:11.5px;font-weight:700;color:var(--sky);min-width:54px">${_esc(hr)}</td>
+  <td id="pc-cell-${it.id}-duracao_prevista" class="pc-td"
+    onclick="event.stopPropagation();pcEditCell('${it.id}','duracao_prevista')"
+    style="color:var(--tx2);min-width:46px">${dur ? dur + ' min' : ''}</td>
+  <td id="pc-cell-${it.id}-tipo" class="pc-td pc-col-tipo"
+    onclick="event.stopPropagation();pcEditCell('${it.id}','tipo')"
+    style="min-width:100px">
+    <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:${tipo.cor}20;color:${tipo.cor};font-weight:700;white-space:nowrap">${_esc(tipo.lbl)}</span>
+  </td>
+  <td id="pc-cell-${it.id}-titulo" class="pc-td pc-td-ttl"
+    onclick="event.stopPropagation();pcEditCell('${it.id}','titulo')"
+    style="font-weight:600">${_esc(it.titulo)}</td>
+  <td id="pc-cell-${it.id}-responsavel_nome" class="pc-td"
+    onclick="event.stopPropagation();pcEditCell('${it.id}','responsavel_nome')"
+    style="color:var(--tx2)">${_esc(it.responsavel_nome || '')}</td>
+  <td class="pc-exp-btn" title="${exp ? 'Recolher detalhes' : 'Expandir detalhes'}"
+    onclick="event.stopPropagation();pcToggleRow('${it.id}')">
+    <span style="display:inline-block;transition:transform .2s;transform:${exp ? 'rotate(90deg)' : ''}">›</span>${hasDet ? `<span style="display:inline-block;width:5px;height:5px;background:var(--sky);border-radius:50%;vertical-align:middle;margin-left:2px"></span>` : ''}
+  </td>
+  <td class="pc-acts">
+    <button onclick="event.stopPropagation();pcRowMenu(event,'${it.id}','${it.bloco_id}')" title="Ações">⋯</button>
+  </td>
+</tr>
+${exp ? _expandedRow(it) : ''}`;
+  }
 
-    modal.style.display = "block";
-    modal.innerHTML = `
-      <div style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;padding:20px;margin-top:16px">
-        <div style="font-size:13px;font-weight:700;color:var(--tx1);margin-bottom:14px">${it ? "Editar Item" : "Novo Item"}</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-          <div>
-            <label style="${lbl2}">Bloco</label>
-            <select id="pci-bloco" style="${inp}">
-              <option value="">Sem bloco</option>
-              ${_blocos.map(b => `<option value="${b.id}" ${b.id===bId?"selected":""}>${_esc(b.nome)}</option>`).join("")}
-            </select>
-          </div>
-          <div>
-            <label style="${lbl2}">Tipo</label>
-            <select id="pci-tipo" style="${inp}">
-              ${Object.entries(TIPO_ITEM_CFG).map(([k,v]) => `<option value="${k}" ${(it?.tipo||"item")===k?"selected":""}>${v.lbl}</option>`).join("")}
-            </select>
-          </div>
-        </div>
-        <div style="margin-bottom:10px">
-          <label style="${lbl2}">Título <span style="color:var(--rose)">*</span></label>
-          <input id="pci-titulo" style="${inp}" value="${_esc(it?.titulo||"")}" placeholder="Ex: Momento de Louvor">
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-          <div>
-            <label style="${lbl2}">Horário Previsto</label>
-            <input id="pci-hr" type="time" style="${inp}" value="${it?.horario_previsto||""}">
-          </div>
-          <div>
-            <label style="${lbl2}">Duração (minutos)</label>
-            <input id="pci-dur" type="number" min="1" max="120" style="${inp}" value="${it?.duracao_prevista||""}">
-          </div>
-        </div>
-        <div style="margin-bottom:10px">
-          <label style="${lbl2}">Responsável</label>
-          <input id="pci-resp" style="${inp}" value="${_esc(it?.responsavel_nome||"")}" placeholder="Nome ou equipe">
-        </div>
-        <div style="margin-bottom:10px">
-          <label style="${lbl2}">Texto Bíblico</label>
-          <input id="pci-texto" style="${inp}" value="${_esc(it?.texto_biblico||"")}" placeholder="Ex: João 3.16">
-        </div>
-        <div style="margin-bottom:10px">
-          <label style="${lbl2}">Obs. Técnicas (áudio, projeção, iluminação)</label>
-          <input id="pci-obs" style="${inp}" value="${_esc(it?.observacoes_tecnicas||"")}" placeholder="Instruções para equipe técnica">
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          ${_btnPri("Salvar item", `pcSalvarItem('${itemId||""}')`)}
-          ${_btn("Cancelar", "document.getElementById('pc-item-modal').style.display='none'")}
-          <div id="pci-msg" style="font-size:11px"></div>
-        </div>
-      </div>`;
+  function _expandedRow(it) {
+    const si = "width:100%;padding:6px 8px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box;outline:none;font-family:inherit";
+    const lb = "display:block;font-size:9px;font-weight:700;color:var(--tx4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px";
+    return `
+<tr id="pc-exp-${it.id}" class="pc-exp-row">
+  <td colspan="8">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
+      <div>
+        <label style="${lb}">Texto Bíblico</label>
+        <input style="${si}" value="${_esc(it.texto_biblico||'')}" placeholder="Ex: João 3.16"
+          onblur="pcSaveExpanded('${it.id}','texto_biblico',this.value)"
+          onkeydown="if(event.key==='Enter')this.blur()">
+      </div>
+      <div>
+        <label style="${lb}">Obs. Técnicas (áudio, projeção, iluminação)</label>
+        <input style="${si}" value="${_esc(it.observacoes_tecnicas||'')}" placeholder="Instruções para equipe técnica"
+          onblur="pcSaveExpanded('${it.id}','observacoes_tecnicas',this.value)"
+          onkeydown="if(event.key==='Enter')this.blur()">
+      </div>
+      <div>
+        <label style="${lb}">Música / Descrição</label>
+        <input style="${si}" value="${_esc(it.descricao||'')}" placeholder="Nome da música, ordem..."
+          onblur="pcSaveExpanded('${it.id}','descricao',this.value)"
+          onkeydown="if(event.key==='Enter')this.blur()">
+      </div>
+    </div>
+  </td>
+</tr>`;
+  }
+
+  function _renderNewRow(blocoId, blocoNome, state) {
+    const modelos  = _MODELOS_BLOCO[blocoNome] || [];
+    const si = "padding:7px 9px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;outline:none;font-family:inherit;box-sizing:border-box";
+    const tipoSel = state.tipo || 'outro';
+    return `
+<div style="border:1px solid var(--bd2);border-top:none;background:var(--bg-surface);padding:12px 14px;border-radius:0 0 8px 8px">
+  ${modelos.length ? `
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--bd1);align-items:center">
+    <span style="font-size:10px;color:var(--tx3);flex-shrink:0">Modelo:</span>
+    ${modelos.map((m, i) => `
+      <button onclick="event.stopPropagation();pcApplyModelo('${blocoId}',${i})"
+        style="font-size:10px;padding:3px 10px;border-radius:10px;border:1px solid ${tipoSel===m.tipo?'var(--sky)':'var(--bd2)'};background:${tipoSel===m.tipo?'var(--sky)':'none'};color:${tipoSel===m.tipo?'#fff':'var(--tx2)'};cursor:pointer;white-space:nowrap;transition:all .15s">
+        ${_esc(m.titulo)}
+      </button>`).join('')}
+  </div>` : ''}
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <input id="pcnr-hr-${blocoId}" type="time" style="${si};width:100px" value="${_esc(state.hr || '')}" placeholder="Horário">
+    <input id="pcnr-dur-${blocoId}" type="number" min="0" max="180" style="${si};width:64px" value="${_esc(String(state.dur || ''))}" placeholder="min">
+    <select id="pcnr-tipo-${blocoId}" style="${si};width:136px">
+      ${_TIPOS_PL.map(t => `<option value="${t.k}" ${tipoSel===t.k?'selected':''}>${_esc(t.l)}</option>`).join('')}
+    </select>
+    <input id="pcnr-titulo-${blocoId}" style="${si};flex:1;min-width:120px" value="${_esc(state.titulo || '')}" placeholder="Título / Tarefa"
+      onkeydown="if(event.key==='Enter')pcSaveNewRow('${blocoId}');else if(event.key==='Escape')pcCancelNewRow('${blocoId}')">
+    <input id="pcnr-resp-${blocoId}" list="pc-resp-dl" style="${si};width:130px" value="${_esc(state.resp || '')}" placeholder="Responsável"
+      onkeydown="if(event.key==='Enter')pcSaveNewRow('${blocoId}')">
+    <button onclick="pcSaveNewRow('${blocoId}')"
+      style="padding:7px 16px;border-radius:6px;border:none;background:var(--sky);color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Salvar</button>
+    <button onclick="pcCancelNewRow('${blocoId}')"
+      style="padding:7px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--tx2);font-size:12px;cursor:pointer">Cancelar</button>
+  </div>
+  <div id="pcnr-msg-${blocoId}" style="font-size:11px;margin-top:6px"></div>
+</div>`;
+  }
+
+  /* ── Handlers da planilha ────────────────────────────────── */
+
+  window.pcToggleBloco = function(blocoId) {
+    _collapsedBlocos[blocoId] = !_collapsedBlocos[blocoId];
+    _renderLiturgiaTab();
   };
 
-  window.pcSalvarItem = async function(itemId) {
-    const msgEl = document.getElementById("pci-msg");
-    const titulo = document.getElementById("pci-titulo")?.value?.trim();
-    if (!titulo) { if(msgEl){msgEl.textContent="Título obrigatório.";msgEl.style.color="var(--rose)";} return; }
+  window.pcToggleRow = function(itemId) {
+    _expandedRows[itemId] = !_expandedRows[itemId];
+    _renderLiturgiaTab();
+  };
 
-    const maxOrdem = _itens.length ? Math.max(..._itens.map(i=>i.ordem)) + 1 : 0;
-    const payload = {
-      culto_id:            _culto.id,
-      bloco_id:            document.getElementById("pci-bloco")?.value || null,
-      tipo:                document.getElementById("pci-tipo")?.value || "item",
-      titulo,
-      horario_previsto:    document.getElementById("pci-hr")?.value  || null,
-      duracao_prevista:    parseInt(document.getElementById("pci-dur")?.value)||null,
-      responsavel_nome:    document.getElementById("pci-resp")?.value?.trim()||null,
-      texto_biblico:       document.getElementById("pci-texto")?.value?.trim()||null,
-      observacoes_tecnicas:document.getElementById("pci-obs")?.value?.trim()||null,
-      ordem:               maxOrdem,
-    };
+  window.pcEditCell = function(itemId, field) {
+    const cell = document.getElementById(`pc-cell-${itemId}-${field}`);
+    if (!cell || cell.dataset.editing === '1') return;
+    cell.dataset.editing = '1';
+    const it  = _itens.find(i => i.id === itemId);
+    const val = it ? (it[field] ?? '') : '';
+
+    let inner;
+    if (field === 'tipo') {
+      inner = `<select class="pc-cel-inp" style="width:112px"
+        onblur="pcSaveCell('${itemId}','${field}',this)"
+        onchange="pcSaveCell('${itemId}','${field}',this)">
+        ${_TIPOS_PL.map(t => `<option value="${t.k}" ${String(val)===t.k?'selected':''}>${_esc(t.l)}</option>`).join('')}
+      </select>`;
+    } else if (field === 'duracao_prevista') {
+      inner = `<input type="number" min="0" max="180" class="pc-cel-inp" style="width:40px;text-align:center"
+        value="${_esc(String(val || ''))}"
+        onblur="pcSaveCell('${itemId}','${field}',this)"
+        onkeydown="if(event.key==='Enter')this.blur()">`;
+    } else if (field === 'horario_previsto') {
+      inner = `<input type="time" class="pc-cel-inp" style="width:78px;color:var(--sky);font-weight:700;font-size:11.5px"
+        value="${_esc(String(val || '').slice(0, 5))}"
+        onblur="pcSaveCell('${itemId}','${field}',this)"
+        onkeydown="if(event.key==='Enter')this.blur()">`;
+    } else if (field === 'responsavel_nome') {
+      inner = `<input list="pc-resp-dl" class="pc-cel-inp" style="width:120px;color:var(--tx2)"
+        value="${_esc(String(val || ''))}"
+        onblur="pcSaveCell('${itemId}','${field}',this)"
+        onkeydown="if(event.key==='Enter')this.blur();else if(event.key==='Escape')pcCancelCell()">`;
+    } else {
+      inner = `<input class="pc-cel-inp" style="width:100%;font-weight:600"
+        value="${_esc(String(val || ''))}"
+        onblur="pcSaveCell('${itemId}','${field}',this)"
+        onkeydown="if(event.key==='Enter')this.blur();else if(event.key==='Escape')pcCancelCell()">`;
+    }
+    cell.innerHTML = `<div style="padding:2px 4px">${inner}</div>`;
+    const inp = cell.querySelector('input,select');
+    if (inp) { inp.focus(); try { inp.select?.(); } catch(_) {} }
+  };
+
+  window.pcSaveCell = async function(itemId, field, inputEl) {
+    let val = inputEl.value;
+    if (field === 'duracao_prevista')  val = parseInt(val) || null;
+    else if (field === 'horario_previsto') val = val ? val + ':00' : null;
+    else val = val.trim() || null;
+
+    const it = _itens.find(i => i.id === itemId);
+    if (it) it[field] = val;
+
+    let changed = [];
+    if (field === 'duracao_prevista' || field === 'horario_previsto') changed = _recalcTimes();
+
+    _renderLiturgiaTab();
 
     try {
-      if (itemId) {
-        await _sb().from("culto_liturgia_itens").update(payload).eq("id", itemId);
-      } else {
-        await _sb().from("culto_liturgia_itens").insert(payload);
-      }
-      await _loadItens(_culto.id);
-      document.getElementById("pc-item-modal").style.display = "none";
+      await _sb().from('culto_liturgia_itens').update({ [field]: val, updated_at: new Date().toISOString() }).eq('id', itemId);
+      if (changed.length) await _persistarHorarios(changed);
+    } catch(e) { console.error('pcSaveCell:', e); }
+  };
+
+  window.pcCancelCell = function() { _renderLiturgiaTab(); };
+
+  window.pcSaveExpanded = async function(itemId, field, value) {
+    const v  = value.trim() || null;
+    const it = _itens.find(i => i.id === itemId);
+    if (it) it[field] = v;
+    try { await _sb().from('culto_liturgia_itens').update({ [field]: v }).eq('id', itemId); }
+    catch(e) { console.error('pcSaveExpanded:', e); }
+  };
+
+  window.pcAddRow = function(blocoId) {
+    const cultoHr = _culto?.data_inicio ? _fmtHr(_culto.data_inicio) : '';
+    _newRowState[blocoId] = { show: true, tipo: 'outro', titulo: '', dur: '', resp: '', hr: cultoHr };
+    _collapsedBlocos[blocoId] = false;
+    _renderLiturgiaTab();
+    setTimeout(() => document.getElementById(`pcnr-titulo-${blocoId}`)?.focus(), 60);
+  };
+
+  window.pcApplyModelo = function(blocoId, idx) {
+    const b = _blocos.find(b => b.id === blocoId);
+    if (!b) return;
+    const m = (_MODELOS_BLOCO[b.nome] || [])[idx];
+    if (!m) return;
+    const resp = m.resp === '_pregador' ? (_culto?.pregador_nome || '') : m.resp;
+    const prev = _newRowState[blocoId] || {};
+    _newRowState[blocoId] = { show: true, tipo: m.tipo, titulo: m.titulo, dur: m.dur, resp, hr: prev.hr || '' };
+    _renderLiturgiaTab();
+    setTimeout(() => document.getElementById(`pcnr-titulo-${blocoId}`)?.focus(), 60);
+  };
+
+  window.pcCancelNewRow = function(blocoId) {
+    delete _newRowState[blocoId];
+    _renderLiturgiaTab();
+  };
+
+  window.pcSaveNewRow = async function(blocoId) {
+    const titulo = document.getElementById(`pcnr-titulo-${blocoId}`)?.value?.trim();
+    const msg    = document.getElementById(`pcnr-msg-${blocoId}`);
+    if (!titulo) { if (msg) { msg.textContent = 'Título obrigatório.'; msg.style.color = 'var(--rose)'; } return; }
+
+    const hr    = document.getElementById(`pcnr-hr-${blocoId}`)?.value;
+    const dur   = parseInt(document.getElementById(`pcnr-dur-${blocoId}`)?.value) || null;
+    const tipo  = document.getElementById(`pcnr-tipo-${blocoId}`)?.value || 'outro';
+    const resp  = document.getElementById(`pcnr-resp-${blocoId}`)?.value?.trim() || null;
+    const ordem = (_itens.filter(i => i.bloco_id === blocoId).reduce((mx, i) => Math.max(mx, i.ordem ?? 0), -1)) + 1;
+
+    if (msg) { msg.textContent = 'Salvando…'; msg.style.color = 'var(--tx3)'; }
+    try {
+      const { data, error } = await _sb().from('culto_liturgia_itens').insert({
+        culto_id:         _culto.id,
+        bloco_id:         blocoId,
+        tipo, titulo,
+        horario_previsto: hr ? hr + ':00' : null,
+        duracao_prevista: dur,
+        responsavel_nome: resp,
+        ordem,
+      }).select('*,culto_item_musicas(*)').single();
+      if (error) throw new Error(error.message);
+      _itens.push(data);
+      delete _newRowState[blocoId];
+      const changed = _recalcTimes();
+      if (changed.length) await _persistarHorarios(changed);
       _renderLiturgiaTab();
-    } catch (e) {
-      if (msgEl) { msgEl.textContent = "Erro: " + e.message; msgEl.style.color = "var(--rose)"; }
+    } catch(e) {
+      if (msg) { msg.textContent = 'Erro: ' + e.message; msg.style.color = 'var(--rose)'; }
     }
   };
 
+  window.pcRowMenu = function(event, itemId, blocoId) {
+    event.stopPropagation();
+    document.getElementById('pc-row-menu')?.remove();
+    const menu = document.createElement('div');
+    menu.id = 'pc-row-menu';
+    menu.style.cssText = 'position:fixed;z-index:9999;background:var(--bg-card);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.18);padding:4px;min-width:168px;font-size:12.5px';
+    const rect = event.currentTarget.getBoundingClientRect();
+    menu.style.top   = rect.bottom + 4 + 'px';
+    menu.style.right = window.innerWidth - rect.right + 'px';
+    const mi = (ico, lbl, fn, danger) => {
+      const el = document.createElement('div');
+      el.style.cssText = `padding:8px 12px;cursor:pointer;border-radius:5px;display:flex;align-items:center;gap:8px;color:${danger?'var(--rose)':'var(--tx1)'}`;
+      el.innerHTML = `<span style="color:var(--tx3);width:16px;text-align:center">${ico}</span>${lbl}`;
+      el.onmouseover = () => el.style.background = 'var(--bg-surface)';
+      el.onmouseout  = () => el.style.background = '';
+      el.onclick     = () => { menu.remove(); fn(); };
+      return el;
+    };
+    menu.appendChild(mi('↓', 'Inserir abaixo',  () => pcInsertBelow(itemId, blocoId)));
+    menu.appendChild(mi('⊕', 'Duplicar linha',   () => pcDuplicateItem(itemId)));
+    const sep = document.createElement('div');
+    sep.style.cssText = 'height:1px;background:var(--bd1);margin:4px 0';
+    menu.appendChild(sep);
+    menu.appendChild(mi('✕', 'Remover item', () => pcExcluirItem(itemId), true));
+    document.body.appendChild(menu);
+    const close = (e) => { if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('click', close); } };
+    setTimeout(() => document.addEventListener('click', close), 10);
+  };
+
+  window.pcInsertBelow = async function(itemId, blocoId) {
+    const it    = _itens.find(i => i.id === itemId);
+    const ordem = (it?.ordem ?? 0) + 1;
+    _itens.filter(i => i.bloco_id === blocoId && (i.ordem ?? 0) >= ordem && i.id !== itemId)
+          .forEach(i => i.ordem = (i.ordem ?? 0) + 1);
+    const { data, error } = await _sb().from('culto_liturgia_itens').insert({
+      culto_id: _culto.id, bloco_id: blocoId, tipo: 'outro', titulo: 'Novo item', ordem,
+    }).select('*,culto_item_musicas(*)').single();
+    if (!error && data) {
+      _itens.push(data);
+      for (const s of _itens.filter(i => i.bloco_id === blocoId && (i.ordem ?? 0) >= ordem && i.id !== data.id))
+        await _sb().from('culto_liturgia_itens').update({ ordem: s.ordem }).eq('id', s.id);
+      _renderLiturgiaTab();
+      setTimeout(() => pcEditCell(data.id, 'titulo'), 80);
+    }
+  };
+
+  window.pcDuplicateItem = async function(itemId) {
+    const it = _itens.find(i => i.id === itemId);
+    if (!it) return;
+    const ordem = (it.ordem ?? 0) + 1;
+    _itens.filter(i => i.bloco_id === it.bloco_id && (i.ordem ?? 0) >= ordem && i.id !== it.id)
+          .forEach(i => i.ordem = (i.ordem ?? 0) + 1);
+    const { data, error } = await _sb().from('culto_liturgia_itens').insert({
+      culto_id: _culto.id, bloco_id: it.bloco_id, tipo: it.tipo,
+      titulo:   it.titulo + ' (cópia)', duracao_prevista: it.duracao_prevista,
+      responsavel_nome: it.responsavel_nome, texto_biblico: it.texto_biblico,
+      observacoes_tecnicas: it.observacoes_tecnicas, ordem,
+    }).select('*,culto_item_musicas(*)').single();
+    if (!error && data) { _itens.push(data); _renderLiturgiaTab(); }
+  };
+
   window.pcExcluirItem = async function(itemId) {
-    if (!confirm("Remover este item da liturgia?")) return;
-    await _sb().from("culto_liturgia_itens").delete().eq("id", itemId);
+    if (!confirm('Remover este item da liturgia?')) return;
+    await _sb().from('culto_liturgia_itens').delete().eq('id', itemId);
+    _itens = _itens.filter(i => i.id !== itemId);
+    delete _expandedRows[itemId];
+    _renderLiturgiaTab();
+  };
+
+  /* ── Drag & Drop ─────────────────────────────────────────── */
+  window.pcDragStart = function(e, itemId) {
+    _dragSrcId = itemId;
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => { const r = document.getElementById(`pc-row-${itemId}`); if (r) r.style.opacity = '.35'; }, 0);
+  };
+  window.pcDragOver = function(e, targetId) {
+    if (_dragSrcId === targetId) return;
+    document.querySelectorAll('.pc-row-over').forEach(el => el.classList.remove('pc-row-over'));
+    document.getElementById(`pc-row-${targetId}`)?.classList.add('pc-row-over');
+  };
+  window.pcDragLeave = function(e, targetId) {
+    document.getElementById(`pc-row-${targetId}`)?.classList.remove('pc-row-over');
+  };
+  window.pcDropOnRow = async function(e, targetId, targetBlocoId) {
+    document.querySelectorAll('.pc-row-over').forEach(el => el.classList.remove('pc-row-over'));
+    if (!_dragSrcId || _dragSrcId === targetId) { _dragSrcId = null; return; }
+    const src = _itens.find(i => i.id === _dragSrcId);
+    const tgt = _itens.find(i => i.id === targetId);
+    _dragSrcId = null;
+    if (!src || !tgt) return;
+    src.bloco_id = targetBlocoId;
+    src.ordem    = tgt.ordem;
+    _itens.filter(i => i.id !== src.id && i.bloco_id === targetBlocoId && (i.ordem ?? 0) >= (tgt.ordem ?? 0))
+          .forEach(i => i.ordem = (i.ordem ?? 0) + 1);
+    _renderLiturgiaTab();
+    await _sb().from('culto_liturgia_itens').update({ bloco_id: src.bloco_id, ordem: src.ordem }).eq('id', src.id);
     await _loadItens(_culto.id);
     _renderLiturgiaTab();
+  };
+  window.pcDropOnTable = async function(e, blocoId) {
+    document.querySelectorAll('.pc-row-over').forEach(el => el.classList.remove('pc-row-over'));
+    if (!_dragSrcId) return;
+    const src = _itens.find(i => i.id === _dragSrcId);
+    _dragSrcId = null;
+    if (!src || src.bloco_id === blocoId) return;
+    const maxOrdem = _itens.filter(i => i.bloco_id === blocoId).reduce((mx, i) => Math.max(mx, i.ordem ?? 0), -1) + 1;
+    src.bloco_id = blocoId;
+    src.ordem    = maxOrdem;
+    _renderLiturgiaTab();
+    await _sb().from('culto_liturgia_itens').update({ bloco_id: blocoId, ordem: maxOrdem }).eq('id', src.id);
+  };
+
+  /* ── Copiar liturgia anterior ────────────────────────────── */
+  window.pcCopiarLiturgiaAnterior = async function() {
+    if (!confirm('Copiar estrutura da liturgia do culto anterior?\n\nCopia: tipos, títulos, durações e obs. técnicas.\nNão copia: pessoas, músicas específicas, textos bíblicos e status.')) return;
+    const { data: ant } = await _sb().from('cultos')
+      .select('id').eq('tipo_culto_id', _culto.tipo_culto_id)
+      .lt('data_inicio', _culto.data_inicio).is('deleted_at', null)
+      .order('data_inicio', { ascending: false }).limit(1).maybeSingle();
+    if (!ant) { alert('Nenhum culto anterior do mesmo tipo encontrado.'); return; }
+    const [{ data: bls }, { data: its }] = await Promise.all([
+      _sb().from('culto_liturgia_blocos').select('*').eq('culto_id', ant.id).order('ordem'),
+      _sb().from('culto_liturgia_itens').select('*').eq('culto_id', ant.id).order('ordem'),
+    ]);
+    if (!bls?.length) { alert('O culto anterior não tem liturgia para copiar.'); return; }
+    for (const b of _blocos) await _sb().from('culto_liturgia_blocos').delete().eq('id', b.id);
+    const novosBlocos = await _criarBlocosPadrao(_culto.id);
+    const mapaBloco   = Object.fromEntries(bls.map((b, i) => [b.id, novosBlocos[i]?.id || null]));
+    const novosItens  = (its || []).map(it => ({
+      culto_id: _culto.id, bloco_id: it.bloco_id ? (mapaBloco[it.bloco_id] || null) : null,
+      ordem: it.ordem, tipo: it.tipo, titulo: it.titulo,
+      duracao_prevista: it.duracao_prevista, observacoes_tecnicas: it.observacoes_tecnicas,
+    }));
+    if (novosItens.length) await _sb().from('culto_liturgia_itens').insert(novosItens);
+    await Promise.all([_loadBlocos(_culto.id), _loadItens(_culto.id)]);
+    _renderLiturgiaTab();
+    if (typeof T === 'function') T('Liturgia copiada!', 'Ajuste horários e responsáveis.');
   };
 
   /* ── Aba Escalas ─────────────────────────────────────────── */
