@@ -115,10 +115,20 @@ async function resolverDestinatarios(
         return dm === mes; // aniv_mes
       }).forEach((p: any) => { if (!map.has(p.id)) map.set(p.id, p.nome); });
 
-    } else if (f.tipo.startsWith("funcao_") || ["nomeados","seminaristas","visitantes","congregados"].includes(f.tipo)) {
-      // Filtros por função: requerem coluna funcao/cargo na v_membros
-      // Implementação futura conforme schema disponível
-      console.log("[dispatch-scheduled] filtro não implementado:", f.tipo);
+    } else if (f.tipo.startsWith("oficial_")) {
+      const cargo = f.tipo.slice(8); // pastor | presbitero | diacono
+      const { data } = await sb.from("oficiais").select("pessoa_id,pessoas(nome)").eq("cargo", cargo).eq("status", "ativo").is("deleted_at", null).limit(300);
+      (data || []).forEach((p: any) => {
+        const nm = (p.pessoas as any)?.nome;
+        if (p.pessoa_id && nm && !map.has(p.pessoa_id)) map.set(p.pessoa_id, nm);
+      });
+
+    } else if (f.tipo.startsWith("nomeados_")) {
+      const funcaoLider = f.tipo.slice(9); // supervisor | coordenador
+      const { data } = await sb.from("nomeados").select("pessoa_id,nome").eq("funcao_lider", funcaoLider).is("deleted_at", null).limit(500);
+      (data || []).forEach((p: any) => {
+        if (p.pessoa_id && p.nome && !map.has(p.pessoa_id)) map.set(p.pessoa_id, p.nome);
+      });
     }
   }
 

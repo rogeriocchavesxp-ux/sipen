@@ -504,7 +504,7 @@ function _wzStep2(body){
 function _wzD1(){
   const hasTodos=_wz.filtros.some(f=>f.tipo==='todos_membros');
   const hasGrupo=_wz.filtros.some(f=>
-    ['min_','cong_','funcao_','aniv_'].some(p=>f.tipo.startsWith(p))||
+    ['min_','cong_','aniv_','nomeados_','oficial_'].some(p=>f.tipo.startsWith(p))||
     ['visitantes','congregados','nomeados','seminaristas'].includes(f.tipo));
   const hasInd=_wz.individuais.length>0;
   return `<div style="font-size:12px;color:var(--tx3);margin-bottom:16px;font-weight:500">Para quem você quer enviar?</div>
@@ -601,9 +601,9 @@ async function _wzD3Carregar(){
 
   } else if(tipo==='funcao'){
     const funcoes=[
-      {k:'funcao_pastor',l:'Pastores'},{k:'funcao_presbitero',l:'Presbíteros'},
-      {k:'funcao_diacono',l:'Diáconos'},{k:'funcao_cooperador',l:'Cooperadores'},
-      {k:'nomeados',l:'Nomeados'},{k:'seminaristas',l:'Seminaristas'},
+      {k:'oficial_pastor',l:'Pastores'},{k:'oficial_presbitero',l:'Presbíteros'},
+      {k:'oficial_diacono',l:'Diáconos'},{k:'nomeados_supervisor',l:'Supervisores'},
+      {k:'nomeados_coordenador',l:'Coordenadores'},{k:'seminaristas',l:'Seminaristas'},
     ];
     const rows=busca?funcoes.filter(f=>f.l.toLowerCase().includes(busca)):funcoes;
     el.innerHTML=rows.map(f=>_wzD3Item(f.k,f.l)).join('');
@@ -1124,8 +1124,23 @@ async function _resolverDests(wz){
           .forEach(p=>{ if(!map.has(p.id)) map.set(p.id, p.nome); });
       }catch(_){}
 
+    } else if(f.tipo.startsWith('oficial_')){
+      const cargo = f.tipo.slice(8); // pastor | presbitero | diacono
+      try{
+        const r = await fetch(`${apiBaseUrl()}/rest/v1/oficiais?cargo=eq.${cargo}&status=eq.ativo&deleted_at=is.null&select=pessoa_id,pessoas(nome)&limit=300`,{headers:apiHeaders()});
+        const rows2 = await r.json();
+        if(Array.isArray(rows2)) rows2.forEach(p=>{ const nm=p.pessoas?.nome; if(p.pessoa_id&&nm&&!map.has(p.pessoa_id)) map.set(p.pessoa_id, nm); });
+      }catch(_){}
+
+    } else if(f.tipo.startsWith('nomeados_')){
+      const funcaoLider = f.tipo.slice(9); // supervisor | coordenador
+      try{
+        const r = await fetch(`${apiBaseUrl()}/rest/v1/nomeados?funcao_lider=eq.${funcaoLider}&deleted_at=is.null&select=pessoa_id,nome&limit=500`,{headers:apiHeaders()});
+        const rows2 = await r.json();
+        if(Array.isArray(rows2)) rows2.forEach(p=>{ if(p.pessoa_id&&!map.has(p.pessoa_id)) map.set(p.pessoa_id, p.nome); });
+      }catch(_){}
     }
-    // demais filtros: salvos como descrição mas não resolvidos automaticamente
+    // demais filtros (seminaristas etc): não resolvidos automaticamente
   }
 
   // individuais adicionados manualmente
