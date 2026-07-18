@@ -253,8 +253,8 @@ UPDATE public.ministerios
   FROM dedup_map m WHERE ministerios.coordenador = m.dup_id;
 
 UPDATE public.congregacao_cultos
-  SET pregador_id = m.keeper_id
-  FROM dedup_map m WHERE congregacao_cultos.pregador_id = m.dup_id;
+  SET pregador = m.keeper_id::text
+  FROM dedup_map m WHERE congregacao_cultos.pregador = m.dup_id::text;
 
 UPDATE public.estudos_pgs
   SET autor_id = m.keeper_id
