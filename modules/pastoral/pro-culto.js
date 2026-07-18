@@ -824,7 +824,9 @@
     const alertas = [];
     if (!c.pregador_nome) alertas.push({ tipo: "atencao", msg: "Pregador ainda não definido." });
     if (!c.texto_biblico) alertas.push({ tipo: "atencao", msg: "Texto bíblico não informado." });
-    if (!_itens.length)   alertas.push({ tipo: "atencao", msg: "Liturgia ainda não estruturada." });
+    const blocosVazios = _blocos.filter(b => !_itens.some(i => i.bloco_id === b.id));
+    if (blocosVazios.length === _blocos.length) alertas.push({ tipo: "atencao", msg: "Liturgia ainda não estruturada." });
+    else if (blocosVazios.length) alertas.push({ tipo: "atencao", msg: `Blocos sem itens: ${blocosVazios.map(b => b.nome).join(", ")}.` });
     if ((c.eventos_especiais||[]).includes("batismo") && _checklists.filter(ch => ch.departamento==="ev_batismo" && ch.status!=="concluido").length)
       alertas.push({ tipo: "critico", msg: "Batismo confirmado, mas checklists pendentes." });
 
@@ -852,7 +854,12 @@
         <div class="card">
           <div class="ctit">Progresso</div>
           <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
-            ${_progressRow("Liturgia", _itens.length ? 100 : 0, "itens estruturados")}
+            ${(function(){
+              if (!_blocos.length) return _progressRow("Liturgia", 0, "sem blocos");
+              const blocosComItens = _blocos.filter(b => _itens.some(i => i.bloco_id === b.id)).length;
+              const pct = Math.round(blocosComItens / _blocos.length * 100);
+              return _progressRow("Liturgia", pct, `${blocosComItens}/${_blocos.length} blocos com itens`);
+            })()}
             ${_progressRow("Pregador", c.pregador_nome ? 100 : 0)}
             ${_progressRow("Checklists", pctCheck, `${doneCheck}/${totalCheck}`)}
           </div>
