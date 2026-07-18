@@ -99,23 +99,61 @@
           </div>
           <div class="msub" id="ms-conselho">
             <div class="si" onclick="go('conselho-dash')">Dashboard do Conselho</div>
-            <div class="si" onclick="go('conselho-nomeados')">Nomeados</div>
-            <div class="si" onclick="go('conselho-ordenados')">Ordenados</div>
-            <div class="sdiv"></div>
-            <div class="si" onclick="go('min-min')">Ministérios</div>
-            <div class="si" onclick="go('min-soc')">Sociedades Internas</div>
-            <div class="si" onclick="go('min-adm')">Administração</div>
-            <div class="sdiv"></div>
-            <div class="si" onclick="go('conselho-seminaristas')">Seminaristas</div>
             <div class="si" onclick="go('conselho-doc')">Documentos do Conselho</div>
             <div class="si" onclick="go('pautas-reunioes')">Reuniões do Conselho</div>
             <div class="sdiv"></div>
             <div class="si" onclick="go('conselho-demandas')">Demandas do Conselho</div>
             <div class="si" onclick="go('conselho-com')">Comissões</div>
             <div class="sdiv"></div>
-            <div class="si" onclick="go('conselho-eleicoes')">Eleições / Indicações</div>
-            <div class="sdiv"></div>
             <div class="si" onclick="go('conselho-resolucoes')">Resoluções do Conselho</div>
+          </div>
+        </div>
+
+        <!-- Oficiais -->
+        <div class="mwrap" id="mw-oficiais">
+          <div class="mhdr" onclick="tog('oficiais')">
+            <div class="micon" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/><path d="M2 20h4M18 20h4"/></svg></div>
+            <span class="mname">Oficiais</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-oficiais">
+            <div class="si" onclick="go('conselho-nomeados')">Nomeados</div>
+            <div class="si" onclick="go('conselho-ordenados')">Ordenados</div>
+            <div class="si" onclick="go('conselho-seminaristas')">Seminaristas</div>
+          </div>
+        </div>
+
+        <!-- Secretaria (renomeado de Membresia) -->
+        <div class="mwrap" id="mw-memb" data-modulo="MEMBRESIA">
+          <div class="mhdr" onclick="tog('memb')">
+            <div class="micon" style="background:rgba(82,196,110,0.14);border-color:rgba(82,196,110,0.25);color:var(--gbr)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+            <span class="mname">Secretaria</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-memb">
+            <div class="si" data-memb-adm="1" onclick="go('memb-dash')">Dashboard da Secretaria</div>
+            <div class="si" onclick="go('memb-cad')">Cadastro de Membros</div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-com')">Comungantes</div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-ncom')">Não Comungantes</div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-vis')">Visitantes</div>
+            <div class="sdiv" data-memb-adm="1"></div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-bat')">Batismos</div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-prof')">Profissões de Fé</div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-trans')">Transferências</div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-hist')">Histórico de Membros</div>
+            <div class="si" onclick="go('memb-aniv')">Aniversariantes</div>
+          </div>
+        </div>
+
+        <!-- Eleições -->
+        <div class="mwrap" id="mw-eleicoes">
+          <div class="mhdr" onclick="tog('eleicoes')">
+            <div class="micon" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+            <span class="mname">Eleições</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-eleicoes">
+            <div class="si" onclick="go('conselho-eleicoes')">Indicações</div>
           </div>
         </div>
 
@@ -147,40 +185,6 @@
           </div>
           <div class="msub" id="ms-cong">
             <div class="si" id="sb-cong-dash-link" onclick="go('cong-dash')" style="display:none">Dashboard Geral</div>
-          </div>
-        </div>
-
-        <!-- Membresia -->
-        <div class="mwrap" id="mw-memb" data-modulo="MEMBRESIA">
-          <div class="mhdr" onclick="tog('memb')">
-            <div class="micon" style="background:rgba(82,196,110,0.14);border-color:rgba(82,196,110,0.25);color:var(--gbr)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-            <span class="mname">Membresia</span>
-            <span class="marr">▶</span>
-          </div>
-          <div class="msub" id="ms-memb">
-            <div class="si" data-memb-adm="1" onclick="go('memb-dash')">Dashboard de Membresia</div>
-            <div class="si" onclick="go('memb-cad')">Cadastro de Membros</div>
-            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-com')">Comungantes</div>
-            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-ncom')">Não Comungantes</div>
-            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-vis')">Visitantes</div>
-            <div class="sdiv" data-memb-adm="1"></div>
-            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-bat')">Batismos</div>
-            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-prof')">Profissões de Fé</div>
-            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-trans')">Transferências</div>
-            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-hist')">Histórico de Membros</div>
-            <div class="si" onclick="go('memb-aniv')">Aniversariantes</div>
-          </div>
-        </div>
-
-        <!-- Projetos -->
-        <div class="mwrap" id="mw-proj" data-modulo="PROJETOS">
-          <div class="mhdr" onclick="tog('proj')">
-            <div class="micon" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="6" height="14" x="2" y="5" rx="2"/><rect width="6" height="10" x="9" y="9" rx="2"/><rect width="6" height="6" x="16" y="13" rx="2"/></svg></div>
-            <span class="mname">Projetos</span>
-            <span class="marr">▶</span>
-          </div>
-          <div class="msub" id="ms-proj">
-            <div class="si" onclick="go('proj-lista')">Projetos & Acompanhamento</div>
           </div>
         </div>
 
