@@ -80,8 +80,17 @@
       <div class="bni" onclick="go('diac-social')">Ação Social</div>
       <div class="bni" onclick="go('diac-solicitacoes')">Solicitações</div>
     </div>
-    <div class="ct" id="diac-esc-content">
-      <div style="padding:32px;color:var(--tx3);text-align:center;font-size:13px">Carregando escala...</div>
+    <div class="ct">
+      <div style="display:flex;gap:8px;margin-bottom:12px;border-bottom:1px solid var(--bd1);padding-bottom:10px">
+        <button id="diac-esc-btn-grid" onclick="diacEscModo('grid')"
+          style="font-size:11px;padding:5px 12px;border-radius:6px;border:1px solid var(--sky);background:var(--sky);color:#fff;cursor:pointer;font-weight:700">Grade mensal</button>
+        <button id="diac-esc-btn-lista" onclick="diacEscModo('lista')"
+          style="font-size:11px;padding:5px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--tx2);cursor:pointer">Lista detalhada</button>
+      </div>
+      <div id="diac-grid-root"></div>
+      <div id="diac-esc-content" style="display:none">
+        <div style="padding:32px;color:var(--tx3);text-align:center;font-size:13px">Carregando escala...</div>
+      </div>
     </div>
   </div>
 
