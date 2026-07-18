@@ -1050,8 +1050,9 @@
       if (!r.ok) return;
       const lista = await r.json();
       if (!lista.length) return;
+      const _sbNome = n => n.replace(/^Minist[eé]rio\s+d[eao]\s+/i, '').replace(/^Minist[eé]rio\s+/i, '');
       el.innerHTML = '<div class="sdiv"></div>' + lista.map(m =>
-        `<div class="si" onclick="window._sbMinisterioId='${m.id}';go('min-min')">${_SB_ICONES[m.tipo]||'◆'} ${m.nome}</div>`
+        `<div class="si" onclick="window._sbMinisterioId='${m.id}';go('min-min')">${_SB_ICONES[m.tipo]||'◆'} ${_sbNome(m.nome)}</div>`
       ).join('');
     } catch (e) { /* silencioso — sidebar não quebra */ }
   }
