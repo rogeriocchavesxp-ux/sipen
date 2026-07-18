@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const sb = createClient(Deno.env.get("SUPABASE_URL")!, svcKey);
+  const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const BC_KEY = Deno.env.get("BOTCONVERSA_API_KEY");
   if (!BC_KEY) return new Response("BOTCONVERSA_API_KEY não configurada", { status: 503 });
 
