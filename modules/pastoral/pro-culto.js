@@ -506,7 +506,7 @@
     const dataFim    = c.data_encerramento ? c.data_encerramento.slice(0,16) : "";
     const evsSel     = c.eventos_especiais || [];
 
-    const optsPastores = _pessoas.map(p => `<option value="${p.pessoa_id}" data-nm="${_esc(p.nome)}" ${c.pregador_nome===p.nome?"selected":""}>${_esc(p.nome)}</option>`).join("");
+    const optsPastores = _pessoas.map(p => `<option value="${_esc(p.nome)}" ${c.pregador_nome===p.nome?"selected":""}>${_esc(p.nome)}</option>`).join("");
 
     r.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
@@ -516,7 +516,7 @@
       <div class="card" style="max-width:700px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           ${fld("Data e Horário de Início <span style='color:var(--rose)'>*</span>",
-            `<input id="pc-data" type="datetime-local" style="${inp}" value="${dataInicio}">`)}
+            `<input id="pc-data" type="datetime-local" style="${inp}" value="${dataInicio}" onchange="pcBuscarPregador()">`)}
           ${fld("Previsão de Encerramento",
             `<input id="pc-fim" type="datetime-local" style="${inp}" value="${dataFim}">`)}
         </div>
@@ -534,10 +534,22 @@
         ${fld("Texto Bíblico",
           `<input id="pc-texto" style="${inp}" value="${_esc(c.texto_biblico||"")}" placeholder="Ex: João 17.20-23">`)}
         ${fld("Pregador",
-          `<select id="pc-preg" style="${inp}">
-            <option value="">— A definir —</option>
-            ${optsPastores}
-          </select>`)}
+          `<div style="position:relative">
+            <div id="pc-preg-display" style="${inp};display:flex;align-items:center;gap:8px;min-height:42px;cursor:default">
+              <span id="pc-preg-nome" style="flex:1;color:${c.pregador_nome?'var(--tx1)':'var(--tx4)'}">${_esc(c.pregador_nome||'Preencha a data para buscar da escala')}</span>
+              <span id="pc-preg-src" style="font-size:10px;color:var(--teal);font-weight:600">${c.pregador_nome?'escala':''}</span>
+            </div>
+            <input type="hidden" id="pc-preg-value" value="${_esc(c.pregador_nome||'')}">
+            <div id="pc-preg-manual" style="display:none;margin-top:6px">
+              <select id="pc-preg-sel" style="${inp}" onchange="document.getElementById('pc-preg-value').value=this.value;document.getElementById('pc-preg-nome').textContent=this.value||'—';document.getElementById('pc-preg-src').textContent=this.value?'manual':''">
+                <option value="">— A definir —</option>
+                ${optsPastores}
+              </select>
+            </div>
+            <button onclick="pcTogglePregOverride()" type="button" style="background:none;border:none;font-size:10px;color:var(--tx3);cursor:pointer;padding:4px 0;text-decoration:underline">
+              <span id="pc-preg-override-lbl">${c.pregador_nome?'Alterar manualmente':'Preencher manualmente'}</span>
+            </button>
+          </div>`)}
         ${fld("Local",
           `<input id="pc-local" style="${inp}" value="${_esc(c.local_nome||"")}" placeholder="Ex: Templo Principal">`)}
         ${fld("Status",
@@ -561,7 +573,84 @@
           <div id="pc-msg" style="font-size:12px"></div>
         </div>
       </div>`;
+    // Auto-buscar pregador se não há pregador definido e há data
+    if (!c.pregador_nome && dataInicio) setTimeout(pcBuscarPregador, 50);
   }
+
+  /* Mapeamento de nome de tipo de culto → culto_tipo da escala */
+  function _matchEscalaTipo(tipoNome, escalaTipo) {
+    const n = (tipoNome || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    if (escalaTipo === "domingo_manha")       return n.includes("manha") || (n.includes("dominical") && (n.includes("manha") || n.includes("manha")));
+    if (escalaTipo === "domingo_noite")       return n.includes("noite");
+    if (escalaTipo === "conexao_com_deus")    return n.includes("conexao") || n.includes("conexion");
+    if (escalaTipo === "tarde_da_esperanca")  return n.includes("tarde") || n.includes("esperanca");
+    return false;
+  }
+
+  window.pcBuscarPregador = async function() {
+    const dataVal = document.getElementById("pc-data")?.value;
+    const nomeEl  = document.getElementById("pc-preg-nome");
+    const srcEl   = document.getElementById("pc-preg-src");
+    const valEl   = document.getElementById("pc-preg-value");
+    if (!nomeEl || !valEl) return;
+    if (!dataVal) {
+      nomeEl.textContent = "Preencha a data para buscar da escala";
+      nomeEl.style.color = "var(--tx4)";
+      srcEl.textContent  = "";
+      valEl.value        = "";
+      return;
+    }
+    const date = dataVal.slice(0, 10); // YYYY-MM-DD
+    nomeEl.textContent = "Buscando na escala…";
+    nomeEl.style.color = "var(--tx3)";
+    srcEl.textContent  = "";
+
+    const { data: entradas } = await _sb()
+      .from("escala_pregacao")
+      .select("culto_tipo, pastores(nome_completo,nome_exibicao)")
+      .eq("data", date)
+      .not("pastor_id", "is", null);
+
+    if (!entradas?.length) {
+      nomeEl.textContent = "Sem escala para esta data";
+      nomeEl.style.color = "var(--amber)";
+      valEl.value        = "";
+      return;
+    }
+
+    // Tentar casar pelo tipo de culto selecionado
+    const tipoId   = document.getElementById("pc-tipo")?.value;
+    const tipoNome = _tipos.find(t => t.id === tipoId)?.nome || "";
+    const match    = entradas.find(e => _matchEscalaTipo(tipoNome, e.culto_tipo)) || entradas[0];
+    const nome     = match.pastores?.nome_exibicao || match.pastores?.nome_completo || null;
+
+    if (nome) {
+      nomeEl.textContent = nome;
+      nomeEl.style.color = "var(--tx1)";
+      srcEl.textContent  = "escala";
+      valEl.value        = nome;
+    } else {
+      nomeEl.textContent = "Sem pregador definido na escala";
+      nomeEl.style.color = "var(--amber)";
+      valEl.value        = "";
+    }
+  };
+
+  window.pcTogglePregOverride = function() {
+    const manual = document.getElementById("pc-preg-manual");
+    const lbl    = document.getElementById("pc-preg-override-lbl");
+    if (!manual) return;
+    const isOpen = manual.style.display !== "none";
+    manual.style.display = isOpen ? "none" : "block";
+    if (lbl) lbl.textContent = isOpen ? "Alterar manualmente" : "Usar da escala";
+    if (!isOpen) {
+      const sel = document.getElementById("pc-preg-sel");
+      if (sel) sel.focus();
+      // Volta para escala ao fechar
+    } else {
+      pcBuscarPregador();
+    }
+  };
 
   window.pcToggleEv = function(k) {
     const cb  = document.getElementById(`ev-${k}`);
@@ -581,8 +670,7 @@
     const dataI = document.getElementById("pc-data")?.value;
     if (!dataI) { msgEl.textContent = "Data de início obrigatória."; msgEl.style.color = "var(--rose)"; return; }
 
-    const pregs  = document.getElementById("pc-preg");
-    const pregNm = pregs?.options[pregs.selectedIndex]?.getAttribute("data-nm") || null;
+    const pregNm = document.getElementById("pc-preg-value")?.value?.trim() || null;
     const evs    = EVENTOS_ESPECIAIS.filter(e => document.getElementById(`ev-${e.k}`)?.checked).map(e => e.k);
 
     const payload = {
