@@ -142,11 +142,12 @@ button{font-family:var(--sans);cursor:pointer;border:none;background:none;color:
 
 /* ── Week Header ────────────────────────────────────── */
 .week-hdr {
-  font-size: 9.5px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .10em; color: var(--tx3);
-  padding: 20px 0 8px; border-top: 1px solid var(--bd1); margin-top: 8px;
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .09em; color: var(--tx2);
+  padding: 8px 12px; margin: 18px 0 8px;
+  background: var(--surf); border: 1px solid var(--bd1); border-radius: 8px;
 }
-.week-hdr:first-child { margin-top: 0; border-top: none; }
+.week-hdr:first-child { margin-top: 0; }
 
 /* ── Pregação rows ──────────────────────────────────── */
 .preg-row {
@@ -180,10 +181,18 @@ button{font-family:var(--sans);cursor:pointer;border:none;background:none;color:
 /* ── Música cards ───────────────────────────────────── */
 .date-group { margin-bottom: 18px; }
 .date-group-hdr {
-  font-size: 10px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .09em; color: var(--tx3);
-  padding-bottom: 8px; margin-bottom: 6px;
-  border-bottom: 1px solid var(--bd1);
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 8px 12px; margin: 18px 0 8px;
+  background: var(--surf); border: 1px solid var(--bd1);
+  border-radius: 8px;
+}
+.date-group-hdr-day {
+  font-size: 22px; font-weight: 800; color: var(--tx1);
+  letter-spacing: -.03em; line-height: 1;
+}
+.date-group-hdr-rest {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .09em; color: var(--tx2);
 }
 .musica-card {
   background: var(--card); border: 1px solid var(--bd1);
@@ -352,7 +361,8 @@ function monthRange(y, m) {
 function fmtDateHdr(dateStr) {
   const [y, mo, d] = dateStr.split("-").map(Number);
   const dt = new Date(y, mo-1, d);
-  return `${pad2(d)} de ${MONTHS[mo-1].toLowerCase()} · ${WDAYS_F[dt.getDay()]}`;
+  return `<span class="date-group-hdr-day">${pad2(d)}</span>
+    <span class="date-group-hdr-rest">${MONTHS[mo-1]} · ${WDAYS_F[dt.getDay()]}</span>`;
 }
 
 function fmtDay(dateStr) {
