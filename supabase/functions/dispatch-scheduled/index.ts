@@ -53,8 +53,16 @@ function normalizar(tel: string | null | undefined): string | null {
   return d.startsWith("55") ? d : "55" + d;
 }
 
+const LOWER_PT = new Set(["de","da","do","das","dos","e","a","o","em","com","por","para"]);
+function titleCase(str: string): string {
+  return str.toLowerCase().split(" ").map((w, i) =>
+    (i > 0 && LOWER_PT.has(w)) ? w : w.charAt(0).toUpperCase() + w.slice(1)
+  ).join(" ");
+}
+
 function renderizar(texto: string, nome: string): string {
-  return texto.replace(/\{\{nome\}\}/gi, nome);
+  const primeiroNome = titleCase(nome.split(" ")[0]);
+  return texto.replace(/\{\{nome\}\}/gi, primeiroNome);
 }
 
 function delay(ms: number) { return new Promise(r => setTimeout(r, ms)); }

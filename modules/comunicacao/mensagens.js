@@ -21,6 +21,13 @@ const STATUS_STYLE = {
 const STATUS_LBL = { rascunho:'Rascunho', agendada:'Agendada', enviando:'Enviando', enviada:'Enviada', parcial:'Parcial', falha:'Falha' };
 const CAT_LBL    = { convocacao:'Convocação', aviso:'Aviso', culto:'Culto', funeral:'Funeral', casamento:'Casamento', aniversario:'Aniversário', pgs:'PG', missoes:'Missões', escala:'Escala', outros:'Outros' };
 
+const _LOWER_PT = new Set(['de','da','do','das','dos','e','a','o','em','com','por','para']);
+function _fmtNome(str){
+  return (str||'').toLowerCase().split(' ').map((w,i)=>
+    (i>0&&_LOWER_PT.has(w))?w:w.charAt(0).toUpperCase()+w.slice(1)
+  ).join(' ');
+}
+
 function _badge(status){
   return `<span style="padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;${STATUS_STYLE[status]||''}">${STATUS_LBL[status]||status}</span>`;
 }
@@ -1149,8 +1156,8 @@ async function _dispararWA(campanhaId, dests, conteudo){
       continue;
     }
 
-    // Substitui {{nome}} pelo primeiro nome
-    const primeiroNome = (d.nome||'').split(' ')[0];
+    // Substitui {{nome}} pelo primeiro nome em title case
+    const primeiroNome = _fmtNome((d.nome||'').split(' ')[0]);
     const mensagem = conteudo.replace(/\{\{nome\}\}/g, primeiroNome);
 
     // Salva destinatário como enviando
