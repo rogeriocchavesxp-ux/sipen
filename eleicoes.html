@@ -245,6 +245,7 @@ const HDRS = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-T
 /* ── Estado ──────────────────────────────────────────── */
 let processo  = null;
 let membros   = [];
+let oficiais  = [];   // oficiais com mandato vencendo no ano do processo
 let indicante = null;
 let dItems    = [];  // indicações de diáconos
 let pItems    = [];  // indicações de presbíteros
@@ -324,6 +325,23 @@ async function init() {
     processo = dados[0];
     document.title = `${processo.nome} — IPPenha`;
     if (processo.status === "rascunho") { renderErro("Não disponível", "Este processo ainda não está disponível. Aguarde o início das indicações."); return; }
+
+    // Carrega oficiais com mandato vencendo no ano do processo
+    try {
+      const cargos = processo.tipo === "presbiteros"
+        ? "cargo=eq.presbitero"
+        : processo.tipo === "diaconos"
+        ? "cargo=eq.diacono"
+        : "cargo=in.(presbitero,diacono)";
+      const ano = processo.ano;
+      const todos = await sbGet(
+        `v_eleicao_oficiais_mandatos?${cargos}&fim_mandato=gte.${ano}-01-01&fim_mandato=lte.${ano}-12-31&select=nome,cargo,fim_mandato,posse`
+      );
+      oficiais = todos || [];
+    } catch (_) {
+      oficiais = [];
+    }
+
     renderInfo();
   } catch (e) {
     renderErro("Erro de conexão", e.message);
@@ -369,6 +387,30 @@ function renderInfo() {
     </div>
 
     <hr class="sec-divider">
+
+    ${oficiais.length ? `
+    <div style="background:var(--surface);border:1px solid var(--bd);border-radius:var(--radius-lg);padding:22px 24px;margin-bottom:20px">
+      <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:14px">
+        Mandatos vencendo em ${p.ano}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        ${oficiais.map(o => {
+          const isP = o.cargo === "presbitero";
+          const cor  = isP ? "var(--green)" : "#2A6A9A";
+          const bg   = isP ? "var(--green-tint)" : "rgba(74,143,191,.08)";
+          const brd  = isP ? "var(--green-border)" : "rgba(74,143,191,.35)";
+          const lbl  = isP ? "Presbítero" : "Diácono";
+          return `<div style="display:flex;align-items:center;gap:10px">
+            <span style="padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;background:${bg};color:${cor};border:1px solid ${brd};white-space:nowrap;flex-shrink:0">${lbl}</span>
+            <span style="font-size:13.5px;color:var(--tx1);font-weight:500">${eh(o.nome)}</span>
+            ${o.posse ? `<span style="font-size:11px;color:var(--tx3);margin-left:auto;white-space:nowrap;flex-shrink:0">desde ${fmtD(o.posse)}</span>` : ""}
+          </div>`;
+        }).join("")}
+      </div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bd);font-size:12px;color:var(--tx3)">
+        Estes irmãos podem ser reconduzidos ou substituídos neste processo eleitoral.
+      </div>
+    </div>` : ""}
 
     ${aberto ? `
     <div class="join-card">
