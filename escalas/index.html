@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Escalas — IPPenha</title>
+<meta name="description" content="Escalas mensais de pregação, ministério de música e Junta Diaconal da Igreja Presbiteriana de Penha.">
+<meta name="theme-color" content="#111111">
+<link rel="icon" href="../icons/icon-32.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<style>
+/* ── Tokens ─────────────────────────────────────────── */
+:root {
+  --bg:    #111111;
+  --card:  #1c1c1e;
+  --surf:  #242426;
+  --bd1:   rgba(255,255,255,0.07);
+  --bd2:   rgba(255,255,255,0.12);
+  --tx1:   #f5f5f7;
+  --tx2:   rgba(235,235,245,0.60);
+  --tx3:   rgba(235,235,245,0.28);
+  --tx4:   rgba(235,235,245,0.10);
+  --gr:    #30d158;
+  --sky:   #4a9cf5;
+  --violet:#bf5af2;
+  --copper:#ac8e68;
+  --amber: #ff9f0a;
+  --teal:  #5ac8fa;
+  --rose:  #ff453a;
+  --sans: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: light) { :root { --bg:#f2f2f7;--card:#ffffff;--surf:#f8f8fb;--bd1:rgba(0,0,0,0.07);--bd2:rgba(0,0,0,0.12);--tx1:#1c1c1e;--tx2:rgba(28,28,30,0.58);--tx3:rgba(28,28,30,0.32);--tx4:rgba(28,28,30,0.08);--gr:#28a745;--sky:#1d6fe8;--violet:#6d28d9;--copper:#7c5130;--amber:#b45309;--teal:#0284c7;--rose:#dc2626; } }
+:root[data-theme="light"] { --bg:#f2f2f7;--card:#ffffff;--surf:#f8f8fb;--bd1:rgba(0,0,0,0.07);--bd2:rgba(0,0,0,0.12);--tx1:#1c1c1e;--tx2:rgba(28,28,30,0.58);--tx3:rgba(28,28,30,0.32);--tx4:rgba(28,28,30,0.08);--gr:#28a745;--sky:#1d6fe8;--violet:#6d28d9;--copper:#7c5130;--amber:#b45309;--teal:#0284c7;--rose:#dc2626; }
+:root[data-theme="dark"] { --bg:#111111;--card:#1c1c1e;--surf:#242426;--bd1:rgba(255,255,255,0.07);--bd2:rgba(255,255,255,0.12);--tx1:#f5f5f7;--tx2:rgba(235,235,245,0.60);--tx3:rgba(235,235,245,0.28);--tx4:rgba(235,235,245,0.10);--gr:#30d158;--sky:#4a9cf5;--violet:#bf5af2;--copper:#ac8e68;--amber:#ff9f0a;--teal:#5ac8fa;--rose:#ff453a; }
+
+/* ── Reset ──────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--tx1);-webkit-font-smoothing:antialiased;min-height:100dvh;padding-bottom:env(safe-area-inset-bottom)}
+a{color:inherit;text-decoration:none}
+button{font-family:var(--sans);cursor:pointer;border:none;background:none;color:inherit}
+
+/* ── Header ─────────────────────────────────────────── */
+.header {
+  background: linear-gradient(180deg, rgba(48,209,88,0.12) 0%, transparent 100%);
+  border-bottom: 1px solid var(--bd1);
+  padding: 28px 20px 20px;
+  text-align: center;
+}
+.header-logo {
+  width: 36px; height: 36px;
+  margin: 0 auto 10px;
+  opacity: .85;
+}
+.header-church {
+  font-size: 10px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--tx3); margin-bottom: 6px;
+}
+.header-title {
+  font-size: 22px; font-weight: 700; letter-spacing: -.02em;
+  color: var(--tx1); line-height: 1.1;
+}
+.header-sub {
+  font-size: 12px; color: var(--tx2); margin-top: 5px; line-height: 1.4;
+}
+.header-actions {
+  display: flex; justify-content: center; gap: 8px;
+  margin-top: 14px;
+}
+.btn-theme {
+  padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  background: var(--surf); border: 1px solid var(--bd2); color: var(--tx2);
+  transition: all .15s;
+}
+.btn-theme:hover { color: var(--tx1); border-color: var(--bd2); }
+
+/* ── Month Navigator ────────────────────────────────── */
+.month-nav {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--bg); border-bottom: 1px solid var(--bd1);
+  display: flex; align-items: center; justify-content: center;
+  gap: 0; padding: 0;
+}
+.month-nav-btn {
+  width: 48px; height: 52px; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: var(--tx2); border-right: 1px solid var(--bd1);
+  border-left: 1px solid var(--bd1); transition: color .15s, background .15s;
+}
+.month-nav-btn:first-child { border-left: none; }
+.month-nav-btn:last-child  { border-right: none; }
+.month-nav-btn:hover { color: var(--tx1); background: var(--surf); }
+.month-nav-btn:disabled { color: var(--tx4); pointer-events: none; }
+.month-nav-label {
+  flex: 1; text-align: center; font-size: 15px; font-weight: 700;
+  letter-spacing: -.01em; color: var(--tx1); padding: 0 12px; line-height: 52px;
+  min-width: 160px;
+}
+
+/* ── Tabs ───────────────────────────────────────────── */
+.tabs {
+  display: flex; border-bottom: 1px solid var(--bd1);
+  overflow-x: auto; scrollbar-width: none; gap: 0;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex: 1; min-width: 100px; display: flex; align-items: center; justify-content: center;
+  gap: 6px; padding: 14px 10px; font-size: 12px; font-weight: 600;
+  color: var(--tx3); border-bottom: 2px solid transparent;
+  transition: all .15s; white-space: nowrap; position: relative; top: 1px;
+}
+.tab:hover { color: var(--tx1); background: var(--surf); }
+.tab.on { color: var(--tab-color); border-bottom-color: var(--tab-color); }
+.tab-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--tab-color); flex-shrink: 0;
+}
+
+/* ── Content ────────────────────────────────────────── */
+.content {
+  max-width: 720px; margin: 0 auto;
+  padding: 20px 16px; min-height: 300px;
+}
+.section { display: none; }
+.section.on { display: block; }
+
+/* ── Loading / Empty ────────────────────────────────── */
+.loading {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 12px; padding: 60px 20px; color: var(--tx3);
+}
+.spinner {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 2px solid var(--bd2); border-top-color: var(--gr);
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 60px 20px; color: var(--tx3); text-align: center;
+}
+.empty-ico { font-size: 36px; opacity: .4; }
+.empty-msg { font-size: 13px; line-height: 1.5; }
+
+/* ── Week Header ────────────────────────────────────── */
+.week-hdr {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .10em; color: var(--tx3);
+  padding: 20px 0 8px; border-top: 1px solid var(--bd1); margin-top: 8px;
+}
+.week-hdr:first-child { margin-top: 0; border-top: none; }
+
+/* ── Pregação rows ──────────────────────────────────── */
+.preg-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--card); border: 1px solid var(--bd1);
+  border-radius: 9px; padding: 11px 14px; margin-bottom: 6px;
+  transition: border-color .15s;
+}
+.preg-row:hover { border-color: var(--bd2); }
+.preg-date-col {
+  min-width: 40px; flex-shrink: 0;
+  text-align: center; line-height: 1.15;
+}
+.preg-date-day { font-size: 19px; font-weight: 700; color: var(--tx1); }
+.preg-date-wday { font-size: 9.5px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--tx3); }
+.preg-divider { width: 1px; align-self: stretch; background: var(--bd1); flex-shrink: 0; }
+.preg-tipo-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; padding: 2px 7px; border-radius: 5px;
+  margin-bottom: 3px;
+}
+.preg-nome { font-size: 12.5px; font-weight: 600; color: var(--tx1); line-height: 1.2; }
+.preg-none { font-size: 12px; color: var(--tx3); font-style: italic; }
+.preg-status {
+  margin-left: auto; flex-shrink: 0;
+  font-size: 9.5px; font-weight: 700; padding: 3px 8px; border-radius: 20px;
+}
+
+/* ── Música cards ───────────────────────────────────── */
+.date-group { margin-bottom: 18px; }
+.date-group-hdr {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .09em; color: var(--tx3);
+  padding-bottom: 8px; margin-bottom: 6px;
+  border-bottom: 1px solid var(--bd1);
+}
+.musica-card {
+  background: var(--card); border: 1px solid var(--bd1);
+  border-radius: 9px; padding: 12px 14px; margin-bottom: 6px;
+  transition: border-color .15s;
+}
+.musica-card:hover { border-color: var(--bd2); }
+.musica-card-top {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.musica-tipo-badge {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; padding: 2px 8px; border-radius: 5px; flex-shrink: 0;
+}
+.musica-status {
+  margin-left: auto; font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+}
+.musica-dirigente { font-size: 12.5px; font-weight: 600; color: var(--tx1); }
+.musica-equipe { font-size: 11.5px; color: var(--tx2); margin-top: 2px; }
+
+/* ── Diaconal cards ─────────────────────────────────── */
+.diac-date-group { margin-bottom: 20px; }
+.diac-prog-block {
+  background: var(--card); border: 1px solid var(--bd1);
+  border-radius: 9px; overflow: hidden; margin-bottom: 6px;
+}
+.diac-prog-hdr {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-bottom: 1px solid var(--bd1);
+  background: rgba(172,142,104,0.06);
+}
+.diac-prog-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .09em; color: var(--copper);
+}
+.diac-list { padding: 4px 0; }
+.diac-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 14px; border-bottom: 1px solid var(--bd1);
+}
+.diac-item:last-child { border-bottom: none; }
+.diac-posto {
+  font-size: 10px; font-weight: 600; color: var(--tx3);
+  min-width: 130px; flex-shrink: 0;
+}
+.diac-nome { font-size: 12.5px; color: var(--tx1); font-weight: 500; }
+
+/* ── Footer ─────────────────────────────────────────── */
+.footer {
+  border-top: 1px solid var(--bd1); padding: 24px 16px;
+  text-align: center; color: var(--tx3); font-size: 10.5px; line-height: 1.7;
+}
+.footer strong { color: var(--tx2); }
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 480px) {
+  .preg-row { padding: 10px 12px; }
+  .preg-date-day { font-size: 17px; }
+  .preg-nome { font-size: 12px; }
+  .preg-status { display: none; }
+  .diac-posto { min-width: 100px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────── -->
+<header class="header">
+  <img src="../icons/logo-ippenha.svg" class="header-logo" alt="IPPenha" onerror="this.style.display='none'">
+  <div class="header-church">Igreja Presbiteriana de Penha</div>
+  <h1 class="header-title">Escalas</h1>
+  <p class="header-sub">Pregação · Ministério de Música · Junta Diaconal</p>
+  <div class="header-actions">
+    <button class="btn-theme" onclick="toggleTheme()">Alternar tema</button>
+  </div>
+</header>
+
+<!-- ── Month Navigator ─────────────────────────────── -->
+<nav class="month-nav" id="month-nav">
+  <button class="month-nav-btn" id="btn-prev" onclick="changeMonth(-1)" title="Mês anterior">&#8249;</button>
+  <span class="month-nav-label" id="month-label">—</span>
+  <button class="month-nav-btn" id="btn-next" onclick="changeMonth(1)" title="Próximo mês">&#8250;</button>
+</nav>
+
+<!-- ── Tabs ────────────────────────────────────────── -->
+<div class="tabs" id="tabs">
+  <button class="tab on" id="tab-pregacao" onclick="switchTab('pregacao')"
+    style="--tab-color:var(--sky)">
+    <span class="tab-dot"></span>Pregação
+  </button>
+  <button class="tab" id="tab-musica" onclick="switchTab('musica')"
+    style="--tab-color:var(--violet)">
+    <span class="tab-dot"></span>Min. de Música
+  </button>
+  <button class="tab" id="tab-diaconal" onclick="switchTab('diaconal')"
+    style="--tab-color:var(--copper)">
+    <span class="tab-dot"></span>Junta Diaconal
+  </button>
+</div>
+
+<!-- ── Content ─────────────────────────────────────── -->
+<main class="content">
+  <div class="section on" id="sec-pregacao"></div>
+  <div class="section"    id="sec-musica"></div>
+  <div class="section"    id="sec-diaconal"></div>
+</main>
+
+<!-- ── Footer ──────────────────────────────────────── -->
+<footer class="footer">
+  <strong>IPPenha</strong> · Igreja Presbiteriana de Penha<br>
+  Rua Penha de França · São Paulo · SP<br>
+  <span style="color:var(--tx4)">SIPEN — Sistema Integrado</span>
+</footer>
+
+<script>
+// ── Config ──────────────────────────────────────────────
+const API = "https://erhwryfzpycahgsohhbh.supabase.co/rest/v1";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyaHdyeWZ6cHljYWhnc29oaGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg2MTUsImV4cCI6MjA5MTg0NDYxNX0.T0hp90Bmufj6a3oUPq1vYcLiGx9YjyMaZiE38S0e3_8";
+const HDR = { "apikey": KEY, "Authorization": `Bearer ${KEY}` };
+
+const TIPO = {
+  domingo_manha:      { label:"Domingo Manhã",      ico:"☀", cor:"#4a9cf5" },
+  domingo_noite:      { label:"Domingo Noite",       ico:"🌙", cor:"#8b6fd4" },
+  conexao_com_deus:   { label:"Conexão com Deus",    ico:"🙏", cor:"#2ab5c0" },
+  tarde_da_esperanca: { label:"Tarde da Esperança",  ico:"✝",  cor:"#d4a843" },
+};
+
+const MONTHS = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+                "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const WDAYS  = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+const WDAYS_F = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
+
+// ── State ────────────────────────────────────────────────
+const now = new Date();
+let year  = now.getFullYear();
+let month = now.getMonth(); // 0-based
+let tab   = "pregacao";
+let cache = {};
+let pastoresMap = {};
+
+// ── Theme ────────────────────────────────────────────────
+(function() {
+  const saved = localStorage.getItem("sipen-esc-theme");
+  if (saved) document.documentElement.dataset.theme = saved;
+  else {
+    const sys = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    document.documentElement.dataset.theme = sys;
+  }
+})();
+
+function toggleTheme() {
+  const cur = document.documentElement.dataset.theme;
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  localStorage.setItem("sipen-esc-theme", next);
+}
+
+// ── Helpers ──────────────────────────────────────────────
+function esc(s) {
+  return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function pad2(n) { return String(n).padStart(2, "0"); }
+
+function monthRange(y, m) {
+  const start = `${y}-${pad2(m+1)}-01`;
+  const lastDay = new Date(y, m+1, 0).getDate();
+  const end = `${y}-${pad2(m+1)}-${pad2(lastDay)}`;
+  return { start, end };
+}
+
+function fmtDateHdr(dateStr) {
+  const [y, mo, d] = dateStr.split("-").map(Number);
+  const dt = new Date(y, mo-1, d);
+  return `${pad2(d)} de ${MONTHS[mo-1].toLowerCase()} · ${WDAYS_F[dt.getDay()]}`;
+}
+
+function fmtDay(dateStr) {
+  return parseInt(dateStr.slice(8), 10);
+}
+
+function fmtWday(dateStr) {
+  const [y, mo, d] = dateStr.split("-").map(Number);
+  return WDAYS[new Date(y, mo-1, d).getDay()];
+}
+
+function isoWeekStart(dateStr) {
+  const [y, mo, d] = dateStr.split("-").map(Number);
+  const dt = new Date(y, mo-1, d);
+  const dow = dt.getDay(); // 0=Sun
+  const diff = dt.getDate() - dow;
+  const sun = new Date(y, mo-1, diff);
+  return `${sun.getFullYear()}-${pad2(sun.getMonth()+1)}-${pad2(sun.getDate())}`;
+}
+
+function weekLabel(weekStart) {
+  const [y, mo, d] = weekStart.split("-").map(Number);
+  const sun = new Date(y, mo-1, d);
+  const sat = new Date(y, mo-1, d+6);
+  const fmt = (dt) => `${pad2(dt.getDate())}/${pad2(dt.getMonth()+1)}`;
+  return `Semana de ${fmt(sun)} a ${fmt(sat)}`;
+}
+
+// ── Fetch ────────────────────────────────────────────────
+async function get(path) {
+  const r = await fetch(`${API}${path}`, { headers: HDR });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+async function loadMonth(y, m) {
+  const key = `${y}-${pad2(m+1)}`;
+  if (cache[key]) return cache[key];
+
+  const { start, end } = monthRange(y, m);
+  const q = `&data=gte.${start}&data=lte.${end}`;
+
+  const [pregacao, diaconal, musica] = await Promise.all([
+    get(`/escala_pregacao?select=data,culto_tipo,pastor_id,status,local${q}&order=data.asc,culto_tipo.asc`),
+    get(`/escala_diaconal?select=data,programacao,posto,diacono_nome,ordem${q}&order=data.asc,ordem.asc`),
+    get(`/escala_musica?select=data,culto_tipo,dirigente_nome,equipe,status${q}&order=data.asc,culto_tipo.asc`),
+  ]);
+
+  cache[key] = { pregacao, diaconal, musica };
+  return cache[key];
+}
+
+async function loadPastores() {
+  if (Object.keys(pastoresMap).length) return;
+  const rows = await get("/pastores?select=id,nome_completo,nome_exibicao&ativo=eq.true");
+  rows.forEach(p => { pastoresMap[p.id] = p.nome_exibicao || p.nome_completo; });
+}
+
+// ── Render Pregação ──────────────────────────────────────
+function renderPregacao(rows) {
+  if (!rows.length) return emptyHtml("☀", "Sem pregações cadastradas para este mês.");
+
+  const weeks = {};
+  rows.forEach(r => {
+    const ws = isoWeekStart(r.data);
+    if (!weeks[ws]) weeks[ws] = [];
+    weeks[ws].push(r);
+  });
+
+  let h = "";
+  Object.keys(weeks).sort().forEach(ws => {
+    h += `<div class="week-hdr">${weekLabel(ws)}</div>`;
+    weeks[ws].forEach(r => {
+      const t = TIPO[r.culto_tipo] || { label: r.culto_tipo, ico:"•", cor:"#888" };
+      const nome = pastoresMap[r.pastor_id] || null;
+      const st = statusBadge(r.status);
+      h += `<div class="preg-row">
+        <div class="preg-date-col">
+          <div class="preg-date-day">${fmtDay(r.data)}</div>
+          <div class="preg-date-wday">${fmtWday(r.data)}</div>
+        </div>
+        <div class="preg-divider"></div>
+        <div style="flex:1;min-width:0">
+          <div class="preg-tipo-badge" style="background:${t.cor}1a;color:${t.cor}">${t.ico} ${esc(t.label)}</div>
+          ${nome
+            ? `<div class="preg-nome">${esc(nome)}</div>`
+            : `<div class="preg-none">a definir</div>`}
+        </div>
+        <div class="preg-status" style="background:${st.bg};color:${st.cl}">${st.lbl}</div>
+      </div>`;
+    });
+  });
+  return h;
+}
+
+// ── Render Música ────────────────────────────────────────
+function renderMusica(rows) {
+  if (!rows.length) return emptyHtml("🎵", "Sem escala de música cadastrada para este mês.");
+
+  const byDate = {};
+  rows.forEach(r => {
+    if (!byDate[r.data]) byDate[r.data] = [];
+    byDate[r.data].push(r);
+  });
+
+  let h = "";
+  Object.keys(byDate).sort().forEach(d => {
+    h += `<div class="date-group">
+      <div class="date-group-hdr">${fmtDateHdr(d)}</div>`;
+    byDate[d].forEach(r => {
+      const t = TIPO[r.culto_tipo] || { label: r.culto_tipo, ico:"•", cor:"#888" };
+      const st = statusBadge(r.status);
+      h += `<div class="musica-card">
+        <div class="musica-card-top">
+          <span class="musica-tipo-badge" style="background:${t.cor}1a;color:${t.cor}">${t.ico} ${esc(t.label)}</span>
+          <span class="musica-status" style="background:${st.bg};color:${st.cl}">${st.lbl}</span>
+        </div>
+        ${r.dirigente_nome
+          ? `<div class="musica-dirigente">♪ ${esc(r.dirigente_nome)}</div>`
+          : `<div class="musica-dirigente" style="color:var(--tx3);font-style:italic">Dirigente a definir</div>`}
+        ${r.equipe ? `<div class="musica-equipe">Equipe: ${esc(r.equipe)}</div>` : ""}
+      </div>`;
+    });
+    h += `</div>`;
+  });
+  return h;
+}
+
+// ── Render Diaconal ──────────────────────────────────────
+function renderDiaconal(rows) {
+  if (!rows.length) return emptyHtml("🤝", "Sem escala diaconal cadastrada para este mês.");
+
+  const byDate = {};
+  rows.forEach(r => {
+    if (!byDate[r.data]) byDate[r.data] = {};
+    const bp = byDate[r.data];
+    if (!bp[r.programacao]) bp[r.programacao] = [];
+    bp[r.programacao].push(r);
+  });
+
+  let h = "";
+  Object.keys(byDate).sort().forEach(d => {
+    h += `<div class="diac-date-group">
+      <div class="date-group-hdr">${fmtDateHdr(d)}</div>`;
+    const progs = byDate[d];
+    Object.keys(progs).forEach(prog => {
+      const items = progs[prog];
+      h += `<div class="diac-prog-block">
+        <div class="diac-prog-hdr">
+          <span class="diac-prog-label">${esc(prog)}</span>
+          <span style="margin-left:auto;font-size:10px;color:var(--tx3)">${items.length} diácono${items.length!==1?"s":""}</span>
+        </div>
+        <div class="diac-list">`;
+      items.forEach(item => {
+        h += `<div class="diac-item">
+          <span class="diac-posto">${esc(item.posto)}</span>
+          <span class="diac-nome">${esc(item.diacono_nome)}</span>
+        </div>`;
+      });
+      h += `</div></div>`;
+    });
+    h += `</div>`;
+  });
+  return h;
+}
+
+// ── Status Badge ─────────────────────────────────────────
+function statusBadge(s) {
+  const map = {
+    CONFIRMADA: { cl:"#30d158", bg:"rgba(48,209,88,.12)",  lbl:"Confirmada" },
+    PREENCHIDA: { cl:"#4a9cf5", bg:"rgba(74,156,245,.12)", lbl:"Preenchida" },
+    PENDENTE:   { cl:"#ff9f0a", bg:"rgba(255,159,10,.12)", lbl:"Pendente"   },
+  };
+  return map[s] || map.PENDENTE;
+}
+
+// ── Empty ────────────────────────────────────────────────
+function emptyHtml(ico, msg) {
+  return `<div class="empty">
+    <div class="empty-ico">${ico}</div>
+    <div class="empty-msg">${msg}</div>
+  </div>`;
+}
+
+function loadingHtml() {
+  return `<div class="loading"><div class="spinner"></div><span style="font-size:12px">Carregando...</span></div>`;
+}
+
+// ── UI ───────────────────────────────────────────────────
+function updateMonthNav() {
+  document.getElementById("month-label").textContent = `${MONTHS[month]} ${year}`;
+  const nextYear = month === 11 ? year+1 : year;
+  const nextMonth = month === 11 ? 0 : month+1;
+  const isNext = nextYear > now.getFullYear() || (nextYear === now.getFullYear() && nextMonth > now.getMonth());
+  document.getElementById("btn-next").disabled = isNext;
+}
+
+function switchTab(t) {
+  tab = t;
+  ["pregacao","musica","diaconal"].forEach(id => {
+    document.getElementById(`tab-${id}`).classList.toggle("on", id === t);
+    document.getElementById(`sec-${id}`).classList.toggle("on", id === t);
+  });
+  renderCurrentTab();
+}
+
+async function renderCurrentTab() {
+  const sec = document.getElementById(`sec-${tab}`);
+  sec.innerHTML = loadingHtml();
+  try {
+    if (tab === "pregacao") await loadPastores();
+    const data = await loadMonth(year, month);
+    if      (tab === "pregacao") sec.innerHTML = renderPregacao(data.pregacao);
+    else if (tab === "musica")   sec.innerHTML = renderMusica(data.musica);
+    else if (tab === "diaconal") sec.innerHTML = renderDiaconal(data.diaconal);
+  } catch(e) {
+    sec.innerHTML = `<div class="empty">
+      <div class="empty-ico" style="font-size:28px">⚠</div>
+      <div class="empty-msg">Erro ao carregar dados.<br><span style="font-size:10px;color:var(--tx4)">${esc(e.message)}</span></div>
+    </div>`;
+  }
+}
+
+function changeMonth(dir) {
+  month += dir;
+  if (month < 0)  { month = 11; year--; }
+  if (month > 11) { month = 0;  year++; }
+  updateMonthNav();
+  renderCurrentTab();
+}
+
+// ── Init ─────────────────────────────────────────────────
+updateMonthNav();
+renderCurrentTab();
+</script>
+</body>
+</html>
