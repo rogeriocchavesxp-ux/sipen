@@ -617,7 +617,9 @@ async function _wzD3Carregar(){
       {k:'aniv_semana',l:'Aniversariantes da semana'},
       {k:'aniv_mes',l:'Aniversariantes do mês'},
     ];
-    el.innerHTML=opts.map(o=>_wzD3Item(o.k,o.l)).join('');
+    el.innerHTML=opts.map(o=>_wzD3Item(o.k,o.l)).join('')+
+      '<div id="msg-wz-aniv-preview" style="margin-top:10px"></div>';
+    _wzAnivPreview();
 
   } else if(tipo==='pgs'){
     el.innerHTML='<div style="color:var(--tx3);font-size:12px;padding:8px">Integração com Pequenos Grupos em breve.</div>';
@@ -634,6 +636,53 @@ async function _wzD3Carregar(){
         </div>`).join('')
       :'<div style="color:var(--tx3);font-size:12px;padding:8px">Digite o nome acima para pesquisar.</div>';
   }
+}
+
+async function _wzAnivPreview(){
+  const el=document.getElementById('msg-wz-aniv-preview');
+  if(!el||!_wz) return;
+  const anivSel=_wz.filtros.filter(f=>f.tipo.startsWith('aniv_'));
+  if(!anivSel.length){el.innerHTML='';return;}
+  el.innerHTML='<div style="color:var(--tx3);font-size:11px;padding:6px 0">Carregando aniversariantes...</div>';
+  try{
+    const r=await fetch(`${apiBaseUrl()}/rest/v1/pessoas?select=id,nome,data_nascimento&data_nascimento=not.is.null&order=nome.asc`,{headers:apiHeaders()});
+    const all=await r.json();
+    const hoje=new Date();
+    const mes=hoje.getMonth()+1;
+    const dia=hoje.getDate();
+    const pessoas=all.filter(p=>{
+      if(!p.data_nascimento) return false;
+      const d=new Date(p.data_nascimento);
+      const dm=d.getMonth()+1, dd=d.getDate();
+      return anivSel.some(f=>{
+        if(f.tipo==='aniv_hoje') return dm===mes&&dd===dia;
+        if(f.tipo==='aniv_semana'){
+          for(let i=0;i<7;i++){const t=new Date(hoje);t.setDate(hoje.getDate()+i);if(dm===t.getMonth()+1&&dd===t.getDate())return true;}
+          return false;
+        }
+        return dm===mes; // aniv_mes
+      });
+    });
+    if(!pessoas.length){
+      el.innerHTML='<div style="color:var(--tx3);font-size:11px;padding:6px 0">Nenhum aniversariante no período.</div>';
+      return;
+    }
+    el.innerHTML=`<div style="padding-top:10px;border-top:1px solid var(--bd1)">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);margin-bottom:8px">${pessoas.length} aniversariante${pessoas.length!==1?'s':''}</div>
+      ${pessoas.map(p=>{
+        const d=new Date(p.data_nascimento);
+        const meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+        const data=`${d.getDate()} de ${meses[d.getMonth()]}`;
+        return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd1)">
+          <span style="font-size:15px">🎂</span>
+          <div style="flex:1">
+            <div style="font-size:12px;color:var(--tx1);font-weight:500">${escapeHtml(_fmtNome(p.nome))}</div>
+            <div style="font-size:10px;color:var(--tx3)">${data}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }catch(_){el.innerHTML='';}
 }
 
 function _wzD3Item(tipo,label){
@@ -727,6 +776,7 @@ window.msgWzToggleGrupo=function(tipo,label){
   else _wz.filtros.push({tipo,label});
   const el=document.getElementById('msg-wz-d3-list');
   if(el) _wzD3Carregar();
+  else if(tipo.startsWith('aniv_')) _wzAnivPreview();
   const sum=document.getElementById('msg-wz-d-summary');
   if(sum) sum.innerHTML=_wzDSummary();
   _wzD3EstimarTotal();
