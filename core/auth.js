@@ -497,6 +497,7 @@ async function entrarNoSistema() {
 
   if (typeof window.demAtualizarLabels === "function") window.demAtualizarLabels();
   if (typeof window.aplicarMenuDemandasPorPerfil === "function") window.aplicarMenuDemandasPorPerfil();
+  if (typeof window.sbMinMinBuild === "function") window.sbMinMinBuild();
 
   // Usuário de congregação: ambiente totalmente isolado — nunca passa pelo rotaSalva nem pelo dashboard geral
   if (_isCongregacaoUser()) {

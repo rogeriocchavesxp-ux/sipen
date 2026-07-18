@@ -185,6 +185,12 @@
         _cardMinisterio(m, contagem[m.id] || 0, nomeSup[m.supervisor] || null)
       ).join('');
 
+      if (window._sbMinisterioId) {
+        const pid = window._sbMinisterioId;
+        window._sbMinisterioId = null;
+        setTimeout(() => minMinAbrir(pid), 80);
+      }
+
     } catch (e) {
       console.error('minMinLoad:', e);
       grid.innerHTML = '<div style="color:var(--rose);font-size:13px;padding:32px 0;text-align:center;grid-column:1/-1">Erro ao carregar ministérios.</div>';
@@ -1030,7 +1036,28 @@
     }
   }
 
+  /* ══ SIDEBAR DINÂMICO ════════════════════════════════════════ */
+  const _SB_ICONES = { MUSICA:'♪', JOVENS:'◈', INFANTIL:'◎', INTERCESSAO:'✦', EVANGELISMO:'✝', DIACONIA:'◇', COMUNICACAO:'◉', OUTRO:'◆' };
+
+  async function sbMinMinBuild() {
+    const el = document.getElementById('sb-min-ministerios');
+    if (!el) return;
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/ministerios?select=id,nome,tipo&ativo=eq.true&order=nome.asc`,
+        { headers: _hdr() }
+      );
+      if (!r.ok) return;
+      const lista = await r.json();
+      if (!lista.length) return;
+      el.innerHTML = '<div class="sdiv"></div>' + lista.map(m =>
+        `<div class="si" onclick="window._sbMinisterioId='${m.id}';go('min-min')">${_SB_ICONES[m.tipo]||'◆'} ${m.nome}</div>`
+      ).join('');
+    } catch (e) { /* silencioso — sidebar não quebra */ }
+  }
+
   /* ══ EXPORTS ═════════════════════════════════════════════════ */
+  window.sbMinMinBuild            = sbMinMinBuild;
   window.minMinLoad               = minMinLoad;
   window.minMinAbrir              = minMinAbrir;
   window.minMinVoltarLista        = minMinVoltarLista;
