@@ -156,7 +156,7 @@ Deno.serve(async (req) => {
       const destinatarios = await resolverDestinatarios(sb, filtros || []);
 
       if (!destinatarios.length) {
-        await sb.from("msg_campanhas").update({ status: "falha", total_dest: 0, total_enviados: 0, total_falhas: 0 }).eq("id", camp.id);
+        await sb.from("msg_campanhas").update({ status: "falha", total_dest: 0, total_entregue: 0, total_falha: 0 }).eq("id", camp.id);
         continue;
       }
 
