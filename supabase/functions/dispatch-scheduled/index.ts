@@ -124,11 +124,24 @@ async function resolverDestinatarios(
       });
 
     } else if (f.tipo.startsWith("nomeados_")) {
-      const funcaoLider = f.tipo.slice(9); // supervisor | coordenador
+      const funcaoLider = f.tipo.slice(9); // supervisor | coordenador | lider_area
       const { data } = await sb.from("nomeados").select("pessoa_id,nome").eq("funcao_lider", funcaoLider).is("deleted_at", null).limit(500);
       (data || []).forEach((p: any) => {
         if (p.pessoa_id && p.nome && !map.has(p.pessoa_id)) map.set(p.pessoa_id, p.nome);
       });
+
+    } else if (f.tipo === "todos_ministerios" || f.tipo === "todos_sociedades") {
+      const tipoMin = f.tipo === "todos_sociedades" ? "SOCIEDADE" : null;
+      const qMin = sb.from("ministerios").select("id").eq("ativo", true);
+      const { data: mins } = tipoMin ? await qMin.eq("tipo", tipoMin) : await qMin.neq("tipo", "SOCIEDADE");
+      if (mins?.length) {
+        const ids = mins.map((m: any) => m.id);
+        const { data: mbs } = await sb.from("ministerio_membros").select("pessoa_id,pessoas(nome)").in("ministerio_id", ids).eq("ativo", true).limit(2000);
+        (mbs || []).forEach((m: any) => {
+          const nm = (m.pessoas as any)?.nome;
+          if (m.pessoa_id && nm && !map.has(m.pessoa_id)) map.set(m.pessoa_id, nm);
+        });
+      }
     }
   }
 

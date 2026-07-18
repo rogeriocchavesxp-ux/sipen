@@ -535,10 +535,12 @@ function _wzD1Card(mode,title,desc,active,hasArrow){
 
 function _wzD2(){
   const tipos=[
-    {k:'ministerio',ic:'🎵',t:'Ministério',d:'Louvor, Comunicação, Infantil...'},
-    {k:'congregacao',ic:'⛪',t:'Congregação',d:'Penha, Aprisco, Vila Rosária...'},
-    {k:'funcao',ic:'👔',t:'Função / Ofício',d:'Pastores, Presbíteros, Diáconos...'},
-    {k:'pgs',ic:'🏠',t:'Pequeno Grupo',d:'Grupos de discipulado e comunhão'},
+    {k:'ministerio',  ic:'🎵', t:'Ministério',                d:'Louvor, Comunicação, Infantil...',        drill:true},
+    {k:'congregacao', ic:'⛪', t:'Congregação',               d:'Penha, Aprisco, Vila Rosária...',         drill:true},
+    {k:'funcao',      ic:'👔', t:'Função / Ofício',           d:'Pastores, Presbíteros, Supervisores...',  drill:true},
+    {k:'pgs',         ic:'🏠', t:'Pequeno Grupo',             d:'Grupos de discipulado e comunhão',        drill:true},
+    {k:'todos_ministerios', ic:'🎼', t:'Membros de Ministérios',    d:'Todos os membros de qualquer ministério', drill:false},
+    {k:'todos_sociedades',  ic:'🤝', t:'Membros de Sociedades',     d:'UMP, SAF, UCP e outras sociedades',      drill:false},
   ];
   return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:16px">
     <button onclick="msgWzDBack()" style="background:none;border:none;cursor:pointer;color:var(--tx3);font-size:13px;padding:0">← Voltar</button>
@@ -547,15 +549,19 @@ function _wzD2(){
   </div>
   <div style="font-size:12px;color:var(--tx3);margin-bottom:14px">Escolha o tipo de grupo:</div>
   <div style="display:flex;flex-direction:column;gap:7px">
-    ${tipos.map(t=>`<div onclick="msgWzD2('${t.k}')" style="display:flex;align-items:center;gap:12px;padding:12px 15px;border-radius:10px;
-      border:1px solid var(--bd1);cursor:pointer;transition:.1s"
-      onmouseover="this.style.background='rgba(139,111,212,.05)'"
-      onmouseout="this.style.background='transparent'">
-      <span style="font-size:20px;line-height:1">${t.ic}</span>
-      <div style="flex:1"><div style="font-weight:600;font-size:13px">${t.t}</div>
-        <div style="font-size:11px;color:var(--tx3);margin-top:1px">${t.d}</div></div>
-      <span style="color:var(--tx3);font-size:16px">›</span>
-    </div>`).join('')}
+    ${tipos.map(t=>{
+      const sel=_wz.filtros.some(f=>f.tipo===t.k);
+      return `<div onclick="msgWzD2('${t.k}')" style="display:flex;align-items:center;gap:12px;padding:12px 15px;border-radius:10px;
+        border:1px solid ${sel?'var(--violet)':'var(--bd1)'};
+        background:${sel?'rgba(139,111,212,.06)':'transparent'};cursor:pointer;transition:.1s"
+        onmouseover="this.style.background='rgba(139,111,212,.05)'"
+        onmouseout="this.style.background='${sel?'rgba(139,111,212,.06)':'transparent'}'">
+        <span style="font-size:20px;line-height:1">${t.ic}</span>
+        <div style="flex:1"><div style="font-weight:600;font-size:13px">${t.t}${sel?' ✓':''}</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:1px">${t.d}</div></div>
+        ${t.drill?'<span style="color:var(--tx3);font-size:16px">›</span>':''}
+      </div>`;
+    }).join('')}
   </div>`;
 }
 
@@ -603,7 +609,8 @@ async function _wzD3Carregar(){
     const funcoes=[
       {k:'oficial_pastor',l:'Pastores'},{k:'oficial_presbitero',l:'Presbíteros'},
       {k:'oficial_diacono',l:'Diáconos'},{k:'nomeados_supervisor',l:'Supervisores'},
-      {k:'nomeados_coordenador',l:'Coordenadores'},{k:'seminaristas',l:'Seminaristas'},
+      {k:'nomeados_coordenador',l:'Coordenadores'},{k:'nomeados_lider_area',l:'Líderes de Área'},
+      {k:'seminaristas',l:'Seminaristas'},
     ];
     const rows=busca?funcoes.filter(f=>f.l.toLowerCase().includes(busca)):funcoes;
     el.innerHTML=rows.map(f=>_wzD3Item(f.k,f.l)).join('');
@@ -748,6 +755,11 @@ window.msgWzD1=function(mode){
 
 window.msgWzD2=function(tipo){
   if(!_wz) return;
+  const LABELS={'todos_ministerios':'Membros de Ministérios','todos_sociedades':'Membros de Sociedades Internas'};
+  if(LABELS[tipo]){
+    msgWzToggleGrupo(tipo, LABELS[tipo]);
+    return;
+  }
   _wz._d.nivel=3;
   _wz._d.tipo=tipo;
   _wz._d.busca='';
@@ -1133,11 +1145,27 @@ async function _resolverDests(wz){
       }catch(_){}
 
     } else if(f.tipo.startsWith('nomeados_')){
-      const funcaoLider = f.tipo.slice(9); // supervisor | coordenador
+      const funcaoLider = f.tipo.slice(9); // supervisor | coordenador | lider_area
       try{
         const r = await fetch(`${apiBaseUrl()}/rest/v1/nomeados?funcao_lider=eq.${funcaoLider}&deleted_at=is.null&select=pessoa_id,nome&limit=500`,{headers:apiHeaders()});
         const rows2 = await r.json();
         if(Array.isArray(rows2)) rows2.forEach(p=>{ if(p.pessoa_id&&!map.has(p.pessoa_id)) map.set(p.pessoa_id, p.nome); });
+      }catch(_){}
+
+    } else if(f.tipo === 'todos_ministerios' || f.tipo === 'todos_sociedades'){
+      const tipoMin = f.tipo === 'todos_sociedades' ? 'SOCIEDADE' : null;
+      try{
+        // Busca IDs dos ministérios pelo tipo
+        const qMin = tipoMin
+          ? `${apiBaseUrl()}/rest/v1/ministerios?tipo=eq.${tipoMin}&ativo=eq.true&select=id`
+          : `${apiBaseUrl()}/rest/v1/ministerios?tipo=neq.SOCIEDADE&ativo=eq.true&select=id`;
+        const rMin = await fetch(qMin,{headers:apiHeaders()});
+        const mins = await rMin.json();
+        if(!Array.isArray(mins)||!mins.length) continue;
+        const ids = mins.map(m=>m.id).join(',');
+        const rMb = await fetch(`${apiBaseUrl()}/rest/v1/ministerio_membros?ministerio_id=in.(${ids})&ativo=eq.true&select=pessoa_id,pessoas(nome)&limit=2000`,{headers:apiHeaders()});
+        const mbs = await rMb.json();
+        if(Array.isArray(mbs)) mbs.forEach(m=>{ const nm=m.pessoas?.nome; if(m.pessoa_id&&nm&&!map.has(m.pessoa_id)) map.set(m.pessoa_id, nm); });
       }catch(_){}
     }
     // demais filtros (seminaristas etc): não resolvidos automaticamente
