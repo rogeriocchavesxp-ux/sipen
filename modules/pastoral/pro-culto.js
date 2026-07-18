@@ -154,6 +154,8 @@
   let _expandedRows    = {};
   let _newRowState     = {};
   let _dragSrcId       = null;
+  let _escalaMusica    = null;
+  let _escalaDiaconal  = [];
 
   /* ── Helpers ─────────────────────────────────────────────── */
   const _sb  = () => (typeof getSupabase === "function" ? getSupabase() : null);
@@ -329,6 +331,36 @@
       .eq("culto_id", cultoId)
       .order("ordem");
     _itens = data || [];
+  }
+
+  async function _loadEscalaMusica() {
+    _escalaMusica = null;
+    if (!_culto?.data_inicio) return;
+    const date     = _culto.data_inicio.slice(0, 10);
+    const tipoNome = _culto.culto_tipos?.nome || "";
+    const slugs    = ["domingo_manha", "domingo_noite", "conexao_com_deus", "tarde_da_esperanca"];
+    const cultoTipo = slugs.find(s => _matchEscalaTipo(tipoNome, s));
+    if (!cultoTipo) return;
+    const { data } = await _sb()
+      .from("escala_musica")
+      .select("*")
+      .eq("data", date)
+      .eq("culto_tipo", cultoTipo)
+      .maybeSingle();
+    _escalaMusica = data || null;
+  }
+
+  async function _loadEscalaDiaconal() {
+    _escalaDiaconal = [];
+    if (!_culto?.data_inicio) return;
+    const date     = _culto.data_inicio.slice(0, 10);
+    const { data } = await _sb()
+      .from("v_escala_diaconal")
+      .select("*")
+      .eq("data", date)
+      .order("programacao")
+      .order("posto");
+    _escalaDiaconal = data || [];
   }
 
   async function _loadChecklists(cultoId) {
@@ -737,6 +769,8 @@
       _loadItens(c.id),
       _loadChecklists(c.id),
       _loadPosCulto(c.id),
+      _loadEscalaMusica(),
+      _loadEscalaDiaconal(),
     ]);
 
     const tipo    = c.culto_tipos;
@@ -970,9 +1004,62 @@
   <button onclick="pcCopiarLiturgiaAnterior()" style="background:none;border:1px solid var(--bd2);border-radius:6px;padding:5px 12px;font-size:11px;color:var(--tx3);cursor:pointer">Copiar liturgia anterior</button>
 </div>
 
-${_blocos.map(b => _renderBlocoSection(b, byBloco[b.id] || [])).join('')}`;
+${_renderEquipeMusica()}
+${_blocos.map(b => _renderBlocoSection(b, byBloco[b.id] || [])).join('')}
+${_renderDiaconosDeServico()}`;
 
     if (page) page.scrollTop = scrollY;
+  }
+
+  function _renderEquipeMusica() {
+    const m = _escalaMusica;
+    if (!m || (!m.dirigente_nome && !m.equipe)) return "";
+    const ST = {
+      PENDENTE:   { cl: "var(--amber)", lbl: "Pendente"   },
+      PREENCHIDA: { cl: "var(--sky)",   lbl: "Preenchida" },
+      CONFIRMADA: { cl: "var(--gr)",    lbl: "Confirmada" },
+    };
+    const st = ST[m.status] || ST.PENDENTE;
+    return `
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 14px;margin-bottom:14px;background:rgba(139,111,212,.07);border:1px solid rgba(139,111,212,.2);border-radius:8px">
+  <span style="font-size:9px;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;flex-shrink:0">Min. de Música</span>
+  ${m.dirigente_nome ? `<span style="font-size:12.5px;font-weight:600;color:var(--tx1)">♪ ${_esc(m.dirigente_nome)}</span>` : ""}
+  ${m.equipe ? `<span style="font-size:11.5px;color:var(--tx2)">· ${_esc(m.equipe)}</span>` : ""}
+  ${m.obs ? `<span style="font-size:10.5px;color:var(--tx3);font-style:italic">${_esc(m.obs)}</span>` : ""}
+  <span style="font-size:9px;padding:2px 8px;border-radius:10px;background:${st.cl}1a;color:${st.cl};font-weight:700;margin-left:auto;flex-shrink:0">${st.lbl}</span>
+</div>`;
+  }
+
+  function _renderDiaconosDeServico() {
+    if (!_escalaDiaconal.length) return "";
+    const byProg = {};
+    _escalaDiaconal.forEach(d => {
+      if (!byProg[d.programacao]) byProg[d.programacao] = [];
+      byProg[d.programacao].push(d);
+    });
+    const progs = Object.keys(byProg);
+    return `
+<div style="margin-top:20px;border:1px solid rgba(184,122,86,.25);border-radius:10px;overflow:hidden">
+  <div onclick="const p=this.nextElementSibling;p.style.display=p.style.display==='none'?'':'none'"
+    style="padding:10px 14px;background:rgba(184,122,86,.06);display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none">
+    <div style="width:3px;height:14px;background:#B87A56;border-radius:2px;flex-shrink:0"></div>
+    <span style="font-size:10.5px;font-weight:700;color:#B87A56;text-transform:uppercase;letter-spacing:.07em">Junta Diaconal — Diáconos de Serviço</span>
+    <span style="font-size:10.5px;color:var(--tx3)">${_escalaDiaconal.length} diácono${_escalaDiaconal.length!==1?"s":""}${progs.length>1?` · ${progs.length} programações`:""}</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--tx4)">⌄</span>
+  </div>
+  <div style="padding:12px 14px;background:var(--bg-card);display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+    ${progs.map(prog => `
+    <div>
+      <div style="font-size:9px;font-weight:700;color:var(--tx4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--bd1)">${_esc(prog)}</div>
+      ${byProg[prog].map(d => `
+      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:5px">
+        <span style="font-size:12px;font-weight:600;color:var(--tx1)">${_esc(d.diacono||"—")}</span>
+        ${d.posto ? `<span style="font-size:10px;color:var(--tx3)">${_esc(d.posto)}</span>` : ""}
+        ${d.horario_chegada ? `<span style="font-size:9.5px;color:#B87A56;margin-left:auto">${d.horario_chegada.slice(0,5)}</span>` : ""}
+      </div>`).join("")}
+    </div>`).join("")}
+  </div>
+</div>`;
   }
 
   function _renderBlocoSection(b, itens) {
