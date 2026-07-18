@@ -191,6 +191,66 @@
       </div>
     </div>
 
+    <!-- ── DEPARTAMENTOS ─────────────────────────────── -->
+    <div class="sb-section" id="sbs-dep">
+      <div class="sb-section-hdr" onclick="sbsToggle('dep')">
+        <span class="sb-section-chv">▼</span>
+        Departamentos
+      </div>
+      <div class="sb-section-body">
+
+        <!-- Ministérios -->
+        <div class="mwrap" id="mw-min" data-modulo="CONSELHO">
+          <div class="mhdr" onclick="tog('min')">
+            <div class="micon" style="background:rgba(138,107,193,0.14);border-color:rgba(138,107,193,0.25);color:var(--violet)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+            <span class="mname">Ministérios</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-min">
+            <div class="si" onclick="go('min-min')">Grupos Ministeriais</div>
+            <div class="si" onclick="go('min-vol')">Voluntários</div>
+          </div>
+        </div>
+
+        <!-- Sociedades Internas -->
+        <div class="mwrap" id="mw-soc" data-modulo="CONSELHO">
+          <div class="mhdr" onclick="tog('soc')">
+            <div class="micon" style="background:rgba(138,107,193,0.14);border-color:rgba(138,107,193,0.25);color:var(--violet)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg></div>
+            <span class="mname">Sociedades Internas</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-soc">
+            <div class="si" onclick="go('min-soc')">UPH, SAF, UMP, UPA, UCP</div>
+          </div>
+        </div>
+
+        <!-- Depto. Administrativo -->
+        <div class="mwrap" id="mw-dep-adm" data-modulo="CONSELHO">
+          <div class="mhdr" onclick="tog('dep-adm')">
+            <div class="micon" style="background:rgba(138,107,193,0.14);border-color:rgba(138,107,193,0.25);color:var(--violet)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+            <span class="mname">Depto. Administrativo</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-dep-adm">
+            <div class="si" onclick="go('min-adm')">Visão Geral</div>
+          </div>
+        </div>
+
+        <!-- Projetos -->
+        <div class="mwrap" id="mw-proj" data-modulo="PROJETOS">
+          <div class="mhdr" onclick="tog('proj')">
+            <div class="micon" style="background:rgba(138,107,193,0.14);border-color:rgba(138,107,193,0.25);color:var(--violet)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="6" height="14" x="2" y="5" rx="2"/><rect width="6" height="10" x="9" y="9" rx="2"/><rect width="6" height="6" x="16" y="13" rx="2"/></svg></div>
+            <span class="mname">Projetos</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-proj">
+            <div class="si" onclick="go('proj-lista')">Projetos & Acompanhamento</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- ── OPERAÇÃO ──────────────────────────────────── -->
     <div class="sb-section" id="sbs-op">
       <div class="sb-section-hdr" onclick="sbsToggle('op')">
