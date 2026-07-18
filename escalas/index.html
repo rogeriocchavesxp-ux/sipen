@@ -406,7 +406,7 @@ async function loadMonth(y, m) {
   const q = `&data=gte.${start}&data=lte.${end}`;
 
   const [pregacao, diaconal, musica] = await Promise.all([
-    get(`/escala_pregacao?select=data,culto_tipo,pastor_id,status,local${q}&order=data.asc,culto_tipo.asc`),
+    get(`/escala_pregacao?select=data,culto_tipo,pastor_id,oficial_id,status,local${q}&order=data.asc,culto_tipo.asc`),
     get(`/escala_diaconal?select=data,programacao,posto,diacono_nome,ordem${q}&order=data.asc,ordem.asc`),
     get(`/escala_musica?select=data,culto_tipo,dirigente_nome,equipe,status${q}&order=data.asc,culto_tipo.asc`),
   ]);
@@ -417,8 +417,13 @@ async function loadMonth(y, m) {
 
 async function loadPastores() {
   if (Object.keys(pastoresMap).length) return;
-  const rows = await get("/pastores?select=id,nome_completo,nome_exibicao&ativo=eq.true");
-  rows.forEach(p => { pastoresMap[p.id] = p.nome_exibicao || p.nome_completo; });
+  // Fonte primária: oficiais (cargo=pastor), via view criada em oficiais-escala-pregacao-link.sql
+  const [oficiais, legado] = await Promise.all([
+    get("/vw_pastores_escala?select=id,nome_exibicao&status=eq.ativo"),
+    get("/pastores?select=id,nome_completo,nome_exibicao&ativo=eq.true"),
+  ]);
+  legado.forEach(p => { pastoresMap[p.id] = p.nome_exibicao || p.nome_completo; });
+  oficiais.forEach(o => { pastoresMap[o.id] = o.nome_exibicao; });
 }
 
 // ── Render Pregação ──────────────────────────────────────
@@ -437,7 +442,7 @@ function renderPregacao(rows) {
     h += `<div class="week-hdr">${weekLabel(ws)}</div>`;
     weeks[ws].forEach(r => {
       const t = TIPO[r.culto_tipo] || { label: r.culto_tipo, ico:"•", cor:"#888" };
-      const nome = pastoresMap[r.pastor_id] || null;
+      const nome = pastoresMap[r.oficial_id] || pastoresMap[r.pastor_id] || null;
       const st = statusBadge(r.status);
       h += `<div class="preg-row">
         <div class="preg-date-col">
