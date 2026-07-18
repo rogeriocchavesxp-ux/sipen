@@ -310,7 +310,7 @@ function sbsToggle(id){
 }
 
 function sbsInit(){
-  ["gov","op","adm","portal"].forEach(id=>{
+  ["igreja","gov","op","adm","portal"].forEach(id=>{
     const sec=document.getElementById("sbs-"+id);
     if(!sec)return;
     try{if(sessionStorage.getItem("sbs-"+id)==="1")sec.classList.add("collapsed");}catch(_){}
