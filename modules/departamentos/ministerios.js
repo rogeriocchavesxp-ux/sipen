@@ -129,6 +129,9 @@
     document.getElementById('min-min-painel-lista').style.display   = '';
     _ministerioAtual = null;
 
+    const heroTtl = document.querySelector('#v-min-min .hero-ttl');
+    if (heroTtl) heroTtl.textContent = 'Ministérios';
+
     const heroAct = document.getElementById('min-min-hero-act');
     if (heroAct) heroAct.style.display = _isAdminGeral() ? '' : 'none';
 
