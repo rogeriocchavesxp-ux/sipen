@@ -388,8 +388,8 @@ async function renderDashboardCongregacao(cong){
             <button class="tbt" style="font-size:10px;padding:3px 8px" onclick="irParaSecaoCong(6)">Ver lançamentos</button>
           </div>
           <div class="kpis c2" style="margin:0">
-            <div class="kpi" style="padding:10px"><div class="kn">Receita Média/Mês</div><div class="kv" style="font-size:20px">R$ ${f.receita_media_mensal.toLocaleString("pt-BR")}</div></div>
-            <div class="kpi" style="padding:10px"><div class="kn">Saldo Atual</div><div class="kv" style="font-size:20px;color:${f.saldo_atual>=0?"var(--gr)":"var(--rose)"}">R$ ${f.saldo_atual.toLocaleString("pt-BR")}</div></div>
+            <div class="kpi" style="padding:10px"><div class="kn">Receita Média/Mês</div><div class="kv">R$ ${f.receita_media_mensal.toLocaleString("pt-BR")}</div></div>
+            <div class="kpi" style="padding:10px"><div class="kn">Saldo Atual</div><div class="kv" style="color:${f.saldo_atual>=0?"var(--gr)":"var(--rose)"}">R$ ${f.saldo_atual.toLocaleString("pt-BR")}</div></div>
           </div>
         </div>
         <div class="card">
@@ -425,11 +425,11 @@ async function renderDashboardCongregacao(cong){
       <div style="display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd1)">
         <div style="width:44px;text-align:center;flex-shrink:0">
           <div style="font-size:12px;font-weight:700;color:var(--gr)">${fmtData(item.data).split(" ").slice(0,2).join(" ")}</div>
-          ${item.hora?`<div style="font-size:9px;color:var(--tx3)">${item.hora.slice(0,5)}</div>`:""}
+          ${item.hora?`<div style="font-size:10.5px;color:var(--tx3)">${item.hora.slice(0,5)}</div>`:""}
         </div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${escapeHtml(item.titulo)}</div>
-          <div style="font-size:10px;color:var(--tx3)">${escapeHtml(item.tipo||"")}</div>
+          <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${escapeHtml(item.titulo)}</div>
+          <div style="font-size:11px;color:var(--tx3)">${escapeHtml(item.tipo||"")}</div>
         </div>
       </div>`).join("");
   }).catch(()=>{
@@ -810,15 +810,15 @@ async function renderTab_membresia(cong, el){
       const nome=mb.nome||`Membro #${mb.pessoa_id?.slice(0,6)}`;
       const sub=[mb.email,mb.telefone].filter(Boolean).join(" · ");
       return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd1)">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gr);flex-shrink:0">${iniciais(nome)}</div>
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:var(--gr);flex-shrink:0">${iniciais(nome)}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:11.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(nome)}</div>
-          ${sub?`<div style="font-size:10px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(sub)}</div>`:""}
-          ${mb.funcao?`<div style="font-size:10px;color:var(--tx3)">${escapeHtml(mb.funcao)}</div>`:""}
+          <div style="font-size:12.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(nome)}</div>
+          ${sub?`<div style="font-size:11px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(sub)}</div>`:""}
+          ${mb.funcao?`<div style="font-size:11px;color:var(--tx3)">${escapeHtml(mb.funcao)}</div>`:""}
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
           ${statusBadge(mb.status||"ativo")}
-          ${podeEd?`<button class="tbt" style="font-size:9px;padding:2px 6px;color:var(--rose)" onclick="desvincularMembroCong('${mb.id}','${cong.id}')">Remover</button>`:""}
+          ${podeEd?`<button class="tbt" style="font-size:10px;padding:2px 6px;color:var(--rose)" onclick="desvincularMembroCong('${mb.id}','${cong.id}')">Remover</button>`:""}
         </div>
       </div>`;
     }).join("");
@@ -865,25 +865,25 @@ function renderTab_cultos(cong, el){
         <div style="padding:9px 0;border-bottom:1px solid var(--bd1)">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
             <div style="flex:1;min-width:0">
-              <div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${fmtData(cu.data)} — ${escapeHtml(cu.tipo)}</div>
-              <div style="font-size:10px;color:var(--tx3);margin-top:1px">Pregador: <b style="color:var(--tx2)">${escapeHtml(cu.pregador||"—")}</b></div>
-              <div style="font-size:10px;color:var(--tx3);margin-top:2px">
+              <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${fmtData(cu.data)} — ${escapeHtml(cu.tipo)}</div>
+              <div style="font-size:11px;color:var(--tx3);margin-top:2px">Pregador: <b style="color:var(--tx2)">${escapeHtml(cu.pregador||"—")}</b></div>
+              <div style="font-size:11px;color:var(--tx3);margin-top:2px">
                 Adultos: <b style="color:var(--tx1)">${cu.adultos||0}</b>&nbsp;
                 Crianças: <b style="color:var(--sky)">${cu.criancas||0}</b>&nbsp;
                 Total: <b style="color:var(--gr)">${total}</b>
                 ${cu.visitantes>0?`&nbsp; Visitantes: <b style="color:var(--amber)">${cu.visitantes}</b>`:""}
                 ${cu.decisoes>0?`&nbsp; Decisões: <b style="color:var(--gr)">${cu.decisoes}</b>`:""}
               </div>
-              ${cu.obs?`<div style="font-size:10px;color:var(--tx3);font-style:italic;margin-top:2px">${escapeHtml(cu.obs)}</div>`:""}
+              ${cu.obs?`<div style="font-size:11px;color:var(--tx3);font-style:italic;margin-top:2px">${escapeHtml(cu.obs)}</div>`:""}
             </div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
               <div style="text-align:right">
-                <div style="font-size:14px;font-weight:700;color:var(--gr)">${total}</div>
-                <div style="font-size:9.5px;color:var(--tx3)">presentes</div>
+                <div style="font-size:13px;font-weight:700;color:var(--gr)">${total}</div>
+                <div style="font-size:10.5px;color:var(--tx3)">presentes</div>
               </div>
               ${podeEd?`<div style="display:flex;gap:4px">
-                <button class="tbt" style="font-size:9px;padding:2px 7px" onclick="abrirModalEditarCulto('${cong.id}',${idx})">Editar</button>
-                <button class="tbt" style="font-size:9px;padding:2px 7px;color:var(--rose)" onclick="excluirCulto('${cong.id}',${idx})">Excluir</button>
+                <button class="tbt" style="font-size:10px;padding:2px 7px" onclick="abrirModalEditarCulto('${cong.id}',${idx})">Editar</button>
+                <button class="tbt" style="font-size:10px;padding:2px 7px;color:var(--rose)" onclick="excluirCulto('${cong.id}',${idx})">Excluir</button>
               </div>`:""}
             </div>
           </div>
@@ -902,12 +902,12 @@ function renderTab_cultos(cong, el){
         <div style="margin-top:14px">
           <div class="ctit" style="margin-bottom:8px">Indicadores</div>
           <div class="kpis c2" style="margin:0 0 8px">
-            <div class="kpi" style="padding:8px"><div class="kn">Média Adultos</div><div class="kv" style="font-size:20px">${freqAdultos}</div></div>
-            <div class="kpi" style="padding:8px"><div class="kn">Média Crianças</div><div class="kv" style="font-size:20px;color:var(--sky)">${freqCriancas}</div></div>
+            <div class="kpi" style="padding:8px"><div class="kn">Média Adultos</div><div class="kv">${freqAdultos}</div></div>
+            <div class="kpi" style="padding:8px"><div class="kn">Média Crianças</div><div class="kv" style="color:var(--sky)">${freqCriancas}</div></div>
           </div>
           <div class="kpis c2" style="margin:0">
-            <div class="kpi" style="padding:8px"><div class="kn">Média Total</div><div class="kv" style="font-size:20px;color:var(--gr)">${freqTotal}</div></div>
-            <div class="kpi" style="padding:8px"><div class="kn">Presentes no Mês</div><div class="kv" style="font-size:20px">${totalMes}</div></div>
+            <div class="kpi" style="padding:8px"><div class="kn">Média Total</div><div class="kv" style="color:var(--gr)">${freqTotal}</div></div>
+            <div class="kpi" style="padding:8px"><div class="kn">Presentes no Mês</div><div class="kv">${totalMes}</div></div>
           </div>
         </div>
         <div style="margin-top:14px">
@@ -939,15 +939,15 @@ function renderTab_pgs(cong, el){
       ${(pg.grupos||[]).length===0?`<div style="color:var(--tx3);font-size:11px">Nenhum grupo cadastrado</div>`:
         (pg.grupos||[]).map(g=>`
           <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bd1)">
-            <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--gr);flex-shrink:0">${iniciais(g.lider)}</div>
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:var(--gr);flex-shrink:0">${iniciais(g.lider)}</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:12px;font-weight:700;color:var(--tx1)">${g.nome}</div>
-              <div style="font-size:10.5px;color:var(--tx3)">Líder: ${g.lider} &nbsp;|&nbsp; ${g.dia} ${g.horario}</div>
-              <div style="font-size:10px;color:var(--tx3)">📍 ${g.local}</div>
+              <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${g.nome}</div>
+              <div style="font-size:11px;color:var(--tx3)">Líder: ${g.lider} &nbsp;|&nbsp; ${g.dia} ${g.horario}</div>
+              <div style="font-size:11px;color:var(--tx3)">📍 ${g.local}</div>
             </div>
             <div style="text-align:right;flex-shrink:0">
               <div style="font-size:13px;font-weight:700;color:var(--gr)">${g.membros}</div>
-              <div style="font-size:9.5px;color:var(--tx3);margin-bottom:4px">membros</div>
+              <div style="font-size:10.5px;color:var(--tx3);margin-bottom:4px">membros</div>
               ${statusBadge(g.status)}
             </div>
           </div>`).join("")}
@@ -970,14 +970,14 @@ function renderTab_ministerios(cong, el){
       ${lista.length===0?`<div style="color:var(--tx3);font-size:11px">Nenhum ministério cadastrado</div>`:
         lista.map(m=>`
           <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bd1)">
-            <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--acc);flex-shrink:0">${iniciais(m.lider)}</div>
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:var(--acc);flex-shrink:0">${iniciais(m.lider)}</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:12px;font-weight:700;color:var(--tx1)">${escapeHtml(m.nome)}</div>
-              <div style="font-size:10.5px;color:var(--tx3)">Líder: ${escapeHtml(m.lider)}</div>
+              <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${escapeHtml(m.nome)}</div>
+              <div style="font-size:11px;color:var(--tx3)">Líder: ${escapeHtml(m.lider)}</div>
             </div>
             <div style="text-align:right;flex-shrink:0">
               <div style="font-size:13px;font-weight:700;color:var(--acc)">${m.membros}</div>
-              <div style="font-size:9.5px;color:var(--tx3);margin-bottom:4px">membros</div>
+              <div style="font-size:10.5px;color:var(--tx3);margin-bottom:4px">membros</div>
               ${statusBadge(m.status)}
             </div>
           </div>`).join("")}
@@ -989,21 +989,21 @@ function renderTab_ministerios(cong, el){
 function _leRow(label, valor){
   if(!valor) return "";
   return `<div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd1)">
-    <div style="font-size:11px;color:var(--tx3);width:110px;flex-shrink:0">${label}</div>
-    <div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${escapeHtml(valor)}</div>
+    <div style="font-size:11.5px;color:var(--tx3);width:110px;flex-shrink:0">${label}</div>
+    <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${escapeHtml(valor)}</div>
   </div>`;
 }
 function _leList(label, arr){
   if(!arr||arr.length===0) return "";
   return `<div style="padding:8px 0;border-bottom:1px solid var(--bd1)">
-    <div style="font-size:11px;color:var(--tx3);margin-bottom:5px">${label}</div>
-    ${arr.map(n=>`<div style="font-size:11.5px;color:var(--tx1);padding:2px 0">• ${escapeHtml(n)}</div>`).join("")}
+    <div style="font-size:11.5px;color:var(--tx3);margin-bottom:5px">${label}</div>
+    ${arr.map(n=>`<div style="font-size:12px;color:var(--tx1);padding:2px 0">• ${escapeHtml(n)}</div>`).join("")}
   </div>`;
 }
 function _leMinisterio(min){
-  const membros=(min.membros||[]).map(m=>`<span style="font-size:10.5px;color:var(--tx2)">${escapeHtml(m.cargo)}: <b style="color:var(--tx1)">${escapeHtml(m.nome)}</b></span>`).join(" &nbsp;|&nbsp; ");
+  const membros=(min.membros||[]).map(m=>`<span style="font-size:11px;color:var(--tx2)">${escapeHtml(m.cargo)}: <b style="color:var(--tx1)">${escapeHtml(m.nome)}</b></span>`).join(" &nbsp;|&nbsp; ");
   return `<div style="padding:8px 0;border-bottom:1px solid var(--bd1)">
-    <div style="font-size:12px;font-weight:700;color:var(--tx1);margin-bottom:4px">${escapeHtml(min.nome)}</div>
+    <div style="font-size:12.5px;font-weight:600;color:var(--tx1);margin-bottom:4px">${escapeHtml(min.nome)}</div>
     <div>${membros||"<span style='font-size:11px;color:var(--tx3)'>Sem membros cadastrados</span>"}</div>
   </div>`;
 }
@@ -1054,10 +1054,10 @@ function renderTab_desafios(cong, el){
         lista.map(d=>`
           <div style="padding:10px 0;border-bottom:1px solid var(--bd1)">
             <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:4px">
-              <div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--tx1)">${escapeHtml(d.titulo)}</div></div>
+              <div style="flex:1"><div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${escapeHtml(d.titulo)}</div></div>
               <div style="display:flex;gap:5px;flex-shrink:0">${prioBadge(d.prioridade)}${statusBadge(d.status)}</div>
             </div>
-            <div style="font-size:10.5px;color:var(--tx3)">${escapeHtml(d.descricao)}</div>
+            <div style="font-size:11px;color:var(--tx3)">${escapeHtml(d.descricao)}</div>
           </div>`).join("")}
     </div>
   `;
@@ -1084,12 +1084,12 @@ function renderTab_planejamento(cong, el){
             <div style="padding:8px 0;border-bottom:1px solid var(--bd1)">
               <div style="display:flex;align-items:flex-start;gap:10px">
                 <div style="width:46px;text-align:center;flex-shrink:0">
-                  <div style="font-size:11px;font-weight:700;color:var(--gr)">${fmtData(e.data).split(" ").slice(0,2).join(" ")}</div>
-                  <div style="font-size:9px;color:var(--tx3)">${fmtData(e.data).split(" ")[2]||""}</div>
+                  <div style="font-size:11.5px;font-weight:700;color:var(--gr)">${fmtData(e.data).split(" ").slice(0,2).join(" ")}</div>
+                  <div style="font-size:10.5px;color:var(--tx3)">${fmtData(e.data).split(" ")[2]||""}</div>
                 </div>
                 <div>
-                  <div style="font-size:11.5px;font-weight:700;color:var(--tx1)">${e.titulo}</div>
-                  <div style="font-size:10px;color:var(--tx3)">${e.tipo}${e.descricao?" — "+e.descricao:""}</div>
+                  <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${e.titulo}</div>
+                  <div style="font-size:11px;color:var(--tx3)">${e.tipo}${e.descricao?" — "+e.descricao:""}</div>
                 </div>
               </div>
             </div>`).join("")}
@@ -1097,7 +1097,7 @@ function renderTab_planejamento(cong, el){
       <div class="card">
         <div class="ctit">Ações Previstas</div>
         ${acoes.length===0?`<div style="color:var(--tx3);font-size:11px">Nenhuma ação registrada</div>`:
-          acoes.map(a=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--bd1);font-size:11.5px;color:var(--tx1)"><span style="color:var(--gr);flex-shrink:0">→</span>${a}</div>`).join("")}
+          acoes.map(a=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--bd1);font-size:12px;color:var(--tx1)"><span style="color:var(--gr);flex-shrink:0">→</span>${a}</div>`).join("")}
       </div>
     </div>
   `;
@@ -1879,14 +1879,14 @@ async function renderTab_agenda(cong, el){
     <div style="display:flex;align-items:flex-start;gap:12px;padding:9px 0;border-bottom:1px solid var(--bd1);${passado?"opacity:.55":""}">
       <div style="width:48px;text-align:center;flex-shrink:0">
         <div style="font-size:12px;font-weight:700;color:var(--gr)">${fmtData(item.data).split(" ").slice(0,2).join(" ")}</div>
-        <div style="font-size:9px;color:var(--tx3)">${fmtData(item.data).split(" ")[2]||""}</div>
-        ${item.hora?`<div style="font-size:10px;color:var(--tx3)">${item.hora.slice(0,5)}</div>`:""}
+        <div style="font-size:10.5px;color:var(--tx3)">${fmtData(item.data).split(" ")[2]||""}</div>
+        ${item.hora?`<div style="font-size:11px;color:var(--tx3)">${item.hora.slice(0,5)}</div>`:""}
       </div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:11.5px;font-weight:700;color:var(--tx1)">${escapeHtml(item.titulo)}</div>
-        <div style="font-size:10px;color:var(--tx3)">${escapeHtml(item.tipo||"")}${item.descricao?" — "+escapeHtml(item.descricao.slice(0,80)):""}</div>
+        <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${escapeHtml(item.titulo)}</div>
+        <div style="font-size:11px;color:var(--tx3)">${escapeHtml(item.tipo||"")}${item.descricao?" — "+escapeHtml(item.descricao.slice(0,80)):""}</div>
       </div>
-      ${podeEd&&!passado?`<button class="tbt" style="font-size:9px;padding:3px 7px;color:var(--rose)" onclick="excluirAgendaCong('${item.id}','${cong.id}')">Remover</button>`:""}
+      ${podeEd&&!passado?`<button class="tbt" style="font-size:10px;padding:3px 7px;color:var(--rose)" onclick="excluirAgendaCong('${item.id}','${cong.id}')">Remover</button>`:""}
     </div>`;
   listaEl.innerHTML=(proximos.length===0&&passados.length===0)
     ?`<div style="color:var(--tx3);font-size:11px;padding:8px 0">Nenhum evento na agenda</div>`
@@ -1962,15 +1962,15 @@ function renderTab_departamentos(cong, el){
       ${lista.length===0?`<div style="color:var(--tx3);font-size:11px">Nenhum departamento cadastrado</div>`:
         lista.map((d,i)=>`
           <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--bd1)">
-            <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--acc);flex-shrink:0">${iniciais(d.lider||d.nome)}</div>
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:var(--acc);flex-shrink:0">${iniciais(d.lider||d.nome)}</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:12px;font-weight:700;color:var(--tx1)">${escapeHtml(d.nome)}</div>
-              ${d.lider?`<div style="font-size:10.5px;color:var(--tx3)">Responsável: ${escapeHtml(d.lider)}</div>`:""}
-              ${d.desc?`<div style="font-size:10px;color:var(--tx3);margin-top:2px">${escapeHtml(d.desc.slice(0,100))}</div>`:""}
+              <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${escapeHtml(d.nome)}</div>
+              ${d.lider?`<div style="font-size:11px;color:var(--tx3)">Responsável: ${escapeHtml(d.lider)}</div>`:""}
+              ${d.desc?`<div style="font-size:11px;color:var(--tx3);margin-top:2px">${escapeHtml(d.desc.slice(0,100))}</div>`:""}
             </div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
               ${statusBadge(d.status||"ativo")}
-              ${podeEd?`<button class="tbt" style="font-size:9px;padding:3px 7px;color:var(--rose)" onclick="excluirDeptCong(${i},'${cong.id}')">Remover</button>`:""}
+              ${podeEd?`<button class="tbt" style="font-size:10px;padding:3px 7px;color:var(--rose)" onclick="excluirDeptCong(${i},'${cong.id}')">Remover</button>`:""}
             </div>
           </div>`).join("")}
     </div>
