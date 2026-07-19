@@ -300,6 +300,8 @@
       if (progBtn)  progBtn.style.display  = _recursosAtual.programacoes ? '' : 'none';
       const escalBtn = document.getElementById('min-min-tab-btn-escal');
       if (escalBtn) escalBtn.style.display = _recursosAtual.escalas      ? '' : 'none';
+      const docBtn   = document.getElementById('min-min-tab-btn-doc');
+      if (docBtn)   docBtn.style.display   = _recursosAtual.documentos   ? '' : 'none';
 
       const btnAdd = document.getElementById('min-min-btn-add-membro');
       if (btnAdd) btnAdd.style.display = _podeEditar() ? '' : 'none';
@@ -330,6 +332,8 @@
     if (tab === 'reunioes'     && _ministerioAtual) _carregarReunioes(_ministerioAtual);
     if (tab === 'programacoes' && _ministerioAtual) _carregarProgramacoes(_ministerioAtual);
     if (tab === 'escalas'      && _ministerioAtual) _carregarEscalas(_ministerioAtual);
+    if (tab === 'documentos'   && _ministerioAtual) _carregarDocumentos(_ministerioAtual);
+    if (tab === 'relatorios'   && _ministerioAtual) _renderRelatorios();
   }
 
   /* ══ HEADER COMPACTO ═════════════════════════════════════════ */
@@ -1268,6 +1272,264 @@
     } catch (e) { alert('Erro ao remover: ' + e.message); }
   }
 
+  /* ══ DOCUMENTOS DO MINISTÉRIO ═══════════════════════════════ */
+  const _STORAGE_BUCKET = 'ministerios-docs';
+
+  function _storageObjUrl(path) {
+    return `${SUPABASE_URL}/storage/v1/object/${_STORAGE_BUCKET}/${path}`;
+  }
+
+  function _fmtBytes(bytes) {
+    if (!bytes) return '—';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  function _fmtDataCurta(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  async function _carregarDocumentos(ministerioId) {
+    const el  = document.getElementById('min-min-doc-list');
+    const btn = document.getElementById('min-min-btn-upload-doc');
+    if (!el) return;
+    if (btn) btn.style.display = _podeEditar() ? '' : 'none';
+    el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Carregando...</div>';
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/ministerio_documentos?ministerio_id=eq.${ministerioId}&order=criado_em.desc`,
+        { headers: _hdr() }
+      );
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        if (err?.code === '42P01') {
+          el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:20px;text-align:center">Execute a migration <strong>ministerios-fase5-documentos.sql</strong> para ativar documentos.</div>';
+          return;
+        }
+        throw new Error(err?.message || r.status);
+      }
+      const lista = await r.json();
+      if (!lista.length) {
+        el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Nenhum documento enviado.</div>';
+        return;
+      }
+      const podeAct = _podeEditar();
+      const TIPOS = { regulamento:'Regulamento', manual:'Manual', ata:'Ata', formulario:'Formulário', outro:'Outro' };
+      el.innerHTML = `
+        <div class="card" style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:480px">
+            <thead><tr style="border-bottom:2px solid var(--bd1)">
+              <th style="text-align:left;padding:7px 8px;color:var(--tx3);font-weight:600">Nome</th>
+              <th style="text-align:left;padding:7px 8px;color:var(--tx3);font-weight:600">Tipo</th>
+              <th style="text-align:left;padding:7px 8px;color:var(--tx3);font-weight:600">Tamanho</th>
+              <th style="text-align:left;padding:7px 8px;color:var(--tx3);font-weight:600">Data</th>
+              ${podeAct ? '<th style="padding:7px 8px;color:var(--tx3);font-weight:600">Ações</th>' : ''}
+            </tr></thead>
+            <tbody>${lista.map(doc => `
+              <tr style="border-bottom:1px solid var(--bd1)">
+                <td style="padding:8px;color:var(--tx1);font-weight:500">
+                  <a href="${_storageObjUrl(doc.storage_path)}" target="_blank" rel="noopener"
+                    style="color:var(--violet);text-decoration:none">${escapeHtml(doc.nome)}</a>
+                </td>
+                <td style="padding:8px;color:var(--tx2)">${TIPOS[doc.tipo] || doc.tipo}</td>
+                <td style="padding:8px;color:var(--tx3);font-variant-numeric:tabular-nums">${_fmtBytes(doc.tamanho)}</td>
+                <td style="padding:8px;color:var(--tx3)">${_fmtDataCurta(doc.criado_em)}</td>
+                ${podeAct ? `<td style="padding:8px;white-space:nowrap">
+                  <button onclick="minMinRemoverDoc('${doc.id}','${doc.storage_path}')"
+                    class="tbt" style="font-size:11px;padding:3px 8px;color:var(--rose);border-color:rgba(255,69,58,0.3)">Remover</button>
+                </td>` : ''}
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    } catch (e) {
+      console.error('_carregarDocumentos:', e);
+      el.innerHTML = '<div style="color:var(--rose);font-size:13px;padding:16px 0">Erro ao carregar documentos.</div>';
+    }
+  }
+
+  function minMinUploadDoc() {
+    if (!_ministerioAtual) return;
+    const inp = document.getElementById('min-doc-file-input');
+    if (inp) inp.click();
+  }
+
+  async function _docHandleFile(input) {
+    const files = Array.from(input.files || []);
+    if (!files.length) return;
+    const statusEl = document.getElementById('min-doc-status');
+    const btnEl    = document.getElementById('min-min-btn-upload-doc');
+    if (btnEl) btnEl.disabled = true;
+
+    const TIPO_OPTS = {
+      'application/pdf': 'manual',
+      'application/msword': 'manual',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'manual',
+      'application/vnd.ms-excel': 'formulario',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'formulario',
+    };
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (statusEl) statusEl.textContent = `Enviando ${i + 1}/${files.length}: ${file.name}`;
+      try {
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const path = `ministerios/${_ministerioAtual}/${Date.now()}_${safeName}`;
+        const rUp = await fetch(`${SUPABASE_URL}/storage/v1/object/${_STORAGE_BUCKET}/${path}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + (typeof sipenToken === 'function' ? sipenToken() : SUPABASE_ANON_KEY),
+            'apikey': SUPABASE_ANON_KEY,
+            'Content-Type': file.type || 'application/octet-stream',
+          },
+          body: file,
+        });
+        if (!rUp.ok) {
+          const errTxt = await rUp.text();
+          throw new Error(`Storage: ${errTxt}`);
+        }
+        const tipo = TIPO_OPTS[file.type] || 'outro';
+        const rDb = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_documentos`, {
+          method: 'POST',
+          headers: _hdrJson(),
+          body: JSON.stringify({
+            ministerio_id: _ministerioAtual,
+            nome:          file.name,
+            tipo,
+            storage_path:  path,
+            mime_type:     file.type || null,
+            tamanho:       file.size,
+            criado_por:    USUARIO_ATUAL?.auth_user_id || null,
+          }),
+        });
+        if (!rDb.ok) throw new Error('Erro ao salvar registro no banco.');
+      } catch (e) {
+        alert(`Erro ao enviar ${file.name}: ${e.message}`);
+      }
+    }
+
+    input.value = '';
+    if (statusEl) statusEl.textContent = '';
+    if (btnEl) btnEl.disabled = false;
+    await _carregarDocumentos(_ministerioAtual);
+  }
+
+  async function minMinRemoverDoc(id, storagePath) {
+    if (!confirm('Remover este documento permanentemente?')) return;
+    try {
+      await Promise.all([
+        fetch(`${SUPABASE_URL}/storage/v1/object/${_STORAGE_BUCKET}`, {
+          method: 'DELETE',
+          headers: Object.assign(_hdrJson(), { 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ prefixes: [storagePath] }),
+        }),
+        fetch(`${SUPABASE_URL}/rest/v1/ministerio_documentos?id=eq.${id}`, {
+          method: 'DELETE', headers: _hdr(),
+        }),
+      ]);
+      await _carregarDocumentos(_ministerioAtual);
+    } catch (e) { alert('Erro ao remover: ' + e.message); }
+  }
+
+  /* ══ RELATÓRIOS DO MINISTÉRIO ════════════════════════════════ */
+  async function _renderRelatorios() {
+    const el = document.getElementById('min-min-rel-content');
+    if (!el || !_ministerioAtual) return;
+    el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Carregando...</div>';
+    try {
+      const hoje       = new Date();
+      const mesAtual   = hoje.getMonth() + 1;
+      const inicio30   = new Date(hoje); inicio30.setDate(inicio30.getDate() - 30);
+      const i30        = inicio30.toISOString().slice(0, 10);
+      const id         = _ministerioAtual;
+
+      const [rMb, rSt, rReu, rPrg, rAnivs, rReuRec, rPrgRec] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/ministerio_membros?ministerio_id=eq.${id}&status=eq.ativo&select=id`, { headers: _hdr() }),
+        fetch(`${SUPABASE_URL}/rest/v1/ministerio_setores?ministerio_id=eq.${id}&ativo=eq.true&select=id`, { headers: _hdr() }),
+        fetch(`${SUPABASE_URL}/rest/v1/ministerio_reunioes?ministerio_id=eq.${id}&status=eq.realizada&data=gte.${i30}&select=id`, { headers: _hdr() }),
+        fetch(`${SUPABASE_URL}/rest/v1/ministerio_programacoes?ministerio_id=eq.${id}&status=eq.realizado&data=gte.${i30}&select=id`, { headers: _hdr() }),
+        fetch(`${SUPABASE_URL}/rest/v1/ministerio_membros?ministerio_id=eq.${id}&status=eq.ativo&select=pessoas(nome,data_nascimento)`, { headers: _hdr() }),
+        fetch(`${SUPABASE_URL}/rest/v1/ministerio_reunioes?ministerio_id=eq.${id}&order=data.desc&limit=5&select=titulo,data,status`, { headers: _hdr() }),
+        fetch(`${SUPABASE_URL}/rest/v1/ministerio_programacoes?ministerio_id=eq.${id}&order=data.desc&limit=5&select=titulo,data,tipo,status`, { headers: _hdr() }),
+      ]);
+
+      const mb   = rMb.ok   ? (await rMb.json()).length   : 0;
+      const st   = rSt.ok   ? (await rSt.json()).length   : 0;
+      const reu  = rReu.ok  ? (await rReu.json()).length  : 0;
+      const prg  = rPrg.ok  ? (await rPrg.json()).length  : 0;
+      const anivRaw = rAnivs.ok ? await rAnivs.json() : [];
+      const reuRec  = rReuRec.ok ? await rReuRec.json() : [];
+      const prgRec  = rPrgRec.ok ? await rPrgRec.json() : [];
+
+      const anivs = anivRaw
+        .filter(m => {
+          const dn = m.pessoas?.data_nascimento;
+          return dn && parseInt(dn.slice(5, 7)) === mesAtual;
+        })
+        .sort((a, b) => parseInt(a.pessoas.data_nascimento.slice(8, 10)) - parseInt(b.pessoas.data_nascimento.slice(8, 10)));
+
+      const _kpi = (v, label, sub) =>
+        `<div class="card" style="text-align:center;padding:16px 10px">
+           <div style="font-size:26px;font-weight:700;color:var(--violet)">${v}</div>
+           <div style="font-size:11px;color:var(--tx3);margin-top:4px">${label}</div>
+           ${sub ? `<div style="font-size:10px;color:var(--tx3);margin-top:2px">${sub}</div>` : ''}
+         </div>`;
+
+      const _atividade = (lista, tipoCor) => lista.length
+        ? lista.map(r => {
+            const d = r.data ? new Date(r.data + 'T12:00:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'short' }) : '—';
+            const st = r.status === 'realizada' || r.status === 'realizado'
+              ? '<span style="font-size:10px;color:var(--gr)">✓</span>'
+              : r.status === 'cancelada' || r.status === 'cancelado'
+                ? '<span style="font-size:10px;color:var(--rose)">✕</span>'
+                : '<span style="font-size:10px;color:var(--gold,#ffd60a)">●</span>';
+            return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd1)">
+              ${st}
+              <span style="font-size:13px;color:var(--tx1);flex:1">${escapeHtml(r.titulo)}</span>
+              <span style="font-size:11px;color:var(--tx3)">${d}</span>
+            </div>`;
+          }).join('')
+        : '<div style="color:var(--tx3);font-size:12px;padding:8px 0">Nenhum registro.</div>';
+
+      const mesNome = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][mesAtual - 1];
+
+      el.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:16px">
+          ${_kpi(mb, 'Membros ativos', '')}
+          ${_kpi(st, 'Setores ativos', '')}
+          ${_kpi(reu, 'Reuniões realizadas', 'últimos 30 dias')}
+          ${_kpi(prg, 'Programações realizadas', 'últimos 30 dias')}
+        </div>
+        ${anivs.length ? `
+          <div class="card" style="margin-bottom:12px">
+            <div class="ctit">Aniversariantes — ${mesNome}</div>
+            <div>${anivs.map(m => {
+              const d = m.pessoas.data_nascimento;
+              return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--bd1)">
+                <div style="width:28px;height:28px;border-radius:6px;background:var(--violetbg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--violet);flex-shrink:0">${d.slice(8,10)}</div>
+                <span style="font-size:13px;color:var(--tx1)">${escapeHtml((m.pessoas.nome||'').toUpperCase())}</span>
+              </div>`;
+            }).join('')}</div>
+          </div>` : ''}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="card">
+            <div class="ctit" style="margin-bottom:10px">Reuniões Recentes</div>
+            ${_atividade(reuRec)}
+          </div>
+          <div class="card">
+            <div class="ctit" style="margin-bottom:10px">Programações Recentes</div>
+            ${_atividade(prgRec)}
+          </div>
+        </div>`;
+
+    } catch (e) {
+      console.error('_renderRelatorios:', e);
+      el.innerHTML = '<div style="color:var(--rose);font-size:13px;padding:16px 0;text-align:center">Erro ao carregar relatórios.</div>';
+    }
+  }
+
   /* ══ MEMBROS DO MINISTÉRIO ═══════════════════════════════════ */
   async function _carregarMembros(ministerioId) {
     const el   = document.getElementById('min-min-membro-list');
@@ -2043,5 +2305,8 @@
   window.minMinRemoverEscalaPessoa    = minMinRemoverEscalaPessoa;
   window._escalToggle                 = _escalToggle;
   window._escalSalvar                 = _escalSalvar;
+  window.minMinUploadDoc              = minMinUploadDoc;
+  window.minMinRemoverDoc             = minMinRemoverDoc;
+  window._docHandleFile               = _docHandleFile;
 
 })();
