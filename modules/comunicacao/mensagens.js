@@ -1110,9 +1110,9 @@ async function _resolverDests(wz){
   for(const f of wz.filtros){
     let rows = [];
     if(f.tipo === 'todos_membros'){
-      const r = await fetch(`${apiBaseUrl()}/rest/v1/v_membros?status=eq.ativo&select=pessoa_id,nome&limit=1000`,{headers:apiHeaders()});
-      rows = await r.json();
-      rows.forEach(p => { if(p.pessoa_id && !map.has(p.pessoa_id)) map.set(p.pessoa_id, p.nome); });
+      const r = await fetch(`${apiBaseUrl()}/rest/v1/v_membros?status=eq.ativo&select=pessoa_id,nome&limit=5000`,{headers:apiHeaders()});
+      rows = r.ok ? await r.json() : [];
+      if(Array.isArray(rows)) rows.forEach(p => { if(p.pessoa_id && !map.has(p.pessoa_id)) map.set(p.pessoa_id, p.nome); });
 
     } else if(f.tipo.startsWith('cong_')){
       const congId = f.tipo.slice(5);
@@ -1188,21 +1188,23 @@ async function _resolverDests(wz){
 // Busca telefone de cada pessoa_id
 async function _resolverTels(pessoas){
   if(!pessoas.length) return [];
-  const ids = pessoas.map(p=>p.pessoa_id);
-  // PostgREST: id=in.(a,b,c)
-  const r = await fetch(
-    `${apiBaseUrl()}/rest/v1/pessoas?id=in.(${ids.join(',')})&select=id,nome,celular,whatsapp,telefone`,
-    {headers:apiHeaders()}
-  );
-  const rows = await r.json();
-  if(!Array.isArray(rows)) return [];
+  const CHUNK = 100; // URL segura: ~4KB por batch
   const byId = {};
-  rows.forEach(p => byId[p.id]=p);
+  for(let i=0; i<pessoas.length; i+=CHUNK){
+    const slice = pessoas.slice(i, i+CHUNK).map(p=>p.pessoa_id);
+    try{
+      const r = await fetch(
+        `${apiBaseUrl()}/rest/v1/pessoas?id=in.(${slice.join(',')})&select=id,nome,celular,whatsapp,telefone`,
+        {headers:apiHeaders()}
+      );
+      if(r.ok){ const rows=await r.json(); if(Array.isArray(rows)) rows.forEach(p=>byId[p.id]=p); }
+    }catch(_){}
+  }
   return pessoas.map(p=>{
     const d = byId[p.pessoa_id]||{};
     const tel = d.whatsapp||d.celular||d.telefone||null;
     return {...p, contato:tel};
-  }); // inclui sem telefone — filtrado depois
+  });
 }
 
 // Modal de progresso
