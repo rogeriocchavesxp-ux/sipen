@@ -69,7 +69,7 @@ function buildCongMenu(){
     const perfilDefinido=typeof USUARIO_ATUAL!=="undefined"&&USUARIO_ATUAL?.perfil;
     if(perfilDefinido){
       dashLink.style.display="block";
-      dashLink.textContent=_isLiderCong()?"Dashboard da Congregação":"Dashboard Geral";
+      dashLink.textContent=_isLiderCong()?"Dashboard da Congregação":"Todas as Congregações";
     } else {
       dashLink.style.display="none";
     }
@@ -152,8 +152,8 @@ function irParaSecaoCong(i){
     });
     return;
   }
-  document.querySelectorAll("#cong-tabs-bar .citab").forEach((tab,idx)=>{
-    tab.classList.toggle("on",idx===i);
+  document.querySelectorAll("#cong-tabs-bar .min-tab").forEach((tab,idx)=>{
+    tab.classList.toggle("active",idx===i);
   });
   const cong=CONG.getCong(_activeCongId);
   if(cong) renderCongTab(i,cong);
@@ -448,39 +448,65 @@ function renderCongView(cong){
   const el=document.getElementById("v-cong-ver");
   if(!el) return;
   const id=cong.id;
-  const hero=`
-    <div class="hero">
-      <div class="hero-ic" style="background:${cong.identificacao.cor}22;border-color:${cong.identificacao.cor}55">${cong.identificacao.icon||"⛪"}</div>
-      <div>
-        <div class="hero-lbl">Congregações</div>
-        <div class="hero-ttl">${escapeHtml(cong.identificacao.nome)}</div>
-        <div class="hero-dsc">${escapeHtml(cong.identificacao.localizacao||"")}${cong.identificacao.localizacao?" — ":""}${statusBadge(cong.identificacao.status)}</div>
-      </div>
-      <div class="hero-act">
-        ${!_isLiderCong()?`<button class="tbt" onclick="go('cong-dash')">← Dashboard</button>`:""}
-        ${_podeEditar(id)?`<button class="tbt pri" onclick="abrirModalEditarCong('${id}')">Editar</button>`:""}
-      </div>
-    </div>`;
+  const le=cong.lideranca_estruturada||{};
 
-  if(_isLiderCong()){
-    // Sem barra de abas no conteúdo — navegação está no menu lateral
-    el.innerHTML=`${hero}<div class="ct" style="padding-top:0"><div id="cong-tab-content" style="padding-top:2px"></div></div>`;
-  } else {
-    // Com barra de abas para perfis administrativos
-    el.innerHTML=`${hero}
-    <div class="ct" style="padding-top:0">
-      <div class="citabs" id="cong-tabs-bar">
-        ${_CONG_TAB_NOMES.map((t,i)=>`<div class="citab${i===_activeTab?" on":""}" onclick="switchCongTab(${i})">${t}</div>`).join("")}
+  const _card=(label,nome)=>{
+    const ini=nome?(nome||"?").split(" ").slice(0,2).map(p=>p[0]).join("").toUpperCase():"—";
+    return `<div style="display:flex;align-items:center;gap:9px;padding:10px 14px;background:var(--bg2);border-radius:8px;flex:1;min-width:130px;max-width:200px">
+      <div style="width:32px;height:32px;border-radius:50%;background:rgba(58,170,92,.15);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--gr);flex-shrink:0">${ini}</div>
+      <div style="min-width:0">
+        <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);margin-bottom:1px">${label}</div>
+        <div style="font-size:12px;font-weight:600;color:${nome?"var(--tx1)":"var(--tx3)"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px">${nome?escapeHtml(nome):"Não informado"}</div>
       </div>
-      <div id="cong-tab-content" style="padding-top:2px"></div>
     </div>`;
-  }
+  };
+
+  const cards=[
+    _card("Pastor Responsável",cong.lideranca.pastor_responsavel||null),
+    _card("Supervisor",le.supervisao||null),
+    _card("Tesoureiro",le.tesoureiro||null),
+  ];
+
+  const tabsHtml=_CONG_TAB_NOMES.map((t,i)=>`<button class="min-tab${i===_activeTab?" active":""}" onclick="switchCongTab(${i})">${t}</button>`).join("");
+
+  const cor=cong.identificacao.cor||"#3AAA5C";
+  el.innerHTML=`
+    <div style="padding:18px 22px 14px;border-bottom:1px solid var(--bd1)">
+      <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
+        <div style="display:flex;align-items:flex-start;gap:12px;flex:1;min-width:240px">
+          <div style="width:48px;height:48px;border-radius:12px;background:${cor}22;border:1.5px solid ${cor}55;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${cong.identificacao.icon||"⛪"}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:4px">Congregações</div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:17px;font-weight:800;color:var(--tx1)">${escapeHtml(cong.identificacao.nome)}</span>
+              ${statusBadge(cong.identificacao.status)}
+            </div>
+            ${cong.identificacao.localizacao?`<div style="font-size:12px;color:var(--tx3);margin-top:3px">${escapeHtml(cong.identificacao.localizacao)}</div>`:""}
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch">
+          ${cards.join("")}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+        ${!_isLiderCong()?`<button class="tbt" onclick="go('cong-dash')">← Todas as Congregações</button>`:""}
+        ${_podeEditar(id)?`<button class="tbt pri" onclick="abrirModalEditarCong('${id}')">Editar</button>`:""}
+        ${_podeEditar(id)&&!_isLiderCong()?`<button class="tbt" onclick="abrirModalNovaCong()">+ Nova Congregação</button>`:""}
+      </div>
+    </div>
+    <div style="border-bottom:1px solid var(--bd1);overflow-x:auto;display:flex;padding:0 18px;gap:2px" id="cong-tabs-bar">
+      ${tabsHtml}
+    </div>
+    <div class="ct" style="padding-top:16px">
+      <div id="cong-tab-content"></div>
+    </div>
+  `;
   renderCongTab(_activeTab,cong);
 }
 
 function switchCongTab(i){
   _activeTab=i;
-  document.querySelectorAll("#cong-tabs-bar .citab").forEach((t,idx)=>t.classList.toggle("on",idx===i));
+  document.querySelectorAll("#cong-tabs-bar .min-tab").forEach((t,idx)=>t.classList.toggle("active",idx===i));
   const cong=CONG.getCong(_activeCongId);
   if(cong) renderCongTab(i,cong);
 }
@@ -503,45 +529,92 @@ function renderCongTab(i, cong){
 // ── Tab 0: Visão Geral ────────────────────────────────
 function renderTab_visaoGeral(cong, el){
   const m=cong.panorama_membresia, a=cong.atividades_igreja, f=cong.financeiro;
+  const pg=cong.pequenos_grupos, des=cong.desafios;
+  const le=cong.lideranca_estruturada||{};
+
+  const _ic=(emoji,bg)=>`<div style="width:40px;height:40px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${emoji}</div>`;
+  const _kpi=(emoji,bg,val,label,sub,tabIdx,link)=>`
+    <div class="card" style="padding:18px 16px;cursor:pointer;display:flex;flex-direction:column;gap:0" onclick="switchCongTab(${tabIdx})">
+      <div style="margin-bottom:12px">${_ic(emoji,bg)}</div>
+      <div style="font-size:30px;font-weight:800;color:var(--tx1);line-height:1">${val}</div>
+      <div style="font-size:13px;font-weight:600;color:var(--tx1);margin-top:5px">${label}</div>
+      <div style="font-size:11.5px;color:var(--tx3);margin-top:2px;flex:1">${sub}</div>
+      <div style="border-top:1px solid var(--bd1);margin-top:14px;padding-top:10px">
+        <span style="font-size:12px;color:var(--gr);font-weight:500">${link} →</span>
+      </div>
+    </div>`;
+
+  const saldoFmt=(f.saldo_atual||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  const desAtivos=des.lista.filter(d=>d.status!=="concluído"&&d.status!=="concluido").length;
+
   el.innerHTML=`
-    <div class="g2" style="margin-top:14px">
+    <div style="margin-bottom:20px">
+      <div style="font-size:17px;font-weight:700;color:var(--tx1)">Visão Geral</div>
+      <div style="font-size:12.5px;color:var(--tx3);margin-top:2px">Resumo geral da congregação.</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px;margin-bottom:24px">
+      ${_kpi("👥","rgba(58,170,92,.12)",m.membros_ativos,"Membros","Membros ativos",1,"Ver membros")}
+      ${_kpi("🕊️","rgba(90,200,250,.12)",a.cultos_por_semana,"Cultos","Por semana",2,"Ver cultos")}
+      ${_kpi("🏠","rgba(82,196,110,.12)",pg.total_grupos,"Pequenos Grupos","Grupos ativos",3,"Ver grupos")}
+      ${_kpi("⚠","rgba(255,69,58,.12)",desAtivos,"Desafios","Em andamento",7,"Ver desafios")}
+      ${_kpi("💰","rgba(58,170,92,.12)",saldoFmt,"Financeiro","Saldo atual",6,"Ver financeiro")}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px">
       <div class="card">
-        <div class="ctit">Identificação</div>
-        <table style="width:100%;font-size:11.5px;border-collapse:collapse">
-          <tr><td style="color:var(--tx3);padding:5px 0;width:42%">Status</td><td>${statusBadge(cong.identificacao.status)}</td></tr>
-          <tr><td style="color:var(--tx3);padding:5px 0">Localização</td><td style="color:var(--tx1)">${escapeHtml(cong.identificacao.localizacao||"—")}</td></tr>
-          <tr><td style="color:var(--tx3);padding:5px 0">Endereço</td><td style="color:var(--tx1)">${escapeHtml(cong.identificacao.endereco||"—")}</td></tr>
-          <tr><td style="color:var(--tx3);padding:5px 0">Início</td><td style="color:var(--tx1)">${fmtData(cong.identificacao.data_inicio)}</td></tr>
-          ${(()=>{const le=cong.lideranca_estruturada||{};return [
-            le.supervisao?`<tr><td style="color:var(--tx3);padding:5px 0">Supervisão</td><td style="color:var(--tx1)">${escapeHtml(le.supervisao)}</td></tr>`:"",
-            le.conselheiro?`<tr><td style="color:var(--tx3);padding:5px 0">Conselheiro</td><td style="color:var(--tx1)">${escapeHtml(le.conselheiro)}</td></tr>`:"",
-            le.coordenacao?`<tr><td style="color:var(--tx3);padding:5px 0">Coordenação</td><td style="color:var(--tx1)">${escapeHtml(le.coordenacao)}</td></tr>`:"",
-            le.tesoureiro?`<tr><td style="color:var(--tx3);padding:5px 0">Tesoureiro</td><td style="color:var(--tx1)">${escapeHtml(le.tesoureiro)}</td></tr>`:""
-          ].join("") || `<tr><td style="color:var(--tx3);padding:5px 0">Responsável</td><td style="color:var(--tx1)">${escapeHtml(cong.lideranca.pastor_responsavel||"—")}</td></tr>`})()}
-          ${cong.identificacao.obs?`<tr><td style="color:var(--tx3);padding:5px 0">Obs.</td><td style="color:var(--tx1)">${escapeHtml(cong.identificacao.obs)}</td></tr>`:""}
-        </table>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:13px;font-weight:700;color:var(--tx1)">Liderança</span>
+          <span style="font-size:11.5px;color:var(--gr);cursor:pointer;font-weight:500" onclick="switchCongTab(5)">Ver toda →</span>
+        </div>
+        <div id="cong-vg-lideranca"></div>
       </div>
       <div class="card">
-        <div class="ctit">Resumo</div>
-        <div class="kpis c2" style="margin:0 0 10px">
-          <div class="kpi" style="padding:10px"><div class="kn">Membros Ativos</div><div class="kv" style="font-size:22px">${m.membros_ativos}</div></div>
-          <div class="kpi" style="padding:10px"><div class="kn">Freq. Média</div><div class="kv" style="font-size:22px">${a.frequencia_media}</div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:13px;font-weight:700;color:var(--tx1)">Desafios Ativos</span>
+          <span style="font-size:11.5px;color:var(--gr);cursor:pointer;font-weight:500" onclick="switchCongTab(7)">Ver todos →</span>
         </div>
-        <div style="font-size:11px;color:var(--tx3);margin-top:8px">Cultos/semana: <b style="color:var(--tx1)">${a.cultos_por_semana}</b> &nbsp;|&nbsp; PGs: <b style="color:var(--tx1)">${cong.pequenos_grupos.total_grupos}</b> &nbsp;|&nbsp; Ministérios: <b style="color:var(--tx1)">${cong.ministerios.lista.length}</b></div>
-        <div style="font-size:11px;color:var(--tx3);margin-top:5px">Batizados este ano: <b style="color:var(--gr)">${m.batizados_ano}</b> &nbsp;|&nbsp; Novos membros: <b style="color:var(--gr)">${m.novos_membros_ano}</b></div>
-        <div style="font-size:11px;color:var(--tx3);margin-top:5px">Receita média: <b style="color:var(--tx1)">R$ ${f.receita_media_mensal.toLocaleString("pt-BR")}</b> &nbsp;|&nbsp; Saldo: <b style="color:${f.saldo_atual>=0?"var(--gr)":"var(--rose)"}">R$ ${f.saldo_atual.toLocaleString("pt-BR")}</b></div>
+        <div id="cong-vg-desafios"></div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:13px;font-weight:700;color:var(--tx1)">Cultos Recentes</span>
+          <span style="font-size:11.5px;color:var(--gr);cursor:pointer;font-weight:500" onclick="switchCongTab(2)">Ver todos →</span>
+        </div>
+        <div id="cong-vg-cultos"></div>
       </div>
     </div>
-    ${cong.desafios.lista.length>0?`
-    <div class="card" style="margin-top:12px">
-      <div class="ctit">Desafios Ativos</div>
-      ${cong.desafios.lista.slice(0,3).map(d=>`
-        <div style="display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd1)">
-          <div style="flex:1"><div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${escapeHtml(d.titulo)}</div><div style="font-size:10px;color:var(--tx3);margin-top:2px">${escapeHtml(d.descricao)}</div></div>
-          <div style="display:flex;gap:5px;flex-shrink:0">${prioBadge(d.prioridade)}${statusBadge(d.status)}</div>
-        </div>`).join("")}
-    </div>`:""}
   `;
+
+  const ldItems=[];
+  if(cong.lideranca.pastor_responsavel) ldItems.push({label:"Pastor",nome:cong.lideranca.pastor_responsavel});
+  if(le.supervisao)  ldItems.push({label:"Supervisor",nome:le.supervisao});
+  if(le.conselheiro) ldItems.push({label:"Conselheiro",nome:le.conselheiro});
+  if(le.coordenacao) ldItems.push({label:"Coordenação",nome:le.coordenacao});
+  if(le.tesoureiro)  ldItems.push({label:"Tesoureiro",nome:le.tesoureiro});
+  const ldEl=document.getElementById("cong-vg-lideranca");
+  if(ldEl){
+    ldEl.innerHTML=ldItems.length
+      ?ldItems.map(l=>`<div style="display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--bd1)"><span style="font-size:10.5px;color:var(--tx3);min-width:80px;flex-shrink:0">${l.label}</span><span style="font-size:11.5px;color:var(--tx1);font-weight:500">${escapeHtml(l.nome)}</span></div>`).join("")
+      :`<div style="color:var(--tx3);font-size:12px;padding:12px 0;text-align:center">Nenhuma liderança cadastrada</div>`;
+  }
+
+  const desEl=document.getElementById("cong-vg-desafios");
+  if(desEl){
+    const ativos=des.lista.filter(d=>d.status!=="concluído"&&d.status!=="concluido").slice(0,3);
+    desEl.innerHTML=ativos.length
+      ?ativos.map(d=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--bd1)"><div style="flex:1;min-width:0"><div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${escapeHtml(d.titulo)}</div></div>${prioBadge(d.prioridade)}</div>`).join("")
+      :`<div style="color:var(--tx3);font-size:12px;padding:12px 0;text-align:center">Nenhum desafio ativo</div>`;
+  }
+
+  const cultosEl=document.getElementById("cong-vg-cultos");
+  if(cultosEl){
+    const hist=(a.historico_cultos||[]).slice(0,3);
+    cultosEl.innerHTML=hist.length
+      ?hist.map(c=>{
+          const total=(c.adultos||0)+(c.criancas||0)||(c.participantes||0);
+          return `<div style="padding:7px 0;border-bottom:1px solid var(--bd1)"><div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${escapeHtml(c.tipo||"Culto")}</div><div style="font-size:10.5px;color:var(--tx3);margin-top:2px">${fmtData(c.data)} · ${total} presentes</div></div>`;
+        }).join("")
+      :`<div style="color:var(--tx3);font-size:12px;padding:12px 0;text-align:center">Nenhum culto registrado</div>`;
+  }
 }
 
 // ── Tab 1: Membresia ──────────────────────────────────
