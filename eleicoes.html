@@ -264,6 +264,12 @@ function fmtD(d) {
   const [y,m,dia] = String(d).slice(0,10).split("-");
   return `${dia}/${m}/${y}`;
 }
+function fmtNome(s) {
+  if (!s) return "";
+  const min = new Set(["de","da","do","das","dos","e","a","o","em","na","no","nas","nos"]);
+  return String(s).toLowerCase()
+    .replace(/\b\w+/g, (w, i) => (i > 0 && min.has(w) ? w : w[0].toUpperCase() + w.slice(1)));
+}
 function calcIdade(dn) {
   if (!dn) return null;
   const h = new Date(), n = new Date(dn + "T00:00:00");
@@ -402,7 +408,7 @@ function renderInfo() {
           const lbl  = isP ? "Presbítero" : "Diácono";
           return `<div style="display:flex;align-items:center;gap:10px">
             <span style="padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;background:${bg};color:${cor};border:1px solid ${brd};white-space:nowrap;flex-shrink:0">${lbl}</span>
-            <span style="font-size:13.5px;color:var(--tx1);font-weight:500">${eh(o.nome)}</span>
+            <span style="font-size:13.5px;color:var(--tx1);font-weight:500">${eh(fmtNome(o.nome))}</span>
             ${o.posse ? `<span style="font-size:11px;color:var(--tx3);margin-left:auto;white-space:nowrap;flex-shrink:0">desde ${fmtD(o.posse)}</span>` : ""}
           </div>`;
         }).join("")}
