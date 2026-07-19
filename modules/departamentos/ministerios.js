@@ -1264,8 +1264,13 @@
           placeholder="Detalhes da programação..."></textarea>
       </div>
       ${_errEl('mpg-err')}`;
-    const footer = `<button id="mpg-btn" onclick="_progSalvar()"
-      style="padding:9px 24px;border-radius:8px;border:none;background:var(--violet);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Salvar</button>`;
+    const footer = `
+      <button id="mpg-btn-publicar" onclick="_progPublicarClick()"
+        style="display:none;padding:9px 18px;border-radius:8px;border:1px solid rgba(42,181,192,0.4);background:rgba(42,181,192,0.08);color:var(--teal);font-size:13px;font-weight:600;cursor:pointer;margin-right:auto">
+        📅 Publicar na Agenda
+      </button>
+      <button id="mpg-btn" onclick="_progSalvar()"
+        style="padding:9px 24px;border-radius:8px;border:none;background:var(--violet);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Salvar</button>`;
     return _modalWrap('min-prog-modal', 'Nova Programação', 'Ministerial · Programações', corpo, footer);
   }
 
@@ -1282,6 +1287,8 @@
     document.getElementById('mpg-status').value  = 'agendado';
     document.getElementById('mpg-desc').value    = '';
     _showErr('mpg-err', '');
+    const btnPub = document.getElementById('mpg-btn-publicar');
+    if (btnPub) btnPub.style.display = 'none';
     modal.style.display = 'flex';
   }
 
@@ -1302,7 +1309,40 @@
     document.getElementById('mpg-tipo').value   = p.tipo         || 'evento';
     document.getElementById('mpg-status').value = p.status       || 'agendado';
     document.getElementById('mpg-desc').value   = p.descricao    || '';
+    const btnPub = document.getElementById('mpg-btn-publicar');
+    if (btnPub) btnPub.style.display = p.agenda_id ? 'none' : '';
     modal.style.display = 'flex';
+  }
+
+  async function _progPublicarClick() {
+    if (!_progEditandoId) return;
+    const titulo = (document.getElementById('mpg-titulo').value || '').trim();
+    const data   = document.getElementById('mpg-data').value || '';
+    if (!titulo) { _showErr('mpg-err', 'Título é obrigatório.'); return; }
+    if (!data)   { _showErr('mpg-err', 'Data é obrigatória.');   return; }
+
+    const btn = document.getElementById('mpg-btn-publicar');
+    if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+
+    try {
+      const payload = {
+        titulo, data,
+        hora:      document.getElementById('mpg-hora').value || null,
+        local:     (document.getElementById('mpg-local').value || '').trim() || null,
+        tipo:      document.getElementById('mpg-tipo').value || 'evento',
+        status:    document.getElementById('mpg-status').value || 'agendado',
+        descricao: (document.getElementById('mpg-desc').value || '').trim() || null,
+      };
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_programacoes?id=eq.${_progEditandoId}`, {
+        method: 'PATCH', headers: _hdrJson(), body: JSON.stringify(payload),
+      });
+      if (!r.ok) throw new Error(await r.text());
+      document.getElementById('min-prog-modal').style.display = 'none';
+      await minMinPublicarNaAgenda(_progEditandoId);
+    } catch (e) {
+      _showErr('mpg-err', 'Erro: ' + e.message);
+      if (btn) { btn.disabled = false; btn.textContent = '📅 Publicar na Agenda'; }
+    }
   }
 
   async function _progSalvar() {
