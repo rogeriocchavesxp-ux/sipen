@@ -7,7 +7,9 @@ const CRUMB={
   "hub-dep":    ["","Departamentos","/ ministérios, sociedades e projetos"],
   "hub-op":     ["","Operação","/ demandas, agenda e comunicação"],
   "hub-adm":    ["","Administração","/ financeiro, infraestrutura e acesso"],
-  "hub-portal": ["","Portal do Membro","/ acesso rápido ao painel pessoal"],
+  "hub-portal":    ["","Portal do Membro","/ acesso rápido ao painel pessoal"],
+  "escalas-dash":  ["","Escalas","/ pregação, música e diaconal"],
+  "lideranca-dash":["","Liderança","/ nomeados, ordenados e seminaristas"],
   "admin-dash":["Administrativo","Dashboard","/ visão do módulo"],
   "admin-sec":["Administrativo","Secretaria e Cadastro",""],
   "fin-dash":["Financeiro","Dashboard","/ visão consolidada"],
@@ -192,6 +194,8 @@ const _VIEW_MAP = {
   "acesso":      "modules/acesso/view.html?v=6.45.13",
   "cultos":      "modules/cultos/view.html",
   "hub":         "modules/shared/hub.html",
+  "escalas":     "modules/shared/hub.html",
+  "lideranca":   "modules/shared/hub.html",
 };
 
 function _getViewFileForRoute(id) {

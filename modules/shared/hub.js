@@ -396,14 +396,87 @@ function renderHubPortal(){
     </div>`;
 }
 
+// ── Escalas: visão geral ───────────────────────────────
+function renderEscalasDash(){
+  const el=document.getElementById('v-escalas-dash');
+  if(!el) return;
+  const sky='var(--sky)',teal='var(--teal)',violet='var(--violet)',copper='var(--copper)';
+  el.innerHTML=`
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(90,200,250,0.12);border-color:rgba(90,200,250,0.28)">${_sv24('<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01"/>')}</div>
+      <div>
+        <div class="hero-lbl">Vida da Igreja</div>
+        <div class="hero-ttl">Escalas</div>
+        <div class="hero-dsc">Pregação, música e serviço diaconal nos cultos da IPPenha</div>
+      </div>
+    </div>
+    <div class="ct">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:10px">Módulos de Escala</div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+        ${_mod(IC.cultos,  'rgba(90,200,250,0.12)', sky,    'Escala de Pregação',  'Pastores e pregadores programados',        'pastoral-preg')}
+        ${_mod(IC.escalas, 'rgba(90,200,250,0.12)', teal,   'Disponibilidade',     'Controle de disponibilidade para pregar',  'pastoral-disp')}
+        ${_mod(IC.grid,    'rgba(139,111,212,0.12)',violet,  'Escalas de Música',   'Músicos e responsáveis pelo louvor',       'min-esc')}
+        ${_mod(IC.hands,   'rgba(184,122,86,0.12)', copper,  'Escalas Diaconais',   'Diáconos de serviço nos cultos',           'diac-escalas')}
+      </div>
+    </div>`;
+}
+
+// ── Liderança: visão geral ─────────────────────────────
+function renderLiderancaDash(){
+  const el=document.getElementById('v-lideranca-dash');
+  if(!el) return;
+  const sky='var(--sky)',gr='var(--gr)',amber='var(--amber)',teal='var(--teal)';
+  el.innerHTML=`
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(88,152,212,0.12);border-color:rgba(88,152,212,0.28)">${_sv24('<circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/><path d="M2 20h4M18 20h4"/>')}</div>
+      <div>
+        <div class="hero-lbl">Governança</div>
+        <div class="hero-ttl">Liderança</div>
+        <div class="hero-dsc">Oficiais ordenados, nomeados, seminaristas e corpo pastoral da IPPenha</div>
+      </div>
+    </div>
+    <div class="ct">
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+        ${_kpi(_sv('<circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/>'), 'rgba(74,156,245,0.12)', sky,   'k-lid-pastores', 'Pastores',  'corpo pastoral ativo')}
+        ${_kpi(_sv('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/>'), 'rgba(58,170,92,0.12)', gr,  'k-lid-nomeados', 'Nomeados',  'funções temporárias')}
+        ${_kpi(IC.shield, 'rgba(88,152,212,0.12)', sky,   'k-lid-ordenados','Ordenados', 'ofícios permanentes')}
+        ${_kpi(IC.book,   'rgba(212,168,67,0.12)', amber, 'k-lid-seminario','Seminaristas','em formação teológica')}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px">
+        ${_mod(IC.users,  'rgba(74,156,245,0.12)', sky,    'Nomeados',          'Funções temporárias do Conselho',          'conselho-nomeados')}
+        ${_mod(IC.shield, 'rgba(88,152,212,0.12)', sky,    'Ordenados',         'Ofícios permanentes — presbíteros e diáconos', 'conselho-ordenados')}
+        ${_mod(IC.book,   'rgba(212,168,67,0.12)', amber,  'Seminaristas',      'Candidatos em formação teológica',         'conselho-seminaristas')}
+        ${_mod(IC.pastoral,'rgba(42,181,192,0.12)',teal,   'Pastores',          'Corpo pastoral e escala de pregação',      'pastoral-pastores')}
+      </div>
+    </div>`;
+
+  // fetch KPIs
+  const api=typeof apiBaseUrl==='function'?apiBaseUrl():'';
+  const hdrs=typeof apiHeaders==='function'?apiHeaders():{};
+  if(!api) return;
+  Promise.all([
+    _cnt('rest/v1/pastores','&deleted_at=is.null'),
+    _cnt('rest/v1/conselho_nomeados','&deleted_at=is.null'),
+    _cnt('rest/v1/conselho_ordenados','&deleted_at=is.null&status=eq.ativo'),
+    _cnt('rest/v1/conselho_seminaristas','&deleted_at=is.null'),
+  ]).then(([pastores,nomeados,ordenados,seminario])=>{
+    _set('k-lid-pastores',  pastores  ?? '—');
+    _set('k-lid-nomeados',  nomeados  ?? '—');
+    _set('k-lid-ordenados', ordenados ?? '—');
+    _set('k-lid-seminario', seminario ?? '—');
+  }).catch(()=>{});
+}
+
 // ── Registro no autoload ───────────────────────────────
 if(typeof VIEW_AUTOLOAD!=='undefined'){
-  VIEW_AUTOLOAD['hub-igreja'] ={fn:renderHubIgreja};
-  VIEW_AUTOLOAD['hub-gov']    ={fn:renderHubGov};
-  VIEW_AUTOLOAD['hub-dep']    ={fn:renderHubDep};
-  VIEW_AUTOLOAD['hub-op']     ={fn:renderHubOp};
-  VIEW_AUTOLOAD['hub-adm']    ={fn:renderHubAdm};
-  VIEW_AUTOLOAD['hub-portal'] ={fn:renderHubPortal};
+  VIEW_AUTOLOAD['hub-igreja']     ={fn:renderHubIgreja};
+  VIEW_AUTOLOAD['hub-gov']        ={fn:renderHubGov};
+  VIEW_AUTOLOAD['hub-dep']        ={fn:renderHubDep};
+  VIEW_AUTOLOAD['hub-op']         ={fn:renderHubOp};
+  VIEW_AUTOLOAD['hub-adm']        ={fn:renderHubAdm};
+  VIEW_AUTOLOAD['hub-portal']     ={fn:renderHubPortal};
+  VIEW_AUTOLOAD['escalas-dash']   ={fn:renderEscalasDash};
+  VIEW_AUTOLOAD['lideranca-dash'] ={fn:renderLiderancaDash};
 }
 
 })();

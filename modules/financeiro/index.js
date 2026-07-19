@@ -906,4 +906,8 @@
     _pagarDebTimer = setTimeout(() => finFiltrarPagar(), 300);
   };
 
+  if(typeof VIEW_AUTOLOAD!=='undefined'){
+    VIEW_AUTOLOAD['fin-dash']={fn: renderDash};
+  }
+
 })();

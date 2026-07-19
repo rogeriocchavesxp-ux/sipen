@@ -2896,4 +2896,8 @@ ${linhas}
 
   window.aplicarMenuDemandasPorPerfil = _aplicarMenuDem;
 
+  if(typeof VIEW_AUTOLOAD!=='undefined'){
+    VIEW_AUTOLOAD['dem-dash']={fn: renderDash};
+  }
+
 })();

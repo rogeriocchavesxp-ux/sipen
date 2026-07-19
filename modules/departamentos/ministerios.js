@@ -3310,4 +3310,8 @@
   window.minMinRemoverTurma           = minMinRemoverTurma;
   window._turmaSalvar                 = _turmaSalvar;
 
+  if(typeof VIEW_AUTOLOAD!=='undefined'){
+    VIEW_AUTOLOAD['min-min']={fn: minMinLoad};
+  }
+
 })();

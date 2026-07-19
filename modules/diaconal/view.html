@@ -12,12 +12,12 @@
       <div class="bni" onclick="go('diac-solicitacoes')">Solicitações</div>
       <div class="bni" onclick="go('diac-whatsapp')">WhatsApp</div>
     </div>
-    <div class="ct">
+    <div class="ct" id="diac-dash-ct">
       <div class="kpis c4">
-        <div class="kpi"><div class="kpi-ico" style="background:var(--copperbg);color:var(--copper);">✚</div><div class="kpi-body"><div class="kpi-lbl">Diáconos ativos</div><div class="kpi-val">12</div><div class="kpi-d nu">em serviço regular</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal);">⌂</div><div class="kpi-body"><div class="kpi-lbl">Famílias assistidas</div><div class="kpi-val">34</div><div class="kpi-d up">▲ +3 este mês</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Escalas do mês</div><div class="kpi-val">8</div><div class="kpi-d nu">cultos e eventos</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Solicitações pendentes</div><div class="kpi-val">5</div><div class="kpi-d wa">⚠ aguardando triagem</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--copperbg);color:var(--copper);">✚</div><div class="kpi-body"><div class="kpi-lbl">Diáconos ativos</div><div class="kpi-val" id="diac-kd-ativos">—</div><div class="kpi-d nu">em serviço regular</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,0.15);color:var(--teal);">⌂</div><div class="kpi-body"><div class="kpi-lbl">Famílias assistidas</div><div class="kpi-val" id="diac-kd-familias">—</div><div class="kpi-d nu">em acompanhamento</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(212,168,67,0.15);color:var(--gold);">◆</div><div class="kpi-body"><div class="kpi-lbl">Escalas este mês</div><div class="kpi-val" id="diac-kd-escalas">—</div><div class="kpi-d nu">cultos e eventos</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber);">⊞</div><div class="kpi-body"><div class="kpi-lbl">Demandas abertas</div><div class="kpi-val" id="diac-kd-dem">—</div><div class="kpi-d nu">aguardando triagem</div></div></div>
       </div>
       <div class="g2">
         <div class="card">

@@ -1363,4 +1363,8 @@
   // Chama após carregar (USUARIO_ATUAL já disponível)
   setTimeout(_ajustarUiPorPerfil, 100);
 
+  if(typeof VIEW_AUTOLOAD!=='undefined'){
+    VIEW_AUTOLOAD['pastoral-dash']={fn: _renderDash};
+  }
+
 })();

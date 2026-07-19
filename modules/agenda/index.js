@@ -1,6 +1,6 @@
 // Agenda autoloads
 // Agenda autoloads completos
-VIEW_AUTOLOAD["agenda-dash"]          = null;
+VIEW_AUTOLOAD["agenda-dash"]          = {fn: carregarAgendaDash};
 VIEW_AUTOLOAD["agenda-calendario"]    = { tab:"AGENDA", id:"agenda-cal-list" };
 VIEW_AUTOLOAD["agenda-confirmados"]   = { fn: () => agCarregarConfirmados() };
 VIEW_AUTOLOAD["agenda-aprovacoes"]    = { fn: () => agCarregarAprovacoes() };
