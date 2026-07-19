@@ -2657,6 +2657,7 @@
         <button class="min-tab" data-tab="membros" onclick="minMinTab('membros')">Membros <span id="min-min-membro-count" style="font-size:11px;font-weight:400"></span></button>
         <button class="min-tab" data-tab="setores" onclick="minMinTab('setores')">Setores <span id="min-min-setor-count" style="font-size:11px;font-weight:400"></span></button>
         <button class="min-tab" data-tab="relatorios" onclick="minMinTab('relatorios')">Relatórios</button>
+        <button class="min-tab" data-tab="reunioes" onclick="minMinTab('reunioes')" id="min-min-tab-btn-reu" style="display:none">Reuniões</button>
         <button class="min-tab" data-tab="adm" onclick="minMinTab('adm')" id="min-min-tab-btn-adm" style="display:none">Administração</button>
       </div>
       <!-- Aba: Dashboard -->
@@ -2681,6 +2682,15 @@
             <span class="cact" id="min-min-btn-add-setor" style="display:none" onclick="minMinNovoSetor()">+ Novo Setor</span>
           </div>
           <div id="min-min-setor-list"><div style="color:var(--tx3);font-size:13px;padding:16px 0">Carregando...</div></div>
+        </div>
+      </div>
+      <!-- Aba: Reuniões -->
+      <div id="min-min-tab-reunioes" class="min-tab-panel" style="display:none">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+          <button class="tbt pri" id="min-min-btn-add-reu" style="display:none" onclick="minMinNovaReuniao()">+ Nova Reunião</button>
+        </div>
+        <div id="min-min-reu-list">
+          <div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Carregando...</div>
         </div>
       </div>
       <!-- Aba: Relatórios -->

@@ -43,6 +43,7 @@
   let _pessoasCache     = null;
   let _editandoId       = null;
   let _setorEditandoId  = null;
+  let _reuEditandoId    = null;
   let _supervisorDoMinisterioAtual = null;
 
   /* ══ SUPABASE HEADERS ════════════════════════════════════════ */
@@ -291,6 +292,9 @@
 
       if (admBtn) admBtn.style.display = _podeEditarMinisterio() ? '' : 'none';
 
+      const reunBtn = document.getElementById('min-min-tab-btn-reu');
+      if (reunBtn) reunBtn.style.display = _recursosAtual.reunioes ? '' : 'none';
+
       const btnAdd = document.getElementById('min-min-btn-add-membro');
       if (btnAdd) btnAdd.style.display = _podeEditar() ? '' : 'none';
 
@@ -316,7 +320,8 @@
     const panel = document.getElementById('min-min-tab-' + tab);
     if (panel) panel.style.display = '';
     _tabAtual = tab;
-    if (tab === 'adm' && _ministerioAtual) _renderAdm();
+    if (tab === 'adm'     && _ministerioAtual) _renderAdm();
+    if (tab === 'reunioes' && _ministerioAtual) _carregarReunioes(_ministerioAtual);
   }
 
   /* ══ HEADER COMPACTO ═════════════════════════════════════════ */
@@ -541,6 +546,233 @@
       if (_ministerioDataAtual) _ministerioDataAtual.recursos = _recursosAtual;
       _renderAdm();
     }
+  }
+
+  /* ══ REUNIÕES DO MINISTÉRIO ══════════════════════════════════ */
+  async function _carregarReunioes(ministerioId) {
+    const el  = document.getElementById('min-min-reu-list');
+    const btn = document.getElementById('min-min-btn-add-reu');
+    if (!el) return;
+    if (btn) btn.style.display = _podeEditar() ? '' : 'none';
+    el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Carregando...</div>';
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/ministerio_reunioes?ministerio_id=eq.${ministerioId}&order=data.desc,criado_em.desc`,
+        { headers: _hdr() }
+      );
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        if (err?.code === '42P01') {
+          el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Execute a migration <strong>ministerios-fase4-reunioes.sql</strong> para ativar reuniões.</div>';
+          return;
+        }
+        throw new Error(err?.message || r.status);
+      }
+      const lista = await r.json();
+      if (!lista.length) {
+        el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Nenhuma reunião registrada.</div>';
+        return;
+      }
+      const podeAct = _podeEditar();
+      el.innerHTML = lista.map(reu => _cardReuniao(reu, podeAct)).join('');
+    } catch (e) {
+      console.error('_carregarReunioes:', e);
+      el.innerHTML = '<div style="color:var(--rose);font-size:13px;padding:16px 0">Erro ao carregar reuniões.</div>';
+    }
+  }
+
+  function _cardReuniao(reu, podeAct) {
+    const STATUS = {
+      agendada:  { label: 'Agendada',  bg: 'rgba(255,214,10,0.12)', cor: 'var(--gold,#ffd60a)' },
+      realizada: { label: 'Realizada', bg: 'rgba(48,209,88,0.12)',  cor: 'var(--gr)' },
+      cancelada: { label: 'Cancelada', bg: 'rgba(255,69,58,0.10)',  cor: 'var(--rose)' },
+    };
+    const st = STATUS[reu.status] || STATUS.agendada;
+    const dataFmt = reu.data
+      ? new Date(reu.data + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+      : '—';
+    const hora = reu.hora ? reu.hora.slice(0, 5) : '';
+
+    const _bloco = (titulo, conteudo) => conteudo
+      ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd1)">
+           <div style="font-size:10.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${titulo}</div>
+           <div style="font-size:13px;color:var(--tx2);white-space:pre-wrap;line-height:1.6">${escapeHtml(conteudo)}</div>
+         </div>`
+      : '';
+
+    const actBtns = podeAct ? `
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button onclick="minMinEditarReuniao('${reu.id}')" class="tbt" style="font-size:11px;padding:4px 10px">Editar</button>
+        ${reu.status === 'agendada'
+          ? `<button onclick="minMinToggleReuniaoStatus('${reu.id}','realizada')" class="tbt"
+               style="font-size:11px;padding:4px 10px;color:var(--gr);border-color:rgba(48,209,88,0.4)">✓ Marcar Realizada</button>`
+          : reu.status === 'realizada'
+            ? `<button onclick="minMinToggleReuniaoStatus('${reu.id}','agendada')" class="tbt"
+                 style="font-size:11px;padding:4px 10px">Reabrir</button>`
+            : ''
+        }
+        <button onclick="minMinRemoverReuniao('${reu.id}')" class="tbt"
+          style="font-size:11px;padding:4px 10px;color:var(--rose);border-color:rgba(255,69,58,0.3)">Remover</button>
+      </div>` : '';
+
+    return `
+      <div class="card" style="margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="_reuToggle('${reu.id}')">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13.5px;font-weight:600;color:var(--tx1);margin-bottom:2px">${escapeHtml(reu.titulo)}</div>
+            <div style="font-size:12px;color:var(--tx3)">${dataFmt}${hora ? ' · ' + hora : ''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            <span style="font-size:11px;padding:2px 9px;border-radius:20px;font-weight:600;background:${st.bg};color:${st.cor}">${st.label}</span>
+            <span id="reu-arrow-${reu.id}" style="color:var(--tx3);font-size:11px;transition:transform .2s">▼</span>
+          </div>
+        </div>
+        <div id="reu-body-${reu.id}" style="display:none" onclick="event.stopPropagation()">
+          ${_bloco('Pauta', reu.pauta)}
+          ${_bloco('Decisões', reu.decisoes)}
+          ${_bloco('Observações', reu.observacoes)}
+          ${actBtns}
+        </div>
+      </div>`;
+  }
+
+  function _reuToggle(id) {
+    const body  = document.getElementById(`reu-body-${id}`);
+    const arrow = document.getElementById(`reu-arrow-${id}`);
+    if (!body) return;
+    const open = body.style.display !== 'none';
+    body.style.display  = open ? 'none' : '';
+    if (arrow) arrow.style.transform = open ? '' : 'rotate(180deg)';
+  }
+
+  function _garantirModalReuniao() {
+    let el = document.getElementById('min-reu-modal');
+    if (el) return el;
+    const corpo = `
+      ${_fld('mru-titulo', 'Título', 'text', true)}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        ${_fld('mru-data', 'Data', 'date', true)}
+        ${_fld('mru-hora', 'Hora', 'time', false)}
+      </div>
+      ${_sel('mru-status', 'Status',
+        '<option value="agendada">Agendada</option><option value="realizada">Realizada</option><option value="cancelada">Cancelada</option>',
+        false)}
+      <div>
+        <label style="${_LB}">Pauta</label>
+        <textarea id="mru-pauta" rows="4"
+          style="${_INP};resize:vertical;height:auto;font-family:inherit;line-height:1.5"
+          placeholder="Tópicos a serem discutidos..."></textarea>
+      </div>
+      <div>
+        <label style="${_LB}">Decisões</label>
+        <textarea id="mru-decisoes" rows="3"
+          style="${_INP};resize:vertical;height:auto;font-family:inherit;line-height:1.5"
+          placeholder="Registre as decisões tomadas..."></textarea>
+      </div>
+      <div>
+        <label style="${_LB}">Observações</label>
+        <textarea id="mru-obs" rows="2"
+          style="${_INP};resize:vertical;height:auto;font-family:inherit;line-height:1.5"></textarea>
+      </div>
+      ${_errEl('mru-err')}`;
+    const footer = `<button id="mru-btn" onclick="_reuSalvar()"
+      style="padding:9px 24px;border-radius:8px;border:none;background:var(--violet);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Salvar</button>`;
+    return _modalWrap('min-reu-modal', 'Nova Reunião', 'Ministerial · Reuniões', corpo, footer);
+  }
+
+  async function minMinNovaReuniao() {
+    if (!_podeEditar() || !_ministerioAtual) return;
+    _reuEditandoId = null;
+    const modal = _garantirModalReuniao();
+    document.getElementById('min-reu-modal-title').textContent = 'Nova Reunião';
+    document.getElementById('mru-titulo').value   = '';
+    document.getElementById('mru-data').value     = new Date().toISOString().slice(0, 10);
+    document.getElementById('mru-hora').value     = '';
+    document.getElementById('mru-status').value   = 'agendada';
+    document.getElementById('mru-pauta').value    = '';
+    document.getElementById('mru-decisoes').value = '';
+    document.getElementById('mru-obs').value      = '';
+    _showErr('mru-err', '');
+    modal.style.display = 'flex';
+  }
+
+  async function minMinEditarReuniao(id) {
+    if (!_podeEditar()) return;
+    _reuEditandoId = id;
+    const modal = _garantirModalReuniao();
+    document.getElementById('min-reu-modal-title').textContent = 'Editar Reunião';
+    _showErr('mru-err', '');
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_reunioes?id=eq.${id}`, { headers: _hdr() });
+    const dados = r.ok ? await r.json() : [];
+    const reu = dados[0];
+    if (!reu) { alert('Reunião não encontrada.'); return; }
+    document.getElementById('mru-titulo').value   = reu.titulo       || '';
+    document.getElementById('mru-data').value     = reu.data         || '';
+    document.getElementById('mru-hora').value     = (reu.hora || '').slice(0, 5);
+    document.getElementById('mru-status').value   = reu.status       || 'agendada';
+    document.getElementById('mru-pauta').value    = reu.pauta        || '';
+    document.getElementById('mru-decisoes').value = reu.decisoes     || '';
+    document.getElementById('mru-obs').value      = reu.observacoes  || '';
+    modal.style.display = 'flex';
+  }
+
+  async function _reuSalvar() {
+    const titulo = (document.getElementById('mru-titulo').value || '').trim();
+    const data   = document.getElementById('mru-data').value || '';
+    if (!titulo) { _showErr('mru-err', 'Título é obrigatório.'); return; }
+    if (!data)   { _showErr('mru-err', 'Data é obrigatória.');   return; }
+    const btn = document.getElementById('mru-btn');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    const payload = {
+      titulo,
+      data,
+      hora:        document.getElementById('mru-hora').value     || null,
+      status:      document.getElementById('mru-status').value   || 'agendada',
+      pauta:       (document.getElementById('mru-pauta').value    || '').trim() || null,
+      decisoes:    (document.getElementById('mru-decisoes').value || '').trim() || null,
+      observacoes: (document.getElementById('mru-obs').value      || '').trim() || null,
+    };
+    try {
+      let r;
+      if (_reuEditandoId) {
+        r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_reunioes?id=eq.${_reuEditandoId}`, {
+          method: 'PATCH', headers: _hdrJson(), body: JSON.stringify(payload),
+        });
+      } else {
+        r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_reunioes`, {
+          method: 'POST', headers: _hdrJson(),
+          body: JSON.stringify(Object.assign({ ministerio_id: _ministerioAtual, criado_por: USUARIO_ATUAL?.auth_user_id || null }, payload)),
+        });
+      }
+      if (!r.ok) throw new Error(await r.text());
+      document.getElementById('min-reu-modal').style.display = 'none';
+      await _carregarReunioes(_ministerioAtual);
+    } catch (e) {
+      _showErr('mru-err', 'Erro ao salvar: ' + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Salvar';
+    }
+  }
+
+  async function minMinToggleReuniaoStatus(id, novoStatus) {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_reunioes?id=eq.${id}`, {
+        method: 'PATCH', headers: _hdrJson(), body: JSON.stringify({ status: novoStatus }),
+      });
+      if (!r.ok) throw new Error(r.status);
+      await _carregarReunioes(_ministerioAtual);
+    } catch (e) { alert('Erro ao atualizar status: ' + e.message); }
+  }
+
+  async function minMinRemoverReuniao(id) {
+    if (!confirm('Remover esta reunião permanentemente?')) return;
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_reunioes?id=eq.${id}`, {
+        method: 'DELETE', headers: _hdr(),
+      });
+      if (!r.ok) throw new Error(r.status);
+      await _carregarReunioes(_ministerioAtual);
+    } catch (e) { alert('Erro ao remover: ' + e.message); }
   }
 
   /* ══ MEMBROS DO MINISTÉRIO ═══════════════════════════════════ */
@@ -1299,5 +1531,11 @@
   window._mstSalvar        = _mstSalvar;
   window._admSalvarInfo    = _admSalvarInfo;
   window._admToggleRecurso = _admToggleRecurso;
+  window.minMinNovaReuniao         = minMinNovaReuniao;
+  window.minMinEditarReuniao       = minMinEditarReuniao;
+  window.minMinToggleReuniaoStatus = minMinToggleReuniaoStatus;
+  window.minMinRemoverReuniao      = minMinRemoverReuniao;
+  window._reuToggle                = _reuToggle;
+  window._reuSalvar                = _reuSalvar;
 
 })();
