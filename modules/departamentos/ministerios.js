@@ -236,6 +236,8 @@
     _ministerioDataAtual = null;
     document.getElementById('min-min-painel-lista').style.display   = 'none';
     document.getElementById('min-min-painel-detalhe').style.display = '';
+    const _heroActDet = document.getElementById('min-min-hero-act');
+    if (_heroActDet) _heroActDet.style.display = 'none';
 
     // Resetar para aba Visão Geral
     minMinTab('visao-geral');
@@ -2569,6 +2571,8 @@
     _ministerioDataAtual = null;
     document.getElementById('min-min-painel-detalhe').style.display = 'none';
     document.getElementById('min-min-painel-lista').style.display   = '';
+    const heroAct = document.getElementById('min-min-hero-act');
+    if (heroAct) heroAct.style.display = _isAdminGeral() ? '' : 'none';
     const heroTtl = document.querySelector('#v-min-min .hero-ttl');
     if (heroTtl) heroTtl.textContent = 'Ministérios';
     const cr = document.getElementById('crumb');
