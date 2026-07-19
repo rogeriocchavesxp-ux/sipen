@@ -3280,6 +3280,8 @@
   window.minMinEditarProgramacao      = minMinEditarProgramacao;
   window.minMinToggleProgStatus       = minMinToggleProgStatus;
   window.minMinRemoverProgramacao     = minMinRemoverProgramacao;
+  window.minMinPublicarNaAgenda       = minMinPublicarNaAgenda;
+  window._progPublicarClick           = _progPublicarClick;
   window._progToggle                  = _progToggle;
   window._progSalvar                  = _progSalvar;
   window.minMinNovaEscala             = minMinNovaEscala;
