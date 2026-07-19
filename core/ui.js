@@ -62,7 +62,11 @@ function escapeHtml(v) {
 /* Normaliza capitalização de nomes para exibição: "JOÃO SILVA" → "João Silva" */
 function nomePropio(str) {
   if (!str) return "";
-  return escapeHtml(str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()));
+  const min = new Set(["de","da","do","das","dos","e","a","o","em","na","no","nas","nos"]);
+  const fmt = str.toLowerCase().split(" ").map((w, i) =>
+    (!w || (i > 0 && min.has(w))) ? w : w.charAt(0).toUpperCase() + w.slice(1)
+  ).join(" ");
+  return escapeHtml(fmt);
 }
 
 function escapeHtmlAttr(v) {
