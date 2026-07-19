@@ -104,7 +104,10 @@ function _renderMensagens(rows){
           <td>${_badge(r.status)}</td>
           <td style="text-align:center;font-size:12px;font-variant-numeric:tabular-nums">${entregaStr}</td>
           <td style="font-size:11px;color:var(--tx3);white-space:nowrap">${_fmtDt(r.criado_em)}</td>
-          <td><button onclick="event.stopPropagation();msgAbrir('${r.id}')" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);cursor:pointer">Ver</button></td>
+          <td style="white-space:nowrap">
+            <button onclick="event.stopPropagation();msgAbrir('${r.id}')" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);cursor:pointer">Ver</button>
+            <button onclick="event.stopPropagation();msgReutilizarCampanha('${r.id}')" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid rgba(139,111,212,.35);background:transparent;color:var(--violet);cursor:pointer;margin-left:4px">Reutilizar</button>
+          </td>
         </tr>`;
       }).join('')}
       </tbody>
@@ -289,9 +292,25 @@ window.msgNovaComModelo=function(id){
   const m=_modelos.find(x=>x.id===id);
   if(!m) return;
   msgNovaMensagem();
-  // Pré-preencher conteúdo após wizard abrir
+  setTimeout(()=>{ if(_wz){ _wz.conteudo=m.conteudo; _wz.canal=m.canal; } },50);
+};
+
+window.msgReutilizarCampanha=async function(id){
+  let c=_campanhas.find(x=>x.id===id);
+  if(!c){
+    try{
+      const r=await fetch(`${apiBaseUrl()}/rest/v1/msg_campanhas?id=eq.${id}&select=*`,{headers:apiHeaders()});
+      const rows=await r.json(); c=rows?.[0];
+    }catch(_){}
+  }
+  if(!c){ T('Erro','Mensagem não encontrada.'); return; }
+  msgNovaMensagem();
   setTimeout(()=>{
-    if(_wz){ _wz.conteudo=m.conteudo; _wz.canal=m.canal; }
+    if(!_wz) return;
+    _wz.canal    = c.canal    || 'whatsapp';
+    _wz.conteudo = c.conteudo || '';
+    _wz.titulo   = c.titulo   || '';
+    _renderWzBody();
   },50);
 };
 
@@ -315,7 +334,7 @@ async function carregarHistorico(){
     }
     el.innerHTML=`<div class="card" style="padding:0;overflow:hidden">
       <div class="tbl-wrap"><table class="tbl">
-        <thead><tr><th>Canal</th><th>Título</th><th>Status</th><th>Total</th><th>Entregues</th><th>Falhas</th><th>Data</th></tr></thead>
+        <thead><tr><th>Canal</th><th>Título</th><th>Status</th><th>Total</th><th>Entregues</th><th>Falhas</th><th>Data</th><th></th></tr></thead>
         <tbody>${rows.map(r=>`<tr>
           <td title="${CANAL_LBL[r.canal]||r.canal}">${CANAL_IC[r.canal]||'📢'}</td>
           <td style="font-weight:500">${escapeHtml(r.titulo)}</td>
@@ -324,6 +343,7 @@ async function carregarHistorico(){
           <td style="text-align:center;font-variant-numeric:tabular-nums;color:var(--gr)">${r.total_entregue}</td>
           <td style="text-align:center;font-variant-numeric:tabular-nums;color:var(--rose)">${r.total_falha}</td>
           <td style="font-size:11px;color:var(--tx3)">${_fmtDt(r.enviado_em||r.criado_em)}</td>
+          <td><button onclick="msgReutilizarCampanha('${r.id}')" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid rgba(139,111,212,.35);background:transparent;color:var(--violet);cursor:pointer">Reutilizar</button></td>
         </tr>`).join('')}
         </tbody>
       </table></div>
