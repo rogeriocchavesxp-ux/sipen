@@ -1016,7 +1016,13 @@ async function _wzSalvar(status){
     headers:{...apiHeaders(),'Content-Type':'application/json','Prefer':'return=representation'},
     body:JSON.stringify(payload)
   });
-  if(!r.ok) throw new Error(await r.text());
+  if(!r.ok){
+    const txt=await r.text();
+    let msg=txt;
+    try{ const j=JSON.parse(txt); msg=j.message||j.hint||j.details||txt; }catch(_){}
+    console.error('[msg_campanhas POST]',txt,'payload:',payload);
+    throw new Error(msg);
+  }
   const [camp]=await r.json();
   if(camp?.id){
     const registros=[
