@@ -1770,3 +1770,49 @@ html[data-theme="light"] .tb-search:focus{border-color:rgba(0,0,0,0.16)}
   .dr-l{min-width:90px}
   .tb-search-wrap{display:none}
 }
+
+/* ══ Sidebar Colapsado ════════════════════════════════════════════ */
+.sb{transition:width .2s ease}
+
+.sb-collapse-btn{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:14px;padding:3px 7px;border-radius:5px;transition:color .12s,background .12s;line-height:1;flex-shrink:0;margin-left:auto}
+.sb-collapse-btn:hover{color:var(--tx1);background:var(--bg-hover)}
+
+.sb.sb-collapsed{width:52px}
+.sb.sb-collapsed .sb-brand,
+.sb.sb-collapsed .mname,
+.sb.sb-collapsed .marr,
+.sb.sb-collapsed .mbadge,
+.sb.sb-collapsed .msub,
+.sb.sb-collapsed .sb-social,
+.sb.sb-collapsed .sb-un,
+.sb.sb-collapsed .sb-ur,
+.sb.sb-collapsed .sb-lo,
+.sb.sb-collapsed .sb-theme-bar{display:none!important}
+
+.sb.sb-collapsed .sb-logo{padding:0 8px;justify-content:center}
+.sb.sb-collapsed .sb-collapse-btn{margin-left:0}
+
+.sb.sb-collapsed .sb-section-hdr{height:0;padding:0;margin:5px 10px 3px;border-top:1px solid var(--bd1);pointer-events:none;gap:0}
+.sb.sb-collapsed .sb-section-hdr span{display:none}
+
+.sb.sb-collapsed .mwrap{margin:1px 5px}
+.sb.sb-collapsed .mhdr{padding:6px 0;justify-content:center;border-radius:8px}
+.sb.sb-collapsed .mhdr.open{border-radius:8px}
+.sb.sb-collapsed .mhdr:hover{background:rgba(255,255,255,0.07)}
+
+.sb.sb-collapsed .l1{padding:7px 0;justify-content:center;border-left:none;border-radius:8px;margin:1px 5px}
+.sb.sb-collapsed .l1-ic{margin:0}
+
+.sb.sb-collapsed .sb-sys{padding:4px 0 2px}
+.sb.sb-collapsed #mw-sys{margin:1px 5px 2px}
+
+.sb.sb-collapsed .sb-ft{padding:8px 6px}
+.sb.sb-collapsed .sb-usr{flex-direction:column;gap:4px;align-items:center}
+.sb.sb-collapsed .sb-av{margin:0}
+.sb.sb-collapsed .sb-exit-btn{display:none!important}
+
+/* Tooltip */
+#sb-tip{position:fixed;left:60px;background:var(--bg-surface);border:1px solid var(--bd2);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--tx1);white-space:nowrap;z-index:999;pointer-events:none;opacity:0;transition:opacity .1s;box-shadow:0 4px 12px rgba(0,0,0,0.25);font-family:var(--sans)}
+#sb-tip.vis{opacity:1}
+
+html[data-theme="light"] .sb.sb-collapsed .mhdr:hover{background:rgba(0,0,0,0.05)}

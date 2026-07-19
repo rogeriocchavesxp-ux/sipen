@@ -3,7 +3,7 @@
 const _isPublicRoute = window.location.hash === "#pautas-reunioes";
 const _shellReady = _isPublicRoute ? Promise.resolve() : Promise.all([
   fetch("views/login.html?v=6.45.13").then(r => r.ok ? r.text() : ""),
-  fetch("views/sidebar.html?v=6.45.13").then(r => r.ok ? r.text() : ""),
+  fetch("views/sidebar.html?v=6.46.0").then(r => r.ok ? r.text() : ""),
   fetch("views/modals.html?v=6.45.13").then(r => r.ok ? r.text() : ""),
 ]).then(([loginHtml, sidebarHtml, modalsHtml]) => {
   document.body.insertAdjacentHTML("afterbegin", loginHtml);
@@ -191,6 +191,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await _shellReady;
   window.renderThemeToggle?.();
   sbsInit();
+  sbCollapseInit();
   _ensureViewLoaded("geral").then(() => go("geral"));
 
   document.querySelectorAll(".bf").forEach(b => {
@@ -678,3 +679,75 @@ async function renderContratados() {
 }
 VIEW_AUTOLOAD["conselho-contratados"] = { fn: () => renderContratados() };
 VIEW_AUTOLOAD["conselho-eleicoes"]   = { fn: () => (typeof eleicaoInit === "function" ? eleicaoInit() : null) };
+
+/* ── Sidebar collapse ──────────────────────────────────────────────── */
+const _SB_COLLAPSED_KEY = 'sipen-sb-collapsed';
+
+function sbCollapse() {
+  const sb = document.querySelector('.sb');
+  if (!sb) return;
+  const collapsed = sb.classList.toggle('sb-collapsed');
+  try { localStorage.setItem(_SB_COLLAPSED_KEY, collapsed ? '1' : '0'); } catch(_) {}
+  const btn = document.getElementById('sb-collapse-btn');
+  if (btn) btn.textContent = collapsed ? '›' : '‹';
+  const tip = document.getElementById('sb-tip');
+  if (tip) tip.classList.remove('vis');
+}
+
+function sbCollapseInit() {
+  const sb = document.querySelector('.sb');
+  if (!sb) return;
+
+  // Restore persisted state
+  try {
+    if (localStorage.getItem(_SB_COLLAPSED_KEY) === '1') {
+      sb.classList.add('sb-collapsed');
+      const btn = document.getElementById('sb-collapse-btn');
+      if (btn) btn.textContent = '›';
+    }
+  } catch(_) {}
+
+  // Tooltip element
+  const tip = document.createElement('div');
+  tip.id = 'sb-tip';
+  document.body.appendChild(tip);
+
+  function _tipName(hdr) {
+    const n = hdr.querySelector('.mname')?.textContent?.trim();
+    if (n) return n;
+    return [...hdr.childNodes]
+      .filter(nd => nd.nodeType === 3)
+      .map(nd => nd.textContent.trim())
+      .filter(Boolean).join('');
+  }
+
+  sb.addEventListener('mouseover', e => {
+    if (!sb.classList.contains('sb-collapsed')) { tip.classList.remove('vis'); return; }
+    const hdr = e.target.closest('.mhdr, .l1');
+    if (!hdr) { tip.classList.remove('vis'); return; }
+    const name = _tipName(hdr);
+    if (!name) return;
+    const r = hdr.getBoundingClientRect();
+    tip.textContent = name;
+    tip.style.top = Math.round(r.top + r.height / 2 - 14) + 'px';
+    tip.classList.add('vis');
+  });
+
+  sb.addEventListener('mouseout', e => {
+    const hdr = e.target.closest('.mhdr, .l1');
+    if (!hdr) return;
+    const rt = e.relatedTarget;
+    if (rt && hdr.contains(rt)) return;
+    tip.classList.remove('vis');
+  });
+
+  // When collapsed, ensure tog() always navigates (clear .open before it checks)
+  sb.addEventListener('click', e => {
+    if (!sb.classList.contains('sb-collapsed')) return;
+    const hdr = e.target.closest('.mhdr:not(.mhdr-noexpand)');
+    if (!hdr) return;
+    const sub = hdr.closest('.mwrap')?.querySelector('.msub');
+    if (sub) sub.classList.remove('open');
+    hdr.classList.remove('open');
+  }, true);
+}
