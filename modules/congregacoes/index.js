@@ -512,7 +512,7 @@ function renderCongView(cong){
   const cr=document.getElementById("crumb");
   if(cr) cr.innerHTML=`<span class="c-mod">Departamentos</span><span class="c-sep">/</span><span class="c-pg">Congregações</span><span class="c-sub">/ ${escapeHtml(cong.identificacao.nome)}</span>`;
 
-  el.innerHTML=`<div class="ct">
+  el.innerHTML=`<div class="ct" style="padding-top:20px">
     <div style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
       ${!_isLiderCong()?`<button class="tbt" onclick="go('cong-dash')">← Todas as Congregações</button>`:`<div></div>`}
       <div style="display:flex;gap:6px;flex-wrap:wrap">
