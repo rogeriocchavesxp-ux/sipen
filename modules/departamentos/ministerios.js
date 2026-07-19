@@ -44,6 +44,8 @@
   let _editandoId       = null;
   let _setorEditandoId  = null;
   let _reuEditandoId    = null;
+  let _progEditandoId   = null;
+  let _escalEditandoId  = null;
   let _supervisorDoMinisterioAtual = null;
 
   /* ══ SUPABASE HEADERS ════════════════════════════════════════ */
@@ -292,8 +294,12 @@
 
       if (admBtn) admBtn.style.display = _podeEditarMinisterio() ? '' : 'none';
 
-      const reunBtn = document.getElementById('min-min-tab-btn-reu');
-      if (reunBtn) reunBtn.style.display = _recursosAtual.reunioes ? '' : 'none';
+      const reunBtn  = document.getElementById('min-min-tab-btn-reu');
+      if (reunBtn)  reunBtn.style.display  = _recursosAtual.reunioes     ? '' : 'none';
+      const progBtn  = document.getElementById('min-min-tab-btn-prog');
+      if (progBtn)  progBtn.style.display  = _recursosAtual.programacoes ? '' : 'none';
+      const escalBtn = document.getElementById('min-min-tab-btn-escal');
+      if (escalBtn) escalBtn.style.display = _recursosAtual.escalas      ? '' : 'none';
 
       const btnAdd = document.getElementById('min-min-btn-add-membro');
       if (btnAdd) btnAdd.style.display = _podeEditar() ? '' : 'none';
@@ -320,8 +326,10 @@
     const panel = document.getElementById('min-min-tab-' + tab);
     if (panel) panel.style.display = '';
     _tabAtual = tab;
-    if (tab === 'adm'     && _ministerioAtual) _renderAdm();
-    if (tab === 'reunioes' && _ministerioAtual) _carregarReunioes(_ministerioAtual);
+    if (tab === 'adm'          && _ministerioAtual) _renderAdm();
+    if (tab === 'reunioes'     && _ministerioAtual) _carregarReunioes(_ministerioAtual);
+    if (tab === 'programacoes' && _ministerioAtual) _carregarProgramacoes(_ministerioAtual);
+    if (tab === 'escalas'      && _ministerioAtual) _carregarEscalas(_ministerioAtual);
   }
 
   /* ══ HEADER COMPACTO ═════════════════════════════════════════ */
@@ -772,6 +780,491 @@
       });
       if (!r.ok) throw new Error(r.status);
       await _carregarReunioes(_ministerioAtual);
+    } catch (e) { alert('Erro ao remover: ' + e.message); }
+  }
+
+  /* ══ PROGRAMAÇÕES DO MINISTÉRIO ══════════════════════════════ */
+  async function _carregarProgramacoes(ministerioId) {
+    const el  = document.getElementById('min-min-prog-list');
+    const btn = document.getElementById('min-min-btn-add-prog');
+    if (!el) return;
+    if (btn) btn.style.display = _podeEditar() ? '' : 'none';
+    el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Carregando...</div>';
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/ministerio_programacoes?ministerio_id=eq.${ministerioId}&order=data.desc,criado_em.desc`,
+        { headers: _hdr() }
+      );
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        if (err?.code === '42P01') {
+          el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:20px;text-align:center">Execute a migration <strong>ministerios-fase3-programacoes-escalas.sql</strong> para ativar este módulo.</div>';
+          return;
+        }
+        throw new Error(err?.message || r.status);
+      }
+      const lista = await r.json();
+      if (!lista.length) {
+        el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Nenhuma programação registrada.</div>';
+        return;
+      }
+      const podeAct = _podeEditar();
+      el.innerHTML = lista.map(p => _cardProgramacao(p, podeAct)).join('');
+    } catch (e) {
+      console.error('_carregarProgramacoes:', e);
+      el.innerHTML = '<div style="color:var(--rose);font-size:13px;padding:16px 0">Erro ao carregar programações.</div>';
+    }
+  }
+
+  function _cardProgramacao(p, podeAct) {
+    const STATUS = {
+      agendado:  { label: 'Agendado',  bg: 'rgba(255,214,10,0.12)', cor: 'var(--gold,#ffd60a)' },
+      realizado: { label: 'Realizado', bg: 'rgba(48,209,88,0.12)',  cor: 'var(--gr)' },
+      cancelado: { label: 'Cancelado', bg: 'rgba(255,69,58,0.10)',  cor: 'var(--rose)' },
+    };
+    const TIPOS = { culto:'Culto', ensaio:'Ensaio', evento:'Evento', atividade:'Atividade', outro:'Outro' };
+    const st = STATUS[p.status] || STATUS.agendado;
+    const dataFmt = p.data
+      ? new Date(p.data + 'T12:00:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' })
+      : '—';
+    const hora  = p.hora  ? p.hora.slice(0, 5) : '';
+    const tipo  = TIPOS[p.tipo] || p.tipo || '';
+    const _bloco = (titulo, conteudo) => conteudo
+      ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd1)">
+           <div style="font-size:10.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">${titulo}</div>
+           <div style="font-size:13px;color:var(--tx2);line-height:1.6">${escapeHtml(conteudo)}</div>
+         </div>` : '';
+    const actBtns = podeAct ? `
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button onclick="minMinEditarProgramacao('${p.id}')" class="tbt" style="font-size:11px;padding:4px 10px">Editar</button>
+        ${p.status === 'agendado'
+          ? `<button onclick="minMinToggleProgStatus('${p.id}','realizado')" class="tbt" style="font-size:11px;padding:4px 10px;color:var(--gr);border-color:rgba(48,209,88,0.4)">✓ Marcar Realizado</button>`
+          : p.status === 'realizado'
+            ? `<button onclick="minMinToggleProgStatus('${p.id}','agendado')" class="tbt" style="font-size:11px;padding:4px 10px">Reabrir</button>`
+            : ''
+        }
+        <button onclick="minMinRemoverProgramacao('${p.id}')" class="tbt" style="font-size:11px;padding:4px 10px;color:var(--rose);border-color:rgba(255,69,58,0.3)">Remover</button>
+      </div>` : '';
+    return `
+      <div class="card" style="margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="_progToggle('${p.id}')">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13.5px;font-weight:600;color:var(--tx1);margin-bottom:2px">${escapeHtml(p.titulo)}</div>
+            <div style="font-size:12px;color:var(--tx3)">${dataFmt}${hora ? ' · ' + hora : ''}${p.local ? ' · ' + escapeHtml(p.local) : ''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            ${tipo ? `<span style="font-size:10.5px;color:var(--tx3)">${tipo}</span>` : ''}
+            <span style="font-size:11px;padding:2px 9px;border-radius:20px;font-weight:600;background:${st.bg};color:${st.cor}">${st.label}</span>
+            <span id="prog-arrow-${p.id}" style="color:var(--tx3);font-size:11px;transition:transform .2s">▼</span>
+          </div>
+        </div>
+        <div id="prog-body-${p.id}" style="display:none" onclick="event.stopPropagation()">
+          ${_bloco('Descrição', p.descricao)}
+          ${actBtns}
+        </div>
+      </div>`;
+  }
+
+  function _progToggle(id) {
+    const body  = document.getElementById(`prog-body-${id}`);
+    const arrow = document.getElementById(`prog-arrow-${id}`);
+    if (!body) return;
+    const open = body.style.display !== 'none';
+    body.style.display = open ? 'none' : '';
+    if (arrow) arrow.style.transform = open ? '' : 'rotate(180deg)';
+  }
+
+  function _garantirModalProg() {
+    let el = document.getElementById('min-prog-modal');
+    if (el) return el;
+    const tipoOpts = `
+      <option value="culto">Culto</option>
+      <option value="ensaio">Ensaio</option>
+      <option value="evento" selected>Evento</option>
+      <option value="atividade">Atividade</option>
+      <option value="outro">Outro</option>`;
+    const corpo = `
+      ${_fld('mpg-titulo', 'Título', 'text', true)}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        ${_fld('mpg-data', 'Data', 'date', true)}
+        ${_fld('mpg-hora', 'Hora', 'time', false)}
+      </div>
+      ${_fld('mpg-local', 'Local', 'text', false)}
+      ${_sel('mpg-tipo', 'Tipo', tipoOpts, false)}
+      ${_sel('mpg-status', 'Status',
+        '<option value="agendado">Agendado</option><option value="realizado">Realizado</option><option value="cancelado">Cancelado</option>',
+        false)}
+      <div>
+        <label style="${_LB}">Descrição</label>
+        <textarea id="mpg-desc" rows="3"
+          style="${_INP};resize:vertical;height:auto;font-family:inherit;line-height:1.5"
+          placeholder="Detalhes da programação..."></textarea>
+      </div>
+      ${_errEl('mpg-err')}`;
+    const footer = `<button id="mpg-btn" onclick="_progSalvar()"
+      style="padding:9px 24px;border-radius:8px;border:none;background:var(--violet);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Salvar</button>`;
+    return _modalWrap('min-prog-modal', 'Nova Programação', 'Ministerial · Programações', corpo, footer);
+  }
+
+  async function minMinNovaProgramacao() {
+    if (!_podeEditar() || !_ministerioAtual) return;
+    _progEditandoId = null;
+    const modal = _garantirModalProg();
+    document.getElementById('min-prog-modal-title').textContent = 'Nova Programação';
+    document.getElementById('mpg-titulo').value  = '';
+    document.getElementById('mpg-data').value    = new Date().toISOString().slice(0, 10);
+    document.getElementById('mpg-hora').value    = '';
+    document.getElementById('mpg-local').value   = '';
+    document.getElementById('mpg-tipo').value    = 'evento';
+    document.getElementById('mpg-status').value  = 'agendado';
+    document.getElementById('mpg-desc').value    = '';
+    _showErr('mpg-err', '');
+    modal.style.display = 'flex';
+  }
+
+  async function minMinEditarProgramacao(id) {
+    if (!_podeEditar()) return;
+    _progEditandoId = id;
+    const modal = _garantirModalProg();
+    document.getElementById('min-prog-modal-title').textContent = 'Editar Programação';
+    _showErr('mpg-err', '');
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_programacoes?id=eq.${id}`, { headers: _hdr() });
+    const dados = r.ok ? await r.json() : [];
+    const p = dados[0];
+    if (!p) { alert('Programação não encontrada.'); return; }
+    document.getElementById('mpg-titulo').value = p.titulo       || '';
+    document.getElementById('mpg-data').value   = p.data         || '';
+    document.getElementById('mpg-hora').value   = (p.hora || '').slice(0, 5);
+    document.getElementById('mpg-local').value  = p.local        || '';
+    document.getElementById('mpg-tipo').value   = p.tipo         || 'evento';
+    document.getElementById('mpg-status').value = p.status       || 'agendado';
+    document.getElementById('mpg-desc').value   = p.descricao    || '';
+    modal.style.display = 'flex';
+  }
+
+  async function _progSalvar() {
+    const titulo = (document.getElementById('mpg-titulo').value || '').trim();
+    const data   = document.getElementById('mpg-data').value || '';
+    if (!titulo) { _showErr('mpg-err', 'Título é obrigatório.'); return; }
+    if (!data)   { _showErr('mpg-err', 'Data é obrigatória.');   return; }
+    const btn = document.getElementById('mpg-btn');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    const payload = {
+      titulo,
+      data,
+      hora:      document.getElementById('mpg-hora').value   || null,
+      local:     (document.getElementById('mpg-local').value || '').trim() || null,
+      tipo:      document.getElementById('mpg-tipo').value   || 'evento',
+      status:    document.getElementById('mpg-status').value || 'agendado',
+      descricao: (document.getElementById('mpg-desc').value  || '').trim() || null,
+    };
+    try {
+      let r;
+      if (_progEditandoId) {
+        r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_programacoes?id=eq.${_progEditandoId}`, {
+          method: 'PATCH', headers: _hdrJson(), body: JSON.stringify(payload),
+        });
+      } else {
+        r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_programacoes`, {
+          method: 'POST', headers: _hdrJson(),
+          body: JSON.stringify(Object.assign({ ministerio_id: _ministerioAtual, criado_por: USUARIO_ATUAL?.auth_user_id || null }, payload)),
+        });
+      }
+      if (!r.ok) throw new Error(await r.text());
+      document.getElementById('min-prog-modal').style.display = 'none';
+      await _carregarProgramacoes(_ministerioAtual);
+    } catch (e) {
+      _showErr('mpg-err', 'Erro ao salvar: ' + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Salvar';
+    }
+  }
+
+  async function minMinToggleProgStatus(id, novoStatus) {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_programacoes?id=eq.${id}`, {
+        method: 'PATCH', headers: _hdrJson(), body: JSON.stringify({ status: novoStatus }),
+      });
+      if (!r.ok) throw new Error(r.status);
+      await _carregarProgramacoes(_ministerioAtual);
+    } catch (e) { alert('Erro: ' + e.message); }
+  }
+
+  async function minMinRemoverProgramacao(id) {
+    if (!confirm('Remover esta programação?')) return;
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_programacoes?id=eq.${id}`, {
+        method: 'DELETE', headers: _hdr(),
+      });
+      if (!r.ok) throw new Error(r.status);
+      await _carregarProgramacoes(_ministerioAtual);
+    } catch (e) { alert('Erro ao remover: ' + e.message); }
+  }
+
+  /* ══ ESCALAS DE SERVIÇO ══════════════════════════════════════ */
+  async function _carregarEscalas(ministerioId) {
+    const el  = document.getElementById('min-min-escal-list');
+    const btn = document.getElementById('min-min-btn-add-escal');
+    if (!el) return;
+    if (btn) btn.style.display = _podeEditar() ? '' : 'none';
+    el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Carregando...</div>';
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/ministerio_escalas?ministerio_id=eq.${ministerioId}&order=data.desc,criado_em.desc`,
+        { headers: _hdr() }
+      );
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        if (err?.code === '42P01') {
+          el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:20px;text-align:center">Execute a migration <strong>ministerios-fase3-programacoes-escalas.sql</strong> para ativar este módulo.</div>';
+          return;
+        }
+        throw new Error(err?.message || r.status);
+      }
+      const lista = await r.json();
+      if (!lista.length) {
+        el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Nenhuma escala registrada.</div>';
+        return;
+      }
+      const podeAct = _podeEditar();
+      el.innerHTML = lista.map(e => _cardEscala(e, podeAct)).join('');
+    } catch (e) {
+      console.error('_carregarEscalas:', e);
+      el.innerHTML = '<div style="color:var(--rose);font-size:13px;padding:16px 0">Erro ao carregar escalas.</div>';
+    }
+  }
+
+  function _cardEscala(e, podeAct) {
+    const dataFmt = e.data
+      ? new Date(e.data + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+      : '—';
+    const hora = e.hora ? e.hora.slice(0, 5) : '';
+    const actBtns = podeAct ? `
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button onclick="minMinEditarEscala('${e.id}')" class="tbt" style="font-size:11px;padding:4px 10px">Editar</button>
+        <button onclick="minMinRemoverEscala('${e.id}')" class="tbt" style="font-size:11px;padding:4px 10px;color:var(--rose);border-color:rgba(255,69,58,0.3)">Remover</button>
+      </div>` : '';
+    const addPessoa = podeAct ? `
+      <div style="display:flex;gap:8px;align-items:flex-end;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd1)">
+        <div style="flex:1">
+          <label style="${_LB};margin-bottom:4px">Adicionar Pessoa</label>
+          <select id="escal-add-p-${e.id}" style="${_INP};padding:7px 10px">${_optionsPessoa('')}</select>
+        </div>
+        <div style="flex:1">
+          <label style="${_LB};margin-bottom:4px">Função</label>
+          <input type="text" id="escal-add-f-${e.id}" list="escal-func-dl" placeholder="Ex: Vocal, Violão..." style="${_INP};padding:7px 10px">
+        </div>
+        <button onclick="minMinAdicionarEscalaPessoa('${e.id}')"
+          style="padding:8px 12px;border-radius:8px;border:none;background:var(--violet);color:#fff;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0">+</button>
+      </div>
+      <div id="escal-add-err-${e.id}" style="color:var(--rose);font-size:11px;display:none;margin-top:4px"></div>
+      <datalist id="escal-func-dl">
+        <option value="Vocal"><option value="Violão"><option value="Guitarra">
+        <option value="Teclado"><option value="Bateria"><option value="Baixo">
+        <option value="Percussão"><option value="Flauta"><option value="Saxofone">
+        <option value="Trompete"><option value="Som"><option value="Projeção">
+        <option value="Pregador"><option value="Coordenador">
+      </datalist>` : '';
+    return `
+      <div class="card" style="margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="_escalToggle('${e.id}')">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13.5px;font-weight:600;color:var(--tx1);margin-bottom:2px">${escapeHtml(e.titulo)}</div>
+            <div style="font-size:12px;color:var(--tx3)">${dataFmt}${hora ? ' · ' + hora : ''}</div>
+          </div>
+          <span id="escal-arrow-${e.id}" style="color:var(--tx3);font-size:11px;transition:transform .2s;flex-shrink:0">▼</span>
+        </div>
+        <div id="escal-body-${e.id}" style="display:none" onclick="event.stopPropagation()">
+          <div id="escal-pessoas-${e.id}" style="margin-top:8px">
+            <div style="color:var(--tx3);font-size:12px;padding:6px 0">Carregando...</div>
+          </div>
+          ${addPessoa}
+          ${e.observacoes ? `<div style="margin-top:8px;font-size:12px;color:var(--tx3);font-style:italic">${escapeHtml(e.observacoes)}</div>` : ''}
+          ${actBtns}
+        </div>
+      </div>`;
+  }
+
+  async function _escalToggle(id) {
+    const body  = document.getElementById(`escal-body-${id}`);
+    const arrow = document.getElementById(`escal-arrow-${id}`);
+    if (!body) return;
+    const open = body.style.display !== 'none';
+    body.style.display = open ? 'none' : '';
+    if (arrow) arrow.style.transform = open ? '' : 'rotate(180deg)';
+    if (!open) await _carregarEscalaPessoas(id);
+  }
+
+  async function _carregarEscalaPessoas(escalId) {
+    const el = document.getElementById(`escal-pessoas-${escalId}`);
+    if (!el) return;
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/ministerio_escala_pessoas?escala_id=eq.${escalId}&select=id,funcao,pessoas(id,nome)&order=criado_por.asc`,
+        { headers: _hdr() }
+      );
+      const lista = r.ok ? await r.json() : [];
+      const podeAct = _podeEditar();
+      if (!lista.length) {
+        el.innerHTML = '<div style="color:var(--tx3);font-size:12px;padding:6px 0">Nenhuma pessoa escalada.</div>';
+        return;
+      }
+      el.innerHTML = `<div style="display:flex;flex-direction:column;gap:4px">` +
+        lista.map(m => {
+          const nome  = (m.pessoas?.nome || '—').toUpperCase();
+          const func  = m.funcao || '—';
+          const rmBtn = podeAct
+            ? `<button onclick="minMinRemoverEscalaPessoa('${m.id}','${escalId}')"
+                 class="tbt" style="font-size:10px;padding:2px 7px;color:var(--rose);border-color:rgba(255,69,58,0.3)">✕</button>`
+            : '';
+          return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0">
+            <span style="font-size:13px;color:var(--tx1);font-weight:500;flex:1">${escapeHtml(nome)}</span>
+            <span style="font-size:11.5px;color:var(--tx3);min-width:80px">${escapeHtml(func)}</span>
+            ${rmBtn}
+          </div>`;
+        }).join('') + `</div>`;
+    } catch (e) {
+      el.innerHTML = '<div style="color:var(--rose);font-size:12px">Erro ao carregar.</div>';
+    }
+  }
+
+  function _garantirModalEscala() {
+    let el = document.getElementById('min-escal-modal');
+    if (el) return el;
+    const corpo = `
+      ${_fld('mesc-titulo', 'Título', 'text', true)}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        ${_fld('mesc-data', 'Data', 'date', true)}
+        ${_fld('mesc-hora', 'Hora', 'time', false)}
+      </div>
+      <div>
+        <label style="${_LB}">Observações</label>
+        <textarea id="mesc-obs" rows="2"
+          style="${_INP};resize:vertical;height:auto;font-family:inherit;line-height:1.5"></textarea>
+      </div>
+      ${_errEl('mesc-err')}`;
+    const footer = `<button id="mesc-btn" onclick="_escalSalvar()"
+      style="padding:9px 24px;border-radius:8px;border:none;background:var(--violet);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Salvar</button>`;
+    return _modalWrap('min-escal-modal', 'Nova Escala', 'Ministerial · Escalas', corpo, footer);
+  }
+
+  async function minMinNovaEscala() {
+    if (!_podeEditar() || !_ministerioAtual) return;
+    _escalEditandoId = null;
+    await _carregarPessoas();
+    const modal = _garantirModalEscala();
+    document.getElementById('min-escal-modal-title').textContent = 'Nova Escala';
+    document.getElementById('mesc-titulo').value = '';
+    document.getElementById('mesc-data').value   = new Date().toISOString().slice(0, 10);
+    document.getElementById('mesc-hora').value   = '';
+    document.getElementById('mesc-obs').value    = '';
+    _showErr('mesc-err', '');
+    modal.style.display = 'flex';
+  }
+
+  async function minMinEditarEscala(id) {
+    if (!_podeEditar()) return;
+    _escalEditandoId = id;
+    await _carregarPessoas();
+    const modal = _garantirModalEscala();
+    document.getElementById('min-escal-modal-title').textContent = 'Editar Escala';
+    _showErr('mesc-err', '');
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_escalas?id=eq.${id}`, { headers: _hdr() });
+    const dados = r.ok ? await r.json() : [];
+    const e = dados[0];
+    if (!e) { alert('Escala não encontrada.'); return; }
+    document.getElementById('mesc-titulo').value = e.titulo       || '';
+    document.getElementById('mesc-data').value   = e.data         || '';
+    document.getElementById('mesc-hora').value   = (e.hora || '').slice(0, 5);
+    document.getElementById('mesc-obs').value    = e.observacoes  || '';
+    modal.style.display = 'flex';
+  }
+
+  async function _escalSalvar() {
+    const titulo = (document.getElementById('mesc-titulo').value || '').trim();
+    const data   = document.getElementById('mesc-data').value || '';
+    if (!titulo) { _showErr('mesc-err', 'Título é obrigatório.'); return; }
+    if (!data)   { _showErr('mesc-err', 'Data é obrigatória.');   return; }
+    const btn = document.getElementById('mesc-btn');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    const payload = {
+      titulo,
+      data,
+      hora:        document.getElementById('mesc-hora').value || null,
+      observacoes: (document.getElementById('mesc-obs').value || '').trim() || null,
+    };
+    try {
+      let r;
+      if (_escalEditandoId) {
+        r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_escalas?id=eq.${_escalEditandoId}`, {
+          method: 'PATCH', headers: _hdrJson(), body: JSON.stringify(payload),
+        });
+      } else {
+        r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_escalas`, {
+          method: 'POST', headers: _hdrJson(),
+          body: JSON.stringify(Object.assign({ ministerio_id: _ministerioAtual, criado_por: USUARIO_ATUAL?.auth_user_id || null }, payload)),
+        });
+      }
+      if (!r.ok) throw new Error(await r.text());
+      document.getElementById('min-escal-modal').style.display = 'none';
+      await _carregarEscalas(_ministerioAtual);
+    } catch (e) {
+      _showErr('mesc-err', 'Erro ao salvar: ' + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Salvar';
+    }
+  }
+
+  async function minMinAdicionarEscalaPessoa(escalId) {
+    const pessoaId = document.getElementById(`escal-add-p-${escalId}`)?.value;
+    const funcao   = (document.getElementById(`escal-add-f-${escalId}`)?.value || '').trim();
+    const errEl    = document.getElementById(`escal-add-err-${escalId}`);
+    if (!pessoaId) {
+      if (errEl) { errEl.textContent = 'Selecione uma pessoa.'; errEl.style.display = ''; }
+      return;
+    }
+    if (errEl) errEl.style.display = 'none';
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_escala_pessoas`, {
+        method: 'POST', headers: _hdrJson(),
+        body: JSON.stringify({
+          escala_id: escalId, pessoa_id: pessoaId,
+          funcao: funcao || null,
+          criado_por: USUARIO_ATUAL?.auth_user_id || null,
+        }),
+      });
+      if (!r.ok) {
+        if (r.status === 409) throw new Error('Esta pessoa já está nesta escala.');
+        throw new Error(await r.text());
+      }
+      const pSel = document.getElementById(`escal-add-p-${escalId}`);
+      const fInp = document.getElementById(`escal-add-f-${escalId}`);
+      if (pSel) pSel.value = '';
+      if (fInp) fInp.value = '';
+      await _carregarEscalaPessoas(escalId);
+    } catch (e) {
+      if (errEl) { errEl.textContent = e.message; errEl.style.display = ''; }
+    }
+  }
+
+  async function minMinRemoverEscalaPessoa(membId, escalId) {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_escala_pessoas?id=eq.${membId}`, {
+        method: 'DELETE', headers: _hdr(),
+      });
+      if (!r.ok) throw new Error(r.status);
+      await _carregarEscalaPessoas(escalId);
+    } catch (e) { alert('Erro ao remover: ' + e.message); }
+  }
+
+  async function minMinRemoverEscala(id) {
+    if (!confirm('Remover esta escala e todas as pessoas escaladas?')) return;
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_escalas?id=eq.${id}`, {
+        method: 'DELETE', headers: _hdr(),
+      });
+      if (!r.ok) throw new Error(r.status);
+      await _carregarEscalas(_ministerioAtual);
     } catch (e) { alert('Erro ao remover: ' + e.message); }
   }
 
@@ -1537,5 +2030,18 @@
   window.minMinRemoverReuniao      = minMinRemoverReuniao;
   window._reuToggle                = _reuToggle;
   window._reuSalvar                = _reuSalvar;
+  window.minMinNovaProgramacao        = minMinNovaProgramacao;
+  window.minMinEditarProgramacao      = minMinEditarProgramacao;
+  window.minMinToggleProgStatus       = minMinToggleProgStatus;
+  window.minMinRemoverProgramacao     = minMinRemoverProgramacao;
+  window._progToggle                  = _progToggle;
+  window._progSalvar                  = _progSalvar;
+  window.minMinNovaEscala             = minMinNovaEscala;
+  window.minMinEditarEscala           = minMinEditarEscala;
+  window.minMinRemoverEscala          = minMinRemoverEscala;
+  window.minMinAdicionarEscalaPessoa  = minMinAdicionarEscalaPessoa;
+  window.minMinRemoverEscalaPessoa    = minMinRemoverEscalaPessoa;
+  window._escalToggle                 = _escalToggle;
+  window._escalSalvar                 = _escalSalvar;
 
 })();

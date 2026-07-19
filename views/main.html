@@ -2657,7 +2657,9 @@
         <button class="min-tab" data-tab="membros" onclick="minMinTab('membros')">Membros <span id="min-min-membro-count" style="font-size:11px;font-weight:400"></span></button>
         <button class="min-tab" data-tab="setores" onclick="minMinTab('setores')">Setores <span id="min-min-setor-count" style="font-size:11px;font-weight:400"></span></button>
         <button class="min-tab" data-tab="relatorios" onclick="minMinTab('relatorios')">Relatórios</button>
-        <button class="min-tab" data-tab="reunioes" onclick="minMinTab('reunioes')" id="min-min-tab-btn-reu" style="display:none">Reuniões</button>
+        <button class="min-tab" data-tab="reunioes"     onclick="minMinTab('reunioes')"     id="min-min-tab-btn-reu"  style="display:none">Reuniões</button>
+        <button class="min-tab" data-tab="programacoes" onclick="minMinTab('programacoes')" id="min-min-tab-btn-prog" style="display:none">Programações</button>
+        <button class="min-tab" data-tab="escalas"      onclick="minMinTab('escalas')"      id="min-min-tab-btn-escal" style="display:none">Escalas</button>
         <button class="min-tab" data-tab="adm" onclick="minMinTab('adm')" id="min-min-tab-btn-adm" style="display:none">Administração</button>
       </div>
       <!-- Aba: Dashboard -->
@@ -2692,6 +2694,20 @@
         <div id="min-min-reu-list">
           <div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Carregando...</div>
         </div>
+      </div>
+      <!-- Aba: Programações -->
+      <div id="min-min-tab-programacoes" class="min-tab-panel" style="display:none">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+          <button class="tbt pri" id="min-min-btn-add-prog" style="display:none" onclick="minMinNovaProgramacao()">+ Nova Programação</button>
+        </div>
+        <div id="min-min-prog-list"><div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Carregando...</div></div>
+      </div>
+      <!-- Aba: Escalas -->
+      <div id="min-min-tab-escalas" class="min-tab-panel" style="display:none">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+          <button class="tbt pri" id="min-min-btn-add-escal" style="display:none" onclick="minMinNovaEscala()">+ Nova Escala</button>
+        </div>
+        <div id="min-min-escal-list"><div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Carregando...</div></div>
       </div>
       <!-- Aba: Relatórios -->
       <div id="min-min-tab-relatorios" class="min-tab-panel" style="display:none">
