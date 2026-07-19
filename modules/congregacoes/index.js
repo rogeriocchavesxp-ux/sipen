@@ -209,21 +209,42 @@ function renderDashboardGeral(){
   `;
 
   const listaEl=document.getElementById("cong-dash-lista");
-  if(listaEl) listaEl.innerHTML=congs.map(c=>{
-    const le=c.lideranca_estruturada||{};
-    const sub=le.supervisao||le.conselheiro||c.identificacao.localizacao||"—";
-    return `
-    <div onclick="abrirCongView('${c.id}')" style="cursor:pointer;margin-bottom:8px;padding:10px 12px;border-radius:8px;border:1px solid var(--bd1);background:var(--bg2);display:flex;align-items:center;gap:12px;transition:background .15s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'">
-      <div style="width:36px;height:36px;border-radius:50%;background:${c.identificacao.cor}22;border:2px solid ${c.identificacao.cor};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${c.identificacao.icon||"⛪"}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:12.5px;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(c.identificacao.nome)}</div>
-        <div style="font-size:10.5px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(sub)}</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        ${statusBadge(c.identificacao.status)}
-      </div>
-    </div>
-  `}).join("")||`<div style="color:var(--tx3);font-size:11px">Nenhuma congregação cadastrada</div>`;
+  if(listaEl){
+    if(congs.length===0){
+      listaEl.innerHTML=`
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 0;gap:8px">
+          <span style="font-size:24px;opacity:.2">⛪</span>
+          <span style="font-size:12px;color:var(--tx3)">Nenhuma congregação cadastrada</span>
+        </div>`;
+    } else {
+      listaEl.innerHTML=`
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:10px">Congregações (${congs.length})</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px">
+          ${congs.map(c=>{
+            const le=c.lideranca_estruturada||{};
+            const pastor=c.lideranca.pastor_responsavel||le.supervisao||"—";
+            const membros=c.panorama_membresia?.membros_ativos||0;
+            const cor=c.identificacao.cor||"#3AAA5C";
+            return `
+              <div class="card" style="cursor:pointer;display:flex;flex-direction:column;gap:0" onclick="abrirCongView('${c.id}')">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+                  <div style="width:40px;height:40px;border-radius:50%;background:${cor}22;border:1.5px solid ${cor}55;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${c.identificacao.icon||"⛪"}</div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:13px;font-weight:700;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(c.identificacao.nome)}</div>
+                    <div style="font-size:10.5px;color:var(--tx3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(c.identificacao.localizacao||"")}</div>
+                  </div>
+                  ${statusBadge(c.identificacao.status)}
+                </div>
+                <div style="font-size:11.5px;color:var(--tx3);flex:1">Pastor: <span style="color:var(--tx1);font-weight:500">${escapeHtml(pastor)}</span></div>
+                <div style="border-top:1px solid var(--bd1);margin-top:12px;padding-top:10px;display:flex;align-items:center;justify-content:space-between">
+                  <span style="font-size:11px;color:var(--tx3)">${membros} membros</span>
+                  <span style="font-size:12px;color:var(--gr);font-weight:500">Abrir →</span>
+                </div>
+              </div>`;
+          }).join("")}
+        </div>`;
+    }
+  }
 
   const todosOsCultos=congs.flatMap(c=>(c.atividades_igreja.historico_cultos||[]).map(cu=>({...cu,congNome:c.identificacao.nome})));
   todosOsCultos.sort((a,b)=>b.data.localeCompare(a.data));
@@ -593,9 +614,9 @@ function renderTab_visaoGeral(cong, el){
   const pg=cong.pequenos_grupos, des=cong.desafios;
   const le=cong.lideranca_estruturada||{};
 
-  // Ícones SVG padronizados
-  const _SV=(p)=>`<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
-  const ICONS={
+  // SVGs — mesmo tamanho/estilo dos Ministérios
+  const _SV=(p)=>`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  const IC={
     users: _SV('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
     church:_SV('<path d="M6 22V12H2l10-10 10 10h-4v10"/><path d="M6 12h12"/><path d="M9 22v-4h6v4"/>'),
     home:  _SV('<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'),
@@ -603,32 +624,49 @@ function renderTab_visaoGeral(cong, el){
     money: _SV('<line x1="12" x2="12" y1="1" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'),
   };
 
+  // Ícone circular — padrão Ministérios
+  const _ic=(key,bg,color)=>
+    `<div style="width:40px;height:40px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <span style="color:${color}">${IC[key]}</span>
+    </div>`;
+
+  // KPI: padding:18px 16px, número 30px, flex:1 no sub para alinhar link
   const _kpi=(key,bg,color,val,label,sub,tabId,link)=>`
-    <div class="card" style="padding:16px;cursor:pointer;display:flex;flex-direction:column" onclick="switchCongTabNamed('${tabId}')">
-      <div style="width:38px;height:38px;border-radius:10px;background:${bg};display:flex;align-items:center;justify-content:center;color:${color};margin-bottom:12px;flex-shrink:0">${ICONS[key]}</div>
-      <div style="font-size:26px;font-weight:800;color:var(--tx1);line-height:1;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${val}</div>
-      <div style="font-size:12.5px;font-weight:600;color:var(--tx1);margin-top:6px">${label}</div>
-      <div style="font-size:11px;color:var(--tx3);margin-top:2px;flex:1">${sub}</div>
-      <div style="border-top:1px solid var(--bd1);margin-top:12px;padding-top:9px">
-        <span style="font-size:11.5px;color:var(--gr);font-weight:600">${link} →</span>
+    <div class="card" style="padding:18px 16px;cursor:pointer;display:flex;flex-direction:column;gap:0" onclick="switchCongTabNamed('${tabId}')">
+      <div style="margin-bottom:12px">${_ic(key,bg,color)}</div>
+      <div style="font-size:30px;font-weight:800;color:var(--tx1);line-height:1">${val}</div>
+      <div style="font-size:13px;font-weight:600;color:var(--tx1);margin-top:5px">${label}</div>
+      <div style="font-size:11.5px;color:var(--tx3);margin-top:2px;flex:1">${sub}</div>
+      <div style="border-top:1px solid var(--bd1);margin-top:14px;padding-top:10px">
+        <span style="font-size:12px;color:var(--gr);font-weight:500">${link} →</span>
       </div>
     </div>`;
 
+  // Saldo compacto: evita texto longo no número grande
   const saldo=f.saldo_atual||0;
-  const saldoFmt=Math.abs(saldo)>=1000
-    ?`R$ ${(saldo/1000).toFixed(1).replace(".",",")}k`
-    :saldo.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  const saldoVal=Math.abs(saldo)>=1000000
+    ?`${(saldo/1000000).toFixed(1)}M`
+    :Math.abs(saldo)>=1000
+    ?`${(saldo/1000).toFixed(0)}k`
+    :String(Math.round(saldo));
+  const saldoSub=`Saldo: ${saldo.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}`;
+
   const desAtivos=des.lista.filter(d=>d.status!=="concluído"&&d.status!=="concluido").length;
 
-  const _empty=(txt)=>`<div style="color:var(--tx3);font-size:12px;text-align:center;padding:22px 0">${txt}</div>`;
+  // Estado vazio elegante e compacto
+  const _empty=(txt)=>`
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 0;gap:6px">
+      <span style="font-size:18px;opacity:.25">—</span>
+      <span style="font-size:11.5px;color:var(--tx3)">${txt}</span>
+    </div>`;
 
   el.innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:20px">
+    <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:16px">
       ${_kpi('users', 'rgba(58,170,92,.12)',  'var(--gr)',   m.membros_ativos,    'Membros',        'Membros ativos',  'membresia',  'Ver membros')}
       ${_kpi('church','rgba(90,200,250,.12)', 'var(--sky)',  a.cultos_por_semana, 'Cultos',         'Por semana',      'cultos',     'Ver cultos')}
       ${_kpi('home',  'rgba(82,196,110,.12)', 'var(--gmd)',  pg.total_grupos,     'Pequenos Grupos','Grupos ativos',   'pgs',        'Ver grupos')}
       ${_kpi('warn',  'rgba(255,69,58,.12)',  'var(--rose)', desAtivos,           'Desafios',       'Em andamento',    'desafios',   'Ver desafios')}
-      ${_kpi('money', 'rgba(58,170,92,.12)',  'var(--gr)',   saldoFmt,            'Financeiro',     'Saldo atual',     'financeiro', 'Ver financeiro')}
+      ${_kpi('money', 'rgba(58,170,92,.12)',  'var(--gr)',   saldoVal,            'Financeiro',     saldoSub,          'financeiro', 'Ver financeiro')}
     </div>
     <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
       <div class="card">
@@ -646,10 +684,12 @@ function renderTab_visaoGeral(cong, el){
     </div>
   `;
 
-  const _row=(a,b)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd1)">
-    <span style="font-size:10.5px;color:var(--tx3);min-width:72px;flex-shrink:0">${a}</span>
-    <span style="font-size:12px;color:var(--tx1);font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b}</span>
-  </div>`;
+  // Rows dos painéis inferiores
+  const _row=(label,valor)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bd1)">
+      <span style="font-size:10.5px;color:var(--tx3);min-width:74px;flex-shrink:0">${label}</span>
+      <span style="font-size:12px;color:var(--tx1);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${valor}</span>
+    </div>`;
 
   const ldItems=[];
   if(cong.lideranca.pastor_responsavel) ldItems.push(["Pastor",cong.lideranca.pastor_responsavel]);
@@ -666,7 +706,8 @@ function renderTab_visaoGeral(cong, el){
   if(desEl){
     const ativos=des.lista.filter(d=>d.status!=="concluído"&&d.status!=="concluido").slice(0,4);
     desEl.innerHTML=ativos.length
-      ?ativos.map(d=>`<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--bd1)">
+      ?ativos.map(d=>`
+        <div style="display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid var(--bd1)">
           <div style="flex:1;min-width:0;font-size:12px;font-weight:500;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(d.titulo)}</div>
           ${prioBadge(d.prioridade)}
         </div>`).join("")
@@ -679,9 +720,9 @@ function renderTab_visaoGeral(cong, el){
     cultosEl.innerHTML=hist.length
       ?hist.map(c=>{
           const total=(c.adultos||0)+(c.criancas||0)||(c.participantes||0);
-          return `<div style="padding:6px 0;border-bottom:1px solid var(--bd1)">
+          return `<div style="padding:7px 0;border-bottom:1px solid var(--bd1)">
             <div style="font-size:12px;font-weight:500;color:var(--tx1)">${escapeHtml(c.tipo||"Culto")}</div>
-            <div style="font-size:10.5px;color:var(--tx3);margin-top:1px">${fmtData(c.data)} · ${total} presentes</div>
+            <div style="font-size:10.5px;color:var(--tx3);margin-top:2px">${fmtData(c.data)} · ${total} presentes</div>
           </div>`;
         }).join("")
       :_empty("Nenhum culto registrado");
