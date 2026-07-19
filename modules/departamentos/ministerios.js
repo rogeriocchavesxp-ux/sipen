@@ -342,9 +342,6 @@
       const btnAdd = document.getElementById('min-min-btn-add-membro');
       if (btnAdd) btnAdd.style.display = _podeEditar() ? '' : 'none';
 
-      // Atualiza hero title
-      const heroTtl = document.querySelector('#v-min-min .hero-ttl');
-      if (heroTtl) heroTtl.textContent = m.nome;
 
       await Promise.all([
         _carregarMembros(id),
