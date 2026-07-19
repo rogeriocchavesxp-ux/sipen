@@ -449,60 +449,72 @@ function renderCongView(cong){
   if(!el) return;
   const id=cong.id;
   const le=cong.lideranca_estruturada||{};
+  const podeEd=_podeEditar(id);
+  const svgPerson=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgb(58,170,92)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
 
-  const _card=(label,nome)=>{
-    const ini=nome?(nome||"?").split(" ").slice(0,2).map(p=>p[0]).join("").toUpperCase():"—";
-    return `<div style="display:flex;align-items:center;gap:9px;padding:10px 14px;background:var(--bg2);border-radius:8px;flex:1;min-width:130px;max-width:200px">
-      <div style="width:32px;height:32px;border-radius:50%;background:rgba(58,170,92,.15);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--gr);flex-shrink:0">${ini}</div>
+  const _roleCard=(label,nome)=>`
+    <div style="display:flex;align-items:center;gap:9px;padding:10px 14px;background:var(--bg2);border-radius:8px;min-width:160px;flex:1">
+      <div style="width:32px;height:32px;border-radius:50%;background:rgba(58,170,92,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">${svgPerson}</div>
       <div style="min-width:0">
-        <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);margin-bottom:1px">${label}</div>
-        <div style="font-size:12px;font-weight:600;color:${nome?"var(--tx1)":"var(--tx3)"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px">${nome?escapeHtml(nome):"Não informado"}</div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:2px">${label}</div>
+        <div style="font-size:12.5px;font-weight:600;color:${nome?"var(--tx1)":"var(--tx3)"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nome?escapeHtml(nome):"Não informado"}</div>
       </div>
     </div>`;
-  };
-
-  const cards=[
-    _card("Pastor Responsável",cong.lideranca.pastor_responsavel||null),
-    _card("Supervisor",le.supervisao||null),
-    _card("Tesoureiro",le.tesoureiro||null),
-  ];
 
   const tabsHtml=_CONG_TAB_NOMES.map((t,i)=>`<button class="min-tab${i===_activeTab?" active":""}" onclick="switchCongTab(${i})">${t}</button>`).join("");
 
-  const cor=cong.identificacao.cor||"#3AAA5C";
+  // Breadcrumb
+  const cr=document.getElementById("crumb");
+  if(cr) cr.innerHTML=`<span class="c-mod">Departamentos</span><span class="c-sep">/</span><span class="c-pg">Congregações</span><span class="c-sub">/ ${escapeHtml(cong.identificacao.nome)}</span>`;
+
   el.innerHTML=`
-    <div style="padding:18px 22px 14px;border-bottom:1px solid var(--bd1)">
-      <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
-        <div style="display:flex;align-items:flex-start;gap:12px;flex:1;min-width:240px">
-          <div style="width:48px;height:48px;border-radius:12px;background:${cor}22;border:1.5px solid ${cor}55;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${cong.identificacao.icon||"⛪"}</div>
+    <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      ${!_isLiderCong()?`<button class="tbt" onclick="go('cong-dash')">← Todas as Congregações</button>`:`<div></div>`}
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${podeEd&&!_isLiderCong()?`<button class="tbt" onclick="abrirModalNovaCong()">+ Nova Congregação</button>`:""}
+        ${podeEd?`<button class="tbt pri" onclick="abrirModalEditarCong('${id}')">Editar</button>`:""}
+        ${podeEd&&!_isLiderCong()?`<button class="tbt" style="color:var(--rose)" onclick="excluirCong('${id}')">Excluir</button>`:""}
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
+        <div style="display:flex;align-items:flex-start;gap:14px;flex:1;min-width:280px">
+          <div style="width:52px;height:52px;border-radius:12px;background:rgba(58,170,92,.15);border:1px solid rgba(58,170,92,.25);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${cong.identificacao.icon||"⛪"}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:4px">Congregações</div>
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <span style="font-size:17px;font-weight:800;color:var(--tx1)">${escapeHtml(cong.identificacao.nome)}</span>
-              ${statusBadge(cong.identificacao.status)}
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+              <span style="font-size:18px;font-weight:800;color:var(--tx1)">${escapeHtml(cong.identificacao.nome)}</span>
+              ${cong.identificacao.status==="ativa"
+                ?'<span class="pill pg" style="font-size:10px">Ativa</span>'
+                :'<span class="pill pa" style="font-size:10px">Inativa</span>'}
             </div>
-            ${cong.identificacao.localizacao?`<div style="font-size:12px;color:var(--tx3);margin-top:3px">${escapeHtml(cong.identificacao.localizacao)}</div>`:""}
+            ${cong.identificacao.localizacao?`<div style="font-size:12.5px;color:var(--tx2)">${escapeHtml(cong.identificacao.localizacao)}</div>`:""}
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch">
-          ${cards.join("")}
+          ${_roleCard("Pastor Responsável",cong.lideranca.pastor_responsavel||null)}
+          ${_roleCard("Supervisor",le.supervisao||null)}
+          ${_roleCard("Tesoureiro",le.tesoureiro||null)}
         </div>
       </div>
-      <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
-        ${!_isLiderCong()?`<button class="tbt" onclick="go('cong-dash')">← Todas as Congregações</button>`:""}
-        ${_podeEditar(id)?`<button class="tbt pri" onclick="abrirModalEditarCong('${id}')">Editar</button>`:""}
-        ${_podeEditar(id)&&!_isLiderCong()?`<button class="tbt" onclick="abrirModalNovaCong()">+ Nova Congregação</button>`:""}
-      </div>
     </div>
-    <div style="border-bottom:1px solid var(--bd1);overflow-x:auto;display:flex;padding:0 18px;gap:2px" id="cong-tabs-bar">
+    <div style="display:flex;border-bottom:2px solid var(--bd1);margin-bottom:20px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;gap:2px" id="cong-tabs-bar">
       ${tabsHtml}
     </div>
-    <div class="ct" style="padding-top:16px">
-      <div id="cong-tab-content"></div>
-    </div>
+    <div id="cong-tab-content"></div>
   `;
   renderCongTab(_activeTab,cong);
 }
+
+function excluirCong(id){
+  const cong=CONG.getCong(id);
+  if(!cong) return;
+  if(!confirm(`Excluir "${cong.identificacao.nome}"?\nEsta ação não pode ser desfeita.`)) return;
+  CONG.saveCongs(CONG.listCongs().filter(c=>String(c.id)!==String(id)));
+  buildCongMenu();
+  if(typeof T==="function") T("Congregação excluída","");
+  go("cong-dash");
+}
+window.excluirCong=excluirCong;
 
 function switchCongTab(i){
   _activeTab=i;
