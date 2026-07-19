@@ -474,11 +474,11 @@ function renderCongView(cong){
   const rec=cong.recursos||{};
   const _svgPerson=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gr)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
   const _roleCard=(label,nome)=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg2);border-radius:8px;flex:1;min-width:150px">
-      <div style="width:32px;height:32px;border-radius:50%;background:rgba(58,170,92,.12);border:1px solid rgba(58,170,92,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0">${_svgPerson}</div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(58,170,92,.07);border:1px solid rgba(58,170,92,.15);border-radius:8px;flex:1;min-width:140px">
+      <div style="width:30px;height:30px;border-radius:50%;background:rgba(58,170,92,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0">${_svgPerson}</div>
       <div style="min-width:0;flex:1">
-        <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:3px">${label}</div>
-        <div style="font-size:12px;font-weight:600;color:${nome?"var(--tx1)":"var(--tx4)"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nome?escapeHtml(nome):"—"}</div>
+        <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:2px">${label}</div>
+        <div style="font-size:12px;font-weight:600;color:${nome?"var(--tx1)":"var(--tx3)"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nome?escapeHtml(nome):"—"}</div>
       </div>
     </div>`;
 
@@ -500,17 +500,19 @@ function renderCongView(cong){
         ${podeEd&&!_isLiderCong()?`<button class="tbt" style="color:var(--rose)" onclick="excluirCong('${id}')">Excluir</button>`:""}
       </div>
     </div>
-    <div class="card" id="cong-ver-header" style="margin-bottom:16px;padding:18px 20px">
-      <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
-        <div style="width:48px;height:48px;border-radius:12px;background:rgba(58,170,92,.12);border:1px solid rgba(58,170,92,.22);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${cong.identificacao.icon||"⛪"}</div>
-        <div style="flex:1;min-width:180px">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
-            <span style="font-size:17px;font-weight:800;color:var(--tx1);letter-spacing:-.02em">${escapeHtml(cong.identificacao.nome)}</span>
-            ${cong.identificacao.status==="ativa"?'<span class="pill pv">Ativa</span>':'<span class="pill pa">Inativa</span>'}
+    <div class="card" id="cong-ver-header" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:200px">
+          <div style="width:44px;height:44px;border-radius:10px;background:rgba(58,170,92,.12);border:1px solid rgba(58,170,92,.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${cong.identificacao.icon||"⛪"}</div>
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:16px;font-weight:700;color:var(--tx1);letter-spacing:-.01em">${escapeHtml(cong.identificacao.nome)}</span>
+              ${cong.identificacao.status==="ativa"?'<span class="pill pv">Ativa</span>':'<span class="pill pa">Inativa</span>'}
+            </div>
+            ${cong.identificacao.localizacao?`<div style="font-size:11.5px;color:var(--tx3);margin-top:2px">${escapeHtml(cong.identificacao.localizacao)}</div>`:""}
           </div>
-          ${cong.identificacao.localizacao?`<div style="font-size:12px;color:var(--tx3)">${escapeHtml(cong.identificacao.localizacao)}</div>`:""}
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
           ${_roleCard("Pastor Responsável",cong.lideranca.pastor_responsavel||null)}
           ${_roleCard("Supervisor",le.supervisao||null)}
           ${_roleCard("Tesoureiro",le.tesoureiro||null)}
@@ -583,46 +585,44 @@ function renderTab_visaoGeral(cong, el){
   const pg=cong.pequenos_grupos, des=cong.desafios;
   const le=cong.lideranca_estruturada||{};
 
-  const _ic=(svg,bg,color)=>
-    `<div style="width:40px;height:40px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-      <span style="color:${color}">${svg}</span>
-    </div>`;
+  // Ícones SVG padronizados
+  const _SV=(p)=>`<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  const ICONS={
+    users: _SV('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
+    church:_SV('<path d="M6 22V12H2l10-10 10 10h-4v10"/><path d="M6 12h12"/><path d="M9 22v-4h6v4"/>'),
+    home:  _SV('<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'),
+    warn:  _SV('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/>'),
+    money: _SV('<line x1="12" x2="12" y1="1" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'),
+  };
 
-  const _svgUsers =`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
-  const _svgChurch=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V12H2l10-10 10 10h-4v10"/><path d="M6 12h12"/><path d="M9 22v-4h6v4"/></svg>`;
-  const _svgHome  =`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
-  const _svgWarn  =`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>`;
-  const _svgMoney =`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="1" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`;
-
-  const _kpi=(svg,bg,color,val,label,sub,tabId,link)=>`
-    <div class="card" style="padding:18px 16px;cursor:pointer;display:flex;flex-direction:column;gap:0" onclick="switchCongTabNamed('${tabId}')">
-      <div style="margin-bottom:12px">${_ic(svg,bg,color)}</div>
-      <div style="font-size:30px;font-weight:800;color:var(--tx1);line-height:1">${val}</div>
-      <div style="font-size:13px;font-weight:600;color:var(--tx1);margin-top:5px">${label}</div>
-      <div style="font-size:11.5px;color:var(--tx3);margin-top:2px;flex:1">${sub}</div>
-      <div style="border-top:1px solid var(--bd1);margin-top:14px;padding-top:10px">
-        <span style="font-size:12px;color:var(--gr);font-weight:500">${link} →</span>
+  const _kpi=(key,bg,color,val,label,sub,tabId,link)=>`
+    <div class="card" style="padding:16px;cursor:pointer;display:flex;flex-direction:column" onclick="switchCongTabNamed('${tabId}')">
+      <div style="width:38px;height:38px;border-radius:10px;background:${bg};display:flex;align-items:center;justify-content:center;color:${color};margin-bottom:12px;flex-shrink:0">${ICONS[key]}</div>
+      <div style="font-size:26px;font-weight:800;color:var(--tx1);line-height:1;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${val}</div>
+      <div style="font-size:12.5px;font-weight:600;color:var(--tx1);margin-top:6px">${label}</div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:2px;flex:1">${sub}</div>
+      <div style="border-top:1px solid var(--bd1);margin-top:12px;padding-top:9px">
+        <span style="font-size:11.5px;color:var(--gr);font-weight:600">${link} →</span>
       </div>
     </div>`;
 
-  const saldoFmt=(f.saldo_atual||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  const saldo=f.saldo_atual||0;
+  const saldoFmt=Math.abs(saldo)>=1000
+    ?`R$ ${(saldo/1000).toFixed(1).replace(".",",")}k`
+    :saldo.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
   const desAtivos=des.lista.filter(d=>d.status!=="concluído"&&d.status!=="concluido").length;
 
+  const _empty=(txt)=>`<div style="color:var(--tx3);font-size:12px;text-align:center;padding:22px 0">${txt}</div>`;
+
   el.innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:8px">
-      <div>
-        <div style="font-size:17px;font-weight:700;color:var(--tx1)">Visão Geral</div>
-        <div style="font-size:12.5px;color:var(--tx3);margin-top:2px">Resumo das atividades e informações da congregação.</div>
-      </div>
+    <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:20px">
+      ${_kpi('users', 'rgba(58,170,92,.12)',  'var(--gr)',   m.membros_ativos,    'Membros',        'Membros ativos',  'membresia',  'Ver membros')}
+      ${_kpi('church','rgba(90,200,250,.12)', 'var(--sky)',  a.cultos_por_semana, 'Cultos',         'Por semana',      'cultos',     'Ver cultos')}
+      ${_kpi('home',  'rgba(82,196,110,.12)', 'var(--gmd)',  pg.total_grupos,     'Pequenos Grupos','Grupos ativos',   'pgs',        'Ver grupos')}
+      ${_kpi('warn',  'rgba(255,69,58,.12)',  'var(--rose)', desAtivos,           'Desafios',       'Em andamento',    'desafios',   'Ver desafios')}
+      ${_kpi('money', 'rgba(58,170,92,.12)',  'var(--gr)',   saldoFmt,            'Financeiro',     'Saldo atual',     'financeiro', 'Ver financeiro')}
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px">
-      ${_kpi(_svgUsers, 'rgba(58,170,92,.12)',  'var(--gr)',    m.membros_ativos,      'Membros',        'Membros ativos',   'membresia',   'Ver membros')}
-      ${_kpi(_svgChurch,'rgba(90,200,250,.12)', 'var(--sky)',   a.cultos_por_semana,   'Cultos',         'Por semana',       'cultos',      'Ver cultos')}
-      ${_kpi(_svgHome,  'rgba(82,196,110,.12)', 'var(--gmd)',   pg.total_grupos,       'Pequenos Grupos','Grupos ativos',    'pgs',         'Ver grupos')}
-      ${_kpi(_svgWarn,  'rgba(255,69,58,.12)',  'var(--rose)',  desAtivos,             'Desafios',       'Em andamento',     'desafios',    'Ver desafios')}
-      ${_kpi(_svgMoney, 'rgba(58,170,92,.12)',  'var(--gr)',    saldoFmt,              'Financeiro',     'Saldo atual',      'financeiro',  'Ver financeiro')}
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px">
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
       <div class="card">
         <div class="ctit">Liderança <span class="cact" onclick="switchCongTabNamed('lideranca')">Ver toda</span></div>
         <div id="cong-vg-lideranca"></div>
@@ -638,37 +638,42 @@ function renderTab_visaoGeral(cong, el){
     </div>
   `;
 
-  const _empty=(txt)=>`<div style="color:var(--tx3);font-size:12px;text-align:center;padding:20px 0">${txt}</div>`;
-  const _row=(cells)=>`<div style="display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--bd1)">${cells}</div>`;
+  const _row=(a,b)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd1)">
+    <span style="font-size:10.5px;color:var(--tx3);min-width:72px;flex-shrink:0">${a}</span>
+    <span style="font-size:12px;color:var(--tx1);font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b}</span>
+  </div>`;
 
   const ldItems=[];
-  if(cong.lideranca.pastor_responsavel) ldItems.push({label:"Pastor",nome:cong.lideranca.pastor_responsavel});
-  if(le.supervisao)  ldItems.push({label:"Supervisor",nome:le.supervisao});
-  if(le.conselheiro) ldItems.push({label:"Conselheiro",nome:le.conselheiro});
-  if(le.coordenacao) ldItems.push({label:"Coordenação",nome:le.coordenacao});
-  if(le.tesoureiro)  ldItems.push({label:"Tesoureiro",nome:le.tesoureiro});
+  if(cong.lideranca.pastor_responsavel) ldItems.push(["Pastor",cong.lideranca.pastor_responsavel]);
+  if(le.supervisao)  ldItems.push(["Supervisor",le.supervisao]);
+  if(le.conselheiro) ldItems.push(["Conselheiro",le.conselheiro]);
+  if(le.coordenacao) ldItems.push(["Coordenação",le.coordenacao]);
+  if(le.tesoureiro)  ldItems.push(["Tesoureiro",le.tesoureiro]);
   const ldEl=document.getElementById("cong-vg-lideranca");
   if(ldEl) ldEl.innerHTML=ldItems.length
-    ?ldItems.map(l=>_row(`<span style="font-size:11px;color:var(--tx3);min-width:76px;flex-shrink:0">${l.label}</span><span style="font-size:12px;color:var(--tx1);font-weight:500">${escapeHtml(l.nome)}</span>`)).join("")
+    ?ldItems.map(([l,n])=>_row(l,escapeHtml(n))).join("")
     :_empty("Nenhuma liderança cadastrada");
 
   const desEl=document.getElementById("cong-vg-desafios");
   if(desEl){
-    const ativos=des.lista.filter(d=>d.status!=="concluído"&&d.status!=="concluido").slice(0,3);
+    const ativos=des.lista.filter(d=>d.status!=="concluído"&&d.status!=="concluido").slice(0,4);
     desEl.innerHTML=ativos.length
-      ?ativos.map(d=>_row(`<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;color:var(--tx1)">${escapeHtml(d.titulo)}</div></div>${prioBadge(d.prioridade)}`)).join("")
+      ?ativos.map(d=>`<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--bd1)">
+          <div style="flex:1;min-width:0;font-size:12px;font-weight:500;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(d.titulo)}</div>
+          ${prioBadge(d.prioridade)}
+        </div>`).join("")
       :_empty("Nenhum desafio ativo");
   }
 
   const cultosEl=document.getElementById("cong-vg-cultos");
   if(cultosEl){
-    const hist=(a.historico_cultos||[]).slice(0,3);
+    const hist=(a.historico_cultos||[]).slice(0,4);
     cultosEl.innerHTML=hist.length
       ?hist.map(c=>{
           const total=(c.adultos||0)+(c.criancas||0)||(c.participantes||0);
-          return `<div style="padding:7px 0;border-bottom:1px solid var(--bd1)">
-            <div style="font-size:12px;font-weight:600;color:var(--tx1)">${escapeHtml(c.tipo||"Culto")}</div>
-            <div style="font-size:11px;color:var(--tx3);margin-top:2px">${fmtData(c.data)} · ${total} presentes</div>
+          return `<div style="padding:6px 0;border-bottom:1px solid var(--bd1)">
+            <div style="font-size:12px;font-weight:500;color:var(--tx1)">${escapeHtml(c.tipo||"Culto")}</div>
+            <div style="font-size:10.5px;color:var(--tx3);margin-top:1px">${fmtData(c.data)} · ${total} presentes</div>
           </div>`;
         }).join("")
       :_empty("Nenhum culto registrado");
