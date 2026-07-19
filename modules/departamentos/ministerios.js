@@ -37,10 +37,13 @@
 
   /* ══ ESTADO ══════════════════════════════════════════════════ */
   let _ministerioAtual  = null;
+  let _ministerioDataAtual = null;
+  let _recursosAtual    = {};
+  let _tabAtual         = 'dashboard';
   let _pessoasCache     = null;
   let _editandoId       = null;
   let _setorEditandoId  = null;
-  let _supervisorDoMinisterioAtual = null; // pessoa_id do supervisor do ministério aberto
+  let _supervisorDoMinisterioAtual = null;
 
   /* ══ SUPABASE HEADERS ════════════════════════════════════════ */
   // Usa o JWT do usuário autenticado (via sipenToken()) para que as
@@ -198,7 +201,7 @@
   }
 
   function _cardMinisterio(m, qtdMembros, nomeSupervisor) {
-    const ICONES = { MUSICA:'🎵', JOVENS:'🔥', INFANTIL:'👶', INTERCESSAO:'🙏', EVANGELISMO:'✝️', DIACONIA:'🤝', COMUNICACAO:'📢', OUTRO:'⭐' };
+    const ICONES = { MUSICA:'🎵', JOVENS:'🔥', INFANTIL:'👶', INTERCESSAO:'🙏', EVANGELISMO:'✝️', DIACONIA:'🤝', COMUNICACAO:'📢', ACOLHIMENTO:'🤗', OUTRO:'⭐' };
     const ic = ICONES[m.tipo] || '⭐';
     const inativoTag = m.ativo === false
       ? '<span style="font-size:10px;padding:2px 7px;background:#fee2e2;color:var(--rose);border-radius:20px;margin-left:6px">Inativo</span>'
@@ -227,23 +230,25 @@
   /* ══ DETALHE DO MINISTÉRIO ═══════════════════════════════════ */
   async function minMinAbrir(id) {
     _ministerioAtual = id;
+    _ministerioDataAtual = null;
     document.getElementById('min-min-painel-lista').style.display   = 'none';
     document.getElementById('min-min-painel-detalhe').style.display = '';
 
-    const header   = document.getElementById('min-min-detalhe-header');
-    const memList  = document.getElementById('min-min-membro-list');
-    const memCount = document.getElementById('min-min-membro-count');
-    const btnAdd   = document.getElementById('min-min-btn-add-membro');
+    // Resetar para aba dashboard
+    minMinTab('dashboard');
 
-    header.innerHTML  = '<div style="color:var(--tx3);font-size:13px;padding:16px 0">Carregando...</div>';
-    memList.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:16px 0">Carregando...</div>';
-    memCount.textContent = '';
-    if (btnAdd) btnAdd.style.display = _podeEditar() ? '' : 'none';
+    const header = document.getElementById('min-min-detalhe-header');
+    const dash   = document.getElementById('min-min-dash-content');
+    header.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:12px 0">Carregando...</div>';
+    if (dash) dash.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Carregando...</div>';
+
+    const admBtn = document.getElementById('min-min-tab-btn-adm');
+    if (admBtn) admBtn.style.display = 'none';
 
     try {
       const [rMin] = await Promise.all([
         fetch(
-          `${SUPABASE_URL}/rest/v1/ministerios?id=eq.${id}&select=id,nome,descricao,tipo,ativo,supervisor,conselheiro,coordenador`,
+          `${SUPABASE_URL}/rest/v1/ministerios?id=eq.${id}&select=id,nome,descricao,tipo,ativo,supervisor,conselheiro,coordenador,recursos`,
           { headers: _hdr() }
         ),
         _carregarPessoas(),
@@ -251,11 +256,11 @@
 
       if (!rMin.ok) {
         const error = await _restError(rMin);
-        if (error?.code === "42P01") {
-          header.innerHTML = '<div style="color:var(--tx3);padding:20px;text-align:center">Tabela "ministérios" não encontrada no banco de dados.<br><small>Execute o SQL de criação da tabela para ativar este módulo.</small></div>';
+        if (error?.code === '42P01') {
+          header.innerHTML = '<div style="color:var(--tx3);padding:20px;text-align:center">Tabela "ministérios" não encontrada.<br><small>Execute o SQL de criação para ativar este módulo.</small></div>';
           return;
         }
-        throw new Error(error?.message || "Erro ao carregar ministério.");
+        throw new Error(error?.message || 'Erro ao carregar ministério.');
       }
 
       const dados = await rMin.json();
@@ -264,9 +269,12 @@
         header.innerHTML = '<div style="color:var(--rose);font-size:13px">Ministério não encontrado.</div>';
         return;
       }
-      _supervisorDoMinisterioAtual = m.supervisor || null;
 
-      // Resolver nomes dos cargos de liderança em um único request
+      _supervisorDoMinisterioAtual = m.supervisor || null;
+      _recursosAtual  = m.recursos || {};
+      _ministerioDataAtual = m;
+
+      // Nomes da liderança
       const pessoaIds = [m.supervisor, m.conselheiro, m.coordenador].filter(Boolean);
       const nomes = {};
       if (pessoaIds.length) {
@@ -275,60 +283,263 @@
           { headers: _hdr() }
         );
         const ps = rp.ok ? await rp.json() : [];
-        ps.forEach(p => { nomes[p.id] = (p.nome || "").toUpperCase(); });
+        ps.forEach(p => { nomes[p.id] = (p.nome || '').toUpperCase(); });
       }
 
-      const ICONES = { MUSICA:'🎵', JOVENS:'🔥', INFANTIL:'👶', INTERCESSAO:'🙏', EVANGELISMO:'✝️', DIACONIA:'🤝', COMUNICACAO:'📢', OUTRO:'⭐' };
-      const ic = ICONES[m.tipo] || '⭐';
-      const tipoLabel = m.tipo ? m.tipo.charAt(0) + m.tipo.slice(1).toLowerCase() : '';
+      _renderHeader(m, nomes);
+      _renderDashboard(m, nomes);
 
-      const _linha = (label, pessoaId) => pessoaId && nomes[pessoaId]
-        ? `<div style="display:flex;gap:8px;align-items:baseline;margin-bottom:6px">
-             <span style="font-size:11px;color:var(--tx3);min-width:110px">${label}</span>
-             <span style="font-size:13px;font-weight:600;color:var(--tx1)">${escapeHtml(nomes[pessoaId])}</span>
-           </div>`
-        : '';
+      if (admBtn) admBtn.style.display = _podeEditarMinisterio() ? '' : 'none';
 
-      const temLideranca = m.supervisor || m.conselheiro || m.coordenador;
-      const btnEditar = _podeEditarMinisterio()
-        ? `<button onclick="minMinEditar('${m.id}')" class="tbt" style="font-size:12px;padding:5px 12px">✏️ Editar</button>`
-        : '';
-      const _badgePapel = () => {
-        if (_isAdminGeral())             return '<span style="font-size:11px;padding:2px 8px;background:var(--violetbg);color:var(--violet);border-radius:20px;font-weight:600">Admin Geral</span>';
-        if (_isSupervisorDoMinisterio()) return '<span style="font-size:11px;padding:2px 8px;background:rgba(74,156,245,0.12);color:var(--sky,#3a9af5);border-radius:20px;font-weight:600">Supervisor</span>';
-        if (USUARIO_ATUAL?.pessoa_id && USUARIO_ATUAL.pessoa_id === m.coordenador) return '<span style="font-size:11px;padding:2px 8px;background:rgba(58,170,92,0.12);color:var(--gmd);border-radius:20px;font-weight:600">Coordenador</span>';
-        return '';
-      };
+      const btnAdd = document.getElementById('min-min-btn-add-membro');
+      if (btnAdd) btnAdd.style.display = _podeEditar() ? '' : 'none';
 
-      header.innerHTML = `
-        <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
-          <div style="width:48px;height:48px;border-radius:12px;background:var(--violetbg);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${ic}</div>
-          <div style="flex:1;min-width:180px">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px">
-              <div style="font-size:18px;font-weight:800;color:var(--tx1)">${escapeHtml(m.nome)}
-                ${m.ativo === false ? '<span style="font-size:11px;padding:2px 8px;background:#fee2e2;color:var(--rose);border-radius:20px;margin-left:4px">Inativo</span>' : ''}
-              </div>
-              ${_badgePapel()}
-              ${btnEditar}
-            </div>
-            ${tipoLabel ? `<div style="font-size:12px;color:var(--tx3);margin-bottom:8px">${tipoLabel}</div>` : ''}
-            ${m.descricao ? `<div style="font-size:13px;color:var(--tx2);line-height:1.6;margin-bottom:10px">${escapeHtml(m.descricao)}</div>` : ''}
-            ${temLideranca ? `
-              <div style="border-top:1px solid var(--bd1);padding-top:10px;margin-top:4px">
-                <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Liderança</div>
-                ${_linha('Supervisor',  m.supervisor)}
-                ${_linha('Conselheiro', m.conselheiro)}
-                ${_linha('Coordenador', m.coordenador)}
-              </div>` : ''}
-          </div>
-        </div>`;
+      // Atualiza hero title
+      const heroTtl = document.querySelector('#v-min-min .hero-ttl');
+      if (heroTtl) heroTtl.textContent = m.nome;
 
-      await _carregarMembros(id);
-      await _carregarSetores(id);
+      await Promise.all([
+        _carregarMembros(id),
+        _carregarSetores(id),
+      ]);
 
     } catch (e) {
       console.error('minMinAbrir:', e);
       header.innerHTML = '<div style="color:var(--rose);font-size:13px;padding:12px">Erro ao carregar dados do ministério.</div>';
+    }
+  }
+
+  /* ══ TROCA DE ABA ════════════════════════════════════════════ */
+  function minMinTab(tab) {
+    document.querySelectorAll('.min-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    document.querySelectorAll('.min-tab-panel').forEach(p => p.style.display = 'none');
+    const panel = document.getElementById('min-min-tab-' + tab);
+    if (panel) panel.style.display = '';
+    _tabAtual = tab;
+    if (tab === 'adm' && _ministerioAtual) _renderAdm();
+  }
+
+  /* ══ HEADER COMPACTO ═════════════════════════════════════════ */
+  function _renderHeader(m, nomes) {
+    const header = document.getElementById('min-min-detalhe-header');
+    if (!header) return;
+    const ICONES = { MUSICA:'🎵', JOVENS:'🔥', INFANTIL:'👶', INTERCESSAO:'🙏', EVANGELISMO:'✝️', DIACONIA:'🤝', COMUNICACAO:'📢', ACOLHIMENTO:'🤗', OUTRO:'⭐' };
+    const ic = ICONES[m.tipo] || '⭐';
+    const tipoLabel = m.tipo ? m.tipo.charAt(0) + m.tipo.slice(1).toLowerCase() : '';
+    const badge = _isAdminGeral()
+      ? '<span class="pill pb" style="font-size:10px">Admin Geral</span>'
+      : _isSupervisorDoMinisterio()
+        ? '<span class="pill pv" style="font-size:10px">Supervisor</span>'
+        : '';
+    header.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:42px;height:42px;border-radius:10px;background:var(--violetbg);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${ic}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px">
+            <span style="font-size:16px;font-weight:800;color:var(--tx1)">${escapeHtml(m.nome)}</span>
+            ${m.ativo === false ? '<span class="pill pa" style="font-size:10px">Inativo</span>' : ''}
+            ${badge}
+          </div>
+          ${tipoLabel ? `<div style="font-size:11px;color:var(--tx3)">${tipoLabel}</div>` : ''}
+        </div>
+      </div>`;
+  }
+
+  /* ══ DASHBOARD ═══════════════════════════════════════════════ */
+  function _renderDashboard(m, nomes) {
+    const el = document.getElementById('min-min-dash-content');
+    if (!el) return;
+    const _linha = (label, pessoaId) => pessoaId && nomes[pessoaId]
+      ? `<div style="display:flex;gap:8px;align-items:baseline;margin-bottom:6px">
+           <span style="font-size:11px;color:var(--tx3);min-width:110px">${label}</span>
+           <span style="font-size:13px;font-weight:600;color:var(--tx1)">${escapeHtml(nomes[pessoaId])}</span>
+         </div>`
+      : '';
+    const temLideranca = m.supervisor || m.conselheiro || m.coordenador;
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:16px">
+        <div class="card" style="text-align:center;padding:16px 12px;cursor:pointer" onclick="minMinTab('membros')">
+          <div id="min-min-stat-membros" style="font-size:28px;font-weight:700;color:var(--violet)">—</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:4px">Membros ativos</div>
+        </div>
+        <div class="card" style="text-align:center;padding:16px 12px;cursor:pointer" onclick="minMinTab('setores')">
+          <div id="min-min-stat-setores" style="font-size:28px;font-weight:700;color:var(--violet)">—</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:4px">Setores</div>
+        </div>
+      </div>
+      ${m.descricao ? `<div class="card" style="margin-bottom:12px">
+        <div style="font-size:13px;color:var(--tx2);line-height:1.65">${escapeHtml(m.descricao)}</div>
+      </div>` : ''}
+      ${temLideranca ? `<div class="card">
+        <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Liderança</div>
+        ${_linha('Supervisor', m.supervisor)}
+        ${_linha('Conselheiro', m.conselheiro)}
+        ${_linha('Coordenador', m.coordenador)}
+      </div>` : ''}`;
+  }
+
+  /* ══ ABA ADMINISTRAÇÃO ═══════════════════════════════════════ */
+  async function _renderAdm() {
+    const el = document.getElementById('min-min-adm-content');
+    if (!el) return;
+    if (!_ministerioDataAtual) {
+      el.innerHTML = '<div style="color:var(--tx3);text-align:center;padding:32px">Carregando...</div>';
+      return;
+    }
+    await _carregarPessoas();
+    const m   = _ministerioDataAtual;
+    const rec = _recursosAtual || {};
+
+    const MODULOS = [
+      { key: 'escalas',      label: 'Escalas',      desc: 'Escala de serviço e atribuições' },
+      { key: 'programacoes', label: 'Programações',  desc: 'Agenda de eventos e cultos' },
+      { key: 'reunioes',     label: 'Reuniões',      desc: 'Atas e pautas de reuniões' },
+      { key: 'documentos',   label: 'Documentos',    desc: 'Regulamentos e manuais' },
+      { key: 'whatsapp',     label: 'WhatsApp',      desc: 'Listas de transmissão' },
+    ];
+
+    const _tog = (key, on) =>
+      `<button id="adm-tog-${key}" onclick="_admToggleRecurso('${key}',${!on})"
+         style="padding:5px 14px;border-radius:20px;border:1px solid ${on ? 'transparent' : 'var(--bd2)'};font-size:11.5px;font-weight:600;cursor:pointer;
+           background:${on ? 'rgba(191,90,242,0.14)' : 'transparent'};color:${on ? 'var(--violet)' : 'var(--tx3)'};transition:all .15s">
+         ${on ? 'Ativado' : 'Desativado'}
+       </button>`;
+
+    el.innerHTML = `
+      <div class="card" style="margin-bottom:16px">
+        <div class="ctit">Informações</div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div>
+            <label style="${_LB}">Nome <span style="color:var(--rose)">*</span></label>
+            <input type="text" id="adm-nome" value="${escapeHtml(m.nome || '')}" style="${_INP}">
+          </div>
+          <div>
+            <label style="${_LB}">Descrição</label>
+            <textarea id="adm-desc" rows="3" style="${_INP};resize:vertical;height:auto;font-family:inherit">${escapeHtml(m.descricao || '')}</textarea>
+          </div>
+          <div>
+            <label style="${_LB}">Tipo</label>
+            <select id="adm-tipo" style="${_INP}">
+              <option value="">— Selecione —</option>
+              <option value="MUSICA"      ${m.tipo==='MUSICA'     ?'selected':''}>Música</option>
+              <option value="JOVENS"      ${m.tipo==='JOVENS'     ?'selected':''}>Jovens</option>
+              <option value="INFANTIL"    ${m.tipo==='INFANTIL'   ?'selected':''}>Infantil</option>
+              <option value="INTERCESSAO" ${m.tipo==='INTERCESSAO'?'selected':''}>Intercessão</option>
+              <option value="EVANGELISMO" ${m.tipo==='EVANGELISMO'?'selected':''}>Evangelismo</option>
+              <option value="DIACONIA"    ${m.tipo==='DIACONIA'   ?'selected':''}>Diaconia</option>
+              <option value="COMUNICACAO" ${m.tipo==='COMUNICACAO'?'selected':''}>Comunicação</option>
+              <option value="ACOLHIMENTO" ${m.tipo==='ACOLHIMENTO'?'selected':''}>Acolhimento &amp; Integração</option>
+              <option value="OUTRO"       ${m.tipo==='OUTRO'      ?'selected':''}>Outro</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
+            <div>
+              <label style="${_LB}">Supervisor</label>
+              <select id="adm-supervisor" style="${_INP}">${_optionsPessoa(m.supervisor || '')}</select>
+            </div>
+            <div>
+              <label style="${_LB}">Conselheiro</label>
+              <select id="adm-conselheiro" style="${_INP}">${_optionsPessoa(m.conselheiro || '')}</select>
+            </div>
+            <div>
+              <label style="${_LB}">Coordenador</label>
+              <select id="adm-coordenador" style="${_INP}">${_optionsPessoa(m.coordenador || '')}</select>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="checkbox" id="adm-ativo" ${m.ativo !== false ? 'checked' : ''} style="width:16px;height:16px;cursor:pointer">
+            <label for="adm-ativo" style="font-size:13px;color:var(--tx2);cursor:pointer">Ministério ativo</label>
+          </div>
+          <div id="adm-info-err" style="color:var(--rose);font-size:12px;display:none"></div>
+          <div style="display:flex;justify-content:flex-end">
+            <button id="adm-info-btn" onclick="_admSalvarInfo()"
+              style="padding:9px 24px;border-radius:8px;border:none;background:var(--violet);color:#fff;font-size:13px;font-weight:600;cursor:pointer">
+              Salvar
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ctit">Módulos Opcionais</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${MODULOS.map(mod => `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg-hover);border-radius:8px">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:var(--tx1)">${mod.label}</div>
+                <div style="font-size:11px;color:var(--tx3);margin-top:2px">${mod.desc}</div>
+              </div>
+              ${_tog(mod.key, !!rec[mod.key])}
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  async function _admSalvarInfo() {
+    const nome = (document.getElementById('adm-nome')?.value || '').trim();
+    if (!nome) { _showErr('adm-info-err', 'Nome é obrigatório.'); return; }
+    const btn = document.getElementById('adm-info-btn');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    const payload = {
+      nome,
+      descricao:   (document.getElementById('adm-desc')?.value    || '').trim() || null,
+      tipo:        document.getElementById('adm-tipo')?.value      || null,
+      supervisor:  document.getElementById('adm-supervisor')?.value  || null,
+      conselheiro: document.getElementById('adm-conselheiro')?.value || null,
+      coordenador: document.getElementById('adm-coordenador')?.value || null,
+      ativo:       document.getElementById('adm-ativo')?.checked    ?? true,
+    };
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerios?id=eq.${_ministerioAtual}`, {
+        method: 'PATCH', headers: _hdrJson(), body: JSON.stringify(payload),
+      });
+      if (!r.ok) throw new Error(await r.text());
+      Object.assign(_ministerioDataAtual, payload);
+      _supervisorDoMinisterioAtual = payload.supervisor;
+      // Atualiza header e dashboard com novos nomes
+      const pessoaIds = [payload.supervisor, payload.conselheiro, payload.coordenador].filter(Boolean);
+      const nomes = {};
+      if (pessoaIds.length) {
+        const rp = await fetch(`${SUPABASE_URL}/rest/v1/pessoas?id=in.(${pessoaIds.join(',')})&select=id,nome`, { headers: _hdr() });
+        const ps = rp.ok ? await rp.json() : [];
+        ps.forEach(p => { nomes[p.id] = (p.nome || '').toUpperCase(); });
+      }
+      _renderHeader(_ministerioDataAtual, nomes);
+      _renderDashboard(_ministerioDataAtual, nomes);
+      // Atualiza counts no dashboard pós-save
+      const sm = document.getElementById('min-min-stat-membros');
+      const ss = document.getElementById('min-min-stat-setores');
+      // Re-carrega membros/setores para atualizar counts
+      await Promise.all([_carregarMembros(_ministerioAtual), _carregarSetores(_ministerioAtual)]);
+      _showErr('adm-info-err', '');
+      btn.textContent = 'Salvo ✓';
+      setTimeout(() => { if (btn) btn.textContent = 'Salvar'; btn.disabled = false; }, 2000);
+    } catch (e) {
+      _showErr('adm-info-err', 'Erro ao salvar: ' + e.message);
+      btn.disabled = false; btn.textContent = 'Salvar';
+    }
+  }
+
+  async function _admToggleRecurso(key, value) {
+    _recursosAtual = Object.assign({}, _recursosAtual || {}, { [key]: value });
+    if (_ministerioDataAtual) _ministerioDataAtual.recursos = _recursosAtual;
+    const btn = document.getElementById(`adm-tog-${key}`);
+    if (btn) {
+      btn.textContent = value ? 'Ativado' : 'Desativado';
+      btn.style.background  = value ? 'rgba(191,90,242,0.14)' : 'transparent';
+      btn.style.color       = value ? 'var(--violet)' : 'var(--tx3)';
+      btn.style.borderColor = value ? 'transparent' : 'var(--bd2)';
+      btn.setAttribute('onclick', `_admToggleRecurso('${key}',${!value})`);
+    }
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerios?id=eq.${_ministerioAtual}`, {
+        method: 'PATCH', headers: _hdrJson(), body: JSON.stringify({ recursos: _recursosAtual }),
+      });
+      if (!r.ok) throw new Error(r.status);
+    } catch (e) {
+      alert('Erro ao salvar configuração: ' + e.message);
+      _recursosAtual[key] = !value;
+      if (_ministerioDataAtual) _ministerioDataAtual.recursos = _recursosAtual;
+      _renderAdm();
     }
   }
 
@@ -345,6 +556,8 @@
       const lista = r.ok ? await r.json() : [];
       const ativos = lista.filter(x => x.status !== 'inativo');
       cnt.textContent = `(${ativos.length})`;
+      const statMb = document.getElementById('min-min-stat-membros');
+      if (statMb) statMb.textContent = ativos.length;
 
       if (lista.length === 0) {
         el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Nenhum membro adicionado a este ministério.</div>';
@@ -414,6 +627,8 @@
       const lista = r.ok ? await r.json() : [];
       const ativos = lista.filter(s => s.ativo !== false);
       if (cnt) cnt.textContent = `(${ativos.length})`;
+      const statSt = document.getElementById('min-min-stat-setores');
+      if (statSt) statSt.textContent = ativos.length;
 
       if (lista.length === 0) {
         el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:16px 0;text-align:center">Nenhum setor cadastrado neste ministério.</div>';
@@ -557,9 +772,12 @@
 
   /* ══ VOLTAR LISTA ════════════════════════════════════════════ */
   function minMinVoltarLista() {
-    _ministerioAtual = null;
+    _ministerioAtual     = null;
+    _ministerioDataAtual = null;
     document.getElementById('min-min-painel-detalhe').style.display = 'none';
     document.getElementById('min-min-painel-lista').style.display   = '';
+    const heroTtl = document.querySelector('#v-min-min .hero-ttl');
+    if (heroTtl) heroTtl.textContent = 'Ministérios';
   }
 
   /* ══ UTILITÁRIOS DE ESTILO (modal) ═══════════════════════════ */
@@ -628,6 +846,7 @@
       <option value="EVANGELISMO">✝️ Evangelismo</option>
       <option value="DIACONIA">🤝 Diaconia</option>
       <option value="COMUNICACAO">📢 Comunicação</option>
+      <option value="ACOLHIMENTO">🤗 Acolhimento &amp; Integração</option>
       <option value="OUTRO">⭐ Outro</option>`;
 
     const corpo = `
@@ -1037,7 +1256,7 @@
   }
 
   /* ══ SIDEBAR DINÂMICO ════════════════════════════════════════ */
-  const _SB_ICONES = { MUSICA:'♪', JOVENS:'◈', INFANTIL:'◎', INTERCESSAO:'✦', EVANGELISMO:'✝', DIACONIA:'◇', COMUNICACAO:'◉', OUTRO:'◆' };
+  const _SB_ICONES = { MUSICA:'♪', JOVENS:'◈', INFANTIL:'◎', INTERCESSAO:'✦', EVANGELISMO:'✝', DIACONIA:'◇', COMUNICACAO:'◉', ACOLHIMENTO:'◌', OUTRO:'◆' };
 
   async function sbMinMinBuild() {
     const el = document.getElementById('sb-min-ministerios');
@@ -1062,6 +1281,7 @@
   window.minMinLoad               = minMinLoad;
   window.minMinAbrir              = minMinAbrir;
   window.minMinVoltarLista        = minMinVoltarLista;
+  window.minMinTab                = minMinTab;
   window.minMinNovo               = minMinNovo;
   window.minMinEditar             = minMinEditar;
   window.minMinAdicionarMembro    = minMinAdicionarMembro;
@@ -1074,8 +1294,10 @@
   window.minMinAdicionarMembroSetor = minMinAdicionarMembroSetor;
   window.minMinRemoverMembroSetor   = minMinRemoverMembroSetor;
   // Chamados de dentro do HTML gerado dinamicamente
-  window._mmSalvar                = _mmSalvar;
-  window._mmbSalvar               = _mmbSalvar;
-  window._mstSalvar               = _mstSalvar;
+  window._mmSalvar         = _mmSalvar;
+  window._mmbSalvar        = _mmbSalvar;
+  window._mstSalvar        = _mstSalvar;
+  window._admSalvarInfo    = _admSalvarInfo;
+  window._admToggleRecurso = _admToggleRecurso;
 
 })();

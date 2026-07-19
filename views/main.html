@@ -2649,14 +2649,53 @@
         <button class="tbt" onclick="minMinVoltarLista()">← Todos os Ministérios</button>
       </div>
       <div id="min-min-detalhe-header" class="card" style="margin-bottom:16px">
-        <div style="color:var(--tx3);font-size:13px;padding:16px 0">Carregando...</div>
+        <div style="color:var(--tx3);font-size:13px;padding:12px 0">Carregando...</div>
       </div>
-      <div class="card">
-        <div class="ctit">Membros
-          <span id="min-min-membro-count" style="color:var(--tx3);font-weight:400;font-size:12px"></span>
-          <span class="cact" id="min-min-btn-add-membro" style="display:none" onclick="minMinAdicionarMembro()">+ Adicionar</span>
+      <!-- Navegação por abas -->
+      <div style="display:flex;border-bottom:2px solid var(--bd1);margin-bottom:16px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch">
+        <button class="min-tab active" data-tab="dashboard" onclick="minMinTab('dashboard')">Dashboard</button>
+        <button class="min-tab" data-tab="membros" onclick="minMinTab('membros')">Membros <span id="min-min-membro-count" style="font-size:11px;font-weight:400"></span></button>
+        <button class="min-tab" data-tab="setores" onclick="minMinTab('setores')">Setores <span id="min-min-setor-count" style="font-size:11px;font-weight:400"></span></button>
+        <button class="min-tab" data-tab="relatorios" onclick="minMinTab('relatorios')">Relatórios</button>
+        <button class="min-tab" data-tab="adm" onclick="minMinTab('adm')" id="min-min-tab-btn-adm" style="display:none">Administração</button>
+      </div>
+      <!-- Aba: Dashboard -->
+      <div id="min-min-tab-dashboard" class="min-tab-panel">
+        <div id="min-min-dash-content">
+          <div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Carregando...</div>
         </div>
-        <div id="min-min-membro-list"><div style="color:var(--tx3);font-size:13px;padding:16px 0">Carregando...</div></div>
+      </div>
+      <!-- Aba: Membros -->
+      <div id="min-min-tab-membros" class="min-tab-panel" style="display:none">
+        <div class="card">
+          <div class="ctit">Membros
+            <span class="cact" id="min-min-btn-add-membro" style="display:none" onclick="minMinAdicionarMembro()">+ Adicionar</span>
+          </div>
+          <div id="min-min-membro-list"><div style="color:var(--tx3);font-size:13px;padding:16px 0">Carregando...</div></div>
+        </div>
+      </div>
+      <!-- Aba: Setores -->
+      <div id="min-min-tab-setores" class="min-tab-panel" style="display:none">
+        <div class="card">
+          <div class="ctit">Setores
+            <span class="cact" id="min-min-btn-add-setor" style="display:none" onclick="minMinNovoSetor()">+ Novo Setor</span>
+          </div>
+          <div id="min-min-setor-list"><div style="color:var(--tx3);font-size:13px;padding:16px 0">Carregando...</div></div>
+        </div>
+      </div>
+      <!-- Aba: Relatórios -->
+      <div id="min-min-tab-relatorios" class="min-tab-panel" style="display:none">
+        <div class="card" style="text-align:center;padding:48px 24px">
+          <div style="font-size:32px;margin-bottom:12px">📊</div>
+          <div style="font-size:14px;font-weight:600;color:var(--tx2);margin-bottom:6px">Relatórios</div>
+          <div style="font-size:13px;color:var(--tx3)">Disponível em breve.</div>
+        </div>
+      </div>
+      <!-- Aba: Administração -->
+      <div id="min-min-tab-adm" class="min-tab-panel" style="display:none">
+        <div id="min-min-adm-content">
+          <div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Carregando...</div>
+        </div>
       </div>
     </div>
   </div>
