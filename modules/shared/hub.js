@@ -7,8 +7,8 @@
 function hubSec(sectionId){
   const sec=document.getElementById('sbs-'+sectionId);
   const collapsed=!sec||sec.classList.contains('collapsed');
-  if(typeof sbsToggle==='function') sbsToggle(sectionId);
-  if(collapsed) go('hub-'+sectionId);
+  if(collapsed&&typeof sbsToggle==='function') sbsToggle(sectionId);
+  go('hub-'+sectionId);
 }
 window.hubSec=hubSec;
 
