@@ -313,6 +313,16 @@
       if (docBtn)   docBtn.style.display   = _recursosAtual.documentos   ? '' : 'none';
       const waBtn    = document.getElementById('min-min-tab-btn-wa');
       if (waBtn)    waBtn.style.display    = _recursosAtual.whatsapp     ? '' : 'none';
+
+      // Abas específicas de Comunicação
+      const isCom = m.tipo === 'COMUNICACAO';
+      const solBtn  = document.getElementById('min-min-tab-btn-sol');
+      if (solBtn)  solBtn.style.display  = isCom ? '' : 'none';
+      const campBtn = document.getElementById('min-min-tab-btn-camp');
+      if (campBtn) campBtn.style.display = isCom ? '' : 'none';
+      const prodBtn = document.getElementById('min-min-tab-btn-prod');
+      if (prodBtn) prodBtn.style.display = isCom ? '' : 'none';
+
       const modBtn   = document.getElementById('min-min-tab-btn-mod');
       if (modBtn) {
         const MOD_LABELS = {
@@ -358,6 +368,9 @@
     if (tab === 'programacoes' && _ministerioAtual) _carregarProgramacoes(_ministerioAtual);
     if (tab === 'escalas'      && _ministerioAtual) _carregarEscalas(_ministerioAtual);
     if (tab === 'arquivos'     && _ministerioAtual) _carregarDocumentos(_ministerioAtual);
+    if (tab === 'solicitacoes' && _ministerioAtual) _renderSolicitacoes();
+    if (tab === 'campanhas'    && _ministerioAtual) _renderCampanhas();
+    if (tab === 'producoes'    && _ministerioAtual) _renderProducoes();
     if (tab === 'whatsapp'     && _ministerioAtual) _renderWhatsapp();
     if (tab === 'modulo'       && _ministerioAtual) _renderModulo();
     if (tab === 'relatorios'   && _ministerioAtual) _renderRelatorios();
@@ -429,65 +442,84 @@
   async function _carregarVisaoGeral() {
     const el = document.getElementById('min-min-dash-content');
     if (!el || !_ministerioAtual) return;
-    const m   = _ministerioDataAtual || {};
-    const sem = _vgSemana(_vgSemanaOffset);
+    const sem    = _vgSemana(_vgSemanaOffset);
     const isoIni = sem.inicio.toISOString().slice(0,10);
     const isoFim = sem.fim.toISOString().slice(0,10);
 
-    el.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-        <div>
-          <div style="font-size:14px;font-weight:700;color:var(--tx1)">Visão Geral</div>
-          <div style="font-size:12px;color:var(--tx3)">Resumo das atividades e informações do ministério.</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:12px;color:var(--tx2)" id="vg-semana-label">📅 ${sem.label}</span>
-          <button class="tbt" style="padding:4px 9px;font-size:12px" onclick="_vgNavSemana(-1)">‹</button>
-          <button class="tbt" style="padding:4px 9px;font-size:12px" onclick="_vgNavSemana(1)">›</button>
-        </div>
-      </div>
+    const _ic = (svg, bg) =>
+      `<div style="width:40px;height:40px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;flex-shrink:0">${svg}</div>`;
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:20px">
-        <div class="card" style="padding:14px 16px;cursor:pointer" onclick="minMinTab('membros')">
-          <div style="font-size:26px;font-weight:800;color:var(--violet)" id="min-min-stat-membros">—</div>
-          <div style="font-size:11px;color:var(--tx3);margin-top:3px">Membros</div>
-          <div style="font-size:10px;color:var(--tx4,var(--tx3));margin-top:1px">Ativos no ministério</div>
-        </div>
-        <div class="card" style="padding:14px 16px;cursor:pointer" onclick="minMinTab('setores')">
-          <div style="font-size:26px;font-weight:800;color:var(--sky)" id="min-min-stat-setores">—</div>
-          <div style="font-size:11px;color:var(--tx3);margin-top:3px">Setores</div>
-          <div style="font-size:10px;color:var(--tx4,var(--tx3));margin-top:1px">Organizados</div>
-        </div>
-        <div class="card" style="padding:14px 16px;cursor:pointer" onclick="minMinTab('escalas')" id="vg-kpi-escalas-card" style="display:none">
-          <div style="font-size:26px;font-weight:800;color:var(--amber)" id="vg-kpi-escalas">—</div>
-          <div style="font-size:11px;color:var(--tx3);margin-top:3px">Escalas</div>
-          <div style="font-size:10px;color:var(--tx4,var(--tx3));margin-top:1px">Esta semana</div>
-        </div>
-        <div class="card" style="padding:14px 16px;cursor:pointer" onclick="minMinTab('programacoes')" id="vg-kpi-progs-card" style="display:none">
-          <div style="font-size:26px;font-weight:800;color:var(--teal)" id="vg-kpi-progs">—</div>
-          <div style="font-size:11px;color:var(--tx3);margin-top:3px">Programações</div>
-          <div style="font-size:10px;color:var(--tx4,var(--tx3));margin-top:1px">Próximos eventos</div>
-        </div>
-      </div>
+    const _svgUsers  = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+    const _svgLayers = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`;
+    const _svgCal    = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>`;
+    const _svgClip   = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>`;
+    const _svgCheck  = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
-        <div class="card" id="vg-escalas-recentes">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <span style="font-size:12.5px;font-weight:700;color:var(--tx1)">Próximas Escalas</span>
-            <span class="cact" style="font-size:11px" onclick="minMinTab('escalas')">Ver todas</span>
-          </div>
-          <div style="color:var(--tx3);font-size:12px;text-align:center;padding:16px 0">Carregando...</div>
-        </div>
-        <div class="card" id="vg-reunioes-recentes">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <span style="font-size:12.5px;font-weight:700;color:var(--tx1)">Próximas Reuniões</span>
-            <span class="cact" style="font-size:11px" onclick="minMinTab('reunioes')">Ver todas</span>
-          </div>
-          <div style="color:var(--tx3);font-size:12px;text-align:center;padding:16px 0">Carregando...</div>
+    const _kpi = (id, icon, iconBg, iconColor, numId, label, sub, tab, linkLabel) => `
+      <div class="card" style="padding:18px 16px;cursor:pointer;display:flex;flex-direction:column;gap:0" onclick="minMinTab('${tab}')" id="${id}">
+        <div style="margin-bottom:12px">${_ic(`<span style="color:${iconColor}">${icon}</span>`, iconBg)}</div>
+        <div style="font-size:30px;font-weight:800;color:var(--tx1);line-height:1" id="${numId}">—</div>
+        <div style="font-size:13px;font-weight:600;color:var(--tx1);margin-top:5px">${label}</div>
+        <div style="font-size:11.5px;color:var(--tx3);margin-top:2px;flex:1">${sub}</div>
+        <div style="border-top:1px solid var(--bd1);margin-top:14px;padding-top:10px">
+          <span style="font-size:12px;color:var(--violet);font-weight:500">${linkLabel} →</span>
         </div>
       </div>`;
 
-    // Carregar KPIs e seções em paralelo (usa dados do período atual)
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-size:17px;font-weight:700;color:var(--tx1)">Visão Geral</div>
+          <div style="font-size:12.5px;color:var(--tx3);margin-top:2px">Resumo das atividades e informações do ministério.</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          <span style="font-size:12px;color:var(--tx2)" id="vg-semana-label">${sem.label}</span>
+          <button class="tbt" style="padding:3px 8px;font-size:13px;line-height:1" onclick="_vgNavSemana(-1)">‹</button>
+          <button class="tbt" style="padding:3px 8px;font-size:13px;line-height:1" onclick="_vgNavSemana(1)">›</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px">
+        ${_kpi('vg-kpi-membros-card',  _svgUsers,  'rgba(139,107,193,.12)', 'var(--violet)', 'min-min-stat-membros', 'Membros',           'Ativos no ministério',  'membros',      'Ver membros')}
+        ${_kpi('vg-kpi-setores-card',  _svgLayers, 'rgba(58,170,92,.12)',   'var(--gmd)',    'min-min-stat-setores', 'Setores',           'Organizados',           'setores',      'Ver setores')}
+        ${_kpi('vg-kpi-escalas-card',  _svgCal,    'rgba(224,138,42,.12)', 'var(--amber)',  'vg-kpi-escalas',       'Escalas esta semana','Em andamento',         'escalas',      'Ver escalas')}
+        ${_kpi('vg-kpi-progs-card',    _svgClip,   'rgba(42,181,192,.12)', 'var(--teal)',   'vg-kpi-progs',         'Programações',      'Próximos eventos',      'programacoes', 'Ver programações')}
+        ${_kpi('vg-kpi-tarefas-card',  _svgCheck,  'rgba(139,107,193,.12)', 'var(--violet)','vg-kpi-tarefas',       'Tarefas pendentes', 'Esta semana',           'relatorios',   'Ver tarefas')}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:24px">
+        <div class="card" id="vg-escalas-sec">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <span style="font-size:13px;font-weight:700;color:var(--tx1)">Próximas Escalas</span>
+            <span class="cact" style="font-size:11.5px" onclick="minMinTab('escalas')">Ver todas</span>
+          </div>
+          <div id="vg-escalas-body"><div style="color:var(--tx3);font-size:12px;text-align:center;padding:20px 0">Carregando...</div></div>
+        </div>
+        <div class="card" id="vg-reunioes-sec">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <span style="font-size:13px;font-weight:700;color:var(--tx1)">Próximas Reuniões</span>
+            <span class="cact" style="font-size:11.5px" onclick="minMinTab('reunioes')">Ver todas</span>
+          </div>
+          <div id="vg-reunioes-body"><div style="color:var(--tx3);font-size:12px;text-align:center;padding:20px 0">Carregando...</div></div>
+        </div>
+        <div class="card" id="vg-avisos-sec">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <span style="font-size:13px;font-weight:700;color:var(--tx1)">Avisos e Comunicados</span>
+            <span class="cact" style="font-size:11.5px">Ver todos</span>
+          </div>
+          <div id="vg-avisos-body"><div style="color:var(--tx3);font-size:12px;text-align:center;padding:20px 0">Carregando...</div></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:13px;font-weight:700;color:var(--tx1)">Atividades Recentes</span>
+        <span class="cact" style="font-size:11.5px">Ver todas</span>
+      </div>
+      <div id="vg-atividades-row" style="display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none">
+        <div style="color:var(--tx3);font-size:12px;padding:20px 0">Carregando...</div>
+      </div>`;
+
     _vgCarregarKpis(isoIni, isoFim);
   }
 
@@ -495,63 +527,122 @@
     _vgSemanaOffset += dir;
     const sem = _vgSemana(_vgSemanaOffset);
     const lbl = document.getElementById('vg-semana-label');
-    if (lbl) lbl.textContent = `📅 ${sem.label}`;
+    if (lbl) lbl.textContent = sem.label;
     _vgCarregarKpis(sem.inicio.toISOString().slice(0,10), sem.fim.toISOString().slice(0,10));
   }
   window._vgNavSemana = _vgNavSemana;
+
+  function _fmtDH(d, h) {
+    const dt = new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
+    return h ? `${dt} • ${h.slice(0,5)}` : dt;
+  }
 
   async function _vgCarregarKpis(ini, fim) {
     if (!_ministerioAtual) return;
     try {
       const hdrs = _hdr();
-      const [rEsc, rProg, rReu] = await Promise.all([
-        fetch(`${SUPABASE_URL}/rest/v1/ministerio_escalas?ministerio_id=eq.${_ministerioAtual}&data=gte.${ini}&data=lte.${fim}&select=id,titulo,data,hora`, { headers: hdrs }),
-        fetch(`${SUPABASE_URL}/rest/v1/ministerio_programacoes?ministerio_id=eq.${_ministerioAtual}&data=gte.${ini}&select=id,titulo,data,hora&order=data.asc&limit=3`, { headers: hdrs }),
-        fetch(`${SUPABASE_URL}/rest/v1/ministerio_reunioes?ministerio_id=eq.${_ministerioAtual}&data=gte.${ini}&select=id,titulo,data,hora&order=data.asc&limit=3`, { headers: hdrs }),
+      const hoje = new Date().toISOString().slice(0,10);
+      const [rEsc, rProg, rReu, rMem, rSetores, rDoc] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/ministerio_escalas?ministerio_id=eq.${_ministerioAtual}&data=gte.${ini}&data=lte.${fim}&select=id,titulo,data,hora,ministerio_escala_pessoas(funcao)&order=data.asc`, { headers: hdrs }),
+        fetch(`${SUPABASE_URL}/rest/v1/ministerio_programacoes?ministerio_id=eq.${_ministerioAtual}&data=gte.${hoje}&select=id,titulo,data,hora&order=data.asc&limit=3`, { headers: hdrs }),
+        fetch(`${SUPABASE_URL}/rest/v1/ministerio_reunioes?ministerio_id=eq.${_ministerioAtual}&data=gte.${hoje}&select=id,titulo,data,hora&order=data.asc&limit=3`, { headers: hdrs }),
+        fetch(`${SUPABASE_URL}/rest/v1/ministerio_membros?ministerio_id=eq.${_ministerioAtual}&ativo=eq.true&select=id,criado_em,pessoas(nome)&order=criado_em.desc&limit=2`, { headers: hdrs }),
+        fetch(`${SUPABASE_URL}/rest/v1/ministerio_setores?ministerio_id=eq.${_ministerioAtual}&select=id,criado_em,nome&order=criado_em.desc&limit=1`, { headers: hdrs }),
+        fetch(`${SUPABASE_URL}/rest/v1/ministerio_documentos?ministerio_id=eq.${_ministerioAtual}&select=id,nome,criado_em&order=criado_em.desc&limit=2`, { headers: hdrs }),
       ]);
 
-      const escalas = rEsc.ok  ? await rEsc.json()  : [];
-      const progs   = rProg.ok ? await rProg.json() : [];
-      const reus    = rReu.ok  ? await rReu.json()  : [];
+      const escalas  = rEsc.ok  ? await rEsc.json()  : [];
+      const progs    = rProg.ok ? await rProg.json() : [];
+      const reus     = rReu.ok  ? await rReu.json()  : [];
+      const recMem   = rMem.ok  ? await rMem.json()  : [];
+      const recDoc   = rDoc.ok  ? await rDoc.json()  : [];
 
-      const kpiEsc = document.getElementById('vg-kpi-escalas');
-      if (kpiEsc) { kpiEsc.textContent = escalas.length; kpiEsc.closest('.card').style.display = ''; }
-      const kpiProg = document.getElementById('vg-kpi-progs');
-      if (kpiProg) { kpiProg.textContent = progs.length; kpiProg.closest('.card').style.display = ''; }
+      // KPI valores
+      const _set = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+      _set('vg-kpi-escalas', escalas.length);
+      _set('vg-kpi-progs',   progs.length);
+      _set('vg-kpi-tarefas', '0');
 
-      const _fmtDH = (d, h) => {
-        const data = new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
-        return h ? `${data} • ${h.slice(0,5)}` : data;
-      };
+      // ── Próximas Escalas ──────────────────────────────────────
+      const TAG_CORES = { transmissao:'74,156,245', projecao:'139,107,193', audio:'58,170,92', som:'58,170,92', louvor:'224,138,42', diaconia:'224,90,90' };
+      const _tagCor = f => { const k = (f||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,''); return TAG_CORES[k] || '139,107,193'; };
+      const _svgCalSm = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>`;
+      const _svgUserSm = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
 
-      const elEsc = document.getElementById('vg-escalas-recentes');
-      if (elEsc) {
-        const body = elEsc.querySelector('div:last-child');
-        body.innerHTML = escalas.length
-          ? escalas.slice(0,3).map(e => `
-              <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd1)">
-                <div style="width:28px;height:28px;border-radius:6px;background:var(--amberbg);display:flex;align-items:center;justify-content:center;flex-shrink:0">📅</div>
+      const elEscB = document.getElementById('vg-escalas-body');
+      if (elEscB) {
+        elEscB.innerHTML = escalas.length
+          ? escalas.slice(0,3).map(e => {
+              const funcoes = (e.ministerio_escala_pessoas || []).map(p => p.funcao).filter(Boolean);
+              const tag = funcoes[0];
+              const cor = tag ? _tagCor(tag) : null;
+              return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd1)">
+                <div style="width:36px;height:36px;border-radius:8px;background:var(--bg3,var(--bg2));display:flex;align-items:center;justify-content:center;flex-shrink:0">${_svgCalSm}</div>
                 <div style="flex:1;min-width:0">
-                  <div style="font-size:12.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(e.titulo)}</div>
-                  <div style="font-size:11px;color:var(--tx3)">${_fmtDH(e.data, e.hora)}</div>
+                  <div style="font-size:13px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(e.titulo)}</div>
+                  <div style="font-size:11.5px;color:var(--tx3);margin-top:1px">${_fmtDH(e.data, e.hora)}</div>
                 </div>
-              </div>`).join('')
-          : '<div style="color:var(--tx3);font-size:12px;text-align:center;padding:12px 0">Nenhuma escala nesta semana.</div>';
+                ${tag ? `<span style="padding:3px 9px;border-radius:20px;background:rgba(${cor},.1);color:rgb(${cor});font-size:11px;font-weight:600;white-space:nowrap">${escapeHtml(tag)}</span>` : ''}
+                <span style="color:var(--tx3);cursor:pointer;font-size:18px;padding:0 2px;line-height:1;flex-shrink:0">⋮</span>
+              </div>`;
+            }).join('')
+          : '<div style="color:var(--tx3);font-size:12px;text-align:center;padding:20px 0">Nenhuma escala nesta semana.</div>';
       }
 
-      const elReu = document.getElementById('vg-reunioes-recentes');
-      if (elReu) {
-        const body = elReu.querySelector('div:last-child');
-        body.innerHTML = reus.length
+      // ── Próximas Reuniões ──────────────────────────────────────
+      const elReuB = document.getElementById('vg-reunioes-body');
+      if (elReuB) {
+        elReuB.innerHTML = reus.length
           ? reus.map(r => `
-              <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd1)">
-                <div style="width:28px;height:28px;border-radius:6px;background:var(--violetbg);display:flex;align-items:center;justify-content:center;flex-shrink:0">🗣️</div>
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd1)">
+                <div style="width:36px;height:36px;border-radius:8px;background:var(--bg3,var(--bg2));display:flex;align-items:center;justify-content:center;flex-shrink:0">${_svgUserSm}</div>
                 <div style="flex:1;min-width:0">
-                  <div style="font-size:12.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(r.titulo)}</div>
-                  <div style="font-size:11px;color:var(--tx3)">${_fmtDH(r.data, r.hora)}</div>
+                  <div style="font-size:13px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(r.titulo)}</div>
+                  <div style="font-size:11.5px;color:var(--tx3);margin-top:1px">${_fmtDH(r.data, r.hora)}</div>
                 </div>
+                <span style="color:var(--tx3);cursor:pointer;font-size:18px;padding:0 2px;line-height:1;flex-shrink:0">⋮</span>
               </div>`).join('')
-          : '<div style="color:var(--tx3);font-size:12px;text-align:center;padding:12px 0">Nenhuma reunião próxima.</div>';
+          : '<div style="color:var(--tx3);font-size:12px;text-align:center;padding:20px 0">Nenhuma reunião próxima.</div>';
+      }
+
+      // ── Avisos e Comunicados (estado vazio elegante) ───────────
+      const elAviB = document.getElementById('vg-avisos-body');
+      if (elAviB) {
+        elAviB.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 0;gap:8px">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+          <div style="font-size:12px;color:var(--tx3);text-align:center">Nenhum aviso publicado.</div>
+        </div>`;
+      }
+
+      // ── Atividades Recentes ────────────────────────────────────
+      const _tempo = iso => {
+        const diff = (Date.now() - new Date(iso)) / 1000;
+        if (diff < 3600)   return `há ${Math.max(1, Math.round(diff/60))} min`;
+        if (diff < 86400)  return `há ${Math.round(diff/3600)} hora${diff < 7200?'':'s'}`;
+        return `há ${Math.round(diff/86400)} dia${diff < 172800?'':'s'}`;
+      };
+
+      const _svgMem  = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+      const _svgFile = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+
+      const atividades = [
+        ...recMem.map(m => ({ icon: _svgMem,  cor:'139,107,193', titulo: (m.pessoas?.nome || 'Membro'), sub:'Adicionado ao ministério', ts: m.criado_em })),
+        ...recDoc.map(d => ({ icon: _svgFile, cor:'74,156,245',  titulo: escapeHtml(d.nome || 'Arquivo'), sub:'Arquivo enviado', ts: d.criado_em })),
+      ].sort((a,b) => new Date(b.ts) - new Date(a.ts)).slice(0,5);
+
+      const elAtiv = document.getElementById('vg-atividades-row');
+      if (elAtiv) {
+        elAtiv.innerHTML = atividades.length
+          ? atividades.map(a => `
+              <div style="min-width:190px;max-width:220px;padding:14px 16px;background:var(--bg2);border-radius:10px;border:1px solid var(--bd1);flex-shrink:0">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                  <div style="width:32px;height:32px;border-radius:50%;background:rgba(${a.cor},.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:rgb(${a.cor})">${a.icon}</div>
+                  <div style="font-size:12.5px;font-weight:700;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1">${a.titulo}</div>
+                </div>
+                <div style="font-size:12px;color:var(--tx2)">${a.sub}</div>
+                <div style="font-size:11px;color:var(--tx3);margin-top:6px">${_tempo(a.ts)}</div>
+              </div>`).join('')
+          : '<div style="color:var(--tx3);font-size:12px;padding:16px 0">Nenhuma atividade recente.</div>';
       }
 
     } catch (e) {
@@ -2958,6 +3049,64 @@
     } catch (e) {
       alert('Erro ao remover: ' + e.message);
     }
+  }
+
+  /* ══ COMUNICAÇÃO: SOLICITAÇÕES ══════════════════════════════ */
+  async function _renderSolicitacoes() {
+    const el = document.getElementById('min-min-sol-content');
+    if (!el || !_ministerioAtual) return;
+    el.innerHTML = '<div style="color:var(--tx3);font-size:13px;text-align:center;padding:32px 0">Carregando...</div>';
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/com_solicitacoes_arte?order=criado_em.desc&limit=50`,
+        { headers: _hdr() }
+      );
+      const lista = r.ok ? await r.json() : [];
+      if (!lista.length) {
+        el.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 0;gap:10px;color:var(--tx3)">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <div style="font-size:14px;font-weight:600;color:var(--tx2)">Nenhuma solicitação</div>
+          <div style="font-size:12.5px">As solicitações de arte aparecerão aqui.</div>
+        </div>`;
+        return;
+      }
+      const _STATUS_COR = { pendente:'224,138,42', em_producao:'74,156,245', concluido:'58,170,92', cancelado:'224,90,90' };
+      el.innerHTML = `<div style="display:flex;flex-direction:column;gap:0">
+        ${lista.map(s => {
+          const cor = _STATUS_COR[s.status] || '139,107,193';
+          const dt  = s.criado_em ? new Date(s.criado_em).toLocaleDateString('pt-BR') : '';
+          return `<div style="display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--bd1)">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13.5px;font-weight:600;color:var(--tx1)">${escapeHtml(s.titulo || s.tipo || 'Solicitação')}</div>
+              <div style="font-size:12px;color:var(--tx3);margin-top:2px">${escapeHtml(s.descricao || '')} ${dt}</div>
+            </div>
+            <span style="padding:4px 12px;border-radius:20px;background:rgba(${cor},.1);color:rgb(${cor});font-size:11.5px;font-weight:600;white-space:nowrap">${(s.status||'pendente').replace('_',' ')}</span>
+          </div>`;
+        }).join('')}
+      </div>`;
+    } catch (e) {
+      el.innerHTML = '<div style="color:var(--rose);font-size:13px;padding:12px">Erro ao carregar solicitações.</div>';
+    }
+  }
+
+  function _renderCampanhas() {
+    const el = document.getElementById('min-min-camp-content');
+    if (!el) return;
+    el.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 0;gap:10px;color:var(--tx3)">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+      <div style="font-size:14px;font-weight:600;color:var(--tx2)">Campanhas em breve</div>
+      <div style="font-size:12.5px">Este módulo está sendo desenvolvido.</div>
+    </div>`;
+  }
+
+  function _renderProducoes() {
+    const el = document.getElementById('min-min-prod-content');
+    if (!el) return;
+    el.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 0;gap:10px;color:var(--tx3)">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect width="15" height="14" x="1" y="5" rx="2"/></svg>
+      <div style="font-size:14px;font-weight:600;color:var(--tx2)">Produções em breve</div>
+      <div style="font-size:12.5px">Este módulo está sendo desenvolvido.</div>
+    </div>`;
   }
 
   /* ══ SIDEBAR DINÂMICO ════════════════════════════════════════ */
