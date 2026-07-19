@@ -1,6 +1,7 @@
 const MC={geral:"var(--gmd)",admin:"var(--gold)",fin:"var(--gr)",jur:"var(--blue)",conselho:"var(--sky)",proj:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)",cong:"var(--gr)",diac:"var(--copper)",area:"var(--gr)",config:"var(--violet)",com:"var(--violet)",eve:"var(--sky)",acesso:"var(--sky)"};
 const CRUMB={
   geral:["","Dashboard Geral","/ IPPenha · visão executiva consolidada"],
+  "cultos-dash":["Cultos","Dashboard","/ visão geral dos cultos"],
   "hub-igreja": ["","Vida da Igreja","/ cultos, pastoral e pequenos grupos"],
   "hub-gov":    ["","Governança","/ conselho, liderança e secretaria"],
   "hub-dep":    ["","Departamentos","/ ministérios, sociedades e projetos"],
@@ -189,6 +190,7 @@ const _VIEW_MAP = {
   "wa":          "modules/whatsapp/view.html",
   "generic":     "modules/shared/view.html",
   "acesso":      "modules/acesso/view.html?v=6.45.13",
+  "cultos":      "modules/cultos/view.html",
   "hub":         "modules/shared/hub.html",
 };
 
