@@ -526,7 +526,13 @@ window.buscarIndicante = function(q) {
   if (txt.length < 2) { drop.style.display = "none"; return; }
   const matches = membros.filter(m => m.nome?.toLowerCase().includes(txt)).slice(0, 10);
   if (!matches.length) {
-    drop.innerHTML = `<div class="drop-item dis"><span class="drop-name">Nenhum membro encontrado</span></div>`;
+    const nEsc = eh(q.trim()).replace(/'/g, "\\'");
+    drop.innerHTML = `
+      <div class="drop-item dis"><span class="drop-name">Nenhum membro encontrado</span></div>
+      <div class="drop-item" onclick="selIndicanteManual('${nEsc}')">
+        <span class="drop-name">Continuar como "${eh(q.trim())}"</span>
+        <span class="drop-sub" style="color:var(--amber)">Nome não está na lista — será registrado como entrada manual</span>
+      </div>`;
     drop.style.display = "block"; return;
   }
   drop.innerHTML = matches.map(m => {
@@ -541,6 +547,14 @@ window.buscarIndicante = function(q) {
     </div>`;
   }).join("");
   drop.style.display = "block";
+};
+
+window.selIndicanteManual = function(nome) {
+  indicante = { pessoa_id: null, nome, congregacao: null, data_nascimento: null, data_ingresso: null, manual: true };
+  const inp = document.getElementById("id-inp");
+  const sel = document.getElementById("id-sel");
+  if (inp) { inp.value = nome; document.getElementById("id-drop").style.display = "none"; }
+  if (sel) sel.innerHTML = `<div class="sel-ok" style="color:var(--amber)">⚠ ${eh(nome)} — não encontrado na lista <button class="sel-ok-rm" onclick="limparIndicante()">✕</button></div>`;
 };
 
 window.selIndicante = function(pid, nome, cong, dn, di) {
@@ -564,13 +578,15 @@ window.fecharDrop = function(id) {
 
 window.confirmarIdentificacao = async function() {
   const msgEl = document.getElementById("id-msg");
-  if (!indicante) { msgEl.textContent = "Selecione seu nome na lista."; msgEl.className = "form-msg err"; return; }
+  if (!indicante || !indicante.nome?.trim()) { msgEl.textContent = "Informe seu nome para continuar."; msgEl.className = "form-msg err"; return; }
   const btn = document.querySelector("[onclick='confirmarIdentificacao()']");
   if (btn) { btn.disabled = true; btn.textContent = "Verificando..."; }
   msgEl.textContent = "";
   try {
-    const jaFez = await sbGet(`eleicao_indicacoes?indicante_pessoa_id=eq.${indicante.pessoa_id}&processo_id=eq.${processo.id}&deleted_at=is.null&select=id&limit=1`);
-    if (jaFez.length) { renderJaIndicou(); return; }
+    if (indicante.pessoa_id) {
+      const jaFez = await sbGet(`eleicao_indicacoes?indicante_pessoa_id=eq.${indicante.pessoa_id}&processo_id=eq.${processo.id}&deleted_at=is.null&select=id&limit=1`);
+      if (jaFez.length) { renderJaIndicou(); return; }
+    }
     renderFormulario();
   } catch (e) {
     msgEl.textContent = "Erro: " + e.message; msgEl.className = "form-msg err";
@@ -734,7 +750,13 @@ window.buscarIndicado = function(id, q) {
   if (txt.length < 2) { drop.style.display = "none"; return; }
   const matches = membros.filter(m => m.nome?.toLowerCase().includes(txt)).slice(0, 10);
   if (!matches.length) {
-    drop.innerHTML = `<div class="drop-item dis"><span class="drop-name">Nenhum membro encontrado</span></div>`;
+    const nEsc = eh(q.trim()).replace(/'/g, "\\'");
+    drop.innerHTML = `
+      <div class="drop-item dis"><span class="drop-name">Nenhum membro encontrado</span></div>
+      <div class="drop-item" onclick="selIndicadoManual(${id},'${nEsc}')">
+        <span class="drop-name">Indicar "${eh(q.trim())}"</span>
+        <span class="drop-sub" style="color:var(--amber)">Nome não está na lista — será registrado como entrada manual</span>
+      </div>`;
     drop.style.display = "block"; return;
   }
   drop.innerHTML = matches.map(m => {
@@ -753,7 +775,7 @@ window.buscarIndicado = function(id, q) {
 
 window.selIndicado = function(id, pid, nome) {
   const it = curItems.find(i => i.id === id); if (!it) return;
-  it.indicado_id = pid; it.indicado_nome = nome;
+  it.indicado_id = pid; it.indicado_nome = nome; it.manual = false;
   const inp = document.getElementById(`bi-${id}`);
   const drp = document.getElementById(`di-${id}`);
   const sel = document.getElementById(`si-${id}`);
@@ -762,23 +784,40 @@ window.selIndicado = function(id, pid, nome) {
   if (sel) sel.innerHTML = `<span class="sel-ok" style="margin-top:0">✓ ${eh(nome)}</span>`;
 };
 
+window.selIndicadoManual = function(id, nome) {
+  const it = curItems.find(i => i.id === id); if (!it) return;
+  it.indicado_id = null; it.indicado_nome = nome; it.manual = true;
+  const inp = document.getElementById(`bi-${id}`);
+  const drp = document.getElementById(`di-${id}`);
+  const sel = document.getElementById(`si-${id}`);
+  if (inp) inp.value = nome;
+  if (drp) drp.style.display = "none";
+  if (sel) sel.innerHTML = `<span class="sel-ok" style="margin-top:0;color:var(--amber)">⚠ ${eh(nome)} — não encontrado na lista</span>`;
+};
+
 /* ── Submeter ─────────────────────────────────────────── */
 window.submeter = async function() {
   const msgEl = document.getElementById("form-msg");
   const tp    = processo.tipo;
 
   const mapRows = (arr, tipo) => arr
-    .filter(i => i.indicado_id)
-    .map(i => ({
-      processo_id:         processo.id,
-      indicante_pessoa_id: indicante.pessoa_id,
-      indicante_nome:      indicante.nome,
-      indicado_pessoa_id:  i.indicado_id,
-      indicado_nome:       i.indicado_nome,
-      tipo,
-      congregacao:         indicante.congregacao || null,
-      ip_dispositivo:      navigator.userAgent?.slice(0, 200) || null,
-    }));
+    .filter(i => i.indicado_nome?.trim())
+    .map(i => {
+      const obsPartes = [];
+      if (i.manual)         obsPartes.push("Indicado não encontrado na lista de membros — entrada manual");
+      if (indicante.manual) obsPartes.push("Indicante não encontrado na lista de membros — entrada manual");
+      return {
+        processo_id:         processo.id,
+        indicante_pessoa_id: indicante.pessoa_id || null,
+        indicante_nome:      indicante.nome,
+        indicado_pessoa_id:  i.indicado_id || null,
+        indicado_nome:       i.indicado_nome,
+        tipo,
+        congregacao:         indicante.congregacao || null,
+        ip_dispositivo:      navigator.userAgent?.slice(0, 200) || null,
+        ...(obsPartes.length && { observacao: obsPartes.join("; ") }),
+      };
+    });
 
   let rows = [];
   if (tp === "ambos") {
@@ -790,7 +829,7 @@ window.submeter = async function() {
   }
 
   if (!rows.length) {
-    msgEl.textContent = "Selecione ao menos um membro para indicar.";
+    msgEl.textContent = "Informe ao menos um nome para indicar.";
     msgEl.className = "form-msg err"; return;
   }
 
