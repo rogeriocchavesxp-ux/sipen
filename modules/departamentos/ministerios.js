@@ -1177,6 +1177,24 @@
            <div style="font-size:10.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">${titulo}</div>
            <div style="font-size:13px;color:var(--tx2);line-height:1.6">${escapeHtml(conteudo)}</div>
          </div>` : '';
+    const agendaStatusLabel = {
+      pendente:             'Aguardando aprovação',
+      aguardando_aprovacao: 'Aguardando aprovação',
+      em_analise:           'Em análise',
+      ajuste_solicitado:    'Ajuste solicitado',
+      confirmado:           'Aprovado na agenda',
+      recusado:             'Recusado',
+      cancelado:            'Cancelado',
+    };
+    const agendaBadge = p.agenda_id
+      ? `<span style="font-size:10px;padding:2px 9px;border-radius:20px;font-weight:600;background:rgba(42,181,192,.12);color:var(--teal);margin-left:4px" title="Solicitação na Agenda da Igreja">
+           📅 ${agendaStatusLabel[p.agenda_status] || 'Na agenda'}
+         </span>` : '';
+
+    const btnPublicar = (podeAct && !p.agenda_id)
+      ? `<button onclick="minMinPublicarNaAgenda('${p.id}')" class="tbt" style="font-size:11px;padding:4px 10px;color:var(--teal);border-color:rgba(42,181,192,0.35)">📅 Publicar na Agenda</button>`
+      : '';
+
     const actBtns = podeAct ? `
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
         <button onclick="minMinEditarProgramacao('${p.id}')" class="tbt" style="font-size:11px;padding:4px 10px">Editar</button>
@@ -1186,6 +1204,7 @@
             ? `<button onclick="minMinToggleProgStatus('${p.id}','agendado')" class="tbt" style="font-size:11px;padding:4px 10px">Reabrir</button>`
             : ''
         }
+        ${btnPublicar}
         <button onclick="minMinRemoverProgramacao('${p.id}')" class="tbt" style="font-size:11px;padding:4px 10px;color:var(--rose);border-color:rgba(255,69,58,0.3)">Remover</button>
       </div>` : '';
     return `
@@ -1198,6 +1217,7 @@
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
             ${tipo ? `<span style="font-size:10.5px;color:var(--tx3)">${tipo}</span>` : ''}
             <span style="font-size:11px;padding:2px 9px;border-radius:20px;font-weight:600;background:${st.bg};color:${st.cor}">${st.label}</span>
+            ${agendaBadge}
             <span id="prog-arrow-${p.id}" style="color:var(--tx3);font-size:11px;transition:transform .2s">▼</span>
           </div>
         </div>
@@ -1342,6 +1362,59 @@
       if (!r.ok) throw new Error(r.status);
       await _carregarProgramacoes(_ministerioAtual);
     } catch (e) { alert('Erro ao remover: ' + e.message); }
+  }
+
+  async function minMinPublicarNaAgenda(progId) {
+    try {
+      const rp = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_programacoes?id=eq.${progId}&select=*`, { headers: _hdr() });
+      if (!rp.ok) throw new Error(rp.status);
+      const [p] = await rp.json();
+      if (!p) throw new Error('Programação não encontrada');
+
+      const ministerioNome = _ministerioDataAtual?.nome || 'Ministério';
+      const dataFmt = p.data
+        ? new Date(p.data + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '';
+
+      if (!confirm(`Enviar "${p.titulo}" (${dataFmt}) para aprovação na Agenda da Igreja?\n\nA solicitação ficará pendente até ser aprovada pelo responsável pela agenda.`)) return;
+
+      const dataObj = p.data ? new Date(p.data + 'T12:00:00') : null;
+      const diaSemana = dataObj ? dataObj.toLocaleDateString('pt-BR', { weekday: 'long' }) : null;
+      const mes       = dataObj ? dataObj.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) : null;
+
+      const body = {
+        titulo:          p.titulo,
+        data:            p.data,
+        hora_inicio:     p.hora || null,
+        descricao:       p.descricao || null,
+        status:          'pendente',
+        solicitante_txt: ministerioNome,
+        origem_sol:      'ministerio',
+        recorrencia:     'Único',
+        ...(diaSemana && { dia_semana: diaSemana }),
+        ...(mes        && { mes }),
+      };
+
+      const ra = await fetch(`${SUPABASE_URL}/rest/v1/agenda`, {
+        method: 'POST',
+        headers: { ..._hdrJson(), 'Prefer': 'return=representation' },
+        body: JSON.stringify(body),
+      });
+      if (!ra.ok) throw new Error(await ra.text());
+      const [agendaRow] = await ra.json();
+
+      await fetch(`${SUPABASE_URL}/rest/v1/ministerio_programacoes?id=eq.${progId}`, {
+        method: 'PATCH',
+        headers: { ..._hdrJson(), 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ agenda_id: agendaRow.id, agenda_status: 'pendente' }),
+      });
+
+      await _carregarProgramacoes(_ministerioAtual);
+      T('Publicado!', 'Solicitação enviada para aprovação na Agenda da Igreja.');
+    } catch (e) {
+      console.error('minMinPublicarNaAgenda:', e);
+      T('Erro', e.message || 'Não foi possível publicar na agenda.');
+    }
   }
 
   /* ══ ESCALAS DE SERVIÇO ══════════════════════════════════════ */
