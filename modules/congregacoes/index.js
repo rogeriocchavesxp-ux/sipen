@@ -562,9 +562,10 @@ async function excluirCong(id){
   if(!cong) return;
   if(!confirm(`Excluir "${cong.identificacao.nome}"?\nEsta ação não pode ser desfeita.`)) return;
   try{
+    const tok=(typeof sipenToken==="function"&&sipenToken())?sipenToken():SUPABASE_ANON_KEY;
     const r=await fetch(
       `${SUPABASE_URL.trim().replace(/\/$/,"")}/rest/v1/congregacoes?id=eq.${encodeURIComponent(id)}`,
-      {method:"DELETE",headers:{apikey:SUPABASE_ANON_KEY,Authorization:`Bearer ${SUPABASE_ANON_KEY}`,"Prefer":"return=minimal"}}
+      {method:"DELETE",headers:{apikey:SUPABASE_ANON_KEY,Authorization:`Bearer ${tok}`,"Prefer":"return=minimal","Content-Type":"application/json"}}
     );
     if(!r.ok){ const t=await r.text(); console.error("excluirCong:",t); if(typeof T==="function") T("Erro ao excluir",t.slice(0,80)); return; }
   }catch(e){ console.error("excluirCong:",e); if(typeof T==="function") T("Erro","Sem conexão"); return; }
