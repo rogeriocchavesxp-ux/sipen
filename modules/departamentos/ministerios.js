@@ -302,6 +302,21 @@
       if (escalBtn) escalBtn.style.display = _recursosAtual.escalas      ? '' : 'none';
       const docBtn   = document.getElementById('min-min-tab-btn-doc');
       if (docBtn)   docBtn.style.display   = _recursosAtual.documentos   ? '' : 'none';
+      const waBtn    = document.getElementById('min-min-tab-btn-wa');
+      if (waBtn)    waBtn.style.display    = _recursosAtual.whatsapp     ? '' : 'none';
+      const modBtn   = document.getElementById('min-min-tab-btn-mod');
+      if (modBtn) {
+        const MOD_LABELS = {
+          repertorio:              'Repertório',
+          turmas:                  'Turmas',
+          projetos:                'Projetos',
+          projetos_missionarios:   'Missões',
+          producoes:               'Produções',
+          integracao:              'Integração',
+        };
+        modBtn.style.display = _recursosAtual.modulo ? '' : 'none';
+        modBtn.textContent   = MOD_LABELS[_recursosAtual.modulo] || 'Módulo';
+      }
 
       const btnAdd = document.getElementById('min-min-btn-add-membro');
       if (btnAdd) btnAdd.style.display = _podeEditar() ? '' : 'none';
@@ -333,6 +348,8 @@
     if (tab === 'programacoes' && _ministerioAtual) _carregarProgramacoes(_ministerioAtual);
     if (tab === 'escalas'      && _ministerioAtual) _carregarEscalas(_ministerioAtual);
     if (tab === 'documentos'   && _ministerioAtual) _carregarDocumentos(_ministerioAtual);
+    if (tab === 'whatsapp'     && _ministerioAtual) _renderWhatsapp();
+    if (tab === 'modulo'       && _ministerioAtual) _renderModulo();
     if (tab === 'relatorios'   && _ministerioAtual) _renderRelatorios();
   }
 
@@ -1530,6 +1547,475 @@
     }
   }
 
+  /* ══ WHATSAPP DO MINISTÉRIO ══════════════════════════════════ */
+  async function _renderWhatsapp() {
+    const el = document.getElementById('min-min-wa-content');
+    if (!el) return;
+    el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Carregando membros...</div>';
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/ministerio_membros?ministerio_id=eq.${_ministerioAtual}&ativo=eq.true&select=pessoa_id,pessoas(id,nome,telefone)&order=pessoas(nome).asc`,
+        { headers: _hdr() }
+      );
+      if (!r.ok) throw new Error(r.status);
+      const rows = await r.json();
+
+      const comTel = rows.filter(r => r.pessoas && r.pessoas.telefone);
+      const semTel = rows.filter(r => r.pessoas && !r.pessoas.telefone);
+
+      if (!rows.length) {
+        el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Nenhum membro ativo.</div>';
+        return;
+      }
+
+      const numeros = comTel.map(r => {
+        const t = r.pessoas.telefone.replace(/\D/g, '');
+        return t.startsWith('55') ? t : '55' + t;
+      });
+
+      el.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <span style="font-size:13px;color:var(--tx2)">${comTel.length} com WhatsApp · ${semTel.length} sem telefone</span>
+          ${comTel.length ? `<button class="tbt sec" onclick="_waCopiarNumeros()">Copiar todos os números</button>` : ''}
+        </div>
+        <input type="hidden" id="wa-numeros-raw" value="${numeros.join(',')}">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${comTel.map(r => {
+            const tel  = r.pessoas.telefone.replace(/\D/g, '');
+            const wa   = tel.startsWith('55') ? tel : '55' + tel;
+            const nome = r.pessoas.nome || '—';
+            return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg2);border-radius:6px;gap:8px">
+              <span style="font-size:13px;color:var(--tx1)">${nome}</span>
+              <a href="https://wa.me/${wa}" target="_blank" style="font-size:12px;color:#25d366;text-decoration:none;white-space:nowrap">
+                ${r.pessoas.telefone} ↗
+              </a>
+            </div>`;
+          }).join('')}
+          ${semTel.length ? `
+            <div style="margin-top:10px;font-size:12px;color:var(--tx3);font-weight:500">Sem telefone cadastrado</div>
+            ${semTel.map(r => `
+              <div style="padding:9px 12px;background:var(--bg2);border-radius:6px;opacity:.6">
+                <span style="font-size:13px;color:var(--tx2)">${r.pessoas ? r.pessoas.nome : '—'}</span>
+              </div>`).join('')}
+          ` : ''}
+        </div>`;
+    } catch (e) {
+      console.error('_renderWhatsapp:', e);
+      el.innerHTML = '<div style="color:var(--rose);font-size:13px;padding:16px 0">Erro ao carregar membros.</div>';
+    }
+  }
+
+  function _waCopiarNumeros() {
+    const raw = document.getElementById('wa-numeros-raw');
+    if (!raw || !raw.value) return;
+    navigator.clipboard.writeText(raw.value).then(() => {
+      const btn = document.querySelector('[onclick="_waCopiarNumeros()"]');
+      if (btn) { const orig = btn.textContent; btn.textContent = 'Copiado!'; setTimeout(() => btn.textContent = orig, 1800); }
+    }).catch(() => alert('Não foi possível copiar. Verifique as permissões do navegador.'));
+  }
+
+  /* ══ MÓDULOS ESPECÍFICOS ══════════════════════════════════════ */
+  async function _renderModulo() {
+    const el = document.getElementById('min-min-mod-content');
+    if (!el) return;
+    const tipo = _recursosAtual.modulo;
+    if (!tipo) { el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Módulo não configurado.</div>'; return; }
+    if (tipo === 'repertorio')                                               return _renderRepertorio(el);
+    if (tipo === 'turmas')                                                   return _renderTurmas(el);
+    if (['projetos','projetos_missionarios','producoes','integracao'].includes(tipo)) return _renderProjetos(el);
+    el.innerHTML = `<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Módulo "${tipo}" não reconhecido.</div>`;
+  }
+
+  /* ── Repertório ────────────────────────────────────────────── */
+  let _repEditandoId = null;
+
+  async function _renderRepertorio(el) {
+    el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Carregando repertório...</div>';
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/ministerio_repertorio?ministerio_id=eq.${_ministerioAtual}&order=titulo.asc`,
+        { headers: _hdr() }
+      );
+      if (!r.ok) throw new Error(r.status);
+      const rows = await r.json();
+
+      el.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <span style="font-size:13px;color:var(--tx2)">${rows.length} música${rows.length !== 1 ? 's' : ''}</span>
+          <button class="tbt pri" onclick="minMinNovaMusica()">+ Música</button>
+        </div>
+        ${rows.length ? `<div style="display:flex;flex-direction:column;gap:6px">
+          ${rows.map(m => `
+            <div style="padding:10px 12px;background:var(--bg2);border-radius:6px">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+                <div>
+                  <div style="font-size:13.5px;font-weight:600;color:var(--tx1)">${_esc(m.titulo)}</div>
+                  ${m.artista ? `<div style="font-size:12px;color:var(--tx3)">${_esc(m.artista)}</div>` : ''}
+                  <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
+                    ${m.tom  ? `<span style="font-size:11px;color:var(--tx3)">Tom: <b>${_esc(m.tom)}</b></span>`   : ''}
+                    ${m.bpm  ? `<span style="font-size:11px;color:var(--tx3)">BPM: <b>${m.bpm}</b></span>`        : ''}
+                    ${m.tags ? `<span style="font-size:11px;color:var(--tx3)">${_esc(m.tags)}</span>`             : ''}
+                  </div>
+                  <div style="display:flex;gap:10px;margin-top:4px">
+                    ${m.link_youtube ? `<a href="${m.link_youtube}" target="_blank" style="font-size:11px;color:var(--violet)">YouTube ↗</a>` : ''}
+                    ${m.link_cifra   ? `<a href="${m.link_cifra}"   target="_blank" style="font-size:11px;color:var(--violet)">Cifra ↗</a>`   : ''}
+                  </div>
+                </div>
+                <div style="display:flex;gap:6px;flex-shrink:0">
+                  <button class="tbt sec" style="font-size:11px;padding:4px 10px" onclick="minMinEditarMusica('${m.id}')">Editar</button>
+                  <button class="tbt dng" style="font-size:11px;padding:4px 10px" onclick="minMinRemoverMusica('${m.id}')">×</button>
+                </div>
+              </div>
+            </div>`).join('')}
+        </div>` : '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Nenhuma música cadastrada.</div>'}`;
+
+      _garantirModalRepertorio();
+    } catch (e) {
+      console.error('_renderRepertorio:', e);
+      el.innerHTML = '<div style="color:var(--rose);font-size:13px;padding:16px 0">Erro ao carregar repertório.</div>';
+    }
+  }
+
+  function _garantirModalRepertorio() {
+    if (document.getElementById('modal-rep')) return;
+    const d = document.createElement('div');
+    d.id = 'modal-rep';
+    d.innerHTML = _modalWrap('modal-rep', 'Música', `
+      ${_fld('Título', 'rep-titulo', 'text', 'Nome da música', true)}
+      ${_fld('Artista', 'rep-artista', 'text', 'Compositor / artista')}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        ${_fld('Tom', 'rep-tom', 'text', 'Ex: G, Bb, C#')}
+        ${_fld('BPM', 'rep-bpm', 'number', '120')}
+      </div>
+      ${_fld('Link YouTube', 'rep-youtube', 'url', 'https://...')}
+      ${_fld('Link Cifra', 'rep-cifra', 'url', 'https://...')}
+      ${_fld('Tags', 'rep-tags', 'text', 'adoração, gospel, contemporâneo...')}
+      ${_errEl('rep-err')}
+    `, `<button class="tbt sec" onclick="_fechModal('modal-rep')">Cancelar</button>
+        <button class="tbt pri" onclick="_repSalvar()">Salvar</button>`);
+    document.body.appendChild(d);
+  }
+
+  function minMinNovaMusica() {
+    _repEditandoId = null;
+    _garantirModalRepertorio();
+    ['rep-titulo','rep-artista','rep-tom','rep-bpm','rep-youtube','rep-cifra','rep-tags'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    _showErr('rep-err', '');
+    document.getElementById('modal-rep-title').textContent = 'Nova Música';
+    _abrModal('modal-rep');
+  }
+
+  async function minMinEditarMusica(id) {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_repertorio?id=eq.${id}`, { headers: _hdr() });
+      if (!r.ok) throw new Error(r.status);
+      const [m] = await r.json();
+      _repEditandoId = id;
+      _garantirModalRepertorio();
+      const set = (fid, v) => { const el = document.getElementById(fid); if (el) el.value = v || ''; };
+      set('rep-titulo', m.titulo); set('rep-artista', m.artista); set('rep-tom', m.tom);
+      set('rep-bpm', m.bpm); set('rep-youtube', m.link_youtube); set('rep-cifra', m.link_cifra);
+      set('rep-tags', m.tags);
+      _showErr('rep-err', '');
+      document.getElementById('modal-rep-title').textContent = 'Editar Música';
+      _abrModal('modal-rep');
+    } catch (e) { alert('Erro ao carregar música: ' + e.message); }
+  }
+
+  async function _repSalvar() {
+    const titulo = document.getElementById('rep-titulo')?.value.trim();
+    if (!titulo) { _showErr('rep-err', 'Título obrigatório.'); return; }
+    const payload = {
+      ministerio_id: _ministerioAtual,
+      titulo,
+      artista:      document.getElementById('rep-artista')?.value.trim() || null,
+      tom:          document.getElementById('rep-tom')?.value.trim()     || null,
+      bpm:          parseInt(document.getElementById('rep-bpm')?.value)  || null,
+      link_youtube: document.getElementById('rep-youtube')?.value.trim() || null,
+      link_cifra:   document.getElementById('rep-cifra')?.value.trim()   || null,
+      tags:         document.getElementById('rep-tags')?.value.trim()    || null,
+    };
+    try {
+      const url = _repEditandoId
+        ? `${SUPABASE_URL}/rest/v1/ministerio_repertorio?id=eq.${_repEditandoId}`
+        : `${SUPABASE_URL}/rest/v1/ministerio_repertorio`;
+      const r = await fetch(url, {
+        method:  _repEditandoId ? 'PATCH' : 'POST',
+        headers: _hdrJson(),
+        body:    JSON.stringify(_repEditandoId ? payload : payload),
+      });
+      if (!r.ok) throw new Error(r.status);
+      _fechModal('modal-rep');
+      _renderRepertorio(document.getElementById('min-min-mod-content'));
+    } catch (e) { _showErr('rep-err', 'Erro ao salvar: ' + e.message); }
+  }
+
+  async function minMinRemoverMusica(id) {
+    if (!confirm('Remover esta música?')) return;
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_repertorio?id=eq.${id}`, { method: 'DELETE', headers: _hdr() });
+      if (!r.ok) throw new Error(r.status);
+      _renderRepertorio(document.getElementById('min-min-mod-content'));
+    } catch (e) { alert('Erro ao remover: ' + e.message); }
+  }
+
+  /* ── Projetos ──────────────────────────────────────────────── */
+  let _projEditandoId = null;
+  const _PROJ_STATUS = { planejado:'Planejado', em_andamento:'Em andamento', concluido:'Concluído', cancelado:'Cancelado' };
+
+  async function _renderProjetos(el) {
+    el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Carregando projetos...</div>';
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/ministerio_projetos?ministerio_id=eq.${_ministerioAtual}&order=criado_em.desc&select=*,pessoas(nome)`,
+        { headers: _hdr() }
+      );
+      if (!r.ok) throw new Error(r.status);
+      const rows = await r.json();
+
+      const COR = { planejado:'var(--violet)', em_andamento:'#f59e0b', concluido:'#22c55e', cancelado:'var(--rose)' };
+
+      el.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <span style="font-size:13px;color:var(--tx2)">${rows.length} projeto${rows.length !== 1 ? 's' : ''}</span>
+          <button class="tbt pri" onclick="minMinNovoProjeto()">+ Projeto</button>
+        </div>
+        ${rows.length ? `<div style="display:flex;flex-direction:column;gap:6px">
+          ${rows.map(p => `
+            <div style="padding:10px 12px;background:var(--bg2);border-radius:6px">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                    <span style="font-size:13.5px;font-weight:600;color:var(--tx1)">${_esc(p.titulo)}</span>
+                    <span style="font-size:11px;padding:2px 7px;border-radius:10px;background:${COR[p.status]}20;color:${COR[p.status]};white-space:nowrap">${_PROJ_STATUS[p.status] || p.status}</span>
+                  </div>
+                  ${p.descricao ? `<div style="font-size:12px;color:var(--tx3);margin-top:2px">${_esc(p.descricao)}</div>` : ''}
+                  <div style="display:flex;gap:12px;margin-top:4px;flex-wrap:wrap">
+                    ${p.data_inicio ? `<span style="font-size:11px;color:var(--tx3)">Início: ${p.data_inicio}</span>`     : ''}
+                    ${p.data_fim    ? `<span style="font-size:11px;color:var(--tx3)">Fim: ${p.data_fim}</span>`           : ''}
+                    ${p.pessoas     ? `<span style="font-size:11px;color:var(--tx3)">Resp.: ${_esc(p.pessoas.nome)}</span>` : ''}
+                  </div>
+                </div>
+                <div style="display:flex;gap:6px;flex-shrink:0">
+                  <button class="tbt sec" style="font-size:11px;padding:4px 10px" onclick="minMinEditarProjeto('${p.id}')">Editar</button>
+                  <button class="tbt dng" style="font-size:11px;padding:4px 10px" onclick="minMinRemoverProjeto('${p.id}')">×</button>
+                </div>
+              </div>
+            </div>`).join('')}
+        </div>` : '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Nenhum projeto cadastrado.</div>'}`;
+
+      _garantirModalProjeto();
+    } catch (e) {
+      console.error('_renderProjetos:', e);
+      el.innerHTML = '<div style="color:var(--rose);font-size:13px;padding:16px 0">Erro ao carregar projetos.</div>';
+    }
+  }
+
+  function _garantirModalProjeto() {
+    if (document.getElementById('modal-proj')) return;
+    const d = document.createElement('div');
+    d.id = 'modal-proj';
+    d.innerHTML = _modalWrap('modal-proj', 'Projeto', `
+      ${_fld('Título', 'proj-titulo', 'text', 'Nome do projeto', true)}
+      ${_fld('Descrição', 'proj-descricao', 'text', 'Breve descrição')}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        ${_fld('Data início', 'proj-inicio', 'date', '')}
+        ${_fld('Data fim', 'proj-fim', 'date', '')}
+      </div>
+      ${_sel('Status', 'proj-status', [
+        { v:'planejado', l:'Planejado' }, { v:'em_andamento', l:'Em andamento' },
+        { v:'concluido', l:'Concluído' }, { v:'cancelado',    l:'Cancelado'    },
+      ])}
+      ${_errEl('proj-err')}
+    `, `<button class="tbt sec" onclick="_fechModal('modal-proj')">Cancelar</button>
+        <button class="tbt pri" onclick="_projSalvar()">Salvar</button>`);
+    document.body.appendChild(d);
+  }
+
+  function minMinNovoProjeto() {
+    _projEditandoId = null;
+    _garantirModalProjeto();
+    ['proj-titulo','proj-descricao','proj-inicio','proj-fim'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    const s = document.getElementById('proj-status'); if (s) s.value = 'planejado';
+    _showErr('proj-err', '');
+    document.getElementById('modal-proj-title').textContent = 'Novo Projeto';
+    _abrModal('modal-proj');
+  }
+
+  async function minMinEditarProjeto(id) {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_projetos?id=eq.${id}`, { headers: _hdr() });
+      if (!r.ok) throw new Error(r.status);
+      const [p] = await r.json();
+      _projEditandoId = id;
+      _garantirModalProjeto();
+      const set = (fid, v) => { const el = document.getElementById(fid); if (el) el.value = v || ''; };
+      set('proj-titulo', p.titulo); set('proj-descricao', p.descricao);
+      set('proj-inicio', p.data_inicio); set('proj-fim', p.data_fim);
+      set('proj-status', p.status);
+      _showErr('proj-err', '');
+      document.getElementById('modal-proj-title').textContent = 'Editar Projeto';
+      _abrModal('modal-proj');
+    } catch (e) { alert('Erro ao carregar projeto: ' + e.message); }
+  }
+
+  async function _projSalvar() {
+    const titulo = document.getElementById('proj-titulo')?.value.trim();
+    if (!titulo) { _showErr('proj-err', 'Título obrigatório.'); return; }
+    const payload = {
+      ministerio_id: _ministerioAtual,
+      titulo,
+      descricao:   document.getElementById('proj-descricao')?.value.trim() || null,
+      data_inicio: document.getElementById('proj-inicio')?.value  || null,
+      data_fim:    document.getElementById('proj-fim')?.value     || null,
+      status:      document.getElementById('proj-status')?.value  || 'planejado',
+    };
+    try {
+      const url = _projEditandoId
+        ? `${SUPABASE_URL}/rest/v1/ministerio_projetos?id=eq.${_projEditandoId}`
+        : `${SUPABASE_URL}/rest/v1/ministerio_projetos`;
+      const r = await fetch(url, {
+        method:  _projEditandoId ? 'PATCH' : 'POST',
+        headers: _hdrJson(),
+        body:    JSON.stringify(payload),
+      });
+      if (!r.ok) throw new Error(r.status);
+      _fechModal('modal-proj');
+      _renderProjetos(document.getElementById('min-min-mod-content'));
+    } catch (e) { _showErr('proj-err', 'Erro ao salvar: ' + e.message); }
+  }
+
+  async function minMinRemoverProjeto(id) {
+    if (!confirm('Remover este projeto?')) return;
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_projetos?id=eq.${id}`, { method: 'DELETE', headers: _hdr() });
+      if (!r.ok) throw new Error(r.status);
+      _renderProjetos(document.getElementById('min-min-mod-content'));
+    } catch (e) { alert('Erro ao remover: ' + e.message); }
+  }
+
+  /* ── Turmas ────────────────────────────────────────────────── */
+  let _turmaEditandoId = null;
+
+  async function _renderTurmas(el) {
+    el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Carregando turmas...</div>';
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/ministerio_turmas?ministerio_id=eq.${_ministerioAtual}&order=nome.asc&select=*,pessoas(nome)`,
+        { headers: _hdr() }
+      );
+      if (!r.ok) throw new Error(r.status);
+      const rows = await r.json();
+
+      el.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <span style="font-size:13px;color:var(--tx2)">${rows.length} turma${rows.length !== 1 ? 's' : ''}</span>
+          <button class="tbt pri" onclick="minMinNovaTurma()">+ Turma</button>
+        </div>
+        ${rows.length ? `<div style="display:flex;flex-direction:column;gap:6px">
+          ${rows.map(t => `
+            <div style="padding:10px 12px;background:var(--bg2);border-radius:6px${t.ativo ? '' : ';opacity:.55'}">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+                <div>
+                  <div style="font-size:13.5px;font-weight:600;color:var(--tx1)">${_esc(t.nome)}</div>
+                  <div style="display:flex;gap:12px;margin-top:4px;flex-wrap:wrap">
+                    ${t.faixa_etaria ? `<span style="font-size:11px;color:var(--tx3)">${_esc(t.faixa_etaria)}</span>`     : ''}
+                    ${t.sala         ? `<span style="font-size:11px;color:var(--tx3)">Sala: ${_esc(t.sala)}</span>`       : ''}
+                    ${t.pessoas      ? `<span style="font-size:11px;color:var(--tx3)">Prof.: ${_esc(t.pessoas.nome)}</span>` : ''}
+                  </div>
+                </div>
+                <div style="display:flex;gap:6px;flex-shrink:0">
+                  <button class="tbt sec" style="font-size:11px;padding:4px 10px" onclick="minMinEditarTurma('${t.id}')">Editar</button>
+                  <button class="tbt dng" style="font-size:11px;padding:4px 10px" onclick="minMinRemoverTurma('${t.id}')">×</button>
+                </div>
+              </div>
+            </div>`).join('')}
+        </div>` : '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Nenhuma turma cadastrada.</div>'}`;
+
+      _garantirModalTurma();
+    } catch (e) {
+      console.error('_renderTurmas:', e);
+      el.innerHTML = '<div style="color:var(--rose);font-size:13px;padding:16px 0">Erro ao carregar turmas.</div>';
+    }
+  }
+
+  function _garantirModalTurma() {
+    if (document.getElementById('modal-turma')) return;
+    const d = document.createElement('div');
+    d.id = 'modal-turma';
+    d.innerHTML = _modalWrap('modal-turma', 'Turma', `
+      ${_fld('Nome', 'turma-nome', 'text', 'Ex: Primários, Juniores', true)}
+      ${_fld('Faixa Etária', 'turma-faixa', 'text', 'Ex: 7 a 10 anos')}
+      ${_fld('Sala', 'turma-sala', 'text', 'Ex: Sala 03')}
+      ${_errEl('turma-err')}
+    `, `<button class="tbt sec" onclick="_fechModal('modal-turma')">Cancelar</button>
+        <button class="tbt pri" onclick="_turmaSalvar()">Salvar</button>`);
+    document.body.appendChild(d);
+  }
+
+  function minMinNovaTurma() {
+    _turmaEditandoId = null;
+    _garantirModalTurma();
+    ['turma-nome','turma-faixa','turma-sala'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    _showErr('turma-err', '');
+    document.getElementById('modal-turma-title').textContent = 'Nova Turma';
+    _abrModal('modal-turma');
+  }
+
+  async function minMinEditarTurma(id) {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_turmas?id=eq.${id}`, { headers: _hdr() });
+      if (!r.ok) throw new Error(r.status);
+      const [t] = await r.json();
+      _turmaEditandoId = id;
+      _garantirModalTurma();
+      const set = (fid, v) => { const el = document.getElementById(fid); if (el) el.value = v || ''; };
+      set('turma-nome', t.nome); set('turma-faixa', t.faixa_etaria); set('turma-sala', t.sala);
+      _showErr('turma-err', '');
+      document.getElementById('modal-turma-title').textContent = 'Editar Turma';
+      _abrModal('modal-turma');
+    } catch (e) { alert('Erro ao carregar turma: ' + e.message); }
+  }
+
+  async function _turmaSalvar() {
+    const nome = document.getElementById('turma-nome')?.value.trim();
+    if (!nome) { _showErr('turma-err', 'Nome obrigatório.'); return; }
+    const payload = {
+      ministerio_id: _ministerioAtual,
+      nome,
+      faixa_etaria: document.getElementById('turma-faixa')?.value.trim() || null,
+      sala:         document.getElementById('turma-sala')?.value.trim()  || null,
+    };
+    try {
+      const url = _turmaEditandoId
+        ? `${SUPABASE_URL}/rest/v1/ministerio_turmas?id=eq.${_turmaEditandoId}`
+        : `${SUPABASE_URL}/rest/v1/ministerio_turmas`;
+      const r = await fetch(url, {
+        method:  _turmaEditandoId ? 'PATCH' : 'POST',
+        headers: _hdrJson(),
+        body:    JSON.stringify(payload),
+      });
+      if (!r.ok) throw new Error(r.status);
+      _fechModal('modal-turma');
+      _renderTurmas(document.getElementById('min-min-mod-content'));
+    } catch (e) { _showErr('turma-err', 'Erro ao salvar: ' + e.message); }
+  }
+
+  async function minMinRemoverTurma(id) {
+    if (!confirm('Remover esta turma?')) return;
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_turmas?id=eq.${id}`, { method: 'DELETE', headers: _hdr() });
+      if (!r.ok) throw new Error(r.status);
+      _renderTurmas(document.getElementById('min-min-mod-content'));
+    } catch (e) { alert('Erro ao remover: ' + e.message); }
+  }
+
   /* ══ MEMBROS DO MINISTÉRIO ═══════════════════════════════════ */
   async function _carregarMembros(ministerioId) {
     const el   = document.getElementById('min-min-membro-list');
@@ -2308,5 +2794,18 @@
   window.minMinUploadDoc              = minMinUploadDoc;
   window.minMinRemoverDoc             = minMinRemoverDoc;
   window._docHandleFile               = _docHandleFile;
+  window._waCopiarNumeros             = _waCopiarNumeros;
+  window.minMinNovaMusica             = minMinNovaMusica;
+  window.minMinEditarMusica           = minMinEditarMusica;
+  window.minMinRemoverMusica          = minMinRemoverMusica;
+  window._repSalvar                   = _repSalvar;
+  window.minMinNovoProjeto            = minMinNovoProjeto;
+  window.minMinEditarProjeto          = minMinEditarProjeto;
+  window.minMinRemoverProjeto         = minMinRemoverProjeto;
+  window._projSalvar                  = _projSalvar;
+  window.minMinNovaTurma              = minMinNovaTurma;
+  window.minMinEditarTurma            = minMinEditarTurma;
+  window.minMinRemoverTurma           = minMinRemoverTurma;
+  window._turmaSalvar                 = _turmaSalvar;
 
 })();
