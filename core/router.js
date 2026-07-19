@@ -183,6 +183,7 @@ const _VIEW_MAP = {
   "wa":          "modules/whatsapp/view.html",
   "generic":     "modules/shared/view.html",
   "acesso":      "modules/acesso/view.html?v=6.45.13",
+  "hub":         "modules/shared/hub.html",
 };
 
 function _getViewFileForRoute(id) {
