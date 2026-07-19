@@ -2653,21 +2653,28 @@
       </div>
       <!-- Navegação por abas -->
       <div style="display:flex;border-bottom:2px solid var(--bd1);margin-bottom:16px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch">
-        <button class="min-tab active" data-tab="dashboard" onclick="minMinTab('dashboard')">Dashboard</button>
-        <button class="min-tab" data-tab="membros" onclick="minMinTab('membros')">Membros <span id="min-min-membro-count" style="font-size:11px;font-weight:400"></span></button>
-        <button class="min-tab" data-tab="setores" onclick="minMinTab('setores')">Setores <span id="min-min-setor-count" style="font-size:11px;font-weight:400"></span></button>
-        <button class="min-tab" data-tab="relatorios" onclick="minMinTab('relatorios')">Relatórios</button>
+        <button class="min-tab active" data-tab="visao-geral"  onclick="minMinTab('visao-geral')">Visão Geral</button>
+        <button class="min-tab" data-tab="lideranca"           onclick="minMinTab('lideranca')">Liderança</button>
+        <button class="min-tab" data-tab="membros"             onclick="minMinTab('membros')">Membros <span id="min-min-membro-count" style="font-size:11px;font-weight:400"></span></button>
+        <button class="min-tab" data-tab="setores"             onclick="minMinTab('setores')">Setores <span id="min-min-setor-count" style="font-size:11px;font-weight:400"></span></button>
+        <button class="min-tab" data-tab="relatorios"          onclick="minMinTab('relatorios')">Relatórios</button>
         <button class="min-tab" data-tab="reunioes"     onclick="minMinTab('reunioes')"     id="min-min-tab-btn-reu"  style="display:none">Reuniões</button>
         <button class="min-tab" data-tab="programacoes" onclick="minMinTab('programacoes')" id="min-min-tab-btn-prog" style="display:none">Programações</button>
-        <button class="min-tab" data-tab="escalas"    onclick="minMinTab('escalas')"    id="min-min-tab-btn-escal" style="display:none">Escalas</button>
-        <button class="min-tab" data-tab="documentos" onclick="minMinTab('documentos')" id="min-min-tab-btn-doc"   style="display:none">Documentos</button>
-        <button class="min-tab" data-tab="whatsapp"  onclick="minMinTab('whatsapp')"  id="min-min-tab-btn-wa"   style="display:none">WhatsApp</button>
-        <button class="min-tab" data-tab="modulo"    onclick="minMinTab('modulo')"    id="min-min-tab-btn-mod"  style="display:none">Módulo</button>
-        <button class="min-tab" data-tab="adm" onclick="minMinTab('adm')" id="min-min-tab-btn-adm" style="display:none">Administração</button>
+        <button class="min-tab" data-tab="escalas"      onclick="minMinTab('escalas')"      id="min-min-tab-btn-escal" style="display:none">Escalas</button>
+        <button class="min-tab" data-tab="arquivos"     onclick="minMinTab('arquivos')"     id="min-min-tab-btn-doc"   style="display:none">Arquivos</button>
+        <button class="min-tab" data-tab="whatsapp"     onclick="minMinTab('whatsapp')"     id="min-min-tab-btn-wa"    style="display:none">WhatsApp</button>
+        <button class="min-tab" data-tab="modulo"       onclick="minMinTab('modulo')"       id="min-min-tab-btn-mod"   style="display:none">Módulo</button>
+        <button class="min-tab" data-tab="adm"          onclick="minMinTab('adm')"          id="min-min-tab-btn-adm"   style="display:none">Administração</button>
       </div>
-      <!-- Aba: Dashboard -->
-      <div id="min-min-tab-dashboard" class="min-tab-panel">
+      <!-- Aba: Visão Geral -->
+      <div id="min-min-tab-visao-geral" class="min-tab-panel">
         <div id="min-min-dash-content">
+          <div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Carregando...</div>
+        </div>
+      </div>
+      <!-- Aba: Liderança -->
+      <div id="min-min-tab-lideranca" class="min-tab-panel" style="display:none">
+        <div id="min-min-lid-content">
           <div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Carregando...</div>
         </div>
       </div>
@@ -2712,8 +2719,8 @@
         </div>
         <div id="min-min-escal-list"><div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Carregando...</div></div>
       </div>
-      <!-- Aba: Documentos -->
-      <div id="min-min-tab-documentos" class="min-tab-panel" style="display:none">
+      <!-- Aba: Arquivos -->
+      <div id="min-min-tab-arquivos" class="min-tab-panel" style="display:none">
         <div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:12px">
           <span id="min-doc-status" style="font-size:12px;color:var(--tx3)"></span>
           <button class="tbt pri" id="min-min-btn-upload-doc" style="display:none" onclick="minMinUploadDoc()">↑ Upload</button>

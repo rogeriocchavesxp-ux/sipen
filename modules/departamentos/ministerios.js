@@ -39,7 +39,7 @@
   let _ministerioAtual  = null;
   let _ministerioDataAtual = null;
   let _recursosAtual    = {};
-  let _tabAtual         = 'dashboard';
+  let _tabAtual         = 'visao-geral';
   let _pessoasCache     = null;
   let _editandoId       = null;
   let _setorEditandoId  = null;
@@ -237,8 +237,8 @@
     document.getElementById('min-min-painel-lista').style.display   = 'none';
     document.getElementById('min-min-painel-detalhe').style.display = '';
 
-    // Resetar para aba dashboard
-    minMinTab('dashboard');
+    // Resetar para aba Visão Geral
+    minMinTab('visao-geral');
 
     const header = document.getElementById('min-min-detalhe-header');
     const dash   = document.getElementById('min-min-dash-content');
@@ -292,6 +292,15 @@
       _renderHeader(m, nomes);
       _renderDashboard(m, nomes);
 
+      // Breadcrumb dinâmico
+      const cr = document.getElementById('crumb');
+      if (cr) cr.innerHTML = `<span class="c-mod">Departamentos</span><span class="c-sep">/</span><span class="c-pg">Ministérios</span><span class="c-sub">/ ${escapeHtml(m.nome)}</span>`;
+
+      // Destacar ministério ativo no sidebar
+      document.querySelectorAll('#sb-min-ministerios .si').forEach(el => {
+        el.classList.toggle('on', el.dataset.mid === id);
+      });
+
       if (admBtn) admBtn.style.display = _podeEditarMinisterio() ? '' : 'none';
 
       const reunBtn  = document.getElementById('min-min-tab-btn-reu');
@@ -344,72 +353,292 @@
     if (panel) panel.style.display = '';
     _tabAtual = tab;
     if (tab === 'adm'          && _ministerioAtual) _renderAdm();
+    if (tab === 'lideranca'    && _ministerioAtual) _renderLideranca();
     if (tab === 'reunioes'     && _ministerioAtual) _carregarReunioes(_ministerioAtual);
     if (tab === 'programacoes' && _ministerioAtual) _carregarProgramacoes(_ministerioAtual);
     if (tab === 'escalas'      && _ministerioAtual) _carregarEscalas(_ministerioAtual);
-    if (tab === 'documentos'   && _ministerioAtual) _carregarDocumentos(_ministerioAtual);
+    if (tab === 'arquivos'     && _ministerioAtual) _carregarDocumentos(_ministerioAtual);
     if (tab === 'whatsapp'     && _ministerioAtual) _renderWhatsapp();
     if (tab === 'modulo'       && _ministerioAtual) _renderModulo();
     if (tab === 'relatorios'   && _ministerioAtual) _renderRelatorios();
   }
 
-  /* ══ HEADER COMPACTO ═════════════════════════════════════════ */
+  /* ══ HEADER DO MINISTÉRIO ═══════════════════════════════════ */
   function _renderHeader(m, nomes) {
     const header = document.getElementById('min-min-detalhe-header');
     if (!header) return;
     const ICONES = { MUSICA:'🎵', JOVENS:'🔥', INFANTIL:'👶', INTERCESSAO:'🙏', EVANGELISMO:'✝️', DIACONIA:'🤝', COMUNICACAO:'📢', ACOLHIMENTO:'🤗', OUTRO:'⭐' };
-    const ic = ICONES[m.tipo] || '⭐';
-    const tipoLabel = m.tipo ? m.tipo.charAt(0) + m.tipo.slice(1).toLowerCase() : '';
-    const badge = _isAdminGeral()
-      ? '<span class="pill pb" style="font-size:10px">Admin Geral</span>'
-      : _isSupervisorDoMinisterio()
-        ? '<span class="pill pv" style="font-size:10px">Supervisor</span>'
-        : '';
+    const CORES  = { MUSICA:'139,107,193', JOVENS:'224,90,90', INFANTIL:'74,156,245', INTERCESSAO:'42,181,192', EVANGELISMO:'201,168,76', DIACONIA:'58,170,92', COMUNICACAO:'139,107,193', ACOLHIMENTO:'224,138,42', OUTRO:'139,107,193' };
+    const ic  = ICONES[m.tipo] || '⭐';
+    const rgb = CORES[m.tipo]  || '139,107,193';
+
+    const _card = (role, label, pessoaId, cor) => {
+      const nome = pessoaId && nomes[pessoaId] ? escapeHtml(nomes[pessoaId]) : null;
+      return `<div style="display:flex;align-items:center;gap:9px;padding:10px 14px;background:var(--bg2);border-radius:8px;min-width:160px;flex:1">
+        <div style="width:32px;height:32px;border-radius:50%;background:rgba(${cor},.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgb(${cor})" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div style="min-width:0">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:2px">${label}</div>
+          <div style="font-size:12.5px;font-weight:600;color:${nome ? 'var(--tx1)' : 'var(--tx3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nome || 'Não informado'}</div>
+        </div>
+      </div>`;
+    };
+
     header.innerHTML = `
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:42px;height:42px;border-radius:10px;background:var(--violetbg);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${ic}</div>
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px">
-            <span style="font-size:16px;font-weight:800;color:var(--tx1)">${escapeHtml(m.nome)}</span>
-            ${m.ativo === false ? '<span class="pill pa" style="font-size:10px">Inativo</span>' : ''}
-            ${badge}
+      <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
+        <div style="display:flex;align-items:flex-start;gap:14px;flex:1;min-width:280px">
+          <div style="width:52px;height:52px;border-radius:12px;background:rgba(${rgb},.15);border:1px solid rgba(${rgb},.25);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${ic}</div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+              <span style="font-size:18px;font-weight:800;color:var(--tx1)">${escapeHtml(m.nome)}</span>
+              ${m.ativo === false
+                ? '<span class="pill pa" style="font-size:10px">Inativo</span>'
+                : '<span class="pill pg" style="font-size:10px">Ativo</span>'}
+            </div>
+            ${m.descricao ? `<div style="font-size:12.5px;color:var(--tx2);line-height:1.6;max-width:480px">${escapeHtml(m.descricao)}</div>` : ''}
           </div>
-          ${tipoLabel ? `<div style="font-size:11px;color:var(--tx3)">${tipoLabel}</div>` : ''}
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch">
+          ${_card('supervisor',   'Supervisor',   m.supervisor,   '58,170,92')}
+          ${_card('conselheiro',  'Conselheiro',  m.conselheiro,  '74,156,245')}
+          ${_card('coordenador',  'Coordenador',  m.coordenador,  '201,168,76')}
         </div>
       </div>`;
   }
 
-  /* ══ DASHBOARD ═══════════════════════════════════════════════ */
-  function _renderDashboard(m, nomes) {
+  /* ══ VISÃO GERAL ════════════════════════════════════════════ */
+  let _vgSemanaOffset = 0;
+
+  function _vgSemana(offset) {
+    const hoje = new Date();
+    const dow  = hoje.getDay();
+    const seg  = new Date(hoje); seg.setDate(hoje.getDate() - (dow === 0 ? 6 : dow - 1) + offset * 7);
+    const sab  = new Date(seg);  sab.setDate(seg.getDate() + 6);
+    const fmt  = d => d.toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' });
+    return { inicio: seg, fim: sab, label: `${seg.toLocaleDateString('pt-BR',{day:'2-digit',month:'long'})} a ${fmt(sab)}` };
+  }
+
+  async function _renderDashboard(m, nomes) {
     const el = document.getElementById('min-min-dash-content');
     if (!el) return;
-    const _linha = (label, pessoaId) => pessoaId && nomes[pessoaId]
-      ? `<div style="display:flex;gap:8px;align-items:baseline;margin-bottom:6px">
-           <span style="font-size:11px;color:var(--tx3);min-width:110px">${label}</span>
-           <span style="font-size:13px;font-weight:600;color:var(--tx1)">${escapeHtml(nomes[pessoaId])}</span>
-         </div>`
-      : '';
-    const temLideranca = m.supervisor || m.conselheiro || m.coordenador;
+    _vgSemanaOffset = 0;
+    await _carregarVisaoGeral();
+  }
+
+  async function _carregarVisaoGeral() {
+    const el = document.getElementById('min-min-dash-content');
+    if (!el || !_ministerioAtual) return;
+    const m   = _ministerioDataAtual || {};
+    const sem = _vgSemana(_vgSemanaOffset);
+    const isoIni = sem.inicio.toISOString().slice(0,10);
+    const isoFim = sem.fim.toISOString().slice(0,10);
+
     el.innerHTML = `
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:16px">
-        <div class="card" style="text-align:center;padding:16px 12px;cursor:pointer" onclick="minMinTab('membros')">
-          <div id="min-min-stat-membros" style="font-size:28px;font-weight:700;color:var(--violet)">—</div>
-          <div style="font-size:11px;color:var(--tx3);margin-top:4px">Membros ativos</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--tx1)">Visão Geral</div>
+          <div style="font-size:12px;color:var(--tx3)">Resumo das atividades e informações do ministério.</div>
         </div>
-        <div class="card" style="text-align:center;padding:16px 12px;cursor:pointer" onclick="minMinTab('setores')">
-          <div id="min-min-stat-setores" style="font-size:28px;font-weight:700;color:var(--violet)">—</div>
-          <div style="font-size:11px;color:var(--tx3);margin-top:4px">Setores</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--tx2)" id="vg-semana-label">📅 ${sem.label}</span>
+          <button class="tbt" style="padding:4px 9px;font-size:12px" onclick="_vgNavSemana(-1)">‹</button>
+          <button class="tbt" style="padding:4px 9px;font-size:12px" onclick="_vgNavSemana(1)">›</button>
         </div>
       </div>
-      ${m.descricao ? `<div class="card" style="margin-bottom:12px">
-        <div style="font-size:13px;color:var(--tx2);line-height:1.65">${escapeHtml(m.descricao)}</div>
-      </div>` : ''}
-      ${temLideranca ? `<div class="card">
-        <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Liderança</div>
-        ${_linha('Supervisor', m.supervisor)}
-        ${_linha('Conselheiro', m.conselheiro)}
-        ${_linha('Coordenador', m.coordenador)}
-      </div>` : ''}`;
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:20px">
+        <div class="card" style="padding:14px 16px;cursor:pointer" onclick="minMinTab('membros')">
+          <div style="font-size:26px;font-weight:800;color:var(--violet)" id="min-min-stat-membros">—</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:3px">Membros</div>
+          <div style="font-size:10px;color:var(--tx4,var(--tx3));margin-top:1px">Ativos no ministério</div>
+        </div>
+        <div class="card" style="padding:14px 16px;cursor:pointer" onclick="minMinTab('setores')">
+          <div style="font-size:26px;font-weight:800;color:var(--sky)" id="min-min-stat-setores">—</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:3px">Setores</div>
+          <div style="font-size:10px;color:var(--tx4,var(--tx3));margin-top:1px">Organizados</div>
+        </div>
+        <div class="card" style="padding:14px 16px;cursor:pointer" onclick="minMinTab('escalas')" id="vg-kpi-escalas-card" style="display:none">
+          <div style="font-size:26px;font-weight:800;color:var(--amber)" id="vg-kpi-escalas">—</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:3px">Escalas</div>
+          <div style="font-size:10px;color:var(--tx4,var(--tx3));margin-top:1px">Esta semana</div>
+        </div>
+        <div class="card" style="padding:14px 16px;cursor:pointer" onclick="minMinTab('programacoes')" id="vg-kpi-progs-card" style="display:none">
+          <div style="font-size:26px;font-weight:800;color:var(--teal)" id="vg-kpi-progs">—</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:3px">Programações</div>
+          <div style="font-size:10px;color:var(--tx4,var(--tx3));margin-top:1px">Próximos eventos</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+        <div class="card" id="vg-escalas-recentes">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <span style="font-size:12.5px;font-weight:700;color:var(--tx1)">Próximas Escalas</span>
+            <span class="cact" style="font-size:11px" onclick="minMinTab('escalas')">Ver todas</span>
+          </div>
+          <div style="color:var(--tx3);font-size:12px;text-align:center;padding:16px 0">Carregando...</div>
+        </div>
+        <div class="card" id="vg-reunioes-recentes">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <span style="font-size:12.5px;font-weight:700;color:var(--tx1)">Próximas Reuniões</span>
+            <span class="cact" style="font-size:11px" onclick="minMinTab('reunioes')">Ver todas</span>
+          </div>
+          <div style="color:var(--tx3);font-size:12px;text-align:center;padding:16px 0">Carregando...</div>
+        </div>
+      </div>`;
+
+    // Carregar KPIs e seções em paralelo (usa dados do período atual)
+    _vgCarregarKpis(isoIni, isoFim);
+  }
+
+  function _vgNavSemana(dir) {
+    _vgSemanaOffset += dir;
+    const sem = _vgSemana(_vgSemanaOffset);
+    const lbl = document.getElementById('vg-semana-label');
+    if (lbl) lbl.textContent = `📅 ${sem.label}`;
+    _vgCarregarKpis(sem.inicio.toISOString().slice(0,10), sem.fim.toISOString().slice(0,10));
+  }
+  window._vgNavSemana = _vgNavSemana;
+
+  async function _vgCarregarKpis(ini, fim) {
+    if (!_ministerioAtual) return;
+    try {
+      const hdrs = _hdr();
+      const [rEsc, rProg, rReu] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/ministerio_escalas?ministerio_id=eq.${_ministerioAtual}&data=gte.${ini}&data=lte.${fim}&select=id,titulo,data,hora`, { headers: hdrs }),
+        fetch(`${SUPABASE_URL}/rest/v1/ministerio_programacoes?ministerio_id=eq.${_ministerioAtual}&data=gte.${ini}&select=id,titulo,data,hora&order=data.asc&limit=3`, { headers: hdrs }),
+        fetch(`${SUPABASE_URL}/rest/v1/ministerio_reunioes?ministerio_id=eq.${_ministerioAtual}&data=gte.${ini}&select=id,titulo,data,hora&order=data.asc&limit=3`, { headers: hdrs }),
+      ]);
+
+      const escalas = rEsc.ok  ? await rEsc.json()  : [];
+      const progs   = rProg.ok ? await rProg.json() : [];
+      const reus    = rReu.ok  ? await rReu.json()  : [];
+
+      const kpiEsc = document.getElementById('vg-kpi-escalas');
+      if (kpiEsc) { kpiEsc.textContent = escalas.length; kpiEsc.closest('.card').style.display = ''; }
+      const kpiProg = document.getElementById('vg-kpi-progs');
+      if (kpiProg) { kpiProg.textContent = progs.length; kpiProg.closest('.card').style.display = ''; }
+
+      const _fmtDH = (d, h) => {
+        const data = new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
+        return h ? `${data} • ${h.slice(0,5)}` : data;
+      };
+
+      const elEsc = document.getElementById('vg-escalas-recentes');
+      if (elEsc) {
+        const body = elEsc.querySelector('div:last-child');
+        body.innerHTML = escalas.length
+          ? escalas.slice(0,3).map(e => `
+              <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd1)">
+                <div style="width:28px;height:28px;border-radius:6px;background:var(--amberbg);display:flex;align-items:center;justify-content:center;flex-shrink:0">📅</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:12.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(e.titulo)}</div>
+                  <div style="font-size:11px;color:var(--tx3)">${_fmtDH(e.data, e.hora)}</div>
+                </div>
+              </div>`).join('')
+          : '<div style="color:var(--tx3);font-size:12px;text-align:center;padding:12px 0">Nenhuma escala nesta semana.</div>';
+      }
+
+      const elReu = document.getElementById('vg-reunioes-recentes');
+      if (elReu) {
+        const body = elReu.querySelector('div:last-child');
+        body.innerHTML = reus.length
+          ? reus.map(r => `
+              <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd1)">
+                <div style="width:28px;height:28px;border-radius:6px;background:var(--violetbg);display:flex;align-items:center;justify-content:center;flex-shrink:0">🗣️</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:12.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(r.titulo)}</div>
+                  <div style="font-size:11px;color:var(--tx3)">${_fmtDH(r.data, r.hora)}</div>
+                </div>
+              </div>`).join('')
+          : '<div style="color:var(--tx3);font-size:12px;text-align:center;padding:12px 0">Nenhuma reunião próxima.</div>';
+      }
+
+    } catch (e) {
+      console.error('_vgCarregarKpis:', e);
+    }
+  }
+
+  /* ══ ABA LIDERANÇA ══════════════════════════════════════════ */
+  async function _renderLideranca() {
+    const el = document.getElementById('min-min-lid-content');
+    if (!el) return;
+    el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Carregando liderança...</div>';
+    try {
+      // Nomeados vinculados ao ministério
+      const rn = await fetch(
+        `${SUPABASE_URL}/rest/v1/nomeados?ministerio_id=eq.${_ministerioAtual}&status=eq.ativo&deleted_at=is.null&select=id,cargo,funcao_lider,tipo_nomeacao,nome,orgao,pessoa_id,pessoas(id,nome)&order=funcao_lider.asc,nome.asc`,
+        { headers: _hdr() }
+      );
+      const nomeados = rn.ok ? await rn.json() : [];
+
+      // Fallback: liderança da tabela ministerios (supervisor/conselheiro/coordenador)
+      const m = _ministerioDataAtual || {};
+      const pessoas = await _carregarPessoas();
+      const _pMap = {};
+      (pessoas || []).forEach(p => { _pMap[p.id] = p.nome; });
+
+      const FUNC_LABEL = { supervisor:'Supervisor', coordenador:'Coordenador', lider_area:'Líder de Área' };
+      const FUNC_COR   = { supervisor:'58,170,92', coordenador:'201,168,76', lider_area:'139,107,193' };
+
+      const _nomeCard = (label, pessoaId, cor) => {
+        const nomePessoa = pessoaId ? (_pMap[pessoaId] || 'Nome não encontrado') : null;
+        return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg2);border-radius:8px;margin-bottom:6px">
+          <div style="width:34px;height:34px;border-radius:50%;background:rgba(${cor},.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgb(${cor})" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)">${label}</div>
+            <div style="font-size:13px;font-weight:600;color:${nomePessoa ? 'var(--tx1)' : 'var(--tx3)'}">${nomePessoa ? escapeHtml(nomePessoa) : 'Não informado'}</div>
+          </div>
+        </div>`;
+      };
+
+      if (nomeados.length) {
+        const grupos = {};
+        nomeados.forEach(n => {
+          const grupo = n.funcao_lider || n.cargo || 'Outros';
+          if (!grupos[grupo]) grupos[grupo] = [];
+          const nomePessoa = (n.pessoas && n.pessoas.nome) ? n.pessoas.nome : n.nome;
+          grupos[grupo].push(nomePessoa);
+        });
+
+        el.innerHTML = `
+          <div class="card">
+            <div class="ctit">Liderança do Ministério</div>
+            ${Object.entries(grupos).map(([func, nomes]) => `
+              <div style="margin-bottom:14px">
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:6px">${FUNC_LABEL[func] || func}</div>
+                ${nomes.map(n => `
+                  <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg2);border-radius:8px;margin-bottom:5px">
+                    <div style="width:30px;height:30px;border-radius:50%;background:rgba(${FUNC_COR[func]||'139,107,193'},.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgb(${FUNC_COR[func]||'139,107,193'})" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                    <span style="font-size:13px;font-weight:600;color:var(--tx1)">${escapeHtml(n)}</span>
+                  </div>`).join('')}
+              </div>`).join('')}
+          </div>`;
+      } else {
+        // Fallback para os campos diretos da tabela ministerios
+        const temAlgum = m.supervisor || m.conselheiro || m.coordenador;
+        el.innerHTML = `
+          <div class="card">
+            <div class="ctit">Liderança do Ministério</div>
+            ${temAlgum ? `
+              ${m.supervisor   ? _nomeCard('Supervisor',  m.supervisor,  '58,170,92')  : ''}
+              ${m.conselheiro  ? _nomeCard('Conselheiro', m.conselheiro, '74,156,245') : ''}
+              ${m.coordenador  ? _nomeCard('Coordenador', m.coordenador, '201,168,76') : ''}
+            ` : `<div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Nenhuma liderança nomeada.</div>`}
+            ${_podeEditarMinisterio() ? `
+              <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bd1)">
+                <button class="tbt sec" style="font-size:12px" onclick="minMinTab('adm')">Gerenciar liderança</button>
+              </div>` : ''}
+          </div>`;
+      }
+    } catch (e) {
+      console.error('_renderLideranca:', e);
+      el.innerHTML = '<div style="color:var(--rose);font-size:13px;padding:16px 0">Erro ao carregar liderança.</div>';
+    }
   }
 
   /* ══ ABA ADMINISTRAÇÃO ═══════════════════════════════════════ */
@@ -2251,6 +2480,9 @@
     document.getElementById('min-min-painel-lista').style.display   = '';
     const heroTtl = document.querySelector('#v-min-min .hero-ttl');
     if (heroTtl) heroTtl.textContent = 'Ministérios';
+    const cr = document.getElementById('crumb');
+    if (cr) cr.innerHTML = `<span class="c-mod">Departamentos</span><span class="c-sep">/</span><span class="c-pg">Ministérios</span><span class="c-sub">/ grupos ministeriais</span>`;
+    document.querySelectorAll('#sb-min-ministerios .si').forEach(el => el.classList.remove('on'));
   }
 
   /* ══ UTILITÁRIOS DE ESTILO (modal) ═══════════════════════════ */
@@ -2744,7 +2976,7 @@
       if (!lista.length) return;
       const _sbNome = n => n.replace(/^Minist[eé]rio\s+d[eao]\s+/i, '').replace(/^Minist[eé]rio\s+/i, '');
       el.innerHTML = '<div class="sdiv"></div>' + lista.map(m =>
-        `<div class="si" onclick="window._sbMinisterioId='${m.id}';go('min-min')">${_SB_ICONES[m.tipo]||'◆'} ${_sbNome(m.nome)}</div>`
+        `<div class="si" data-mid="${m.id}" onclick="window._sbMinisterioId='${m.id}';go('min-min')">${_SB_ICONES[m.tipo]||'◆'} ${_sbNome(m.nome)}</div>`
       ).join('');
     } catch (e) { /* silencioso — sidebar não quebra */ }
   }
@@ -2794,6 +3026,8 @@
   window.minMinUploadDoc              = minMinUploadDoc;
   window.minMinRemoverDoc             = minMinRemoverDoc;
   window._docHandleFile               = _docHandleFile;
+  window._renderLideranca             = _renderLideranca;
+  window._carregarVisaoGeral          = _carregarVisaoGeral;
   window._waCopiarNumeros             = _waCopiarNumeros;
   window.minMinNovaMusica             = minMinNovaMusica;
   window.minMinEditarMusica           = minMinEditarMusica;
