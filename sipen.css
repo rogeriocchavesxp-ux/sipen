@@ -1708,3 +1708,65 @@ textarea.fi{resize:vertical;line-height:1.5}
 .min-tab:hover{color:var(--tx1)}
 .min-tab.active{color:var(--violet);border-bottom-color:var(--violet);font-weight:600}
 textarea.fi{resize:vertical;line-height:1.5}
+
+/* ══ Dashboard Geral — redesign ════════════════════════════════════ */
+.dash-alerts{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:rgba(255,69,58,0.06);border:1px solid rgba(255,69,58,0.14);border-radius:8px;padding:8px 14px;margin-bottom:18px;font-size:12px}
+.da-item{color:var(--tx2)}
+.da-warn{color:var(--amber)}
+.da-err{color:var(--rose)}
+.da-sep{color:var(--tx4)}
+.da-link{margin-left:auto;color:var(--tx3);cursor:pointer;font-size:11.5px;white-space:nowrap}
+.da-link:hover{color:var(--tx1)}
+
+.dash-g2{display:grid;grid-template-columns:1fr 300px;gap:12px;margin-bottom:12px;align-items:start}
+.dash-main,.dash-side{display:flex;flex-direction:column;gap:12px}
+
+.dash-panel{background:var(--bg-card);border:1px solid var(--bd1);border-radius:10px;overflow:hidden}
+.dash-ph{display:flex;align-items:center;gap:9px;padding:11px 14px 10px;border-bottom:1px solid var(--bd1)}
+.dash-pi{font-size:13px;line-height:1;flex-shrink:0}
+.dash-pt{font-size:12.5px;font-weight:600;color:var(--tx1);flex:1;letter-spacing:-0.01em}
+.dash-pa{font-size:11px;color:var(--tx4);cursor:pointer;white-space:nowrap}
+.dash-pa:hover{color:var(--tx2)}
+
+.dash-pr{display:flex;flex-direction:column}
+.dash-row{display:flex;align-items:baseline;padding:8px 14px;gap:10px;border-bottom:1px solid rgba(255,255,255,0.025)}
+.dash-row:last-child{border-bottom:none}
+.dr-l{font-size:11.5px;color:var(--tx3);min-width:115px;flex-shrink:0}
+.dr-v{font-size:12px;color:var(--tx2)}
+.dr-warn{color:var(--amber);font-weight:500}
+.dr-err{color:var(--rose);font-weight:500}
+.dr-ok{color:var(--gbr);font-weight:500}
+
+/* Mini Calendar */
+.dash-cal .mini-cal{padding:8px 12px 12px}
+.mc-head{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px}
+.mc-head span{text-align:center;font-size:10px;color:var(--tx4);font-weight:500;padding:2px 0}
+.mc-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px}
+.mc-grid span{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--tx3);border-radius:4px;cursor:default}
+.mc-grid span:not(.mc-today):hover{background:var(--bg-hover);color:var(--tx1)}
+.mc-today{background:var(--gmd)!important;color:#fff!important;font-weight:600}
+
+/* Timeline */
+.dash-timeline .feed{display:flex;flex-direction:column;padding:0}
+.dash-timeline .fi{display:flex;gap:9px;padding:8px 14px;background:none;border:none;border-bottom:1px solid rgba(255,255,255,0.025);border-radius:0;width:auto;outline:none}
+.dash-timeline .fi:last-child{border-bottom:none}
+
+/* Topbar search + avatar */
+.tb-search-wrap{flex:1;max-width:260px;margin:0 4px}
+.tb-search{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);border-radius:7px;color:var(--tx3);font-size:12px;padding:5px 11px;font-family:var(--sans);outline:none;cursor:pointer;transition:border-color .12s}
+.tb-search::placeholder{color:var(--tx4)}
+.tb-search:focus{border-color:rgba(255,255,255,0.14);color:var(--tx2)}
+.tb-av-btn{width:28px!important;height:28px!important;padding:0!important;border-radius:50%!important;background:var(--grd)!important;border-color:transparent!important;color:#fff!important;font-size:11px!important;font-weight:700!important;justify-content:center;flex-shrink:0}
+
+html[data-theme="light"] .dash-row{border-bottom-color:rgba(0,0,0,0.04)}
+html[data-theme="light"] .dash-timeline .fi{border-bottom-color:rgba(0,0,0,0.04)}
+html[data-theme="light"] .dash-alerts{background:rgba(255,159,10,0.07);border-color:rgba(255,159,10,0.2)}
+html[data-theme="light"] .tb-search{background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.08)}
+html[data-theme="light"] .tb-search:focus{border-color:rgba(0,0,0,0.16)}
+
+@media(max-width:860px){
+  .dash-g2{grid-template-columns:1fr}
+  .dash-side{display:none}
+  .dr-l{min-width:90px}
+  .tb-search-wrap{display:none}
+}

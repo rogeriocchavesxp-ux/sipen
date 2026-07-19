@@ -603,6 +603,8 @@ function atualizarSidebarUsuario() {
   if (av) { av.textContent = initials; av.style.background = "var(--grd)"; }
   if (un) un.textContent = USUARIO_ATUAL.nome;
   if (ur) ur.textContent = `${perfil.icon} ${perfil.nome}`;
+  const tbav = document.getElementById("tb-avatar");
+  if (tbav) { tbav.textContent = initials; }
 }
 
 /* ── PERMISSÕES ────────────────────────────── */
@@ -964,7 +966,7 @@ const DASH_MODULOS = [
   },
 ];
 
-// ── DASHBOARD GERAL — renderização dinâmica por permissão ──────────
+// ── DASHBOARD GERAL ────────────────────────────────────────────────
 const _GERAL_FEED = [
   { mod:"INFRAESTRUTURA", cor:"var(--rose)", txt:"<b>Infraestrutura e Conservação</b> — OS-042 marcada como <b>atrasada</b>",             time:"hoje · 14:32" },
   { mod:"INFRAESTRUTURA", cor:"var(--gmd)",  txt:"<b>Infraestrutura e Conservação</b> — OS de manutenção elétrica concluída",             time:"hoje · 11:15" },
@@ -980,140 +982,149 @@ const _GERAL_BARRAS = [
   { mod:"PASTORAL",       nome:"Pastoral",       val:5,  pct:22,  cor:"var(--teal)"   },
 ];
 
+function _buildMiniCal() {
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth(), today = now.getDate();
+  const MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+  const DAYS   = ["D","S","T","Q","Q","S","S"];
+  const first  = new Date(y, m, 1).getDay();
+  const total  = new Date(y, m + 1, 0).getDate();
+  let cells = "";
+  for (let d = 0; d < first; d++) cells += `<span></span>`;
+  for (let d = 1; d <= total; d++) cells += `<span class="${d === today ? "mc-today" : ""}">${d}</span>`;
+  return `<div class="dash-panel dash-cal">
+    <div class="dash-ph">
+      <span class="dash-pi" style="color:var(--sky)">▤</span>
+      <span class="dash-pt">${MONTHS[m]} ${y}</span>
+    </div>
+    <div class="mini-cal">
+      <div class="mc-head">${DAYS.map(d => `<span>${d}</span>`).join("")}</div>
+      <div class="mc-grid">${cells}</div>
+    </div>
+  </div>`;
+}
+
 function renderGeralDash() {
   const ct = document.getElementById("geral-ct");
   if (!ct || !USUARIO_ATUAL) return;
-
-  // Membros comuns não usam o dashboard geral — redireciona para Área do Membro
   if (_isMembroComum()) { go("area-dash"); return; }
-
   const can = (mod) => canAccessModule(mod);
-  let h = "";
 
-  // ── Alerta crítico (só para quem acessa Administrativo) ──────────
-  if (can("ADMINISTRATIVO")) {
-    h += `<div class="alr alr-w" style="margin-bottom:20px">
-      <span class="alr-i">⚠</span>
-      <div><strong>3 contratos</strong> vencem em 30 dias · <strong>8 demandas</strong> atrasadas · <strong>2 OS</strong> urgentes sem resposta</div>
-      <span class="alr-a" onclick="go('admin-con')">Ver →</span>
+  // ── Alert strip ──────────────────────────────────────────────────
+  let alertsHtml = "";
+  if (can("ADMINISTRATIVO") || can("DEMANDAS") || can("INFRAESTRUTURA")) {
+    alertsHtml = `<div class="dash-alerts">
+      <span class="da-item da-warn"><strong>3 contratos</strong> vencem em 30 dias</span>
+      <span class="da-sep">·</span>
+      <span class="da-item da-err"><strong>8 demandas</strong> atrasadas</span>
+      <span class="da-sep">·</span>
+      <span class="da-item da-err"><strong>2 OS</strong> urgentes sem resposta</span>
+      <span class="da-link" onclick="go('dem-todas')">Ver tudo →</span>
     </div>`;
   }
 
-  // ── KPIs executivos (somente módulos liberados) ──────────────────
-  const kpis = [];
-  if (can("DEMANDAS")) {
-    kpis.push(`<div class="kpi" onclick="go('dem-todas')" style="cursor:pointer">
-      <div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky)">📋</div>
-      <div class="kpi-body"><div class="kpi-lbl">Demandas abertas</div><div class="kpi-val" id="geral-kpi-abertas">—</div><div class="kpi-d nu">em andamento</div></div>
-    </div>`);
-    kpis.push(`<div class="kpi" onclick="go('dem-todas')" style="cursor:pointer">
-      <div class="kpi-ico" style="background:rgba(224,85,85,0.15);color:var(--rose)">⚠️</div>
-      <div class="kpi-body"><div class="kpi-lbl">Em atraso</div><div class="kpi-val" style="color:var(--rose)">8</div><div class="kpi-d dn">requer atenção urgente</div></div>
-    </div>`);
-  }
-  if (can("DEMANDAS") || can("AGENDA")) {
-    kpis.push(`<div class="kpi">
-      <div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gmd)">📥</div>
-      <div class="kpi-body"><div class="kpi-lbl">Solicitações no mês</div><div class="kpi-val">23</div><div class="kpi-d up">▲ Mai/26</div></div>
-    </div>`);
-  }
-  if (can("AGENDA") || can("ADMINISTRATIVO") || can("INFRAESTRUTURA")) {
-    kpis.push(`<div class="kpi">
-      <div class="kpi-ico" style="background:rgba(224,138,42,0.15);color:var(--amber)">⚡</div>
-      <div class="kpi-body"><div class="kpi-lbl">Conflitos</div><div class="kpi-val">2</div><div class="kpi-d wa">agenda ou operacional</div></div>
-    </div>`);
-  }
-  if (kpis.length) {
-    const cols = Math.min(kpis.length, 4);
-    h += `<div class="kpis c${cols}" style="margin-bottom:26px">${kpis.join("")}</div>`;
+  // ── Coluna esquerda — Agenda, Pastoral, Membresia ────────────────
+  let left = "";
+
+  if (can("AGENDA")) {
+    left += `<div class="dash-panel">
+      <div class="dash-ph">
+        <span class="dash-pi" style="color:var(--teal)">◉</span>
+        <span class="dash-pt">Agenda</span>
+        <span class="dash-pa" onclick="go('agenda-dash')">ver tudo →</span>
+      </div>
+      <div class="dash-pr">
+        <div class="dash-row"><span class="dr-l">Hoje</span><span class="dr-v">Culto da manhã · 09:00</span></div>
+        <div class="dash-row"><span class="dr-l">Esta semana</span><span class="dr-v">3 eventos confirmados</span></div>
+        <div class="dash-row"><span class="dr-l">Solicitações</span><span class="dr-v dr-warn">12 aguardando aprovação</span></div>
+        <div class="dash-row"><span class="dr-l">Conflitos</span><span class="dr-v dr-err">2 detectados</span></div>
+      </div>
+    </div>`;
   }
 
-  // ── Status dos módulos (sempre presente; conteúdo renderizado por renderDashboardModulos) ──
-  h += `<div class="dash-sec"><span class="dash-sec-t">Status dos Módulos</span><span class="dash-sec-s">visão consolidada das suas áreas</span></div>
-  <div class="g3" id="dash-modcards-grid" style="margin-bottom:26px"></div>
-  <div id="dash-modcards-empty" style="display:none;background:var(--bg-card);border:1px solid var(--bd1);border-radius:10px;padding:32px 24px;text-align:center;color:var(--tx3);font-size:13px;margin-bottom:26px">
-    Nenhum módulo disponível para o seu perfil.<br>Entre em contato com a administração.
-  </div>`;
+  if (can("PASTORAL")) {
+    left += `<div class="dash-panel">
+      <div class="dash-ph">
+        <span class="dash-pi" style="color:var(--rose)">✦</span>
+        <span class="dash-pt">Pastoral</span>
+        <span class="dash-pa" onclick="go('pastoral-dash')">ver tudo →</span>
+      </div>
+      <div class="dash-pr">
+        <div class="dash-row"><span class="dr-l">Aconselhamentos</span><span class="dr-v">47 este mês</span></div>
+        <div class="dash-row"><span class="dr-l">Visitas</span><span class="dr-v">12 agendadas</span></div>
+        <div class="dash-row"><span class="dr-l">Pedidos de oração</span><span class="dr-v dr-warn">28 ativos</span></div>
+        <div class="dash-row"><span class="dr-l">Prioritários</span><span class="dr-v dr-err">4 casos urgentes</span></div>
+      </div>
+    </div>`;
+  }
 
-  // ── Feed de atividade filtrado por módulos permitidos ────────────
+  if (can("MEMBRESIA")) {
+    left += `<div class="dash-panel">
+      <div class="dash-ph">
+        <span class="dash-pi" style="color:var(--gbr)">✝</span>
+        <span class="dash-pt">Membresia</span>
+        <span class="dash-pa" onclick="go('memb-dash')">ver tudo →</span>
+      </div>
+      <div class="dash-pr">
+        <div class="dash-row"><span class="dr-l">Visitantes</span><span class="dr-v dr-ok">74 em Abr/26</span></div>
+        <div class="dash-row"><span class="dr-l">Novos membros</span><span class="dr-v dr-ok">6 este mês</span></div>
+        <div class="dash-row"><span class="dr-l">Batismos 2026</span><span class="dr-v">38 realizados</span></div>
+        <div class="dash-row"><span class="dr-l">Transferências</span><span class="dr-v">3 pendentes</span></div>
+      </div>
+    </div>`;
+  }
+
+  // ── Coluna direita — Calendário, PGs, Departamentos ──────────────
+  let right = _buildMiniCal();
+
+  if (can("PGS")) {
+    right += `<div class="dash-panel">
+      <div class="dash-ph">
+        <span class="dash-pi" style="color:var(--gbr)">⌂</span>
+        <span class="dash-pt">Pequenos Grupos</span>
+        <span class="dash-pa" onclick="go('pgs-dash')">ver tudo →</span>
+      </div>
+      <div class="dash-pr">
+        <div class="dash-row"><span class="dr-l">PGs ativos</span><span class="dr-v dr-ok">18</span></div>
+        <div class="dash-row"><span class="dr-l">Reuniões</span><span class="dr-v">61 este mês</span></div>
+        <div class="dash-row"><span class="dr-l">Visitantes</span><span class="dr-v dr-ok">27 este mês</span></div>
+      </div>
+    </div>`;
+  }
+
+  if (can("CONSELHO") || can("COMUNICACAO") || can("MINISTERIAL")) {
+    right += `<div class="dash-panel">
+      <div class="dash-ph">
+        <span class="dash-pi" style="color:var(--violet)">◈</span>
+        <span class="dash-pt">Departamentos</span>
+        <span class="dash-pa" onclick="go('min-min')">ver tudo →</span>
+      </div>
+      <div class="dash-pr">
+        <div class="dash-row"><span class="dr-l">Comunicações</span><span class="dr-v">3 campanhas ativas</span></div>
+        <div class="dash-row"><span class="dr-l">Programações</span><span class="dr-v dr-warn">4 pendentes</span></div>
+        <div class="dash-row"><span class="dr-l">Reuniões</span><span class="dr-v">2 esta semana</span></div>
+      </div>
+    </div>`;
+  }
+
+  // ── Timeline ─────────────────────────────────────────────────────
   const feedItems = _GERAL_FEED.filter(f => can(f.mod));
-
-  // ── Painel estratégico (coluna direita) ─────────────────────────
-  const rightCards = [];
-  if (can("FINANCEIRO") || can("ADMINISTRATIVO")) {
-    rightCards.push(`<div class="card">
-      <div class="ctit">Financeiro — Mai/26</div>
-      <div class="gfr">
-        <div class="gfr-row"><span class="gfr-lbl">Entradas</span><span class="gfr-val pos">R$ 42.300</span></div>
-        <div class="gfr-row"><span class="gfr-lbl">Saídas</span><span class="gfr-val neg">R$ 28.700</span></div>
-        <div class="gfr-row gfr-saldo"><span class="gfr-lbl">Saldo</span><span class="gfr-val up">R$ 13.600</span></div>
-      </div>
-    </div>`);
-  }
-  if (can("DEMANDAS")) {
-    const barras = _GERAL_BARRAS.filter(b => can(b.mod));
-    if (barras.length) {
-      rightCards.push(`<div class="card">
-        <div class="ctit">Demandas por módulo</div>
-        <div class="bars">${barras.map(b =>
-          `<div><div class="bh"><span class="bn">${b.nome}</span><span class="bv">${b.val}</span></div>
-          <div class="bt"><div class="bf" style="width:${b.pct}%;background:${b.cor}"></div></div></div>`
-        ).join("")}</div>
-      </div>`);
-    }
-  }
-
-  // ── Layout da seção inferior ─────────────────────────────────────
-  if (feedItems.length && rightCards.length) {
-    const feedHtml = feedItems.map((f, i) =>
+  const timelineHtml = feedItems.length ? `<div class="dash-panel dash-timeline">
+    <div class="dash-ph">
+      <span class="dash-pi" style="color:var(--tx3)">◎</span>
+      <span class="dash-pt">Atividade recente</span>
+      <span class="dash-pa" onclick="T('Auditoria','Log imutável disponível')">auditoria →</span>
+    </div>
+    <div class="feed">${feedItems.map((f, i) =>
       `<div class="fi"><div class="fl"><div class="fdot" style="background:${f.cor}"></div>${i < feedItems.length - 1 ? '<div class="fc"></div>' : ''}</div>
       <div class="fb"><div class="ft">${f.txt}</div><div class="ftm">${f.time}</div></div></div>`
-    ).join("");
-    h += `<div class="g2">
-      <div class="card">
-        <div class="ctit">Atividade recente<span class="csub">— últimas ações</span><span class="cact" onclick="T('Auditoria','Log imutável disponível')">auditoria →</span></div>
-        <div class="feed">${feedHtml}</div>
-      </div>
-      <div class="gcol">${rightCards.join("")}</div>
-    </div>`;
-  } else if (feedItems.length) {
-    const feedHtml = feedItems.map((f, i) =>
-      `<div class="fi"><div class="fl"><div class="fdot" style="background:${f.cor}"></div>${i < feedItems.length - 1 ? '<div class="fc"></div>' : ''}</div>
-      <div class="fb"><div class="ft">${f.txt}</div><div class="ftm">${f.time}</div></div></div>`
-    ).join("");
-    h += `<div class="card"><div class="ctit">Atividade recente<span class="csub">— últimas ações</span></div><div class="feed">${feedHtml}</div></div>`;
-  } else if (rightCards.length) {
-    h += `<div class="gcol">${rightCards.join("")}</div>`;
-  }
+    ).join("")}</div>
+  </div>` : "";
 
-  ct.innerHTML = h;
-  renderDashboardModulos();
+  ct.innerHTML = `${alertsHtml}<div class="dash-g2"><div class="dash-main">${left}</div><div class="dash-side">${right}</div></div>${timelineHtml}`;
 }
 
-function renderDashboardModulos() {
-  const grid  = document.getElementById("dash-modcards-grid");
-  const empty = document.getElementById("dash-modcards-empty");
-  if (!grid) return;
-  const visiveis = DASH_MODULOS.filter(m => canAccessModule(m.key));
-  if (!visiveis.length) {
-    grid.innerHTML = "";
-    if (empty) empty.style.display = "";
-    return;
-  }
-  if (empty) empty.style.display = "none";
-  grid.innerHTML = visiveis.map(m => {
-    const statsHtml = m.stats.map(s =>
-      `<div class="sr"><span class="sl">${s.l}</span><span class="sv${s.cls ? " " + s.cls : ""}">${s.v}</span></div>`
-    ).join("");
-    return `<div class="modcard" style="--mc:${m.mc}" onclick="go('${m.dest}')">
-      <div class="mc-head">
-        <div class="mc-icon" style="background:${m.icoBg};border-color:${m.icoBd};color:${m.icoClr}">${m.ico}</div>
-        <span class="mc-name">${m.nome}</span><span class="mc-open">abrir →</span>
-      </div>
-      ${statsHtml}
-    </div>`;
-  }).join("");
-}
+function renderDashboardModulos() {}
 
 /* ── GESTÃO DE USUÁRIOS ────────────────────── */
 function renderPerfisAcesso() {

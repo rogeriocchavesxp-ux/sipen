@@ -43,7 +43,7 @@ if(window.location.hash==='#pautas-reunioes'){window.location.replace('pautas-re
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="sipen.css?v=6.45.12">
+<link rel="stylesheet" href="sipen.css?v=6.46.0">
 </head>
 <body>
 
@@ -52,13 +52,16 @@ if(window.location.hash==='#pautas-reunioes'){window.location.replace('pautas-re
     <button class="sb-ham" id="sb-ham" onclick="sbToggle()">&#9776;</button>
     <div class="crumb" id="crumb">
       <span class="c-pg">Dashboard Geral</span>
-      <span class="c-sub">/ IPPenha · visão executiva consolidada</span>
+    </div>
+    <div class="tb-search-wrap">
+      <input class="tb-search" type="search" placeholder="Buscar..." autocomplete="off" readonly onclick="T('Busca','Em desenvolvimento')">
     </div>
     <div class="trr">
-      <button class="tbt" id="btn-trocar-area" onclick="trocarArea()" title="Alternar entre Área do Membro e Área do Gestor" style="gap:5px">⇄ <span id="btn-trocar-area-label">Trocar Área</span></button>
-      <button class="tbt" onclick="T('WhatsApp','Serviço de notificações ativo — IPPenha')">◎ WhatsApp</button>
-      <button class="tbt" onclick="openModal()">+ Nova Tarefa</button>
-      <button class="tbt" onclick="T('3 alertas','Contratos a vencer e OS atrasadas')">🔔 3 <span class="ndot"></span></button>
+      <button class="tbt" id="btn-trocar-area" onclick="trocarArea()" title="Alternar entre Área do Membro e Área do Gestor">⇄ <span id="btn-trocar-area-label">Trocar Área</span></button>
+      <button class="tbt" onclick="T('WhatsApp','Serviço de notificações ativo — IPPenha')" title="WhatsApp">◎</button>
+      <button class="tbt pri" onclick="openModal()">+ Nova Tarefa</button>
+      <button class="tbt" onclick="T('3 alertas','Contratos a vencer e OS atrasadas')" title="Notificações">🔔 <span class="ndot"></span></button>
+      <button class="tbt tb-av-btn" onclick="T('Perfil','Em desenvolvimento')" title="Meu perfil"><span id="tb-avatar">?</span></button>
     </div>
   </div>
   <div class="band" id="band" style="--mc:var(--gmd)"></div>
@@ -90,7 +93,7 @@ if(window.location.hash==='#pautas-reunioes'){window.location.replace('pautas-re
 <script src="modules/admin/estacionamento-controles.js?v=6.45.12"></script>
 <script src="modules/admin/acesso-facial.js?v=6.45.12"></script>
 <script src="modules/admin/espacos.js?v=6.45.12"></script>
-<script src="core/auth.js?v=6.45.12"></script>
+<script src="core/auth.js?v=6.46.0"></script>
 <script src="modules/pastoral/index.js?v=6.45.12"></script>
 <script src="core/init.js?v=6.45.12"></script>
 
