@@ -491,7 +491,7 @@ function renderCongView(cong){
   const cr=document.getElementById("crumb");
   if(cr) cr.innerHTML=`<span class="c-mod">Departamentos</span><span class="c-sep">/</span><span class="c-pg">Congregações</span><span class="c-sub">/ ${escapeHtml(cong.identificacao.nome)}</span>`;
 
-  el.innerHTML=`
+  el.innerHTML=`<div class="ct">
     <div style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
       ${!_isLiderCong()?`<button class="tbt" onclick="go('cong-dash')">← Todas as Congregações</button>`:`<div></div>`}
       <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -523,7 +523,7 @@ function renderCongView(cong){
       ${tabsHtml}
     </div>
     <div id="cong-tab-content"></div>
-  `;
+  </div>`;
   _renderCongTabContent(_congTabAtual, cong);
 }
 
@@ -557,10 +557,17 @@ function _renderCongTabContent(tabId, cong){
   if(r){ const p=r(cong,el); if(p instanceof Promise) p.catch(e=>console.warn("cong-tab",tabId,e)); }
 }
 
-function excluirCong(id){
+async function excluirCong(id){
   const cong=CONG.getCong(id);
   if(!cong) return;
   if(!confirm(`Excluir "${cong.identificacao.nome}"?\nEsta ação não pode ser desfeita.`)) return;
+  try{
+    const r=await fetch(
+      `${SUPABASE_URL.trim().replace(/\/$/,"")}/rest/v1/congregacoes?id=eq.${encodeURIComponent(id)}`,
+      {method:"DELETE",headers:{apikey:SUPABASE_ANON_KEY,Authorization:`Bearer ${SUPABASE_ANON_KEY}`,"Prefer":"return=minimal"}}
+    );
+    if(!r.ok){ const t=await r.text(); console.error("excluirCong:",t); if(typeof T==="function") T("Erro ao excluir",t.slice(0,80)); return; }
+  }catch(e){ console.error("excluirCong:",e); if(typeof T==="function") T("Erro","Sem conexão"); return; }
   CONG.saveCongs(CONG.listCongs().filter(c=>String(c.id)!==String(id)));
   buildCongMenu();
   if(typeof T==="function") T("Congregação excluída","");
