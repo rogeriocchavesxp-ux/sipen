@@ -437,10 +437,10 @@ function renderLiderancaDash(){
     </div>
     <div class="ct">
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
-        ${_kpi(_sv('<circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/>'), 'rgba(74,156,245,0.12)', sky,   'k-lid-pastores', 'Pastores',  'corpo pastoral ativo')}
-        ${_kpi(_sv('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/>'), 'rgba(58,170,92,0.12)', gr,  'k-lid-nomeados', 'Nomeados',  'funções temporárias')}
-        ${_kpi(IC.shield, 'rgba(88,152,212,0.12)', sky,   'k-lid-ordenados','Ordenados', 'ofícios permanentes')}
-        ${_kpi(IC.book,   'rgba(212,168,67,0.12)', amber, 'k-lid-seminario','Seminaristas','em formação teológica')}
+        ${_kpi(_sv('<circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/>'), 'rgba(74,156,245,0.12)', sky,   '<span id="k-lid-pastores">—</span>', 'Pastores',  'corpo pastoral ativo')}
+        ${_kpi(_sv('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/>'), 'rgba(58,170,92,0.12)', gr,  '<span id="k-lid-nomeados">—</span>', 'Nomeados',  'funções temporárias')}
+        ${_kpi(IC.shield, 'rgba(88,152,212,0.12)', sky,   '<span id="k-lid-ordenados">—</span>','Ordenados', 'ofícios permanentes')}
+        ${_kpi(IC.book,   'rgba(212,168,67,0.12)', amber, '<span id="k-lid-seminario">—</span>','Seminaristas','em formação teológica')}
       </div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px">
         ${_mod(IC.users,  'rgba(74,156,245,0.12)', sky,    'Nomeados',          'Funções temporárias do Conselho',          'conselho-nomeados')}
