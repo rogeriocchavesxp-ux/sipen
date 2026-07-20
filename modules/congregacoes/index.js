@@ -537,6 +537,7 @@ function renderCongView(cong){
           ${_roleCard("Pastor Responsável",cong.lideranca.pastor_responsavel||null,"cong-hdr-pastor")}
           ${_roleCard("Supervisor",le.supervisao||null,"cong-hdr-supervisor")}
           ${_roleCard("Tesoureiro",le.tesoureiro||null,"cong-hdr-tesoureiro")}
+          ${_roleCard("Mesa Administrativa",(le.mesa_administrativa||[]).length?`${(le.mesa_administrativa||[]).length} membros`:null,"cong-hdr-mesa")}
         </div>
       </div>
     </div>
@@ -567,10 +568,12 @@ function renderCongView(cong){
       const pastor     = rows.find(n => /pastor/i.test(n.cargo));
       const supervisor = rows.find(n => n.funcao_lider === 'supervisor');
       const tesoureiro = rows.find(n => /tesourei/i.test(n.cargo));
+      const mesa       = rows.filter(n => /mesa/i.test(n.cargo) || /mesa/i.test(n.funcao_lider||''));
 
       if (pastor     && !cong.lideranca.pastor_responsavel) upd('cong-hdr-pastor',     pastor.nome);
       if (supervisor && !le.supervisao)                     upd('cong-hdr-supervisor', supervisor.nome);
       if (tesoureiro && !le.tesoureiro)                     upd('cong-hdr-tesoureiro', tesoureiro.nome);
+      if (mesa.length && !(le.mesa_administrativa||[]).length) upd('cong-hdr-mesa', `${mesa.length} membro${mesa.length>1?'s':''}`);
     } catch {}
   })();
 }
