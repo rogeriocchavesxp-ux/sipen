@@ -1525,11 +1525,16 @@ function fmtD(d) {
     if (!sec) return;
     const isFinanceiro = cat === "Financeiro";
     const isAgendProg  = cat === "Agendamentos" && _PROG_SUBS_INT.has(sub);
+    const isPauta      = sub === "Pauta de Reunião";
     sec.style.display             = isFinanceiro ? "" : "none";
     if (agSec)    agSec.style.display    = isAgendProg ? "" : "none";
     if (pagSec)   pagSec.style.display   = (isFinanceiro && sub === "Solicitação de pagamento") ? "flex" : "none";
     if (reimbSec) reimbSec.style.display = (isFinanceiro && sub === "Reembolso")               ? "flex" : "none";
     if (isFinanceiro) _toggleFormaPagamento();
+    const localRow = document.getElementById("dem-f-local-row");
+    const respRow  = document.getElementById("dem-f-resp-row");
+    if (localRow) localRow.style.display = isPauta ? "none" : "";
+    if (respRow)  respRow.style.display  = isPauta ? "none" : "";
   }
 
   function _toggleFormaPagamento() {
