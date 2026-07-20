@@ -179,8 +179,8 @@
   function _linhaLider(r) {
     const area = r.area || r.orgao || '';
     const sub  = r.suborgao ? ` <span class="csub">› ${r.suborgao}</span>` : '';
-    return `<tr>
-      <td class="tx1b" style="padding-left:20px">${r.nome}</td>
+    return `<tr style="cursor:pointer" onclick="nomEditarRegistro('${r.id}')" title="Clique para editar">
+      <td class="tx1b" style="padding-left:20px">${r.nome || '—'}</td>
       <td><span style="color:var(--tx3);font-size:10.5px">${area}</span>${sub}</td>
       <td style="text-align:right;white-space:nowrap;color:var(--sky);font-weight:600;font-size:11px">${r.cargo || ''}</td>
     </tr>`;
@@ -188,8 +188,8 @@
 
   function _linhaMembro(r) {
     const sub = r.suborgao ? ` <span class="csub">· ${r.suborgao}</span>` : '';
-    return `<tr>
-      <td class="tx1b" style="padding-left:20px">${r.nome}${sub}</td>
+    return `<tr style="cursor:pointer" onclick="nomEditarRegistro('${r.id}')" title="Clique para editar">
+      <td class="tx1b" style="padding-left:20px">${r.nome || '—'}${sub}</td>
       <td style="text-align:right;white-space:nowrap;font-size:11px">${r.cargo || ''}</td>
     </tr>`;
   }
@@ -602,6 +602,65 @@
     }
   }
 
+  async function nomEditarRegistro(id) {
+    const r = _rows.find(x => String(x.id) === String(id));
+    if (!r) return;
+
+    nomNovoRegistro(); // abre o modal vazio
+
+    // Ajusta título e adiciona id oculto
+    const modal = _el('nom-modal');
+    const titleEl = modal?.querySelector('div[style*="font-weight:700"]');
+    if (titleEl) titleEl.textContent = 'Editar Registro de Nomeação';
+
+    const hid = document.createElement('input');
+    hid.type = 'hidden'; hid.id = 'nom-f-edit-id'; hid.value = id;
+    modal?.appendChild(hid);
+
+    // Preenche campos simples
+    const sv = (eid, val) => { const e = _el(eid); if (e && val != null) e.value = val; };
+    sv('nom-f-ano',    r.ano || _anoAtivo);
+    sv('nom-f-nome',   r.nome || '');
+    sv('nom-f-cargo',  r.cargo || '');
+    sv('nom-f-inicio', r.data_inicio || '');
+    sv('nom-f-fim',    r.data_fim || '');
+    sv('nom-f-ata',    r.ata_origem || '');
+    sv('nom-f-obs',    r.obs || '');
+    if (_el('nom-f-nome-pid')) _el('nom-f-nome-pid').value = r.pessoa_id || '';
+
+    // Tipo de nomeação + campos condicionais
+    sv('nom-f-tipo', r.tipo_nomeacao || '');
+    nomMostrarCampos();
+    if (r.funcao_lider) sv('nom-f-funcao', r.funcao_lider);
+
+    // Categoria + Orgão (assíncrono)
+    const CAT_MAP = { ministerio:'ministerio', sociedade:'sociedade', departamento:'departamento', congregacao:'congregacao' };
+    const cat = CAT_MAP[r.orgao_tipo] || '';
+    if (cat) {
+      sv('nom-f-categoria', cat);
+      await nomCarregarOrgaos();
+      const orgSel = _el('nom-f-orgao-sel');
+      const orgNome = (r.orgao || r.area || '').toLowerCase();
+      if (orgSel && orgNome) {
+        for (const opt of orgSel.options) {
+          const n = (opt.getAttribute('data-nome') || opt.textContent).toLowerCase();
+          if (n === orgNome) { orgSel.value = opt.value; break; }
+        }
+        await nomCarregarSetores();
+        if (r.suborgao) {
+          const subSel = _el('nom-f-suborgao-sel');
+          const subNome = r.suborgao.toLowerCase();
+          if (subSel) {
+            for (const opt of subSel.options) {
+              const n = (opt.getAttribute('data-nome') || opt.textContent).toLowerCase();
+              if (n === subNome) { subSel.value = opt.value; break; }
+            }
+          }
+        }
+      }
+    }
+  }
+
   function nomMostrarCampos() {
     const tipo = (_el('nom-f-tipo') || {}).value;
     const fDiv = _el('nom-f-funcao-div');
@@ -754,15 +813,22 @@
     };
     Object.keys(payload).forEach(k => { if (payload[k] === null || payload[k] === '') delete payload[k]; });
 
+    const editId = (_el('nom-f-edit-id') || {}).value || null;
     try {
-      const res = await fetch(`${apiBaseUrl()}/rest/v1/nomeados`, {
-        method:  'POST',
-        headers: { ...apiHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body:    JSON.stringify(payload),
-      });
+      const res = editId
+        ? await fetch(`${apiBaseUrl()}/rest/v1/nomeados?id=eq.${editId}`, {
+            method:  'PATCH',
+            headers: { ...apiHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+            body:    JSON.stringify(payload),
+          })
+        : await fetch(`${apiBaseUrl()}/rest/v1/nomeados`, {
+            method:  'POST',
+            headers: { ...apiHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+            body:    JSON.stringify(payload),
+          });
       if (!res.ok) throw new Error(await res.text());
       _el('nom-modal')?.remove();
-      T('Nomeação salva', `${nome} foi adicionado(a) com sucesso.`);
+      T(editId ? 'Nomeação atualizada' : 'Nomeação salva', `${nome} foi ${editId ? 'atualizado(a)' : 'adicionado(a)'} com sucesso.`);
       carregarNomeados();
     } catch (e) {
       T('Erro ao salvar', e.message);
@@ -1142,6 +1208,7 @@
   window.nomExportarExcel    = nomExportarExcel;
   window.nomMenuExportar     = nomMenuExportar;
   window.nomNovoRegistro     = nomNovoRegistro;
+  window.nomEditarRegistro   = nomEditarRegistro;
   window.nomMostrarCampos    = nomMostrarCampos;
   window.nomCarregarOrgaos   = nomCarregarOrgaos;
   window.nomCarregarSetores  = nomCarregarSetores;
