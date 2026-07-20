@@ -536,7 +536,7 @@ function renderCongView(cong){
         <div>
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:6px">Mesa Administrativa</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            ${_roleCard("Líder Responsável",cong.lideranca.pastor_responsavel||null,"cong-hdr-pastor")}
+            ${_roleCard("Coordenador",cong.lideranca.pastor_responsavel||null,"cong-hdr-pastor")}
             ${_roleCard("Supervisor",le.supervisao||null,"cong-hdr-supervisor")}
             ${_roleCard("Tesoureiro",le.tesoureiro||null,"cong-hdr-tesoureiro")}
           </div>
@@ -2047,7 +2047,7 @@ function renderTab_adm_cong(cong, el){
           <div><label style="${_lbStyle}">Localização</label><input id="cong-adm-local" value="${escapeHtml(cong.identificacao.localizacao||"")}" style="${_inpStyle}" ${podeEd?"":" disabled"}></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-          <div><label style="${_lbStyle}">Líder Responsável</label><input id="cong-adm-pastor" value="${escapeHtml(cong.lideranca.pastor_responsavel||"")}" style="${_inpStyle}" ${podeEd?"":" disabled"}></div>
+          <div><label style="${_lbStyle}">Coordenador</label><input id="cong-adm-pastor" value="${escapeHtml(cong.lideranca.pastor_responsavel||"")}" style="${_inpStyle}" ${podeEd?"":" disabled"}></div>
           <div><label style="${_lbStyle}">Supervisor</label><input id="cong-adm-super" value="${escapeHtml((cong.lideranca_estruturada||{}).supervisao||"")}" style="${_inpStyle}" ${podeEd?"":" disabled"}></div>
           <div><label style="${_lbStyle}">Tesoureiro</label><input id="cong-adm-tes" value="${escapeHtml((cong.lideranca_estruturada||{}).tesoureiro||"")}" style="${_inpStyle}" ${podeEd?"":" disabled"}></div>
         </div>
