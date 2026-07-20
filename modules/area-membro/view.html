@@ -6,7 +6,7 @@
         <div class="hero-ttl" id="area-saudacao">Bem-vindo!</div>
         <div class="hero-dsc">Suas atividades, escalas, solicitações e avisos</div>
       </div>
-      <div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Solicitação</button></div>
+      <div class="hero-act"></div>
     </div>
     <div class="bnav" style="--mc:var(--gr)">
       <div class="bni" onclick="go('area-dash')">Início</div>
@@ -106,7 +106,7 @@
       <div class="bni" onclick="go('area-dem')">Solicitações</div>
     </div>
     <div class="ct">
-      <div class="alr alr-w"><div class="alr-i">ℹ</div><div>Esta seção exibe os próximos eventos confirmados da igreja. Para solicitar um agendamento ou espaço, use <strong>+ Nova Solicitação</strong> no painel principal.</div></div>
+      <div class="alr alr-w"><div class="alr-i">ℹ</div><div>Esta seção exibe os próximos eventos confirmados da igreja. Para solicitar um agendamento ou espaço, use o botão <strong>+ Nova Tarefa</strong> no canto superior direito.</div></div>
       <div class="card">
         <div class="ctit">Próximos Eventos <span class="cact" onclick="go('agenda-confirmados')">ver todos →</span></div>
         <div id="area-agenda-list"><div style="color:var(--tx3);font-size:11.5px;padding:16px 0">Carregando eventos...</div></div>
@@ -116,7 +116,6 @@
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
           <button class="tbt" onclick="go('agenda-confirmados')">📅 Eventos Confirmados</button>
           <button class="tbt" onclick="go('agenda-calendario')">🗓 Calendário Geral</button>
-          <button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Solicitar Agendamento</button>
         </div>
       </div>
     </div>
@@ -140,7 +139,7 @@
       <div class="bni" onclick="go('area-dem')">Solicitações</div>
     </div>
     <div class="ct">
-      <div class="alr alr-w"><div class="alr-i">ℹ</div><div>Veja abaixo os ministérios ativos da IPPenha. Para participar de um ministério, entre em contato com o líder responsável ou solicite via <strong>+ Nova Solicitação</strong>.</div></div>
+      <div class="alr alr-w"><div class="alr-i">ℹ</div><div>Veja abaixo os ministérios ativos da IPPenha. Para participar de um ministério, entre em contato com o líder responsável ou use o botão <strong>+ Nova Tarefa</strong> no canto superior direito.</div></div>
       <div class="g2">
         <div class="card">
           <div class="ctit">Ministérios Ativos</div>
@@ -170,7 +169,6 @@
             <button class="tbt" onclick="go('min-esc')">📅 Escalas de Serviço</button>
             <button class="tbt" onclick="go('min-prog')">📋 Programações</button>
             <button class="tbt" onclick="go('min-vol')">🙌 Voluntários</button>
-            <button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Solicitar inclusão em Ministério</button>
           </div>
         </div>
       </div>
@@ -214,7 +212,6 @@
             <button class="tbt" onclick="go('pgs-lista')">⌂ Ver todos os PGs</button>
             <button class="tbt" onclick="go('pgs-estudos')">📖 Material de Estudo</button>
             <button class="tbt" onclick="go('pgs-oracao')">🙏 Pedidos de Oração</button>
-            <button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Solicitar participação em PG</button>
           </div>
         </div>
       </div>
@@ -231,7 +228,6 @@
       </div>
       <div class="hero-act">
         <button class="tbt" onclick="go('area-dash')">← Voltar</button>
-        <button class="tbt pri" onclick="abrirModalNovaDemanda()" style="margin-left:8px">+ Nova Solicitação</button>
       </div>
     </div>
     <div class="bnav" style="--mc:var(--gr)">

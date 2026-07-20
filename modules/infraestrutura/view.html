@@ -4,7 +4,6 @@
       <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Infraestrutura e Conservação</div><div class="hero-dsc">Gestão de ordens de serviço, limpeza, patrimônio e solicitações operacionais</div></div>
       <div class="hero-act" style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="tbt" onclick="infraLinkPublico()" title="Link público para abertura de chamados">🌐 Link Público</button>
-        <button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova OS</button>
       </div>
     </div>
     <div class="bnav" style="--mc:var(--amber)">
@@ -60,7 +59,7 @@
   <!-- ════ DEMANDAS ════════════════════════ -->
 
   <div class="view" id="v-infra-demandas">
-    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🛠</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Solicitações e Demandas</div><div class="hero-dsc">Demandas do módulo Infraestrutura e Conservação — manutenção, limpeza, patrimônio e operações</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🛠</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Solicitações e Demandas</div><div class="hero-dsc">Demandas do módulo Infraestrutura e Conservação — manutenção, limpeza, patrimônio e operações</div></div><div class="hero-act"></div></div>
     <div class="bnav" style="--mc:var(--amber)">
       <div class="bni" onclick="go('infra-dash')">Dashboard</div>
       <div class="bni" onclick="go('infra-man')">Manutenção</div>
@@ -103,7 +102,7 @@
   <!-- INFRAESTRUTURA: DEMANDAS DE INFRAESTRUTURA (aba filtrada) -->
 
   <div class="view" id="v-infra-demandas-infra">
-    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🛠</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Demandas de Infraestrutura</div><div class="hero-dsc">Demandas direcionadas ao módulo Infraestrutura e Conservação</div></div><div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova Demanda</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🛠</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Demandas de Infraestrutura</div><div class="hero-dsc">Demandas direcionadas ao módulo Infraestrutura e Conservação</div></div><div class="hero-act"></div></div>
     <div class="bnav" style="--mc:var(--amber)">
       <div class="bni" onclick="go('infra-dash')">Dashboard</div>
       <div class="bni" onclick="go('infra-man')">Manutenção</div>
@@ -149,7 +148,7 @@
         <div class="hero-ttl">Manutenção</div>
         <div class="hero-dsc">Ordens de serviço e manutenções preventivas e corretivas</div>
       </div>
-      <div class="hero-act"><button class="tbt pri" onclick="abrirModalNovaDemanda()">+ Nova OS</button></div>
+      <div class="hero-act"></div>
     </div>
     <div class="bnav" style="--mc:var(--amber)">
       <div class="bni" onclick="go('infra-dash')">Dashboard</div>
@@ -224,7 +223,7 @@
   <!-- AUDITORIA / LOGS -->
 
   <div class="view" id="v-infra-lim">
-    <div class="hero"><div class="hero-ic" style="background:var(--amberbg)">🧹</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Limpeza e Conservação</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova OS</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:var(--amberbg)">🧹</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Limpeza e Conservação</div></div><div class="hero-act"></div></div>
     <div class="bnav" style="--mc:var(--amber)">
       <div class="bni" onclick="go('infra-dash')">Dashboard</div>
       <div class="bni" onclick="go('infra-man')">Manutenção</div>
@@ -238,7 +237,7 @@
   </div>
 
   <div class="view" id="v-infra-sol">
-    <div class="hero"><div class="hero-ic" style="background:var(--amberbg)">📝</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Solicitações Operacionais</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('DEMANDAS')">+ Nova Solicitação</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:var(--amberbg)">📝</div><div><div class="hero-lbl">Infraestrutura e Conservação</div><div class="hero-ttl">Solicitações Operacionais</div></div><div class="hero-act"></div></div>
     <div class="bnav" style="--mc:var(--amber)">
       <div class="bni" onclick="go('infra-dash')">Dashboard</div>
       <div class="bni" onclick="go('infra-man')">Manutenção</div>
