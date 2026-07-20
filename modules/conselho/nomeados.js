@@ -474,7 +474,7 @@
 
   /* ── Novo Registro ────────────────────────────────────────── */
 
-  function nomNovoRegistro() {
+  function nomNovoRegistro(opts) {
     let modal = _el('nom-modal');
     if (!modal) {
       modal = document.createElement('div');
@@ -529,6 +529,7 @@
                 <option value="ministerio">Ministério</option>
                 <option value="sociedade">Sociedade Interna</option>
                 <option value="departamento">Departamento</option>
+                <option value="congregacao">Congregação</option>
               </select>
             </div>
 
@@ -538,7 +539,7 @@
             </div>
 
             <div style="grid-column:1/-1">
-              <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Área / Ministério / Sociedade <span style="color:var(--rose)">*</span></label>
+              <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Área / Ministério / Sociedade / Congregação <span style="color:var(--rose)">*</span></label>
               <select id="nom-f-orgao-sel" onchange="nomCarregarSetores()" disabled style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none;cursor:pointer">
                 <option value="">— Selecione uma Categoria Institucional primeiro —</option>
               </select>
@@ -579,6 +580,25 @@
           <button onclick="nomSalvarRegistro()" style="background:var(--gr);border:none;border-radius:6px;padding:8px 16px;color:#fff;font-weight:600;cursor:pointer">💾 Salvar</button>
         </div>
       </div>`;
+
+    // Pré-preenchimento via opts = { categoria, orgaoId }
+    if (opts?.categoria) {
+      const catSel = _el('nom-f-categoria');
+      if (catSel) {
+        catSel.value = opts.categoria;
+        nomCarregarOrgaos().then(() => {
+          if (opts.orgaoId) {
+            const orgSel = _el('nom-f-orgao-sel');
+            if (orgSel) {
+              orgSel.value = String(opts.orgaoId);
+              const opt = orgSel.options[orgSel.selectedIndex];
+              const nomHid = _el('nom-f-orgao-nome');
+              if (nomHid) nomHid.value = opt?.getAttribute('data-nome') || opt?.textContent || '';
+            }
+          }
+        });
+      }
+    }
   }
 
   function nomMostrarCampos() {
@@ -625,6 +645,9 @@
         if (r.ok) items = await r.json();
       } else if (cat === 'departamento') {
         const r = await fetch(`${apiBaseUrl()}/rest/v1/dept_administrativos?select=id,nome&order=nome.asc`, { headers: apiHeaders() });
+        if (r.ok) items = await r.json();
+      } else if (cat === 'congregacao') {
+        const r = await fetch(`${apiBaseUrl()}/rest/v1/congregacoes?deleted_at=is.null&select=id,nome&order=nome.asc`, { headers: apiHeaders() });
         if (r.ok) items = await r.json();
       }
 

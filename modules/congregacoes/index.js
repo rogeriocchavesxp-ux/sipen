@@ -1015,6 +1015,12 @@ function renderTab_lideranca(cong, el){
 
   el.innerHTML=`
     <div style="margin-top:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:700;color:var(--tx2)">Liderança da Congregação</div>
+        ${typeof nomNovoRegistro==='function'
+          ? `<button class="tbt pri" onclick="nomNovoRegistro({categoria:'congregacao',orgaoId:'${cong.id}'})">+ Novo Nomeado</button>`
+          : ''}
+      </div>
       <div class="card">
         <div class="ctit">Estrutura de Liderança</div>
         ${temEstrutura ? [
