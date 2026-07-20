@@ -3312,6 +3312,127 @@
 
   if(typeof VIEW_AUTOLOAD!=='undefined'){
     VIEW_AUTOLOAD['min-min']={fn: minMinLoad};
+    VIEW_AUTOLOAD['min-soc']={fn: minSocLoad};
   }
+
+  /* ══ SOCIEDADES INTERNAS ════════════════════════════════════ */
+
+  const _SOC_LIST = [
+    { sigla:'UPH', nome:'União Presbiteriana de Homens',       orgao:'UPH – União Presbiteriana de Homens',       ic:'👨' },
+    { sigla:'SAF', nome:'Sociedade Auxiliadora Feminina',      orgao:'SAF – Sociedade Auxiliadora Feminina',      ic:'👩' },
+    { sigla:'UMP', nome:'União da Mocidade Presbiteriana',     orgao:'UMP – União da Mocidade Presbiteriana',     ic:'🔥' },
+    { sigla:'UPA', nome:'União Presbiteriana de Adolescentes', orgao:'UPA – União Presbiteriana de Adolescentes', ic:'🌟' },
+    { sigla:'UCP', nome:'União das Crianças Presbiterianas',   orgao:'UCP – União das Crianças Presbiterianas',   ic:'👶' },
+  ];
+
+  async function sbMinSocBuild() {
+    const el = document.getElementById('sb-min-sociedades');
+    if (!el) return;
+    el.innerHTML = '<div class="sdiv"></div>' + _SOC_LIST.map(s =>
+      `<div class="si" data-soc="${s.sigla}" onclick="window._sbSocSigla='${s.sigla}';go('min-soc')">${s.ic} ${s.sigla}</div>`
+    ).join('');
+  }
+
+  function _socMostrarLista() {
+    const lista   = document.getElementById('min-soc-painel-lista');
+    const detalhe = document.getElementById('min-soc-painel-detalhe');
+    const ttl     = document.getElementById('min-soc-hero-ttl');
+    const dsc     = document.getElementById('min-soc-hero-dsc');
+    const act     = document.getElementById('min-soc-hero-act');
+    if (ttl) ttl.textContent = 'Sociedades Internas';
+    if (dsc) dsc.textContent = 'UPH, SAF, UMP, UPA, UCP — grupos organizados da IPPenha';
+    if (act) act.innerHTML = '';
+    if (detalhe) detalhe.style.display = 'none';
+    if (!lista) return;
+    lista.style.display = '';
+    lista.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+        ${_SOC_LIST.map(s => `
+          <div class="card" style="cursor:pointer" onclick="minSocAbrir('${s.sigla}')">
+            <div style="font-size:28px;margin-bottom:8px">${s.ic}</div>
+            <div style="font-size:14px;font-weight:700;color:var(--tx1);margin-bottom:3px">${s.sigla}</div>
+            <div style="font-size:11px;color:var(--tx3)">${s.nome}</div>
+          </div>`).join('')}
+      </div>`;
+    document.querySelectorAll('#sb-min-sociedades .si').forEach(e => e.classList.remove('on'));
+  }
+
+  async function minSocAbrir(sigla) {
+    const soc = _SOC_LIST.find(s => s.sigla === sigla);
+    if (!soc) { _socMostrarLista(); return; }
+
+    const lista   = document.getElementById('min-soc-painel-lista');
+    const detalhe = document.getElementById('min-soc-painel-detalhe');
+    const ttl     = document.getElementById('min-soc-hero-ttl');
+    const dsc     = document.getElementById('min-soc-hero-dsc');
+    const act     = document.getElementById('min-soc-hero-act');
+
+    if (lista) lista.style.display = 'none';
+    if (detalhe) { detalhe.style.display = ''; detalhe.innerHTML = '<div style="color:var(--tx3);font-size:12px">Carregando...</div>'; }
+    if (ttl) ttl.textContent = `${soc.sigla} — ${soc.nome}`;
+    if (dsc) dsc.textContent = 'Sociedade Interna da IPPenha';
+    if (act) act.innerHTML = `<button class="tbt" onclick="minSocVoltarLista()">← Todas as Sociedades</button>`;
+
+    document.querySelectorAll('#sb-min-sociedades .si').forEach(el => {
+      el.classList.toggle('on', el.dataset.soc === sigla);
+    });
+
+    try {
+      const url = `${SUPABASE_URL}/rest/v1/nomeados?orgao_tipo=eq.sociedade&orgao=eq.${encodeURIComponent(soc.orgao)}&deleted_at=is.null&select=nome,cargo,tipo_nomeacao,data_inicio,data_fim&order=tipo_nomeacao.asc,cargo.asc`;
+      const r = await fetch(url, { headers: _hdr() });
+      const rows = r.ok ? await r.json() : [];
+
+      const lideres  = rows.filter(x => x.tipo_nomeacao === 'lider');
+      const membros  = rows.filter(x => x.tipo_nomeacao !== 'lider');
+
+      const _fmtCargo = c => c || '—';
+      const _linha = (r) => `
+        <tr>
+          <td style="padding:7px 8px;font-size:12px;color:var(--tx1)">${_hEsc(r.nome)}</td>
+          <td style="padding:7px 8px;font-size:11px;color:var(--tx3)">${_fmtCargo(r.cargo)}</td>
+        </tr>`;
+
+      const _tbl = (titulo, itens) => !itens.length ? '' : `
+        <div class="ctit" style="margin-bottom:8px">${titulo}</div>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:20px">
+          <thead>
+            <tr style="border-bottom:1px solid var(--bd1)">
+              <th style="text-align:left;padding:5px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)">Nome</th>
+              <th style="text-align:left;padding:5px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)">Cargo / Função</th>
+            </tr>
+          </thead>
+          <tbody>${itens.map(_linha).join('')}</tbody>
+        </table>`;
+
+      if (detalhe) {
+        detalhe.innerHTML = rows.length
+          ? _tbl('Diretoria / Líderes', lideres) + _tbl('Membros', membros)
+          : `<div class="card"><div style="color:var(--tx3);font-size:12px">Nenhum registro encontrado em Nomeados para ${soc.orgao}.</div></div>`;
+      }
+    } catch(e) {
+      if (detalhe) detalhe.innerHTML = `<div style="color:var(--rose);font-size:12px">Erro: ${e.message}</div>`;
+    }
+  }
+
+  function minSocLoad() {
+    const sigla = window._sbSocSigla || null;
+    window._sbSocSigla = null;
+    if (sigla) minSocAbrir(sigla);
+    else _socMostrarLista();
+  }
+
+  function minSocVoltarLista() {
+    _socMostrarLista();
+  }
+
+  function _hEsc(v) {
+    return String(v ?? '').replace(/[&<>"']/g, s =>
+      ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s]));
+  }
+
+  window.sbMinSocBuild   = sbMinSocBuild;
+  window.minSocLoad      = minSocLoad;
+  window.minSocAbrir     = minSocAbrir;
+  window.minSocVoltarLista = minSocVoltarLista;
 
 })();

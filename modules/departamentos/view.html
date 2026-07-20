@@ -252,55 +252,25 @@
   <div class="view" id="v-min-soc">
     <div class="hero">
       <div class="hero-ic" style="background:var(--violetbg)">🏛</div>
-    <div class="bnav" style="--mc:var(--violet)">
-      <div class="bni" onclick="go('min-dash')">Dashboard</div>
-      <div class="bni" onclick="go('min-min')">Ministérios</div>
-      <div class="bni" onclick="go('min-adm')">Administração</div>
-      <div class="bni" onclick="go('min-esc')">Escalas</div>
-      <div class="bni" onclick="go('min-prog')">Programações</div>
-      <div class="bni" onclick="go('min-lit')">Liturgia</div>
-      <div class="bni" onclick="go('min-vol')">Voluntários</div>
-      <div class="bni" onclick="go('min-whatsapp')">WhatsApp</div>
-    </div>
+      <div class="bnav" style="--mc:var(--violet)">
+        <div class="bni" onclick="go('min-dash')">Dashboard</div>
+        <div class="bni" onclick="go('min-min')">Ministérios</div>
+        <div class="bni" onclick="go('min-adm')">Administração</div>
+        <div class="bni" onclick="go('min-esc')">Escalas</div>
+        <div class="bni" onclick="go('min-prog')">Programações</div>
+        <div class="bni" onclick="go('min-lit')">Liturgia</div>
+        <div class="bni" onclick="go('min-vol')">Voluntários</div>
+        <div class="bni" onclick="go('min-whatsapp')">WhatsApp</div>
+      </div>
       <div>
         <div class="hero-lbl">Departamentos</div>
-        <div class="hero-ttl">Sociedades Internas</div>
-        <div class="hero-dsc">UPH, SAF, UMP, UPA, UCP — grupos organizados da IPPenha</div>
+        <div class="hero-ttl" id="min-soc-hero-ttl">Sociedades Internas</div>
+        <div class="hero-dsc" id="min-soc-hero-dsc">UPH, SAF, UMP, UPA, UCP — grupos organizados da IPPenha</div>
       </div>
+      <div class="hero-act" id="min-soc-hero-act"></div>
     </div>
-    <div class="ct">
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:20px">
-        <div class="card" style="cursor:default">
-          <div style="font-size:24px;margin-bottom:8px">👩</div>
-          <div style="font-size:13px;font-weight:700;color:var(--tx1)">UPH</div>
-          <div style="font-size:11px;color:var(--tx3)">União Presbiteriana de Homens</div>
-        </div>
-        <div class="card" style="cursor:default">
-          <div style="font-size:24px;margin-bottom:8px">👩‍👧</div>
-          <div style="font-size:13px;font-weight:700;color:var(--tx1)">SAF</div>
-          <div style="font-size:11px;color:var(--tx3)">Sociedade Auxiliadora Feminina</div>
-        </div>
-        <div class="card" style="cursor:default">
-          <div style="font-size:24px;margin-bottom:8px">🔥</div>
-          <div style="font-size:13px;font-weight:700;color:var(--tx1)">UMP</div>
-          <div style="font-size:11px;color:var(--tx3)">União de Mocidade Presbiteriana</div>
-        </div>
-        <div class="card" style="cursor:default">
-          <div style="font-size:24px;margin-bottom:8px">🌟</div>
-          <div style="font-size:13px;font-weight:700;color:var(--tx1)">UPA</div>
-          <div style="font-size:11px;color:var(--tx3)">União Presbiteriana de Adolescentes</div>
-        </div>
-        <div class="card" style="cursor:default">
-          <div style="font-size:24px;margin-bottom:8px">👶</div>
-          <div style="font-size:13px;font-weight:700;color:var(--tx1)">UCP</div>
-          <div style="font-size:11px;color:var(--tx3)">União de Crianças Presbiterianas</div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="ctit">Em desenvolvimento</div>
-        <div style="color:var(--tx3);font-size:12px;padding:8px 0">O módulo completo de Sociedades Internas — com diretoria, membros e atividades — está em implementação.</div>
-      </div>
-    </div>
+    <div class="ct" id="min-soc-painel-lista"></div>
+    <div class="ct" id="min-soc-painel-detalhe" style="display:none"></div>
   </div>
 
   <!-- DEPARTAMENTOS ADMINISTRATIVOS -->
