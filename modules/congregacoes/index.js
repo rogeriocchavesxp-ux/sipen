@@ -569,7 +569,7 @@ function renderCongView(cong){
 
       const coordenador = rows.find(n => n.funcao_lider === 'coordenador' || /coordenador/i.test(n.cargo));
       const supervisor  = rows.find(n => n.funcao_lider === 'supervisor'  || /supervisor/i.test(n.cargo));
-      const tesoureiro  = rows.find(n => /tesourei/i.test(n.cargo));
+      const tesoureiro  = rows.find(n => n.funcao_lider === 'tesoureiro' || /tesourei/i.test(n.cargo));
 
       if (coordenador && !cong.lideranca.pastor_responsavel) upd('cong-hdr-pastor',     coordenador.nome);
       if (supervisor  && !le.supervisao)                     upd('cong-hdr-supervisor', supervisor.nome);
