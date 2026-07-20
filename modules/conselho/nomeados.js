@@ -731,8 +731,8 @@
     if (!cat)     { T('Campo obrigatório', 'Selecione a categoria institucional.');    return; }
     if (!orgaoId) { T('Campo obrigatório', 'Selecione a área, ministério ou sociedade.'); return; }
 
-    const TIPO_MEMBRO_MAP = { ministerio:'ministerio', sociedade:'sociedade', departamento:'outro' };
-    const ORGAO_TIPO_MAP  = { ministerio:'ministerio', sociedade:'sociedade', departamento:'departamento' };
+    const TIPO_MEMBRO_MAP = { ministerio:'ministerio', sociedade:'sociedade', departamento:'outro', congregacao:'congregacao' };
+    const ORGAO_TIPO_MAP  = { ministerio:'ministerio', sociedade:'sociedade', departamento:'departamento', congregacao:'congregacao' };
 
     const payload = {
       nome,
