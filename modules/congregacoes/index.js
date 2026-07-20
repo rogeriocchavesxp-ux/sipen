@@ -536,8 +536,8 @@ function renderCongView(cong){
         <div>
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:6px">Mesa Administrativa</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            ${_roleCard("Coordenador",cong.lideranca.pastor_responsavel||null,"cong-hdr-pastor")}
             ${_roleCard("Supervisor",le.supervisao||null,"cong-hdr-supervisor")}
+            ${_roleCard("Coordenador",cong.lideranca.pastor_responsavel||null,"cong-hdr-pastor")}
             ${_roleCard("Tesoureiro",le.tesoureiro||null,"cong-hdr-tesoureiro")}
           </div>
         </div>
@@ -567,14 +567,13 @@ function renderCongView(cong){
         el.style.color = nome ? 'var(--tx1)' : 'var(--tx3)';
       };
 
-      const pastor     = rows.find(n => /pastor/i.test(n.cargo));
-      const supervisor = rows.find(n => n.funcao_lider === 'supervisor');
-      const tesoureiro = rows.find(n => /tesourei/i.test(n.cargo));
-      const mesa       = rows.filter(n => /mesa/i.test(n.cargo) || /mesa/i.test(n.funcao_lider||''));
+      const coordenador = rows.find(n => n.funcao_lider === 'coordenador' || /coordenador/i.test(n.cargo));
+      const supervisor  = rows.find(n => n.funcao_lider === 'supervisor'  || /supervisor/i.test(n.cargo));
+      const tesoureiro  = rows.find(n => /tesourei/i.test(n.cargo));
 
-      if (pastor     && !cong.lideranca.pastor_responsavel) upd('cong-hdr-pastor',     pastor.nome);
-      if (supervisor && !le.supervisao)                     upd('cong-hdr-supervisor', supervisor.nome);
-      if (tesoureiro && !le.tesoureiro)                     upd('cong-hdr-tesoureiro', tesoureiro.nome);
+      if (coordenador && !cong.lideranca.pastor_responsavel) upd('cong-hdr-pastor',     coordenador.nome);
+      if (supervisor  && !le.supervisao)                     upd('cong-hdr-supervisor', supervisor.nome);
+      if (tesoureiro  && !le.tesoureiro)                     upd('cong-hdr-tesoureiro', tesoureiro.nome);
     } catch {}
   })();
 }
