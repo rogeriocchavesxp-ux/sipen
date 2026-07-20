@@ -377,10 +377,169 @@
     try {
       await _carregarReunioes(true);
       _renderListaReunioes();
+      if (_podeAdmin()) _renderSolicitacoesPauta();
     } catch (e) {
       el.innerHTML = `<div style="padding:16px;color:var(--rose);font-size:12px">Erro: ${_eh(e.message)}</div>`;
     }
   }
+
+  async function _renderSolicitacoesPauta() {
+    const el = _view("pautas-reunioes-content");
+    if (!el) return;
+    let rows = [];
+    try {
+      rows = await _fetchJson(
+        `${_api()}/rest/v1/demandas?area=eq.Conselho&subcategoria=eq.${encodeURIComponent("Pauta de Reunião")}&status=eq.ABERTA&select=id,titulo,descricao,solicitante,data_abertura&order=data_abertura.asc&limit=50`
+      );
+    } catch (_) { return; }
+    if (!rows?.length) return;
+
+    const secHtml = `
+      <div id="pautas-sol-section" style="margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--amber);margin-bottom:8px">
+          ${rows.length} Solicitaç${rows.length > 1 ? "ões" : "ão"} de Pauta Pendente${rows.length > 1 ? "s" : ""}
+        </div>
+        ${rows.map(d => `
+          <div class="card" style="border-left:3px solid var(--amber);margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+              <div style="min-width:0;flex:1">
+                <div style="font-size:13px;font-weight:600;color:var(--tx1)">${_eh(d.titulo)}</div>
+                <div style="font-size:11px;color:var(--tx3);margin-top:2px">Solicitado por: ${_eh(d.solicitante||"—")} · ${_fmtData(d.data_abertura)}</div>
+                ${d.descricao ? `<div style="font-size:11.5px;color:var(--tx2);margin-top:5px;line-height:1.5">${_eh(d.descricao)}</div>` : ""}
+              </div>
+              <div style="display:flex;gap:6px;flex-shrink:0">
+                <button class="tbt pri" onclick="pautasIncluirNaPauta('${_ea(d.id)}','${_ea(d.titulo)}')">Incluir na pauta</button>
+                <button class="tbt" style="color:var(--tx3)" onclick="pautasNaoIncluir('${_ea(d.id)}','${_ea(d.solicitante||"")}')">Não incluir</button>
+              </div>
+            </div>
+          </div>`).join("")}
+      </div>`;
+    el.insertAdjacentHTML("afterbegin", secHtml);
+  }
+
+  window.pautasIncluirNaPauta = function(demandaId, titulo) {
+    _fecharModal();
+    const opts = (_reunioes || [])
+      .filter(r => r.status !== "CANCELADA")
+      .map(r => `<option value="${_ea(r.id)}">${_eh(r.titulo)} — ${_fmtData(r.data_reuniao)}</option>`)
+      .join("");
+    if (!opts) { _toast("Sem reuniões", "Cadastre uma reunião antes de incluir pautas."); return; }
+
+    const overlay = document.createElement("div");
+    overlay.id = "modal-incluir-pauta";
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9900;display:flex;align-items:center;justify-content:center;padding:16px";
+    overlay.innerHTML = `
+      <div style="background:var(--bg2,#212529);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:480px;padding:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <strong style="font-size:14px">Incluir na Pauta</strong>
+          <button onclick="document.getElementById('modal-incluir-pauta').remove()" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button>
+        </div>
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:12px">Assunto: <strong>${_eh(titulo)}</strong></div>
+        <label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);margin-bottom:5px">Selecione a Reunião</label>
+        <select id="sol-reuniao-sel" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;margin-bottom:16px">
+          ${opts}
+        </select>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <button onclick="document.getElementById('modal-incluir-pauta').remove()" style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:8px 14px;color:var(--tx2);cursor:pointer">Cancelar</button>
+          <button class="tbt pri" onclick="_pautasConfirmarInclusao('${_ea(demandaId)}','${_ea(titulo)}')">Confirmar inclusão</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+  };
+
+  window._pautasConfirmarInclusao = async function(demandaId, titulo) {
+    const reuniaoId = document.getElementById("sol-reuniao-sel")?.value;
+    if (!reuniaoId) { _toast("Selecione a reunião", ""); return; }
+    const reuniao = (_reunioes||[]).find(r => r.id === reuniaoId);
+    document.getElementById("modal-incluir-pauta")?.remove();
+    try {
+      const u = _user();
+      const ordem = 0;
+      await _fetchJson(`${_api()}/rest/v1/conselho_pautas`, {
+        method: "POST",
+        headers: _headers({ "Content-Type": "application/json", Prefer: "return=minimal" }),
+        body: JSON.stringify({ titulo, reuniao_id: reuniaoId, status: "PENDENTE", created_by: u?.id||null, ordem }),
+      });
+      await _fetchJson(`${_api()}/rest/v1/demandas?id=eq.${encodeURIComponent(demandaId)}`, {
+        method: "PATCH",
+        headers: _headers({ "Content-Type": "application/json", Prefer: "return=minimal" }),
+        body: JSON.stringify({ status: "CONCLUIDA" }),
+      });
+      const dataReuniao = reuniao ? _fmtDataLonga(reuniao.data_reuniao) : "";
+      await _fetchJson(`${_api()}/rest/v1/demanda_andamentos`, {
+        method: "POST",
+        headers: _headers({ "Content-Type": "application/json", Prefer: "return=minimal" }),
+        body: JSON.stringify({
+          demanda_id: demandaId,
+          usuario_id: u?.id||null,
+          usuario_nome: u?.nome||"",
+          texto: `Sua solicitação de pauta foi apreciada e incluída na ${reuniao?.titulo||"reunião"} agendada para ${dataReuniao}. Agradecemos sua contribuição.`,
+          status_demanda: "CONCLUIDA",
+          automatico: true,
+        }),
+      });
+      _toast("Pauta incluída", `"${titulo}" foi adicionada à reunião.`);
+      document.getElementById("pautas-sol-section")?.remove();
+      _renderSolicitacoesPauta();
+    } catch(e) {
+      _toast("Erro", e.message);
+    }
+  };
+
+  window.pautasNaoIncluir = function(demandaId, solicitante) {
+    _fecharModal();
+    const overlay = document.createElement("div");
+    overlay.id = "modal-nao-incluir";
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9900;display:flex;align-items:center;justify-content:center;padding:16px";
+    overlay.innerHTML = `
+      <div style="background:var(--bg2,#212529);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:480px;padding:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <strong style="font-size:14px">Não incluir na Pauta</strong>
+          <button onclick="document.getElementById('modal-nao-incluir').remove()" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button>
+        </div>
+        <p style="font-size:12px;color:var(--tx2);margin-bottom:12px">
+          Informe o motivo (opcional). Uma mensagem respeitosa será registrada para o solicitante.
+        </p>
+        <textarea id="sol-nao-incluir-obs" rows="3" placeholder="Ex: A pauta desta reunião já está fechada. Sua solicitação poderá ser apreciada em próxima reunião." style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;resize:vertical;margin-bottom:16px;box-sizing:border-box"></textarea>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <button onclick="document.getElementById('modal-nao-incluir').remove()" style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:8px 14px;color:var(--tx2);cursor:pointer">Cancelar</button>
+          <button class="tbt" style="background:var(--rose);color:#fff;border:none" onclick="_pautasConfirmarNaoInclusao('${_ea(demandaId)}','${_ea(solicitante)}')">Confirmar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+  };
+
+  window._pautasConfirmarNaoInclusao = async function(demandaId, solicitante) {
+    const obs = document.getElementById("sol-nao-incluir-obs")?.value?.trim();
+    document.getElementById("modal-nao-incluir")?.remove();
+    try {
+      const u = _user();
+      const nome = solicitante ? `${solicitante}, ` : "";
+      const motivo = obs || "No momento, não será possível incluí-la na pauta das próximas reuniões.";
+      await _fetchJson(`${_api()}/rest/v1/demandas?id=eq.${encodeURIComponent(demandaId)}`, {
+        method: "PATCH",
+        headers: _headers({ "Content-Type": "application/json", Prefer: "return=minimal" }),
+        body: JSON.stringify({ status: "CONCLUIDA" }),
+      });
+      await _fetchJson(`${_api()}/rest/v1/demanda_andamentos`, {
+        method: "POST",
+        headers: _headers({ "Content-Type": "application/json", Prefer: "return=minimal" }),
+        body: JSON.stringify({
+          demanda_id: demandaId,
+          usuario_id: u?.id||null,
+          usuario_nome: u?.nome||"",
+          texto: `Prezado(a) ${nome}sua solicitação foi recebida e apreciada. ${motivo} Agradecemos sua participação.`,
+          status_demanda: "CONCLUIDA",
+          automatico: true,
+        }),
+      });
+      _toast("Solicitação encerrada", "O solicitante foi notificado.");
+      document.getElementById("pautas-sol-section")?.remove();
+      _renderSolicitacoesPauta();
+    } catch(e) {
+      _toast("Erro", e.message);
+    }
+  };
 
   function _renderListaReunioes() {
     const el = _view("pautas-reunioes-content");

@@ -1491,12 +1491,22 @@ function fmtD(d) {
     if (!subEl) return;
     if (cat) {
       const primeiro = cat.subcats[0];
+      let subcats = cat.subcats;
+      // Adicionar "Pauta de Reunião" apenas para membros do Conselho e Admin
+      if (catNome === "Conselho") {
+        const perfil = typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL?.perfil : "";
+        if (perfil === "CONSELHO" || perfil === "ADMINISTRADOR_GERAL") {
+          subcats = [...subcats, "Pauta de Reunião"];
+        }
+      }
       if (primeiro && typeof primeiro === "object" && primeiro.grupo) {
-        subEl.innerHTML = cat.subcats.map(g =>
-          `<optgroup label="${g.grupo}">${g.itens.map(s => `<option value="${s}">${s}</option>`).join("")}</optgroup>`
+        subEl.innerHTML = subcats.map(g =>
+          typeof g === "object"
+            ? `<optgroup label="${g.grupo}">${g.itens.map(s => `<option value="${s}">${s}</option>`).join("")}</optgroup>`
+            : `<option value="${g}">${g}</option>`
         ).join("");
       } else {
-        subEl.innerHTML = cat.subcats.map(s => `<option value="${s}">${s}</option>`).join("");
+        subEl.innerHTML = subcats.map(s => `<option value="${s}">${s}</option>`).join("");
       }
     } else {
       subEl.innerHTML = `<option value="">Selecione a categoria primeiro</option>`;
