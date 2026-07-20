@@ -494,12 +494,12 @@ function renderCongView(cong){
   const podeEd=_podeEditar(id);
   const rec=cong.recursos||{};
   const _svgPerson=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gr)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
-  const _roleCard=(label,nome)=>`
+  const _roleCard=(label,nome,spanId)=>`
     <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(58,170,92,.07);border:1px solid rgba(58,170,92,.15);border-radius:8px;flex:1;min-width:140px">
       <div style="width:30px;height:30px;border-radius:50%;background:rgba(58,170,92,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0">${_svgPerson}</div>
       <div style="min-width:0;flex:1">
         <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:2px">${label}</div>
-        <div style="font-size:12px;font-weight:600;color:${nome?"var(--tx1)":"var(--tx3)"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nome?escapeHtml(nome):"—"}</div>
+        <div id="${spanId||''}" style="font-size:12px;font-weight:600;color:${nome?"var(--tx1)":"var(--tx3)"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nome?escapeHtml(nome):"—"}</div>
       </div>
     </div>`;
 
@@ -534,9 +534,9 @@ function renderCongView(cong){
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          ${_roleCard("Pastor Responsável",cong.lideranca.pastor_responsavel||null)}
-          ${_roleCard("Supervisor",le.supervisao||null)}
-          ${_roleCard("Tesoureiro",le.tesoureiro||null)}
+          ${_roleCard("Pastor Responsável",cong.lideranca.pastor_responsavel||null,"cong-hdr-pastor")}
+          ${_roleCard("Supervisor",le.supervisao||null,"cong-hdr-supervisor")}
+          ${_roleCard("Tesoureiro",le.tesoureiro||null,"cong-hdr-tesoureiro")}
         </div>
       </div>
     </div>
@@ -546,6 +546,33 @@ function renderCongView(cong){
     <div id="cong-tab-content"></div>
   </div>`;
   _renderCongTabContent(_congTabAtual, cong);
+
+  // Preencher cabeçalho automaticamente com nomeados da congregação
+  (async () => {
+    try {
+      const anoAtivo = new Date().getFullYear();
+      const nomeCong = encodeURIComponent(cong.identificacao.nome);
+      const url = `${apiBaseUrl()}/rest/v1/nomeados?orgao_tipo=eq.congregacao&orgao=ilike.${nomeCong}&deleted_at=is.null&ano=eq.${anoAtivo}&select=nome,funcao_lider,cargo`;
+      const r = await fetch(url, { headers: apiHeaders() });
+      if (!r.ok) return;
+      const rows = await r.json();
+
+      const upd = (elId, nome) => {
+        const el = document.getElementById(elId);
+        if (!el) return;
+        el.textContent = nome || '—';
+        el.style.color = nome ? 'var(--tx1)' : 'var(--tx3)';
+      };
+
+      const pastor     = rows.find(n => /pastor/i.test(n.cargo));
+      const supervisor = rows.find(n => n.funcao_lider === 'supervisor');
+      const tesoureiro = rows.find(n => /tesourei/i.test(n.cargo));
+
+      if (pastor     && !cong.lideranca.pastor_responsavel) upd('cong-hdr-pastor',     pastor.nome);
+      if (supervisor && !le.supervisao)                     upd('cong-hdr-supervisor', supervisor.nome);
+      if (tesoureiro && !le.tesoureiro)                     upd('cong-hdr-tesoureiro', tesoureiro.nome);
+    } catch {}
+  })();
 }
 
 function switchCongTabNamed(tabId){
