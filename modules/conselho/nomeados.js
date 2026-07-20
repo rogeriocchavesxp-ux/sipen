@@ -702,8 +702,13 @@
         const r = await fetch(`${apiBaseUrl()}/rest/v1/ministerios?ativo=eq.true&select=id,nome&order=nome.asc`, { headers: apiHeaders() });
         if (r.ok) items = await r.json();
       } else if (cat === 'sociedade') {
-        const r = await fetch(`${apiBaseUrl()}/rest/v1/ministerios?ativo=eq.true&tipo=eq.SOCIEDADE&select=id,nome&order=nome.asc`, { headers: apiHeaders() });
-        if (r.ok) items = await r.json();
+        items = [
+          { id: 'SAF – Sociedade Auxiliadora Feminina',      nome: 'SAF – Sociedade Auxiliadora Feminina' },
+          { id: 'UCP – União das Crianças Presbiterianas',   nome: 'UCP – União das Crianças Presbiterianas' },
+          { id: 'UMP – União da Mocidade Presbiteriana',     nome: 'UMP – União da Mocidade Presbiteriana' },
+          { id: 'UPA – União Presbiteriana de Adolescentes', nome: 'UPA – União Presbiteriana de Adolescentes' },
+          { id: 'UPH – União Presbiteriana de Homens',       nome: 'UPH – União Presbiteriana de Homens' },
+        ];
       } else if (cat === 'departamento') {
         const r = await fetch(`${apiBaseUrl()}/rest/v1/dept_administrativos?select=id,nome&order=nome.asc`, { headers: apiHeaders() });
         if (r.ok) items = await r.json();
