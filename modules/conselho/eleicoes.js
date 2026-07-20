@@ -379,6 +379,10 @@
           ${field("Data de Abertura", `<input id="ep-abertura" type="date" style="${inp}" value="${p.data_abertura||""}">`)}
           ${field("Data de Encerramento", `<input id="ep-encerramento" type="date" style="${inp}" value="${p.data_encerramento||""}">`)}
         </div>
+        <div style="display:grid;grid-template-columns:180px 1fr;gap:12px;margin-top:14px;align-items:start">
+          ${field("Limite de indicações por tipo", `<input id="ep-max-ind" type="number" style="${inp}" value="${p.max_indicacoes??5}" min="1" max="20">`, true)}
+          <div style="padding-top:22px;font-size:11.5px;color:var(--tx3);line-height:1.5">Número máximo de nomes que cada membro pode indicar por tipo de ofício (presbítero e diácono separadamente).</div>
+        </div>
         ${field("Slug (URL pública)", `
           <div style="display:flex;gap:8px;align-items:center">
             <input id="ep-slug" style="${inp}" value="${_esc(p.slug||"")}" placeholder="Ex: eleicao-2026">
@@ -443,6 +447,7 @@
       data_abertura:     document.getElementById("ep-abertura")?.value    || null,
       data_encerramento: document.getElementById("ep-encerramento")?.value || null,
       slug,
+      max_indicacoes:    parseInt(document.getElementById("ep-max-ind")?.value) || 5,
       atualizado_em:     new Date().toISOString(),
     };
 

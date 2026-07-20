@@ -699,6 +699,7 @@ function addItem() {
 function renderItems() {
   const c = document.getElementById("items-ct");
   if (c) c.innerHTML = curItems.map(it => itemHTML(it)).join("");
+  syncAddBtn();
 }
 
 function itemHTML(it) {
@@ -729,16 +730,30 @@ function itemHTML(it) {
 }
 
 window.addItemUI = function() {
+  const lim = processo.max_indicacoes ?? 5;
+  if (curItems.length >= lim) return;
   addItem();
   const c = document.getElementById("items-ct");
   if (c) c.insertAdjacentHTML("beforeend", itemHTML(curItems[curItems.length - 1]));
   syncRm();
+  syncAddBtn();
 };
 window.rmItem = function(id) {
   curItems.splice(curItems.findIndex(i => i.id === id), 1);
   document.getElementById(`nom-${id}`)?.remove();
   syncRm();
+  syncAddBtn();
 };
+function syncAddBtn() {
+  const lim = processo.max_indicacoes ?? 5;
+  const btn = document.querySelector(".add-nom-btn");
+  if (!btn) return;
+  const reached = curItems.length >= lim;
+  btn.disabled = reached;
+  btn.style.opacity = reached ? ".4" : "";
+  btn.style.cursor  = reached ? "not-allowed" : "";
+  btn.title = reached ? `Limite de ${lim} indicações por tipo atingido` : "";
+}
 function syncRm() {
   curItems.forEach((it, idx) => {
     const num = document.querySelector(`#nom-${it.id} .nom-num`);
