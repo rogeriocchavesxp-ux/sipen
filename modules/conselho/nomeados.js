@@ -635,7 +635,7 @@
     if (r.funcao_lider) sv('nom-f-funcao', r.funcao_lider);
 
     // Categoria + Orgão (assíncrono)
-    const CAT_MAP = { ministerio:'ministerio', sociedade:'sociedade', departamento:'departamento', congregacao:'congregacao' };
+    const CAT_MAP = { ministerio:'ministerio', sociedade:'sociedade', comissao:'departamento', congregacao:'congregacao' };
     const cat = CAT_MAP[r.orgao_tipo] || '';
     if (cat) {
       sv('nom-f-categoria', cat);
@@ -798,7 +798,7 @@
     if (!orgaoId) { T('Campo obrigatório', 'Selecione a área, ministério ou sociedade.'); return; }
 
     const TIPO_MEMBRO_MAP = { ministerio:'ministerio', sociedade:'sociedade', departamento:'outro', congregacao:'congregacao' };
-    const ORGAO_TIPO_MAP  = { ministerio:'ministerio', sociedade:'sociedade', departamento:'departamento', congregacao:'congregacao' };
+    const ORGAO_TIPO_MAP  = { ministerio:'ministerio', sociedade:'sociedade', departamento:'comissao', congregacao:'congregacao' };
 
     const payload = {
       nome,
