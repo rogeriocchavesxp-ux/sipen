@@ -533,11 +533,13 @@ function renderCongView(cong){
             ${cong.identificacao.localizacao?`<div style="font-size:11.5px;color:var(--tx3);margin-top:2px">${escapeHtml(cong.identificacao.localizacao)}</div>`:""}
           </div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          ${_roleCard("Líder Responsável",cong.lideranca.pastor_responsavel||null,"cong-hdr-pastor")}
-          ${_roleCard("Supervisor",le.supervisao||null,"cong-hdr-supervisor")}
-          ${_roleCard("Tesoureiro",le.tesoureiro||null,"cong-hdr-tesoureiro")}
-          ${_roleCard("Mesa Administrativa",(le.mesa_administrativa||[]).length?`${(le.mesa_administrativa||[]).length} membros`:null,"cong-hdr-mesa")}
+        <div>
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:6px">Mesa Administrativa</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${_roleCard("Líder Responsável",cong.lideranca.pastor_responsavel||null,"cong-hdr-pastor")}
+            ${_roleCard("Supervisor",le.supervisao||null,"cong-hdr-supervisor")}
+            ${_roleCard("Tesoureiro",le.tesoureiro||null,"cong-hdr-tesoureiro")}
+          </div>
         </div>
       </div>
     </div>
@@ -573,7 +575,6 @@ function renderCongView(cong){
       if (pastor     && !cong.lideranca.pastor_responsavel) upd('cong-hdr-pastor',     pastor.nome);
       if (supervisor && !le.supervisao)                     upd('cong-hdr-supervisor', supervisor.nome);
       if (tesoureiro && !le.tesoureiro)                     upd('cong-hdr-tesoureiro', tesoureiro.nome);
-      if (mesa.length && !(le.mesa_administrativa||[]).length) upd('cong-hdr-mesa', `${mesa.length} membro${mesa.length>1?'s':''}`);
     } catch {}
   })();
 }
