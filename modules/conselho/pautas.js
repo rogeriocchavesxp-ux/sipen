@@ -514,16 +514,16 @@
   window.pautasIncluirNaPauta = function(demandaId, titulo) {
     _fecharModal();
     const opts = (_reunioes || [])
-      .filter(r => r.status !== "CANCELADA")
+      .filter(r => r.status === "AGENDADA")
       .map(r => `<option value="${_ea(r.id)}">${_eh(r.titulo)} — ${_fmtData(r.data_reuniao)}</option>`)
       .join("");
-    if (!opts) { _toast("Sem reuniões", "Cadastre uma reunião antes de incluir pautas."); return; }
+    if (!opts) { _toast("Sem reuniões agendadas", "Não há reuniões agendadas para incluir pautas."); return; }
 
     const overlay = document.createElement("div");
     overlay.id = "modal-incluir-pauta";
     overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9900;display:flex;align-items:center;justify-content:center;padding:16px";
     overlay.innerHTML = `
-      <div style="background:var(--bg2,#212529);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:480px;padding:24px">
+      <div style="background:var(--bg-surface);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:480px;padding:24px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
           <strong style="font-size:14px">Incluir na Pauta</strong>
           <button onclick="document.getElementById('modal-incluir-pauta').remove()" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button>
