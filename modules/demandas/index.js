@@ -77,6 +77,7 @@
     "Em Andamento": { bg:"rgba(139,111,212,.12)", cl:"var(--violet)"},
     "Aguardando Pagamento": { bg:"rgba(234,179,8,.12)", cl:"var(--amber)" },
     "Concluída":    { bg:"rgba(58,170,92,.12)",   cl:"var(--gr)"    },
+    "Pago":         { bg:"rgba(58,170,92,.12)",   cl:"var(--gr)"    },
     "Cancelada":    { bg:"rgba(90,96,104,.15)",   cl:"var(--tx3)"   },
     "Pendente":     { bg:"rgba(224,138,42,.12)",  cl:"var(--amber)" },
   };
@@ -144,6 +145,7 @@
     "Aguardando Pagamento": "AGUARDANDO_PAGAMENTO",
     "Pendente":     "PENDENTE",
     "Concluída":    "CONCLUIDA",
+    "Pago":         "PAGO",
     "Cancelada":    "CANCELADA",
   };
 
@@ -154,8 +156,11 @@
     "AGUARDANDO_PAGAMENTO": "Aguardando Pagamento",
     "PENDENTE":     "Pendente",
     "CONCLUIDA":    "Concluída",
+    "PAGO":         "Pago",
     "CANCELADA":    "Cancelada",
   };
+
+  const _STATUS_FECHADO = ["CONCLUIDA", "PAGO", "CANCELADA"];
 
   function _toDb(st)    { return _STATUS_DB[st]    || st || "ABERTA"; }
   function _toLabel(st) { return _STATUS_LABEL[st] || st || "Aberta"; }
@@ -349,7 +354,7 @@ function fmtD(d) {
   function _atualizarBadge() {
     const badge = document.querySelector("#mw-dem .mbadge");
     if (!badge) return;
-    const abertas = _cache.filter(r => !["Concluída","Cancelada"].includes(r.status)).length;
+    const abertas = _cache.filter(r => !_STATUS_FECHADO.includes(_toDb(r.status))).length;
     badge.textContent = abertas || "";
     badge.style.display = abertas ? "" : "none";
   }
@@ -369,7 +374,7 @@ function fmtD(d) {
     const analise  = _cache.filter(r => r.status === "Em Análise");
     const andando  = _cache.filter(r => r.status === "Em Andamento");
     const pendente = _cache.filter(r => r.status === "Pendente");
-    const concl    = _cache.filter(r => r.status === "Concluída");
+    const concl    = _cache.filter(r => ["Concluída","Pago"].includes(r.status));
     const cancel   = _cache.filter(r => r.status === "Cancelada");
     const urgentes = _cache.filter(r => ["Alta","Urgente"].includes(r.prioridade) && ATIVAS.includes(r.status));
     const total    = _cache.filter(r => ATIVAS.includes(r.status));
@@ -512,7 +517,8 @@ function fmtD(d) {
         if (k === "prioridade" && v === "Alta") {
           rows = rows.filter(r => ["Alta","Urgente"].includes(r.prioridade));
         } else if (k === "status") {
-          rows = rows.filter(r => _toDb(String(r[k]||"")) === _toDb(String(v)));
+          const vArr = Array.isArray(v) ? v.map(_toDb) : [_toDb(String(v))];
+          rows = rows.filter(r => vArr.includes(_toDb(String(r[k]||""))));
         } else if (Array.isArray(v)) {
           rows = rows.filter(r => v.includes(String(r[k]||"")));
         } else {
@@ -839,7 +845,7 @@ function fmtD(d) {
     return dem?.area === "Financeiro"
       && _temFinancialData(dem)
       && _podeAprovarPagamento()
-      && !["Concluída", "Cancelada", "Aguardando Pagamento"].includes(_toLabel(dem.status));
+      && !_STATUS_FECHADO.includes(_toDb(dem.status)) && _toLabel(dem.status) !== "Aguardando Pagamento";
   }
 
   window.demAprovarParaPagamento = async function(demandaId) {
@@ -1115,7 +1121,10 @@ function fmtD(d) {
             <div class="ctit">Alterar Status</div>
             <div style="font-size:11px;color:var(--tx3);margin-bottom:10px">Status atual: ${pillStatus(dem.status)}</div>
             <div style="display:flex;flex-direction:column;gap:6px" id="dem-status-btns-${id}">
-              ${[["Aberta","Aberta"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],["Concluída","Concluída"],["Cancelada","Cancelada"]].map(([st, label]) => `
+              ${(dem.area === "Financeiro"
+                  ? [["Aberta","Aberta"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],["Aguardando Pagamento","Aguardando Pagamento"],["Pago","Pago"],["Cancelada","Cancelada"]]
+                  : [["Aberta","Aberta"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],["Concluída","Concluída"],["Cancelada","Cancelada"]]
+                ).map(([st, label]) => `
                 <button
                   data-demid="${id}"
                   data-status="${st}"
@@ -1234,7 +1243,7 @@ function fmtD(d) {
     }
     try {
       const dbPayload = { status: _toDb(novoStatus) };
-      if (novoStatus === "Concluída") {
+      if (novoStatus === "Concluída" || novoStatus === "Pago") {
         dbPayload.data_conclusao = new Date().toISOString().split("T")[0];
       }
       await apiWrite("update", "DEMANDAS", { _row: id, ...dbPayload });
@@ -2216,8 +2225,8 @@ function fmtD(d) {
 
     const nAbertas = rows.filter(r => ["ABERTA","EM_ANALISE"].includes(_toDb(r.status))).length;
     const nAnd     = rows.filter(r => _toDb(r.status) === "EM_ANDAMENTO").length;
-    const nPri     = rows.filter(r => ["Alta","Urgente"].includes(r.prioridade) && _toDb(r.status) !== "CONCLUIDA").length;
-    const nConc    = rows.filter(r => _toDb(r.status) === "CONCLUIDA" && (r.data_conclusao||r.criado_em||"").startsWith(mes)).length;
+    const nPri     = rows.filter(r => ["Alta","Urgente"].includes(r.prioridade) && !_STATUS_FECHADO.includes(_toDb(r.status))).length;
+    const nConc    = rows.filter(r => ["CONCLUIDA","PAGO"].includes(_toDb(r.status)) && (r.data_conclusao||r.criado_em||"").startsWith(mes)).length;
 
     const sv = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     sv("infra-kpi-abertas", nAbertas);
@@ -2245,7 +2254,7 @@ function fmtD(d) {
     if (elAb) elAb.innerHTML = abList.length ? _miniTable(abList) : _empty("Nenhuma demanda em aberto.");
 
     const elPri = document.getElementById("infra-dash-prioridade");
-    const priList = rows.filter(r => ["Alta","Urgente"].includes(r.prioridade) && _toDb(r.status) !== "CONCLUIDA")
+    const priList = rows.filter(r => ["Alta","Urgente"].includes(r.prioridade) && !_STATUS_FECHADO.includes(_toDb(r.status)))
                         .sort((a,b) => (b.criado_em||"").localeCompare(a.criado_em||"")).slice(0, 6);
     if (elPri) elPri.innerHTML = priList.length ? _miniTable(priList) : _empty("Nenhuma demanda prioritária.");
   }
@@ -2291,7 +2300,7 @@ function fmtD(d) {
       "dem-todas":   () => renderLista("dem-todas-content"),
       "dem-analise": () => renderLista("dem-analise-content", { status:"EM_ANALISE" }),
       "dem-and":     () => renderLista("dem-and-content",     { status:"EM_ANDAMENTO" }),
-      "dem-conc":    () => renderLista("dem-conc-content",    { status:"CONCLUIDA" }),
+      "dem-conc":    () => renderLista("dem-conc-content",    { status:["CONCLUIDA","PAGO"] }),
       "dem-pri":               () => renderLista("dem-pri-content",             { prioridade:"Alta" }),
       "dem-hist":              () => renderLista("dem-hist-content"),
       "admin-demandas":        () => _admRender(),
@@ -2376,6 +2385,7 @@ function fmtD(d) {
                 <option value="ABERTA">Aberto</option>
                 <option value="EM_ANDAMENTO">Em Acompanhamento</option>
                 <option value="CONCLUIDA">Resolvido</option>
+                <option value="PAGO">Pago</option>
                 <option value="CANCELADA">Arquivado</option>
               </select>
             </div>
@@ -2492,9 +2502,9 @@ function fmtD(d) {
       }
 
       const PRIO_COR = {Urgente:'#ef4444',Alta:'#e97316',Média:'#d4a843',Baixa:'#2ab5c0'};
-      const ST_LBL   = {ABERTA:'Aberto',EM_ANALISE:'Em Análise',EM_ANDAMENTO:'Em Acompanhamento',PENDENTE:'Pendente',CONCLUIDA:'Resolvido',CANCELADA:'Arquivado'};
-      const ST_BG    = {ABERTA:'rgba(239,68,68,.1)',EM_ANALISE:'rgba(212,168,67,.1)',EM_ANDAMENTO:'rgba(74,156,245,.1)',CONCLUIDA:'rgba(58,170,92,.1)',CANCELADA:'rgba(100,100,100,.1)'};
-      const ST_CL    = {ABERTA:'#ef4444',EM_ANALISE:'#d4a843',EM_ANDAMENTO:'#4a9cf5',CONCLUIDA:'#3aaa5c',CANCELADA:'#888'};
+      const ST_LBL   = {ABERTA:'Aberto',EM_ANALISE:'Em Análise',EM_ANDAMENTO:'Em Acompanhamento',PENDENTE:'Pendente',CONCLUIDA:'Resolvido',PAGO:'Pago',CANCELADA:'Arquivado'};
+      const ST_BG    = {ABERTA:'rgba(239,68,68,.1)',EM_ANALISE:'rgba(212,168,67,.1)',EM_ANDAMENTO:'rgba(74,156,245,.1)',CONCLUIDA:'rgba(58,170,92,.1)',PAGO:'rgba(58,170,92,.1)',CANCELADA:'rgba(100,100,100,.1)'};
+      const ST_CL    = {ABERTA:'#ef4444',EM_ANALISE:'#d4a843',EM_ANDAMENTO:'#4a9cf5',CONCLUIDA:'#3aaa5c',PAGO:'#3aaa5c',CANCELADA:'#888'};
 
       el.innerHTML = `
         <div style="overflow-x:auto">
@@ -2578,7 +2588,8 @@ function fmtD(d) {
         if (k === "prioridade" && v === "Alta") {
           rows = rows.filter(r => ["Alta","Urgente"].includes(r.prioridade));
         } else if (k === "status") {
-          rows = rows.filter(r => _toDb(String(r[k]||"")) === _toDb(String(v)));
+          const vArr2 = Array.isArray(v) ? v.map(_toDb) : [_toDb(String(v))];
+          rows = rows.filter(r => vArr2.includes(_toDb(String(r[k]||""))));
         } else if (Array.isArray(v)) {
           rows = rows.filter(r => v.includes(String(r[k]||"")));
         } else {
@@ -2721,7 +2732,7 @@ function fmtD(d) {
     const abaLabel = {"Financeiro":"Financeiras","Administrativo":"Secretaria","Infraestrutura e Conservação":"Infraestrutura","":"Todas"}[_finFiltro] ?? (_finFiltro||"Todas");
     const fmtVal   = v => v?.valor!=null ? `R$ ${parseFloat(v.valor).toLocaleString("pt-BR",{minimumFractionDigits:2})}` : "—";
 
-    const ST_COR  = {"Aberta":"#1565c0","Em Análise":"#f57f17","Em Andamento":"#6a1b9a","Concluída":"#2e7d32","Cancelada":"#555","Pendente":"#e65100","Aguardando Pagamento":"#f57f17"};
+    const ST_COR  = {"Aberta":"#1565c0","Em Análise":"#f57f17","Em Andamento":"#6a1b9a","Concluída":"#2e7d32","Pago":"#2e7d32","Cancelada":"#555","Pendente":"#e65100","Aguardando Pagamento":"#f57f17"};
     const PR_COR  = {"Urgente":"#c62828","Alta":"#c62828","Média":"#f57f17","Baixa":"#2e7d32"};
 
     const linhas = rows.map((r, i) => {
@@ -2902,6 +2913,7 @@ ${linhas}
                     ${["Aberta","Em Análise","Em Andamento","Pendente","Concluída","Cancelada"].map(s =>
                       `<option${stLabel===s?" selected":""}>${s}</option>`
                     ).join("")}
+                    ${stLabel==="Pago" ? `<option selected>Pago</option>` : ""}
                   </select>
                 </td>
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${fmtD(r.data_abertura||r.criado_em)}</td>
