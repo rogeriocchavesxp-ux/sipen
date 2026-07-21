@@ -1279,7 +1279,8 @@ async function _confirmarEnvioSenha() {
 
   try {
     const fnUrl = (SUPABASE_URL || "").trim().replace(/\/$/, "") + "/functions/v1/send-reset-link";
-    const jwt   = JSON.parse(localStorage.getItem("sipen_session") || "{}")?.access_token;
+    const { data: sess } = await getSupabase().auth.getSession();
+    const jwt   = sess?.session?.access_token;
     const res   = await fetch(fnUrl, {
       method:  "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${jwt}` },
