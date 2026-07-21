@@ -1210,12 +1210,36 @@ async function carregarUsuarios() {
   }
 }
 
-async function enviarLinkSenha(u) {
-  if (!u.email) { showToast("Usuário sem e-mail cadastrado.", "err"); return; }
+function enviarLinkSenha(u) {
+  if (!u.email)    { showToast("Usuário sem e-mail cadastrado.", "err"); return; }
   if (!u.telefone) { showToast("Usuário sem telefone cadastrado.", "err"); return; }
 
-  const btn = document.querySelector(`[onclick*="enviarLinkSenha"][onclick*="${u.id}"]`);
-  if (btn) { btn.disabled = true; btn.textContent = "⏳"; }
+  // Modal de confirmação
+  const overlay = document.createElement("div");
+  overlay.id = "modal-confirmar-senha";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9900;display:flex;align-items:center;justify-content:center;padding:16px";
+  overlay.innerHTML = `
+    <div style="background:var(--bg-surface);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:420px;padding:24px">
+      <div style="font-size:14px;font-weight:600;color:var(--tx1);margin-bottom:10px">Enviar link de senha</div>
+      <div style="font-size:12px;color:var(--tx2);margin-bottom:6px">
+        Um link de redefinição de senha será enviado por WhatsApp para:
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:8px;padding:10px 14px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:600;color:var(--tx1)">${escapeHtml(nomePropio(u.nome) || u.email)}</div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:3px">${escapeHtml(u.telefone)} · ${escapeHtml(u.email)}</div>
+      </div>
+      <div style="font-size:10.5px;color:var(--tx3);margin-bottom:16px">O link expira em 1 hora.</div>
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button onclick="document.getElementById('modal-confirmar-senha').remove()" style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:6px;padding:7px 14px;color:var(--tx2);cursor:pointer;font-size:12px">Cancelar</button>
+        <button id="btn-confirmar-envio-senha" onclick="_confirmarEnvioSenha(${safeJsonForHtml(u)})" style="background:var(--gr);border:none;border-radius:6px;padding:7px 16px;color:#fff;cursor:pointer;font-size:12px;font-weight:600">Enviar por WhatsApp</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function _confirmarEnvioSenha(u) {
+  const confirmBtn = document.getElementById("btn-confirmar-envio-senha");
+  if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = "Enviando..."; }
 
   try {
     const fnUrl = (SUPABASE_URL || "").trim().replace(/\/$/, "") + "/functions/v1/send-reset-link";
@@ -1226,28 +1250,40 @@ async function enviarLinkSenha(u) {
       body:    JSON.stringify({ email: u.email, telefone: u.telefone, nome: u.nome }),
     });
     const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || "Erro ao gerar link");
 
-    if (!res.ok || !data.ok) {
-      throw new Error(data.error || "Erro ao gerar link");
-    }
+    document.getElementById("modal-confirmar-senha")?.remove();
 
     if (data.whatsapp_sent) {
-      showToast("Link enviado por WhatsApp com sucesso.", "ok");
+      // Modal de sucesso
+      const ok = document.createElement("div");
+      ok.id = "modal-senha-ok";
+      ok.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9900;display:flex;align-items:center;justify-content:center;padding:16px";
+      ok.innerHTML = `
+        <div style="background:var(--bg-surface);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:380px;padding:28px;text-align:center">
+          <div style="font-size:32px;margin-bottom:10px">✅</div>
+          <div style="font-size:14px;font-weight:600;color:var(--tx1);margin-bottom:6px">Link enviado com sucesso!</div>
+          <div style="font-size:12px;color:var(--tx3);margin-bottom:20px">
+            O link de redefinição de senha foi enviado por WhatsApp para <strong>${escapeHtml(nomePropio(u.nome) || u.email)}</strong>.
+          </div>
+          <button onclick="document.getElementById('modal-senha-ok').remove()" style="background:var(--gr);border:none;border-radius:6px;padding:8px 24px;color:#fff;cursor:pointer;font-size:12px;font-weight:600">OK</button>
+        </div>`;
+      document.body.appendChild(ok);
     } else {
-      // Fallback: exibe o link para copiar manualmente
-      const overlay = document.createElement("div");
-      overlay.id = "modal-link-senha";
-      overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9900;display:flex;align-items:center;justify-content:center;padding:16px";
-      overlay.innerHTML = `
+      // Fallback: exibe link para copiar
+      const fb = document.createElement("div");
+      fb.id = "modal-link-senha";
+      fb.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9900;display:flex;align-items:center;justify-content:center;padding:16px";
+      fb.innerHTML = `
         <div style="background:var(--bg-surface);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:500px;padding:24px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-            <strong style="font-size:14px;color:var(--tx1)">🔑 Link de Redefinição de Senha</strong>
+            <strong style="font-size:14px;color:var(--tx1)">Link de Redefinição de Senha</strong>
             <button onclick="document.getElementById('modal-link-senha').remove()" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button>
           </div>
           <div style="font-size:12px;color:var(--tx3);margin-bottom:12px">
-            O WhatsApp não pôde ser enviado automaticamente. Copie o link abaixo e envie manualmente para <strong>${escapeHtml(u.nome || u.email)}</strong>.
+            O WhatsApp não pôde ser enviado automaticamente. Copie o link abaixo e envie manualmente para <strong>${escapeHtml(nomePropio(u.nome) || u.email)}</strong>.
           </div>
-          <div style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--tx2);word-break:break-all;margin-bottom:14px;line-height:1.6">
+          <div style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--tx2);word-break:break-all;margin-bottom:10px;line-height:1.6">
             ${escapeHtml(data.link)}
           </div>
           <div style="font-size:10px;color:var(--tx3);margin-bottom:14px">⚠️ Este link expira em 1 hora.</div>
@@ -1256,12 +1292,11 @@ async function enviarLinkSenha(u) {
             <button onclick="navigator.clipboard.writeText('${data.link.replace(/'/g,"\\'")}').then(()=>showToast('Link copiado!','ok'))" style="background:var(--gr);border:none;border-radius:6px;padding:7px 16px;color:#fff;cursor:pointer;font-size:12px;font-weight:600">Copiar link</button>
           </div>
         </div>`;
-      document.body.appendChild(overlay);
+      document.body.appendChild(fb);
     }
   } catch(e) {
+    document.getElementById("modal-confirmar-senha")?.remove();
     showToast("Erro: " + e.message, "err");
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = "🔑 Senha"; }
   }
 }
 
