@@ -1731,7 +1731,7 @@ function fmtD(d) {
       if (temValor) {
         valorEl.readOnly         = true;
         valorEl.value            = soma.toFixed(2);
-        valorEl.style.background = "var(--bg3,#2b2f33)";
+        valorEl.style.background = "var(--bg-card)";
         valorEl.style.color      = "var(--tx3)";
       } else if (!isBoleto) {
         valorEl.readOnly         = false;

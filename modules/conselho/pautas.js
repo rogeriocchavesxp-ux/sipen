@@ -586,7 +586,7 @@
     overlay.id = "modal-nao-incluir";
     overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9900;display:flex;align-items:center;justify-content:center;padding:16px";
     overlay.innerHTML = `
-      <div style="background:var(--bg2,#212529);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:480px;padding:24px">
+      <div style="background:var(--bg-surface);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:480px;padding:24px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
           <strong style="font-size:14px">Não incluir na Pauta</strong>
           <button onclick="document.getElementById('modal-nao-incluir').remove()" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button>
@@ -1073,7 +1073,7 @@
       const ultimo  = idxFull === _pautas.length - 1;
 
       const btnStyle = (dis) =>
-        `background:var(--bg3,#2b2f33);border:1px solid var(--bd2);border-radius:4px;` +
+        `background:var(--bg-card);border:1px solid var(--bd2);border-radius:4px;` +
         `color:var(--tx2);font-size:11px;width:26px;height:26px;cursor:${dis?"default":"pointer"};` +
         `display:flex;align-items:center;justify-content:center;opacity:${dis?.35:1};line-height:1;` +
         `padding:0;font-family:inherit`;
@@ -1168,7 +1168,7 @@
     const podeEd = _podeEditar(p);
     const podeSec = _podeSecretaria();
     overlay.innerHTML = `
-      <div style="background:var(--bg2,#212529);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;padding:24px">
+      <div style="background:var(--bg-surface);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;padding:24px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;gap:12px">
           <div>
             <div style="font-size:11px;color:var(--tx3);margin-bottom:4px">${_eh(p.categoria)}</div>
@@ -1180,7 +1180,7 @@
           <button onclick="pautasFecharModal()" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer;flex-shrink:0">✕</button>
         </div>
         ${p.encaminhamento ? `<div class="sr"><span class="sl">Encaminhamento</span><span class="sv">${_eh(p.encaminhamento)}</span></div>` : ""}
-        ${p.sintese ? `<div style="margin-top:12px"><div style="font-size:11px;color:var(--tx3);margin-bottom:6px">Síntese</div><div style="font-size:13px;color:var(--tx2);line-height:1.6;background:var(--bg3,#2b2f33);border-radius:6px;padding:10px 12px">${_eh(p.sintese)}</div></div>` : ""}
+        ${p.sintese ? `<div style="margin-top:12px"><div style="font-size:11px;color:var(--tx3);margin-bottom:6px">Síntese</div><div style="font-size:13px;color:var(--tx2);line-height:1.6;background:var(--bg-card);border-radius:6px;padding:10px 12px">${_eh(p.sintese)}</div></div>` : ""}
         ${p.observacoes ? `<div style="margin-top:10px"><div style="font-size:11px;color:var(--tx3);margin-bottom:4px">Observações</div><div style="font-size:12px;color:var(--tx3);line-height:1.5">${_eh(p.observacoes)}</div></div>` : ""}
         ${p.arquivo_path ? `<div style="margin-top:12px"><button onclick="pautasAbrirAnexo('${_ea(p.arquivo_path)}')" style="display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--blue);background:rgba(74,156,245,.08);border:1px solid rgba(74,156,245,.25);border-radius:7px;padding:7px 12px;cursor:pointer">📎 ${_eh(p.arquivo_nome || "Abrir documento")}</button></div>` : ""}
         ${p.deliberacao ? `<div style="margin-top:14px;padding:12px;background:rgba(58,170,92,.08);border:1px solid rgba(58,170,92,.2);border-radius:8px">
@@ -1189,7 +1189,7 @@
           ${p.responsaveis ? `<div style="font-size:11px;color:var(--tx3);margin-top:6px">Responsáveis: ${_eh(p.responsaveis)}</div>` : ""}
           ${p.prazo ? `<div style="font-size:11px;color:var(--tx3)">Prazo: ${_fmtData(p.prazo)}</div>` : ""}
         </div>` : ""}
-        ${(p.pauta_origem_id || p.reuniao_destino_id) ? `<div style="margin-top:14px;padding:10px 12px;background:var(--bg3,#2b2f33);border-radius:7px;border-left:2px solid var(--amber)">
+        ${(p.pauta_origem_id || p.reuniao_destino_id) ? `<div style="margin-top:14px;padding:10px 12px;background:var(--bg-card);border-radius:7px;border-left:2px solid var(--amber)">
           <div style="font-size:10.5px;font-weight:700;color:var(--amber);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px">Tramitação</div>
           ${p.reuniao_origem_id ? `<div style="font-size:12px;color:var(--tx3);margin-bottom:3px">Origem: <span style="color:var(--amber);font-weight:500">${_labelReuniao(p.reuniao_origem_id) || "reunião anterior"}</span></div>` : ""}
           <div style="font-size:12px;color:var(--tx3);margin-bottom:3px">Esta reunião: <span style="color:var(--tx2);font-weight:500">${_eh(_reuniaoAtual?.titulo || "—")}</span></div>
@@ -1218,7 +1218,7 @@
     const catOpts    = CATEGORIAS.map(c => `<option value="${c}" ${(pauta?.categoria || "Geral") === c ? "selected" : ""}>${c}</option>`).join("");
     const statusOpts = Object.entries(STATUS_CFG).map(([k, v]) => `<option value="${k}" ${(pauta?.status || "PENDENTE") === k ? "selected" : ""}>${v.label}</option>`).join("");
     overlay.innerHTML = `
-      <div style="background:var(--bg2,#212529);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;padding:24px;margin:auto">
+      <div style="background:var(--bg-surface);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;padding:24px;margin:auto">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
           <strong style="font-size:15px">${isEdit ? "Editar Item de Pauta" : "Novo Item de Pauta"}</strong>
           <button onclick="pautasFecharModal()" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button>
@@ -1255,7 +1255,7 @@
           <div>
             <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:6px">Documento anexo</label>
             ${pauta?.arquivo_path ? `
-            <div id="mp-anexo-atual" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3,#1a1d21);border:1px solid var(--bd2);border-radius:6px;margin-bottom:8px">
+            <div id="mp-anexo-atual" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;margin-bottom:8px">
               <span style="font-size:18px">📎</span>
               <span style="flex:1;font-size:12px;color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_eh(pauta.arquivo_nome || pauta.arquivo_path.split("/").pop())}</span>
               <button type="button" onclick="pautasRemoverAnexo('${_ea(pauta.id)}')" style="background:none;border:none;color:var(--rose);font-size:12px;cursor:pointer;flex-shrink:0">Remover</button>
@@ -1522,12 +1522,12 @@
     overlay.id = "modal-adiamento";
     overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9900;display:flex;align-items:center;justify-content:center;padding:16px";
     overlay.innerHTML = `
-      <div style="background:var(--bg2,#212529);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:480px;padding:24px">
+      <div style="background:var(--bg-surface);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:480px;padding:24px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
           <strong style="font-size:15px">Adiar para outra reunião</strong>
           <button onclick="pautasFecharModal()" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button>
         </div>
-        <div style="font-size:12px;color:var(--tx3);margin-bottom:16px;padding:8px 10px;background:var(--bg3,#2b2f33);border-radius:6px">${_eh(p.titulo)}</div>
+        <div style="font-size:12px;color:var(--tx3);margin-bottom:16px;padding:8px 10px;background:var(--bg-card);border-radius:6px">${_eh(p.titulo)}</div>
         <div style="display:flex;flex-direction:column;gap:12px">
           <div>
             <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:6px">Reunião destino *</label>
@@ -1643,7 +1643,7 @@
     overlay.id = "modal-delib";
     overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9800;display:flex;align-items:center;justify-content:center;padding:16px";
     overlay.innerHTML = `
-      <div style="background:var(--bg2,#212529);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:480px;padding:24px">
+      <div style="background:var(--bg-surface);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:480px;padding:24px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
           <strong style="font-size:15px">Registrar Deliberação</strong>
           <button onclick="pautasFecharModal()" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button>

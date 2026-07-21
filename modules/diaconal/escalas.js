@@ -225,7 +225,7 @@
 
   function _escalaHtml() {
     const podeEd  = _podeEditar();
-    const inputSt = `style="background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2,#adb5bd);font-size:11px;padding:5px 9px"`;
+    const inputSt = `style="background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:11px;padding:5px 9px"`;
     return `
       <div class="kpis c4" id="diac-esc-kpis"></div>
 
@@ -240,14 +240,14 @@
         </div>
 
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px;padding-top:8px;border-top:1px solid var(--bd1)">
-          <select id="diac-esc-fil-prog"  onchange="diacEscalaFiltrar()" ${inputSt} style="flex:1;min-width:150px;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2,#adb5bd);font-size:11px;padding:5px 9px">
+          <select id="diac-esc-fil-prog"  onchange="diacEscalaFiltrar()" ${inputSt} style="flex:1;min-width:150px;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:11px;padding:5px 9px">
             <option value="">Todas programações</option>
           </select>
-          <select id="diac-esc-fil-posto" onchange="diacEscalaFiltrar()" ${inputSt} style="flex:1;min-width:150px;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2,#adb5bd);font-size:11px;padding:5px 9px">
+          <select id="diac-esc-fil-posto" onchange="diacEscalaFiltrar()" ${inputSt} style="flex:1;min-width:150px;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:11px;padding:5px 9px">
             <option value="">Todos os postos</option>
           </select>
           <input id="diac-esc-fil-diac" type="text" placeholder="Buscar diácono..." oninput="diacEscalaFiltrar()"
-            style="flex:1;min-width:130px;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11px;padding:5px 9px">
+            style="flex:1;min-width:130px;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11px;padding:5px 9px">
         </div>
 
         <div style="overflow-x:auto">
@@ -307,7 +307,7 @@
   window.diacEscalaFecharModal = _fecharModal;
 
   function _selStyle() {
-    return `style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px"`;
+    return `style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px"`;
   }
   function _inpStyle() { return _selStyle(); }
   function _lbl(t)     { return `<label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:4px">${t}</label>`; }
@@ -334,7 +334,7 @@
     const overlay = document.createElement("div");
     overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9800;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto";
     overlay.innerHTML = `
-      <div style="background:var(--bg2,#212529);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:24px;margin:auto">
+      <div style="background:var(--bg-surface);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:24px;margin:auto">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
           <strong style="font-size:15px">${isEdit ? "Editar Lançamento" : "Novo Lançamento"}</strong>
           <button onclick="diacEscalaFecharModal()" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer;line-height:1">✕</button>
@@ -348,7 +348,7 @@
           ${_field(_lbl("Diácono *") + `<select id="de-diac" ${_selStyle()}>${_buildDiaconoOpts(item?.diacono_id)}</select>`)}
           ${_field(_lbl("Posto *") + `<select id="de-posto" ${_selStyle()}><option value="">Selecionar...</option>${postoOpts}</select>`)}
           ${_field(_lbl("Troca / Pagamento / Substituição") + `<input id="de-troca" type="text" value="${_ea(item?.troca_obs || "")}" placeholder="Ex: troca com Diác. João Silva" ${_inpStyle()}>`)}
-          ${_field(_lbl("Observações internas") + `<textarea id="de-obs" rows="2" ${_selStyle().replace("<","<").replace("input","textarea")} style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px;resize:vertical">${_eh(item?.obs || "")}</textarea>`)}
+          ${_field(_lbl("Observações internas") + `<textarea id="de-obs" rows="2" ${_selStyle().replace("<","<").replace("input","textarea")} style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px;resize:vertical">${_eh(item?.obs || "")}</textarea>`)}
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px">
           <button onclick="diacEscalaFecharModal()" class="btn">Cancelar</button>
