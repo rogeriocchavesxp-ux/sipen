@@ -1158,6 +1158,18 @@ function renderPerfisAcesso() {
   }).join("");
 }
 
+function usrToggleMenu(id) {
+  const target = document.getElementById(id);
+  if (!target) return;
+  const isOpen = target.style.display !== "none";
+  document.querySelectorAll('[id^="usr-menu-"]').forEach(m => { m.style.display = "none"; });
+  if (!isOpen) {
+    target.style.display = "block";
+    const close = (e) => { if (!target.contains(e.target)) { target.style.display = "none"; document.removeEventListener("click", close); } };
+    setTimeout(() => document.addEventListener("click", close), 0);
+  }
+}
+
 async function carregarUsuarios() {
   await carregarPermissoesDB();
   renderPerfisAcesso();
@@ -1185,23 +1197,33 @@ async function carregarUsuarios() {
       return;
     }
 
-    el.innerHTML = rows.map(u => {
-      const perfil  = PERFIS[u.funcao] || { nome: u.funcao || "Sem perfil", icon:"👤", cor:"var(--tx3)" };
+    el.innerHTML = rows.map((u, idx) => {
+      const perfil   = PERFIS[u.funcao] || { nome: u.funcao || "Sem perfil", icon:"👤", cor:"var(--tx3)" };
       const initials = (u.nome || "?").split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
-      const ativo   = u.status === "ativo" || u.status == null;
+      const ativo    = u.status === "ativo" || u.status == null;
+      const menuId   = `usr-menu-${idx}`;
+      const senhaItem = u.email
+        ? `<div onclick="document.getElementById('${menuId}').style.display='none';enviarLinkSenha(${safeJsonForHtml(u)})" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:var(--tx1);cursor:pointer" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">🔑 Enviar senha por WhatsApp</div>`
+        : "";
       return `
         <div class="usr-row">
           <div class="usr-av-sm" style="background:${ativo ? "var(--grd)" : "var(--tx4)"}">${initials}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(u.nome || "—")}</div>
-            <div style="font-size:10px;color:var(--tx3)">${escapeHtml(u.email || u.telefone || "—")}</div>
+            <div style="font-size:12px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(nomePropio(u.nome) || "—")}</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
+              <span style="font-size:9.5px;padding:1px 6px;border-radius:8px;border:1px solid ${perfil.cor}44;color:${perfil.cor};background:${perfil.cor}11">${perfil.icon} ${escapeHtml(perfil.nome)}</span>
+              <span style="font-size:10px;color:var(--tx3)">${escapeHtml(u.email || u.telefone || "—")}</span>
+            </div>
           </div>
-          <span style="font-size:9.5px;padding:2px 7px;border-radius:10px;border:1px solid ${perfil.cor}44;color:${perfil.cor};background:${perfil.cor}11;white-space:nowrap">${perfil.icon} ${escapeHtml(perfil.nome)}</span>
-          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
-            <span style="font-size:9px;padding:2px 7px;border-radius:8px;background:${ativo ? "rgba(58,170,92,0.12)" : "rgba(224,85,85,0.1)"};color:${ativo ? "var(--gr)" : "var(--rose)"}">${ativo ? "✓ Ativo" : "✗ Inativo"}</span>
-            ${u.email ? `<button onclick='enviarLinkSenha(${safeJsonForHtml(u)})' title="Enviar link de redefinição de senha por WhatsApp" style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:10px;padding:3px 8px;cursor:pointer">🔑 Senha</button>` : ""}
-            <button onclick='editarUsuario(${safeJsonForHtml(u)})' style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:10px;padding:3px 8px;cursor:pointer">✏️ Editar</button>
-            <button onclick='revogarAcesso(${JSON.stringify(u.id)},${JSON.stringify(u.nome)})' style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:4px;color:var(--rose);font-size:10px;padding:3px 8px;cursor:pointer">🚫</button>
+          <span style="font-size:9px;padding:2px 7px;border-radius:8px;background:${ativo ? "rgba(58,170,92,0.12)" : "rgba(224,85,85,0.1)"};color:${ativo ? "var(--gr)" : "var(--rose)"};flex-shrink:0">${ativo ? "✓ Ativo" : "✗ Inativo"}</span>
+          <div style="position:relative;flex-shrink:0">
+            <button onclick="usrToggleMenu('${menuId}')" style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:6px;color:var(--tx2);font-size:14px;padding:3px 10px;cursor:pointer;line-height:1">···</button>
+            <div id="${menuId}" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--bg-surface);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:200;min-width:210px;overflow:hidden">
+              ${senhaItem}
+              <div onclick="document.getElementById('${menuId}').style.display='none';editarUsuario(${safeJsonForHtml(u)})" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:var(--tx1);cursor:pointer" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">✏️ Editar</div>
+              <div style="height:1px;background:var(--bd1);margin:2px 0"></div>
+              <div onclick="document.getElementById('${menuId}').style.display='none';revogarAcesso(${JSON.stringify(u.id)},${JSON.stringify(u.nome)})" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:var(--rose);cursor:pointer" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">🚫 Revogar acesso</div>
+            </div>
           </div>
         </div>`;
     }).join("");
