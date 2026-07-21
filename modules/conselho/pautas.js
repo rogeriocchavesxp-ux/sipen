@@ -666,7 +666,6 @@
             ${_podeAdmin() ? `<button class="tbt" onclick="pautasEditarReuniao('${_ea(r.id)}')">Editar</button>` : ""}
           </div>
         </div>
-        ${r.observacoes ? `<div style="font-size:11.5px;color:var(--tx3);margin-top:8px;border-top:1px solid var(--bd1);padding-top:8px">${_eh(r.observacoes)}</div>` : ""}
       </div>`;
     }).join("");
     el.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px">${cards}</div>`;
