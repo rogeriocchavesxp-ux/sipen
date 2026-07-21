@@ -93,45 +93,54 @@ const DEPT_ADM = (function(){
   /* ── Painel: lista de departamentos ─────────────────────── */
 
   function _renderLista(){
-    const lista = document.getElementById("dept-adm-lista");
+    const lista   = document.getElementById("dept-adm-lista");
     const detalhe = document.getElementById("dept-adm-detalhe");
     const heroAct = document.getElementById("dept-adm-hero-act");
     const heroTtl = document.getElementById("dept-adm-titulo");
     const heroDsc = document.getElementById("dept-adm-subtitulo");
     if(!lista) return;
 
-    if(heroTtl) heroTtl.textContent = "Administração";
+    if(heroTtl) heroTtl.textContent = "Administrativos";
     if(heroDsc) heroDsc.textContent = "Secretaria, Tesouraria, Patrimônio, Comunicação, Infraestrutura e Conservação, Jurídico";
-    if(heroAct) heroAct.innerHTML = "";
+    if(heroAct) heroAct.innerHTML = _isAdmin()
+      ? `<button class="tbt pri" onclick="DEPT_ADM.openDeptModal(null)">+ Novo Departamento</button>`
+      : "";
     if(detalhe){ detalhe.style.display="none"; detalhe.innerHTML=""; }
-
-    // Contar membros por dept
-    const countMap = {};
-    for(const d of _depts){ countMap[d.id] = 0; }
 
     lista.style.display = "";
     lista.innerHTML = `
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px">
-        ${CFG.map(cfg => {
-          const dept = _depts.find(d=>d.slug===cfg.slug);
-          if(!dept) return "";
+        ${_depts.map(dept => {
+          const cfg = _cfgBySlug(dept.slug);
+          const ico = cfg ? cfg.ico : "🏢";
+          const cor = cfg ? cfg.cor : "var(--blue)";
+          const desc = dept.descricao || (cfg ? cfg.desc : "");
           return `
-            <div class="card" style="cursor:pointer;transition:box-shadow .15s"
+            <div class="card" style="transition:box-shadow .15s"
               onmouseenter="this.style.boxShadow='0 4px 18px rgba(0,0,0,.14)'"
-              onmouseleave="this.style.boxShadow=''"
-              onclick="DEPT_ADM.abrirDetalhe('${_esc(dept.id)}')">
-              <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-                <div style="width:40px;height:40px;border-radius:10px;background:var(--bg2);border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${cfg.ico}</div>
+              onmouseleave="this.style.boxShadow=''">
+              <div style="cursor:pointer;display:flex;align-items:center;gap:12px;margin-bottom:10px"
+                onclick="DEPT_ADM.abrirDetalhe('${_esc(dept.id)}')">
+                <div style="width:40px;height:40px;border-radius:10px;background:var(--bg2);border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${ico}</div>
                 <div>
                   <div style="font-size:13.5px;font-weight:700;color:var(--tx1)">${_esc(dept.nome)}</div>
-                  <div style="font-size:10.5px;color:var(--tx3);margin-top:2px">${_esc(cfg.desc)}</div>
+                  <div style="font-size:10.5px;color:var(--tx3);margin-top:2px">${_esc(desc)}</div>
                 </div>
               </div>
               <div style="display:flex;justify-content:space-between;align-items:center">
-                <span style="font-size:10px;font-weight:700;color:${cfg.cor};background:var(--bd2);padding:2px 8px;border-radius:20px">
+                <span style="font-size:10px;font-weight:700;color:${cor};background:var(--bd2);padding:2px 8px;border-radius:20px">
                   ${dept.status==="ativo"?"Ativo":"Inativo"}
                 </span>
-                <span style="font-size:11px;color:var(--tx3)">Ver equipe →</span>
+                <span style="display:flex;gap:6px;align-items:center">
+                  <span style="font-size:11px;color:var(--tx3);cursor:pointer"
+                    onclick="DEPT_ADM.abrirDetalhe('${_esc(dept.id)}')">Ver equipe →</span>
+                  ${_isAdmin() ? `
+                    <button class="tbt" style="font-size:10px;padding:2px 8px"
+                      onclick="event.stopPropagation();DEPT_ADM.openDeptModal('${_esc(dept.id)}')">Editar</button>
+                    <button class="tbt" style="font-size:10px;padding:2px 8px;color:var(--rose);border-color:var(--rose)"
+                      onclick="event.stopPropagation();DEPT_ADM.removerDept('${_esc(dept.id)}','${_esc(dept.nome)}')">Remover</button>
+                  ` : ""}
+                </span>
               </div>
             </div>`;
         }).join("")}
@@ -152,6 +161,109 @@ const DEPT_ADM = (function(){
           </div>
         </div>
       </div>`;
+  }
+
+  /* ── CRUD: modal de departamento ────────────────────── */
+
+  function openDeptModal(deptId) {
+    const dept   = deptId ? _deptById(deptId) : null;
+    const isEdit = !!dept;
+    const iStyle = "width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:12px;padding:8px 10px;outline:none;box-sizing:border-box";
+    const lStyle = "display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px";
+
+    let overlay = document.getElementById("dept-crud-modal");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "dept-crud-modal";
+      overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:350;display:flex;align-items:center;justify-content:center";
+      overlay.addEventListener("click", e => { if (e.target === overlay) overlay.remove(); });
+      document.body.appendChild(overlay);
+    }
+
+    overlay.innerHTML = `
+      <div style="width:min(460px,94vw);background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:20px">
+        <div style="display:flex;align-items:center;margin-bottom:16px">
+          <div style="font-size:15px;font-weight:800;color:var(--tx1)">${isEdit ? "Editar" : "Novo"} Departamento</div>
+          <button onclick="document.getElementById('dept-crud-modal').remove()"
+            style="margin-left:auto;background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button>
+        </div>
+        <input type="hidden" id="dcd-id" value="${_esc(deptId || '')}">
+        <div style="margin-bottom:10px">
+          <label style="${lStyle}">Nome <span style="color:var(--rose)">*</span></label>
+          <input id="dcd-nome" type="text" value="${_esc(dept?.nome || '')}"
+            placeholder="Ex: Secretaria" style="${iStyle}">
+        </div>
+        <div style="margin-bottom:10px">
+          <label style="${lStyle}">Descrição</label>
+          <textarea id="dcd-desc" style="${iStyle};min-height:64px;resize:vertical"
+            placeholder="Finalidade ou área de atuação">${_esc(dept?.descricao || '')}</textarea>
+        </div>
+        <div style="margin-bottom:16px">
+          <label style="${lStyle}">Status</label>
+          <select id="dcd-status" style="${iStyle}">
+            <option value="ativo"    ${(!dept || dept.status === "ativo")    ? "selected" : ""}>Ativo</option>
+            <option value="inativo"  ${dept?.status === "inativo"            ? "selected" : ""}>Inativo</option>
+          </select>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <button onclick="document.getElementById('dept-crud-modal').remove()"
+            style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:8px 14px;color:var(--tx2);cursor:pointer;font-size:12px">Cancelar</button>
+          <button id="dcd-btn-salvar" onclick="DEPT_ADM.salvarDept()"
+            style="background:var(--gr);border:none;border-radius:6px;padding:8px 18px;color:#fff;font-weight:600;cursor:pointer;font-size:12px">
+            ${isEdit ? "Salvar" : "Criar"}
+          </button>
+        </div>
+      </div>`;
+
+    overlay.style.display = "flex";
+  }
+
+  async function salvarDept() {
+    const id   = document.getElementById("dcd-id")?.value || null;
+    const nome = (document.getElementById("dcd-nome")?.value || "").trim();
+    const desc = (document.getElementById("dcd-desc")?.value || "").trim() || null;
+    const stat = document.getElementById("dcd-status")?.value || "ativo";
+
+    if (!nome) { if (typeof T === "function") T("Campo obrigatório", "Informe o nome do departamento."); return; }
+
+    const btn = document.getElementById("dcd-btn-salvar");
+    if (btn) { btn.disabled = true; btn.textContent = "Salvando..."; }
+
+    try {
+      if (id) {
+        await _fetch(`dept_administrativos?id=eq.${encodeURIComponent(id)}`, {
+          method: "PATCH",
+          body: JSON.stringify({ nome, descricao: desc, status: stat, updated_at: new Date().toISOString() }),
+        });
+      } else {
+        const slug = nome.toLowerCase()
+          .normalize("NFD").replace(/\p{Diacritic}/gu, "")
+          .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+        await _fetch("dept_administrativos", {
+          method: "POST",
+          body: JSON.stringify({ nome, descricao: desc, status: stat, slug }),
+        });
+      }
+      document.getElementById("dept-crud-modal")?.remove();
+      if (typeof T === "function") T(id ? "Atualizado" : "Criado", `Departamento ${id ? "atualizado" : "criado"} com sucesso.`);
+      _depts = [];
+      await load();
+    } catch (e) {
+      if (btn) { btn.disabled = false; btn.textContent = id ? "Salvar" : "Criar"; }
+      if (typeof T === "function") T("Erro ao salvar", e.message);
+    }
+  }
+
+  async function removerDept(deptId, nome) {
+    if (!confirm(`Remover o departamento "${nome}"?\nEsta ação também removerá os vínculos de equipe.`)) return;
+    try {
+      await _fetch(`dept_administrativos?id=eq.${encodeURIComponent(deptId)}`, { method: "DELETE" });
+      if (typeof T === "function") T("Removido", `${nome} removido com sucesso.`);
+      _depts = [];
+      await load();
+    } catch (e) {
+      if (typeof T === "function") T("Erro ao remover", e.message);
+    }
   }
 
   /* ── Painel: detalhe do departamento ────────────────────── */
@@ -377,7 +489,7 @@ const DEPT_ADM = (function(){
   function invalidate(){ _depts=[]; _pessoas=[]; _detalhe=null; }
 
   /* ── API pública ────────────────────────────────────────── */
-  return { load, invalidate, abrirDetalhe, voltarLista, openAddModal, closeAddModal, salvarMembro, removerMembro };
+  return { load, invalidate, abrirDetalhe, voltarLista, openAddModal, closeAddModal, salvarMembro, removerMembro, openDeptModal, salvarDept, removerDept };
 })();
 
 window.DEPT_ADM = DEPT_ADM;
