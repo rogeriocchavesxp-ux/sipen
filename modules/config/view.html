@@ -15,7 +15,13 @@
       <div class="g2">
         <!-- Lista de usuários -->
         <div class="card">
-          <div class="ctit">Usuários Cadastrados <span class="cact" onclick="carregarUsuarios()">↻ Atualizar</span></div>
+          <div class="ctit" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="flex:1">Usuários Cadastrados</span>
+            <input id="usr-busca-filtro" type="search" placeholder="Buscar por nome, e-mail ou telefone…"
+              style="flex:2;min-width:180px;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11px;padding:5px 9px;outline:none"
+              oninput="filtrarUsuarios(this.value)">
+            <span class="cact" onclick="carregarUsuarios()">↻ Atualizar</span>
+          </div>
           <div id="usuarios-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
         </div>
         <!-- Perfis de acesso -->

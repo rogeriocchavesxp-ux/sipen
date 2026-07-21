@@ -1179,6 +1179,97 @@ function usrToggleMenu(id) {
   }
 }
 
+function _usrRowHtml(u, idx) {
+  const perfil  = PERFIS[u.funcao] || { nome: u.funcao || "Sem perfil", icon:"👤", cor:"var(--tx3)" };
+  const initials = (u.nome || "?").split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
+  const ativo   = u.status === "ativo" || u.status == null;
+  const menuId  = `usr-menu-${idx}`;
+  const senhaItem = u.email
+    ? `<div onclick="usrAcao('senha',${idx})" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:var(--tx1);cursor:pointer" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">🔑 Enviar senha por WhatsApp</div>`
+    : "";
+  return `
+    <div class="usr-row">
+      <div class="usr-av-sm" style="background:${ativo ? "var(--grd)" : "var(--tx4)"}">${initials}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(nomePropio(u.nome) || "—")}</div>
+        <span style="font-size:10px;color:var(--tx3)">${escapeHtml(u.email || u.telefone || "—")}</span>
+      </div>
+      <span style="font-size:9px;padding:2px 7px;border-radius:8px;background:${ativo ? "rgba(58,170,92,0.12)" : "rgba(224,85,85,0.1)"};color:${ativo ? "var(--gr)" : "var(--rose)"};flex-shrink:0">${ativo ? "✓ Ativo" : "✗ Inativo"}</span>
+      <div style="position:relative;flex-shrink:0">
+        <button onclick="usrToggleMenu('${menuId}')" style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:6px;color:var(--tx2);font-size:14px;padding:3px 10px;cursor:pointer;line-height:1">···</button>
+        <div id="${menuId}" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--bg-surface);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:200;min-width:210px;overflow:hidden">
+          ${senhaItem}
+          <div onclick="usrAcao('editar',${idx})" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:var(--tx1);cursor:pointer" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">✏️ Editar</div>
+          <div style="height:1px;background:var(--bd1);margin:2px 0"></div>
+          <div onclick="usrAcao('revogar',${idx})" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:var(--rose);cursor:pointer" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">🚫 Revogar acesso</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function _renderUsrGrupos(rows) {
+  const el = document.getElementById("usuarios-list");
+  if (!el) return;
+
+  if (!rows.length) {
+    el.innerHTML = `<div style="text-align:center;padding:24px;color:var(--tx3)">Nenhum resultado encontrado.</div>`;
+    return;
+  }
+
+  // Agrupa por funcao na ordem do PERFIS
+  const ordem = Object.keys(PERFIS);
+  const grupos = {};
+  rows.forEach((u, idx) => {
+    const key = u.funcao || "__sem_perfil__";
+    if (!grupos[key]) grupos[key] = [];
+    grupos[key].push({ u, idx });
+  });
+
+  const keysOrdenadas = [
+    ...ordem.filter(k => grupos[k]),
+    ...Object.keys(grupos).filter(k => !ordem.includes(k)),
+  ];
+
+  el.innerHTML = keysOrdenadas.map(key => {
+    const perfil  = PERFIS[key] || { nome: key || "Sem perfil", icon:"👤", cor:"var(--tx3)" };
+    const itens   = grupos[key];
+    const groupId = `usr-grupo-${key}`;
+    return `
+      <div style="margin-bottom:6px">
+        <div onclick="usrToggleGrupo('${groupId}')" style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg-hover);border-radius:7px;cursor:pointer;user-select:none">
+          <span style="font-size:13px">${perfil.icon}</span>
+          <span style="font-size:11.5px;font-weight:600;color:var(--tx1);flex:1">${escapeHtml(perfil.nome)}</span>
+          <span style="font-size:10px;padding:1px 7px;border-radius:8px;background:${perfil.cor}22;color:${perfil.cor};font-weight:600">${itens.length}</span>
+          <span class="usr-grupo-arrow-${groupId}" style="font-size:10px;color:var(--tx3);transition:transform .2s">▾</span>
+        </div>
+        <div id="${groupId}" style="padding-top:2px">
+          ${itens.map(({ u, idx }) => _usrRowHtml(u, idx)).join("")}
+        </div>
+      </div>`;
+  }).join("");
+}
+
+function usrToggleGrupo(id) {
+  const el  = document.getElementById(id);
+  const arr = document.querySelector(`.usr-grupo-arrow-${id}`);
+  if (!el) return;
+  const open = el.style.display !== "none";
+  el.style.display  = open ? "none" : "";
+  if (arr) arr.style.transform = open ? "rotate(-90deg)" : "";
+}
+
+function filtrarUsuarios(q) {
+  const rows = window._usrRows || [];
+  if (!q.trim()) { _renderUsrGrupos(rows); return; }
+  const t = q.trim().toLowerCase();
+  const filtrados = rows.filter(u =>
+    (u.nome    || "").toLowerCase().includes(t) ||
+    (u.email   || "").toLowerCase().includes(t) ||
+    (u.telefone|| "").toLowerCase().includes(t)
+  );
+  _renderUsrGrupos(filtrados);
+}
+
 async function carregarUsuarios() {
   await carregarPermissoesDB();
   renderPerfisAcesso();
@@ -1207,36 +1298,9 @@ async function carregarUsuarios() {
     }
 
     window._usrRows = rows;
-    el.innerHTML = rows.map((u, idx) => {
-      const perfil   = PERFIS[u.funcao] || { nome: u.funcao || "Sem perfil", icon:"👤", cor:"var(--tx3)" };
-      const initials = (u.nome || "?").split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
-      const ativo    = u.status === "ativo" || u.status == null;
-      const menuId   = `usr-menu-${idx}`;
-      const senhaItem = u.email
-        ? `<div onclick="usrAcao('senha',${idx})" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:var(--tx1);cursor:pointer" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">🔑 Enviar senha por WhatsApp</div>`
-        : "";
-      return `
-        <div class="usr-row">
-          <div class="usr-av-sm" style="background:${ativo ? "var(--grd)" : "var(--tx4)"}">${initials}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(nomePropio(u.nome) || "—")}</div>
-            <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-              <span style="font-size:9.5px;padding:1px 6px;border-radius:8px;border:1px solid ${perfil.cor}44;color:${perfil.cor};background:${perfil.cor}11">${perfil.icon} ${escapeHtml(perfil.nome)}</span>
-              <span style="font-size:10px;color:var(--tx3)">${escapeHtml(u.email || u.telefone || "—")}</span>
-            </div>
-          </div>
-          <span style="font-size:9px;padding:2px 7px;border-radius:8px;background:${ativo ? "rgba(58,170,92,0.12)" : "rgba(224,85,85,0.1)"};color:${ativo ? "var(--gr)" : "var(--rose)"};flex-shrink:0">${ativo ? "✓ Ativo" : "✗ Inativo"}</span>
-          <div style="position:relative;flex-shrink:0">
-            <button onclick="usrToggleMenu('${menuId}')" style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:6px;color:var(--tx2);font-size:14px;padding:3px 10px;cursor:pointer;line-height:1">···</button>
-            <div id="${menuId}" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--bg-surface);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:200;min-width:210px;overflow:hidden">
-              ${senhaItem}
-              <div onclick="usrAcao('editar',${idx})" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:var(--tx1);cursor:pointer" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">✏️ Editar</div>
-              <div style="height:1px;background:var(--bd1);margin:2px 0"></div>
-              <div onclick="usrAcao('revogar',${idx})" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:var(--rose);cursor:pointer" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">🚫 Revogar acesso</div>
-            </div>
-          </div>
-        </div>`;
-    }).join("");
+    const busca = document.getElementById("usr-busca-filtro");
+    if (busca) busca.value = "";
+    _renderUsrGrupos(rows);
   } catch(e) {
     el.innerHTML = `<div style="color:var(--rose);font-size:11.5px;padding:12px">Erro: ${escapeHtml(e.message)}</div>`;
   }
