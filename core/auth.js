@@ -1235,14 +1235,14 @@ function _renderUsrGrupos(rows) {
     const itens   = grupos[key];
     const groupId = `usr-grupo-${key}`;
     return `
-      <div style="margin-bottom:6px">
-        <div onclick="usrToggleGrupo('${groupId}')" style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg-hover);border-radius:7px;cursor:pointer;user-select:none">
-          <span style="font-size:13px">${perfil.icon}</span>
-          <span style="font-size:11.5px;font-weight:600;color:var(--tx1);flex:1">${escapeHtml(perfil.nome)}</span>
-          <span style="font-size:10px;padding:1px 7px;border-radius:8px;background:${perfil.cor}22;color:${perfil.cor};font-weight:600">${itens.length}</span>
-          <span class="usr-grupo-arrow-${groupId}" style="font-size:10px;color:var(--tx3);transition:transform .2s">▾</span>
+      <div style="margin-bottom:4px">
+        <div onclick="usrToggleGrupo('${groupId}')" style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:${perfil.cor}14;border:1px solid ${perfil.cor}30;border-radius:8px;cursor:pointer;user-select:none">
+          <span style="font-size:15px;line-height:1">${perfil.icon}</span>
+          <span style="font-size:13px;font-weight:700;color:var(--tx1);flex:1;letter-spacing:.01em">${escapeHtml(perfil.nome)}</span>
+          <span style="font-size:10px;padding:2px 8px;border-radius:8px;background:${perfil.cor}22;color:${perfil.cor};font-weight:700">${itens.length}</span>
+          <span class="usr-grupo-arrow-${groupId}" style="font-size:11px;color:${perfil.cor};transform:rotate(-90deg);transition:transform .2s">▾</span>
         </div>
-        <div id="${groupId}" style="padding-top:2px">
+        <div id="${groupId}" style="display:none;padding-top:2px">
           ${itens.map(({ u, idx }) => _usrRowHtml(u, idx)).join("")}
         </div>
       </div>`;
@@ -1255,7 +1255,7 @@ function usrToggleGrupo(id) {
   if (!el) return;
   const open = el.style.display !== "none";
   el.style.display  = open ? "none" : "";
-  if (arr) arr.style.transform = open ? "rotate(-90deg)" : "";
+  if (arr) arr.style.transform = open ? "rotate(-90deg)" : "rotate(0deg)";
 }
 
 function filtrarUsuarios(q) {
