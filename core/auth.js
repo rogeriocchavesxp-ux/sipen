@@ -1199,6 +1199,7 @@ async function carregarUsuarios() {
           <span style="font-size:9.5px;padding:2px 7px;border-radius:10px;border:1px solid ${perfil.cor}44;color:${perfil.cor};background:${perfil.cor}11;white-space:nowrap">${perfil.icon} ${escapeHtml(perfil.nome)}</span>
           <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
             <span style="font-size:9px;padding:2px 7px;border-radius:8px;background:${ativo ? "rgba(58,170,92,0.12)" : "rgba(224,85,85,0.1)"};color:${ativo ? "var(--gr)" : "var(--rose)"}">${ativo ? "✓ Ativo" : "✗ Inativo"}</span>
+            ${u.email ? `<button onclick='enviarLinkSenha(${safeJsonForHtml(u)})' title="Enviar link de redefinição de senha por WhatsApp" style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:10px;padding:3px 8px;cursor:pointer">🔑 Senha</button>` : ""}
             <button onclick='editarUsuario(${safeJsonForHtml(u)})' style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:10px;padding:3px 8px;cursor:pointer">✏️ Editar</button>
             <button onclick='revogarAcesso(${JSON.stringify(u.id)},${JSON.stringify(u.nome)})' style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:4px;color:var(--rose);font-size:10px;padding:3px 8px;cursor:pointer">🚫</button>
           </div>
@@ -1206,6 +1207,61 @@ async function carregarUsuarios() {
     }).join("");
   } catch(e) {
     el.innerHTML = `<div style="color:var(--rose);font-size:11.5px;padding:12px">Erro: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+async function enviarLinkSenha(u) {
+  if (!u.email) { showToast("Usuário sem e-mail cadastrado.", "err"); return; }
+  if (!u.telefone) { showToast("Usuário sem telefone cadastrado.", "err"); return; }
+
+  const btn = document.querySelector(`[onclick*="enviarLinkSenha"][onclick*="${u.id}"]`);
+  if (btn) { btn.disabled = true; btn.textContent = "⏳"; }
+
+  try {
+    const fnUrl = (SUPABASE_URL || "").trim().replace(/\/$/, "") + "/functions/v1/send-reset-link";
+    const jwt   = JSON.parse(localStorage.getItem("sipen_session") || "{}")?.access_token;
+    const res   = await fetch(fnUrl, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${jwt}` },
+      body:    JSON.stringify({ email: u.email, telefone: u.telefone, nome: u.nome }),
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || "Erro ao gerar link");
+    }
+
+    if (data.whatsapp_sent) {
+      showToast("Link enviado por WhatsApp com sucesso.", "ok");
+    } else {
+      // Fallback: exibe o link para copiar manualmente
+      const overlay = document.createElement("div");
+      overlay.id = "modal-link-senha";
+      overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9900;display:flex;align-items:center;justify-content:center;padding:16px";
+      overlay.innerHTML = `
+        <div style="background:var(--bg-surface);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:500px;padding:24px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <strong style="font-size:14px;color:var(--tx1)">🔑 Link de Redefinição de Senha</strong>
+            <button onclick="document.getElementById('modal-link-senha').remove()" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button>
+          </div>
+          <div style="font-size:12px;color:var(--tx3);margin-bottom:12px">
+            O WhatsApp não pôde ser enviado automaticamente. Copie o link abaixo e envie manualmente para <strong>${escapeHtml(u.nome || u.email)}</strong>.
+          </div>
+          <div style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--tx2);word-break:break-all;margin-bottom:14px;line-height:1.6">
+            ${escapeHtml(data.link)}
+          </div>
+          <div style="font-size:10px;color:var(--tx3);margin-bottom:14px">⚠️ Este link expira em 1 hora.</div>
+          <div style="display:flex;justify-content:flex-end;gap:8px">
+            <button onclick="document.getElementById('modal-link-senha').remove()" style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:6px;padding:7px 14px;color:var(--tx2);cursor:pointer;font-size:12px">Fechar</button>
+            <button onclick="navigator.clipboard.writeText('${data.link.replace(/'/g,"\\'")}').then(()=>showToast('Link copiado!','ok'))" style="background:var(--gr);border:none;border-radius:6px;padding:7px 16px;color:#fff;cursor:pointer;font-size:12px;font-weight:600">Copiar link</button>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+    }
+  } catch(e) {
+    showToast("Erro: " + e.message, "err");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "🔑 Senha"; }
   }
 }
 
