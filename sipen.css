@@ -227,8 +227,8 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 .sb-section.collapsed .sb-section-chv{transform:rotate(-90deg)}
 .sb-section-body{
   overflow:hidden;
-  max-height:1800px;
-  transition:max-height .3s ease;
+  max-height:5000px;
+  transition:max-height .4s ease;
 }
 .sb-section.collapsed .sb-section-body{max-height:0}
 

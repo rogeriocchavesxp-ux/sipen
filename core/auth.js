@@ -678,6 +678,11 @@ function aplicarPermissoes() {
     mw.style.display = isAdminTotal ? "" : "none";
   });
 
+  // Garantia explícita: ADMINISTRADOR_GERAL vê todos os itens do menu
+  if (isAdminTotal) {
+    document.querySelectorAll(".mwrap").forEach(mw => { mw.style.display = ""; });
+  }
+
   const sbSys = document.getElementById("sb-sys");
   if (sbSys) {
     const nConf = isAdminTotal ? "COMPLETO" : (permissoesUsuario["CONFIGURACOES"] || "SEM_ACESSO");
