@@ -231,9 +231,9 @@
       .mr-chip-aus{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.22)}
       .mr-chip-just{background:rgba(148,163,184,.12);border-color:rgba(148,163,184,.25)}
       .mr-autocomplete{position:relative}
-      .mr-drop{position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--bg3,#2a2d31);border:1px solid var(--bd2);border-radius:6px;z-index:200;max-height:180px;overflow-y:auto;display:none;box-shadow:0 4px 16px rgba(0,0,0,.35)}
+      .mr-drop{position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;z-index:200;max-height:180px;overflow-y:auto;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2)}
       .mr-drop-item{padding:8px 12px;cursor:pointer;font-size:12.5px;display:flex;align-items:center;justify-content:space-between}
-      .mr-drop-item:hover{background:rgba(255,255,255,.05)}
+      .mr-drop-item:hover{background:var(--bg-hover)}
       .mr-grp-ttl{font-size:10.5px;font-weight:600;color:var(--sky);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--bd1)}
       .mr-inp{width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px;box-sizing:border-box}
       .mr-inp:focus{outline:none;border-color:var(--sky)}
@@ -704,7 +704,7 @@
     overlay.id = "modal-reuniao";
     overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9800;display:flex;align-items:center;justify-content:center;padding:16px";
     overlay.innerHTML = `
-      <div style="background:var(--bg2,#212529);border:1px solid var(--bd2,rgba(255,255,255,.12));border-radius:12px;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;padding:24px">
+      <div style="background:var(--bg-surface);border:1px solid var(--bd2);border-radius:12px;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;padding:24px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
           <strong style="font-size:15px">${isEdit ? "Editar Reunião" : "Nova Reunião do Conselho"}</strong>
           <button onclick="pautasFecharModal()" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button>
