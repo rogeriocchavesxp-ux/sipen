@@ -1243,8 +1243,8 @@ async function carregarUsuarios() {
 }
 
 function enviarLinkSenha(u) {
-  if (!u.email)    { showToast("Usuário sem e-mail cadastrado.", "err"); return; }
-  if (!u.telefone) { showToast("Usuário sem telefone cadastrado.", "err"); return; }
+  if (!u.email)    { T("Usuário sem e-mail cadastrado.", "err"); return; }
+  if (!u.telefone) { T("Usuário sem telefone cadastrado.", "err"); return; }
 
   window._usrPendente = u;
 
@@ -1328,14 +1328,14 @@ async function _confirmarEnvioSenha() {
           <div style="font-size:10px;color:var(--tx3);margin-bottom:14px">⚠️ Este link expira em 1 hora.</div>
           <div style="display:flex;justify-content:flex-end;gap:8px">
             <button onclick="document.getElementById('modal-link-senha').remove()" style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:6px;padding:7px 14px;color:var(--tx2);cursor:pointer;font-size:12px">Fechar</button>
-            <button onclick="navigator.clipboard.writeText('${data.link.replace(/'/g,"\\'")}').then(()=>showToast('Link copiado!','ok'))" style="background:var(--gr);border:none;border-radius:6px;padding:7px 16px;color:#fff;cursor:pointer;font-size:12px;font-weight:600">Copiar link</button>
+            <button onclick="navigator.clipboard.writeText('${data.link.replace(/'/g,"\\'")}').then(()=>T('Link copiado!','ok'))" style="background:var(--gr);border:none;border-radius:6px;padding:7px 16px;color:#fff;cursor:pointer;font-size:12px;font-weight:600">Copiar link</button>
           </div>
         </div>`;
       document.body.appendChild(fb);
     }
   } catch(e) {
     document.getElementById("modal-confirmar-senha")?.remove();
-    showToast("Erro: " + e.message, "err");
+    T("Erro: " + e.message, "err");
   }
 }
 

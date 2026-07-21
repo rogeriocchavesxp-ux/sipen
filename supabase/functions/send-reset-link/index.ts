@@ -81,15 +81,25 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  const { data: caller } = await sb
-    .from("v_membros")
+  const { data: pessoa } = await sb
+    .from("pessoas")
+    .select("id")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+
+  if (!pessoa) return json({ error: "Acesso negado. Perfil não encontrado." }, 403);
+
+  const { data: membro } = await sb
+    .from("membros")
     .select("funcao")
-    .eq("auth_id", user.id)
-    .single();
+    .eq("pessoa_id", pessoa.id)
+    .eq("status", "ativo")
+    .is("deleted_at", null)
+    .maybeSingle();
 
   const adminRoles = ["admin_geral", "administrador_geral", "ADMINISTRADOR_GERAL"];
-  if (!caller || !adminRoles.includes(caller.funcao)) {
-    return json({ error: "Acesso negado. Apenas administradores podem enviar links de senha." }, 403);
+  if (!membro || !adminRoles.includes(membro.funcao)) {
+    return json({ error: `Acesso negado. Perfil "${membro?.funcao}" não tem permissão.` }, 403);
   }
 
   // ── 3. Parse do body ─────────────────────────────────────────
