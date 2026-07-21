@@ -46,7 +46,7 @@
   </div>
 
 
-  <!-- ════ PAUTAS DO CONSELHO ════════════ -->
+  <!-- ════ REUNIÕES DO CONSELHO ════════════ -->
 
   <div class="view" id="v-pautas-reunioes">
     <div class="hero">
@@ -59,7 +59,8 @@
       <div class="hero-act"><button class="tbt pri" onclick="pautasNovaReuniao()">+ Nova Reunião</button></div>
     </div>
     <div class="bnav" style="--mc:var(--sky)">
-      <div class="bni on" onclick="go('pautas-reunioes')">Pautas do Conselho</div>
+      <div class="bni on" onclick="go('pautas-reunioes')">Reuniões</div>
+      <div class="bni" onclick="go('pautas-pautas')">Pautas</div>
       <div class="bni" onclick="go('atas-dash')">Atas e Deliberações</div>
     </div>
     <div class="ct" id="pautas-reunioes-content">
@@ -78,7 +79,8 @@
       <div class="hero-act"><button class="tbt" onclick="go('pautas-reunioes')">← Voltar</button></div>
     </div>
     <div class="bnav" style="--mc:var(--sky)">
-      <div class="bni on" onclick="go('pautas-reunioes')">Pautas do Conselho</div>
+      <div class="bni on" onclick="go('pautas-reunioes')">Reuniões</div>
+      <div class="bni" onclick="go('pautas-pautas')">Pautas</div>
       <div class="bni" onclick="go('atas-dash')">Atas e Deliberações</div>
     </div>
     <div class="ct" id="pautas-lista-content">
@@ -96,11 +98,34 @@
       </div>
     </div>
     <div class="bnav" style="--mc:var(--sky)">
-      <div class="bni on" onclick="go('pautas-reunioes')">Pautas do Conselho</div>
+      <div class="bni on" onclick="go('pautas-reunioes')">Reuniões</div>
+      <div class="bni" onclick="go('pautas-pautas')">Pautas</div>
       <div class="bni" onclick="go('atas-dash')">Atas e Deliberações</div>
     </div>
     <div class="ct" id="pautas-imprimir-content">
       <div class="card" style="padding:28px;color:var(--tx3)">Preparando documento...</div>
+    </div>
+  </div>
+
+  <!-- ════ PAUTAS ════════════ -->
+
+  <div class="view" id="v-pautas-pautas">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(88,152,212,0.14);border-color:rgba(88,152,212,0.25);color:var(--sky)">◨</div>
+      <div>
+        <div class="hero-lbl">Conselho e Governança</div>
+        <div class="hero-ttl">Pautas do Conselho</div>
+        <div class="hero-dsc">Solicitações enviadas e pautas aprovadas por reunião.</div>
+      </div>
+      <div class="hero-act"></div>
+    </div>
+    <div class="bnav" style="--mc:var(--sky)">
+      <div class="bni" onclick="go('pautas-reunioes')">Reuniões</div>
+      <div class="bni on" onclick="go('pautas-pautas')">Pautas</div>
+      <div class="bni" onclick="go('atas-dash')">Atas e Deliberações</div>
+    </div>
+    <div class="ct" id="pautas-pautas-content">
+      <div class="card" style="padding:28px;color:var(--tx3)">Carregando pautas...</div>
     </div>
   </div>
 
@@ -119,7 +144,8 @@
       </div>
     </div>
     <div class="bnav" style="--mc:var(--sky)">
-      <div class="bni" onclick="go('pautas-reunioes')">Pautas do Conselho</div>
+      <div class="bni" onclick="go('pautas-reunioes')">Reuniões</div>
+      <div class="bni" onclick="go('pautas-pautas')">Pautas</div>
       <div class="bni on" onclick="go('atas-dash')">Atas e Deliberações</div>
     </div>
     <div class="bnav" style="--mc:var(--sky);margin-top:0;border-top:1px solid var(--bd1)">
@@ -144,7 +170,8 @@
       </div>
     </div>
     <div class="bnav" style="--mc:var(--sky)">
-      <div class="bni" onclick="go('pautas-reunioes')">Pautas do Conselho</div>
+      <div class="bni" onclick="go('pautas-reunioes')">Reuniões</div>
+      <div class="bni" onclick="go('pautas-pautas')">Pautas</div>
       <div class="bni on" onclick="go('atas-dash')">Atas e Deliberações</div>
     </div>
     <div class="bnav" style="--mc:var(--sky);margin-top:0;border-top:1px solid var(--bd1)">
@@ -166,7 +193,8 @@
       </div>
     </div>
     <div class="bnav" style="--mc:var(--sky)">
-      <div class="bni" onclick="go('pautas-reunioes')">Pautas do Conselho</div>
+      <div class="bni" onclick="go('pautas-reunioes')">Reuniões</div>
+      <div class="bni" onclick="go('pautas-pautas')">Pautas</div>
       <div class="bni on" onclick="go('atas-dash')">Atas e Deliberações</div>
     </div>
     <div class="bnav" style="--mc:var(--sky);margin-top:0;border-top:1px solid var(--bd1)">
@@ -188,7 +216,8 @@
       </div>
     </div>
     <div class="bnav" style="--mc:var(--sky)">
-      <div class="bni" onclick="go('pautas-reunioes')">Pautas do Conselho</div>
+      <div class="bni" onclick="go('pautas-reunioes')">Reuniões</div>
+      <div class="bni" onclick="go('pautas-pautas')">Pautas</div>
       <div class="bni on" onclick="go('atas-dash')">Atas e Deliberações</div>
     </div>
     <div class="bnav" style="--mc:var(--sky);margin-top:0;border-top:1px solid var(--bd1)">

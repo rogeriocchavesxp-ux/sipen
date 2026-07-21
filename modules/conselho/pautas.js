@@ -377,14 +377,70 @@
     try {
       await _carregarReunioes(true);
       _renderListaReunioes();
-      if (_podeAdmin()) _renderSolicitacoesPauta();
     } catch (e) {
       el.innerHTML = `<div style="padding:16px;color:var(--rose);font-size:12px">Erro: ${_eh(e.message)}</div>`;
     }
   }
 
+  async function renderPautasTab() {
+    const el = _view("pautas-pautas-content");
+    if (!el) return;
+    el.innerHTML = "";
+    try {
+      await _carregarReunioes(false);
+      if (_podeAdmin()) await _renderSolicitacoesPauta();
+      await _renderPautasPorReuniao();
+    } catch (e) {
+      el.insertAdjacentHTML("beforeend", `<div style="padding:16px;color:var(--rose);font-size:12px">Erro: ${_eh(e.message)}</div>`);
+    }
+  }
+
+  async function _renderPautasPorReuniao() {
+    const el = _view("pautas-pautas-content");
+    if (!el) return;
+    let rows = [];
+    try {
+      rows = await _fetchJson(
+        `${_api()}/rest/v1/conselho_pautas?select=id,titulo,status,ordem,reuniao_id&order=reuniao_id.desc,ordem.asc&limit=200`
+      );
+    } catch(_) { return; }
+
+    if (!rows?.length) {
+      if (!document.getElementById("pautas-sol-section")) {
+        el.innerHTML = `<div class="card" style="padding:28px;text-align:center;color:var(--tx3)">Nenhuma pauta registrada ainda.</div>`;
+      }
+      return;
+    }
+
+    const byReuniao = {};
+    rows.forEach(p => {
+      const rid = p.reuniao_id || "__sem_reuniao__";
+      if (!byReuniao[rid]) byReuniao[rid] = [];
+      byReuniao[rid].push(p);
+    });
+
+    const secHtml = `
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:10px;margin-top:${_podeAdmin() ? "16px" : "0"}">Pautas por Reunião</div>
+      ${Object.entries(byReuniao).map(([rid, pautas]) => {
+        const reun = (_reunioes||[]).find(r => r.id === rid);
+        const tituloReun = reun ? _eh(reun.titulo) : "Reunião";
+        const dataReun   = reun ? ` · ${_fmtData(reun.data_reuniao)}` : "";
+        return `<div class="card" style="margin-bottom:10px">
+          <div class="ctit" style="margin-bottom:10px">${tituloReun}${dataReun}</div>
+          ${pautas.map(p => {
+            const scfg = STATUS_CFG[p.status] || { label: p.status||"Pendente", cls: "pz" };
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd1)">
+              <div style="font-size:12.5px;color:var(--tx1)">${_eh(p.titulo)}</div>
+              <span class="px ${scfg.cls}" style="font-size:10px;flex-shrink:0">${_eh(scfg.label)}</span>
+            </div>`;
+          }).join("")}
+        </div>`;
+      }).join("")}`;
+    el.insertAdjacentHTML("beforeend", secHtml);
+  }
+
   async function _renderSolicitacoesPauta() {
-    const el = _view("pautas-reunioes-content");
+    const el = _view("pautas-pautas-content");
     if (!el) return;
     let rows = [];
     try {
@@ -480,7 +536,10 @@
       });
       _toast("Pauta incluída", `"${titulo}" foi adicionada à reunião.`);
       document.getElementById("pautas-sol-section")?.remove();
-      _renderSolicitacoesPauta();
+      const _ppEl = _view("pautas-pautas-content");
+      if (_ppEl) _ppEl.innerHTML = "";
+      await _renderSolicitacoesPauta();
+      await _renderPautasPorReuniao();
     } catch(e) {
       _toast("Erro", e.message);
     }
@@ -535,7 +594,10 @@
       });
       _toast("Solicitação encerrada", "O solicitante foi notificado.");
       document.getElementById("pautas-sol-section")?.remove();
-      _renderSolicitacoesPauta();
+      const _ppEl2 = _view("pautas-pautas-content");
+      if (_ppEl2) _ppEl2.innerHTML = "";
+      await _renderSolicitacoesPauta();
+      await _renderPautasPorReuniao();
     } catch(e) {
       _toast("Erro", e.message);
     }
@@ -1713,8 +1775,15 @@
 
   document.addEventListener("sipen:navigate", async ({ detail: { id } }) => {
     if (id === "pautas-reunioes") await renderReunioes();
+    if (id === "pautas-pautas")   await renderPautasTab();
     if (id === "pautas-lista")    await renderPautas();
     if (id === "pautas-imprimir") await renderImprimir();
   });
+
+  if (typeof VIEW_AUTOLOAD !== "undefined") {
+    VIEW_AUTOLOAD["pautas-reunioes"] = { fn: renderReunioes };
+    VIEW_AUTOLOAD["pautas-pautas"]   = { fn: renderPautasTab };
+  }
+  window.renderPautasTab = renderPautasTab;
 
 })();
