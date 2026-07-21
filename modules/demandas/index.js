@@ -719,6 +719,8 @@ function fmtD(d) {
       if (error) throw error;
       txtEl.value = "";
       if (typeof T === "function") T("✅ Andamento registrado!", "");
+      const _demAndamento = _cache.find(r => String(r.id||r._row) === String(demandaId)) || _ativo;
+      if (_demAndamento) _notificarSolicitanteWA(_demAndamento, "andamento", { texto }).catch(() => {});
       await _carregarAndamentos(demandaId, _ativo);
     } catch(e) {
       console.error("[andamentos] registrar:", e);
@@ -925,6 +927,7 @@ function fmtD(d) {
       if (idx >= 0) Object.assign(_cache[idx], { status: novoStatus });
       if (_ativo && String(_ativo.id || _ativo._row) === String(demandaId)) {
         Object.assign(_ativo, { status: novoStatus });
+        _notificarSolicitanteWA(_ativo, "status", { status: novoStatus }).catch(() => {});
       }
 
       await _registrarAndamentoAuto(
@@ -1247,6 +1250,7 @@ function fmtD(d) {
       if (_ativo && String(_ativo.id||_ativo._row) === String(id)) {
         Object.assign(_ativo, cacheUpd);
         await _registrarAndamentoAuto(id, `Status alterado para "${novoStatus}"`, novoStatus);
+        _notificarSolicitanteWA(_ativo, "status", { status: novoStatus }).catch(() => {});
         _renderDetalhe(_ativo);
       }
       _atualizarBadge();
@@ -2095,6 +2099,48 @@ function fmtD(d) {
     "Ação Social / Hebron":    "MINISTERIAL",
     "Administrativo Geral":    "DEMANDAS",
   };
+
+  async function _notificarSolicitanteWA(dem, evento, extra = {}) {
+    if (typeof WA === "undefined") return;
+    if (!dem) return;
+
+    // Não notifica se o atualizador é o próprio solicitante
+    const uidAtual = typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL?.id : null;
+    if (uidAtual && dem.solicitante_id && String(dem.solicitante_id) === String(uidAtual)) return;
+
+    const tel = dem.telefone_solicitante;
+    if (!tel) return;
+
+    const nome   = (dem.solicitante || dem.solicitante_txt || "").split(" ")[0] || "prezado(a)";
+    const titulo = dem.titulo || "—";
+    const link   = "https://www.sipen.com.br";
+
+    let mensagem = "";
+    if (evento === "status") {
+      mensagem =
+        `📋 *Atualização no seu chamado*\n\n` +
+        `*Título:* ${titulo}\n` +
+        `*Status atual:* ${extra.status}\n\n` +
+        `🔗 Acompanhe em:\n${link}`;
+    } else if (evento === "andamento") {
+      mensagem =
+        `💬 *Novo andamento no seu chamado*\n\n` +
+        `*Título:* ${titulo}\n\n` +
+        `${extra.texto}\n\n` +
+        `🔗 Acompanhe em:\n${link}`;
+    }
+    if (!mensagem) return;
+
+    WA.send({
+      para:        tel,
+      nome,
+      mensagem,
+      modulo:      _AREA_MODULO_WA[dem.area] || "DEMANDAS",
+      referenciaT: "demanda",
+      referenciaId: String(dem.id || dem._row || ""),
+      chave:       `DEM_SOL_${evento}_${dem.id || dem._row}_${Math.floor(Date.now() / 5000)}`,
+    }).catch(() => {});
+  }
 
   async function _notificarResponsaveisWA(dem) {
     const _log = (...a) => console.log("[WA-DEM]", ...a);
