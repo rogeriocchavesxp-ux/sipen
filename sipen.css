@@ -1816,3 +1816,132 @@ html[data-theme="light"] .tb-search:focus{border-color:rgba(0,0,0,0.16)}
 #sb-tip.vis{opacity:1}
 
 html[data-theme="light"] .sb.sb-collapsed .mhdr:hover{background:rgba(0,0,0,0.05)}
+
+/* ══════════════════════════════════════════════════════
+   ÁREA DO MEMBRO — Greeting Strip
+   ══════════════════════════════════════════════════════ */
+.area-greeting {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px 16px;
+  background: var(--bg-card);
+  border-bottom: 1.5px solid var(--bd1);
+}
+.area-gr-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--gr);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(58,170,92,0.2);
+  letter-spacing: 0;
+}
+.area-gr-text { flex: 1; min-width: 0; }
+.area-gr-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--tx1);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.area-gr-sub {
+  font-size: 11px;
+  color: var(--tx3);
+  margin-top: 2px;
+}
+.area-gr-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+/* ══════════════════════════════════════════════════════
+   ÁREA DO MEMBRO — Bottom Tab Bar
+   ══════════════════════════════════════════════════════ */
+.area-tabbar { display: none }
+
+.area-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--tx3);
+  transition: color .15s;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  font-family: var(--sans);
+}
+.area-tab.on { color: var(--gr) }
+.area-tab.on::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 18%;
+  right: 18%;
+  height: 2.5px;
+  background: var(--gr);
+  border-radius: 0 0 3px 3px;
+}
+.area-tab:active { opacity: .7 }
+.area-tab-ico { font-size: 20px; line-height: 1 }
+.area-tab-lbl {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+@media (max-width: 768px) {
+  /* Mostrar tabbar */
+  .area-tabbar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(58px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--bg-card);
+    border-top: 1.5px solid var(--bd2);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.10);
+    z-index: 800;
+  }
+  .area-tabbar.area-tabbar--hidden { display: none }
+
+  /* Ocultar bnav horizontal nas views da área */
+  #v-area-dash .bnav,
+  #v-area-agenda .bnav,
+  #v-area-min .bnav,
+  #v-area-pgs .bnav,
+  #v-area-dem .bnav { display: none }
+
+  /* Padding inferior para não ficar atrás da tabbar */
+  #v-area-dash .ct,
+  #v-area-agenda .ct,
+  #v-area-min .ct,
+  #v-area-pgs .ct,
+  #v-area-dem .ct { padding-bottom: 82px }
+
+  /* Greeting strip mais compacta no mobile */
+  .area-greeting { padding: 14px 16px 12px; gap: 12px }
+  .area-gr-avatar { width: 40px; height: 40px; font-size: 15px }
+  .area-gr-name { font-size: 14px }
+}

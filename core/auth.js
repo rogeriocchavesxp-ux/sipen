@@ -1916,6 +1916,8 @@ function _areaDashLoad() {
   const saud = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
   const el = document.getElementById("area-saudacao");
   if (el) el.textContent = `${saud}, ${nome}!`;
+  const av = document.getElementById("area-gr-avatar");
+  if (av) av.textContent = (USUARIO_ATUAL?.nome || "M")[0].toUpperCase();
 
   _areaCarregarSemana();
   _areaCarregarEscalas();
@@ -1980,14 +1982,17 @@ async function _areaCarregarEscalas() {
 }
 
 async function _areaCarregarMinisterios() {
-  const el      = document.getElementById("area-dash-ministerios");
-  const badgeEl = document.getElementById("area-badge-ministerios");
-  const kpiEl   = document.getElementById("area-kpi-min");
-  if (!el) return;
+  const el        = document.getElementById("area-dash-ministerios");
+  const minListEl = document.getElementById("area-min-list");
+  const badgeEl   = document.getElementById("area-badge-ministerios");
+  const kpiEl     = document.getElementById("area-kpi-min");
+  if (!el && !minListEl) return;
 
   function _empty() {
-    el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Você ainda não está vinculado a nenhum ministério.</div>
+    const html = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0">Você ainda não está vinculado a nenhum ministério.</div>
       <button class="tbt" style="margin-top:10px" onclick="abrirModalNovaDemanda()">Solicitar inclusão em Ministério</button>`;
+    if (el)        el.innerHTML        = html;
+    if (minListEl) minListEl.innerHTML = html;
     if (kpiEl)   kpiEl.textContent   = "Nenhum";
     if (badgeEl) badgeEl.textContent = "Nenhum vinculado";
   }
@@ -1997,7 +2002,7 @@ async function _areaCarregarMinisterios() {
     const n = rows.length;
     if (kpiEl)   kpiEl.textContent   = rows[0].nome?.split(" ")[0] || "—";
     if (badgeEl) badgeEl.textContent = n === 1 ? "1 ministério" : `${n} ministérios`;
-    el.innerHTML = rows.map(r => {
+    const html = rows.map(r => {
       const ativo = r.ativo !== false;
       return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd1)">
         <div>
@@ -2006,7 +2011,9 @@ async function _areaCarregarMinisterios() {
         </div>
         <span class="sv ${ativo ? "pos" : "wa"}" style="font-size:10px;white-space:nowrap">${ativo ? "ativo" : "inativo"}</span>
       </div>`;
-    }).join("") + `<div style="margin-top:12px"><button class="tbt" onclick="go('area-min')">Ver detalhes →</button></div>`;
+    }).join("");
+    if (el)        el.innerHTML        = html + `<div style="margin-top:12px"><button class="tbt" onclick="go('area-min')">Ver detalhes →</button></div>`;
+    if (minListEl) minListEl.innerHTML = html;
   }
 
   const pessoaId = USUARIO_ATUAL?.pessoa_id || USUARIO_ATUAL?.id;
@@ -2099,6 +2106,7 @@ document.addEventListener("sipen:navigate", ({ detail: { id } }) => {
   if (id === "min-adm")               { if(typeof DEPT_ADM!=="undefined") DEPT_ADM.load(); }
   if (id === "geral")                 renderGeralDash();
   if (id === "area-dash")             _areaDashLoad();
+  if (id === "area-min")              _areaCarregarMinisterios();
   if (id.startsWith("cong"))          window._congSyncOnNav?.();
   if (id === "min-dash")              _aplicarPermissoesMinisterial();
   if (id === "min-min")               minMinLoad();
@@ -2108,6 +2116,16 @@ document.addEventListener("sipen:navigate", ({ detail: { id } }) => {
   if (id === "pastoral-pastores")     pd_renderPastores();
   if (id === "pastoral-historico")    pd_renderHistorico();
   if (id === "pastoral-relatorios")   pd_renderRelatorios();
+
+  // Tabbar da Área do Membro
+  const bar = document.getElementById("area-tabbar");
+  if (bar) {
+    const isArea = id.startsWith("area-");
+    bar.classList.toggle("area-tabbar--hidden", !isArea);
+    bar.querySelectorAll(".area-tab").forEach(t => {
+      t.classList.toggle("on", t.dataset.route === id);
+    });
+  }
 });
 
 // CRUMBs adicionais

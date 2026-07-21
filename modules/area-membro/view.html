@@ -1,12 +1,13 @@
   <div class="view" id="v-area-dash">
-    <div class="hero">
-      <div class="hero-ic" style="background:rgba(58,170,92,0.12);border-color:rgba(58,170,92,0.25)">⛪</div>
-      <div>
-        <div class="hero-lbl">Área do Membro</div>
-        <div class="hero-ttl" id="area-saudacao">Bem-vindo!</div>
-        <div class="hero-dsc">Suas atividades, escalas, solicitações e avisos</div>
+    <div class="area-greeting">
+      <div class="area-gr-avatar" id="area-gr-avatar">M</div>
+      <div class="area-gr-text">
+        <div class="area-gr-name" id="area-saudacao">Bem-vindo!</div>
+        <div class="area-gr-sub">Igreja Presbiteriana de Penha</div>
       </div>
-      <div class="hero-act"></div>
+      <div class="area-gr-actions">
+        <button class="tbt" onclick="trocarArea()" title="Alternar para Área do Gestor" style="font-size:11px;padding:6px 11px">⇄ Gestor</button>
+      </div>
     </div>
     <div class="bnav" style="--mc:var(--gr)">
       <div class="bni" onclick="go('area-dash')">Início</div>
@@ -32,8 +33,8 @@
         </div>
       </div>
 
-      <!-- 3. MEUS MINISTÉRIOS — retrátil no mobile -->
-      <div class="card area-col-card" id="area-col-ministerios" style="margin-bottom:14px">
+      <!-- 3. MEUS MINISTÉRIOS — aberto por padrão -->
+      <div class="card area-col-card open" id="area-col-ministerios" style="margin-bottom:14px">
         <div class="area-col-hdr" onclick="areaToggle('ministerios')">
           <div>
             <div class="ctit" style="margin:0;border:none;padding-bottom:0">Meus Ministérios</div>
@@ -46,8 +47,8 @@
         </div>
       </div>
 
-      <!-- 4. MINHAS SOLICITAÇÕES — retrátil no mobile -->
-      <div class="card area-col-card" id="area-col-solicitacoes" style="margin-bottom:14px">
+      <!-- 4. MINHAS SOLICITAÇÕES — aberto por padrão -->
+      <div class="card area-col-card open" id="area-col-solicitacoes" style="margin-bottom:14px">
         <div class="area-col-hdr" onclick="areaToggle('solicitacoes')">
           <div>
             <div class="ctit" style="margin:0;border:none;padding-bottom:0">Solicitações Recentes</div>
@@ -64,17 +65,6 @@
       <div class="card" style="margin-bottom:14px">
         <div class="ctit">Comunicados <span class="cact" onclick="_areaCarregarAvisos()">↻</span></div>
         <div id="area-dash-avisos"><div style="color:var(--tx3);font-size:11.5px;padding:14px 0">Carregando...</div></div>
-      </div>
-
-      <!-- 6. ACESSO RÁPIDO -->
-      <div class="sh" style="margin-top:2px"><span class="sh-t">Acesso Rápido</span></div>
-      <div class="area-atalhos" style="margin-bottom:20px">
-        <div class="area-atalho" onclick="go('area-agenda')"><div class="area-atalho-ico">🗓</div><div class="area-atalho-lbl">Agenda</div></div>
-        <div class="area-atalho" onclick="go('area-min')"><div class="area-atalho-ico">◉</div><div class="area-atalho-lbl">Ministérios</div></div>
-        <div class="area-atalho" onclick="go('area-pgs')"><div class="area-atalho-ico">⌂</div><div class="area-atalho-lbl">Meu PG</div></div>
-        <div class="area-atalho" onclick="go('area-dem')"><div class="area-atalho-ico">📋</div><div class="area-atalho-lbl">Solicitações</div></div>
-        <div class="area-atalho" onclick="go('agenda-confirmados')"><div class="area-atalho-ico">🎶</div><div class="area-atalho-lbl">Cultos</div></div>
-        <div class="area-atalho" onclick="go('memb-aniv')"><div class="area-atalho-ico">🎂</div><div class="area-atalho-lbl">Aniversários</div></div>
       </div>
 
       <!-- KPIs ocultos para compatibilidade -->
@@ -139,28 +129,10 @@
       <div class="bni" onclick="go('area-dem')">Solicitações</div>
     </div>
     <div class="ct">
-      <div class="alr alr-w"><div class="alr-i">ℹ</div><div>Veja abaixo os ministérios ativos da IPPenha. Para participar de um ministério, entre em contato com o líder responsável ou use o botão <strong>+ Nova Tarefa</strong> no canto superior direito.</div></div>
       <div class="g2">
         <div class="card">
-          <div class="ctit">Ministérios Ativos</div>
-          <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
-            <div style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:10px 12px">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="color:var(--violet)">♪</span><strong style="font-size:12px">Louvor e Adoração</strong></div>
-              <div style="font-size:10.5px;color:var(--tx3)">Líder: Ana Lima · 28 membros · Ensaios: Sáb 19h</div>
-            </div>
-            <div style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:10px 12px">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="color:var(--teal)">◈</span><strong style="font-size:12px">O Movimento (UMP)</strong></div>
-              <div style="font-size:10.5px;color:var(--tx3)">Líder: Lucas Ferreira · 89 membros · Sáb 19h30</div>
-            </div>
-            <div style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:10px 12px">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="color:var(--rose)">✦</span><strong style="font-size:12px">SAF</strong></div>
-              <div style="font-size:10.5px;color:var(--tx3)">Presidente: Elisa Santos · 54 membros · Qua 16h</div>
-            </div>
-            <div style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:10px 12px">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="color:var(--amber)">◉</span><strong style="font-size:12px">SOS (Adolescentes)</strong></div>
-              <div style="font-size:10.5px;color:var(--tx3)">Líder: Marcos Dias · 41 adolescentes · Sex 19h</div>
-            </div>
-          </div>
+          <div class="ctit">Meus Ministérios <span class="cact" onclick="_areaCarregarMinisterios()">↻</span></div>
+          <div id="area-min-list" style="margin-top:6px"><div style="color:var(--tx3);font-size:11.5px;padding:14px 0">Carregando...</div></div>
         </div>
         <div class="card">
           <div class="ctit">Acesso Rápido</div>
