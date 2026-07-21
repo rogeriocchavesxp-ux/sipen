@@ -12,6 +12,7 @@
   let _anuais    = [];
   let _anoAtivo  = new Date().getFullYear();
   let _tabAtiva  = 'nomeacoes';
+  let _minTipos  = null; // cache: nome_upper → tipo (carregado sob demanda)
 
   /* ── Helpers ──────────────────────────────────────────────── */
 
@@ -59,6 +60,17 @@
 
     if (!clone.area) clone.area = r.orgao;
     return clone;
+  }
+
+  async function _carregarMinTipos() {
+    if (_minTipos) return _minTipos;
+    try {
+      const r = await fetch(`${apiBaseUrl()}/rest/v1/ministerios?select=nome,tipo`, { headers: apiHeaders() });
+      const lista = r.ok ? await r.json() : [];
+      _minTipos = {};
+      lista.forEach(m => { if (m.nome) _minTipos[m.nome.toUpperCase()] = m.tipo || 'OUTRO'; });
+    } catch { _minTipos = {}; }
+    return _minTipos;
   }
 
   /* ── Carregamento de dados ────────────────────────────────── */
@@ -225,18 +237,50 @@
 
   /* ── Seção: MEMBROS ───────────────────────────────────────── */
 
-  function _renderSecaoMembros(rows) {
+  async function _renderSecaoMembros(rows) {
     const membros = rows.filter(r => r.tipo_nomeacao === 'membro');
     const socs    = membros.filter(r => r.tipo_membro === 'sociedade');
     const mins    = membros.filter(r => r.tipo_membro === 'ministerio');
 
+    // Sociedades — agrupadas por sigla/órgão
     const bySoc = {};
     socs.forEach(r => { const k = r.orgao || r.area || '—'; (bySoc[k] = bySoc[k] || []).push(r); });
-    const byMin = {};
-    mins.forEach(r => { const k = r.orgao || r.area || '—'; (byMin[k] = byMin[k] || []).push(r); });
+    const htmlSocs = Object.keys(bySoc).sort()
+      .map((o, i) => _bloco(`nom-soc-${i}`, o, 'var(--gold)', '', bySoc[o], _linhaMembro)).join('');
 
-    const htmlSocs = Object.keys(bySoc).sort().map((o, i) => _bloco(`nom-soc-${i}`, o, 'var(--gold)', '', bySoc[o], _linhaMembro)).join('');
-    const htmlMins = Object.keys(byMin).sort().map((o, i) => _bloco(`nom-min-${i}`, o, 'var(--teal)', '', byMin[o], _linhaMembro)).join('');
+    // Ministérios — agrupados por tipo/categoria
+    const tipoMap = await _carregarMinTipos();
+    const TIPO_LABEL = {
+      MUSICA:      'Música',
+      JOVENS:      'Jovens',
+      INFANTIL:    'Infantil',
+      INTERCESSAO: 'Intercessão',
+      EVANGELISMO: 'Evangelismo',
+      DIACONIA:    'Diaconia',
+      COMUNICACAO: 'Comunicação',
+      ACOLHIMENTO: 'Acolhimento & Integração',
+      OUTRO:       'Outros',
+    };
+    const TIPO_ORDER = ['MUSICA','JOVENS','INFANTIL','INTERCESSAO','EVANGELISMO','DIACONIA','COMUNICACAO','ACOLHIMENTO','OUTRO'];
+
+    const byTipo = {};
+    mins.forEach(r => {
+      const tipo = tipoMap[(r.orgao || '').toUpperCase()] || 'OUTRO';
+      const orgao = r.orgao || '—';
+      if (!byTipo[tipo]) byTipo[tipo] = {};
+      (byTipo[tipo][orgao] = byTipo[tipo][orgao] || []).push(r);
+    });
+
+    let htmlMins = '';
+    TIPO_ORDER.forEach(tipo => {
+      if (!byTipo[tipo]) return;
+      const label  = TIPO_LABEL[tipo] || tipo;
+      const orgaos = Object.keys(byTipo[tipo]).sort();
+      htmlMins += _subHeader(label, 'var(--teal)');
+      orgaos.forEach((o, i) => {
+        htmlMins += _bloco(`nom-min-${tipo}-${i}`, o, 'var(--teal)', '', byTipo[tipo][o], _linhaMembro);
+      });
+    });
 
     return `
       ${_subHeader('Sociedades Internas', 'var(--gold)')}
@@ -272,12 +316,12 @@
 
   /* ── Render principal: Nomeações ──────────────────────────── */
 
-  function _renderNomeacoes() {
+  async function _renderNomeacoes() {
     const container = _el('nom-main-container');
     if (!container) return;
 
-    const rows  = _rows;
-    const anual = _anuais.find(a => a.ano === _anoAtivo);
+    const rows   = _rows;
+    const anual  = _anuais.find(a => a.ano === _anoAtivo);
     const outros = rows.filter(r => r.tipo_nomeacao === 'outro');
 
     if (!rows.length) {
@@ -309,7 +353,7 @@
 
       <div class="card" style="margin-bottom:10px;padding:14px 16px">
         <div class="ctit" style="margin-bottom:6px;color:var(--teal)">Membros</div>
-        ${_renderSecaoMembros(rows)}
+        <div id="nom-membros-body"><div style="color:var(--tx3);font-size:12px;padding:8px 0">${_sp()}Carregando…</div></div>
       </div>
 
       ${outros.length ? `
@@ -318,6 +362,10 @@
           ${_renderSecaoOutros(rows)}
         </div>` : ''}
     `;
+
+    // Preenche Membros de forma assíncrona (aguarda fetch de ministerios)
+    const membrosEl = _el('nom-membros-body');
+    if (membrosEl) membrosEl.innerHTML = await _renderSecaoMembros(rows);
   }
 
   /* ── Render: Histórico ────────────────────────────────────── */
