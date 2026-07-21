@@ -1158,6 +1158,15 @@ function renderPerfisAcesso() {
   }).join("");
 }
 
+function usrAcao(acao, idx) {
+  document.querySelectorAll('[id^="usr-menu-"]').forEach(m => { m.style.display = "none"; });
+  const u = (window._usrRows || [])[idx];
+  if (!u) return;
+  if (acao === "senha")   enviarLinkSenha(u);
+  if (acao === "editar")  editarUsuario(u);
+  if (acao === "revogar") revogarAcesso(u.id, u.nome);
+}
+
 function usrToggleMenu(id) {
   const target = document.getElementById(id);
   if (!target) return;
@@ -1197,13 +1206,14 @@ async function carregarUsuarios() {
       return;
     }
 
+    window._usrRows = rows;
     el.innerHTML = rows.map((u, idx) => {
       const perfil   = PERFIS[u.funcao] || { nome: u.funcao || "Sem perfil", icon:"👤", cor:"var(--tx3)" };
       const initials = (u.nome || "?").split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
       const ativo    = u.status === "ativo" || u.status == null;
       const menuId   = `usr-menu-${idx}`;
       const senhaItem = u.email
-        ? `<div onclick="document.getElementById('${menuId}').style.display='none';enviarLinkSenha(${safeJsonForHtml(u)})" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:var(--tx1);cursor:pointer" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">🔑 Enviar senha por WhatsApp</div>`
+        ? `<div onclick="usrAcao('senha',${idx})" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:var(--tx1);cursor:pointer" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">🔑 Enviar senha por WhatsApp</div>`
         : "";
       return `
         <div class="usr-row">
@@ -1220,9 +1230,9 @@ async function carregarUsuarios() {
             <button onclick="usrToggleMenu('${menuId}')" style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:6px;color:var(--tx2);font-size:14px;padding:3px 10px;cursor:pointer;line-height:1">···</button>
             <div id="${menuId}" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--bg-surface);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:200;min-width:210px;overflow:hidden">
               ${senhaItem}
-              <div onclick="document.getElementById('${menuId}').style.display='none';editarUsuario(${safeJsonForHtml(u)})" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:var(--tx1);cursor:pointer" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">✏️ Editar</div>
+              <div onclick="usrAcao('editar',${idx})" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:var(--tx1);cursor:pointer" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">✏️ Editar</div>
               <div style="height:1px;background:var(--bd1);margin:2px 0"></div>
-              <div onclick="document.getElementById('${menuId}').style.display='none';revogarAcesso(${JSON.stringify(u.id)},${JSON.stringify(u.nome)})" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:var(--rose);cursor:pointer" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">🚫 Revogar acesso</div>
+              <div onclick="usrAcao('revogar',${idx})" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:var(--rose);cursor:pointer" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">🚫 Revogar acesso</div>
             </div>
           </div>
         </div>`;
