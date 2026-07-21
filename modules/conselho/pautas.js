@@ -295,7 +295,7 @@
     if (!el || !_presencasEdit) return;
     const cls = (_PRESENCA_GRUPOS.find(g => g.tipo === tipo) || {}).cls || "";
     el.innerHTML = (_presencasEdit[tipo] || []).map((p, i) =>
-      `<span class="mr-chip ${cls}">${_eh(p.nome)}<button type="button" onclick="mrRemoverPresenca('${tipo}',${i})">×</button></span>`
+      `<span class="mr-chip ${cls}">${nomePropio(p.nome)}<button type="button" onclick="mrRemoverPresenca('${tipo}',${i})">×</button></span>`
     ).join("");
   }
 
@@ -315,7 +315,7 @@
       if (!matches.length) { drop.style.display = "none"; return; }
       drop.innerHTML = matches.map(o =>
         `<div class="mr-drop-item" onmousedown="mrAdicionarPresenca('${tipo}','${_ea(o.id)}','${_ea(o.pessoas.nome)}')">
-          <span>${_eh(o.pessoas.nome)}</span>
+          <span>${nomePropio(o.pessoas.nome)}</span>
           <span style="font-size:10px;color:var(--tx3);background:rgba(255,255,255,.07);padding:2px 7px;border-radius:10px">${o.cargo}</span>
         </div>`
       ).join("");

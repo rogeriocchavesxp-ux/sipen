@@ -662,7 +662,7 @@ function fmtD(d) {
           </div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
-              <span style="font-size:12px;font-weight:600;color:var(--tx1)">${a.automatico ? "Sistema" : escapeHtml(a.usuario_nome || "Usuário")}</span>
+              <span style="font-size:12px;font-weight:600;color:var(--tx1)">${a.automatico ? "Sistema" : nomePropio(a.usuario_nome || "Usuário")}</span>
               <span style="font-size:10.5px;color:var(--tx3)">${dt}</span>
               ${a.status_demanda ? pillStatus(a.status_demanda) : ""}
             </div>
@@ -1377,7 +1377,7 @@ function fmtD(d) {
           `<div onclick="window._demSolSelecionar('${escapeHtmlAttr(String(p.id))}','${escapeHtmlAttr(p.nome)}')"
             style="padding:8px 12px;cursor:pointer;font-size:12px;color:var(--tx1);border-bottom:1px solid var(--bd1)"
             onmouseover="this.style.background='var(--bg-hover)'"
-            onmouseout="this.style.background=''">${escapeHtml(p.nome)}</div>`
+            onmouseout="this.style.background=''">${nomePropio(p.nome)}</div>`
         ).join("");
         dd.style.display = "block";
       } catch (_) {

@@ -229,7 +229,7 @@
             style="padding:10px 14px;font-size:13px;color:var(--tx1);cursor:pointer"
             onmouseover="this.style.background='var(--bg3,#eee)'"
             onmouseout="this.style.background=''"
-          >${escapeHtml(p.nome)}</div>
+          >${nomePropio(p.nome)}</div>
         `).join('');
         sugg.style.display = 'block';
 
@@ -282,7 +282,7 @@
       }
 
       _invalidate();
-      _setOk(container, `${escapeHtml(pessoa.nome)} adicionado à sua rede.`);
+      _setOk(container, `${nomePropio(pessoa.nome)} adicionado à sua rede.`);
       await _renderLider(container);
     } catch (e) {
       _setErro(container, e.message);
@@ -359,11 +359,11 @@
             : Object.entries(porCuidador).map(([, g]) => `
                 <div style="border:1px solid var(--bd2);border-radius:8px;padding:14px 16px;background:var(--bg2)">
                   <div style="font-size:13px;font-weight:600;color:var(--tx1);margin-bottom:8px">
-                    ${escapeHtml(g.nome)}
+                    ${nomePropio(g.nome)}
                     <span style="font-size:11px;font-weight:400;color:var(--tx3);margin-left:8px">${g.membros.length}/5</span>
                   </div>
                   <div style="display:flex;flex-wrap:wrap;gap:6px">
-                    ${g.membros.map(m => `<span style="font-size:11px;background:var(--bg3,#eee);border-radius:4px;padding:3px 8px;color:var(--tx2)">${escapeHtml(m)}</span>`).join('')}
+                    ${g.membros.map(m => `<span style="font-size:11px;background:var(--bg-hover);border-radius:4px;padding:3px 8px;color:var(--tx2)">${nomePropio(m)}</span>`).join('')}
                   </div>
                 </div>
               `).join('')
@@ -375,7 +375,7 @@
         <div style="display:flex;flex-wrap:wrap;gap:6px">
           ${semCuidador.length === 0
             ? '<div style="color:var(--tx3);font-size:12px">Todos os membros têm cuidador.</div>'
-            : semCuidador.map(p => `<span style="font-size:12px;background:var(--bg2);border:1px solid var(--bd2);border-radius:4px;padding:4px 10px;color:var(--tx2)">${escapeHtml(p.nome)}</span>`).join('')
+            : semCuidador.map(p => `<span style="font-size:12px;background:var(--bg-card);border:1px solid var(--bd2);border-radius:4px;padding:4px 10px;color:var(--tx2)">${nomePropio(p.nome)}</span>`).join('')
           }
         </div>
 

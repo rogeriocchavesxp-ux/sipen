@@ -180,7 +180,7 @@
     const area = r.area || r.orgao || '';
     const sub  = r.suborgao ? ` <span class="csub">› ${r.suborgao}</span>` : '';
     return `<tr style="cursor:pointer" onclick="nomEditarRegistro('${r.id}')" title="Clique para editar">
-      <td class="tx1b" style="padding-left:20px">${r.nome || '—'}</td>
+      <td class="tx1b" style="padding-left:20px">${nomePropio(r.nome) || '—'}</td>
       <td><span style="color:var(--tx3);font-size:10.5px">${area}</span>${sub}</td>
       <td style="text-align:right;white-space:nowrap;color:var(--sky);font-weight:600;font-size:11px">${r.cargo || ''}</td>
     </tr>`;
@@ -189,7 +189,7 @@
   function _linhaMembro(r) {
     const sub = r.suborgao ? ` <span class="csub">· ${r.suborgao}</span>` : '';
     return `<tr style="cursor:pointer" onclick="nomEditarRegistro('${r.id}')" title="Clique para editar">
-      <td class="tx1b" style="padding-left:20px">${r.nome || '—'}${sub}</td>
+      <td class="tx1b" style="padding-left:20px">${nomePropio(r.nome) || '—'}${sub}</td>
       <td style="text-align:right;white-space:nowrap;font-size:11px">${r.cargo || ''}</td>
     </tr>`;
   }
@@ -412,7 +412,7 @@
           if (!ps.length) return '';
           return `<h3 style="font-size:12px;margin:14px 0 4px;color:#555">${g.label}</h3>
             <table style="width:100%;border-collapse:collapse;font-size:11px">
-              ${ps.map(p => `<tr style="border-bottom:1px solid #eee"><td style="padding:3px 0">${p.nome}</td><td style="color:#777">${p.orgao||''}${p.suborgao?' › '+p.suborgao:''}</td><td style="text-align:right;color:#555">${p.cargo||''}</td></tr>`).join('')}
+              ${ps.map(p => `<tr style="border-bottom:1px solid #eee"><td style="padding:3px 0">${nomePropio(p.nome)}</td><td style="color:#777">${p.orgao||''}${p.suborgao?' › '+p.suborgao:''}</td><td style="text-align:right;color:#555">${p.cargo||''}</td></tr>`).join('')}
             </table>`;
         }).join('');
     };
@@ -431,7 +431,7 @@
         Object.keys(bySoc).sort().forEach(k => {
           html += `<div style="margin-bottom:8px"><strong style="font-size:11px">${k}</strong>
             <table style="width:100%;border-collapse:collapse;font-size:11px">
-              ${bySoc[k].map(p => `<tr style="border-bottom:1px solid #f5f5f5"><td style="padding:2px 0 2px 8px">${p.nome}</td><td style="text-align:right;color:#555">${p.cargo||''}</td></tr>`).join('')}
+              ${bySoc[k].map(p => `<tr style="border-bottom:1px solid #f5f5f5"><td style="padding:2px 0 2px 8px">${nomePropio(p.nome)}</td><td style="text-align:right;color:#555">${p.cargo||''}</td></tr>`).join('')}
             </table></div>`;
         });
       }
@@ -443,7 +443,7 @@
         Object.keys(byMin).sort().forEach(k => {
           html += `<div style="margin-bottom:8px"><strong style="font-size:11px">${k}</strong>
             <table style="width:100%;border-collapse:collapse;font-size:11px">
-              ${byMin[k].map(p => `<tr style="border-bottom:1px solid #f5f5f5"><td style="padding:2px 0 2px 8px">${p.nome}${p.suborgao?` (${p.suborgao})`:''}</td><td style="text-align:right;color:#555">${p.cargo||''}</td></tr>`).join('')}
+              ${byMin[k].map(p => `<tr style="border-bottom:1px solid #f5f5f5"><td style="padding:2px 0 2px 8px">${nomePropio(p.nome)}${p.suborgao?` (${p.suborgao})`:''}</td><td style="text-align:right;color:#555">${p.cargo||''}</td></tr>`).join('')}
             </table></div>`;
         });
       }
@@ -1031,7 +1031,7 @@
           style="padding:9px 12px;cursor:pointer;font-size:12px;color:var(--tx1);border-bottom:1px solid var(--bd1)"
           onmouseover="this.style.background='var(--bg-surface2)'"
           onmouseout="this.style.background=''">
-          ${escapeHtml(p.nome)}
+          ${nomePropio(p.nome)}
         </div>`).join('');
     } catch {
       list.innerHTML = `<div style="padding:8px 12px;color:var(--tx3);font-size:11px">Erro na busca.</div>`;
@@ -1113,7 +1113,7 @@
             ${pessoas.map(p => `
               <label style="display:flex;align-items:center;gap:8px;padding:6px 6px;border-radius:4px;cursor:pointer" onmouseover="this.style.background='var(--bg-surface2)'" onmouseout="this.style.background=''">
                 <input type="checkbox" data-id="${p.id}" checked style="width:14px;height:14px;accent-color:var(--gr);flex-shrink:0">
-                <span style="flex:1;font-size:12px;color:var(--tx1)">${p.nome}</span>
+                <span style="flex:1;font-size:12px;color:var(--tx1)">${nomePropio(p.nome)}</span>
                 <span style="font-size:10px;color:var(--tx3)">${p.cargo || ''}</span>
               </label>`).join('')}
           </div>`;
