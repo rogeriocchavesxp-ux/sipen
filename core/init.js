@@ -204,6 +204,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const sb = getSupabase();
 
+      // Detecta fluxo de recovery pelo hash antes de qualquer listener
+      // Supabase adiciona type=recovery ao hash quando processa o link de redefinição
+      const _modoRecovery = window.location.hash.includes("type=recovery");
+
       // Listener de estado de autenticação
       sb.auth.onAuthStateChange(async (event, session) => {
         if (event === "PASSWORD_RECOVERY") {
@@ -234,7 +238,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
 
       const { data: { session } } = await sb.auth.getSession();
-      if (session?.user?.id) {
+      if (session?.user?.id && !_modoRecovery) {
         await carregarUsuarioLogado(session.user.id);
       }
       // Se não há sessão, login-screen permanece visível (padrão)
