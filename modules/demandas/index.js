@@ -2110,15 +2110,19 @@ function fmtD(d) {
   };
 
   async function _notificarSolicitanteWA(dem, evento, extra = {}) {
-    if (typeof WA === "undefined") return;
-    if (!dem) return;
+    const _lg = (...a) => console.log("[WA-SOL]", ...a);
+    if (typeof WA === "undefined") { _lg("WA indefinido"); return; }
+    if (!dem) { _lg("dem nulo"); return; }
 
-    // Não notifica se o atualizador é o próprio solicitante
     const uidAtual = typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL?.id : null;
-    if (uidAtual && dem.solicitante_id && String(dem.solicitante_id) === String(uidAtual)) return;
+    _lg(`evento="${evento}" dem.id=${dem.id} solicitante_id=${dem.solicitante_id} uidAtual=${uidAtual} tel=${dem.telefone_solicitante}`);
+
+    if (uidAtual && dem.solicitante_id && String(dem.solicitante_id) === String(uidAtual)) {
+      _lg("bloqueado: usuário atual é o solicitante"); return;
+    }
 
     const tel = dem.telefone_solicitante;
-    if (!tel) return;
+    if (!tel) { _lg("bloqueado: sem telefone_solicitante"); return; }
 
     const nome   = (dem.solicitante || dem.solicitante_txt || "").split(" ")[0] || "prezado(a)";
     const titulo = dem.titulo || "—";
@@ -2140,6 +2144,7 @@ function fmtD(d) {
     }
     if (!mensagem) return;
 
+    _lg(`enviando para ${tel} (${nome})`);
     WA.send({
       para:        tel,
       nome,
@@ -2148,7 +2153,7 @@ function fmtD(d) {
       referenciaT: "demanda",
       referenciaId: String(dem.id || dem._row || ""),
       chave:       `DEM_SOL_${evento}_${dem.id || dem._row}_${Math.floor(Date.now() / 5000)}`,
-    }).catch(() => {});
+    }).then(r => _lg("resultado:", r)).catch(e => _lg("erro:", e.message));
   }
 
   async function _notificarResponsaveisWA(dem) {
