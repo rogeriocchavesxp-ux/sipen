@@ -1246,6 +1246,8 @@ function enviarLinkSenha(u) {
   if (!u.email)    { showToast("Usuário sem e-mail cadastrado.", "err"); return; }
   if (!u.telefone) { showToast("Usuário sem telefone cadastrado.", "err"); return; }
 
+  window._usrPendente = u;
+
   // Modal de confirmação
   const overlay = document.createElement("div");
   overlay.id = "modal-confirmar-senha";
@@ -1263,13 +1265,15 @@ function enviarLinkSenha(u) {
       <div style="font-size:10.5px;color:var(--tx3);margin-bottom:16px">O link expira em 1 hora.</div>
       <div style="display:flex;justify-content:flex-end;gap:8px">
         <button onclick="document.getElementById('modal-confirmar-senha').remove()" style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:6px;padding:7px 14px;color:var(--tx2);cursor:pointer;font-size:12px">Cancelar</button>
-        <button id="btn-confirmar-envio-senha" onclick="_confirmarEnvioSenha(${safeJsonForHtml(u)})" style="background:var(--gr);border:none;border-radius:6px;padding:7px 16px;color:#fff;cursor:pointer;font-size:12px;font-weight:600">Enviar por WhatsApp</button>
+        <button id="btn-confirmar-envio-senha" onclick="_confirmarEnvioSenha()" style="background:var(--gr);border:none;border-radius:6px;padding:7px 16px;color:#fff;cursor:pointer;font-size:12px;font-weight:600">Enviar por WhatsApp</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
 }
 
-async function _confirmarEnvioSenha(u) {
+async function _confirmarEnvioSenha() {
+  const u = window._usrPendente;
+  if (!u) return;
   const confirmBtn = document.getElementById("btn-confirmar-envio-senha");
   if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = "Enviando..."; }
 
