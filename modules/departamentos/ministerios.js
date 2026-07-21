@@ -3373,8 +3373,6 @@
   const _socIcLider = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-1px"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/><path d="m16 11 1.5 1.5L20 10"/></svg>`;
   const _socIcUsers = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-1px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
   const _socIcBar   = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-1px"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>`;
-  const _socIcPerson = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
-
   /* ── Abrir detalhe de uma sociedade ─────────────────────── */
   async function minSocAbrir(sigla) {
     const socs = await _socGetList();
@@ -3401,9 +3399,6 @@
     if (!detalhe) return;
     detalhe.style.display = '';
     detalhe.innerHTML = `
-      <div id="soc-detalhe-header" style="margin-bottom:18px">
-        <div style="color:var(--tx3);font-size:12px;padding:16px;text-align:center">Carregando...</div>
-      </div>
       <div style="display:flex;border-bottom:2px solid var(--bd1);margin-bottom:20px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;gap:2px">
         <button class="min-tab active" data-tab="visao-geral" onclick="minSocTab('visao-geral')">${_socIcHome}Visão Geral</button>
         <button class="min-tab" data-tab="lideranca"          onclick="minSocTab('lideranca')">${_socIcLider}Liderança</button>
@@ -3425,41 +3420,7 @@
       _socRows = r.ok ? await r.json() : [];
     } catch { _socRows = []; }
 
-    _socRenderHeader();
     _socRenderVisaoGeral();
-  }
-
-  /* ── Header da sociedade ────────────────────────────────── */
-  function _socRenderHeader() {
-    const el = document.getElementById('soc-detalhe-header');
-    if (!el || !_socAtual) return;
-    const soc     = _socAtual;
-    const lideres = _socRows.filter(r => r.tipo_nomeacao === 'lider');
-    const membros = _socRows.filter(r => r.tipo_nomeacao !== 'lider');
-
-    const _stat = (num, label, rgb) => `
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg2);border-radius:8px;min-width:130px">
-        <div style="width:34px;height:34px;border-radius:50%;background:rgba(${rgb},.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg stroke="rgb(${rgb})" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${_socIcPerson}</svg>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3)">${label}</div>
-          <div style="font-size:22px;font-weight:800;color:var(--tx1);line-height:1.1">${num}</div>
-        </div>
-      </div>`;
-
-    el.innerHTML = `
-      <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
-        <div style="width:56px;height:56px;border-radius:14px;background:var(--violetbg);border:1px solid rgba(144,104,200,0.25);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">${soc.ic}</div>
-        <div style="flex:1;min-width:160px">
-          <div style="font-size:19px;font-weight:800;color:var(--tx1);margin-bottom:3px">${_hEsc(soc.sigla)} — ${_hEsc(soc.nome)}</div>
-          <div style="font-size:12.5px;color:var(--tx3)">Sociedade Interna · IPPenha</div>
-        </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          ${_stat(lideres.length, 'Líderes',  '58,170,92')}
-          ${_stat(membros.length, 'Membros',  '139,107,193')}
-        </div>
-      </div>`;
   }
 
   /* ── Aba: Visão Geral ───────────────────────────────────── */
@@ -3499,10 +3460,10 @@
       </div>`;
 
     el.innerHTML = `
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:20px">
-        ${_kpi(lideres.length, 'Líderes',  'Diretoria e supervisão')}
-        ${_kpi(membros.length, 'Membros',  'Participantes ativos')}
-        ${_kpi(_socRows.length,'Total',    'Pessoas nomeadas')}
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:20px">
+        ${_kpi(lideres.length, 'Líderes',   'Diretoria e supervisão')}
+        ${_kpi(membros.length, 'Membros',   'Participantes ativos')}
+        ${_kpi(_socRows.length, 'Total',    'Pessoas nomeadas')}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
         ${_preview('Diretoria / Líderes', lideres, 'lideranca')}
