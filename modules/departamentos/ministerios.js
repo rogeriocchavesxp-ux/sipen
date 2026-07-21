@@ -3317,23 +3317,30 @@
 
   /* ══ SOCIEDADES INTERNAS ════════════════════════════════════ */
 
-  const _SOC_LIST = [
-    { sigla:'UPH', nome:'União Presbiteriana de Homens',       orgao:'UPH – União Presbiteriana de Homens',       ic:'👨' },
-    { sigla:'SAF', nome:'Sociedade Auxiliadora Feminina',      orgao:'SAF – Sociedade Auxiliadora Feminina',      ic:'👩' },
-    { sigla:'UMP', nome:'União da Mocidade Presbiteriana',     orgao:'UMP – União da Mocidade Presbiteriana',     ic:'🔥' },
-    { sigla:'UPA', nome:'União Presbiteriana de Adolescentes', orgao:'UPA – União Presbiteriana de Adolescentes', ic:'🌟' },
-    { sigla:'UCP', nome:'União das Crianças Presbiterianas',   orgao:'UCP – União das Crianças Presbiterianas',   ic:'👶' },
-  ];
+  let _SOC_LIST = null;
+
+  async function _socGetList() {
+    if (_SOC_LIST) return _SOC_LIST;
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/sociedades?ativo=eq.true&select=id,sigla,nome,orgao,ic&order=sigla.asc`,
+        { headers: _hdr() }
+      );
+      _SOC_LIST = r.ok ? await r.json() : [];
+    } catch { _SOC_LIST = []; }
+    return _SOC_LIST;
+  }
 
   async function sbMinSocBuild() {
     const el = document.getElementById('sb-min-sociedades');
     if (!el) return;
-    el.innerHTML = '<div class="sdiv"></div>' + _SOC_LIST.map(s =>
+    const socs = await _socGetList();
+    el.innerHTML = '<div class="sdiv"></div>' + socs.map(s =>
       `<div class="si" data-soc="${s.sigla}" onclick="window._sbSocSigla='${s.sigla}';go('min-soc')">${s.ic} ${s.sigla}</div>`
     ).join('');
   }
 
-  function _socMostrarLista() {
+  async function _socMostrarLista() {
     const lista   = document.getElementById('min-soc-painel-lista');
     const detalhe = document.getElementById('min-soc-painel-detalhe');
     const ttl     = document.getElementById('min-soc-hero-ttl');
@@ -3345,9 +3352,10 @@
     if (detalhe) detalhe.style.display = 'none';
     if (!lista) return;
     lista.style.display = '';
+    const socs = await _socGetList();
     lista.innerHTML = `
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
-        ${_SOC_LIST.map(s => `
+        ${socs.map(s => `
           <div class="card" style="cursor:pointer" onclick="minSocAbrir('${s.sigla}')">
             <div style="font-size:28px;margin-bottom:8px">${s.ic}</div>
             <div style="font-size:14px;font-weight:700;color:var(--tx1);margin-bottom:3px">${s.sigla}</div>
@@ -3358,7 +3366,8 @@
   }
 
   async function minSocAbrir(sigla) {
-    const soc = _SOC_LIST.find(s => s.sigla === sigla);
+    const socs = await _socGetList();
+    const soc = socs.find(s => s.sigla === sigla);
     if (!soc) { _socMostrarLista(); return; }
 
     const lista   = document.getElementById('min-soc-painel-lista');
