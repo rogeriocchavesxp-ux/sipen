@@ -3607,60 +3607,94 @@
   async function _socRenderAdm() {
     const el = document.getElementById('soc-adm-content');
     if (!el || !_socAtual) return;
+    el.innerHTML = '<div style="color:var(--tx3);text-align:center;padding:32px">Carregando...</div>';
+    await _carregarPessoas();
     const soc = _socAtual;
-    const conselheiro = _socRows.find(r => (r.funcao_lider || r.cargo || '').toLowerCase().includes('conselheiro'));
-    const presidente  = _socRows.find(r => (r.funcao_lider || r.cargo || '').toLowerCase().includes('presidente'));
+    const liderRows = _socRows.filter(r => r.tipo_nomeacao === 'lider');
 
     el.innerHTML = `
-      <div class="card" style="margin-bottom:14px">
-        <div class="ctit">Informações da Sociedade</div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="ctit">Informações</div>
         <div style="display:flex;flex-direction:column;gap:14px">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div>
-              <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Sigla</div>
-              <div style="font-size:14px;font-weight:700;color:var(--tx1)">${_hEsc(soc.sigla)}</div>
-            </div>
-            <div>
-              <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Status</div>
-              <span style="font-size:12px;padding:3px 10px;border-radius:20px;background:rgba(58,170,92,0.12);color:var(--gr);border:1px solid rgba(58,170,92,0.2);font-weight:600">Ativa</span>
-            </div>
+          <div>
+            <label style="${_LB}">Sigla</label>
+            <input type="text" id="soc-adm-sigla" value="${_hEsc(soc.sigla)}" disabled
+              style="${_INP};opacity:.55;cursor:not-allowed">
           </div>
           <div>
-            <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Nome Completo</div>
-            <div style="font-size:13px;color:var(--tx1)">${_hEsc(soc.nome)}</div>
+            <label style="${_LB}">Nome <span style="color:var(--rose)">*</span></label>
+            <input type="text" id="soc-adm-nome" value="${_hEsc(soc.nome || '')}" style="${_INP}">
           </div>
           <div>
-            <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Órgão / Grupo</div>
-            <div style="font-size:13px;color:var(--tx2)">${_hEsc(soc.orgao || '—')}</div>
+            <label style="${_LB}">Órgão / Grupo</label>
+            <input type="text" id="soc-adm-orgao" value="${_hEsc(soc.orgao || '')}" style="${_INP}">
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="checkbox" id="soc-adm-ativo" ${soc.ativo !== false ? 'checked' : ''}
+              style="width:16px;height:16px;cursor:pointer">
+            <label for="soc-adm-ativo" style="font-size:13px;color:var(--tx2);cursor:pointer">Sociedade ativa</label>
+          </div>
+          <div id="soc-adm-err" style="color:var(--rose);font-size:12px;display:none"></div>
+          <div style="display:flex;justify-content:flex-end">
+            <button id="soc-adm-btn" onclick="window._socSalvarAdm()"
+              style="padding:9px 24px;border-radius:8px;border:none;background:var(--violet);color:#fff;font-size:13px;font-weight:600;cursor:pointer">
+              Salvar
+            </button>
           </div>
         </div>
       </div>
       <div class="card">
-        <div class="ctit">Liderança Atual</div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          ${presidente ? `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg-hover);border-radius:8px">
-              <div>
-                <div style="font-size:13px;font-weight:500;color:var(--tx1)">${_hEsc(presidente.nome)}</div>
-                <div style="font-size:11px;color:var(--tx3);margin-top:2px">Presidente</div>
-              </div>
-            </div>` : ''}
-          ${conselheiro ? `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg-hover);border-radius:8px">
-              <div>
-                <div style="font-size:13px;font-weight:500;color:var(--tx1)">${_hEsc(conselheiro.nome)}</div>
-                <div style="font-size:11px;color:var(--tx3);margin-top:2px">Conselheiro</div>
-              </div>
-            </div>` : ''}
-          ${!presidente && !conselheiro ? `
-            <div style="color:var(--tx3);font-size:12.5px;padding:16px 0;text-align:center">Nenhuma liderança nomeada.</div>
-          ` : ''}
-        </div>
-        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--bd1);display:flex;justify-content:flex-end">
+        <div class="ctit">Liderança</div>
+        ${liderRows.length ? `
+          <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px">
+            ${liderRows.map(r => `
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--bg-hover);border-radius:8px">
+                <div style="font-size:13px;font-weight:500;color:var(--tx1)">${_hEsc(r.nome)}</div>
+                <div style="font-size:11.5px;color:var(--tx3)">${_hEsc(r.cargo || r.funcao_lider || '—')}</div>
+              </div>`).join('')}
+          </div>` : `
+          <div style="color:var(--tx3);font-size:12.5px;padding:12px 0;text-align:center">Nenhuma liderança nomeada.</div>`}
+        <div style="display:flex;justify-content:flex-end">
           <button class="tbt sec" style="font-size:12px" onclick="minSocTab('lideranca')">Gerenciar liderança</button>
         </div>
       </div>`;
   }
+
+  async function _socSalvarAdm() {
+    if (!_socAtual) return;
+    const nome  = (document.getElementById('soc-adm-nome')?.value  || '').trim();
+    const orgao = (document.getElementById('soc-adm-orgao')?.value || '').trim();
+    const ativo = document.getElementById('soc-adm-ativo')?.checked ?? true;
+    const errEl = document.getElementById('soc-adm-err');
+    const btn   = document.getElementById('soc-adm-btn');
+    if (errEl) errEl.style.display = 'none';
+    if (!nome) {
+      if (errEl) { errEl.textContent = 'Nome é obrigatório.'; errEl.style.display = ''; }
+      return;
+    }
+    if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/sociedades?id=eq.${_socAtual.id}`,
+        { method: 'PATCH', headers: { ..._hdr(), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ nome, orgao, ativo }) }
+      );
+      if (!r.ok) throw new Error((await r.json())?.message || 'Erro ao salvar.');
+      // Atualiza cache local
+      _socAtual.nome  = nome;
+      _socAtual.orgao = orgao;
+      _socAtual.ativo = ativo;
+      _SOC_LIST = null; // invalida cache da lista
+      const ttl = document.getElementById('min-soc-hero-ttl');
+      if (ttl) ttl.textContent = `${_socAtual.sigla} — ${nome}`;
+      if (typeof T === 'function') T('Salvo', 'Dados da sociedade atualizados.');
+    } catch (e) {
+      if (errEl) { errEl.textContent = e.message; errEl.style.display = ''; }
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Salvar'; }
+    }
+  }
+  window._socSalvarAdm = _socSalvarAdm;
 
   /* ── Troca de aba (scoped ao painel de detalhe) ─────────── */
   function minSocTab(tab) {
