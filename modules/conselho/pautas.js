@@ -1811,8 +1811,6 @@
   /* ── NAVEGAÇÃO ───────────────────────────────────────────── */
 
   document.addEventListener("sipen:navigate", async ({ detail: { id } }) => {
-    if (id === "pautas-reunioes") await renderReunioes();
-    if (id === "pautas-pautas")   await renderPautasTab();
     if (id === "pautas-lista")    await renderPautas();
     if (id === "pautas-imprimir") await renderImprimir();
   });
