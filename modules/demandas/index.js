@@ -1149,6 +1149,7 @@ function fmtD(d) {
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Responsável</label>
               <input id="dem-edit-resp" type="text" value="${escapeHtmlAttr(dem.responsavel || dem.responsavel_txt || '')}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>
+            ${dem.area !== "Financeiro" ? `
             <div>
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Localização / Sala</label>
               <select id="dem-edit-local" data-valor-atual="${dem.local_id || dem.local || ''}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
@@ -1158,7 +1159,9 @@ function fmtD(d) {
             <div>
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Conclusão prevista</label>
               <input id="dem-edit-venc" type="date" value="${dem.data_conclusao||''}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
-            </div>
+            </div>` : `
+            <input type="hidden" id="dem-edit-local" value="">
+            <input type="hidden" id="dem-edit-venc" value="">`}
           </div>
           ${_podeEditarPrioridade() ? `
           <div style="margin-top:12px">
