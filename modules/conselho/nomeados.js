@@ -137,8 +137,9 @@
     _sv('nom-kpi-socs',    [...new Set(socs.map(r => r.orgao))].length);
 
     // Subtextos
+    const lidsoc = lideres.filter(r => r.orgao_tipo === 'sociedade');
     const kpiSubs = {
-      'nom-kpi-sub-lideres': `${lideres.filter(r=>r.funcao_lider==='supervisor').length} sup · ${lideres.filter(r=>r.funcao_lider==='coordenador').length} coord`,
+      'nom-kpi-sub-lideres': `${lideres.filter(r=>r.funcao_lider==='supervisor').length} sup · ${lideres.filter(r=>r.funcao_lider==='coordenador').length} coord · ${lidsoc.length} soc`,
       'nom-kpi-sub-membros': `${mins.length} em ministérios · ${socs.length} em sociedades`,
     };
     Object.entries(kpiSubs).forEach(([id, v]) => _sv(id, v));
@@ -205,10 +206,21 @@
   function _renderSecaoLideres(rows) {
     const lideres = rows.filter(r => r.tipo_nomeacao === 'lider');
     if (!lideres.length) return `<p style="color:var(--tx3);font-size:11.5px;padding:4px 0">Nenhum líder cadastrado para este ano.</p>`;
+
+    const lidsoc = lideres.filter(r => r.orgao_tipo === 'sociedade');
+    const lidgov = lideres.filter(r => r.orgao_tipo !== 'sociedade');
+
+    const bySoc = {};
+    lidsoc.forEach(r => { const k = r.orgao || '—'; (bySoc[k] = bySoc[k] || []).push(r); });
+    const htmlSocLid = Object.keys(bySoc).sort().map((o, i) =>
+      _bloco(`nom-soc-lid-${i}`, o, 'var(--gold)', '', bySoc[o], _linhaLider)
+    ).join('');
+
     return `
-      ${_bloco('nom-sup',   'Supervisores',    'var(--rose)',   '', lideres.filter(r => r.funcao_lider === 'supervisor'),  _linhaLider)}
-      ${_bloco('nom-coord', 'Coordenadores',   'var(--sky)',    '', lideres.filter(r => r.funcao_lider === 'coordenador'), _linhaLider)}
-      ${_bloco('nom-lider', 'Líderes de Área', 'var(--violet)', '', lideres.filter(r => r.funcao_lider === 'lider_area'),  _linhaLider)}`;
+      ${_bloco('nom-sup',   'Supervisores',    'var(--rose)',   '', lidgov.filter(r => r.funcao_lider === 'supervisor'),  _linhaLider)}
+      ${_bloco('nom-coord', 'Coordenadores',   'var(--sky)',    '', lidgov.filter(r => r.funcao_lider === 'coordenador'), _linhaLider)}
+      ${_bloco('nom-lider', 'Líderes de Área', 'var(--violet)', '', lidgov.filter(r => r.funcao_lider === 'lider_area'),  _linhaLider)}
+      ${lidsoc.length ? `${_subHeader('Liderança de Sociedades Internas', 'var(--gold)')}${htmlSocLid}` : ''}`;
   }
 
   /* ── Seção: MEMBROS ───────────────────────────────────────── */
@@ -401,20 +413,31 @@
     const _secaoLideres = (r) => {
       const lideres = r.filter(x => x.tipo_nomeacao === 'lider');
       if (!lideres.length) return '';
+      const lidsoc = lideres.filter(x => x.orgao_tipo === 'sociedade');
+      const lidgov = lideres.filter(x => x.orgao_tipo !== 'sociedade');
       const grupos = [
         { key:'supervisor',  label:'Supervisores' },
         { key:'coordenador', label:'Coordenadores' },
         { key:'lider_area',  label:'Líderes de Área' },
       ];
-      return `<h2 style="font-size:14px;margin:24px 0 8px;border-bottom:1px solid #ccc;padding-bottom:4px">LÍDERES</h2>` +
-        grupos.map(g => {
-          const ps = lideres.filter(x => x.funcao_lider === g.key);
-          if (!ps.length) return '';
-          return `<h3 style="font-size:12px;margin:14px 0 4px;color:#555">${g.label}</h3>
-            <table style="width:100%;border-collapse:collapse;font-size:11px">
-              ${ps.map(p => `<tr style="border-bottom:1px solid #eee"><td style="padding:3px 0">${nomePropio(p.nome)}</td><td style="color:#777">${p.orgao||''}${p.suborgao?' › '+p.suborgao:''}</td><td style="text-align:right;color:#555">${p.cargo||''}</td></tr>`).join('')}
-            </table>`;
-        }).join('');
+      const _tbl = ps => `<table style="width:100%;border-collapse:collapse;font-size:11px">
+        ${ps.map(p => `<tr style="border-bottom:1px solid #eee"><td style="padding:3px 0">${nomePropio(p.nome)}</td><td style="color:#777">${p.orgao||''}${p.suborgao?' › '+p.suborgao:''}</td><td style="text-align:right;color:#555">${p.cargo||''}</td></tr>`).join('')}
+      </table>`;
+      let html = `<h2 style="font-size:14px;margin:24px 0 8px;border-bottom:1px solid #ccc;padding-bottom:4px">LÍDERES</h2>`;
+      html += grupos.map(g => {
+        const ps = lidgov.filter(x => x.funcao_lider === g.key);
+        if (!ps.length) return '';
+        return `<h3 style="font-size:12px;margin:14px 0 4px;color:#555">${g.label}</h3>${_tbl(ps)}`;
+      }).join('');
+      if (lidsoc.length) {
+        html += `<h3 style="font-size:12px;margin:14px 0 4px;color:#555">Liderança de Sociedades Internas</h3>`;
+        const bySoc = {};
+        lidsoc.forEach(x => { const k = x.orgao||'—'; (bySoc[k]=bySoc[k]||[]).push(x); });
+        Object.keys(bySoc).sort().forEach(k => {
+          html += `<div style="margin-bottom:6px"><strong style="font-size:11px">${k}</strong>${_tbl(bySoc[k])}</div>`;
+        });
+      }
+      return html;
     };
 
     const _secaoMembros = (r) => {
