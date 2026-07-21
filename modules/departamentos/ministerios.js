@@ -3410,6 +3410,9 @@
     if (!detalhe) return;
     detalhe.style.display = '';
     detalhe.innerHTML = `
+      <div id="min-soc-detalhe-header" class="card" style="margin-bottom:16px">
+        <div style="color:var(--tx3);font-size:13px;padding:12px 0">Carregando...</div>
+      </div>
       <div style="display:flex;border-bottom:2px solid var(--bd1);margin-bottom:20px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;gap:2px">
         <button class="min-tab active" data-tab="visao-geral" onclick="minSocTab('visao-geral')">${_socIcHome}Visão Geral</button>
         <button class="min-tab" data-tab="lideranca"          onclick="minSocTab('lideranca')">${_socIcLider}Liderança</button>
@@ -3435,7 +3438,56 @@
       _socRows = r.ok ? await r.json() : [];
     } catch { _socRows = []; }
 
+    _socRenderHeader();
     _socRenderVisaoGeral();
+  }
+
+  function _socRenderHeader() {
+    const el = document.getElementById('min-soc-detalhe-header');
+    if (!el || !_socAtual) return;
+    const soc = _socAtual;
+
+    const findByRole = (...pats) => _socRows.find(r =>
+      r.tipo_nomeacao === 'lider' &&
+      pats.some(p => (r.cargo || r.funcao_lider || '').toLowerCase().includes(p))
+    );
+    const presidente  = findByRole('presidente');
+    const conselheiro = findByRole('conselh');
+    const secretario  = findByRole('secretar', 'tesour');
+
+    const _card = (label, pessoa, cor) => {
+      const nome = pessoa ? _hEsc(pessoa.nome) : null;
+      return `<div style="display:flex;align-items:center;gap:9px;padding:10px 14px;background:var(--bg2);border-radius:8px;min-width:140px;flex:1">
+        <div style="width:32px;height:32px;border-radius:50%;background:rgba(${cor},.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgb(${cor})" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div style="min-width:0">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:2px">${label}</div>
+          <div style="font-size:12.5px;font-weight:600;color:${nome ? 'var(--tx1)' : 'var(--tx3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nome || 'Não informado'}</div>
+        </div>
+      </div>`;
+    };
+
+    el.innerHTML = `
+      <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
+        <div style="display:flex;align-items:flex-start;gap:14px;flex:1;min-width:260px">
+          <div style="width:52px;height:52px;border-radius:12px;background:rgba(139,107,193,.15);border:1px solid rgba(139,107,193,.25);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${soc.ic || '🏛'}</div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+              <span style="font-size:18px;font-weight:800;color:var(--tx1)">${_hEsc(soc.nome)}</span>
+              ${soc.ativo === false
+                ? '<span class="pill pa" style="font-size:10px">Inativa</span>'
+                : '<span class="pill pg" style="font-size:10px">Ativa</span>'}
+            </div>
+            ${soc.descricao ? `<div style="font-size:12.5px;color:var(--tx2);line-height:1.6;max-width:480px">${_hEsc(soc.descricao)}</div>` : ''}
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch">
+          ${_card('Presidente',  presidente,  '201,168,76')}
+          ${_card('Conselheiro', conselheiro, '74,156,245')}
+          ${_card('Secretário',  secretario,  '58,170,92')}
+        </div>
+      </div>`;
   }
 
   /* ── Aba: Visão Geral ───────────────────────────────────── */
@@ -3718,6 +3770,7 @@
       _SOC_LIST = null;
       const ttl = document.getElementById('min-soc-hero-ttl');
       if (ttl) ttl.textContent = `${_socAtual.sigla} — ${nome}`;
+      _socRenderHeader();
       if (btn) { btn.textContent = 'Salvo ✓'; }
       setTimeout(() => { const b = document.getElementById('soc-adm-btn'); if (b) { b.textContent = 'Salvar'; b.disabled = false; } }, 2000);
     } catch (e) {

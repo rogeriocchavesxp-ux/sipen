@@ -517,6 +517,7 @@
               <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Função do Líder</label>
               <select id="nom-f-funcao" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
                 <option value="supervisor">Supervisor</option>
+                <option value="presidente">Presidente</option>
                 <option value="coordenador">Coordenador</option>
                 <option value="lider_area">Líder de Área</option>
                 <option value="conselheiro">Conselheiro</option>
@@ -847,7 +848,7 @@
         ? '"' + s.replace(/"/g, '""') + '"' : s;
     };
     const _tipoLabel = r => r.tipo_nomeacao === 'lider' ? 'Líder' : r.tipo_nomeacao === 'membro' ? 'Membro' : 'Outro';
-    const _funcLabel = r => ({ supervisor:'Supervisor', coordenador:'Coordenador', lider_area:'Líder de Área', conselheiro:'Conselheiro', tesoureiro:'Tesoureiro' }[r.funcao_lider] || '');
+    const _funcLabel = r => ({ supervisor:'Supervisor', presidente:'Presidente', coordenador:'Coordenador', lider_area:'Líder de Área', conselheiro:'Conselheiro', tesoureiro:'Tesoureiro' }[r.funcao_lider] || '');
     const _membLabel = r => ({ sociedade:'Sociedade Interna', ministerio:'Ministério', comissao:'Comissão', grupo:'Grupo', congregacao:'Congregação' }[r.tipo_membro] || r.orgao_tipo || '');
 
     const cab = ['Ano','Tipo','Função / Vínculo','Área / Ministério / Sociedade','Sub-área','Nome','Cargo','Ata de Origem'];
