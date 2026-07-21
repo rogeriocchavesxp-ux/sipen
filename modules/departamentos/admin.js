@@ -462,6 +462,22 @@ const DEPT_ADM = (function(){
     }
   }
 
+  /* ── Sidebar: itens dinâmicos por departamento ──────────── */
+
+  async function sbDeptAdmBuild() {
+    const el = document.getElementById("sb-dept-adm");
+    if (!el) return;
+    try {
+      await _carregarDepts();
+      el.innerHTML = _depts
+        .filter(d => d.status === "ativo")
+        .map(d =>
+          `<div class="si" data-dept="${_esc(d.id)}"
+            onclick="window._deptAdmId='${_esc(d.id)}';go('min-adm')">${_esc(d.nome)}</div>`
+        ).join("");
+    } catch { el.innerHTML = ""; }
+  }
+
   /* ── Entrada principal ──────────────────────────────────── */
 
   async function load(){
@@ -479,7 +495,17 @@ const DEPT_ADM = (function(){
         lista.innerHTML = `<div style="color:var(--rose);font-size:11.5px">Tabelas não encontradas. Execute o script <b>supabase-dept-admin.sql</b> no Supabase.</div>`;
         return;
       }
-      _renderLista();
+
+      if (window._deptAdmId) {
+        const id = window._deptAdmId;
+        window._deptAdmId = null;
+        document.querySelectorAll("#sb-dept-adm .si").forEach(e =>
+          e.classList.toggle("on", e.dataset.dept === id)
+        );
+        await abrirDetalhe(id);
+      } else {
+        _renderLista();
+      }
     }catch(e){
       lista.innerHTML = `<div style="color:var(--rose);font-size:11.5px">Erro ao carregar: ${_esc(e.message)}</div>`;
     }
@@ -489,10 +515,11 @@ const DEPT_ADM = (function(){
   function invalidate(){ _depts=[]; _pessoas=[]; _detalhe=null; }
 
   /* ── API pública ────────────────────────────────────────── */
-  return { load, invalidate, abrirDetalhe, voltarLista, openAddModal, closeAddModal, salvarMembro, removerMembro, openDeptModal, salvarDept, removerDept };
+  return { load, invalidate, abrirDetalhe, voltarLista, openAddModal, closeAddModal, salvarMembro, removerMembro, openDeptModal, salvarDept, removerDept, sbDeptAdmBuild };
 })();
 
 window.DEPT_ADM = DEPT_ADM;
+window.sbDeptAdmBuild = DEPT_ADM.sbDeptAdmBuild;
 
 /* ═══════════════════════════════════════════════════════
    COMISSÕES — gestão de comissões institucionais
