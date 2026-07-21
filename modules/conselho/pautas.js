@@ -428,7 +428,6 @@
       byAno[ano].push({ rid, pautas, reun });
     });
     const anos = Object.keys(byAno).sort((a, b) => b.localeCompare(a));
-    const anoAtual = String(new Date().getFullYear());
 
     const _tog = `(function(el){const b=el.nextElementSibling;const arr=el.querySelector('.ppr-arr');const open=b.style.display==='none';b.style.display=open?'':'none';arr.style.transform=open?'rotate(0deg)':'rotate(-90deg)';})(this)`;
 
@@ -437,20 +436,18 @@
       ${anos.map(ano => {
         const reunioes = byAno[ano];
         const totalItens = reunioes.reduce((s, r) => s + r.pautas.length, 0);
-        const anoAberto = ano === anoAtual;
         return `<div style="margin-bottom:10px">
           <div onclick="${_tog}" style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg-surface);border:1px solid var(--bd1);border-radius:8px;cursor:pointer;user-select:none;margin-bottom:6px">
             <span style="font-size:12px;font-weight:700;color:var(--tx1)">${ano}</span>
             <div style="display:flex;align-items:center;gap:10px">
               <span style="font-size:10px;color:var(--tx3)">${reunioes.length} reuniõe${reunioes.length!==1?"s":""} · ${totalItens} item${totalItens!==1?"s":""}</span>
-              <span class="ppr-arr" style="color:var(--tx3);font-size:10px;transition:transform .2s;transform:${anoAberto?"rotate(0deg)":"rotate(-90deg)"}">▼</span>
+              <span class="ppr-arr" style="color:var(--tx3);font-size:10px;transition:transform .2s;transform:rotate(-90deg)">▼</span>
             </div>
           </div>
-          <div style="display:${anoAberto?"":"none"};padding-left:8px">
-            ${reunioes.map(({ rid, pautas, reun }, i) => {
+          <div style="display:none;padding-left:8px">
+            ${reunioes.map(({ rid, pautas, reun }) => {
               const tituloReun = reun ? _eh(reun.titulo) : "Reunião";
               const dataReun   = reun ? _fmtData(reun.data_reuniao) : "";
-              const rAberto = i === 0 && anoAberto;
               return `<div class="card" style="margin-bottom:6px;padding:0;overflow:hidden">
                 <div onclick="${_tog}" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:pointer;user-select:none">
                   <div>
@@ -458,9 +455,9 @@
                     ${dataReun ? `<span style="font-size:11px;color:var(--tx3);margin-left:8px">${dataReun}</span>` : ""}
                     <span style="font-size:10px;color:var(--tx3);margin-left:8px">${pautas.length} item${pautas.length!==1?"s":""}</span>
                   </div>
-                  <span class="ppr-arr" style="color:var(--tx3);font-size:10px;transition:transform .2s;transform:${rAberto?"rotate(0deg)":"rotate(-90deg)"}">▼</span>
+                  <span class="ppr-arr" style="color:var(--tx3);font-size:10px;transition:transform .2s;transform:rotate(-90deg)">▼</span>
                 </div>
-                <div style="display:${rAberto?"":"none"};border-top:1px solid var(--bd1);padding:0 14px">
+                <div style="display:none;border-top:1px solid var(--bd1);padding:0 14px">
                   ${pautas.map(p => {
                     const scfg = STATUS_CFG[p.status] || { label: p.status||"Pendente", cls: "pz" };
                     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd1)">
