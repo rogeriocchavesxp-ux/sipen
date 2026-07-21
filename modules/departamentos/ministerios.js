@@ -3326,7 +3326,7 @@
     if (_SOC_LIST) return _SOC_LIST;
     try {
       const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/sociedades?ativo=eq.true&select=id,sigla,nome,orgao,ic,descricao,presidente_id,conselheiro_id,secretario_id,recursos&order=sigla.asc`,
+        `${SUPABASE_URL}/rest/v1/sociedades?ativo=eq.true&select=id,sigla,nome,orgao,ic,descricao,recursos&order=sigla.asc`,
         { headers: _hdr() }
       );
       if (r.ok) {
@@ -3616,10 +3616,9 @@
   async function _socRenderAdm() {
     const el = document.getElementById('soc-adm-content');
     if (!el || !_socAtual) return;
-    el.innerHTML = '<div style="color:var(--tx3);text-align:center;padding:32px">Carregando...</div>';
-    await _carregarPessoas();
-    const soc = _socAtual;
-    const rec = soc.recursos || {};
+    const soc    = _socAtual;
+    const rec    = soc.recursos || {};
+    const lideres = _socRows.filter(r => r.tipo_nomeacao === 'lider');
 
     const SOC_MODULOS = [
       { key: 'reunioes',   label: 'Reuniões',   desc: 'Atas e pautas de reuniões internas' },
@@ -3634,6 +3633,22 @@
          ${on ? 'Ativado' : 'Desativado'}
        </button>`;
 
+    const liderHtml = lideres.length
+      ? `<div style="display:flex;flex-direction:column;gap:5px">
+          ${lideres.map(r => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--bg-hover);border-radius:8px">
+              <div style="font-size:13px;font-weight:500;color:var(--tx1)">${_hEsc(r.nome)}</div>
+              <div style="font-size:11.5px;color:var(--tx3)">${_hEsc(r.cargo || r.funcao_lider || '—')}</div>
+            </div>`).join('')}
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:10px">
+          <button class="tbt sec" style="font-size:12px" onclick="minSocTab('lideranca')">Gerenciar liderança →</button>
+        </div>`
+      : `<div style="display:flex;align-items:center;gap:12px;padding:4px 0">
+          <span style="font-size:12.5px;color:var(--tx3)">Nenhuma liderança nomeada.</span>
+          <button class="tbt sec" style="font-size:12px" onclick="minSocTab('lideranca')">Adicionar →</button>
+        </div>`;
+
     el.innerHTML = `
       <div class="card" style="margin-bottom:16px">
         <div class="ctit">Informações</div>
@@ -3646,19 +3661,9 @@
             <label style="${_LB}">Descrição</label>
             <textarea id="soc-adm-desc" rows="3" style="${_INP};resize:vertical;height:auto;font-family:inherit">${_hEsc(soc.descricao || '')}</textarea>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
-            <div>
-              <label style="${_LB}">Presidente</label>
-              <select id="soc-adm-presidente" style="${_INP}">${_optionsPessoa(soc.presidente_id || '')}</select>
-            </div>
-            <div>
-              <label style="${_LB}">Conselheiro</label>
-              <select id="soc-adm-conselheiro" style="${_INP}">${_optionsPessoa(soc.conselheiro_id || '')}</select>
-            </div>
-            <div>
-              <label style="${_LB}">Secretário(a)</label>
-              <select id="soc-adm-secretario" style="${_INP}">${_optionsPessoa(soc.secretario_id || '')}</select>
-            </div>
+          <div>
+            <label style="${_LB}">Liderança</label>
+            ${liderHtml}
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <input type="checkbox" id="soc-adm-ativo" ${soc.ativo !== false ? 'checked' : ''} style="width:16px;height:16px;cursor:pointer">
@@ -3690,12 +3695,9 @@
 
   async function _socSalvarAdm() {
     if (!_socAtual) return;
-    const nome        = (document.getElementById('soc-adm-nome')?.value || '').trim();
-    const descricao   = (document.getElementById('soc-adm-desc')?.value || '').trim() || null;
-    const presidente  = document.getElementById('soc-adm-presidente')?.value  || null;
-    const conselheiro = document.getElementById('soc-adm-conselheiro')?.value || null;
-    const secretario  = document.getElementById('soc-adm-secretario')?.value  || null;
-    const ativo       = document.getElementById('soc-adm-ativo')?.checked ?? true;
+    const nome      = (document.getElementById('soc-adm-nome')?.value || '').trim();
+    const descricao = (document.getElementById('soc-adm-desc')?.value || '').trim() || null;
+    const ativo     = document.getElementById('soc-adm-ativo')?.checked ?? true;
     const errEl = document.getElementById('soc-adm-err');
     const btn   = document.getElementById('soc-adm-btn');
     if (errEl) errEl.style.display = 'none';
@@ -3705,15 +3707,14 @@
     }
     if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
     const payload = { nome, ativo };
-    if ('descricao' in (window._socAtual || {})) payload.descricao = descricao;
-    if ('presidente_id' in (window._socAtual || {})) { payload.presidente_id = presidente; payload.conselheiro_id = conselheiro; payload.secretario_id = secretario; }
+    if ('descricao' in (_socAtual || {})) payload.descricao = descricao;
     try {
       const r = await fetch(
         `${SUPABASE_URL}/rest/v1/sociedades?id=eq.${_socAtual.id}`,
         { method: 'PATCH', headers: _hdrJson(), body: JSON.stringify(payload) }
       );
       if (!r.ok) throw new Error((await r.json().catch(() => ({})))?.message || 'Erro ao salvar.');
-      Object.assign(_socAtual, { nome, ativo, descricao, presidente_id: presidente, conselheiro_id: conselheiro, secretario_id: secretario });
+      Object.assign(_socAtual, { nome, ativo, descricao });
       _SOC_LIST = null;
       const ttl = document.getElementById('min-soc-hero-ttl');
       if (ttl) ttl.textContent = `${_socAtual.sigla} — ${nome}`;
