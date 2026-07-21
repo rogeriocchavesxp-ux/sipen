@@ -3317,7 +3317,10 @@
 
   /* ══ SOCIEDADES INTERNAS ════════════════════════════════════ */
 
-  let _SOC_LIST = null;
+  let _SOC_LIST    = null;
+  let _socAtual    = null;
+  let _socTabAtual = 'visao-geral';
+  let _socRows     = [];
 
   async function _socGetList() {
     if (_SOC_LIST) return _SOC_LIST;
@@ -3349,7 +3352,7 @@
     if (ttl) ttl.textContent = 'Sociedades Internas';
     if (dsc) dsc.textContent = 'UPH, SAF, UMP, UPA, UCP — grupos organizados da IPPenha';
     if (act) act.innerHTML = '';
-    if (detalhe) detalhe.style.display = 'none';
+    if (detalhe) { detalhe.style.display = 'none'; detalhe.innerHTML = ''; }
     if (!lista) return;
     lista.style.display = '';
     const socs = await _socGetList();
@@ -3365,10 +3368,20 @@
     document.querySelectorAll('#sb-min-sociedades .si').forEach(e => e.classList.remove('on'));
   }
 
+  /* ── SVG helpers ────────────────────────────────────────── */
+  const _socIcHome  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-1px"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
+  const _socIcLider = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-1px"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/><path d="m16 11 1.5 1.5L20 10"/></svg>`;
+  const _socIcUsers = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-1px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+  const _socIcBar   = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-1px"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>`;
+  const _socIcPerson = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+
+  /* ── Abrir detalhe de uma sociedade ─────────────────────── */
   async function minSocAbrir(sigla) {
     const socs = await _socGetList();
-    const soc = socs.find(s => s.sigla === sigla);
+    const soc  = socs.find(s => s.sigla === sigla);
     if (!soc) { _socMostrarLista(); return; }
+    _socAtual    = soc;
+    _socTabAtual = 'visao-geral';
 
     const lista   = document.getElementById('min-soc-painel-lista');
     const detalhe = document.getElementById('min-soc-painel-detalhe');
@@ -3377,50 +3390,250 @@
     const act     = document.getElementById('min-soc-hero-act');
 
     if (lista) lista.style.display = 'none';
-    if (detalhe) { detalhe.style.display = ''; detalhe.innerHTML = '<div style="color:var(--tx3);font-size:12px">Carregando...</div>'; }
-    if (ttl) ttl.textContent = `${soc.sigla} — ${soc.nome}`;
-    if (dsc) dsc.textContent = 'Sociedade Interna da IPPenha';
-    if (act) act.innerHTML = `<button class="tbt" onclick="minSocVoltarLista()">← Todas as Sociedades</button>`;
+    if (ttl)   ttl.textContent = `${soc.sigla} — ${soc.nome}`;
+    if (dsc)   dsc.textContent = 'Sociedade Interna da IPPenha';
+    if (act)   act.innerHTML   = `<button class="tbt" onclick="minSocVoltarLista()">← Todas as Sociedades</button>`;
 
     document.querySelectorAll('#sb-min-sociedades .si').forEach(el => {
       el.classList.toggle('on', el.dataset.soc === sigla);
     });
 
+    if (!detalhe) return;
+    detalhe.style.display = '';
+    detalhe.innerHTML = `
+      <div id="soc-detalhe-header" style="margin-bottom:18px">
+        <div style="color:var(--tx3);font-size:12px;padding:16px;text-align:center">Carregando...</div>
+      </div>
+      <div style="display:flex;border-bottom:2px solid var(--bd1);margin-bottom:20px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;gap:2px">
+        <button class="min-tab active" data-tab="visao-geral" onclick="minSocTab('visao-geral')">${_socIcHome}Visão Geral</button>
+        <button class="min-tab" data-tab="lideranca"          onclick="minSocTab('lideranca')">${_socIcLider}Liderança</button>
+        <button class="min-tab" data-tab="membros"            onclick="minSocTab('membros')">${_socIcUsers}Membros <span id="soc-membro-count" style="font-size:11px;font-weight:400"></span></button>
+        <button class="min-tab" data-tab="relatorios"         onclick="minSocTab('relatorios')">${_socIcBar}Relatórios</button>
+      </div>
+      <div id="soc-tab-visao-geral"  class="min-tab-panel"><div id="soc-vg-content"><div style="color:var(--tx3);text-align:center;padding:32px">Carregando...</div></div></div>
+      <div id="soc-tab-lideranca"    class="min-tab-panel" style="display:none"><div id="soc-lid-content"></div></div>
+      <div id="soc-tab-membros"      class="min-tab-panel" style="display:none">
+        <div class="card"><div class="ctit">Membros</div><div id="soc-membros-list"><div style="color:var(--tx3);padding:16px">Carregando...</div></div></div>
+      </div>
+      <div id="soc-tab-relatorios"   class="min-tab-panel" style="display:none"><div id="soc-rel-content"></div></div>`;
+
     try {
-      const url = `${SUPABASE_URL}/rest/v1/nomeados?orgao_tipo=eq.sociedade&orgao=eq.${encodeURIComponent(soc.orgao)}&deleted_at=is.null&select=nome,cargo,tipo_nomeacao,data_inicio,data_fim&order=tipo_nomeacao.asc,cargo.asc`;
-      const r = await fetch(url, { headers: _hdr() });
-      const rows = r.ok ? await r.json() : [];
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/nomeados?orgao_tipo=eq.sociedade&orgao=eq.${encodeURIComponent(soc.orgao)}&deleted_at=is.null&select=id,nome,cargo,tipo_nomeacao,funcao_lider,data_inicio&order=tipo_nomeacao.asc,cargo.asc`,
+        { headers: _hdr() }
+      );
+      _socRows = r.ok ? await r.json() : [];
+    } catch { _socRows = []; }
 
-      const lideres  = rows.filter(x => x.tipo_nomeacao === 'lider');
-      const membros  = rows.filter(x => x.tipo_nomeacao !== 'lider');
+    _socRenderHeader();
+    _socRenderVisaoGeral();
+  }
 
-      const _fmtCargo = c => c || '—';
-      const _linha = (r) => `
-        <tr>
-          <td style="padding:7px 8px;font-size:12px;color:var(--tx1)">${_hEsc(r.nome)}</td>
-          <td style="padding:7px 8px;font-size:11px;color:var(--tx3)">${_fmtCargo(r.cargo)}</td>
-        </tr>`;
+  /* ── Header da sociedade ────────────────────────────────── */
+  function _socRenderHeader() {
+    const el = document.getElementById('soc-detalhe-header');
+    if (!el || !_socAtual) return;
+    const soc     = _socAtual;
+    const lideres = _socRows.filter(r => r.tipo_nomeacao === 'lider');
+    const membros = _socRows.filter(r => r.tipo_nomeacao !== 'lider');
 
-      const _tbl = (titulo, itens) => !itens.length ? '' : `
-        <div class="ctit" style="margin-bottom:8px">${titulo}</div>
-        <table style="width:100%;border-collapse:collapse;margin-bottom:20px">
-          <thead>
-            <tr style="border-bottom:1px solid var(--bd1)">
-              <th style="text-align:left;padding:5px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)">Nome</th>
-              <th style="text-align:left;padding:5px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)">Cargo / Função</th>
-            </tr>
-          </thead>
-          <tbody>${itens.map(_linha).join('')}</tbody>
-        </table>`;
+    const _stat = (num, label, rgb) => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg2);border-radius:8px;min-width:130px">
+        <div style="width:34px;height:34px;border-radius:50%;background:rgba(${rgb},.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg stroke="rgb(${rgb})" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${_socIcPerson}</svg>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3)">${label}</div>
+          <div style="font-size:22px;font-weight:800;color:var(--tx1);line-height:1.1">${num}</div>
+        </div>
+      </div>`;
 
-      if (detalhe) {
-        detalhe.innerHTML = rows.length
-          ? _tbl('Diretoria / Líderes', lideres) + _tbl('Membros', membros)
-          : `<div class="card"><div style="color:var(--tx3);font-size:12px">Nenhum registro encontrado em Nomeados para ${soc.orgao}.</div></div>`;
-      }
-    } catch(e) {
-      if (detalhe) detalhe.innerHTML = `<div style="color:var(--rose);font-size:12px">Erro: ${e.message}</div>`;
+    el.innerHTML = `
+      <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
+        <div style="width:56px;height:56px;border-radius:14px;background:var(--violetbg);border:1px solid rgba(144,104,200,0.25);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">${soc.ic}</div>
+        <div style="flex:1;min-width:160px">
+          <div style="font-size:19px;font-weight:800;color:var(--tx1);margin-bottom:3px">${_hEsc(soc.sigla)} — ${_hEsc(soc.nome)}</div>
+          <div style="font-size:12.5px;color:var(--tx3)">Sociedade Interna · IPPenha</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          ${_stat(lideres.length, 'Líderes',  '58,170,92')}
+          ${_stat(membros.length, 'Membros',  '139,107,193')}
+        </div>
+      </div>`;
+  }
+
+  /* ── Aba: Visão Geral ───────────────────────────────────── */
+  function _socRenderVisaoGeral() {
+    const el  = document.getElementById('soc-vg-content');
+    if (!el || !_socAtual) return;
+    const lideres = _socRows.filter(r => r.tipo_nomeacao === 'lider');
+    const membros = _socRows.filter(r => r.tipo_nomeacao !== 'lider');
+    const cnt     = document.getElementById('soc-membro-count');
+    if (cnt) cnt.textContent = membros.length ? `(${membros.length})` : '';
+
+    if (!_socRows.length) {
+      el.innerHTML = `<div class="card"><div style="color:var(--tx3);text-align:center;padding:32px">Nenhum registro encontrado para ${_hEsc(_socAtual.orgao)}.</div></div>`;
+      return;
     }
+
+    const _kpi = (num, label, sub) => `
+      <div class="card" style="padding:18px 16px">
+        <div style="font-size:30px;font-weight:800;color:var(--tx1);line-height:1">${num}</div>
+        <div style="font-size:13px;font-weight:600;color:var(--tx1);margin-top:5px">${label}</div>
+        <div style="font-size:11.5px;color:var(--tx3);margin-top:2px">${sub}</div>
+      </div>`;
+
+    const _preview = (titulo, items, tabKey) => `
+      <div class="card">
+        <div class="ctit">${titulo} <span class="cact" onclick="minSocTab('${tabKey}')">Ver todos</span></div>
+        ${items.length ? `
+          <div style="display:flex;flex-direction:column;gap:0">
+            ${items.slice(0, 5).map(r => `
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd1)">
+                <div style="font-size:12.5px;font-weight:500;color:var(--tx1)">${_hEsc(r.nome)}</div>
+                <div style="font-size:11px;color:var(--tx3)">${_hEsc(r.cargo || '—')}</div>
+              </div>`).join('')}
+            ${items.length > 5 ? `<div style="font-size:11px;color:var(--tx3);padding:7px 0;text-align:center">+${items.length - 5} mais</div>` : ''}
+          </div>
+        ` : `<div style="color:var(--tx3);font-size:12px;padding:8px 0">Nenhum registro.</div>`}
+      </div>`;
+
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:20px">
+        ${_kpi(lideres.length, 'Líderes',  'Diretoria e supervisão')}
+        ${_kpi(membros.length, 'Membros',  'Participantes ativos')}
+        ${_kpi(_socRows.length,'Total',    'Pessoas nomeadas')}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        ${_preview('Diretoria / Líderes', lideres, 'lideranca')}
+        ${_preview('Membros',             membros, 'membros')}
+      </div>`;
+  }
+
+  /* ── Aba: Liderança ─────────────────────────────────────── */
+  function _socRenderLideranca() {
+    const el = document.getElementById('soc-lid-content');
+    if (!el) return;
+    const lideres = _socRows.filter(r => r.tipo_nomeacao === 'lider');
+    if (!lideres.length) {
+      el.innerHTML = `<div class="card"><div style="color:var(--tx3);text-align:center;padding:20px">Nenhuma liderança nomeada.</div></div>`;
+      return;
+    }
+
+    const FUNC_LABEL = { supervisor:'Supervisor', coordenador:'Coordenador', lider_area:'Líder de Área', conselheiro:'Conselheiro', tesoureiro:'Tesoureiro' };
+    const FUNC_RGB   = { supervisor:'58,170,92', coordenador:'201,168,76', lider_area:'139,107,193', conselheiro:'74,156,245', tesoureiro:'224,138,42' };
+
+    const grupos = {};
+    lideres.forEach(r => {
+      const g = r.funcao_lider || r.cargo || 'Outros';
+      (grupos[g] = grupos[g] || []).push(r);
+    });
+
+    el.innerHTML = `
+      <div class="card">
+        <div class="ctit">Liderança — ${_hEsc(_socAtual?.sigla || '')}</div>
+        ${Object.entries(grupos).map(([func, pessoas]) => `
+          <div style="margin-bottom:18px">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:8px">${FUNC_LABEL[func] || func}</div>
+            ${pessoas.map(r => `
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg2);border-radius:8px;margin-bottom:5px">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="width:30px;height:30px;border-radius:50%;background:rgba(${FUNC_RGB[func]||'139,107,193'},.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgb(${FUNC_RGB[func]||'139,107,193'})" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </div>
+                  <div>
+                    <div style="font-size:13px;font-weight:600;color:var(--tx1)">${_hEsc(r.nome)}</div>
+                    ${r.cargo && r.cargo !== func ? `<div style="font-size:11px;color:var(--tx3)">${_hEsc(r.cargo)}</div>` : ''}
+                  </div>
+                </div>
+                ${r.data_inicio ? `<div style="font-size:11px;color:var(--tx3)">desde ${new Date(r.data_inicio+'T12:00:00').toLocaleDateString('pt-BR')}</div>` : ''}
+              </div>`).join('')}
+          </div>`).join('')}
+      </div>`;
+  }
+
+  /* ── Aba: Membros ───────────────────────────────────────── */
+  function _socRenderMembros() {
+    const el = document.getElementById('soc-membros-list');
+    if (!el) return;
+    const membros = _socRows.filter(r => r.tipo_nomeacao !== 'lider');
+    if (!membros.length) {
+      el.innerHTML = `<div style="color:var(--tx3);text-align:center;padding:20px">Nenhum membro registrado.</div>`;
+      return;
+    }
+    el.innerHTML = `
+      <table class="tbl">
+        <thead><tr>
+          <th>Nome</th><th>Cargo / Função</th><th>Desde</th>
+        </tr></thead>
+        <tbody>
+          ${membros.map(r => `
+            <tr>
+              <td style="font-size:12.5px;font-weight:500;color:var(--tx1)">${_hEsc(r.nome)}</td>
+              <td style="font-size:11.5px;color:var(--tx3)">${_hEsc(r.cargo || '—')}</td>
+              <td style="font-size:11.5px;color:var(--tx3)">${r.data_inicio ? new Date(r.data_inicio+'T12:00:00').toLocaleDateString('pt-BR') : '—'}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  /* ── Aba: Relatórios ────────────────────────────────────── */
+  function _socRenderRelatorios() {
+    const el = document.getElementById('soc-rel-content');
+    if (!el) return;
+    const lideres = _socRows.filter(r => r.tipo_nomeacao === 'lider');
+    const membros = _socRows.filter(r => r.tipo_nomeacao !== 'lider');
+    const byCargo = {};
+    _socRows.forEach(r => { const c = r.cargo || 'Sem cargo'; byCargo[c] = (byCargo[c] || 0) + 1; });
+
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="card">
+          <div class="ctit">Resumo</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <tbody>
+              <tr style="border-bottom:1px solid var(--bd1)">
+                <td style="padding:8px 0;color:var(--tx2)">Total de pessoas</td>
+                <td style="padding:8px 0;font-weight:700;color:var(--tx1);text-align:right">${_socRows.length}</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--bd1)">
+                <td style="padding:8px 0;color:var(--tx2)">Líderes / Diretoria</td>
+                <td style="padding:8px 0;font-weight:700;color:var(--tx1);text-align:right">${lideres.length}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;color:var(--tx2)">Membros</td>
+                <td style="padding:8px 0;font-weight:700;color:var(--tx1);text-align:right">${membros.length}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="ctit">Por Cargo / Função</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <tbody>
+              ${Object.entries(byCargo).sort((a,b) => b[1]-a[1]).map(([cargo, qtd]) => `
+                <tr style="border-bottom:1px solid var(--bd1)">
+                  <td style="padding:7px 0;color:var(--tx2)">${_hEsc(cargo)}</td>
+                  <td style="padding:7px 0;font-weight:700;color:var(--tx1);text-align:right">${qtd}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+
+  /* ── Troca de aba (scoped ao painel de detalhe) ─────────── */
+  function minSocTab(tab) {
+    const detalhe = document.getElementById('min-soc-painel-detalhe');
+    if (!detalhe) return;
+    detalhe.querySelectorAll('.min-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    detalhe.querySelectorAll('.min-tab-panel').forEach(p => p.style.display = 'none');
+    const panel = document.getElementById('soc-tab-' + tab);
+    if (panel) panel.style.display = '';
+    _socTabAtual = tab;
+    if (tab === 'lideranca')  _socRenderLideranca();
+    if (tab === 'membros')    _socRenderMembros();
+    if (tab === 'relatorios') _socRenderRelatorios();
   }
 
   function minSocLoad() {
@@ -3431,6 +3644,8 @@
   }
 
   function minSocVoltarLista() {
+    _socAtual = null;
+    _socRows  = [];
     _socMostrarLista();
   }
 
@@ -3439,9 +3654,10 @@
       ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s]));
   }
 
-  window.sbMinSocBuild   = sbMinSocBuild;
-  window.minSocLoad      = minSocLoad;
-  window.minSocAbrir     = minSocAbrir;
+  window.sbMinSocBuild     = sbMinSocBuild;
+  window.minSocLoad        = minSocLoad;
+  window.minSocAbrir       = minSocAbrir;
+  window.minSocTab         = minSocTab;
   window.minSocVoltarLista = minSocVoltarLista;
 
 })();
