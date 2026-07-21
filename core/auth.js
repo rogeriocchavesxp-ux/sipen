@@ -1287,6 +1287,7 @@ async function _confirmarEnvioSenha() {
       body:    JSON.stringify({ email: u.email, telefone: u.telefone, nome: u.nome }),
     });
     const data = await res.json();
+    console.log("[send-reset-link] resposta:", { status: res.status, data });
     if (!res.ok || !data.ok) throw new Error(data.error || "Erro ao gerar link");
 
     document.getElementById("modal-confirmar-senha")?.remove();
@@ -1320,6 +1321,7 @@ async function _confirmarEnvioSenha() {
           <div style="font-size:12px;color:var(--tx3);margin-bottom:12px">
             O WhatsApp não pôde ser enviado automaticamente. Copie o link abaixo e envie manualmente para <strong>${escapeHtml(nomePropio(u.nome) || u.email)}</strong>.
           </div>
+          ${data.error ? `<div style="font-size:10px;color:#c0392b;background:#fdf2f2;border:1px solid #f5c6c6;border-radius:6px;padding:6px 10px;margin-bottom:10px;word-break:break-all">Detalhe: ${escapeHtml(data.error)}</div>` : ""}
           <div style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--tx2);word-break:break-all;margin-bottom:10px;line-height:1.6">
             ${escapeHtml(data.link)}
           </div>
