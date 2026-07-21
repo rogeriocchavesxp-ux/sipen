@@ -421,19 +421,31 @@
 
     const secHtml = `
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:10px;margin-top:${_podeAdmin() ? "16px" : "0"}">Pautas por Reunião</div>
-      ${Object.entries(byReuniao).map(([rid, pautas]) => {
+      ${Object.entries(byReuniao).map(([rid, pautas], i) => {
         const reun = (_reunioes||[]).find(r => r.id === rid);
         const tituloReun = reun ? _eh(reun.titulo) : "Reunião";
         const dataReun   = reun ? ` · ${_fmtData(reun.data_reuniao)}` : "";
-        return `<div class="card" style="margin-bottom:10px">
-          <div class="ctit" style="margin-bottom:10px">${tituloReun}${dataReun}</div>
-          ${pautas.map(p => {
-            const scfg = STATUS_CFG[p.status] || { label: p.status||"Pendente", cls: "pz" };
-            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd1)">
-              <div style="font-size:12.5px;color:var(--tx1)">${_eh(p.titulo)}</div>
-              <span class="px ${scfg.cls}" style="font-size:10px;flex-shrink:0">${_eh(scfg.label)}</span>
-            </div>`;
-          }).join("")}
+        const uid = `ppr-${i}`;
+        const aberto = i === 0;
+        return `<div class="card" style="margin-bottom:8px;padding:0;overflow:hidden">
+          <div onclick="(function(el){const b=el.closest('.card').querySelector('.ppr-body');const arr=el.querySelector('.ppr-arr');const open=b.style.display==='none';b.style.display=open?'':'none';arr.style.transform=open?'rotate(0deg)':'rotate(-90deg)';})(this)"
+               style="display:flex;justify-content:space-between;align-items:center;padding:11px 14px;cursor:pointer;user-select:none">
+            <div>
+              <span style="font-size:12.5px;font-weight:600;color:var(--tx1)">${tituloReun}</span>
+              <span style="font-size:11px;color:var(--tx3)">${dataReun}</span>
+              <span style="font-size:10px;color:var(--tx3);margin-left:8px">${pautas.length} item${pautas.length !== 1 ? "s" : ""}</span>
+            </div>
+            <span class="ppr-arr" style="color:var(--tx3);font-size:10px;transition:transform .2s;transform:${aberto ? "rotate(0deg)" : "rotate(-90deg)"}">▼</span>
+          </div>
+          <div class="ppr-body" style="display:${aberto ? "" : "none"};border-top:1px solid var(--bd1);padding:0 14px">
+            ${pautas.map(p => {
+              const scfg = STATUS_CFG[p.status] || { label: p.status||"Pendente", cls: "pz" };
+              return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd1)">
+                <div style="font-size:12.5px;color:var(--tx1)">${_eh(p.titulo)}</div>
+                <span class="px ${scfg.cls}" style="font-size:10px;flex-shrink:0">${_eh(scfg.label)}</span>
+              </div>`;
+            }).join("")}
+          </div>
         </div>`;
       }).join("")}`;
     el.insertAdjacentHTML("beforeend", secHtml);
