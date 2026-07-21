@@ -2097,14 +2097,16 @@ function fmtD(d) {
   };
 
   async function _notificarResponsaveisWA(dem) {
-    if (typeof WA === "undefined") return;
+    const _log = (...a) => console.log("[WA-DEM]", ...a);
+    if (typeof WA === "undefined") { _log("WA não definido — abortando"); return; }
     const base = typeof SUPABASE_URL !== "undefined" ? SUPABASE_URL.trim().replace(/\/$/, "") : "";
     const hdrs = typeof apiHeaders === "function" ? apiHeaders() : {};
 
     let rows = [];
 
-    // Responsáveis configurados por módulo WhatsApp (fonte única — demanda_responsaveis descontinuado)
     const modulo = _AREA_MODULO_WA[dem.area];
+    _log(`área="${dem.area}" → módulo="${modulo}"`);
+
     if (modulo) {
       try {
         const res = await fetch(
@@ -2113,29 +2115,22 @@ function fmtD(d) {
           { headers: hdrs }
         );
         rows = res.ok ? await res.json() : [];
-      } catch (_) {}
+        _log(`responsáveis no módulo: ${rows.length}`);
+      } catch (e) { _log("erro ao buscar responsáveis:", e.message); }
     }
 
-    // Fallback: admins (demanda_responsaveis descontinuado)
     if (!rows.length) {
-      try {
-        const res = await fetch(
-          `${base}/rest/v1/user_profiles?role=eq.admin&ativo=eq.true` +
-          `&select=pessoa_id,pessoas(id,nome,whatsapp,telefone,celular)`,
-          { headers: hdrs }
-        );
-        rows = res.ok ? await res.json() : [];
-      } catch (_) {}
+      _log("sem responsáveis configurados — sem fallback");
+      return;
     }
-
-    if (!rows.length) return;
 
     const msg = _montarMsgWA(dem);
     for (const row of rows) {
       const p = row.pessoas;
-      if (!p) continue;
+      if (!p) { _log("pessoa não encontrada no row:", row); continue; }
       const tel = p.whatsapp || p.celular || p.telefone;
-      if (!tel) continue;
+      if (!tel) { _log("sem telefone para:", p.nome); continue; }
+      _log(`enviando para ${p.nome} (${tel})`);
       WA.send({
         para:        tel,
         nome:        p.nome,
@@ -2144,7 +2139,7 @@ function fmtD(d) {
         referenciaT: "demanda",
         referenciaId: dem.id,
         chave:       `DEM_NOVA_${dem.id}_${row.pessoa_id}`,
-      }).catch(() => {});
+      }).then(r => _log("resultado:", r)).catch(e => _log("erro WA.send:", e.message));
     }
   }
 
