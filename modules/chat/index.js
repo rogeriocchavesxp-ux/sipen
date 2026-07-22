@@ -140,8 +140,9 @@
     return `
       <div class="chat-msg chat-msg--${meu ? 'meu' : 'deles'}">
         ${!meu ? `<div class="chat-msg-autor">${_esc(nome)}</div>` : ''}
-        <div class="chat-msg-balao">${_esc(m.texto)}</div>
-        <div class="chat-msg-hora">${hora}</div>
+        <div class="chat-msg-balao">
+          ${_esc(m.texto)}<span class="chat-msg-meta">${hora}${meu ? ' ✓' : ''}</span>
+        </div>
       </div>`;
   }
 
