@@ -1,4 +1,4 @@
-const MC={geral:"var(--gmd)",admin:"var(--gold)",fin:"var(--gr)",jur:"var(--blue)",conselho:"var(--sky)",proj:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)",cong:"var(--gr)",diac:"var(--copper)",area:"var(--gr)",config:"var(--violet)",com:"var(--violet)",eve:"var(--sky)",acesso:"var(--sky)"};
+const MC={geral:"var(--gmd)",admin:"var(--gold)",fin:"var(--gr)",jur:"var(--blue)",conselho:"var(--sky)",proj:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)",cong:"var(--gr)",diac:"var(--copper)",area:"var(--gr)",config:"var(--violet)",com:"var(--violet)",eve:"var(--sky)",acesso:"var(--sky)",chat:"var(--violet)"};
 const CRUMB={
   geral:["","Dashboard Geral","/ IPPenha · visão executiva consolidada"],
   "cultos-dash":["Cultos","Dashboard","/ visão geral dos cultos"],
@@ -160,6 +160,7 @@ const CRUMB={
   "eve-config":        ["Eventos","Configurações","/ integrações e preferências"],
   "eve-sorteio":       ["Programações","Família de Oração","/ sorteio semanal de oração"],
   "acesso-relatorio":  ["Controle de Acesso","Relatório de Acessos","/ análise estatística — mai/2026"],
+  "chat-inbox":        ["Comunicação","Chat Interno","/ mensagens entre usuários"],
 };
 const SL={dash:"Dashboard",diaconos:"Diáconos",escalas:"Escalas de Serviço",familias:"Famílias Assistidas",social:"Ação Social e Beneficência",visitacao:"Visitação Diaconal",patrimonio:"Patrimônio e Apoio Operacional",solicitacoes:"Solicitações Diaconais",relatorios:"Relatórios Diaconais",historico:"Histórico e Atas",sec:"Secretaria e Cadastro",rh:"RH / Gestão de Pessoas",doc:"Documentos",aud:"Auditoria",fin:"Financeiro",con:"Contratos",est:"Controle de Estoque",demandas:"Processos e Demandas Jurídicas",contratos:"Contratos e Instrumentos",pareceres:"Pareceres",documentos:"Documentos Jurídicos",riscos:"Riscos e Pendências",historico:"Histórico",rel:"Relatórios Estratégicos",ind:"Indicadores",cong:"Congregações",nomeados:"Nomeados",ordenados:"Ordenados",ate:"Atendimentos",ora:"Pedidos de Oração",aco:"Acompanhamentos",reg:"Registros Pastorais",pri:"Casos Prioritários",min:"Ministérios",soc:"Sociedades Internas",adm:"Administração",com:"Comissões",lid:"Liderança Ministerial",esc:"Escalas",prog:"Programações",lit:"Liturgia dos Cultos",vol:"Voluntários",calendario:"Calendário Geral",solicitacoes:"Solicitações de Agendamento",aprovacoes:"Aprovações Pendentes",confirmados:"Eventos Confirmados",recusados:"Eventos Recusados",reagendamentos:"Reagendamentos e Ajustes",ambientes:"Ambientes e Recursos",conflitos:"Conflitos de Agenda",config:"Configurações da Agenda",lista:"Lista de PGs",encontros:"Encontros",participantes:"Participantes",visitantes:"Visitantes",estudos:"Estudos",relatorios:"Relatórios",oracao:"Pedidos de Oração",man:"Manutenção",lim:"Limpeza e Conservação",sol:"Solicitações Operacionais",pat:"Patrimônio",pre:"Prestadores",todas:"Todas as Solicitações",pend:"Pendentes",and:"Em Andamento",conc:"Concluídas",hist:"Histórico",mod:"Por Módulo",exp:"Exportações",uni:"Por Congregação",res:"Por Responsável",cad:"Cadastro de Membros",bat:"Batismos",prof:"Profissões de Fé",trans:"Transferências",vis:"Visitantes"};
 const MN={hub:"Hub",admin:"Administrativo",fin:"Financeiro",jur:"Jurídico",conselho:"Conselho",proj:"Projetos",pastoral:"Pastoral",min:"Departamentos",agenda:"Agenda",pgs:"Pequenos Grupos",infra:"Infraestrutura e Conservação",dem:"Demandas",rel:"Relatórios",memb:"Secretaria",cong:"Congregações",diac:"Junta Diaconal",area:"Área do Membro",com:"Comunicação",eve:"Eventos",acesso:"Controle de Acesso"};
@@ -197,6 +198,7 @@ const _VIEW_MAP = {
   "hub":         "modules/shared/hub.html",
   "escalas":     "modules/shared/hub.html",
   "lideranca":   "modules/shared/hub.html",
+  "chat":        "modules/chat/view.html?v=6.49.0",
 };
 
 function _getViewFileForRoute(id) {
@@ -280,6 +282,17 @@ async function go(id){
       document.querySelectorAll(".mhdr").forEach(h=>h.classList.remove("open"));
       comSub.classList.add("open");
       if(comHdr)comHdr.classList.add("open");
+    }
+  }
+  // chat-* está em Comunicação — abre ms-com
+  if(mod==="chat"){
+    const chatSub=document.getElementById("ms-com");
+    const chatHdr=document.querySelector("#mw-com .mhdr");
+    if(chatSub&&!chatSub.classList.contains("open")){
+      document.querySelectorAll(".msub").forEach(s=>s.classList.remove("open"));
+      document.querySelectorAll(".mhdr").forEach(h=>h.classList.remove("open"));
+      chatSub.classList.add("open");
+      if(chatHdr)chatHdr.classList.add("open");
     }
   }
   // config-* e wa-* estão dentro de Sistema — garante que ms-sys está aberto

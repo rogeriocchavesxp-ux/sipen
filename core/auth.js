@@ -578,6 +578,27 @@ window.areaToggle = function(id) {
   card.classList.toggle("open");
 };
 
+// ── Área do Membro: preview mobile no desktop ─────────────
+let _areaPreviewPref = localStorage.getItem("sipen-area-preview") !== "false";
+
+function _areaApplyPreview(isArea) {
+  const onDesktop = window.innerWidth >= 769;
+  const ativo = isArea && _areaPreviewPref && onDesktop;
+  document.body.classList.toggle("area-mobile-preview", ativo);
+  const btn = document.getElementById("btn-area-preview");
+  if (!btn) return;
+  btn.style.display = (isArea && onDesktop) ? "" : "none";
+  btn.innerHTML     = _areaPreviewPref ? "🖥 PC" : "📱 Celular";
+  btn.title         = _areaPreviewPref ? "Exibir como PC" : "Exibir como celular";
+}
+
+window.areaTogglePreview = function() {
+  _areaPreviewPref = !_areaPreviewPref;
+  localStorage.setItem("sipen-area-preview", _areaPreviewPref);
+  const currentRoute = (sessionStorage.getItem("sipen_route") || "").startsWith("area-");
+  _areaApplyPreview(currentRoute);
+};
+
 /* ── LOGOUT ──────────────────────────────────── */
 async function doLogout() {
   if (!confirm("Deseja encerrar a sessão?")) return;
@@ -2125,6 +2146,7 @@ document.addEventListener("sipen:navigate", ({ detail: { id } }) => {
     bar.querySelectorAll(".area-tab").forEach(t => {
       t.classList.toggle("on", t.dataset.route === id);
     });
+    _areaApplyPreview(isArea);
   }
 });
 

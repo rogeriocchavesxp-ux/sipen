@@ -1945,3 +1945,86 @@ html[data-theme="light"] .sb.sb-collapsed .mhdr:hover{background:rgba(0,0,0,0.05
   .area-gr-avatar { width: 40px; height: 40px; font-size: 15px }
   .area-gr-name { font-size: 14px }
 }
+
+/* ══════════════════════════════════════════════════════
+   ÁREA DO MEMBRO — Desktop Mobile Preview
+   ══════════════════════════════════════════════════════ */
+@media (min-width: 769px) {
+
+  /* Fundo da "mesa" quando preview ativo */
+  body.area-mobile-preview .page {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow: hidden;
+    background: #0c0e13;
+    padding-top: 28px;
+  }
+  html[data-theme="light"] body.area-mobile-preview .page {
+    background: #d4d6db;
+  }
+
+  /* Moldura do telefone */
+  body.area-mobile-preview .view.on[id^="v-area-"] {
+    width: 390px;
+    flex-shrink: 0;
+    height: calc(100dvh - 56px - 28px - 66px); /* viewport - topbar/band - padding top - tabbar+border */
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    border-radius: 40px 40px 0 0;
+    border: 8px solid #1c1f27;
+    border-bottom: none;
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,0.06),
+      0 0 0 1px rgba(255,255,255,0.04),
+      0 -24px 80px rgba(0,0,0,0.5);
+    background: var(--bg-card);
+    margin: 0;
+    animation: none;
+  }
+  body.area-mobile-preview .view.on[id^="v-area-"]::-webkit-scrollbar { display: none }
+
+  /* Pílula de câmera no topo da moldura */
+  body.area-mobile-preview .view.on[id^="v-area-"]::before {
+    content: '';
+    display: block;
+    width: 100px;
+    height: 5px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 3px;
+    margin: 10px auto 4px;
+    flex-shrink: 0;
+  }
+
+  /* Tabbar vira parte inferior da moldura */
+  body.area-mobile-preview #area-tabbar:not(.area-tabbar--hidden) {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 374px; /* 390 - 2×8 border */
+    height: 58px;
+    border-radius: 0 0 32px 32px;
+    border-left: 8px solid #1c1f27;
+    border-right: 8px solid #1c1f27;
+    border-bottom: 8px solid #1c1f27;
+    border-top: none;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    z-index: 800;
+  }
+
+  /* Ocultar bnav e ajustar padding no preview */
+  body.area-mobile-preview #v-area-dash .bnav,
+  body.area-mobile-preview #v-area-agenda .bnav,
+  body.area-mobile-preview #v-area-min .bnav,
+  body.area-mobile-preview #v-area-pgs .bnav,
+  body.area-mobile-preview #v-area-dem .bnav { display: none }
+
+  body.area-mobile-preview #v-area-dash .ct,
+  body.area-mobile-preview #v-area-agenda .ct,
+  body.area-mobile-preview #v-area-min .ct,
+  body.area-mobile-preview #v-area-pgs .ct,
+  body.area-mobile-preview #v-area-dem .ct { padding-bottom: 24px }
+}

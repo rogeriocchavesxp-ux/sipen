@@ -44,7 +44,7 @@ if(window.location.hash==='#pautas-reunioes'){window.location.replace('pautas-re
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="sipen.css?v=6.49.0">
+<link rel="stylesheet" href="sipen.css?v=6.49.3">
 </head>
 <body>
 
@@ -58,6 +58,7 @@ if(window.location.hash==='#pautas-reunioes'){window.location.replace('pautas-re
       <input class="tb-search" type="search" placeholder="Buscar..." autocomplete="off" readonly onclick="T('Busca','Em desenvolvimento')">
     </div>
     <div class="trr">
+      <button class="tbt" id="btn-area-preview" onclick="areaTogglePreview()" title="Alternar visualização mobile/PC" style="display:none;font-size:11.5px">📱 Celular</button>
       <button class="tbt" id="btn-trocar-area" onclick="trocarArea()" title="Alternar entre Área do Membro e Área do Gestor">⇄ <span id="btn-trocar-area-label">Trocar Área</span></button>
       <button class="tbt" onclick="T('WhatsApp','Serviço de notificações ativo — IPPenha')" title="WhatsApp">◎</button>
       <button class="tbt pri" onclick="openModal()">+ Nova Tarefa</button>
@@ -94,7 +95,7 @@ if(window.location.hash==='#pautas-reunioes'){window.location.replace('pautas-re
 <script src="modules/admin/estacionamento-controles.js?v=6.45.12"></script>
 <script src="modules/admin/acesso-facial.js?v=6.45.12"></script>
 <script src="modules/admin/espacos.js?v=6.45.12"></script>
-<script src="core/auth.js?v=6.49.2"></script>
+<script src="core/auth.js?v=6.49.3"></script>
 <script src="modules/pastoral/index.js?v=6.47.2"></script>
 <script src="core/init.js?v=6.48.8"></script>
 
@@ -131,6 +132,7 @@ if(window.location.hash==='#pautas-reunioes'){window.location.replace('pautas-re
 <script src="modules/diaconal/escala-grid.js?v=1.0.0"></script>
 <script src="modules/departamentos/escala-musica.js?v=1.0.0"></script>
 <script src="modules/cultos/index.js?v=1.0.0"></script>
+<script src="modules/chat/index.js?v=6.49.0"></script>
 <script src="modules/shared/hub.js?v=1.2.0"></script>
 <script src="core/pwa.js?v=6.45.12"></script>
 <script src="core/theme.js?v=6.45.12"></script>
