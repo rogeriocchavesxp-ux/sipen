@@ -2,12 +2,13 @@
 /* ── Chat Interno ──────────────────────────────────────────── */
 #v-chat-inbox {
   padding: 0;
+  height: 78vh;
+  min-height: 480px;
   overflow: hidden;
 }
 .chat-shell {
   display: flex;
-  height: calc(100vh - 96px);
-  min-height: 480px;
+  height: 100%;
   overflow: hidden;
 }
 /* Painel esquerdo — lista de conversas */
@@ -130,8 +131,8 @@
 #chat-thread-ativo {
   position: absolute;
   inset: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
 }
 .chat-vazio {
   flex: 1;
