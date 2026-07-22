@@ -262,21 +262,22 @@ window.comListasSalvar = async function(id){
         method:'PATCH', headers:_H(),
         body: JSON.stringify({ nome, descricao: desc||null, atualizado_em: new Date().toISOString() })
       });
-      if(!r.ok) throw new Error();
+      if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.message||e.hint||`HTTP ${r.status}`); }
       T('Lista', 'Lista atualizada');
     } else {
-      const r = await fetch(_url('com_listas'), {
-        method:'POST', headers: { ..._H(), Prefer:'return=representation' },
-        body: JSON.stringify({ nome, descricao: desc||null, criado_por: USUARIO_ATUAL.pessoa_id })
-      });
-      if(!r.ok) throw new Error();
-      const rows = await r.json();
-      _listaSelecionada = rows[0]?.id || null;
+      const sb = getSupabase();
+      const { data, error } = await sb.from('com_listas').insert({
+        nome,
+        descricao: desc||null,
+        criado_por: USUARIO_ATUAL.pessoa_id
+      }).select('id').single();
+      if(error) throw new Error(error.message||error.hint||'Erro desconhecido');
+      _listaSelecionada = data?.id || null;
       T('Lista', 'Lista criada');
     }
     await _renderListas();
     if(_listaSelecionada) await _renderMembros(_listaSelecionada);
-  }catch(_){ T('Lista', 'Erro ao salvar lista'); }
+  }catch(e){ T('Lista', e.message||'Erro ao salvar lista'); }
 };
 
 // ── Excluir ───────────────────────────────────────────────────────────────
