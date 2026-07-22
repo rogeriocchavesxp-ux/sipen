@@ -2027,4 +2027,6 @@ html[data-theme="light"] .sb.sb-collapsed .mhdr:hover{background:rgba(0,0,0,0.05
   body.area-mobile-preview #v-area-min .ct,
   body.area-mobile-preview #v-area-pgs .ct,
   body.area-mobile-preview #v-area-dem .ct { padding-bottom: 24px }
+
+  body.area-mobile-preview .sipen-footer { display: none }
 }
