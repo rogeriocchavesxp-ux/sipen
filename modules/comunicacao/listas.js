@@ -152,7 +152,7 @@ window.comListasBuscar = function(q){
   if(!q || q.length < 2){ if(res) res.style.display='none'; return; }
   _buscaTimer = setTimeout(async () => {
     try{
-      const r = await fetch(_url(`pessoas?nome=ilike.*${encodeURIComponent(q)}*&select=id,nome&order=nome.asc&limit=10`), { headers: apiHeaders() });
+      const r = await fetch(_url(`v_membros?nome=ilike.*${encodeURIComponent(q)}*&status=eq.ativo&select=pessoa_id,nome&order=nome.asc&limit=10`), { headers: apiHeaders() });
       const rows = r.ok ? await r.json() : [];
       if(!res) return;
       if(!rows.length){
@@ -162,7 +162,7 @@ window.comListasBuscar = function(q){
       }
       // Excluir já adicionados
       const jaAdd = new Set(_membrosCache.map(m => m.pessoa_id));
-      const disponiveis = rows.filter(p => !jaAdd.has(p.id));
+      const disponiveis = rows.filter(p => !jaAdd.has(p.pessoa_id));
       if(!disponiveis.length){
         res.style.display='block';
         res.innerHTML='<div style="padding:10px;font-size:12px;color:var(--tx3)">Todos já estão na lista.</div>';
@@ -170,7 +170,7 @@ window.comListasBuscar = function(q){
       }
       res.style.display='block';
       res.innerHTML = disponiveis.map(p =>
-        `<div onclick="comListasAdicionarMembro('${_listaSelecionada}','${p.id}')"
+        `<div onclick="comListasAdicionarMembro('${_listaSelecionada}','${p.pessoa_id}')"
           style="padding:9px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bd1);color:var(--tx1)"
           onmouseover="this.style.background='rgba(139,111,212,.06)'"
           onmouseout="this.style.background=''">${escapeHtml(p.nome)}</div>`
