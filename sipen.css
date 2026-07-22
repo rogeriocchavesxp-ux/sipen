@@ -1964,14 +1964,14 @@ html[data-theme="light"] .sb.sb-collapsed .mhdr:hover{background:rgba(0,0,0,0.05
     background: #d4d6db;
   }
 
-  /* Moldura do telefone */
+  /* Moldura do telefone — flex-column para conter o scroll */
   body.area-mobile-preview .view.on[id^="v-area-"] {
     width: 390px;
     flex-shrink: 0;
     height: calc(100dvh - 56px - 28px - 66px); /* viewport - topbar/band - padding top - tabbar+border */
-    overflow-y: auto;
-    overflow-x: hidden;
-    scrollbar-width: none;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     border-radius: 40px 40px 0 0;
     border: 8px solid #1c1f27;
     border-bottom: none;
@@ -1983,7 +1983,6 @@ html[data-theme="light"] .sb.sb-collapsed .mhdr:hover{background:rgba(0,0,0,0.05
     margin: 0;
     animation: none;
   }
-  body.area-mobile-preview .view.on[id^="v-area-"]::-webkit-scrollbar { display: none }
 
   /* Pílula de câmera no topo da moldura */
   body.area-mobile-preview .view.on[id^="v-area-"]::before {
@@ -1996,6 +1995,23 @@ html[data-theme="light"] .sb.sb-collapsed .mhdr:hover{background:rgba(0,0,0,0.05
     margin: 10px auto 4px;
     flex-shrink: 0;
   }
+
+  /* Região scrollável é o .ct — o resto fica fixo no topo */
+  body.area-mobile-preview #v-area-dash .ct,
+  body.area-mobile-preview #v-area-agenda .ct,
+  body.area-mobile-preview #v-area-min .ct,
+  body.area-mobile-preview #v-area-pgs .ct,
+  body.area-mobile-preview #v-area-dem .ct {
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    scrollbar-width: none;
+  }
+  body.area-mobile-preview #v-area-dash .ct::-webkit-scrollbar,
+  body.area-mobile-preview #v-area-agenda .ct::-webkit-scrollbar,
+  body.area-mobile-preview #v-area-min .ct::-webkit-scrollbar,
+  body.area-mobile-preview #v-area-pgs .ct::-webkit-scrollbar,
+  body.area-mobile-preview #v-area-dem .ct::-webkit-scrollbar { display: none }
 
   /* Tabbar vira parte inferior da moldura */
   body.area-mobile-preview #area-tabbar:not(.area-tabbar--hidden) {
