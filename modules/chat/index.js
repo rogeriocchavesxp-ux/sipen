@@ -18,6 +18,13 @@
 
   function _setBadge(n) {
     _unreadCount = Math.max(0, n);
+
+    // Ícone do app na tela inicial (PWA — iOS 16.4+, Android Chrome)
+    if ('setAppBadge' in navigator) {
+      if (_unreadCount > 0) navigator.setAppBadge(_unreadCount).catch(() => {});
+      else navigator.clearAppBadge().catch(() => {});
+    }
+
     const dot  = document.querySelector('.ndot');
     const bell = dot?.closest('.tbt');
     if (!dot) return;
