@@ -1953,11 +1953,11 @@ html[data-theme="light"] .sb.sb-collapsed .mhdr:hover{background:rgba(0,0,0,0.05
 
   /* Fundo da "mesa" quando preview ativo */
   body.area-mobile-preview .page {
-    background: #0c0e13;
+    background: #1e2230;
     overflow: hidden;
   }
   html[data-theme="light"] body.area-mobile-preview .page {
-    background: #d4d6db;
+    background: #c8ccd6;
   }
 
   /* Moldura do telefone — position:fixed para posicionamento preciso */
@@ -2023,7 +2023,8 @@ html[data-theme="light"] .sb.sb-collapsed .mhdr:hover{background:rgba(0,0,0,0.05
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 374px; /* 390 - 2×8 border */
+    width: 390px;
+    box-sizing: border-box;
     height: 58px;
     border-radius: 0 0 32px 32px;
     border-left: 8px solid #1c1f27;
