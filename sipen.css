@@ -1954,21 +1954,23 @@ html[data-theme="light"] .sb.sb-collapsed .mhdr:hover{background:rgba(0,0,0,0.05
   /* Fundo da "mesa" quando preview ativo */
   body.area-mobile-preview .page {
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: center;
     overflow: hidden;
     background: #0c0e13;
     padding-top: 28px;
+    padding-bottom: 66px; /* espaço para tabbar + borda inferior da moldura */
+    box-sizing: border-box;
   }
   html[data-theme="light"] body.area-mobile-preview .page {
     background: #d4d6db;
   }
 
-  /* Moldura do telefone — flex-column para conter o scroll */
+  /* Moldura do telefone — ocupa todo o espaço disponível */
   body.area-mobile-preview .view.on[id^="v-area-"] {
     width: 390px;
-    flex-shrink: 0;
-    height: calc(100dvh - 56px - 28px - 66px); /* viewport - topbar/band - padding top - tabbar+border */
+    flex: 1 1 0;
+    min-height: 0;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -1996,7 +1998,7 @@ html[data-theme="light"] .sb.sb-collapsed .mhdr:hover{background:rgba(0,0,0,0.05
     flex-shrink: 0;
   }
 
-  /* Região scrollável é o .ct — o resto fica fixo no topo */
+  /* Região scrollável é o .ct — min-height:0 é essencial para o flex-shrink funcionar */
   body.area-mobile-preview #v-area-dash .ct,
   body.area-mobile-preview #v-area-agenda .ct,
   body.area-mobile-preview #v-area-min .ct,
@@ -2005,6 +2007,7 @@ html[data-theme="light"] .sb.sb-collapsed .mhdr:hover{background:rgba(0,0,0,0.05
     overflow-y: auto;
     overflow-x: hidden;
     flex: 1;
+    min-height: 0;
     scrollbar-width: none;
   }
   body.area-mobile-preview #v-area-dash .ct::-webkit-scrollbar,
