@@ -527,10 +527,12 @@ function _wzD1(){
     ['min_','cong_','aniv_','nomeados_','oficial_'].some(p=>f.tipo.startsWith(p))||
     ['visitantes','congregados','nomeados','seminaristas'].includes(f.tipo));
   const hasInd=_wz.individuais.length>0;
+  const hasLista=_wz.filtros.some(f=>f.tipo.startsWith('lista_'));
   return `<div style="font-size:12px;color:var(--tx3);margin-bottom:16px;font-weight:500">Para quem você quer enviar?</div>
     <div style="display:flex;flex-direction:column;gap:8px">
       ${_wzD1Card('todos','Todos os membros','Toda a membresia ativa',hasTodos,false)}
       ${_wzD1Card('grupo','Grupo específico','Por ministério, congregação, função...',hasGrupo,true)}
+      ${_wzD1Card('lista','Lista personalizada','Grupos criados por você com membros específicos',hasLista,true)}
       ${_wzD1Card('individual','Pessoas específicas','Adicionar membros individualmente',hasInd,true)}
       ${_wzD1Card('avancado','Pesquisa avançada','Aniversariantes, visitantes, congregados...',false,true)}
     </div>`;
@@ -587,8 +589,8 @@ function _wzD2(){
 
 function _wzD3(){
   const tipo=_wz._d.tipo;
-  const LABELS={ministerio:'Ministérios',congregacao:'Congregações',funcao:'Funções',pgs:'Pequenos Grupos',avancado:'Pesquisa avançada',individual:'Pessoas específicas'};
-  const PHOLDERS={ministerio:'Pesquisar ministério...',congregacao:'Pesquisar congregação...',funcao:'Pesquisar função...',pgs:'Pesquisar grupo...',individual:'Buscar membro pelo nome...'};
+  const LABELS={ministerio:'Ministérios',congregacao:'Congregações',funcao:'Funções',pgs:'Pequenos Grupos',avancado:'Pesquisa avançada',individual:'Pessoas específicas',lista:'Listas personalizadas'};
+  const PHOLDERS={ministerio:'Pesquisar ministério...',congregacao:'Pesquisar congregação...',funcao:'Pesquisar função...',pgs:'Pesquisar grupo...',individual:'Buscar membro pelo nome...',lista:'Pesquisar lista...'};
   const showSearch=tipo!=='avancado'&&tipo!=='pgs';
   return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:16px">
     <button onclick="msgWzDBack()" style="background:none;border:none;cursor:pointer;color:var(--tx3);font-size:13px;padding:0">← Voltar</button>
@@ -662,6 +664,23 @@ async function _wzD3Carregar(){
           <button onclick="msgWzRemInd('${p.pessoa_id}')" style="background:none;border:none;cursor:pointer;color:var(--tx3);font-size:14px;padding:0">✕</button>
         </div>`).join('')
       :'<div style="color:var(--tx3);font-size:12px;padding:8px">Digite o nome acima para pesquisar.</div>';
+
+  } else if(tipo==='lista'){
+    try{
+      const r=await fetch(`${apiBaseUrl()}/rest/v1/com_listas?criado_por=eq.${USUARIO_ATUAL.pessoa_id}&order=nome.asc&select=id,nome,descricao`,{headers:apiHeaders()});
+      const rows=r.ok?await r.json():[];
+      if(!rows.length){
+        el.innerHTML=`<div style="color:var(--tx3);font-size:12px;padding:8px">Nenhuma lista encontrada.
+          <a href="#" onclick="event.preventDefault();document.querySelector('.modal-close,.modal-bg,#msg-wz-modal')?.remove();go('com-listas')"
+            style="color:var(--violet);font-weight:600">Criar lista →</a></div>`;
+        return;
+      }
+      const filtered=busca?rows.filter(l=>l.nome.toLowerCase().includes(busca)):rows;
+      el.innerHTML=filtered.length?filtered.map(l=>_wzD3Item(`lista_${l.id}`,l.nome)).join('')
+        :'<div style="color:var(--tx3);font-size:12px;padding:8px">Nenhuma lista encontrada.</div>';
+    }catch(_){
+      el.innerHTML='<div style="color:var(--tx3);font-size:12px;padding:8px">Erro ao carregar listas.</div>';
+    }
   }
 }
 
@@ -767,7 +786,7 @@ window.msgWzD1=function(mode){
     _wzD3EstimarTotal();
   } else {
     _wz._d.nivel=mode==='grupo'?2:3;
-    _wz._d.tipo=mode==='individual'?'individual':mode==='avancado'?'avancado':null;
+    _wz._d.tipo=mode==='individual'?'individual':mode==='avancado'?'avancado':mode==='lista'?'lista':null;
     _wz._d.busca='';
     _wzStep2(document.getElementById('msg-wz-body'));
   }
@@ -1176,6 +1195,14 @@ async function _resolverDests(wz){
         const r = await fetch(`${apiBaseUrl()}/rest/v1/nomeados?funcao_lider=eq.${funcaoLider}&deleted_at=is.null&select=pessoa_id,nome&limit=500`,{headers:apiHeaders()});
         const rows2 = await r.json();
         if(Array.isArray(rows2)) rows2.forEach(p=>{ if(p.pessoa_id&&!map.has(p.pessoa_id)) map.set(p.pessoa_id, p.nome); });
+      }catch(_){}
+
+    } else if(f.tipo.startsWith('lista_')){
+      const listaId=f.tipo.slice(6);
+      try{
+        const r=await fetch(`${apiBaseUrl()}/rest/v1/com_lista_membros?lista_id=eq.${listaId}&select=pessoa_id,pessoas(nome)&limit=500`,{headers:apiHeaders()});
+        const rows2=await r.json();
+        if(Array.isArray(rows2)) rows2.forEach(p=>{ const nm=p.pessoas?.nome; if(p.pessoa_id&&nm&&!map.has(p.pessoa_id)) map.set(p.pessoa_id, nm); });
       }catch(_){}
 
     } else if(f.tipo === 'todos_ministerios' || f.tipo === 'todos_sociedades'){

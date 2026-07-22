@@ -185,6 +185,7 @@
       <div class="bni" onclick="go('com-agendamentos')">Agendamentos</div>
       <div class="bni" onclick="go('com-modelos')">Modelos</div>
       <div class="bni" onclick="go('com-historico')">Histórico</div>
+      <div class="bni" onclick="go('com-listas')">Listas</div>
     </div>
 
     <div class="ct" style="margin-bottom:0">
@@ -234,6 +235,7 @@
       <div class="bni" onclick="go('com-agendamentos')">Agendamentos</div>
       <div class="bni on" onclick="go('com-modelos')">Modelos</div>
       <div class="bni" onclick="go('com-historico')">Histórico</div>
+      <div class="bni" onclick="go('com-listas')">Listas</div>
     </div>
 
     <div class="ct">
@@ -259,6 +261,7 @@
       <div class="bni" onclick="go('com-agendamentos')">Agendamentos</div>
       <div class="bni" onclick="go('com-modelos')">Modelos</div>
       <div class="bni on" onclick="go('com-historico')">Histórico</div>
+      <div class="bni" onclick="go('com-listas')">Listas</div>
     </div>
 
     <div class="ct">
@@ -285,10 +288,44 @@
       <div class="bni on" onclick="go('com-agendamentos')">Agendamentos</div>
       <div class="bni" onclick="go('com-modelos')">Modelos</div>
       <div class="bni" onclick="go('com-historico')">Histórico</div>
+      <div class="bni" onclick="go('com-listas')">Listas</div>
     </div>
 
     <div class="ct">
       <div id="msg-agend-container" style="width:100%"><div style="color:var(--tx3);padding:24px">Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- ════ COMUNICAÇÃO — Listas Personalizadas ════════════════ -->
+  <div class="view" id="v-com-listas">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(139,111,212,0.14);border-color:rgba(139,111,212,0.25);color:var(--violet)">📋</div>
+      <div>
+        <div class="hero-lbl">Comunicação</div>
+        <div class="hero-ttl">Listas Personalizadas</div>
+        <div class="hero-dsc">Grupos de destinatários criados por você para usar no envio de mensagens.</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="comListasNova()">+ Nova Lista</button>
+      </div>
+    </div>
+
+    <div class="bnav" style="--mc:var(--violet)">
+      <div class="bni" onclick="go('com-mensagens')">Mensagens</div>
+      <div class="bni" onclick="go('com-agendamentos')">Agendamentos</div>
+      <div class="bni" onclick="go('com-modelos')">Modelos</div>
+      <div class="bni" onclick="go('com-historico')">Histórico</div>
+      <div class="bni on" onclick="go('com-listas')">Listas</div>
+    </div>
+
+    <div class="ct">
+      <div id="com-listas-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;width:100%">
+        <div style="color:var(--tx3);padding:20px">Carregando...</div>
+      </div>
+    </div>
+
+    <div class="ct">
+      <div id="com-listas-painel" style="display:none;width:100%"></div>
     </div>
   </div>
 
