@@ -999,7 +999,11 @@ function agAprovarSolicitacao(r) {
       <div style="grid-column:1/-1"><label class="flb">Organizador</label><input id="ag-ap-org" class="fi2" value="${escapeHtml(r.responsavel||r.solicitante||'')}" placeholder="Responsável pelo evento"></div>
       <div style="grid-column:1/-1"><label class="flb">Descrição</label><textarea id="ag-ap-desc" class="fi2" rows="3" placeholder="Detalhes do evento">${escapeHtml(r.descricao||'')}</textarea></div>
     </div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px">
+    <label style="display:flex;align-items:center;gap:9px;margin-top:14px;cursor:pointer;user-select:none">
+      <input type="checkbox" id="ag-ap-interno" style="width:16px;height:16px;accent-color:var(--sky);cursor:pointer">
+      <span style="font-size:12.5px;color:var(--tx2)">Atividade interna <span style="color:var(--tx3);font-size:11px">— não aparece na Área do Membro</span></span>
+    </label>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
       <button class="btn" onclick="document.getElementById('ag-aprov-modal')?.remove()">Cancelar</button>
       <button class="btn btn-p" onclick="agConfirmarAprovacao('${r.id}')">Confirmar e criar evento</button>
     </div>
@@ -1030,7 +1034,7 @@ async function agConfirmarAprovacao(demandaId) {
     const resAg = await fetch(`${apiBaseUrl()}/rest/v1/agenda`, {
       method: "POST",
       headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
-      body: JSON.stringify({ titulo, data, hora_inicio: hi, hora_fim: hf, espaco: espNome, espaco_id: espId, organizador: org, descricao: desc, status: "confirmado", mes, dia_semana: diaSemana, recorrencia: "Único" })
+      body: JSON.stringify({ titulo, data, hora_inicio: hi, hora_fim: hf, espaco: espNome, espaco_id: espId, organizador: org, descricao: desc, status: "confirmado", mes, dia_semana: diaSemana, recorrencia: "Único", visibilidade: document.getElementById("ag-ap-interno")?.checked ? "interna" : "publica" })
     });
     if (!resAg.ok) throw new Error(await resAg.text());
 
@@ -1682,7 +1686,7 @@ async function agCarregarConfirmados() {
   if (!el) return;
   el.innerHTML = `<div style="color:var(--tx3);font-size:11px">${typeof spinner==="function"?spinner():"⏳"} Carregando...</div>`;
   try {
-    const url = `${apiBaseUrl()}/rest/v1/agenda?status=eq.confirmado&deleted_at=is.null&order=data.desc&select=id,titulo,data,hora_inicio,hora_fim,espaco,solicitante_txt,protocolo,aprovado_por_nome,aprovado_em,status_termo,token_termo`;
+    const url = `${apiBaseUrl()}/rest/v1/agenda?status=eq.confirmado&deleted_at=is.null&order=data.desc&select=id,titulo,data,hora_inicio,hora_fim,espaco,solicitante_txt,protocolo,aprovado_por_nome,aprovado_em,status_termo,token_termo,visibilidade`;
     const res = await fetch(url, { headers: apiHeaders() });
     if (!res.ok) throw new Error(await res.text());
     _agConfRows = await res.json();
@@ -1734,6 +1738,7 @@ function _agRenderConfirmados() {
             <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Horário</th>
             <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Espaço</th>
             <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Responsável</th>
+            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Visibilidade</th>
             <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Termo</th>
           </tr>
         </thead>
@@ -1745,6 +1750,12 @@ function _agRenderConfirmados() {
               <td style="padding:8px 10px;color:var(--tx2);white-space:nowrap">${fmtH(r.hora_inicio)}${r.hora_fim?" → "+fmtH(r.hora_fim):""}</td>
               <td style="padding:8px 10px;color:var(--tx2);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.espaco||"—")}</td>
               <td style="padding:8px 10px;color:var(--tx2);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.solicitante_txt||"—")}</td>
+              <td style="padding:8px 10px">
+                <span onclick="agToggleVisibilidade('${r.id}',this)" data-vis="${r.visibilidade||'publica'}"
+                  style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:12px;font-size:9.5px;font-weight:700;cursor:pointer;transition:all .15s;${(r.visibilidade||'publica')==='interna'?"background:rgba(74,156,245,.12);color:var(--sky);border:1px solid rgba(74,156,245,.3)":"background:rgba(58,170,92,.1);color:var(--gr);border:1px solid rgba(58,170,92,.3)"}">
+                  ${(r.visibilidade||'publica')==='interna'?"🔒 Interna":"🌐 Pública"}
+                </span>
+              </td>
               <td style="padding:8px 10px">${termoBadge(r.status_termo)}</td>
             </tr>`).join("")}
         </tbody>
@@ -1752,6 +1763,27 @@ function _agRenderConfirmados() {
     </div>` : `<div style="text-align:center;padding:24px 0;color:var(--tx3);font-size:12px">Nenhum evento neste mês.</div>`}`;
 }
 window._agRenderConfirmados = _agRenderConfirmados;
+
+async function agToggleVisibilidade(id, el) {
+  const atual = el.dataset.vis || "publica";
+  const nova  = atual === "interna" ? "publica" : "interna";
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${id}`, {
+      method: "PATCH",
+      headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+      body: JSON.stringify({ visibilidade: nova }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    el.dataset.vis = nova;
+    el.textContent = nova === "interna" ? "🔒 Interna" : "🌐 Pública";
+    el.style.background    = nova === "interna" ? "rgba(74,156,245,.12)" : "rgba(58,170,92,.1)";
+    el.style.color         = nova === "interna" ? "var(--sky)"           : "var(--gr)";
+    el.style.borderColor   = nova === "interna" ? "rgba(74,156,245,.3)"  : "rgba(58,170,92,.3)";
+    const row = _agConfRows.find(r => r.id === id);
+    if (row) row.visibilidade = nova;
+  } catch(e) { T("Erro", e.message); }
+}
+window.agToggleVisibilidade = agToggleVisibilidade;
 
 // ── Kebab menu de solicitação ──────────────────────────────────
 function agSolKebab(btn, id) {

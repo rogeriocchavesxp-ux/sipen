@@ -1935,7 +1935,7 @@ async function _areaCarregarSemana() {
     const today = new Date().toISOString().slice(0,10);
     // tabela agenda usa coluna "data"; data_inicio é coluna legada (nullable)
     const res = await fetch(
-      `${apiBaseUrl()}/rest/v1/agenda?or=(data.gte.${today},data_inicio.gte.${today})&status=eq.confirmado&order=data.asc&limit=6&select=titulo,data,data_inicio,local,tipo`,
+      `${apiBaseUrl()}/rest/v1/agenda?or=(data.gte.${today},data_inicio.gte.${today})&status=eq.confirmado&visibilidade=eq.publica&order=data.asc&limit=6&select=titulo,data,data_inicio,local,tipo`,
       { headers: apiHeaders() }
     );
     if (!res.ok) throw new Error("agenda_" + res.status);
