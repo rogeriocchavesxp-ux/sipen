@@ -123,17 +123,15 @@
 .chat-thread {
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  position: relative;
   background: var(--bg-base, var(--bg));
+  overflow: hidden;
 }
 #chat-thread-ativo {
-  flex: 1;
-  min-height: 0;
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 .chat-vazio {
   flex: 1;
@@ -178,7 +176,6 @@
 }
 .chat-msgs {
   flex: 1;
-  min-height: 0;
   overflow-y: auto;
   padding: 16px 20px;
   display: flex;

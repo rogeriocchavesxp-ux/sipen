@@ -198,7 +198,7 @@ const _VIEW_MAP = {
   "hub":         "modules/shared/hub.html",
   "escalas":     "modules/shared/hub.html",
   "lideranca":   "modules/shared/hub.html",
-  "chat":        "modules/chat/view.html?v=6.49.4",
+  "chat":        "modules/chat/view.html?v=6.49.5",
 };
 
 function _getViewFileForRoute(id) {
