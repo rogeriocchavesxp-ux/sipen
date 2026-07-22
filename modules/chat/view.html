@@ -23,6 +23,11 @@ html[data-theme="light"] {
   --cht-inp:     #f0f2f5;
 }
 
+/* Esconde o rodapé e trava o scroll do page quando o chat está ativo —
+   evita que o footer empurre o input bar para fora da tela */
+body:has(#v-chat-inbox.on) .sipen-footer { display: none; }
+body:has(#v-chat-inbox.on) #page { overflow: hidden; }
+
 #v-chat-inbox {
   padding: 0;
   height: calc(100dvh - var(--th) - 2px);
