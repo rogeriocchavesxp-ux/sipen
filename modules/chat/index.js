@@ -249,21 +249,21 @@
   window.chatNovaConversa = async function () {
     const sb = getSupabase();
 
-    // Busca usuários ativos do sistema
-    const { data: perfis } = await sb
-      .from('perfis')
-      .select('pessoa_id, pessoas(id, nome)')
-      .eq('status', 'ativo')
-      .not('pessoa_id', 'is', null);
+    // Busca pessoas com login no sistema (auth_user_id preenchido)
+    const { data: usuarios } = await sb
+      .from('pessoas')
+      .select('id, nome')
+      .not('auth_user_id', 'is', null)
+      .order('nome');
 
-    const outros = (perfis || []).filter(p => p.pessoa_id !== USUARIO_ATUAL.pessoa_id);
+    const outros = (usuarios || []).filter(p => p.id !== USUARIO_ATUAL.pessoa_id);
     if (!outros.length) { T('Chat', 'Nenhum outro usuário encontrado'); return; }
 
     // Remove modal anterior se existir
     document.getElementById('chat-modal-bg')?.remove();
 
     const opts = outros
-      .map(p => `<option value="${p.pessoa_id}">${_esc(p.pessoas?.nome || 'Usuário')}</option>`)
+      .map(p => `<option value="${p.id}">${_esc(p.nome || 'Usuário')}</option>`)
       .join('');
 
     const modal = document.createElement('div');
