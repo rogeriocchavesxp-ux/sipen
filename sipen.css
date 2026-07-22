@@ -1969,6 +1969,7 @@ html[data-theme="light"] .sb.sb-collapsed .mhdr:hover{background:rgba(0,0,0,0.05
     transform: translateX(-50%);
     width: 390px;
     max-width: calc(100vw - 32px);
+    box-sizing: border-box;              /* 390px inclui as bordas — alinha com o tabbar */
     overflow: hidden;
     display: flex;
     flex-direction: column;
