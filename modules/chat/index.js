@@ -100,8 +100,7 @@
     );
 
     document.getElementById('chat-vazio').style.display = 'none';
-    const area = document.getElementById('chat-thread-ativo');
-    Object.assign(area.style, { display: 'flex', flexDirection: 'column', flex: '1', overflow: 'hidden' });
+    document.getElementById('chat-thread-ativo').style.display = 'flex';
 
     const nome = _conversaNome(_conversaAtual);
     document.getElementById('chat-hdr-nome').textContent = nome;

@@ -122,10 +122,18 @@
 /* Painel direito — thread */
 .chat-thread {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   background: var(--bg-base, var(--bg));
+}
+#chat-thread-ativo {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 .chat-vazio {
   flex: 1;
@@ -170,6 +178,7 @@
 }
 .chat-msgs {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 16px 20px;
   display: flex;
@@ -354,7 +363,7 @@
         <p>Selecione uma conversa</p>
       </div>
 
-      <div id="chat-thread-ativo" style="display:none;flex:1;flex-direction:column;overflow:hidden;display:none">
+      <div id="chat-thread-ativo" style="display:none">
         <div class="chat-thread-hdr" id="chat-thread-hdr">
           <div class="chat-thread-hdr-av" id="chat-hdr-av"></div>
           <span class="chat-thread-hdr-nome" id="chat-hdr-nome"></span>
