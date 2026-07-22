@@ -250,11 +250,11 @@
     const sb = getSupabase();
 
     // Busca pessoas com login no sistema (auth_user_id preenchido)
-    const { data: usuarios } = await sb
-      .from('pessoas')
-      .select('id, nome')
-      .not('auth_user_id', 'is', null)
-      .order('nome');
+    const r = await fetch(
+      `${apiBaseUrl()}/rest/v1/pessoas?auth_user_id=not.is.null&select=id,nome&order=nome`,
+      { headers: apiHeaders() }
+    );
+    const usuarios = r.ok ? await r.json() : [];
 
     const outros = (usuarios || []).filter(p => p.id !== USUARIO_ATUAL.pessoa_id);
     if (!outros.length) { T('Chat', 'Nenhum outro usuário encontrado'); return; }
