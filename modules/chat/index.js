@@ -195,24 +195,12 @@
 
     const agora = new Date().toISOString();
 
-    // Insere e exibe otimisticamente — não depende do retorno
-    const msgLocal = {
-      id: crypto.randomUUID(), texto, criado_em: agora,
-      pessoa_id: USUARIO_ATUAL.pessoa_id,
-      pessoas: { nome: USUARIO_ATUAL.nome }
-    };
-    _appendMsg(msgLocal);
+    // Exibe otimisticamente
+    _appendMsg({ id: crypto.randomUUID(), texto, criado_em: agora, pessoa_id: USUARIO_ATUAL.pessoa_id, pessoas: { nome: USUARIO_ATUAL.nome } });
 
-    await fetch(_url('chat_mensagens'), {
-      method:  'POST',
-      headers: { ..._H(), 'Prefer': 'return=minimal' },
-      body:    JSON.stringify({ conversa_id: _conversaAtual.id, pessoa_id: USUARIO_ATUAL.pessoa_id, texto, criado_em: agora })
-    });
-
-    await fetch(
-      _url(`chat_conversas?id=eq.${_conversaAtual.id}`),
-      { method: 'PATCH', headers: _H(), body: JSON.stringify({ ultima_msg_em: agora }) }
-    );
+    const sb = getSupabase();
+    await sb.from('chat_mensagens').insert({ conversa_id: _conversaAtual.id, pessoa_id: USUARIO_ATUAL.pessoa_id, texto, criado_em: agora });
+    await sb.from('chat_conversas').update({ ultima_msg_em: agora }).eq('id', _conversaAtual.id);
   };
 
   window.chatInputKeydown = function (e) {
@@ -282,34 +270,31 @@
 
     // 3. Cria nova conversa se não existe
     if (!conversaId) {
-      // UUID gerado no cliente — evita depender de SELECT pós-insert bloqueado por RLS
+      const sb = getSupabase();
       const newId = crypto.randomUUID();
 
-      const rC = await fetch(_url('chat_conversas'), {
-        method:  'POST',
-        headers: { ..._H(), 'Prefer': 'return=minimal' },
-        body:    JSON.stringify({ id: newId, tipo: 'direto', criado_por: myId })
-      });
-      if (!rC.ok) {
-        const err = await rC.text().catch(() => rC.status);
-        console.error('chat_conversas insert error:', rC.status, err);
-        T('Chat', `Erro ao criar conversa (${rC.status})`);
+      const { error: eConv } = await sb
+        .from('chat_conversas')
+        .insert({ id: newId, tipo: 'direto', criado_por: myId });
+
+      if (eConv) {
+        console.error('chat_conversas insert error:', eConv);
+        T('Chat', `Erro ao criar conversa: ${eConv.message}`);
         return;
       }
 
       conversaId = newId;
 
-      const rP = await fetch(_url('chat_participantes'), {
-        method:  'POST',
-        headers: { ..._H(), 'Prefer': 'return=minimal' },
-        body:    JSON.stringify([
+      const { error: ePart } = await sb
+        .from('chat_participantes')
+        .insert([
           { conversa_id: conversaId, pessoa_id: myId },
           { conversa_id: conversaId, pessoa_id: outroPessoaId }
-        ])
-      });
-      if (!rP.ok) {
-        console.error('chat_participantes insert error:', rP.status);
-        T('Chat', 'Erro ao adicionar participantes');
+        ]);
+
+      if (ePart) {
+        console.error('chat_participantes insert error:', ePart);
+        T('Chat', `Erro ao adicionar participantes: ${ePart.message}`);
         return;
       }
     }
