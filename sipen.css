@@ -1775,6 +1775,44 @@ html[data-theme="light"] .tb-search:focus{border-color:rgba(0,0,0,0.16)}
   .tb-search-wrap{display:none}
 }
 
+/* ══ Relatório por Departamento (Dashboard Geral) ════════════════ */
+.dpt-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 10px;border-bottom:1px solid var(--bd1)}
+.dpt-tabs{margin-left:auto;display:flex;gap:4px}
+.dpt-tab{background:none;border:1px solid var(--bd2);border-radius:6px;color:var(--tx3);font-size:11px;font-weight:500;padding:4px 11px;cursor:pointer;font-family:var(--sans);transition:background .12s,color .12s,border-color .12s}
+.dpt-tab.on{background:var(--violetbg);border-color:rgba(191,90,242,.4);color:var(--violet)}
+.dpt-tab:not(.on):hover{background:var(--bg-hover);color:var(--tx2)}
+.dpt-body{padding:14px}
+
+/* Admin grid */
+.dpt-ag{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.dpt-ac{background:var(--bg-surface);border:1px solid var(--bd1);border-left:3px solid var(--bd2);border-radius:8px;padding:12px 13px;cursor:pointer;transition:background .12s,border-color .12s}
+.dpt-ac:hover{background:var(--bg-hover);border-left-width:3px}
+.dpt-ac-hdr{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.dpt-ac-ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.dpt-ac-name{font-size:12px;font-weight:600;color:var(--tx1);letter-spacing:-.01em}
+.dpt-ac-ms{display:flex;flex-direction:column;gap:5px}
+.dpt-ac-m{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.dpt-ac-ml{font-size:11px;color:var(--tx3)}
+.dpt-ac-mv{font-size:12px;font-weight:600;color:var(--tx2);font-variant-numeric:tabular-nums}
+.dpt-warn{color:var(--rose)}
+
+/* Ministry grid */
+.dpt-sg{font-size:10.5px;font-weight:600;color:var(--tx4);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.dpt-mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.dpt-mc{background:var(--bg-surface);border:1px solid var(--bd1);border-radius:8px;padding:11px 12px;cursor:pointer;transition:background .12s}
+.dpt-mc:hover{background:var(--bg-hover)}
+.dpt-mc-top{display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.dpt-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dpt-mc-nm{font-size:11.5px;font-weight:500;color:var(--tx1);line-height:1.3}
+.dpt-bar-w{height:4px;background:var(--bd2);border-radius:2px;margin-bottom:6px;overflow:hidden}
+.dpt-bar{height:100%;border-radius:2px;transition:width .4s ease;min-width:4px}
+.dpt-mc-ft{display:flex;align-items:baseline;gap:3px}
+.dpt-mc-n{font-size:13px;font-weight:700;color:var(--tx1);font-variant-numeric:tabular-nums}
+.dpt-mc-l{font-size:10.5px;color:var(--tx4)}
+
+@media(max-width:760px){.dpt-ag{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.dpt-ag{grid-template-columns:1fr}}
+
 /* ══ Sidebar Colapsado ════════════════════════════════════════════ */
 .sb{transition:width .2s ease}
 

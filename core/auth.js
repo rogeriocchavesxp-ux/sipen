@@ -1149,8 +1149,106 @@ function renderGeralDash() {
     ).join("")}</div>
   </div>` : "";
 
-  ct.innerHTML = `${alertsHtml}<div class="dash-g2"><div class="dash-main">${left}</div><div class="dash-side">${right}</div></div>${timelineHtml}`;
+  ct.innerHTML = `${alertsHtml}<div class="dash-g2"><div class="dash-main">${left}</div><div class="dash-side">${right}</div></div>${timelineHtml}<div id="dash-depto" class="dash-panel" style="margin-top:12px"></div>`;
+  _renderDepto();
 }
+
+async function _renderDepto() {
+  const el = document.getElementById('dash-depto');
+  if (!el) return;
+
+  const H = apiHeaders();
+  const B = apiBaseUrl();
+  const now = new Date();
+  const mesInicio = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+
+  async function _g(path) {
+    try { const r = await fetch(`${B}/rest/v1/${path}`, { headers: H }); return r.ok ? await r.json() : []; }
+    catch(_) { return []; }
+  }
+
+  const [membros, dems, camps, mins, membsMin] = await Promise.all([
+    _g('v_membros?status=eq.ativo&select=pessoa_id'),
+    _g('demandas?select=id,status'),
+    _g('msg_campanhas?select=id&criado_em=gte.' + mesInicio),
+    _g('ministerios?ativo=eq.true&select=id,nome,tipo&order=nome.asc'),
+    _g('ministerio_membros?ativo=eq.true&select=ministerio_id'),
+  ]);
+
+  const totalMembros = Array.isArray(membros) ? membros.length : 0;
+  const ABERTOS = ['aberta', 'nova', 'em análise', 'em andamento', 'pendente'];
+  const demAbertas = Array.isArray(dems) ? dems.filter(d => ABERTOS.includes((d.status || '').toLowerCase())).length : 0;
+  const campsMes = Array.isArray(camps) ? camps.length : 0;
+
+  const contMin = {};
+  if (Array.isArray(membsMin)) membsMin.forEach(m => { contMin[m.ministerio_id] = (contMin[m.ministerio_id] || 0) + 1; });
+  const maxMin = Math.max(...Object.values(contMin), 1);
+
+  const ministeriosList = Array.isArray(mins) ? mins.filter(m => m.tipo !== 'SOCIEDADE') : [];
+  const sociedadesList  = Array.isArray(mins) ? mins.filter(m => m.tipo === 'SOCIEDADE')  : [];
+
+  const CORS_MIN = ['#8b6fd4','#4a9cf5','#3aaa5c','#d4a843','#2ab5c0','#e05555','#f0b429','#8b6fd4'];
+  const CORS_SOC = ['#d4a843','#f0b429','#8b6fd4','#4a9cf5'];
+
+  function minCard(m, i, cors) {
+    const n   = contMin[m.id] || 0;
+    const pct = Math.round((n / maxMin) * 100);
+    const cor = cors[i % cors.length];
+    return '<div class="dpt-mc" onclick="go(\'min-min\')">' +
+      '<div class="dpt-mc-top">' +
+        '<span class="dpt-dot" style="background:' + cor + '"></span>' +
+        '<span class="dpt-mc-nm">' + escapeHtml(m.nome) + '</span>' +
+      '</div>' +
+      '<div class="dpt-bar-w"><div class="dpt-bar" style="width:' + pct + '%;background:' + cor + '"></div></div>' +
+      '<div class="dpt-mc-ft"><span class="dpt-mc-n">' + n + '</span><span class="dpt-mc-l"> membros</span></div>' +
+    '</div>';
+  }
+
+  const admHtml = `<div class="dpt-ag">
+    ${_dptCard('Secretaria','👥','var(--gr)','rgba(58,170,92,.1)',[['Membros ativos',totalMembros.toLocaleString('pt-BR'),false],['Base de dados','—',false]],'memb-dash')}
+    ${_dptCard('Demandas','📋','var(--amber)','rgba(255,159,10,.1)',[['Solicitações abertas',demAbertas,demAbertas>10],['Atualização diária','—',false]],'dem-todas')}
+    ${_dptCard('Comunicação','📢','var(--violet)','rgba(191,90,242,.1)',[['Campanhas este mês',campsMes,false],['Listas personalizadas','—',false]],'com-mensagens')}
+    ${_dptCard('Agenda','📅','var(--teal)','rgba(90,200,250,.1)',[['Eventos esta semana','—',false],['Próximos 30 dias','—',false]],'agenda-dash')}
+    ${_dptCard('Financeiro','💰','var(--sky)','rgba(100,210,255,.1)',[['Dízimos (mês)','—',false],['Ofertas (mês)','—',false]],'fin-dash')}
+    ${_dptCard('Jurídico','⚖️','var(--rose)','rgba(255,69,58,.1)',[['Contratos vigentes','—',false],['A vencer (30 dias)','—',false]],'jur-contratos')}
+  </div>`;
+
+  const minHtml =
+    (ministeriosList.length ? '<div class="dpt-sg">Ministérios</div><div class="dpt-mg">' + ministeriosList.map((m,i) => minCard(m, i, CORS_MIN)).join('') + '</div>' : '') +
+    (sociedadesList.length  ? '<div class="dpt-sg" style="margin-top:18px">Sociedades Internas</div><div class="dpt-mg">' + sociedadesList.map((m,i) => minCard(m, i, CORS_SOC)).join('') + '</div>' : '') +
+    (!ministeriosList.length && !sociedadesList.length ? '<div style="padding:20px;color:var(--tx3);font-size:12px">Nenhum ministério cadastrado.</div>' : '');
+
+  el.innerHTML = `<div class="dpt-hdr">
+    <span class="dash-pi" style="color:var(--violet)">◈</span>
+    <span class="dash-pt">Relatório por Departamento</span>
+    <div class="dpt-tabs">
+      <button class="dpt-tab on" onclick="dptSwitch('adm',this)">Administrativo</button>
+      <button class="dpt-tab" onclick="dptSwitch('min',this)">Ministerial</button>
+    </div>
+  </div>
+  <div id="dpt-adm" class="dpt-body">${admHtml}</div>
+  <div id="dpt-min" class="dpt-body" style="display:none">${minHtml}</div>`;
+}
+
+function _dptCard(title, icon, ac, bgIco, metrics, route) {
+  const rows = metrics.map(([lbl, val, warn]) =>
+    `<div class="dpt-ac-m"><span class="dpt-ac-ml">${lbl}</span><span class="dpt-ac-mv${warn ? ' dpt-warn' : ''}">${val}</span></div>`
+  ).join('');
+  return `<div class="dpt-ac" onclick="go('${route}')" style="border-left-color:${ac}">
+    <div class="dpt-ac-hdr">
+      <div class="dpt-ac-ico" style="background:${bgIco}">${icon}</div>
+      <div class="dpt-ac-name">${title}</div>
+    </div>
+    <div class="dpt-ac-ms">${rows}</div>
+  </div>`;
+}
+
+window.dptSwitch = function(id, btn) {
+  document.getElementById('dpt-adm').style.display = id === 'adm' ? '' : 'none';
+  document.getElementById('dpt-min').style.display = id === 'min' ? '' : 'none';
+  document.querySelectorAll('.dpt-tab').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+};
 
 function renderDashboardModulos() {}
 
