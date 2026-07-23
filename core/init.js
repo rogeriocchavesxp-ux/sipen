@@ -367,7 +367,7 @@ async function renderOficiaisOrdenados() {
     const makePastoresTable = list => {
       if (!list.length) return `<p style="color:var(--tx4);font-size:12px;padding:8px">Nenhum registro.</p>`;
       return `<table class="tbl"><thead><tr><th>Nome</th><th>Posse</th><th>Ata</th><th>Obs</th><th>Status</th><th></th></tr></thead><tbody>` +
-        list.map(r => `<tr><td class="tdp">${r.nome}</td><td class="tdc mono">${fmtDate(r.posse)}</td><td class="tdc mono">${r.ata||"—"}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs||"—"}</td><td>${fmtPill(r.status)}</td><td class="tdc">${btnEditar(r.id)}</td></tr>`).join("") +
+        list.map(r => `<tr><td class="tdp">${nomePropio(r.nome)}</td><td class="tdc mono">${fmtDate(r.posse)}</td><td class="tdc mono">${r.ata||"—"}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs||"—"}</td><td>${fmtPill(r.status)}</td><td class="tdc">${btnEditar(r.id)}</td></tr>`).join("") +
         `</tbody></table>`;
     };
 
@@ -388,7 +388,7 @@ async function renderOficiaisOrdenados() {
         const lbl = grp.length > 1 ? labelPlural : labelSingular;
         html += `<tr><td colspan="9" style="background:${bgLbl(yr)};font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;padding:6px 10px;font-weight:700">Mandato até ${yr} — ${grp.length} ${lbl}</td></tr>`;
         grp.forEach(r => {
-          html += `<tr><td class="tdp">${r.nome}</td><td class="tdc mono">${fmtDate(r.posse)}</td><td class="tdc mono">${fmtDate(r.fim_mandato)}</td><td class="tdc mono">${r.ata||"—"}</td><td class="tdc" style="text-align:center">${fmtMand(r.mandato_numero)}</td><td class="tdc" style="text-align:center">${fmtEmer(r.emerencia_votos)}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs||"—"}</td><td>${fmtPill(r.status)}</td><td class="tdc">${btnEditar(r.id)}</td></tr>`;
+          html += `<tr><td class="tdp">${nomePropio(r.nome)}</td><td class="tdc mono">${fmtDate(r.posse)}</td><td class="tdc mono">${fmtDate(r.fim_mandato)}</td><td class="tdc mono">${r.ata||"—"}</td><td class="tdc" style="text-align:center">${fmtMand(r.mandato_numero)}</td><td class="tdc" style="text-align:center">${fmtEmer(r.emerencia_votos)}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs||"—"}</td><td>${fmtPill(r.status)}</td><td class="tdc">${btnEditar(r.id)}</td></tr>`;
         });
       }
       html += `</tbody></table>`;
@@ -447,7 +447,7 @@ async function renderDiaconos() {
       const label = yr === "especial" ? `Situações especiais / encerrados — ${list.length}` : `Mandato até ${yr} — ${list.length} diácono${list.length>1?'s':''}`;
       html += `<tr><td colspan="8" style="background:${labelColor(yr)};font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;padding:6px 10px;font-weight:700">${label}</td></tr>`;
       list.forEach(r => {
-        html += `<tr><td class="tdp" style="${r.status!=='ativo'?'color:var(--tx3)':''}">${r.nome}</td><td class="tdc mono">${fmtDate(r.posse)}</td><td class="tdc mono">${fmtDate(r.fim_mandato)}</td><td class="tdc mono">${r.ata||"—"}</td><td class="tdc" style="text-align:center">${fmtMand(r.mandato_numero)}</td><td class="tdc" style="text-align:center">${fmtEmer(r.emerencia_votos)}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs||"—"}</td><td>${pillStatus(r.status)}</td></tr>`;
+        html += `<tr><td class="tdp" style="${r.status!=='ativo'?'color:var(--tx3)':''}">${nomePropio(r.nome)}</td><td class="tdc mono">${fmtDate(r.posse)}</td><td class="tdc mono">${fmtDate(r.fim_mandato)}</td><td class="tdc mono">${r.ata||"—"}</td><td class="tdc" style="text-align:center">${fmtMand(r.mandato_numero)}</td><td class="tdc" style="text-align:center">${fmtEmer(r.emerencia_votos)}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs||"—"}</td><td>${pillStatus(r.status)}</td></tr>`;
       });
     }
     html += `</tbody></table>`;
@@ -533,7 +533,7 @@ function _renderNomAll() {
         const sub = p.suborgao ? ` <span style="font-size:10px;color:var(--tx4)">(${p.suborgao})</span>` : "";
         const obs = p.obs ? ` <span style="font-size:10px;color:var(--tx3);font-style:italic">· ${p.obs}</span>` : "";
         html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px 8px 32px;${pi < pessoas.length-1 ? "border-bottom:1px solid rgba(255,255,255,0.04)" : ""}">
-            <span style="font-size:12px;color:var(--tx1)">${p.nome}${sub}${obs}</span>
+            <span style="font-size:12px;color:var(--tx1)">${nomePropio(p.nome)}${sub}${obs}</span>
             <span style="font-size:11px;color:${cor};font-weight:600;white-space:nowrap;margin-left:12px">${p.cargo || ""}</span>
           </div>`;
       });
@@ -579,7 +579,7 @@ function _renderNomTabContent(tipo) {
       const obs = p.obs ? ` <span style="font-size:10px;color:var(--tx3);font-style:italic">· ${p.obs}</span>` : "";
       html += `
           <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px 8px 32px;${pi < pessoas.length-1 ? "border-bottom:1px solid rgba(255,255,255,0.04)" : ""}">
-            <span style="font-size:12px;color:var(--tx1)">${p.nome}${sub}${obs}</span>
+            <span style="font-size:12px;color:var(--tx1)">${nomePropio(p.nome)}${sub}${obs}</span>
             <span style="font-size:11px;color:${cor};font-weight:600;white-space:nowrap;margin-left:12px">${p.cargo || ""}</span>
           </div>`;
     });
@@ -641,7 +641,7 @@ async function renderSeminaristas() {
     let html = `<table class="tbl"><thead><tr><th>Nome</th><th>Seminário</th><th>Curso</th><th>Ano</th><th>Supervisor</th><th>Estágio</th><th>Status</th></tr></thead><tbody>`;
     rows.forEach(r => {
       const est = r.tem_estagio ? `<span class="pill pd">Sim · ${r.area_estagio||""}</span>` : `<span class="pill pz">Não</span>`;
-      html += `<tr><td class="tdp">${r.nome}</td><td class="tdc">${r.seminario||"—"}</td><td>${r.curso||"—"}</td><td class="tdc mono">${r.ano_curso||"—"}</td><td>${r.supervisor||"—"}</td><td>${est}</td><td>${fmtPill(r.status)}</td></tr>`;
+      html += `<tr><td class="tdp">${nomePropio(r.nome)}</td><td class="tdc">${r.seminario||"—"}</td><td>${r.curso||"—"}</td><td class="tdc mono">${r.ano_curso||"—"}</td><td>${r.supervisor||"—"}</td><td>${est}</td><td>${fmtPill(r.status)}</td></tr>`;
     });
     html += `</tbody></table>`;
     if (el) el.innerHTML = html;
@@ -678,7 +678,7 @@ async function renderContratados() {
     if (!rows.length) { if (el) el.innerHTML = `<p style="color:var(--tx4);font-size:12px;padding:8px">Nenhum registro.</p>`; return; }
     let html = `<table class="tbl"><thead><tr><th>Nome / Empresa</th><th>Função</th><th>Categoria</th><th>Tipo de Vínculo</th><th>Área Atendida</th><th>Desde</th><th>Até</th><th>Status</th></tr></thead><tbody>`;
     rows.forEach(r => {
-      html += `<tr><td class="tdp">${r.nome}${r.empresa?` <span style="font-size:10px;color:var(--tx3)">(${r.empresa})</span>`:""}</td><td>${r.funcao||"—"}</td><td>${pillCat(r.categoria)}</td><td class="tdc">${r.tipo_vinculo||"—"}</td><td class="tdc">${r.area_atendida||"—"}</td><td class="tdc mono">${fmtDate(r.contrato_desde)}</td><td class="tdc mono">${fmtDate(r.contrato_ate)}</td><td>${fmtPill(r.status)}</td></tr>`;
+      html += `<tr><td class="tdp">${nomePropio(r.nome)}${r.empresa?` <span style="font-size:10px;color:var(--tx3)">(${r.empresa})</span>`:""}</td><td>${r.funcao||"—"}</td><td>${pillCat(r.categoria)}</td><td class="tdc">${r.tipo_vinculo||"—"}</td><td class="tdc">${r.area_atendida||"—"}</td><td class="tdc mono">${fmtDate(r.contrato_desde)}</td><td class="tdc mono">${fmtDate(r.contrato_ate)}</td><td>${fmtPill(r.status)}</td></tr>`;
     });
     html += `</tbody></table>`;
     if (el) el.innerHTML = html;
