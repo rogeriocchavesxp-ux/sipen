@@ -1727,6 +1727,8 @@ textarea.fi{resize:vertical;line-height:1.5}
 .dash-main,.dash-side{display:flex;flex-direction:column;gap:12px}
 
 .dash-panel{background:var(--bg-card);border:1px solid var(--bd1);border-radius:10px;overflow:hidden}
+.dash-atalho{transition:border-color .13s,background .13s}
+.dash-atalho:hover{background:var(--bg-hover);border-color:var(--bd2)}
 .dash-ph{display:flex;align-items:center;gap:9px;padding:11px 14px 10px;border-bottom:1px solid var(--bd1)}
 .dash-pi{font-size:13px;line-height:1;flex-shrink:0}
 .dash-pt{font-size:12.5px;font-weight:600;color:var(--tx1);flex:1;letter-spacing:-0.01em}

@@ -902,114 +902,8 @@ function canAccessModule(moduloKey) {
   return nivel !== "SEM_ACESSO";
 }
 
-const DASH_MODULOS = [
-  {
-    key:"ADMINISTRATIVO", dest:"admin-dash",
-    mc:"var(--gold)", icoBg:"rgba(201,168,76,0.14)", icoBd:"rgba(201,168,76,0.25)", icoClr:"var(--gold)", ico:"◆",
-    nome:"Administrativo",
-    stats:[
-      {l:"Saldo financeiro",  v:"R$ 13.600", cls:"pos"},
-      {l:"Contratos",         v:"3 a vencer", cls:"wa"},
-      {l:"Colaboradores",     v:"24 ativos"},
-    ]
-  },
-  {
-    key:"CONSELHO", dest:"conselho-dash",
-    mc:"var(--sky)", icoBg:"rgba(88,152,212,0.14)", icoBd:"rgba(88,152,212,0.25)", icoClr:"var(--sky)", ico:"◈",
-    nome:"Conselho e Governança",
-    stats:[
-      {l:"Congregações",  v:"1 ativa"},
-      {l:"Membros totais",v:"1.284"},
-      {l:"Receita",       v:"R$ 42.300/mês"},
-    ]
-  },
-  {
-    key:"JURIDICO", dest:"jur-dash",
-    mc:"var(--blue)", icoBg:"rgba(74,156,245,0.14)", icoBd:"rgba(74,156,245,0.25)", icoClr:"var(--blue)", ico:"⚖",
-    nome:"Jurídico",
-    stats:[
-      {l:"Demandas jurídicas", v:"11"},
-      {l:"Contratos vigentes", v:"14"},
-      {l:"Pendências críticas",v:"2", cls:"wa"},
-    ]
-  },
-  {
-    key:"PASTORAL", dest:"pastoral-dash",
-    mc:"var(--teal)", icoBg:"rgba(58,176,184,0.14)", icoBd:"rgba(58,176,184,0.25)", icoClr:"var(--teal)", ico:"✦",
-    nome:"Pastoral",
-    stats:[
-      {l:"Atendimentos (Abr)", v:"47"},
-      {l:"Prioritários",       v:"4 urgentes", cls:"dn"},
-      {l:"Pedidos oração",     v:"28"},
-    ]
-  },
-  {
-    key:"MINISTERIAL", dest:"min-dash",
-    mc:"var(--violet)", icoBg:"rgba(144,104,200,0.14)", icoBd:"rgba(144,104,200,0.25)", icoClr:"var(--violet)", ico:"◉",
-    nome:"Departamentos",
-    stats:[
-      {l:"Ministérios",    v:"8 ativos"},
-      {l:"Voluntários",    v:"342"},
-      {l:"Escala pendente",v:"1 (Louvor)", cls:"wa"},
-    ]
-  },
-  {
-    key:"AGENDA", dest:"agenda-dash",
-    mc:"var(--teal)", icoBg:"rgba(42,181,192,0.14)", icoBd:"rgba(42,181,192,0.25)", icoClr:"var(--teal)", ico:"🗓",
-    nome:"Agenda",
-    stats:[
-      {l:"Solicitações no mês",  v:"83"},
-      {l:"Aguardando aceite",    v:"12", cls:"wa"},
-      {l:"Conflitos detectados", v:"4",  cls:"dn"},
-    ]
-  },
-  {
-    key:"PGS", dest:"pgs-dash",
-    mc:"var(--gbr)", icoBg:"rgba(82,196,110,0.14)", icoBd:"rgba(82,196,110,0.25)", icoClr:"var(--gbr)", ico:"⌂",
-    nome:"Pequenos Grupos",
-    stats:[
-      {l:"PGs ativos",       v:"18"},
-      {l:"Encontros no mês", v:"61"},
-      {l:"Visitantes",       v:"27", cls:"pos"},
-    ]
-  },
-  {
-    key:"INFRAESTRUTURA", dest:"infra-dash",
-    mc:"var(--amber)", icoBg:"rgba(208,144,64,0.14)", icoBd:"rgba(208,144,64,0.25)", icoClr:"var(--amber)", ico:"⊞",
-    nome:"Infraestrutura e Conservação",
-    stats:[
-      {l:"OS abertas", v:"5"},
-      {l:"Atrasadas",  v:"2 urgentes", cls:"dn"},
-      {l:"Patrimônio", v:"213 itens"},
-    ]
-  },
-  {
-    key:"MEMBRESIA", dest:"memb-dash",
-    mc:"var(--gbr)", icoBg:"rgba(82,196,110,0.14)", icoBd:"rgba(82,196,110,0.25)", icoClr:"var(--gbr)", ico:"✝",
-    nome:"Membresia",
-    stats:[
-      {l:"Membros ativos", v:"1.284"},
-      {l:"Batismos 2026",  v:"38", cls:"pos"},
-      {l:"Visitantes (Abr)",v:"74"},
-    ]
-  },
-];
 
 // ── DASHBOARD GERAL ────────────────────────────────────────────────
-const _GERAL_FEED = [
-  { mod:"INFRAESTRUTURA", cor:"var(--rose)", txt:"<b>Infraestrutura e Conservação</b> — OS-042 marcada como <b>atrasada</b>",             time:"hoje · 14:32" },
-  { mod:"INFRAESTRUTURA", cor:"var(--gmd)",  txt:"<b>Infraestrutura e Conservação</b> — OS de manutenção elétrica concluída",             time:"hoje · 11:15" },
-  { mod:"ADMINISTRATIVO", cor:"var(--gold)", txt:"<b>Administrativo</b> — <b>Ana Lima</b> nomeada Líder Ministerial",       time:"hoje · 09:48" },
-  { mod:"MEMBRESIA",      cor:"var(--teal)", txt:"<b>Membresia</b> — 14 novos membros cadastrados em lote",                 time:"10/04 · 16:20"},
-  { mod:"DEMANDAS",       cor:"var(--sky)",  txt:"<b>Demandas</b> — 8 alertas enviados aos responsáveis",                   time:"10/04 · 08:00"},
-];
-
-const _GERAL_BARRAS = [
-  { mod:"INFRAESTRUTURA", nome:"Infraestrutura e Conservação", val:23, pct:100, cor:"var(--amber)"  },
-  { mod:"MINISTERIAL",    nome:"Ministerial",    val:18, pct:78,  cor:"var(--violet)" },
-  { mod:"ADMINISTRATIVO", nome:"Administrativo", val:12, pct:52,  cor:"var(--gold)"   },
-  { mod:"PASTORAL",       nome:"Pastoral",       val:5,  pct:22,  cor:"var(--teal)"   },
-];
 
 function _buildMiniCal() {
   const now = new Date();
@@ -1039,118 +933,30 @@ function renderGeralDash() {
   if (_isMembroComum()) { go("area-dash"); return; }
   const can = (mod) => canAccessModule(mod);
 
-  // ── Alert strip ──────────────────────────────────────────────────
-  let alertsHtml = "";
-  if (can("ADMINISTRATIVO") || can("DEMANDAS") || can("INFRAESTRUTURA")) {
-    alertsHtml = `<div class="dash-alerts">
-      <span class="da-item da-warn"><strong>3 contratos</strong> vencem em 30 dias</span>
-      <span class="da-sep">·</span>
-      <span class="da-item da-err"><strong>8 demandas</strong> atrasadas</span>
-      <span class="da-sep">·</span>
-      <span class="da-item da-err"><strong>2 OS</strong> urgentes sem resposta</span>
-      <span class="da-link" onclick="go('dem-todas')">Ver tudo →</span>
+  // Acesso rápido: card simples sem dados fictícios
+  function _atalho(ico, cor, nome, rota) {
+    return `<div class="dash-panel dash-atalho" onclick="go('${rota}')" style="cursor:pointer">
+      <div class="dash-ph">
+        <span class="dash-pi" style="color:${cor}">${ico}</span>
+        <span class="dash-pt">${nome}</span>
+        <span class="dash-pa">acessar →</span>
+      </div>
     </div>`;
   }
 
-  // ── Coluna esquerda — Agenda, Pastoral, Membresia ────────────────
   let left = "";
+  if (can("AGENDA"))    left += _atalho("◉","var(--teal)",  "Agenda",          "agenda-dash");
+  if (can("PASTORAL"))  left += _atalho("✦","var(--rose)",  "Pastoral",        "pastoral-dash");
+  if (can("MEMBRESIA")) left += _atalho("✝","var(--gbr)",   "Membresia",       "memb-dash");
+  if (can("DEMANDAS"))  left += _atalho("📋","var(--amber)", "Demandas",        "dem-todas");
 
-  if (can("AGENDA")) {
-    left += `<div class="dash-panel">
-      <div class="dash-ph">
-        <span class="dash-pi" style="color:var(--teal)">◉</span>
-        <span class="dash-pt">Agenda</span>
-        <span class="dash-pa" onclick="go('agenda-dash')">ver tudo →</span>
-      </div>
-      <div class="dash-pr">
-        <div class="dash-row"><span class="dr-l">Hoje</span><span class="dr-v">Culto da manhã · 09:00</span></div>
-        <div class="dash-row"><span class="dr-l">Esta semana</span><span class="dr-v">3 eventos confirmados</span></div>
-        <div class="dash-row"><span class="dr-l">Solicitações</span><span class="dr-v dr-warn">12 aguardando aprovação</span></div>
-        <div class="dash-row"><span class="dr-l">Conflitos</span><span class="dr-v dr-err">2 detectados</span></div>
-      </div>
-    </div>`;
-  }
-
-  if (can("PASTORAL")) {
-    left += `<div class="dash-panel">
-      <div class="dash-ph">
-        <span class="dash-pi" style="color:var(--rose)">✦</span>
-        <span class="dash-pt">Pastoral</span>
-        <span class="dash-pa" onclick="go('pastoral-dash')">ver tudo →</span>
-      </div>
-      <div class="dash-pr">
-        <div class="dash-row"><span class="dr-l">Aconselhamentos</span><span class="dr-v">47 este mês</span></div>
-        <div class="dash-row"><span class="dr-l">Visitas</span><span class="dr-v">12 agendadas</span></div>
-        <div class="dash-row"><span class="dr-l">Pedidos de oração</span><span class="dr-v dr-warn">28 ativos</span></div>
-        <div class="dash-row"><span class="dr-l">Prioritários</span><span class="dr-v dr-err">4 casos urgentes</span></div>
-      </div>
-    </div>`;
-  }
-
-  if (can("MEMBRESIA")) {
-    left += `<div class="dash-panel">
-      <div class="dash-ph">
-        <span class="dash-pi" style="color:var(--gbr)">✝</span>
-        <span class="dash-pt">Membresia</span>
-        <span class="dash-pa" onclick="go('memb-dash')">ver tudo →</span>
-      </div>
-      <div class="dash-pr">
-        <div class="dash-row"><span class="dr-l">Visitantes</span><span class="dr-v dr-ok">74 em Abr/26</span></div>
-        <div class="dash-row"><span class="dr-l">Novos membros</span><span class="dr-v dr-ok">6 este mês</span></div>
-        <div class="dash-row"><span class="dr-l">Batismos 2026</span><span class="dr-v">38 realizados</span></div>
-        <div class="dash-row"><span class="dr-l">Transferências</span><span class="dr-v">3 pendentes</span></div>
-      </div>
-    </div>`;
-  }
-
-  // ── Coluna direita — Calendário, PGs, Departamentos ──────────────
   let right = _buildMiniCal();
+  if (can("PGS"))       right += _atalho("⌂","var(--gbr)",   "Pequenos Grupos", "pgs-dash");
+  if (can("MINISTERIAL") || can("CONSELHO"))
+                        right += _atalho("◈","var(--violet)", "Departamentos",   "min-min");
+  if (can("FINANCEIRO")) right += _atalho("◆","var(--gold)",  "Financeiro",      "fin-dash");
 
-  if (can("PGS")) {
-    right += `<div class="dash-panel">
-      <div class="dash-ph">
-        <span class="dash-pi" style="color:var(--gbr)">⌂</span>
-        <span class="dash-pt">Pequenos Grupos</span>
-        <span class="dash-pa" onclick="go('pgs-dash')">ver tudo →</span>
-      </div>
-      <div class="dash-pr">
-        <div class="dash-row"><span class="dr-l">PGs ativos</span><span class="dr-v dr-ok">18</span></div>
-        <div class="dash-row"><span class="dr-l">Reuniões</span><span class="dr-v">61 este mês</span></div>
-        <div class="dash-row"><span class="dr-l">Visitantes</span><span class="dr-v dr-ok">27 este mês</span></div>
-      </div>
-    </div>`;
-  }
-
-  if (can("CONSELHO") || can("COMUNICACAO") || can("MINISTERIAL")) {
-    right += `<div class="dash-panel">
-      <div class="dash-ph">
-        <span class="dash-pi" style="color:var(--violet)">◈</span>
-        <span class="dash-pt">Departamentos</span>
-        <span class="dash-pa" onclick="go('min-min')">ver tudo →</span>
-      </div>
-      <div class="dash-pr">
-        <div class="dash-row"><span class="dr-l">Comunicações</span><span class="dr-v">3 campanhas ativas</span></div>
-        <div class="dash-row"><span class="dr-l">Programações</span><span class="dr-v dr-warn">4 pendentes</span></div>
-        <div class="dash-row"><span class="dr-l">Reuniões</span><span class="dr-v">2 esta semana</span></div>
-      </div>
-    </div>`;
-  }
-
-  // ── Timeline ─────────────────────────────────────────────────────
-  const feedItems = _GERAL_FEED.filter(f => can(f.mod));
-  const timelineHtml = feedItems.length ? `<div class="dash-panel dash-timeline">
-    <div class="dash-ph">
-      <span class="dash-pi" style="color:var(--tx3)">◎</span>
-      <span class="dash-pt">Atividade recente</span>
-      <span class="dash-pa" onclick="T('Auditoria','Log imutável disponível')">auditoria →</span>
-    </div>
-    <div class="feed">${feedItems.map((f, i) =>
-      `<div class="fi"><div class="fl"><div class="fdot" style="background:${f.cor}"></div>${i < feedItems.length - 1 ? '<div class="fc"></div>' : ''}</div>
-      <div class="fb"><div class="ft">${f.txt}</div><div class="ftm">${f.time}</div></div></div>`
-    ).join("")}</div>
-  </div>` : "";
-
-  ct.innerHTML = `${alertsHtml}<div class="dash-g2"><div class="dash-main">${left}</div><div class="dash-side">${right}</div></div>${timelineHtml}<div id="dash-depto" class="dash-panel" style="margin-top:12px"></div>`;
+  ct.innerHTML = `<div class="dash-g2"><div class="dash-main">${left}</div><div class="dash-side">${right}</div></div><div id="dash-depto" class="dash-panel" style="margin-top:12px"></div>`;
   _renderDepto();
 }
 
