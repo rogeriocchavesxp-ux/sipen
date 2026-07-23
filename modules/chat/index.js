@@ -1,15 +1,18 @@
-// SIPEN — Chat Interno v6.49.11
+// SIPEN — Chat Interno v6.49.16
 // Mensagens em tempo real entre usuários do sistema
 
 (function () {
   'use strict';
 
-  let _conversaAtual = null;
-  let _channel       = null;
-  let _globalChannel = null;
+  let _conversaAtual  = null;
+  let _channel        = null;
+  let _globalChannel  = null;
   let _globalInitDone = false;
-  let _unreadCount   = 0;
+  let _unreadCount    = 0;
   let _conversasCache = [];
+  let _pendingAnexo   = null; // { file, url (object URL), nome, tipo }
+
+  const STORAGE_URL = 'https://erhwryfzpycahgsohhbh.supabase.co/storage/v1';
 
   const _H = () => ({ ...apiHeaders(), 'Content-Type': 'application/json' });
   const _url = (path) => `${apiBaseUrl()}/rest/v1/${path}`;
@@ -201,10 +204,25 @@
     const meu  = m.pessoa_id === USUARIO_ATUAL.pessoa_id;
     const hora = _fmtHora(m.criado_em);
     const nome = (m.pessoas?.nome || '').split(' ')[0];
+
+    let conteudo = '';
+    if (m.anexo_url) {
+      if (m.anexo_tipo?.startsWith('image/')) {
+        conteudo += `<img src="${_esc(m.anexo_url)}" class="chat-msg-img" onclick="window.open('${_esc(m.anexo_url)}','_blank')" loading="lazy">`;
+      } else {
+        const ext = (m.anexo_nome || '').split('.').pop().toUpperCase().slice(0, 5);
+        conteudo += `<a href="${_esc(m.anexo_url)}" target="_blank" class="chat-msg-file">
+          <span class="chat-msg-file-ic">📄</span>
+          <span class="chat-msg-file-nome">${_esc(m.anexo_nome || 'Arquivo')}</span>
+        </a>`;
+      }
+    }
+    if (m.texto) conteudo += _esc(m.texto);
+
     return `
       <div class="chat-msg chat-msg--${meu ? 'meu' : 'deles'}">
         ${!meu ? `<div class="chat-msg-autor">${_esc(nome)}</div>` : ''}
-        <div class="chat-msg-balao">${_esc(m.texto)}<span class="chat-msg-meta">${hora}</span></div>
+        <div class="chat-msg-balao">${conteudo}<span class="chat-msg-meta">${hora}</span></div>
       </div>`;
   }
 
@@ -250,16 +268,37 @@
     if (!_conversaAtual?.id) return;
     const input = document.getElementById('chat-input');
     const texto = (input?.value || '').trim();
-    if (!texto) return;
+
+    if (!texto && !_pendingAnexo) return;
 
     input.value = '';
     input.style.height = '';
 
+    let anexo = null;
+    if (_pendingAnexo) {
+      const fileRef = _pendingAnexo.file;
+      chatRemoverAnexo();
+      anexo = await _uploadAnexo(fileRef);
+      if (!anexo && !texto) return;
+    }
+
     const agora = new Date().toISOString();
-    _appendMsg({ id: crypto.randomUUID(), texto, criado_em: agora, pessoa_id: USUARIO_ATUAL.pessoa_id, pessoas: { nome: USUARIO_ATUAL.nome } });
+    const msgLocal = {
+      id: crypto.randomUUID(), texto: texto || null, criado_em: agora,
+      pessoa_id: USUARIO_ATUAL.pessoa_id, pessoas: { nome: USUARIO_ATUAL.nome },
+      anexo_url: anexo?.url || null, anexo_nome: anexo?.nome || null, anexo_tipo: anexo?.tipo || null
+    };
+    _appendMsg(msgLocal);
 
     const sb = getSupabase();
-    await sb.from('chat_mensagens').insert({ conversa_id: _conversaAtual.id, pessoa_id: USUARIO_ATUAL.pessoa_id, texto, criado_em: agora });
+    const payload = {
+      conversa_id: _conversaAtual.id,
+      pessoa_id:   USUARIO_ATUAL.pessoa_id,
+      texto:       texto || null,
+      criado_em:   agora,
+      ...(anexo ? { anexo_url: anexo.url, anexo_nome: anexo.nome, anexo_tipo: anexo.tipo } : {})
+    };
+    await sb.from('chat_mensagens').insert(payload);
     await sb.from('chat_conversas').update({ ultima_msg_em: agora }).eq('id', _conversaAtual.id);
     _marcarLido(_conversaAtual.id);
   };
@@ -272,6 +311,58 @@
     el.style.height = 'auto';
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   };
+
+  // ── Anexos ────────────────────────────────────────────────────────────────
+
+  window.chatArquivoSelecionado = function (input) {
+    const file = input.files?.[0];
+    if (!file) return;
+    input.value = '';
+
+    if (file.size > 10 * 1024 * 1024) { T('Chat', 'Arquivo muito grande — máximo 10 MB'); return; }
+
+    _pendingAnexo = { file, nome: file.name, tipo: file.type, objectUrl: URL.createObjectURL(file) };
+
+    const preview = document.getElementById('chat-anexo-preview');
+    const thumb   = document.getElementById('chat-anexo-thumb');
+    const nomeEl  = document.getElementById('chat-anexo-nome');
+
+    preview.classList.add('ativo');
+    nomeEl.textContent = file.name;
+
+    if (file.type.startsWith('image/')) {
+      thumb.innerHTML = `<img src="${_pendingAnexo.objectUrl}" class="chat-anexo-preview-thumb">`;
+    } else {
+      const ext = file.name.split('.').pop().toUpperCase().slice(0, 4);
+      thumb.innerHTML = `<div class="chat-anexo-preview-file">${ext}</div>`;
+    }
+  };
+
+  window.chatRemoverAnexo = function () {
+    if (_pendingAnexo?.objectUrl) URL.revokeObjectURL(_pendingAnexo.objectUrl);
+    _pendingAnexo = null;
+    document.getElementById('chat-anexo-preview').classList.remove('ativo');
+    document.getElementById('chat-anexo-thumb').innerHTML = '';
+  };
+
+  async function _uploadAnexo(file) {
+    const sb   = getSupabase();
+    const ext  = file.name.split('.').pop();
+    const path = `${USUARIO_ATUAL.pessoa_id}/${Date.now()}-${crypto.randomUUID().slice(0,8)}.${ext}`;
+
+    const { data, error } = await sb.storage.from('chat-anexos').upload(path, file, {
+      contentType: file.type,
+      upsert: false
+    });
+
+    if (error) { T('Chat', `Erro ao enviar arquivo: ${error.message}`); return null; }
+
+    return {
+      url:  `${STORAGE_URL}/object/public/chat-anexos/${data.path}`,
+      nome: file.name,
+      tipo: file.type
+    };
+  }
 
   // ── Nova conversa ─────────────────────────────────────────────────────────
 
