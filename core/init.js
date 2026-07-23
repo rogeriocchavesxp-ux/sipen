@@ -362,10 +362,12 @@ async function renderOficiaisOrdenados() {
     const fmtEmer = v => v ? `<span style="font-size:9px;background:rgba(212,168,67,0.15);color:var(--gold);border:1px solid rgba(212,168,67,0.3);border-radius:3px;padding:1px 5px">${v} vts</span>` : "—";
     const fmtMand = n => n ? `<span style="font-size:9px;color:var(--tx3)">${n}º</span>` : "—";
 
+    const btnEditar = id => `<button onclick="oficialNovoRegistro('${id}')" style="background:none;border:1px solid var(--bd2);border-radius:4px;padding:2px 7px;font-size:10px;color:var(--tx3);cursor:pointer" title="Editar">✏</button>`;
+
     const makePastoresTable = list => {
       if (!list.length) return `<p style="color:var(--tx4);font-size:12px;padding:8px">Nenhum registro.</p>`;
-      return `<table class="tbl"><thead><tr><th>Nome</th><th>Posse</th><th>Ata</th><th>Obs</th><th>Status</th></tr></thead><tbody>` +
-        list.map(r => `<tr><td class="tdp">${r.nome}</td><td class="tdc mono">${fmtDate(r.posse)}</td><td class="tdc mono">${r.ata||"—"}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs||"—"}</td><td>${fmtPill(r.status)}</td></tr>`).join("") +
+      return `<table class="tbl"><thead><tr><th>Nome</th><th>Posse</th><th>Ata</th><th>Obs</th><th>Status</th><th></th></tr></thead><tbody>` +
+        list.map(r => `<tr><td class="tdp">${r.nome}</td><td class="tdc mono">${fmtDate(r.posse)}</td><td class="tdc mono">${r.ata||"—"}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs||"—"}</td><td>${fmtPill(r.status)}</td><td class="tdc">${btnEditar(r.id)}</td></tr>`).join("") +
         `</tbody></table>`;
     };
 
@@ -381,12 +383,12 @@ async function renderOficiaisOrdenados() {
       const bgLbl = yr => parseInt(yr) <= anoAtual + 1
         ? "rgba(224,138,42,0.06);color:var(--amber)"
         : "rgba(58,170,92,0.05);color:var(--gr)";
-      let html = `<table class="tbl"><thead><tr><th>Nome</th><th>Posse</th><th>Fim Mandato</th><th>Ata</th><th>Mand.</th><th>Emerência</th><th>Obs</th><th>Status</th></tr></thead><tbody>`;
+      let html = `<table class="tbl"><thead><tr><th>Nome</th><th>Posse</th><th>Fim Mandato</th><th>Ata</th><th>Mand.</th><th>Emerência</th><th>Obs</th><th>Status</th><th></th></tr></thead><tbody>`;
       for (const [yr, grp] of Object.entries(groups).sort()) {
         const lbl = grp.length > 1 ? labelPlural : labelSingular;
-        html += `<tr><td colspan="8" style="background:${bgLbl(yr)};font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;padding:6px 10px;font-weight:700">Mandato até ${yr} — ${grp.length} ${lbl}</td></tr>`;
+        html += `<tr><td colspan="9" style="background:${bgLbl(yr)};font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;padding:6px 10px;font-weight:700">Mandato até ${yr} — ${grp.length} ${lbl}</td></tr>`;
         grp.forEach(r => {
-          html += `<tr><td class="tdp">${r.nome}</td><td class="tdc mono">${fmtDate(r.posse)}</td><td class="tdc mono">${fmtDate(r.fim_mandato)}</td><td class="tdc mono">${r.ata||"—"}</td><td class="tdc" style="text-align:center">${fmtMand(r.mandato_numero)}</td><td class="tdc" style="text-align:center">${fmtEmer(r.emerencia_votos)}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs||"—"}</td><td>${fmtPill(r.status)}</td></tr>`;
+          html += `<tr><td class="tdp">${r.nome}</td><td class="tdc mono">${fmtDate(r.posse)}</td><td class="tdc mono">${fmtDate(r.fim_mandato)}</td><td class="tdc mono">${r.ata||"—"}</td><td class="tdc" style="text-align:center">${fmtMand(r.mandato_numero)}</td><td class="tdc" style="text-align:center">${fmtEmer(r.emerencia_votos)}</td><td class="tdc" style="font-size:10px;color:var(--tx3)">${r.obs||"—"}</td><td>${fmtPill(r.status)}</td><td class="tdc">${btnEditar(r.id)}</td></tr>`;
         });
       }
       html += `</tbody></table>`;

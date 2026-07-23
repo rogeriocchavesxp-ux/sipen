@@ -1293,6 +1293,188 @@
     } catch(e) { console.warn('[conselho-kpi]', e.message); }
   }
 
+  /* ══════════════════════════════════════════════════════════
+     OFICIAIS ORDENADOS — Cadastro / Edição
+  ══════════════════════════════════════════════════════════ */
+
+  let _oficialId = null;
+
+  function oficialNovoRegistro(id) {
+    _oficialId = id || null;
+    let modal = document.getElementById('oficial-modal');
+    if (modal) modal.remove();
+    modal = document.createElement('div');
+    modal.id = 'oficial-modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+    modal.innerHTML = `
+      <div style="background:var(--bg-card);border-radius:10px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.4)">
+        <div style="padding:16px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:14px;font-weight:700;color:var(--tx1)" id="oficial-modal-titulo">${id ? 'Editar Oficial' : 'Novo Oficial Ordenado'}</div>
+          <button onclick="document.getElementById('oficial-modal').remove()" style="background:none;border:none;font-size:18px;color:var(--tx3);cursor:pointer">✕</button>
+        </div>
+        <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="grid-column:1/-1;position:relative">
+            <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Nome <span style="color:var(--rose)">*</span></label>
+            <input id="ofc-f-nome" type="text" placeholder="Buscar por nome…" autocomplete="off"
+              oninput="oficialBuscarPessoa(this.value,'ofc-f-nome')"
+              style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none;box-sizing:border-box">
+            <input type="hidden" id="ofc-f-nome-pid">
+            <div id="ofc-f-nome-list" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;z-index:10;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.2)"></div>
+          </div>
+          <div>
+            <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Ofício <span style="color:var(--rose)">*</span></label>
+            <select id="ofc-f-cargo" onchange="oficialToggleCampos()" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+              <option value="">— Selecione —</option>
+              <option value="pastor">Pastor</option>
+              <option value="presbitero">Presbítero</option>
+              <option value="diacono">Diácono</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Status</label>
+            <select id="ofc-f-status" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+              <option value="ativo">Ativo</option>
+              <option value="especial">Especial</option>
+              <option value="licenciado">Licenciado</option>
+              <option value="afastado">Afastado</option>
+              <option value="transferido">Transferido</option>
+              <option value="falecido">Falecido</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Data de Posse</label>
+            <input id="ofc-f-posse" type="date" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+          </div>
+          <div id="ofc-wrap-fim">
+            <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Fim do Mandato</label>
+            <input id="ofc-f-fim" type="date" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+          </div>
+          <div>
+            <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Ata de Ordenação</label>
+            <input id="ofc-f-ata" type="text" placeholder="Ex: Ata nº 1298, de 12/12/2024" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+          </div>
+          <div id="ofc-wrap-mand">
+            <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Nº do Mandato</label>
+            <input id="ofc-f-mandato" type="number" min="1" placeholder="1" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+          </div>
+          <div style="grid-column:1/-1">
+            <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Observações</label>
+            <textarea id="ofc-f-obs" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none;min-height:60px;resize:vertical;box-sizing:border-box"></textarea>
+          </div>
+        </div>
+        <div style="padding:14px 16px;border-top:1px solid var(--bd1);display:flex;justify-content:flex-end;gap:8px">
+          <button onclick="document.getElementById('oficial-modal').remove()" style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:8px 12px;color:var(--tx2);cursor:pointer">Cancelar</button>
+          <button onclick="oficialSalvarRegistro()" style="background:var(--sky);border:none;border-radius:6px;padding:8px 16px;color:#fff;font-weight:600;cursor:pointer">💾 Salvar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    if (id) _oficialCarregarParaEditar(id);
+  }
+
+  function oficialToggleCampos() {
+    const isPastor = (_el('ofc-f-cargo') || {}).value === 'pastor';
+    ['ofc-wrap-fim', 'ofc-wrap-mand'].forEach(wid => {
+      const el = _el(wid);
+      if (el) el.style.opacity = isPastor ? '.4' : '1';
+    });
+  }
+
+  async function oficialBuscarPessoa(termo, inpId) {
+    const list = _el(inpId + '-list');
+    const pid  = _el(inpId + '-pid');
+    if (pid) pid.value = '';
+    if (!list) return;
+    if (termo.length < 2) { list.style.display = 'none'; return; }
+    list.innerHTML = `<div style="padding:8px 12px;color:var(--tx3);font-size:11px">Buscando…</div>`;
+    list.style.display = 'block';
+    try {
+      const t   = encodeURIComponent(`*${termo}*`);
+      const res = await fetch(
+        `${apiBaseUrl()}/rest/v1/pessoas?nome=ilike.${t}&select=id,nome&order=nome.asc&limit=15`,
+        { headers: apiHeaders() }
+      );
+      const pessoas = res.ok ? await res.json() : [];
+      if (!pessoas.length) {
+        list.innerHTML = `<div style="padding:8px 12px;color:var(--tx3);font-size:11px">Nenhuma pessoa encontrada.</div>`;
+        return;
+      }
+      list.innerHTML = pessoas.map(p => `
+        <div data-pid="${p.id}" data-nome="${escapeHtml(p.nome)}"
+          onclick="oficialSelecionarPessoa('${inpId}',this)"
+          style="padding:9px 12px;cursor:pointer;font-size:12px;color:var(--tx1);border-bottom:1px solid var(--bd1)"
+          onmouseover="this.style.background='var(--bg-surface2)'" onmouseout="this.style.background=''">
+          ${nomePropio(p.nome)}
+        </div>`).join('');
+    } catch {
+      list.innerHTML = `<div style="padding:8px 12px;color:var(--tx3);font-size:11px">Erro na busca.</div>`;
+    }
+  }
+
+  function oficialSelecionarPessoa(inpId, div) {
+    const inp   = _el(inpId);
+    const pidEl = _el(inpId + '-pid');
+    const list  = _el(inpId + '-list');
+    if (inp)   inp.value   = div.dataset.nome;
+    if (pidEl) pidEl.value = div.dataset.pid;
+    if (list)  list.style.display = 'none';
+  }
+
+  async function _oficialCarregarParaEditar(id) {
+    try {
+      const [resO, resV] = await Promise.all([
+        fetch(`${apiBaseUrl()}/rest/v1/oficiais?id=eq.${id}&select=*&limit=1`, { headers: apiHeaders() }),
+        fetch(`${apiBaseUrl()}/rest/v1/v_oficiais?id=eq.${id}&select=id,nome&limit=1`, { headers: apiHeaders() }),
+      ]);
+      const [r] = resO.ok ? await resO.json() : [{}];
+      const [v] = resV.ok ? await resV.json() : [{}];
+      if (!r) return;
+      const sv = (elId, val) => { const el = _el(elId); if (el) el.value = val || ''; };
+      sv('ofc-f-nome',     v?.nome || '');
+      sv('ofc-f-nome-pid', r.pessoa_id || '');
+      sv('ofc-f-cargo',    r.cargo    || '');
+      sv('ofc-f-status',   r.status   || 'ativo');
+      sv('ofc-f-posse',    r.posse    || '');
+      sv('ofc-f-fim',      r.fim_mandato || '');
+      sv('ofc-f-ata',      r.ata      || '');
+      sv('ofc-f-mandato',  r.mandato_numero || '');
+      sv('ofc-f-obs',      r.obs      || '');
+      oficialToggleCampos();
+    } catch(e) { console.warn('[oficial-editar]', e.message); }
+  }
+
+  async function oficialSalvarRegistro() {
+    const g    = elId => (_el(elId) || {}).value || null;
+    const nome = (_el('ofc-f-nome') || {}).value?.trim();
+    const cargo = g('ofc-f-cargo');
+    if (!nome)  { T('Campo obrigatório', 'Informe o nome do oficial'); return; }
+    if (!cargo) { T('Campo obrigatório', 'Selecione o ofício'); return; }
+
+    const payload = {
+      cargo,
+      status:         g('ofc-f-status') || 'ativo',
+      posse:          g('ofc-f-posse')  || null,
+      fim_mandato:    g('ofc-f-fim')    || null,
+      ata:            g('ofc-f-ata')    || null,
+      mandato_numero: g('ofc-f-mandato') ? parseInt(g('ofc-f-mandato'), 10) : null,
+      obs:            g('ofc-f-obs')    || null,
+    };
+    const pessoaId = g('ofc-f-nome-pid');
+    if (pessoaId) payload.pessoa_id = pessoaId;
+
+    try {
+      const api  = apiBaseUrl();
+      const hdrs = { ...apiHeaders(), 'Content-Type': 'application/json', Prefer: 'return=minimal' };
+      const res  = _oficialId
+        ? await fetch(`${api}/rest/v1/oficiais?id=eq.${_oficialId}`, { method: 'PATCH', headers: hdrs, body: JSON.stringify(payload) })
+        : await fetch(`${api}/rest/v1/oficiais`, { method: 'POST', headers: hdrs, body: JSON.stringify(payload) });
+
+      if (!res.ok) { T('Erro ao salvar', `HTTP ${res.status}`); return; }
+      (_el('oficial-modal') || { remove() {} }).remove();
+      T('Salvo ✓', `${nomePropio(nome)} — ${cargo}`);
+      if (typeof renderOficiaisOrdenados === 'function') renderOficiaisOrdenados();
+    } catch(e) { T('Erro', e.message); }
+  }
+
   /* ── Registro no router ───────────────────────────────────── */
 
   VIEW_AUTOLOAD['conselho-nomeados'] = { fn: carregarNomeados };
@@ -1319,5 +1501,11 @@
   window.nomDupMarcarTodos   = nomDupMarcarTodos;
   window.nomConfirmarDuplicacao = nomConfirmarDuplicacao;
   window._el                 = window._el || ((id) => document.getElementById(id));
+
+  window.oficialNovoRegistro     = oficialNovoRegistro;
+  window.oficialToggleCampos     = oficialToggleCampos;
+  window.oficialBuscarPessoa     = oficialBuscarPessoa;
+  window.oficialSelecionarPessoa = oficialSelecionarPessoa;
+  window.oficialSalvarRegistro   = oficialSalvarRegistro;
 
 })();
