@@ -917,8 +917,6 @@ function _wzStep3(body){
             style="padding:3px 8px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx2);font-size:12px;font-style:italic;cursor:pointer;line-height:1.4">I</button>
           <button onclick="msgWzFormat('~')" title="Tachado (~texto~)"
             style="padding:3px 8px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx2);font-size:12px;text-decoration:line-through;cursor:pointer;line-height:1.4">S</button>
-          <button onclick="msgWzFormat('```')" title="Código (```texto```)"
-            style="padding:3px 8px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx2);font-size:11px;font-family:monospace;cursor:pointer;line-height:1.4">{ }</button>
         </div>
       </div>
       <textarea id="msg-wz-content-ta" rows="10" placeholder="Olá {{nome}}, ..."
