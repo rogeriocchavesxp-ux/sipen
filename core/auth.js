@@ -494,6 +494,7 @@ async function entrarNoSistema() {
   if (USUARIO_ATUAL?.perfil === "ADMINISTRADOR_GERAL") initSupabaseBadge();
   testApiSilently();
   carregarPermissoesDB(); // popula _perfisUuidMap e PERMISSOES_DB em background
+  if (typeof window.__chatOnLogin === "function") window.__chatOnLogin();
 
   if (typeof window.demAtualizarLabels === "function") window.demAtualizarLabels();
   if (typeof window.aplicarMenuDemandasPorPerfil === "function") window.aplicarMenuDemandasPorPerfil();

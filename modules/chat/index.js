@@ -1,4 +1,4 @@
-// SIPEN — Chat Interno v6.49.17
+// SIPEN — Chat Interno v6.49.18
 // Mensagens em tempo real entre usuários do sistema
 
 (function () {
@@ -28,18 +28,21 @@
       else navigator.clearAppBadge().catch(() => {});
     }
 
-    const dot  = document.querySelector('.ndot');
-    const bell = dot?.closest('.tbt');
+    const dot = document.querySelector('.ndot');
     if (!dot) return;
+    const bell = dot.closest('.tbt');
 
     if (_unreadCount > 0) {
-      dot.textContent = _unreadCount > 99 ? '99+' : String(_unreadCount);
+      const label = _unreadCount > 99 ? '99+' : String(_unreadCount);
+      dot.textContent = label;
+      dot.classList.add('ativo');
       if (bell) {
         bell.title   = `${_unreadCount} mensagem(ns) não lida(s)`;
         bell.onclick = () => go('chat-inbox');
       }
     } else {
       dot.textContent = '';
+      dot.classList.remove('ativo');
       if (bell) {
         bell.title   = 'Notificações';
         bell.onclick = () => T('Notificações', 'Sem alertas no momento');
@@ -57,9 +60,6 @@
   // ── Realtime global (inicia logo após o login, persiste em toda sessão) ──
 
   function _subscribeGlobal() {
-    if (_globalInitDone) return;
-    _globalInitDone = true;
-
     const sb = getSupabase();
     _globalChannel = sb.channel('chat-notif-global')
       .on('postgres_changes', {
@@ -73,7 +73,6 @@
 
         const minhasIds = _conversasCache.map(c => c.id);
         if (minhasIds.length > 0 && !minhasIds.includes(m.conversa_id)) {
-          // Conversa nova — recarregar e verificar participação
           _loadConversas().then(convs => {
             _conversasCache = convs;
             if (_conversasCache.some(c => c.id === m.conversa_id))
@@ -83,33 +82,68 @@
         }
         _setBadge(_unreadCount + 1);
       })
-      .subscribe();
+      .subscribe(status => {
+        if (status === 'CHANNEL_ERROR') {
+          // Reconectar após erro
+          setTimeout(() => {
+            if (_globalChannel) { try { getSupabase().removeChannel(_globalChannel); } catch(_) {} }
+            _globalChannel = null;
+            _subscribeGlobal();
+          }, 5000);
+        }
+      });
   }
 
-  // Roda assim que USUARIO_ATUAL fica disponível (após login).
-  // Badge e Realtime ficam ativos desde o login, sem precisar visitar o chat.
+  // Roda logo após o login — badge inicial + Realtime + refresh periódico.
   async function _initGlobal() {
+    if (_globalInitDone) return;
+    _globalInitDone = true;
+
     const convs = await _loadConversas();
     _conversasCache = convs;
     _calcUnread();
     _subscribeGlobal();
+
+    // Fallback: re-verifica a cada 60s caso o Realtime não dispare
+    setInterval(async () => {
+      if (!USUARIO_ATUAL?.pessoa_id || _conversaAtual) return;
+      const c = await _loadConversas();
+      _conversasCache = c;
+      _calcUnread();
+    }, 60000);
   }
 
+  // Gatilho primário: chamado por entrarNoSistema() em auth.js imediatamente após o login
+  window.__chatOnLogin = function () {
+    if (USUARIO_ATUAL?.pessoa_id && !_globalInitDone) _initGlobal();
+  };
+
+  // Gatilho via Supabase auth (cobre reload de página com sessão ativa)
+  try {
+    getSupabase().auth.onAuthStateChange((event, session) => {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && !_globalInitDone) {
+        const _try = (n) => {
+          if (USUARIO_ATUAL?.pessoa_id) { _initGlobal(); }
+          else if (n > 0) { setTimeout(() => _try(n - 1), 500); }
+        };
+        _try(8); // até 4s aguardando USUARIO_ATUAL ser populado por auth.js
+      }
+    });
+  } catch (_) {}
+
+  // Fallback: polling lento para casos onde os eventos acima falham
   (function _waitForAuth() {
-    if (typeof USUARIO_ATUAL !== 'undefined' && USUARIO_ATUAL?.pessoa_id) {
-      _initGlobal();
-    } else {
-      setTimeout(_waitForAuth, 1500);
-    }
+    if (USUARIO_ATUAL?.pessoa_id && !_globalInitDone) { _initGlobal(); return; }
+    if (!_globalInitDone) setTimeout(_waitForAuth, 2000);
   })();
 
   // ── Init do módulo (ao navegar para o chat) ───────────────────────────────
 
   async function chatInit() {
     if (!USUARIO_ATUAL?.pessoa_id) return;
+    if (!_globalInitDone) _initGlobal(); // garante que notificações estejam ativas
     await _renderLista();
     _calcUnread();
-    _subscribeGlobal(); // idempotente
   }
 
   // ── Lista ─────────────────────────────────────────────────────────────────
