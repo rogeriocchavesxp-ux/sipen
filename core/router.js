@@ -351,7 +351,7 @@ function sbsInit(){
   ["igreja","gov","dep","op","adm","portal"].forEach(id=>{
     const sec=document.getElementById("sbs-"+id);
     if(!sec)return;
-    try{if(sessionStorage.getItem("sbs-"+id)==="1")sec.classList.add("collapsed");}catch(_){}
+    try{if(sessionStorage.getItem("sbs-"+id)!=="0")sec.classList.add("collapsed");}catch(_){}
   });
 }
 
