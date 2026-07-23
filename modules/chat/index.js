@@ -1,4 +1,4 @@
-// SIPEN — Chat Interno v6.49.16
+// SIPEN — Chat Interno v6.49.17
 // Mensagens em tempo real entre usuários do sistema
 
 (function () {
@@ -54,7 +54,7 @@
     _setBadge(n);
   }
 
-  // ── Realtime global (persiste fora do módulo) ─────────────────────────────
+  // ── Realtime global (inicia logo após o login, persiste em toda sessão) ──
 
   function _subscribeGlobal() {
     if (_globalInitDone) return;
@@ -70,18 +70,46 @@
         const m = payload.new;
         if (m.pessoa_id === USUARIO_ATUAL?.pessoa_id) return;
         if (_conversaAtual?.id === m.conversa_id) return;
+
+        const minhasIds = _conversasCache.map(c => c.id);
+        if (minhasIds.length > 0 && !minhasIds.includes(m.conversa_id)) {
+          // Conversa nova — recarregar e verificar participação
+          _loadConversas().then(convs => {
+            _conversasCache = convs;
+            if (_conversasCache.some(c => c.id === m.conversa_id))
+              _setBadge(_unreadCount + 1);
+          });
+          return;
+        }
         _setBadge(_unreadCount + 1);
       })
       .subscribe();
   }
 
-  // ── Init ──────────────────────────────────────────────────────────────────
+  // Roda assim que USUARIO_ATUAL fica disponível (após login).
+  // Badge e Realtime ficam ativos desde o login, sem precisar visitar o chat.
+  async function _initGlobal() {
+    const convs = await _loadConversas();
+    _conversasCache = convs;
+    _calcUnread();
+    _subscribeGlobal();
+  }
+
+  (function _waitForAuth() {
+    if (typeof USUARIO_ATUAL !== 'undefined' && USUARIO_ATUAL?.pessoa_id) {
+      _initGlobal();
+    } else {
+      setTimeout(_waitForAuth, 1500);
+    }
+  })();
+
+  // ── Init do módulo (ao navegar para o chat) ───────────────────────────────
 
   async function chatInit() {
     if (!USUARIO_ATUAL?.pessoa_id) return;
     await _renderLista();
     _calcUnread();
-    _subscribeGlobal();
+    _subscribeGlobal(); // idempotente
   }
 
   // ── Lista ─────────────────────────────────────────────────────────────────
