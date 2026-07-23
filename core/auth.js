@@ -796,6 +796,8 @@ async function _minDashMinisterios(el, opts = {}) {
     const lista = Array.isArray(rows) ? rows : [];
     const totalAtivos = lista.filter(m => m.ativo !== false).length;
     setKpi(lista.length, totalAtivos);
+    const volEl = document.getElementById('min-kpi-vol');
+    if (volEl) volEl.textContent = Array.isArray(membrosRows) ? membrosRows.length : '—';
 
     if (!lista.length) {
       el.innerHTML = `<div class="alr alr-w" style="grid-column:1/-1"><div class="alr-i">ℹ</div><div>Nenhum ministério cadastrado ainda. Crie um novo ministério para começar.</div></div>`;

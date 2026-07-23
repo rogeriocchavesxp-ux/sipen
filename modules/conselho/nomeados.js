@@ -1267,9 +1267,36 @@
     carregarNomeados();
   }
 
+  /* ── Dashboard do Conselho — KPIs reais ──────────────────── */
+
+  async function conselhoKpiLoad() {
+    try {
+      const hoje = new Date();
+      const em90 = new Date(hoje.getTime() + 90*24*60*60*1000).toISOString().split('T')[0];
+      const ano  = hoje.getFullYear();
+      const api  = apiBaseUrl(), hdrs = apiHeaders();
+      const [rNom, rOrd, rMand] = await Promise.all([
+        fetch(`${api}/rest/v1/nomeados?ano=eq.${ano}&status=eq.ativo&deleted_at=is.null&select=id`,                                              {headers:hdrs}),
+        fetch(`${api}/rest/v1/v_oficiais?status=in.(ativo,especial)&select=id`,                                                                  {headers:hdrs}),
+        fetch(`${api}/rest/v1/oficiais?status=in.(ativo,especial)&deleted_at=is.null&fim_mandato=not.is.null&fim_mandato=lte.${em90}&select=id`, {headers:hdrs}),
+      ]);
+      const nom  = rNom.ok  ? (await rNom.json()).length  : 0;
+      const ord  = rOrd.ok  ? (await rOrd.json()).length  : 0;
+      const mand = rMand.ok ? (await rMand.json()).length : 0;
+      const set = (id, v, d) => {
+        const el = document.getElementById(id); if (el) el.textContent = v;
+        const de = document.getElementById(id+'-d'); if (de && d !== undefined) de.textContent = d;
+      };
+      set('cdash-kpi-nom',  nom,  `nomeados ativos — ${ano}`);
+      set('cdash-kpi-ord',  ord,  'pastores, presbíteros e diáconos');
+      set('cdash-kpi-mand', mand, mand ? '⚠ próximos 90 dias' : 'nenhum a vencer em breve');
+    } catch(e) { console.warn('[conselho-kpi]', e.message); }
+  }
+
   /* ── Registro no router ───────────────────────────────────── */
 
   VIEW_AUTOLOAD['conselho-nomeados'] = { fn: carregarNomeados };
+  VIEW_AUTOLOAD['conselho-dash']     = { fn: conselhoKpiLoad };
 
   /* ── Exposição global ─────────────────────────────────────── */
 

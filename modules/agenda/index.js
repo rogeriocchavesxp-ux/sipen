@@ -593,10 +593,31 @@ async function exportarDados(tab, nome) {
   } catch(e) { T("Erro ao exportar", e.message); }
 }
 
+async function relDashLoad() {
+  try {
+    const [dem, memb] = await Promise.all([
+      apiRead("DEMANDAS").catch(()=>[]),
+      apiRead("MEMBROS").catch(()=>[]),
+    ]);
+    const total  = dem.length;
+    const concl  = dem.filter(d => d.status === 'Concluída').length;
+    const aber   = dem.filter(d => !['Concluída','Cancelado'].includes(d.status)).length;
+    const taxa   = total ? Math.round((concl / total) * 100) : null;
+    const set = (id, v, d) => {
+      const el = document.getElementById(id); if (el) el.textContent = v;
+      const de = document.getElementById(id+'-sub'); if (de && d) de.textContent = d;
+    };
+    set('rel-kpi-taxa',   taxa !== null ? `${taxa}%` : '—', taxa !== null ? `${concl} de ${total} demandas` : 'sem dados');
+    set('rel-kpi-abertas', aber || '—');
+    set('rel-kpi-memb',   memb.length || '—');
+  } catch(e) { console.warn('[rel-dash]', e.message); }
+}
+
 // VIEW_AUTOLOAD para novas views
 const _newAutoloads = {
   "conselho-ind":    null, // handled by carregarIndicadores
   "rel-ind":         null, // handled by carregarIndicadoresGerais
+  "rel-dash":        { fn: relDashLoad },
   "admin-con":       null, // handled by contratos.js
   "admin-doc":       { tab:"DEMANDAS",       id:"admin-doc-list",   filtro:{area:"Documentos"} },
   "admin-parking-controls": { fn: () => ceCarregar() },

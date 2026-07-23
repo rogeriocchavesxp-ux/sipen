@@ -584,16 +584,15 @@
       const hoy = new Date();
       const mes = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}`;
       const [rDiac, rEsc, rDem] = await Promise.all([
-        fetch(`${api}/rest/v1/diaconos?select=id,status&deleted_at=is.null`, {headers:hdrs}),
+        fetch(`${api}/rest/v1/v_oficiais?cargo=eq.diacono&status=in.(ativo,especial)&select=id`, {headers:hdrs}),
         fetch(`${api}/rest/v1/escala_diaconal?select=id&data=gte.${mes}-01&data=lte.${mes}-31`, {headers:hdrs}),
-        fetch(`${api}/rest/v1/v_demandas?select=id,status&area=ilike.*diaconal*&status=not.in.(CONCLUIDA,CANCELADA)`, {headers:hdrs}),
+        fetch(`${api}/rest/v1/v_demandas?select=id&area=ilike.*diaconal*&status=neq.Concluída`, {headers:hdrs}),
       ]);
       const diaconos = rDiac.ok ? (await rDiac.json()) : [];
       const escalas  = rEsc.ok  ? (await rEsc.json())  : [];
       const demandas = rDem.ok  ? (await rDem.json())  : [];
-      const ativos = Array.isArray(diaconos) ? diaconos.filter(d => (d.status||'').toLowerCase() === 'ativo').length : 0;
-      _set('diac-kd-ativos',  ativos || diaconos.length || '—');
-      _set('diac-kd-escalas', Array.isArray(escalas) ? escalas.length : '—');
+      _set('diac-kd-ativos',  Array.isArray(diaconos) ? diaconos.length : '—');
+      _set('diac-kd-escalas', Array.isArray(escalas)  ? escalas.length  : '—');
       _set('diac-kd-dem',     Array.isArray(demandas) ? demandas.length : '—');
     } catch (e) {
       console.warn('[diac-dash]', e.message);
