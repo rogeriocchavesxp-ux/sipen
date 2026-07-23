@@ -1,4 +1,4 @@
-// SIPEN — Chat Interno v6.49.18
+// SIPEN — Chat Interno v6.49.19
 // Mensagens em tempo real entre usuários do sistema
 
 (function () {
@@ -28,25 +28,26 @@
       else navigator.clearAppBadge().catch(() => {});
     }
 
-    const dot = document.querySelector('.ndot');
-    if (!dot) return;
-    const bell = dot.closest('.tbt');
+    const label = _unreadCount > 99 ? '99+' : (_unreadCount > 0 ? String(_unreadCount) : '');
+    const active = _unreadCount > 0;
 
-    if (_unreadCount > 0) {
-      const label = _unreadCount > 99 ? '99+' : String(_unreadCount);
+    // Badge no sino (topbar)
+    const dot = document.querySelector('.ndot:not(#chat-sb-dot)');
+    if (dot) {
       dot.textContent = label;
-      dot.classList.add('ativo');
+      dot.classList.toggle('ativo', active);
+      const bell = dot.closest('.tbt');
       if (bell) {
-        bell.title   = `${_unreadCount} mensagem(ns) não lida(s)`;
-        bell.onclick = () => go('chat-inbox');
+        bell.title   = active ? `${_unreadCount} mensagem(ns) não lida(s)` : 'Notificações';
+        bell.onclick = active ? () => go('chat-inbox') : () => T('Notificações', 'Sem alertas no momento');
       }
-    } else {
-      dot.textContent = '';
-      dot.classList.remove('ativo');
-      if (bell) {
-        bell.title   = 'Notificações';
-        bell.onclick = () => T('Notificações', 'Sem alertas no momento');
-      }
+    }
+
+    // Badge no ícone Chat da sidebar
+    const sbDot = document.getElementById('chat-sb-dot');
+    if (sbDot) {
+      sbDot.textContent = label;
+      sbDot.classList.toggle('ativo', active);
     }
   }
 
