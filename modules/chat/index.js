@@ -1,4 +1,4 @@
-// SIPEN — Chat Interno v6.49.19
+// SIPEN — Chat Interno v6.49.20
 // Mensagens em tempo real entre usuários do sistema
 
 (function () {
@@ -194,7 +194,7 @@
     const inIds = ids.map(i => `"${i}"`).join(',');
 
     const r2 = await fetch(
-      _url(`chat_conversas?id=in.(${inIds})&select=id,tipo,nome,ultima_msg_em,chat_participantes(pessoa_id,pessoas(id,nome))&order=ultima_msg_em.desc.nullsfirst`),
+      _url(`chat_conversas?id=in.(${inIds})&select=id,tipo,nome,ultima_msg_em,chat_participantes(pessoa_id,pessoas(id,nome))&order=ultima_msg_em.desc.nullslast`),
       { headers: apiHeaders() }
     );
     const convs = r2.ok ? await r2.json() : [];
@@ -207,7 +207,14 @@
     const ultimaMsg = {};
     msgs.forEach(m => { if (!ultimaMsg[m.conversa_id]) ultimaMsg[m.conversa_id] = m.texto; });
 
-    return convs.map(c => ({ ...c, meu_ultimo_lido: lidos[c.id], ultima_msg_preview: ultimaMsg[c.id] || null }));
+    return convs
+      .map(c => ({ ...c, meu_ultimo_lido: lidos[c.id], ultima_msg_preview: ultimaMsg[c.id] || null }))
+      .sort((a, b) => {
+        if (!a.ultima_msg_em && !b.ultima_msg_em) return 0;
+        if (!a.ultima_msg_em) return 1;
+        if (!b.ultima_msg_em) return -1;
+        return new Date(b.ultima_msg_em) - new Date(a.ultima_msg_em);
+      });
   }
 
   function _conversaNome(c) {
