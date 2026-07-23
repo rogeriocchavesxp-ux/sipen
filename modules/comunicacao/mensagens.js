@@ -908,7 +908,19 @@ function _wzStep3(body){
         oninput="msgWzSetTitulo(this.value)">
     </div>`:''}
     <div style="margin-bottom:10px">
-      <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:4px">Mensagem</label>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <label style="font-size:11px;color:var(--tx3)">Mensagem</label>
+        <div style="display:flex;gap:3px">
+          <button onclick="msgWzFormat('*')" title="Negrito (*texto*)"
+            style="padding:3px 8px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx2);font-size:12px;font-weight:700;cursor:pointer;line-height:1.4">B</button>
+          <button onclick="msgWzFormat('_')" title="Itálico (_texto_)"
+            style="padding:3px 8px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx2);font-size:12px;font-style:italic;cursor:pointer;line-height:1.4">I</button>
+          <button onclick="msgWzFormat('~')" title="Tachado (~texto~)"
+            style="padding:3px 8px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx2);font-size:12px;text-decoration:line-through;cursor:pointer;line-height:1.4">S</button>
+          <button onclick="msgWzFormat('```')" title="Código (```texto```)"
+            style="padding:3px 8px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx2);font-size:11px;font-family:monospace;cursor:pointer;line-height:1.4">{ }</button>
+        </div>
+      </div>
       <textarea id="msg-wz-content-ta" rows="10" placeholder="Olá {{nome}}, ..."
         oninput="msgWzSetConteudo(this.value)"
         style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:13px;resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.65"></textarea>
@@ -939,6 +951,20 @@ window.msgWzInsertVar=function(v){
   const s=ta.selectionStart,e=ta.selectionEnd;
   ta.value=ta.value.slice(0,s)+v+ta.value.slice(e);
   ta.selectionStart=ta.selectionEnd=s+v.length;
+  ta.focus();
+  if(_wz) _wz.conteudo=ta.value;
+};
+
+window.msgWzFormat=function(marker){
+  const ta=document.getElementById('msg-wz-content-ta');
+  if(!ta) return;
+  const s=ta.selectionStart, e=ta.selectionEnd;
+  const sel=ta.value.slice(s,e);
+  const wrapped=sel?marker+sel+marker:marker+marker;
+  ta.value=ta.value.slice(0,s)+wrapped+ta.value.slice(e);
+  // posiciona cursor dentro dos marcadores se não havia seleção
+  const cur=sel?s+wrapped.length:s+marker.length;
+  ta.selectionStart=ta.selectionEnd=cur;
   ta.focus();
   if(_wz) _wz.conteudo=ta.value;
 };
