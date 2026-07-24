@@ -129,50 +129,26 @@
           </div>
           <div class="msub" id="ms-memb">
 
-            <!-- Membros -->
-            <div class="mwrap" id="mw-sec-memb" style="margin:0">
-              <div class="mhdr" onclick="tog('sec-memb','memb-cad')" style="padding:6px 10px;border-radius:6px">
-                <span class="mname" style="font-size:12px">Membros</span>
-                <span class="marr">▶</span>
-              </div>
-              <div class="msub" id="ms-sec-memb" style="padding-left:10px">
-                <div class="si" onclick="go('memb-cad')"><span style="color:var(--tx4);font-size:7px;margin-right:7px;vertical-align:middle">●</span>Cadastro de Membros</div>
-                <div class="si si-mob" data-memb-adm="1" onclick="go('memb-com')"><span style="color:var(--tx4);font-size:7px;margin-right:7px;vertical-align:middle">●</span>Comungantes</div>
-                <div class="si si-mob" data-memb-adm="1" onclick="go('memb-ncom')"><span style="color:var(--tx4);font-size:7px;margin-right:7px;vertical-align:middle">●</span>Não Comungantes</div>
-                <div class="sdiv" data-memb-adm="1"></div>
-                <div class="si si-mob" data-memb-adm="1" onclick="go('memb-bat')"><span style="color:var(--tx4);font-size:7px;margin-right:7px;vertical-align:middle">●</span>Batismos</div>
-                <div class="si si-mob" data-memb-adm="1" onclick="go('memb-prof')"><span style="color:var(--tx4);font-size:7px;margin-right:7px;vertical-align:middle">●</span>Profissões de Fé</div>
-                <div class="si si-mob" data-memb-adm="1" onclick="go('memb-trans')"><span style="color:var(--tx4);font-size:7px;margin-right:7px;vertical-align:middle">●</span>Transferências</div>
-                <div class="si si-mob" data-memb-adm="1" onclick="go('memb-hist')"><span style="color:var(--tx4);font-size:7px;margin-right:7px;vertical-align:middle">●</span>Histórico de Membros</div>
-                <div class="si" onclick="go('memb-aniv')"><span style="color:var(--tx4);font-size:7px;margin-right:7px;vertical-align:middle">●</span>Aniversariantes</div>
-              </div>
-            </div>
+            <div class="sb-grp-lbl">Membros</div>
+            <div class="si" onclick="go('memb-cad')">Cadastro de Membros</div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-com')">Comungantes</div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-ncom')">Não Comungantes</div>
+            <div class="sdiv" data-memb-adm="1"></div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-bat')">Batismos</div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-prof')">Profissões de Fé</div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-trans')">Transferências</div>
+            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-hist')">Histórico de Membros</div>
+            <div class="si" onclick="go('memb-aniv')">Aniversariantes</div>
 
-            <!-- Conselho -->
-            <div class="mwrap" id="mw-sec-conselho" style="margin:0">
-              <div class="mhdr" onclick="tog('sec-conselho','conselho-dash')" style="padding:6px 10px;border-radius:6px">
-                <span class="mname" style="font-size:12px">Conselho</span>
-                <span class="marr">▶</span>
-              </div>
-              <div class="msub" id="ms-sec-conselho" style="padding-left:10px">
-                <div class="si" onclick="go('pautas-reunioes')"><span style="color:var(--tx4);font-size:7px;margin-right:7px;vertical-align:middle">●</span>Reuniões</div>
-                <div class="si" onclick="go('conselho-doc')"><span style="color:var(--tx4);font-size:7px;margin-right:7px;vertical-align:middle">●</span>Documentos</div>
-                <div class="si" onclick="go('conselho-com')"><span style="color:var(--tx4);font-size:7px;margin-right:7px;vertical-align:middle">●</span>Comissões</div>
-                <div class="si" onclick="go('conselho-resolucoes')"><span style="color:var(--tx4);font-size:7px;margin-right:7px;vertical-align:middle">●</span>Resoluções</div>
-                <div class="si" onclick="go('conselho-demandas-cons')"><span style="color:var(--tx4);font-size:7px;margin-right:7px;vertical-align:middle">●</span>Demandas</div>
-              </div>
-            </div>
+            <div class="sb-grp-lbl" style="cursor:pointer;padding-top:14px" onclick="go('conselho-dash')">Conselho</div>
+            <div class="si" onclick="go('pautas-reunioes')">Reuniões</div>
+            <div class="si" onclick="go('conselho-doc')">Documentos</div>
+            <div class="si" onclick="go('conselho-com')">Comissões</div>
+            <div class="si" onclick="go('conselho-resolucoes')">Resoluções</div>
+            <div class="si" onclick="go('conselho-demandas-cons')">Demandas</div>
 
-            <!-- Eleições -->
-            <div class="mwrap" id="mw-sec-eleicoes" style="margin:0">
-              <div class="mhdr" onclick="tog('sec-eleicoes','eleicoes-dash')" style="padding:6px 10px;border-radius:6px">
-                <span class="mname" style="font-size:12px">Eleições</span>
-                <span class="marr">▶</span>
-              </div>
-              <div class="msub" id="ms-sec-eleicoes" style="padding-left:10px">
-                <div class="si" onclick="go('conselho-eleicoes')"><span style="color:var(--tx4);font-size:7px;margin-right:7px;vertical-align:middle">●</span>Indicações Eleitorais</div>
-              </div>
-            </div>
+            <div class="sb-grp-lbl" style="cursor:pointer;padding-top:14px" onclick="go('eleicoes-dash')">Eleições</div>
+            <div class="si" onclick="go('conselho-eleicoes')">Indicações Eleitorais</div>
           </div>
         </div>
 
