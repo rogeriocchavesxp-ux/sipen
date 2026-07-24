@@ -660,6 +660,7 @@
           <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
             <span class="pill ${scfg.cls}">${_eh(scfg.label)}</span>
             <button class="tbt pri" onclick="pautasAbrirReuniao('${_ea(r.id)}')">Ver pautas</button>
+            ${_podeAdmin() && r.status === "REALIZADA" ? `<button class="tbt" style="color:var(--gbr)" onclick="pautasGerarAtaFormal('${_ea(r.id)}')">Gerar Ata</button>` : ""}
             ${_podeAdmin() ? `<button class="tbt" onclick="pautasEditarReuniao('${_ea(r.id)}')">Editar</button>` : ""}
           </div>
         </div>
@@ -933,6 +934,64 @@
       _reunioes = null;
       await renderReunioes();
     } catch (e) { _toast("Erro", e.message); }
+  };
+
+  window.pautasGerarAtaFormal = async function (reuniaoId) {
+    const r = (_reunioes || []).find(x => x.id === reuniaoId);
+    if (!r) { _toast("Erro", "Reunião não encontrada."); return; }
+    if (!confirm(`Gerar ata formal para "${r.titulo}"?\nAs deliberações das pautas serão importadas automaticamente.`)) return;
+    try {
+      const exist = await _fetchJson(
+        `${_api()}/rest/v1/atas?reuniao_id=eq.${encodeURIComponent(reuniaoId)}&select=id&limit=1`,
+        { headers: _headers() }
+      ).catch(() => []);
+      if (exist?.length) {
+        _toast("Ata já existe", "Esta reunião já tem uma ata formal. Acesse o módulo de Atas.");
+        go("atas-todas");
+        return;
+      }
+      const [novaAta] = await _fetchJson(`${_api()}/rest/v1/atas`, {
+        method: "POST",
+        headers: _headers({ "Content-Type": "application/json", Prefer: "return=representation" }),
+        body: JSON.stringify({
+          reuniao_id: reuniaoId,
+          numero: r.numero_ata || null,
+          tipo: r.tipo,
+          data: r.data_reuniao,
+          hora_inicio: r.horario ? String(r.horario).slice(0, 5) : null,
+          hora_fim: r.horario_encerramento ? String(r.horario_encerramento).slice(0, 5) : null,
+          local: r.local || null,
+          presidente: r.presidente || null,
+          secretario: r.secretario || null,
+          status: "RASCUNHO",
+        }),
+      });
+      const pautas = await _fetchJson(
+        `${_api()}/rest/v1/conselho_pautas?reuniao_id=eq.${encodeURIComponent(reuniaoId)}&select=*&order=ordem.asc&limit=500`,
+        { headers: _headers() }
+      ) || [];
+      const tipoMap = { APROVADO: "APROVADO", REJEITADO: "REJEITADO", ADIADO: "ENCAMINHADO", CONCLUIDO: "APROVADO", EM_ANALISE: "EM_ANALISE", PENDENTE: "EM_ANALISE" };
+      const comDelib = pautas.filter(p => p.deliberacao);
+      for (const p of comDelib) {
+        await _fetchJson(`${_api()}/rest/v1/atas_deliberacoes`, {
+          method: "POST",
+          headers: _headers({ "Content-Type": "application/json", Prefer: "return=minimal" }),
+          body: JSON.stringify({
+            ata_id: novaAta.id,
+            pauta_id: p.id,
+            descricao: p.deliberacao,
+            tipo: tipoMap[p.status] || "EM_ANALISE",
+            responsavel: p.responsaveis || null,
+            prazo: p.prazo || null,
+            gerar_demanda: false,
+          }),
+        });
+      }
+      _toast("Ata gerada", `Ata nº ${r.numero_ata || "—"} criada em rascunho com ${comDelib.length} deliberação(ões). Revise e aprove no módulo de Atas.`);
+      go("atas-todas");
+    } catch (e) {
+      _toast("Erro", e.message);
+    }
   };
 
   /* ── PAUTAS ──────────────────────────────────────────────── */
