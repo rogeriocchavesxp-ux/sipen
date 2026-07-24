@@ -256,56 +256,31 @@ async function go(id){
   if(mod==="min"){
     const minSub=document.getElementById("ms-min");
     const minHdr=document.querySelector("#mw-min .mhdr");
-    if(minSub&&!minSub.classList.contains("open")){
-      document.querySelectorAll(".msub").forEach(s=>s.classList.remove("open"));
-      document.querySelectorAll(".mhdr").forEach(h=>h.classList.remove("open"));
-      minSub.classList.add("open");
-      if(minHdr)minHdr.classList.add("open");
-    }
+    if(minSub&&!minSub.classList.contains("open")){minSub.classList.add("open");if(minHdr)minHdr.classList.add("open");}
   }
   // jur-* permanece em Conselho e Governança
   if(mod==="jur"){
     const consSub=document.getElementById("ms-conselho");
     const consHdr=document.querySelector("#mw-conselho .mhdr");
-    if(consSub&&!consSub.classList.contains("open")){
-      document.querySelectorAll(".msub").forEach(s=>s.classList.remove("open"));
-      document.querySelectorAll(".mhdr").forEach(h=>h.classList.remove("open"));
-      consSub.classList.add("open");
-      if(consHdr)consHdr.classList.add("open");
-    }
+    if(consSub&&!consSub.classList.contains("open")){consSub.classList.add("open");if(consHdr)consHdr.classList.add("open");}
   }
   // com-* abre ms-com
   if(mod==="com"){
     const comSub=document.getElementById("ms-com");
     const comHdr=document.querySelector("#mw-com .mhdr");
-    if(comSub&&!comSub.classList.contains("open")){
-      document.querySelectorAll(".msub").forEach(s=>s.classList.remove("open"));
-      document.querySelectorAll(".mhdr").forEach(h=>h.classList.remove("open"));
-      comSub.classList.add("open");
-      if(comHdr)comHdr.classList.add("open");
-    }
+    if(comSub&&!comSub.classList.contains("open")){comSub.classList.add("open");if(comHdr)comHdr.classList.add("open");}
   }
   // chat-* está em Comunicação — abre ms-com
   if(mod==="chat"){
     const chatSub=document.getElementById("ms-com");
     const chatHdr=document.querySelector("#mw-com .mhdr");
-    if(chatSub&&!chatSub.classList.contains("open")){
-      document.querySelectorAll(".msub").forEach(s=>s.classList.remove("open"));
-      document.querySelectorAll(".mhdr").forEach(h=>h.classList.remove("open"));
-      chatSub.classList.add("open");
-      if(chatHdr)chatHdr.classList.add("open");
-    }
+    if(chatSub&&!chatSub.classList.contains("open")){chatSub.classList.add("open");if(chatHdr)chatHdr.classList.add("open");}
   }
   // config-* e wa-* estão dentro de Sistema — garante que ms-sys está aberto
   if(mod==="config"||mod==="wa"){
     const sysSub=document.getElementById("ms-sys");
     const sysHdr=document.querySelector("#mw-sys .mhdr");
-    if(sysSub&&!sysSub.classList.contains("open")){
-      document.querySelectorAll(".msub").forEach(s=>s.classList.remove("open"));
-      document.querySelectorAll(".mhdr").forEach(h=>h.classList.remove("open"));
-      sysSub.classList.add("open");
-      if(sysHdr)sysHdr.classList.add("open");
-    }
+    if(sysSub&&!sysSub.classList.contains("open")){sysSub.classList.add("open");if(sysHdr)sysHdr.classList.add("open");}
   }
   document.querySelectorAll(".si").forEach(e=>{
     e.classList.remove("on");
@@ -335,10 +310,11 @@ async function go(id){
 function tog(mod,defaultRoute){
   const sub=document.getElementById("ms-"+mod);
   const hdr=document.querySelector("#mw-"+mod+" .mhdr");
+  if(!sub)return;
   const isOpen=sub.classList.contains("open");
-  document.querySelectorAll(".msub").forEach(s=>s.classList.remove("open"));
-  document.querySelectorAll(".mhdr").forEach(h=>h.classList.remove("open"));
-  if(!isOpen){sub.classList.add("open");hdr.classList.add("open");go(defaultRoute||mod+"-dash");}
+  sub.classList.toggle("open");
+  if(hdr)hdr.classList.toggle("open");
+  if(!isOpen)go(defaultRoute||mod+"-dash");
 }
 
 function sbsToggle(id){
