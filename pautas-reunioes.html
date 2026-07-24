@@ -3,61 +3,146 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pautas das Reuniões — IPPenha</title>
+  <title>Reuniões do Conselho — IPPenha</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg-body:    #111111;
+      --bg-surface: #1c1c1e;
+      --bg-card:    #242426;
+      --bg-hover:   #2c2c2e;
+      --bd1: rgba(255,255,255,0.055);
+      --bd2: rgba(255,255,255,0.095);
+      --tx1: #f5f5f7;
+      --tx2: rgba(235,235,245,0.62);
+      --tx3: rgba(235,235,245,0.32);
+      --gr:  #30d158;
+      --blue:   #0a84ff;
+      --rose:   #ff453a;
+      --teal:   #5ac8fa;
+      --amber:  #ff9f0a;
+      --violet: #bf5af2;
+      --gold:   #ffd60a;
+      --sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg-body:    #f0f2f5;
+        --bg-surface: #eaecef;
+        --bg-card:    #ffffff;
+        --bg-hover:   #f2f4f6;
+        --bd1: rgba(0,0,0,0.08);
+        --bd2: rgba(0,0,0,0.13);
+        --tx1: #1a1d21;
+        --tx2: #3e4755;
+        --tx3: #6b7885;
+      }
+    }
+    html[data-theme="dark"] {
+      --bg-body:#111111;--bg-surface:#1c1c1e;--bg-card:#242426;--bg-hover:#2c2c2e;
+      --bd1:rgba(255,255,255,0.055);--bd2:rgba(255,255,255,0.095);
+      --tx1:#f5f5f7;--tx2:rgba(235,235,245,0.62);--tx3:rgba(235,235,245,0.32);
+    }
+    html[data-theme="light"] {
+      --bg-body:#f0f2f5;--bg-surface:#eaecef;--bg-card:#ffffff;--bg-hover:#f2f4f6;
+      --bd1:rgba(0,0,0,0.08);--bd2:rgba(0,0,0,0.13);
+      --tx1:#1a1d21;--tx2:#3e4755;--tx3:#6b7885;
+    }
+
     *{box-sizing:border-box;margin:0;padding:0}
-    body{background:#0d0f14;color:#e0e0e8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;line-height:1.5}
-    .wrap{max-width:760px;margin:0 auto;padding:40px 20px 80px}
+    body{background:var(--bg-body);color:var(--tx1);font-family:var(--sans);min-height:100vh;line-height:1.5;transition:background .2s,color .2s}
 
-    /* Header */
-    .header{display:flex;align-items:center;gap:16px;margin-bottom:40px;padding-bottom:24px;border-bottom:1px solid #1e2130}
-    .header-ic{width:42px;height:42px;background:rgba(42,181,192,.12);border:1.5px solid rgba(42,181,192,.3);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;color:#2ab5c0;flex-shrink:0}
-    .header-lbl{font-size:11px;color:#444;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
-    .header-ttl{font-size:22px;font-weight:700;color:#e8e8ee}
+    /* ── Topbar ── */
+    .topbar{background:var(--bg-surface);border-bottom:1px solid var(--bd1);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+    .topbar-brand{display:flex;align-items:center;gap:10px}
+    .topbar-ic{width:30px;height:30px;background:rgba(48,209,88,.15);border:1.5px solid rgba(48,209,88,.3);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--gr);flex-shrink:0}
+    .topbar-name{font-size:13px;font-weight:700;color:var(--tx1);letter-spacing:-.01em}
+    .topbar-sub{font-size:11px;color:var(--tx3);margin-top:1px}
+    .btn-theme{background:none;border:1px solid var(--bd2);border-radius:8px;color:var(--tx2);cursor:pointer;font-size:12px;padding:5px 10px;font-family:var(--sans);transition:background .15s,color .15s}
+    .btn-theme:hover{background:var(--bg-hover);color:var(--tx1)}
 
-    /* Reunião card */
-    .card{background:#13161e;border:1px solid #1e2130;border-radius:12px;margin-bottom:16px;overflow:hidden}
-    .card-hdr{padding:18px 20px;cursor:pointer;display:flex;align-items:center;gap:14px;user-select:none;transition:background .15s}
-    .card-hdr:hover{background:#181c26}
-    .card-info{flex:1}
-    .card-ttl{font-size:15px;font-weight:700;color:#e8e8ee;letter-spacing:-.01em}
-    .card-sub{font-size:12px;color:#444;margin-top:3px}
-    .card-meta{display:flex;align-items:center;gap:12px;flex-shrink:0}
+    /* ── Hero ── */
+    .hero{background:var(--bg-surface);border-bottom:1px solid var(--bd1);padding:28px 24px 24px}
+    .hero-inner{max-width:760px;margin:0 auto}
+    .hero-eyebrow{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);margin-bottom:8px}
+    .hero-ttl{font-size:24px;font-weight:700;color:var(--tx1);letter-spacing:-.02em;margin-bottom:4px}
+    .hero-dsc{font-size:13px;color:var(--tx3)}
+
+    /* ── Content ── */
+    .wrap{max-width:760px;margin:0 auto;padding:28px 24px 80px}
+
+    /* ── Cards de reunião ── */
+    .card{background:var(--bg-card);border:1px solid var(--bd1);border-radius:12px;margin-bottom:12px;overflow:hidden}
+    .card-hdr{padding:16px 20px;cursor:pointer;display:flex;align-items:center;gap:14px;user-select:none;transition:background .15s}
+    .card-hdr:hover{background:var(--bg-hover)}
+    .card-left{display:flex;align-items:center;gap:14px;flex:1;min-width:0}
+    .card-stripe{width:3px;height:36px;border-radius:2px;flex-shrink:0}
+    .card-info{flex:1;min-width:0}
+    .card-ttl{font-size:14px;font-weight:600;color:var(--tx1);letter-spacing:-.01em;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+    .card-num{font-size:11px;font-weight:400;color:var(--tx3)}
+    .card-sub{font-size:12px;color:var(--tx3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .card-meta{display:flex;align-items:center;gap:10px;flex-shrink:0}
     .badge{font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap;letter-spacing:.02em}
-    .chev{color:#333;font-size:18px;transition:transform .2s;line-height:1}
+    .cnt{font-size:11px;color:var(--tx3)}
+    .chev{color:var(--tx3);font-size:16px;transition:transform .2s;line-height:1;flex-shrink:0}
     .chev.open{transform:rotate(90deg)}
 
-    /* Body */
-    .card-body{display:none;border-top:1px solid #1a1d28}
+    /* ── Corpo do card ── */
+    .card-body{display:none;border-top:1px solid var(--bd1)}
     .card-body.open{display:block}
-    .obs{font-size:12.5px;color:#555;padding:14px 20px;border-bottom:1px solid #1a1d28;font-style:italic;background:#0f1117}
+    .obs{font-size:12.5px;color:var(--tx3);padding:14px 20px;border-bottom:1px solid var(--bd1);font-style:italic;background:var(--bg-surface)}
 
-    /* Pauta items */
-    .pauta-list{padding:8px 0}
-    .pauta-item{padding:18px 20px;border-bottom:1px solid #191c28;display:flex;align-items:flex-start;gap:16px}
+    /* ── Pautas ── */
+    .pauta-list{padding:4px 0}
+    .pauta-item{padding:16px 20px;border-bottom:1px solid var(--bd1);display:flex;align-items:flex-start;gap:16px}
     .pauta-item:last-child{border-bottom:none}
-    .pauta-num{font-size:11px;font-weight:700;color:#2a2d3a;min-width:22px;padding-top:2px;text-align:right;flex-shrink:0}
+    .pauta-num{font-size:11px;font-weight:600;color:var(--tx3);min-width:22px;padding-top:2px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
     .pauta-info{flex:1;min-width:0}
-    .pauta-ttl{font-size:14px;font-weight:700;color:#dde0ea;margin-bottom:6px}
-    .pauta-dsc{font-size:13px;color:#6b7082;line-height:1.65}
-    .pauta-sintese{font-size:13px;color:#7a8090;margin-top:10px;padding:10px 14px;border-left:2px solid #252835;line-height:1.65;background:#0f1218;border-radius:0 6px 6px 0}
-    .pauta-delib{font-size:13px;color:#3aaa5c;margin-top:10px;padding:12px 14px;background:rgba(58,170,92,.06);border:1px solid rgba(58,170,92,.18);border-radius:8px;line-height:1.65}
-    .pauta-delib-lbl{display:block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#3aaa5c;opacity:.6;margin-bottom:5px}
-    .pauta-footer{display:flex;align-items:center;gap:10px;margin-top:10px}
-    .pauta-cat{font-size:10px;color:#333;text-transform:uppercase;letter-spacing:.08em}
-    .empty{color:#333;font-size:12.5px;padding:24px 20px}
-    #status{color:#444;font-size:13px;padding:60px 0;text-align:center}
+    .pauta-ttl{font-size:13.5px;font-weight:600;color:var(--tx1);margin-bottom:5px;line-height:1.4}
+    .pauta-dsc{font-size:12.5px;color:var(--tx2);line-height:1.65}
+    .pauta-sintese{font-size:12.5px;color:var(--tx2);margin-top:10px;padding:10px 14px;border-left:2px solid var(--bd2);line-height:1.65;background:var(--bg-surface);border-radius:0 6px 6px 0}
+    .pauta-delib{font-size:12.5px;color:var(--tx1);margin-top:10px;padding:12px 14px;background:rgba(48,209,88,.07);border:1px solid rgba(48,209,88,.2);border-radius:8px;line-height:1.65}
+    .pauta-delib-lbl{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--gr);margin-bottom:5px}
+    .pauta-footer{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+    .pauta-cat{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em}
+
+    .empty{color:var(--tx3);font-size:12.5px;padding:24px 20px}
+    #status{color:var(--tx3);font-size:13px;padding:60px 0;text-align:center}
+
+    @media(max-width:600px){
+      .topbar{padding:0 16px}
+      .hero{padding:20px 16px}
+      .wrap{padding:20px 16px 60px}
+      .card-hdr{padding:14px 16px}
+      .pauta-item{padding:14px 16px}
+      .card-ttl{font-size:13px}
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="header">
-      <div class="header-ic">◆</div>
+
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-ic">◆</div>
       <div>
-        <div class="header-lbl">IPPenha · Conselho e Governança</div>
-        <div class="header-ttl">Pautas das Reuniões</div>
+        <div class="topbar-name">SIPEN</div>
+        <div class="topbar-sub">Sistema Integrado da IPPenha</div>
       </div>
     </div>
+    <button class="btn-theme" onclick="toggleTheme()" id="btn-theme">☀ Claro</button>
+  </div>
+
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="hero-eyebrow">Conselho e Governança</div>
+      <div class="hero-ttl">Reuniões do Conselho</div>
+      <div class="hero-dsc">Pautas, deliberações e histórico das reuniões da IPPenha</div>
+    </div>
+  </div>
+
+  <div class="wrap">
     <div id="content"><div id="status">Carregando reuniões...</div></div>
   </div>
 
@@ -66,83 +151,146 @@
     const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyaHdyeWZ6cHljYWhnc29oaGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg2MTUsImV4cCI6MjA5MTg0NDYxNX0.T0hp90Bmufj6a3oUPq1vYcLiGx9YjyMaZiE38S0e3_8";
 
     const TIPO = { ORDINARIA:"Ordinária", EXTRAORDINARIA:"Extraordinária", COMISSAO_EXECUTIVA:"Comissão Executiva" };
-    const STATUS_R = { REALIZADA:["Realizada","#3aaa5c"], CANCELADA:["Cancelada","#e05555"], AGENDADA:["Agendada","#4a9cf5"] };
-    const STATUS_P = {
-      PENDENTE:  ["Pendente","#666"],   EM_ANALISE:["Em análise","#d4a843"],
-      APROVADO:  ["Aprovado","#3aaa5c"],REJEITADO: ["Rejeitado","#e05555"],
-      ADIADO:    ["Adiado","#4a9cf5"], CONCLUIDO: ["Concluído","#8b6fd4"],
+
+    const STATUS_R = {
+      REALIZADA: { label:"Realizada", cor:"#30d158" },
+      CANCELADA: { label:"Cancelada", cor:"#ff453a" },
+      AGENDADA:  { label:"Agendada",  cor:"#0a84ff" },
     };
 
-    function fmt(d){ if(!d) return "—"; const[y,m,day]=d.split("T")[0].split("-"); return `${day}/${m}/${y}`; }
+    const STATUS_P = {
+      PENDENTE:   { label:"Pendente",   cor:"#6b7885" },
+      EM_ANALISE: { label:"Em análise", cor:"#ff9f0a" },
+      APROVADO:   { label:"Aprovado",   cor:"#30d158" },
+      REJEITADO:  { label:"Rejeitado",  cor:"#ff453a" },
+      ADIADO:     { label:"Adiado",     cor:"#0a84ff" },
+      CONCLUIDO:  { label:"Concluído",  cor:"#bf5af2" },
+    };
 
-    async function api(path){
-      const r = await fetch(`${SUPA_URL}/rest/v1/${path}`,{headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}});
-      if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    /* ── Tema ── */
+    (function () {
+      const saved = localStorage.getItem("sipen-pub-theme");
+      const sys   = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      const t     = saved || sys;
+      document.documentElement.dataset.theme = t;
+    })();
+
+    function toggleTheme() {
+      const cur = document.documentElement.dataset.theme;
+      const next = cur === "dark" ? "light" : "dark";
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem("sipen-pub-theme", next);
+      document.getElementById("btn-theme").textContent = next === "dark" ? "☀ Claro" : "☾ Escuro";
+    }
+
+    /* Atualiza label do botão ao carregar */
+    (function () {
+      const t = document.documentElement.dataset.theme;
+      document.addEventListener("DOMContentLoaded", () => {
+        const btn = document.getElementById("btn-theme");
+        if (btn) btn.textContent = t === "dark" ? "☀ Claro" : "☾ Escuro";
+      });
+    })();
+
+    function fmt(d) {
+      if (!d) return "—";
+      const [y, m, day] = d.split("T")[0].split("-");
+      return `${day}/${m}/${y}`;
+    }
+
+    async function api(path) {
+      const r = await fetch(`${SUPA_URL}/rest/v1/${path}`, {
+        headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}` }
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return r.json();
     }
 
-    function toggle(i){
-      document.getElementById("b"+i).classList.toggle("open");
-      document.getElementById("c"+i).classList.toggle("open");
+    function toggle(i) {
+      document.getElementById("b" + i).classList.toggle("open");
+      document.getElementById("c" + i).classList.toggle("open");
     }
 
-    async function render(){
+    async function render() {
       const el = document.getElementById("content");
-      try{
+      try {
         const [reunioes, pautas] = await Promise.all([
           api("conselho_reunioes?select=*&order=data_reuniao.desc&limit=100"),
           api("conselho_pautas?select=*&order=ordem.asc,created_at.asc&limit=1000"),
         ]);
 
-        if(!reunioes.length){ el.innerHTML='<div id="status">Nenhuma reunião registrada.</div>'; return; }
+        if (!reunioes.length) {
+          el.innerHTML = '<div id="status">Nenhuma reunião registrada.</div>';
+          return;
+        }
 
         const por = {};
-        pautas.forEach(p=>{ if(!por[p.reuniao_id]) por[p.reuniao_id]=[]; por[p.reuniao_id].push(p); });
+        pautas.forEach(p => {
+          if (!por[p.reuniao_id]) por[p.reuniao_id] = [];
+          por[p.reuniao_id].push(p);
+        });
 
-        el.innerHTML = reunioes.map((r,i)=>{
-          const tipo = TIPO[r.tipo] || r.tipo || "Reunião";
-          const [sLabel, sCor] = STATUS_R[r.status] || ["—","#666"];
-          const itens = por[r.id] || [];
+        el.innerHTML = reunioes.map((r, i) => {
+          const tipo   = TIPO[r.tipo] || r.tipo || "Reunião";
+          const scfg   = STATUS_R[r.status] || { label: r.status || "—", cor: "#6b7885" };
+          const itens  = por[r.id] || [];
+          const stripe = scfg.cor;
 
           const pautasHtml = itens.length
-            ? `<div class="pauta-list">${itens.map((p,n)=>{
-                const [pLabel,pCor] = STATUS_P[p.status] || [p.status||"—","#666"];
+            ? `<div class="pauta-list">${itens.map((p, n) => {
+                const pcfg = STATUS_P[p.status] || { label: p.status || "—", cor: "#6b7885" };
                 return `<div class="pauta-item">
-                  <div class="pauta-num">${n+1}</div>
+                  <div class="pauta-num">${n + 1}</div>
                   <div class="pauta-info">
-                    <div class="pauta-ttl">${p.titulo||"—"}</div>
-                    ${p.descricao?`<div class="pauta-dsc">${p.descricao}</div>`:""}
-                    ${p.sintese?`<div class="pauta-sintese">${p.sintese}</div>`:""}
-                    ${p.deliberacao?`<div class="pauta-delib"><span class="pauta-delib-lbl">Deliberação</span>${p.deliberacao}</div>`:""}
+                    <div class="pauta-ttl">${p.titulo || "—"}</div>
+                    ${p.descricao ? `<div class="pauta-dsc">${p.descricao}</div>` : ""}
+                    ${p.sintese   ? `<div class="pauta-sintese">${p.sintese}</div>` : ""}
+                    ${p.deliberacao ? `<div class="pauta-delib"><span class="pauta-delib-lbl">Deliberação</span>${p.deliberacao}</div>` : ""}
                     <div class="pauta-footer">
-                      <span class="badge" style="color:${pCor};background:${pCor}18;border:1px solid ${pCor}33">${pLabel}</span>
-                      ${p.categoria?`<span class="pauta-cat">${p.categoria}</span>`:""}
+                      <span class="badge" style="color:${pcfg.cor};background:${pcfg.cor}18;border:1px solid ${pcfg.cor}33">${pcfg.label}</span>
+                      ${p.categoria ? `<span class="pauta-cat">${p.categoria}</span>` : ""}
                     </div>
                   </div>
                 </div>`;
               }).join("")}</div>`
             : `<div class="empty">Nenhum item de pauta registrado.</div>`;
 
+          const horario = r.horario ? String(r.horario).slice(0, 5) : "";
+          const henc    = r.horario_encerramento ? String(r.horario_encerramento).slice(0, 5) : "";
+          const sub = [
+            tipo,
+            fmt(r.data_reuniao),
+            horario ? (henc ? `${horario} → ${henc}` : horario) : "",
+            r.local || "",
+          ].filter(Boolean).join(" · ");
+
           return `<div class="card">
             <div class="card-hdr" onclick="toggle(${i})">
-              <div class="card-info">
-                <div class="card-ttl">${tipo} · ${fmt(r.data_reuniao)}</div>
-                ${r.local?`<div class="card-sub">${r.local}</div>`:""}
+              <div class="card-left">
+                <div class="card-stripe" style="background:${stripe}"></div>
+                <div class="card-info">
+                  <div class="card-ttl">
+                    ${r.numero_ata ? `<span class="card-num">Ata nº ${r.numero_ata}</span>` : ""}
+                    ${r.titulo || tipo}
+                  </div>
+                  <div class="card-sub">${sub}</div>
+                </div>
               </div>
               <div class="card-meta">
-                <span class="badge" style="color:${sCor};background:${sCor}18;border:1px solid ${sCor}33">${sLabel}</span>
-                <span style="font-size:11px;color:#333">${itens.length} item${itens.length!==1?"s":""}</span>
+                <span class="badge" style="color:${scfg.cor};background:${scfg.cor}18;border:1px solid ${scfg.cor}33">${scfg.label}</span>
+                <span class="cnt">${itens.length} item${itens.length !== 1 ? "s" : ""}</span>
                 <span class="chev" id="c${i}">›</span>
               </div>
             </div>
             <div class="card-body" id="b${i}">
-              ${r.observacoes?`<div class="obs">${r.observacoes}</div>`:""}
+              ${r.observacoes ? `<div class="obs">${r.observacoes}</div>` : ""}
               ${pautasHtml}
             </div>
           </div>`;
         }).join("");
-      }catch(e){
-        el.innerHTML=`<div id="status" style="color:#e05555">Erro ao carregar dados: ${e.message}</div>`;
+
+      } catch (e) {
+        el.innerHTML = `<div id="status" style="color:var(--rose)">Erro ao carregar dados: ${e.message}</div>`;
       }
     }
 
