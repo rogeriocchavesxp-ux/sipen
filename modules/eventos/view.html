@@ -17,26 +17,22 @@
     <div id="eve-dash-nav"></div>
 
     <!-- KPIs -->
-    <div class="ct" style="grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:0">
-      <div class="card" style="padding:16px 18px;cursor:pointer" onclick="go('eve-todos')">
-        <div style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Total de Programações</div>
-        <div id="eve-kpi-total" style="font-size:28px;font-weight:800;color:var(--tx1);line-height:1">—</div>
-        <div style="font-size:10px;color:var(--tx3);margin-top:4px">cadastrados</div>
+    <div class="kpis" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;background:var(--bg-card);border:1px solid var(--bd1);border-radius:var(--rl);overflow:hidden;margin-bottom:0">
+      <div class="kpi" style="cursor:pointer;border-radius:0;border:none;border-right:1px solid var(--bd1)" onclick="go('eve-todos')">
+        <div class="kpi-ico" style="background:rgba(74,156,245,0.12);color:var(--sky)">🎉</div>
+        <div class="kpi-body"><div class="kpi-lbl">Total</div><div class="kpi-val" id="eve-kpi-total">—</div><div class="kpi-d nu">cadastrados</div></div>
       </div>
-      <div class="card" style="padding:16px 18px;cursor:pointer" onclick="eveGoFiltro('inscricoes_abertas')">
-        <div style="font-size:9.5px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Inscrições Abertas</div>
-        <div id="eve-kpi-abertos" style="font-size:28px;font-weight:800;color:var(--gr);line-height:1">—</div>
-        <div style="font-size:10px;color:var(--tx3);margin-top:4px">eventos ativos</div>
+      <div class="kpi" style="cursor:pointer;border-radius:0;border:none;border-right:1px solid var(--bd1)" onclick="eveGoFiltro('inscricoes_abertas')">
+        <div class="kpi-ico" style="background:rgba(58,170,92,0.12);color:var(--gr)">◉</div>
+        <div class="kpi-body"><div class="kpi-lbl">Inscrições Abertas</div><div class="kpi-val" id="eve-kpi-abertos">—</div><div class="kpi-d nu">eventos ativos</div></div>
       </div>
-      <div class="card" style="padding:16px 18px;cursor:pointer" onclick="eveGoFiltro('publicado')">
-        <div style="font-size:9.5px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Publicados</div>
-        <div id="eve-kpi-pub" style="font-size:28px;font-weight:800;color:var(--blue);line-height:1">—</div>
-        <div style="font-size:10px;color:var(--tx3);margin-top:4px">visíveis</div>
+      <div class="kpi" style="cursor:pointer;border-radius:0;border:none;border-right:1px solid var(--bd1)" onclick="eveGoFiltro('publicado')">
+        <div class="kpi-ico" style="background:rgba(139,111,212,0.12);color:var(--violet)">◎</div>
+        <div class="kpi-body"><div class="kpi-lbl">Publicados</div><div class="kpi-val" id="eve-kpi-pub">—</div><div class="kpi-d nu">visíveis</div></div>
       </div>
-      <div class="card" style="padding:16px 18px;cursor:pointer" onclick="eveGoFiltro('concluido')">
-        <div style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Concluídos</div>
-        <div id="eve-kpi-conc" style="font-size:28px;font-weight:800;color:var(--tx3);line-height:1">—</div>
-        <div style="font-size:10px;color:var(--tx3);margin-top:4px">realizados</div>
+      <div class="kpi" style="cursor:pointer;border-radius:0;border:none" onclick="eveGoFiltro('concluido')">
+        <div class="kpi-ico" style="background:rgba(120,120,120,0.10);color:var(--tx3)">✓</div>
+        <div class="kpi-body"><div class="kpi-lbl">Concluídos</div><div class="kpi-val" id="eve-kpi-conc">—</div><div class="kpi-d up">realizados</div></div>
       </div>
     </div>
 
