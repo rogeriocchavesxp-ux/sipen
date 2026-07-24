@@ -194,6 +194,7 @@ function fmtD(d) {
   let _ativo = null;
   let _origemView = "dem-todas"; // rastreia de onde o detalhe foi aberto
   let _saving = false;           // guard: impede submit duplo em salvarNovaDemanda
+  let _dashFiltro = "todas";     // filtro ativo no dashboard
 
   /* ── Estado: tela Admin Demandas ────────────────────── */
   const _ADM_KEY = "sipen_adm_dem_filtro";
@@ -430,31 +431,12 @@ function fmtD(d) {
 
       <div class="g2">
         <div class="card">
-          <div class="ctit">Solicitações recentes <span class="cact" onclick="demRecarregarDash()">↻ Atualizar</span></div>
-          ${recentes.length === 0
-            ? '<div class="empty-state">Nenhuma demanda registrada</div>'
-            : recentes.map(r => {
-                const localPart = r.local ? ` · ${escapeHtml(r.local)}` : "";
-                const meta = [
-                  escapeHtml(r.area) || "—",
-                  r.subcategoria ? escapeHtml(r.subcategoria) : null,
-                  r.local        ? escapeHtml(r.local)        : null,
-                  nomePropio(r.solicitante || r.solicitante_txt) || "—",
-                  fmtD(r.data_abertura || r.criado_em),
-                ].filter(Boolean).join(" · ");
-                return `
-              <div onclick="demAbrirDetalhe('${r.id||r._row}','dem-dash')"
-                   style="cursor:pointer;border-bottom:1px solid var(--bd1);padding:9px 0"
-                   onmouseover="this.style.background='var(--bg-hover)'"
-                   onmouseout="this.style.background=''">
-                <div style="display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;padding:0 2px 5px">
-                  <span style="font-size:10.5px;font-weight:700;color:var(--blue);font-family:var(--mono);letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.numero_chamado ? escapeHtml(r.numero_chamado) : "—"}</span>
-                  <span style="font-size:12.5px;font-weight:600;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${catIcon(r.area)} ${escapeHtml(r.titulo) || "Sem título"}</span>
-                  ${pillStatus(r.status)}
-                </div>
-                <div style="font-size:11px;color:var(--tx3);padding:0 2px;line-height:1.4">${meta}</div>
-              </div>`;
-              }).join("")}
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div class="ctit" style="margin-bottom:0">Solicitações</div>
+            <span class="cact" onclick="demRecarregarDash()">↻ Atualizar</span>
+          </div>
+          <div id="dem-dash-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+          <div id="dem-dash-lista"></div>
         </div>
 
         <div style="display:flex;flex-direction:column;gap:16px">
@@ -489,9 +471,74 @@ function fmtD(d) {
           </div>
         </div>
       </div>`;
+
+    _renderDashChips();
+    _renderDashListaRows();
   }
 
   window.demRecarregarDash = async function() { _invalidate(); await renderDash(); };
+
+  const _DASH_CHIPS = [
+    { id:"todas",      label:"Todas",           cor:"var(--blue)" },
+    { id:"analise",    label:"Em Análise",       cor:"var(--gold)" },
+    { id:"andamento",  label:"Em Andamento",     cor:"var(--violet)" },
+    { id:"concluidas", label:"Concluídas",        cor:"var(--gr)" },
+    { id:"prioridade", label:"Alta Prioridade",  cor:"var(--rose)" },
+    { id:"historico",  label:"Histórico",        cor:"var(--tx3)" },
+  ];
+
+  function _dashGetRows(id) {
+    const all = [..._cache].sort((a,b) => (b.criado_em||"").localeCompare(a.criado_em||""));
+    if (id === "analise")    return all.filter(r => r.status === "Em Análise");
+    if (id === "andamento")  return all.filter(r => r.status === "Em Andamento");
+    if (id === "concluidas") return all.filter(r => ["Concluída","Pago"].includes(r.status));
+    if (id === "prioridade") return all.filter(r => ["Alta","Urgente"].includes(r.prioridade));
+    if (id === "historico")  return all;
+    return all.slice(0, 20); // todas: 20 mais recentes
+  }
+
+  function _renderDashChips() {
+    const el = document.getElementById("dem-dash-chips");
+    if (!el) return;
+    el.innerHTML = _DASH_CHIPS.map(c => {
+      const ativo = _dashFiltro === c.id;
+      return `<span onclick="demDashFiltrar('${c.id}')" style="cursor:pointer;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid ${ativo ? c.cor : 'var(--bd2)'};background:${ativo ? c.cor+'18' : 'transparent'};color:${ativo ? c.cor : 'var(--tx3)'};transition:all .12s">${c.label}</span>`;
+    }).join("");
+  }
+
+  function _renderDashListaRows() {
+    const el = document.getElementById("dem-dash-lista");
+    if (!el) return;
+    const rows = _dashGetRows(_dashFiltro);
+    if (!rows.length) { el.innerHTML = '<div class="empty-state">Nenhuma demanda encontrada</div>'; return; }
+    el.innerHTML = rows.map(r => {
+      const meta = [
+        escapeHtml(r.area) || "—",
+        r.subcategoria ? escapeHtml(r.subcategoria) : null,
+        r.local        ? escapeHtml(r.local)        : null,
+        nomePropio(r.solicitante || r.solicitante_txt) || "—",
+        fmtD(r.data_abertura || r.criado_em),
+      ].filter(Boolean).join(" · ");
+      return `
+        <div onclick="demAbrirDetalhe('${r.id||r._row}','dem-dash')"
+             style="cursor:pointer;border-bottom:1px solid var(--bd1);padding:9px 0"
+             onmouseover="this.style.background='var(--bg-hover)'"
+             onmouseout="this.style.background=''">
+          <div style="display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;padding:0 2px 5px">
+            <span style="font-size:10.5px;font-weight:700;color:var(--blue);font-family:var(--mono);letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.numero_chamado ? escapeHtml(r.numero_chamado) : "—"}</span>
+            <span style="font-size:12.5px;font-weight:600;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${catIcon(r.area)} ${escapeHtml(r.titulo) || "Sem título"}</span>
+            ${pillStatus(r.status)}
+          </div>
+          <div style="font-size:11px;color:var(--tx3);padding:0 2px;line-height:1.4">${meta}</div>
+        </div>`;
+    }).join("");
+  }
+
+  window.demDashFiltrar = function(id) {
+    _dashFiltro = id;
+    _renderDashChips();
+    _renderDashListaRows();
+  };
 
   /* ── Lista com filtros ──────────────────────────────── */
 
