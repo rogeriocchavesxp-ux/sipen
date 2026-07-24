@@ -307,6 +307,10 @@ html[data-theme="light"] .sb-grp-lbl{opacity:.85}
 .sb-grp-hdr:hover,.sb-grp-hdr.open{background:none!important;border-radius:0!important;color:var(--teal)!important}
 .sb-grp-hdr .marr{font-size:9px;opacity:.7}
 html[data-theme="light"] .sb-grp-hdr{opacity:.85}
+#ms-sec-memb .si,#ms-sec-conselho .si,#ms-sec-eleicoes .si{color:var(--teal);opacity:.7}
+#ms-sec-memb .si:hover,#ms-sec-conselho .si:hover,#ms-sec-eleicoes .si:hover{opacity:1}
+#ms-sec-memb .si.on,#ms-sec-conselho .si.on,#ms-sec-eleicoes .si.on{color:var(--teal)!important;opacity:1}
+#ms-sec-memb .si::before,#ms-sec-conselho .si::before,#ms-sec-eleicoes .si::before{background:var(--teal)}
 
 
 /* Sistema (pinned above footer) */
