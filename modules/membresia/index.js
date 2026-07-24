@@ -116,11 +116,6 @@
 
   function normalizarFuncao(valor) {
     const mapa = {
-      PASTOR: "pastor",
-      EVANGELISTA: "evangelista",
-      PRESBITERO: "presbitero",
-      DIACONO: "diacono",
-      MISSIONARIO: "missionario",
       LIDER_MINISTERIO: "lider_ministerio",
       LIDER_PG: "lider_pg",
       SECRETARIO: "secretario",
@@ -561,18 +556,13 @@
         </div>
 
         <div>
-          <label class="mem-lbl">Função / Cargo</label>
+          <label class="mem-lbl">Função na Congregação</label>
           <select id="mem-f-funcao" class="mem-inp">
             <option value="">Sem função especial</option>
-            <option value="pastor">Pastor</option>
-            <option value="evangelista">Evangelista</option>
-            <option value="presbitero">Presbítero</option>
-            <option value="diacono">Diácono</option>
-            <option value="missionario">Missionário</option>
             <option value="lider_ministerio">Líder de Ministério</option>
             <option value="lider_pg">Líder de PG</option>
-            <option value="secretario">Secretário</option>
-            <option value="tesoureiro">Tesoureiro</option>
+            <option value="secretario">Secretário(a)</option>
+            <option value="tesoureiro">Tesoureiro(a)</option>
             <option value="membro">Membro</option>
           </select>
         </div>

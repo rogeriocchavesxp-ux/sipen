@@ -155,7 +155,7 @@ const SCHEMA = {
   /* Tipos especiais para renderizar inputs corretos */
   tipos: {
     AGENDA:     { data:"date", hora_inicio:"time", hora_fim:"time", dia_semana:"select:Domingo,Segunda-feira,Terça-feira,Quarta-feira,Quinta-feira,Sexta-feira,Sábado", mes:"select:Janeiro,Fevereiro,Março,Abril,Maio,Junho,Julho,Agosto,Setembro,Outubro,Novembro,Dezembro", status:"select:aguardando_aprovacao=Aguardando Aprovação,em_analise=Em Análise,ajuste_solicitado=Ajuste Solicitado,confirmado=Confirmado,recusado=Recusado,cancelado=Cancelado,reagendado=Reagendado,arquivado=Arquivado", recorrencia:"select:Único,Semanal,Quinzenal,Mensal,Anual", espaco:"espacos-select" },
-    MEMBROS:    { status:"select:ativo,inativo,transferido,falecido,disciplinado,afastado", tipo_membro:"select:COMUNGANTE=Comungante,NAO_COMUNGANTE=Não Comungante", data_nascimento:"date", data_ingresso:"date", data_saida:"date", data_batismo:"date", batizado:"boolean", casado_na_igreja:"boolean", tipo_ingresso:"select:batismo,transferência,profissão de fé,restauração,outro" },
+    MEMBROS:    { status:"select:ativo,inativo,transferido,falecido,disciplinado,afastado", tipo_membro:"select:comungante=Comungante,nao_comungante=Não Comungante", data_nascimento:"date", data_ingresso:"date", data_saida:"date", data_batismo:"date", batizado:"boolean", casado_na_igreja:"boolean", tipo_ingresso:"select:batismo,transferencia=Transferência,profissao_de_fe=Profissão de Fé,restauracao=Restauração,outro" },
     VISITANTES: { data_primeira_visita:"date", interesse_nivel:"select:baixo,médio,alto,convertido" },
     DEMANDAS:   { data_abertura: "date", data_conclusao: "date", status: "select:ABERTA=Aberta,EM_ANALISE=Em Análise,EM_ANDAMENTO=Em Andamento,PENDENTE=Pendente,CONCLUIDA=Concluída,CANCELADA=Cancelada", prioridade: "select:Baixa,Média,Alta,Urgente" },
     FINANCEIRO: { valor: "number", data_lancamento: "date", tipo: "select:Receita,Despesa", status: "select:Pendente,Confirmado,Cancelado" },
@@ -473,8 +473,8 @@ async function loadKPIs() {
 
     const membrosAtivos   = membros.filter(r => String(r.status || "").toLowerCase() === "ativo").length || membros.length;
     const membrosAtivosArr = membros.filter(r => String(r.status || "").toLowerCase() === "ativo");
-    const comungantes     = membrosAtivosArr.filter(r => (r.tipo_membro || "COMUNGANTE") === "COMUNGANTE").length;
-    const naoComungantes  = membrosAtivosArr.filter(r => r.tipo_membro === "NAO_COMUNGANTE").length;
+    const comungantes     = membrosAtivosArr.filter(r => (r.tipo_membro || "comungante") === "comungante").length;
+    const naoComungantes  = membrosAtivosArr.filter(r => r.tipo_membro === "nao_comungante").length;
     const demandasAbertas = demandas.filter(r => !["concluído","concluido","fechado","cancelado"].includes(String(r.status||"").toLowerCase())).length;
     const pgsAtivos = 0; // tabela pgs sujeita a permissões — KPI omitido
     const saldo = financeiro.reduce((acc, row) => {

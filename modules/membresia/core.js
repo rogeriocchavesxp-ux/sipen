@@ -376,7 +376,7 @@ function membresiaFiltrar() {
   let rows = _membCache;
   if (fstatus)     rows = rows.filter(r => r.status === fstatus);
   if (ftipo)       rows = rows.filter(r => (r.tipo_ingresso || "").toLowerCase() === ftipo);
-  if (ftipomembro) rows = rows.filter(r => (r.tipo_membro || "COMUNGANTE") === ftipomembro);
+  if (ftipomembro) rows = rows.filter(r => (r.tipo_membro || "comungante") === ftipomembro);
   if (busca)   rows = rows.filter(r =>
     (r.nome        || "").toLowerCase().includes(busca) ||
     (r.funcao      || "").toLowerCase().includes(busca) ||
@@ -417,7 +417,7 @@ function vis_filtrar() {
 
 function com_filtrar() {
   const busca = (document.getElementById("com-busca")?.value || "").toLowerCase().trim();
-  let rows = _membCache.filter(r => (r.tipo_membro || "COMUNGANTE") === "COMUNGANTE");
+  let rows = _membCache.filter(r => (r.tipo_membro || "comungante") === "comungante");
   if (busca) rows = rows.filter(r => JSON.stringify(r).toLowerCase().includes(busca));
   const cnt = document.getElementById("memb-com-count");
   if (cnt) cnt.textContent = `· ${rows.length}`;
@@ -426,7 +426,7 @@ function com_filtrar() {
 
 function ncom_filtrar() {
   const busca = (document.getElementById("ncom-busca")?.value || "").toLowerCase().trim();
-  let rows = _membCache.filter(r => r.tipo_membro === "NAO_COMUNGANTE");
+  let rows = _membCache.filter(r => r.tipo_membro === "nao_comungante");
   if (busca) rows = rows.filter(r => JSON.stringify(r).toLowerCase().includes(busca));
   const cnt = document.getElementById("memb-ncom-count");
   if (cnt) cnt.textContent = `· ${rows.length}`;
