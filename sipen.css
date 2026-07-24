@@ -303,7 +303,7 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 .sb-grp-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);padding:10px 10px 3px;opacity:.75;user-select:none}
 .sb-grp-lbl:first-child{padding-top:4px}
 html[data-theme="light"] .sb-grp-lbl{opacity:.85}
-.sb-grp-hdr{font-size:10px!important;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--teal)!important;padding:10px 10px 4px!important;opacity:.75}
+.sb-grp-hdr{font-size:10px!important;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--teal)!important;padding:10px 10px 4px 38px!important;opacity:.75}
 .sb-grp-hdr:hover,.sb-grp-hdr.open{background:none!important;border-radius:0!important;color:var(--teal)!important}
 .sb-grp-hdr .marr{font-size:9px;opacity:.7}
 html[data-theme="light"] .sb-grp-hdr{opacity:.85}
