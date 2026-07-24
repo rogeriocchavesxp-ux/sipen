@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aniversariantes — IPPenha</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0d0f14;color:#e0e0e8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;line-height:1.5}
+    .wrap{max-width:820px;margin:0 auto;padding:36px 20px 80px}
+
+    /* Header */
+    .header{display:flex;align-items:center;gap:16px;margin-bottom:28px;padding-bottom:22px;border-bottom:1px solid #1e2130}
+    .header-ic{width:44px;height:44px;background:rgba(212,168,67,.12);border:1.5px solid rgba(212,168,67,.3);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+    .header-lbl{font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+    .header-ttl{font-size:22px;font-weight:700;color:#e8e8ee;letter-spacing:-.01em}
+
+    /* Month tabs */
+    .month-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:24px}
+    .mtab{background:none;border:1px solid #1e2130;border-radius:7px;color:#555;font-size:11.5px;font-weight:500;padding:6px 12px;cursor:pointer;font-family:inherit;transition:background .12s,color .12s,border-color .12s;white-space:nowrap}
+    .mtab:hover{background:#181c26;color:#aaa}
+    .mtab.on{background:rgba(212,168,67,.12);border-color:rgba(212,168,67,.35);color:#d4a843;font-weight:600}
+
+    /* KPIs */
+    .kpis{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+    .kpi{background:#13161e;border:1px solid #1e2130;border-radius:9px;padding:12px 16px;display:flex;align-items:center;gap:11px;min-width:130px}
+    .kpi-ico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .kpi-lbl{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+    .kpi-val{font-size:20px;font-weight:700;color:#e8e8ee;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+
+    /* Table */
+    .table-wrap{background:#13161e;border:1px solid #1e2130;border-radius:12px;overflow:hidden}
+    .table-hdr{padding:12px 16px;border-bottom:1px solid #1e2130;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .table-ttl{font-size:12px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.08em}
+    .table-count{font-size:11px;color:#444;background:#0d0f14;border:1px solid #1a1d28;border-radius:20px;padding:2px 10px}
+    .table-overflow{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    thead tr{background:#0f1117;border-bottom:2px solid rgba(212,168,67,.2)}
+    th{text-align:left;padding:10px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#555;font-weight:700;white-space:nowrap}
+    tbody tr{border-bottom:1px solid #191c28;transition:background .1s}
+    tbody tr:last-child{border-bottom:none}
+    tbody tr:hover{background:#181c26}
+    tbody tr.hoje{background:rgba(212,168,67,.06)}
+    tbody tr.hoje:hover{background:rgba(212,168,67,.1)}
+    td{padding:9px 12px;color:#bbb;vertical-align:middle}
+
+    /* Avatar */
+    .av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;background:#1a1d28;border:1px solid #252835;color:#777}
+    .av.gold{background:rgba(212,168,67,.18);border-color:rgba(212,168,67,.35);color:#d4a843}
+    .nome-cell{display:flex;align-items:center;gap:10px}
+    .nome-txt{font-weight:600;color:#dde0ea}
+    .nome-sub{font-size:10px;color:#444;margin-top:1px}
+    .badge-hoje{font-size:9px;background:rgba(212,168,67,.18);color:#d4a843;border-radius:4px;padding:1px 6px;font-weight:700;margin-left:6px;vertical-align:middle}
+    .dia-num{font-size:16px;font-weight:700;color:#dde0ea;font-variant-numeric:tabular-nums}
+    .dia-sub{font-size:10px;color:#444;margin-top:1px}
+
+    /* Empty / status */
+    #status{color:#444;font-size:13px;padding:60px 0;text-align:center}
+    .empty{text-align:center;padding:48px 20px;color:#3a3d50}
+    .empty-ic{font-size:36px;margin-bottom:12px}
+    .empty-txt{font-size:13px}
+
+    /* Footer */
+    .foot{text-align:center;color:#2a2d3a;font-size:11px;margin-top:40px}
+
+    @media(max-width:600px){
+      .header-ttl{font-size:18px}
+      .mtab{padding:5px 10px;font-size:11px}
+      th:nth-child(4),td:nth-child(4),
+      th:nth-child(5),td:nth-child(5){display:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="header-ic">🎂</div>
+      <div>
+        <div class="header-lbl">IPPenha · Membresia</div>
+        <div class="header-ttl">Aniversariantes</div>
+      </div>
+    </div>
+
+    <div class="month-bar" id="month-bar"></div>
+    <div id="kpis-wrap" class="kpis"></div>
+    <div id="content"><div id="status">Carregando...</div></div>
+    <div class="foot">SIPEN · Igreja Presbiteriana de Penha</div>
+  </div>
+
+  <script>
+    const SUPA_URL = "https://erhwryfzpycahgsohhbh.supabase.co";
+    const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyaHdyeWZ6cHljYWhnc29oaGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg2MTUsImV4cCI6MjA5MTg0NDYxNX0.T0hp90Bmufj6a3oUPq1vYcLiGx9YjyMaZiE38S0e3_8";
+
+    const MESES = ["","Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    const MESES_ABREV = ["","Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+
+    let _cache = null;
+    let _mesSel = new Date().getMonth() + 1;
+
+    async function api(path) {
+      const r = await fetch(`${SUPA_URL}/rest/v1/${path}`, {
+        headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    }
+
+    function esc(s) {
+      return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    function initials(nome) {
+      return (nome || "?").split(" ").filter(Boolean).slice(0, 2).map(p => p[0].toUpperCase()).join("");
+    }
+
+    function fmtDia(d) {
+      try { return new Date(d + "T00:00:00").getDate(); } catch { return "?"; }
+    }
+
+    function idade(d) {
+      try {
+        const n = new Date(d + "T00:00:00");
+        const a = new Date();
+        const aniversarioEsteAno = new Date(a.getFullYear(), n.getMonth(), n.getDate());
+        return a.getFullYear() - n.getFullYear() - (a < aniversarioEsteAno ? 1 : 0);
+      } catch { return "?"; }
+    }
+
+    function buildMonthBar() {
+      const bar = document.getElementById("month-bar");
+      bar.innerHTML = MESES_ABREV.slice(1).map((m, i) => {
+        const mes = i + 1;
+        return `<button class="mtab${mes === _mesSel ? " on" : ""}" onclick="setMes(${mes})">${m}</button>`;
+      }).join("");
+    }
+
+    window.setMes = function(mes) {
+      _mesSel = mes;
+      document.querySelectorAll(".mtab").forEach((b, i) => b.classList.toggle("on", i + 1 === mes));
+      renderMes();
+    };
+
+    function renderMes() {
+      if (!_cache) return;
+
+      const now = new Date();
+      const hoje = now.getDate();
+      const mesAtual = now.getMonth() + 1;
+
+      const aniv = _cache.filter(r => {
+        if (!r.data_nascimento) return false;
+        try { return new Date(r.data_nascimento + "T00:00:00").getMonth() + 1 === _mesSel; } catch { return false; }
+      }).sort((a, b) => fmtDia(a.data_nascimento) - fmtDia(b.data_nascimento));
+
+      // KPIs
+      const anivHoje = mesAtual === _mesSel
+        ? aniv.filter(r => fmtDia(r.data_nascimento) === hoje).length : 0;
+      const anivSemana = mesAtual === _mesSel
+        ? aniv.filter(r => { const d = fmtDia(r.data_nascimento); return d >= hoje && d <= hoje + 6; }).length : 0;
+
+      const kpiEl = document.getElementById("kpis-wrap");
+      kpiEl.innerHTML = `
+        <div class="kpi">
+          <div class="kpi-ico" style="background:rgba(212,168,67,.14);color:#d4a843">🎂</div>
+          <div><div class="kpi-lbl">Total em ${MESES[_mesSel]}</div><div class="kpi-val">${aniv.length}</div></div>
+        </div>
+        ${mesAtual === _mesSel ? `
+        <div class="kpi">
+          <div class="kpi-ico" style="background:rgba(224,85,85,.14);color:#e05555">🎉</div>
+          <div><div class="kpi-lbl">Hoje</div><div class="kpi-val">${anivHoje}</div></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-ico" style="background:rgba(58,170,92,.14);color:#3aaa5c">📅</div>
+          <div><div class="kpi-lbl">Próx. 7 dias</div><div class="kpi-val">${anivSemana}</div></div>
+        </div>` : ""}`;
+
+      const content = document.getElementById("content");
+
+      if (!aniv.length) {
+        content.innerHTML = `<div class="table-wrap"><div class="empty"><div class="empty-ic">🎂</div><div class="empty-txt">Nenhum aniversariante em ${MESES[_mesSel]}</div></div></div>`;
+        return;
+      }
+
+      const rows = aniv.map(r => {
+        const dia = fmtDia(r.data_nascimento);
+        const isHoje = mesAtual === _mesSel && dia === hoje;
+        const ini = initials(r.nome);
+        return `<tr class="${isHoje ? "hoje" : ""}">
+          <td style="padding-left:16px">
+            <div style="display:flex;align-items:center;gap:3px;flex-direction:column;min-width:28px;text-align:center">
+              <span class="dia-num">${dia}</span>
+              <span class="dia-sub">${MESES_ABREV[_mesSel]}</span>
+            </div>
+          </td>
+          <td>
+            <div class="nome-cell">
+              <div class="av${isHoje ? " gold" : ""}">${esc(ini)}</div>
+              <div>
+                <div class="nome-txt">${esc(r.nome || "—")}${isHoje ? '<span class="badge-hoje">Hoje 🎉</span>' : ""}</div>
+                <div class="nome-sub">${esc(r.funcao || "Membro")}</div>
+              </div>
+            </div>
+          </td>
+          <td style="color:#777;font-variant-numeric:tabular-nums">${idade(r.data_nascimento)} anos</td>
+          <td style="color:#555;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.congregacao || "—")}</td>
+        </tr>`;
+      }).join("");
+
+      content.innerHTML = `
+        <div class="table-wrap">
+          <div class="table-hdr">
+            <span class="table-ttl">${MESES[_mesSel]}</span>
+            <span class="table-count">${aniv.length} membro${aniv.length !== 1 ? "s" : ""}</span>
+          </div>
+          <div class="table-overflow">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:52px;padding-left:16px">Dia</th>
+                  <th>Nome</th>
+                  <th>Idade</th>
+                  <th>Congregação</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    async function init() {
+      buildMonthBar();
+      try {
+        _cache = await api("v_membros?select=nome,data_nascimento,funcao,congregacao&status=eq.ativo&data_nascimento=not.is.null&order=data_nascimento.asc");
+        renderMes();
+      } catch(e) {
+        document.getElementById("content").innerHTML = `<div id="status">Não foi possível carregar os dados.<br><small style="color:#333">${e.message}</small></div>`;
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
