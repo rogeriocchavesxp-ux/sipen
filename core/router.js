@@ -114,6 +114,7 @@ const CRUMB={
   "atas-delib":             ["Conselho e Governança","Reuniões do Conselho","/ deliberações"],
   "conselho-demandas":      ["Conselho e Governança","Demandas do Conselho","/ todas"],
   "conselho-demandas-cons": ["Conselho e Governança","Demandas do Conselho","/ filtradas"],
+  "eleicoes-dash":          ["Conselho e Governança","Eleições","/ dashboard"],
   "conselho-eleicoes":      ["Conselho e Governança","Eleições — Indicações","/ processo eleitoral"],
   "infra-demandas":         ["Infraestrutura e Conservação","Demandas de Infraestrutura","/ todas"],
   "infra-demandas-infra":   ["Infraestrutura e Conservação","Demandas de Infraestrutura","/ filtradas"],

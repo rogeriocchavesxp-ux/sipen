@@ -1730,6 +1730,77 @@
      ENTRY POINT
   ═══════════════════════════════════════════════════════ */
 
+  async function renderEleicoesDash() {
+    const el = document.getElementById("eleicoes-dash-content");
+    if (!el) return;
+    el.innerHTML = `<div style="padding:24px;text-align:center;color:var(--tx3);font-size:12px"><span style="display:inline-block;width:20px;height:20px;border:2px solid var(--bd2);border-top-color:var(--sky);border-radius:50%;animation:spin .7s linear infinite"></span></div>`;
+
+    await _carregarProcessos();
+
+    const ativos    = _processos.filter(p => ["aberto","agendado"].includes(p.status));
+    const rascunhos = _processos.filter(p => p.status === "rascunho");
+    const encerrados = _processos.filter(p => ["encerrado","arquivado"].includes(p.status));
+    const ultimo    = encerrados[0] || null;
+
+    const _fmtAno = p => p.ano ? String(p.ano) : (p.data_encerramento ? p.data_encerramento.slice(0,4) : "—");
+    const _fmtDt  = d => d ? new Date(d).toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric"}) : "—";
+
+    el.innerHTML = `
+      <div class="kpis" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;background:var(--bg-card);border:1px solid var(--bd1);border-radius:var(--rl);overflow:hidden;margin-bottom:18px">
+        <div class="kpi" style="border-radius:0;border:none;border-right:1px solid var(--bd1)">
+          <div class="kpi-ico" style="background:rgba(88,152,212,.12);color:var(--sky)">⊞</div>
+          <div class="kpi-body"><div class="kpi-lbl">Total de Processos</div><div class="kpi-val">${_processos.length}</div><div class="kpi-d nu">histórico</div></div>
+        </div>
+        <div class="kpi" style="cursor:pointer;border-radius:0;border:none;border-right:1px solid var(--bd1)" onclick="go('conselho-eleicoes')">
+          <div class="kpi-ico" style="background:rgba(58,170,92,.12);color:var(--gr)">◉</div>
+          <div class="kpi-body"><div class="kpi-lbl">Em Andamento</div><div class="kpi-val">${ativos.length}</div><div class="kpi-d ${ativos.length > 0 ? "up" : "nu"}">abertos ou agendados</div></div>
+        </div>
+        <div class="kpi" style="border-radius:0;border:none;border-right:1px solid var(--bd1)">
+          <div class="kpi-ico" style="background:rgba(120,120,120,.10);color:var(--tx3)">✓</div>
+          <div class="kpi-body"><div class="kpi-lbl">Encerrados</div><div class="kpi-val">${encerrados.length}</div><div class="kpi-d nu">realizados</div></div>
+        </div>
+        <div class="kpi" style="border-radius:0;border:none">
+          <div class="kpi-ico" style="background:rgba(212,168,67,.12);color:var(--gold)">◈</div>
+          <div class="kpi-body"><div class="kpi-lbl">Último Realizado</div><div class="kpi-val" style="font-size:15px">${ultimo ? _fmtAno(ultimo) : "—"}</div><div class="kpi-d nu">${ultimo ? _fmtDt(ultimo.data_encerramento) : "nenhum"}</div></div>
+        </div>
+      </div>
+
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Processos Ativos <span class="cact" onclick="go('conselho-eleicoes')">Ver todos →</span></div>
+          ${ativos.length === 0 && rascunhos.length === 0
+            ? `<div style="color:var(--tx3);font-size:12px;padding:12px 0">Nenhum processo em andamento.</div>
+               <button onclick="go('conselho-eleicoes')" style="margin-top:8px;padding:7px 16px;border-radius:8px;border:1px solid var(--bd2);background:transparent;color:var(--sky);font-size:12px;cursor:pointer;font-weight:600">+ Novo Processo Eleitoral</button>`
+            : [...ativos, ...rascunhos].map(p => `
+              <div onclick="go('conselho-eleicoes')" style="cursor:pointer;border-bottom:1px solid var(--bd1);padding:10px 0;display:flex;align-items:center;gap:12px"
+                   onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13px;font-weight:600;color:var(--tx1)">${_esc(p.nome)}</div>
+                  <div style="font-size:11px;color:var(--tx3);margin-top:2px">${p.tipo||"—"} · ${_fmtAno(p)}</div>
+                </div>
+                ${_statusBadge(p.status)}
+              </div>`).join("")}
+        </div>
+
+        <div class="card">
+          <div class="ctit">Histórico Recente</div>
+          ${encerrados.length === 0
+            ? `<div style="color:var(--tx3);font-size:12px;padding:8px 0">Nenhum processo encerrado.</div>`
+            : encerrados.slice(0,6).map(p => `
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd1)">
+                <div>
+                  <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${_esc(p.nome)}</div>
+                  <div style="font-size:11px;color:var(--tx3)">${p.tipo||"—"} · ${_fmtDt(p.data_encerramento)}</div>
+                </div>
+                ${_statusBadge(p.status)}
+              </div>`).join("")}
+          ${encerrados.length > 6 ? `<div style="margin-top:10px;text-align:right"><button onclick="go('conselho-eleicoes')" style="background:none;border:none;color:var(--sky);font-size:12px;cursor:pointer;font-weight:600">Ver todos →</button></div>` : ""}
+        </div>
+      </div>`;
+  }
+
+  VIEW_AUTOLOAD["eleicoes-dash"] = { fn: () => renderEleicoesDash() };
+
   window.eleicaoInit = async function() {
     const r = _root();
     if (!r) return;
