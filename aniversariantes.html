@@ -38,6 +38,18 @@
     .table-hdr{padding:13px 18px;border-bottom:1px solid #e8f0e8;display:flex;align-items:center;justify-content:space-between}
     .table-ttl{font-size:11px;font-weight:700;color:#6a8870;text-transform:uppercase;letter-spacing:.08em}
     .table-count{font-size:11px;color:#6a8870;background:#f0f7f2;border:1px solid #d0e8d8;border-radius:20px;padding:2px 11px;font-weight:600}
+    /* Destaque — aniversariantes de hoje */
+    .destaques-lbl{font-size:10.5px;font-weight:700;color:#8a6800;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+    .destaques-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:28px}
+    .dest-card{background:linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%);border:2px solid #f59e0b;border-radius:16px;padding:20px 18px;text-align:center;position:relative;overflow:hidden}
+    .dest-card::before{content:"🎉";position:absolute;top:10px;right:12px;font-size:18px;opacity:.5}
+    .dest-av{width:56px;height:56px;border-radius:50%;background:#fff;border:3px solid #f59e0b;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#92400e;margin:0 auto 10px}
+    .dest-nome{font-size:14px;font-weight:700;color:#78350f;line-height:1.3;margin-bottom:4px}
+    .dest-funcao{font-size:11px;color:#a87840;margin-bottom:8px}
+    .dest-idade{display:inline-block;background:#f59e0b;color:#fff;font-size:12px;font-weight:700;border-radius:20px;padding:3px 12px;font-variant-numeric:tabular-nums}
+
+    /* Tabela do mês */
+    .section-lbl{font-size:10.5px;font-weight:700;color:#6a8870;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
     .table-ov{overflow-x:auto}
     table{width:100%;border-collapse:collapse}
     thead tr{background:#f5f8f5;border-bottom:2px solid #c8e0d0}
@@ -45,16 +57,12 @@
     tbody tr{border-bottom:1px solid #eef5f0;transition:background .1s}
     tbody tr:last-child{border-bottom:none}
     tbody tr:hover{background:#f5faf6}
-    tbody tr.hoje{background:#fdf8e8}
-    tbody tr.hoje:hover{background:#fbf3d8}
     td{padding:10px 13px;color:#4a5e50;vertical-align:middle;font-size:12.5px}
 
     .av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;background:#e8f2ec;border:1.5px solid #c0dcc8;color:#1d4d35}
-    .av.gold{background:#fdf3d0;border-color:#e8c84a;color:#8a6800}
     .nome-cell{display:flex;align-items:center;gap:10px}
     .nome-txt{font-weight:600;color:#1a2e22;font-size:13px}
     .nome-sub{font-size:10.5px;color:#8aaa90;margin-top:1px}
-    .badge-hoje{font-size:9px;background:#fdf3d0;color:#8a6800;border:1px solid #e8c84a;border-radius:4px;padding:1px 7px;font-weight:700;margin-left:6px;vertical-align:middle}
     .dia-n{font-size:18px;font-weight:700;color:#1d4d35;font-variant-numeric:tabular-nums;line-height:1}
     .dia-s{font-size:10px;color:#8aaa90;margin-top:2px}
 
@@ -88,7 +96,7 @@
     <div class="month-bar" id="month-bar"></div>
     <div id="kpis-wrap" class="kpis"></div>
     <div id="content"><div id="status">Carregando...</div></div>
-    <div class="foot">SIPEN · Igreja Presbiteriana de Penha · sipen.com.br</div>
+    <div class="foot">SIPEN — Sistema Integrado da IPPenha</div>
   </div>
 
   <script>
@@ -158,19 +166,36 @@
         return;
       }
 
-      const rows=aniv.map(r=>{
+      const isHojeMes = mesAtual===_mesSel;
+      const anivHojeList  = isHojeMes ? aniv.filter(r=>diaOf(r.data_nascimento)===hoje) : [];
+      const anivResto     = isHojeMes ? aniv.filter(r=>diaOf(r.data_nascimento)!==hoje) : aniv;
+
+      // Cards de destaque (apenas quando é o mês atual e tem aniversariantes hoje)
+      const destHtml = anivHojeList.length ? `
+        <div class="destaques-lbl">🎂 Aniversariantes de hoje</div>
+        <div class="destaques-grid">
+          ${anivHojeList.map(r=>`
+            <div class="dest-card">
+              <div class="dest-av">${esc(initials(r.nome))}</div>
+              <div class="dest-nome">${esc(r.nome||"—")}</div>
+              <div class="dest-funcao">${esc(r.funcao||"Membro")}</div>
+              <div class="dest-idade">${idade(r.data_nascimento)} anos</div>
+            </div>`).join("")}
+        </div>` : "";
+
+      // Tabela com o restante do mês
+      const rows=anivResto.map(r=>{
         const dia=diaOf(r.data_nascimento);
-        const isHoje=mesAtual===_mesSel&&dia===hoje;
-        return `<tr class="${isHoje?"hoje":""}">
+        return `<tr>
           <td style="padding-left:18px;text-align:center;min-width:48px">
             <div class="dia-n">${dia}</div>
             <div class="dia-s">${MESES_ABR[_mesSel]}</div>
           </td>
           <td>
             <div class="nome-cell">
-              <div class="av${isHoje?" gold":""}">${esc(initials(r.nome))}</div>
+              <div class="av">${esc(initials(r.nome))}</div>
               <div>
-                <div class="nome-txt">${esc(r.nome||"—")}${isHoje?'<span class="badge-hoje">Hoje 🎉</span>':""}</div>
+                <div class="nome-txt">${esc(r.nome||"—")}</div>
                 <div class="nome-sub">${esc(r.funcao||"Membro")}</div>
               </div>
             </div>
@@ -179,22 +204,26 @@
         </tr>`;
       }).join("");
 
-      content.innerHTML=`<div class="table-wrap">
-        <div class="table-hdr">
-          <span class="table-ttl">${MESES[_mesSel]}</span>
-          <span class="table-count">${aniv.length} membro${aniv.length!==1?"s":""}</span>
-        </div>
-        <div class="table-ov">
-          <table>
-            <thead><tr>
-              <th style="width:56px;padding-left:18px">Dia</th>
-              <th>Nome</th>
-              <th>Idade</th>
-            </tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>
-      </div>`;
+      const tabelaHtml = anivResto.length ? `
+        <div class="section-lbl">Demais aniversariantes de ${MESES[_mesSel]}</div>
+        <div class="table-wrap">
+          <div class="table-hdr">
+            <span class="table-ttl">${MESES[_mesSel]}</span>
+            <span class="table-count">${anivResto.length} membro${anivResto.length!==1?"s":""}</span>
+          </div>
+          <div class="table-ov">
+            <table>
+              <thead><tr>
+                <th style="width:56px;padding-left:18px">Dia</th>
+                <th>Nome</th>
+                <th>Idade</th>
+              </tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>` : "";
+
+      content.innerHTML = destHtml + tabelaHtml;
     }
 
     async function init(){
