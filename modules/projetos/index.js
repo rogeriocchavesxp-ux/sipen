@@ -360,7 +360,96 @@
     window.projInit();
   };
 
+  async function _renderDash() {
+    const el = _view("proj-dash-content");
+    if (!el) return;
+
+    const hoje = _hojeIso();
+    const todos = _lista;
+
+    const total    = todos.length;
+    const andamento= todos.filter(p => p.status === "em_andamento").length;
+    const concluido= todos.filter(p => p.status === "concluido").length;
+    const atrasados= todos.filter(p => p.data_prevista && p.data_prevista < hoje && p.status !== "concluido");
+
+    function _kpi(valor, label, cor) {
+      return `<div class="kpi" style="cursor:default">
+        <div class="kval" style="color:${cor}">${valor}</div>
+        <div class="klbl">${label}</div>
+      </div>`;
+    }
+
+    function _cardProj(r, destaque) {
+      const pr = _progresso(r.projeto_etapas || []);
+      const tipo = TIPO_LABEL[r.tipo] || r.tipo || "—";
+      const atrasado = r.data_prevista && r.data_prevista < hoje && r.status !== "concluido";
+      const borda = destaque ? "var(--rose)" : (PRIO_CFG[r.prioridade]?.cor || "var(--bd2)");
+      return `<div class="card" style="border-left:3px solid ${borda}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+          <div style="min-width:0;flex:1">
+            <div class="ctit" style="margin-bottom:4px">${_eh(r.nome)}</div>
+            <div style="font-size:11px;color:var(--tx3)">${_eh(tipo)} · Responsável: ${_eh(_membroNome(r.responsavel_id))}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
+            ${_badgePrio(r.prioridade)}${_badgeStatus(r.status)}${atrasado ? '<span class="pill pl">Atrasado</span>' : ""}
+            <button class="tbt" onclick="projAbrirDetalhe('${_ea(r.id)}')">Ver</button>
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--tx3);margin-bottom:5px">
+            <span>Progresso</span>
+            <span>${pr.done}/${pr.total} etapas · ${pr.pct}%${r.data_prevista ? " · Previsão: " + _fmtData(r.data_prevista) : ""}</span>
+          </div>
+          <div style="height:5px;background:var(--bg-input);border:1px solid var(--bd1);border-radius:999px;overflow:hidden">
+            <div style="height:100%;width:${pr.pct}%;background:${destaque && pr.pct < 100 ? "var(--rose)" : "var(--gr)"};transition:width .2s"></div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    const emAndamento = todos.filter(p => p.status === "em_andamento" && !(p.data_prevista && p.data_prevista < hoje));
+    const planejamento= todos.filter(p => p.status === "planejamento");
+    const pausados    = todos.filter(p => p.status === "pausado");
+    const concluidos  = todos.filter(p => p.status === "concluido").slice(0, 3);
+
+    function _section(titulo, lista, cor, destaque) {
+      if (!lista.length) return "";
+      return `<div style="margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:${cor};margin-bottom:10px">${titulo} <span style="font-weight:400;opacity:.6">(${lista.length})</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px">${lista.map(r => _cardProj(r, destaque)).join("")}</div>
+      </div>`;
+    }
+
+    el.innerHTML = `
+      <div class="kpis" style="margin-bottom:20px">
+        ${_kpi(total, "Total", "var(--tx1)")}
+        ${_kpi(andamento, "Em andamento", "var(--amber)")}
+        ${_kpi(atrasados.length, "Atrasados", atrasados.length ? "var(--rose)" : "var(--tx3)")}
+        ${_kpi(concluido, "Concluídos", "var(--gr)")}
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+        <button class="tbt" onclick="go('proj-lista')">Ver todos os projetos →</button>
+      </div>
+      ${!total ? `<div class="card" style="text-align:center;color:var(--tx3);padding:40px">Nenhum projeto cadastrado.</div>` : ""}
+      ${_section("Atrasados", atrasados, "var(--rose)", true)}
+      ${_section("Em andamento", emAndamento, "var(--amber)", false)}
+      ${_section("Planejamento", planejamento, "var(--blue)", false)}
+      ${_section("Pausados", pausados, "var(--tx3)", false)}
+      ${concluidos.length ? _section("Concluídos recentemente", concluidos, "var(--gr)", false) : ""}
+    `;
+  }
+
+  window.projDashInit = async function () {
+    const btnNovo = document.getElementById("proj-dash-btn-novo");
+    if (btnNovo) btnNovo.style.display = _podeEditar() ? "" : "none";
+    const el = _view("proj-dash-content");
+    if (el) el.innerHTML = `<div class="card" style="padding:28px;color:var(--tx3)">${_spin()} Carregando projetos...</div>`;
+    try { await _carregarLista(); await _renderDash(); }
+    catch (e) { if (el) el.innerHTML = `<div class="card" style="color:var(--rose);padding:24px">Erro: ${_eh(e.message)}</div>`; }
+  };
+
   document.addEventListener("sipen:navigate", ({ detail: { id } }) => {
     if (id === "proj-lista") window.projInit();
+    if (id === "proj-dash") window.projDashInit();
   });
 })();
