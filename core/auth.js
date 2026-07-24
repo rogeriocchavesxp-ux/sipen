@@ -692,11 +692,7 @@ function aplicarPermissoes() {
     el.style.display = nivel === "SEM_ACESSO" ? "none" : "";
   });
 
-  // Entrada pública de Aniversariantes: sempre visível para qualquer usuário logado
-  const sbAniv = document.getElementById("sb-aniversariantes-pub");
-  if (sbAniv) sbAniv.style.display = "";
-
-  document.querySelectorAll(".mwrap:not([data-modulo])").forEach(mw => {
+document.querySelectorAll(".mwrap:not([data-modulo])").forEach(mw => {
     mw.style.display = isAdminTotal ? "" : "none";
   });
 
