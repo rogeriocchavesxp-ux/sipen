@@ -129,26 +129,50 @@
           </div>
           <div class="msub" id="ms-memb">
 
-            <div class="sb-grp-lbl">Membros</div>
-            <div class="si" onclick="go('memb-cad')">Cadastro de Membros</div>
-            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-com')">Comungantes</div>
-            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-ncom')">Não Comungantes</div>
-            <div class="sdiv" data-memb-adm="1"></div>
-            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-bat')">Batismos</div>
-            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-prof')">Profissões de Fé</div>
-            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-trans')">Transferências</div>
-            <div class="si si-mob" data-memb-adm="1" onclick="go('memb-hist')">Histórico de Membros</div>
-            <div class="si" onclick="go('memb-aniv')">Aniversariantes</div>
+            <!-- Membros -->
+            <div class="mwrap" id="mw-sec-memb" style="margin:0">
+              <div class="mhdr sb-grp-hdr open" onclick="tog('sec-memb','memb-cad')">
+                <span>Membros</span>
+                <span class="marr">▶</span>
+              </div>
+              <div class="msub open" id="ms-sec-memb">
+                <div class="si" onclick="go('memb-cad')">Cadastro de Membros</div>
+                <div class="si si-mob" data-memb-adm="1" onclick="go('memb-com')">Comungantes</div>
+                <div class="si si-mob" data-memb-adm="1" onclick="go('memb-ncom')">Não Comungantes</div>
+                <div class="sdiv" data-memb-adm="1"></div>
+                <div class="si si-mob" data-memb-adm="1" onclick="go('memb-bat')">Batismos</div>
+                <div class="si si-mob" data-memb-adm="1" onclick="go('memb-prof')">Profissões de Fé</div>
+                <div class="si si-mob" data-memb-adm="1" onclick="go('memb-trans')">Transferências</div>
+                <div class="si si-mob" data-memb-adm="1" onclick="go('memb-hist')">Histórico de Membros</div>
+                <div class="si" onclick="go('memb-aniv')">Aniversariantes</div>
+              </div>
+            </div>
 
-            <div class="sb-grp-lbl" style="cursor:pointer;padding-top:14px" onclick="go('conselho-dash')">Conselho</div>
-            <div class="si" onclick="go('pautas-reunioes')">Reuniões</div>
-            <div class="si" onclick="go('conselho-doc')">Documentos</div>
-            <div class="si" onclick="go('conselho-com')">Comissões</div>
-            <div class="si" onclick="go('conselho-resolucoes')">Resoluções</div>
-            <div class="si" onclick="go('conselho-demandas-cons')">Demandas</div>
+            <!-- Conselho -->
+            <div class="mwrap" id="mw-sec-conselho" style="margin:0">
+              <div class="mhdr sb-grp-hdr open" onclick="tog('sec-conselho','conselho-dash')">
+                <span>Conselho</span>
+                <span class="marr">▶</span>
+              </div>
+              <div class="msub open" id="ms-sec-conselho">
+                <div class="si" onclick="go('pautas-reunioes')">Reuniões</div>
+                <div class="si" onclick="go('conselho-doc')">Documentos</div>
+                <div class="si" onclick="go('conselho-com')">Comissões</div>
+                <div class="si" onclick="go('conselho-resolucoes')">Resoluções</div>
+                <div class="si" onclick="go('conselho-demandas-cons')">Demandas</div>
+              </div>
+            </div>
 
-            <div class="sb-grp-lbl" style="cursor:pointer;padding-top:14px" onclick="go('eleicoes-dash')">Eleições</div>
-            <div class="si" onclick="go('conselho-eleicoes')">Indicações Eleitorais</div>
+            <!-- Eleições -->
+            <div class="mwrap" id="mw-sec-eleicoes" style="margin:0">
+              <div class="mhdr sb-grp-hdr open" onclick="tog('sec-eleicoes','eleicoes-dash')">
+                <span>Eleições</span>
+                <span class="marr">▶</span>
+              </div>
+              <div class="msub open" id="ms-sec-eleicoes">
+                <div class="si" onclick="go('conselho-eleicoes')">Indicações Eleitorais</div>
+              </div>
+            </div>
           </div>
         </div>
 
