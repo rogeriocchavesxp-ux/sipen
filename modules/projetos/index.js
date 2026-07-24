@@ -339,7 +339,7 @@
     if (!nome?.trim()) return;
     try {
       const ordem = (_atual.projeto_etapas || []).length + 1;
-      await _fetchJson(`${_api()}/rest/v1/projeto_etapas`, { method:"POST", headers:_headers({ "Prefer":"return=minimal" }), body:JSON.stringify({ projeto_id:_atual.id, nome:nome.trim(), ordem }) });
+      await _fetchJson(`${_api()}/rest/v1/projeto_etapas`, { method:"POST", headers:_headers({ "Content-Type":"application/json", "Prefer":"return=minimal" }), body:JSON.stringify({ projeto_id:_atual.id, nome:nome.trim(), ordem, created_by: _user()?.id || null }) });
       await window.projAbrirDetalhe(_atual.id);
     } catch(e) { _toast("Erro", e.message); }
   };
