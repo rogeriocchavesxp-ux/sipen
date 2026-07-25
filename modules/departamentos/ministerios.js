@@ -2493,7 +2493,11 @@
             const tdAcoes = podeAct
               ? `<td style="padding:7px 8px;text-align:right">
                    <div style="position:relative;display:inline-block">
-                     <button onclick="minMinMembroKebab(this,'${mb.id}','${ativo ? 'inativo' : 'ativo'}',${JSON.stringify(funcao).replace(/'/g,"\\'")})"
+                     <button onclick="minMinMembroKebab(this)"
+                       data-id="${mb.id}"
+                       data-novo-status="${ativo ? 'inativo' : 'ativo'}"
+                       data-funcao="${funcao.replace(/"/g,'&quot;')}"
+                       data-ativo="${ativo}"
                        style="background:none;border:1px solid var(--bd2);border-radius:5px;color:var(--tx2);font-size:15px;padding:2px 7px;cursor:pointer;line-height:1">⋯</button>
                    </div>
                  </td>`
@@ -3097,8 +3101,12 @@
     }
   }
 
-  function minMinMembroKebab(btn, id, novoStatus, funcaoAtual) {
-    // Fecha qualquer dropdown aberto
+  function minMinMembroKebab(btn) {
+    const id         = btn.dataset.id;
+    const novoStatus = btn.dataset.novoStatus;
+    const funcao     = btn.dataset.funcao;
+    const ativo      = btn.dataset.ativo === 'true';
+
     document.querySelectorAll('.min-kebab-menu').forEach(m => {
       if (m !== btn._kebabMenu) m.remove();
     });
@@ -3107,17 +3115,30 @@
       btn._kebabMenu = null;
       return;
     }
-    const ativo = novoStatus === 'inativo'; // novoStatus é o PRÓXIMO status, logo se é 'inativo' o atual é ativo
     const menu = document.createElement('div');
     menu.className = 'min-kebab-menu';
     menu.style.cssText = 'position:absolute;right:0;top:100%;z-index:9999;background:var(--bg2);border:1px solid var(--bd2);border-radius:7px;box-shadow:0 4px 16px rgba(0,0,0,.15);min-width:150px;overflow:hidden;margin-top:2px';
-    menu.innerHTML = `
-      <button onclick="minMinEditarMembro('${id}',${JSON.stringify(funcaoAtual)})" style="display:block;width:100%;text-align:left;padding:9px 14px;background:none;border:none;font-size:13px;color:var(--tx1);cursor:pointer">Editar função</button>
-      <button onclick="minMinToggleMembroStatus('${id}','${novoStatus}')" style="display:block;width:100%;text-align:left;padding:9px 14px;background:none;border:none;font-size:13px;color:var(--tx1);cursor:pointer">${ativo ? 'Inativar' : 'Reativar'}</button>
-      <button onclick="minMinRemoverMembro('${id}')" style="display:block;width:100%;text-align:left;padding:9px 14px;background:none;border:none;font-size:13px;color:var(--rose);cursor:pointer">Remover</button>`;
+
+    const btnEditar = document.createElement('button');
+    btnEditar.textContent = 'Editar função';
+    btnEditar.style.cssText = 'display:block;width:100%;text-align:left;padding:9px 14px;background:none;border:none;font-size:13px;color:var(--tx1);cursor:pointer';
+    btnEditar.onclick = () => minMinEditarMembro(id, funcao);
+
+    const btnToggle = document.createElement('button');
+    btnToggle.textContent = ativo ? 'Inativar' : 'Reativar';
+    btnToggle.style.cssText = 'display:block;width:100%;text-align:left;padding:9px 14px;background:none;border:none;font-size:13px;color:var(--tx1);cursor:pointer';
+    btnToggle.onclick = () => minMinToggleMembroStatus(id, novoStatus);
+
+    const btnRemover = document.createElement('button');
+    btnRemover.textContent = 'Remover';
+    btnRemover.style.cssText = 'display:block;width:100%;text-align:left;padding:9px 14px;background:none;border:none;font-size:13px;color:var(--rose);cursor:pointer';
+    btnRemover.onclick = () => minMinRemoverMembro(id);
+
+    menu.append(btnEditar, btnToggle, btnRemover);
     btn.parentElement.style.position = 'relative';
     btn.parentElement.appendChild(menu);
     btn._kebabMenu = menu;
+
     setTimeout(() => {
       document.addEventListener('click', function handler(e) {
         if (!menu.contains(e.target) && e.target !== btn) {
