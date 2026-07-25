@@ -88,7 +88,7 @@ function renderMembrosTable(rows, containerId) {
               <td style="padding:8px 10px;color:var(--tx2);font-size:11px;white-space:nowrap">${fmtDate(row.data_nascimento)}</td>
               <td style="padding:8px 10px;color:var(--tx2);font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${row.email ? escapeHtml(row.email) : "—"}</td>
               <td style="padding:8px 10px;text-align:right;white-space:nowrap">
-                ${_podeEditarMembresia() ? `<button onclick='openCrudForm("MEMBROS",${safeJsonForHtml(row)})' style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:10px;padding:3px 8px;cursor:pointer;margin-right:4px" title="Editar">✏️</button>` : ""}
+                ${_podeEditarMembresia() ? `<button onclick='openNovoMembro("${escapeHtml(row.id || "")}")' style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:10px;padding:3px 8px;cursor:pointer;margin-right:4px" title="Editar">✏️</button>` : ""}
                 ${_podeExcluirMembresia() ? `<button onclick='deletarRegistro("MEMBROS","${escapeHtml(row.id || "")}")' style="background:rgba(224,85,85,0.08);border:1px solid rgba(224,85,85,0.18);border-radius:4px;color:var(--rose);font-size:10px;padding:3px 8px;cursor:pointer" title="Remover">🗑</button>` : ""}
               </td>
             </tr>`;
