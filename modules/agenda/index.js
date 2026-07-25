@@ -55,6 +55,88 @@ async function agSalasSelectPopular(id) {
   }
 }
 
+/* ── AUTOCOMPLETE DE PESSOAS (organizador / responsável) ─────── */
+const _agBuscaTimer = {};
+
+function _agAutocompleteHtml(campo, labelTxt, valorInicial, fi) {
+  return `
+    <div>
+      <label style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:5px">${labelTxt}</label>
+      <div style="position:relative">
+        <input id="ag-f-${campo}" type="text" value="${escapeHtml(valorInicial)}" autocomplete="off"
+          placeholder="Digite para buscar..."
+          oninput="_agBuscarPessoa('${campo}',this.value)"
+          onblur="_agFecharDropdown('${campo}')"
+          style="${fi}">
+        <div id="ag-dd-${campo}" style="display:none;position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--bg-card);border:1px solid var(--bd2);border-radius:7px;box-shadow:0 6px 20px rgba(0,0,0,.18);z-index:500;max-height:180px;overflow-y:auto"></div>
+      </div>
+      <input type="hidden" id="ag-f-${campo}-tel" value="">
+    </div>`;
+}
+
+window._agBuscarPessoa = function(campo, query) {
+  clearTimeout(_agBuscaTimer[campo]);
+  const dd = document.getElementById(`ag-dd-${campo}`);
+  if (!dd) return;
+  const q = query.trim();
+  if (q.length < 2) { dd.style.display = "none"; return; }
+  document.getElementById(`ag-f-${campo}-tel`)?.setAttribute("value", "");
+  _agBuscaTimer[campo] = setTimeout(async () => {
+    try {
+      const res = await fetch(
+        `${apiBaseUrl()}/rest/v1/pessoas?nome=ilike.*${encodeURIComponent(q)}*&select=id,nome,whatsapp,celular,telefone&deleted_at=is.null&order=nome.asc&limit=8`,
+        { headers: apiHeaders() }
+      );
+      const rows = res.ok ? await res.json() : [];
+      if (!rows.length) {
+        dd.innerHTML = `<div style="padding:9px 12px;color:var(--tx3);font-size:11.5px">Nenhuma pessoa encontrada</div>`;
+      } else {
+        dd.innerHTML = rows.map(p => {
+          const tel = p.whatsapp || p.celular || p.telefone || "";
+          return `<div onmousedown="_agSelecionarPessoa('${campo}','${escapeHtml(p.nome).replace(/'/g,"\\'")}','${tel.replace(/'/g,"\\'")}') "
+            style="padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--bd1)"
+            onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+            <div style="font-size:12px;font-weight:600;color:var(--tx1)">${escapeHtml(p.nome)}</div>
+            ${tel ? `<div style="font-size:10px;color:var(--tx3);margin-top:1px">${escapeHtml(tel)}</div>` : ""}
+          </div>`;
+        }).join("");
+      }
+      dd.style.display = "block";
+    } catch(_) { dd.style.display = "none"; }
+  }, 280);
+};
+
+window._agSelecionarPessoa = function(campo, nome, tel) {
+  const inp = document.getElementById(`ag-f-${campo}`);
+  const telInp = document.getElementById(`ag-f-${campo}-tel`);
+  const dd = document.getElementById(`ag-dd-${campo}`);
+  if (inp) inp.value = nome;
+  if (telInp) telInp.value = tel;
+  if (dd) dd.style.display = "none";
+};
+
+window._agFecharDropdown = function(campo) {
+  setTimeout(() => {
+    const dd = document.getElementById(`ag-dd-${campo}`);
+    if (dd) dd.style.display = "none";
+  }, 150);
+};
+
+// Pré-carrega telefone silenciosamente ao abrir form de edição
+async function _agPreencherTelSilent(campo, nome) {
+  if (!nome) return;
+  try {
+    const res = await fetch(
+      `${apiBaseUrl()}/rest/v1/pessoas?nome=ilike.${encodeURIComponent(nome)}&select=whatsapp,celular,telefone&deleted_at=is.null&limit=1`,
+      { headers: apiHeaders() }
+    );
+    const rows = res.ok ? await res.json() : [];
+    const tel = rows[0]?.whatsapp || rows[0]?.celular || rows[0]?.telefone || "";
+    const el = document.getElementById(`ag-f-${campo}-tel`);
+    if (el && tel) el.value = tel;
+  } catch(_) {}
+}
+
 /* ── FORMULÁRIO CUSTOMIZADO DE AGENDA ────────────────────────── */
 const AG_TIPOS_COR = {
   "Culto":       "#dc2626",
@@ -227,8 +309,8 @@ async function agAbrirForm(r = null) {
 
         <!-- Organizador / Responsável -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div>${lbl("Organizador")}<input id="ag-f-organizador" type="text" value="${escapeHtml(r?.organizador||"")}" style="${fi}"></div>
-          <div>${lbl("Responsável")}<input id="ag-f-responsavel" type="text" value="${escapeHtml(r?.responsavel||"")}" style="${fi}"></div>
+          ${_agAutocompleteHtml("organizador", "Organizador", r?.organizador||"", fi)}
+          ${_agAutocompleteHtml("responsavel", "Responsável", r?.responsavel||"", fi)}
         </div>
 
         <!-- Solicitante / Telefone -->
@@ -286,20 +368,24 @@ async function agAbrirForm(r = null) {
       document.getElementById("ag-f-tipo").value = btn.dataset.tipo;
     });
   });
+
+  // Ao editar, pré-carrega telefones do organizador e responsável
+  if (isEdit) {
+    _agPreencherTelSilent("organizador", r?.organizador);
+    _agPreencherTelSilent("responsavel", r?.responsavel);
+  }
 }
 window.agAbrirForm = agAbrirForm;
 
-// Notifica todos os responsáveis do módulo AGENDA via WhatsApp
-async function _agNotificarResponsaveis(acao, evento) {
+// Notifica responsáveis do módulo AGENDA + organizador + responsável via WhatsApp
+async function _agNotificarResponsaveis(acao, evento, extras = {}) {
   if (typeof WA === "undefined") return;
   try {
     const res = await fetch(
       `${apiBaseUrl()}/rest/v1/whatsapp_modulo_responsaveis?modulo=eq.AGENDA&ativo=eq.true&select=id,pessoas(nome,celular,whatsapp,telefone)`,
       { headers: apiHeaders() }
     );
-    if (!res.ok) return;
-    const resps = await res.json();
-    if (!resps.length) return;
+    const resps = res.ok ? await res.json() : [];
 
     const fmtD = d => { if (!d) return ""; const [y,m,dia] = String(d).slice(0,10).split("-"); return `${dia}/${m}/${y}`; };
     const fmtH = h => h ? String(h).slice(0,5) : "";
@@ -308,30 +394,40 @@ async function _agNotificarResponsaveis(acao, evento) {
     const espaco  = evento.espaco ? `\n📍 ${evento.espaco}` : "";
 
     const acoes = {
-      criado:  `✅ *Novo evento agendado*`,
-      editado: `✏️ *Evento atualizado*`,
-      excluido:`🗑 *Evento removido da agenda*`,
+      criado:   `✅ *Novo evento agendado*`,
+      editado:  `✏️ *Evento atualizado*`,
+      excluido: `🗑 *Evento removido da agenda*`,
     };
-    const cabecalho = acoes[acao] || `📋 *Agenda*`;
-
-    const msg = `${cabecalho}\n\n`
+    const msg = `${acoes[acao] || "📋 *Agenda*"}\n\n`
       + `📌 *${evento.titulo || "—"}*\n`
-      + (data    ? `📅 ${data}${horario ? " às " + horario : ""}\n` : "")
+      + (data ? `📅 ${data}${horario ? " às " + horario : ""}\n` : "")
       + espaco
       + (evento.tipo ? `\n🏷 ${evento.tipo}` : "")
       + `\n\n_Enviado automaticamente pelo SIPEN_`;
 
+    // Monta lista de destinatários: responsáveis do módulo + organizador + responsável do evento
+    const destinatarios = [];
     for (const r of resps) {
       const tel = r.pessoas?.whatsapp || r.pessoas?.celular || r.pessoas?.telefone;
-      if (!tel) continue;
+      if (tel) destinatarios.push({ tel, nome: r.pessoas?.nome || "" });
+    }
+    if (extras.orgTel) destinatarios.push({ tel: extras.orgTel, nome: evento.organizador || "Organizador" });
+    if (extras.respTel) destinatarios.push({ tel: extras.respTel, nome: evento.responsavel || "Responsável" });
+
+    // Remove duplicatas por número
+    const vistos = new Set();
+    for (const d of destinatarios) {
+      const num = (d.tel || "").replace(/\D/g, "");
+      if (!num || vistos.has(num)) continue;
+      vistos.add(num);
       WA.send({
-        para:        tel,
-        nome:        r.pessoas?.nome || "",
-        mensagem:    msg,
-        modulo:      "AGENDA",
-        referenciaT: "evento",
+        para:         d.tel,
+        nome:         d.nome,
+        mensagem:     msg,
+        modulo:       "AGENDA",
+        referenciaT:  "evento",
         referenciaId: evento.id || null,
-        chave:       `AGENDA_${acao}_${evento.id || "novo"}_${Date.now()}`,
+        chave:        `AGENDA_${acao}_${evento.id || "novo"}_${num}`,
       });
     }
   } catch(e) {
@@ -391,7 +487,9 @@ async function agSalvarForm(id) {
       });
     }
     // Notifica responsáveis do módulo AGENDA via WhatsApp
-    _agNotificarResponsaveis(isEdit ? "editado" : "criado", { ...payload, id: novoId || id });
+    const orgTel  = document.getElementById("ag-f-organizador-tel")?.value || "";
+    const respTel = document.getElementById("ag-f-responsavel-tel")?.value || "";
+    _agNotificarResponsaveis(isEdit ? "editado" : "criado", { ...payload, id: novoId || id }, { orgTel, respTel });
     document.getElementById("ag-form-modal").style.display = "none";
     T("Salvo", isEdit ? "Evento atualizado." : "Evento criado e enviado para Programações.");
     if (typeof carregarAgendaDash === "function") carregarAgendaDash();
