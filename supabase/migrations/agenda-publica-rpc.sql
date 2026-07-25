@@ -37,6 +37,7 @@ AS $$
     recorrencia
   FROM public.agenda
   WHERE status = 'confirmado'
+    AND visibilidade = 'publica'
     AND deleted_at IS NULL
   ORDER BY data ASC, hora_inicio ASC
   LIMIT 1000;
