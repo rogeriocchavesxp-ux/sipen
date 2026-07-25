@@ -8,6 +8,7 @@ DROP POLICY IF EXISTS "agenda_anon_select"   ON public.agenda;
 DROP POLICY IF EXISTS "agenda_public_select" ON public.agenda;
 
 -- Função SECURITY DEFINER: executa como owner, ignora RLS
+DROP FUNCTION IF EXISTS public.agenda_publica();
 CREATE OR REPLACE FUNCTION public.agenda_publica()
 RETURNS TABLE (
   id           UUID,
