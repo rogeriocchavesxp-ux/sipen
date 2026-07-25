@@ -283,14 +283,26 @@ const WA_CFG = (function(){
     if(q.length < 2){ el.innerHTML = ""; return; }
 
     el.innerHTML = `<div style="color:var(--tx3);font-size:11px;padding:4px 0">Buscando...</div>`;
-    const rows = await _fetch(
-      `/rest/v1/pessoas?select=id,nome,celular,whatsapp,telefone&nome=ilike.*${encodeURIComponent(q)}*&limit=8&order=nome`
+    const raw = await _fetch(
+      `/rest/v1/pessoas?select=id,nome,celular,whatsapp,telefone&nome=ilike.*${encodeURIComponent(q)}*&limit=20&order=nome`
     );
 
-    if(!rows || !rows.length){
+    if(!raw || !raw.length){
       el.innerHTML = `<div style="color:var(--tx3);font-size:11px;padding:4px 0">Nenhuma pessoa encontrada</div>`;
       return;
     }
+
+    // Deduplica por nome normalizado; mantém o registro com telefone preenchido
+    const seen = new Map();
+    for (const p of raw) {
+      const key = p.nome.toLowerCase().replace(/\s+/g, " ").trim();
+      if (!seen.has(key)) {
+        seen.set(key, p);
+      } else if (!seen.get(key).whatsapp && !seen.get(key).celular && (p.whatsapp || p.celular)) {
+        seen.set(key, p);
+      }
+    }
+    const rows = [...seen.values()].slice(0, 8);
 
     el.innerHTML = rows.map(p => {
       const tel = p.whatsapp || p.celular || p.telefone || "";
