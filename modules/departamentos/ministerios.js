@@ -2473,7 +2473,7 @@
       }
 
       const podeAct = _podeEditar();
-      const thAcoes = podeAct ? '<th style="padding:6px 8px;color:var(--tx3);font-weight:600">Ações</th>' : '';
+      const thAcoes = podeAct ? '<th style="width:40px;padding:6px 8px"></th>' : '';
 
       el.innerHTML = `
         <table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -2485,26 +2485,22 @@
           </tr></thead>
           <tbody>${lista.map(mb => {
             const nome   = (mb.pessoas?.nome  || '—').toUpperCase();
-            const funcao = mb.funcao          || 'Membro';
+            const funcao = mb.funcao || 'Membro';
             const ativo  = mb.status !== 'inativo';
             const stTag  = ativo
               ? '<span style="font-size:11px;padding:2px 7px;background:var(--greenbg,#d1fae5);color:var(--green,#059669);border-radius:20px">Ativo</span>'
               : '<span style="font-size:11px;padding:2px 7px;background:#fee2e2;color:var(--rose);border-radius:20px">Inativo</span>';
             const tdAcoes = podeAct
-              ? `<td style="padding:7px 8px;white-space:nowrap">
-                   <button onclick="minMinToggleMembroStatus('${mb.id}','${ativo ? 'inativo' : 'ativo'}')"
-                     class="tbt" style="font-size:11px;padding:3px 8px;margin-right:4px">
-                     ${ativo ? 'Inativar' : 'Reativar'}
-                   </button>
-                   <button onclick="minMinRemoverMembro('${mb.id}')"
-                     class="tbt" style="font-size:11px;padding:3px 8px;color:var(--rose);border-color:var(--rose)">
-                     Remover
-                   </button>
+              ? `<td style="padding:7px 8px;text-align:right">
+                   <div style="position:relative;display:inline-block">
+                     <button onclick="minMinMembroKebab(this,'${mb.id}','${ativo ? 'inativo' : 'ativo'}',${JSON.stringify(funcao).replace(/'/g,"\\'")})"
+                       style="background:none;border:1px solid var(--bd2);border-radius:5px;color:var(--tx2);font-size:15px;padding:2px 7px;cursor:pointer;line-height:1">⋯</button>
+                   </div>
                  </td>`
               : '';
             return `<tr style="border-bottom:1px solid var(--bd1)">
               <td style="padding:7px 8px;color:var(--tx1);font-weight:500">${nome}</td>
-              <td style="padding:7px 8px;color:var(--tx2)">${funcao}</td>
+              <td style="padding:7px 8px;color:var(--tx2)">${escH(funcao)}</td>
               <td style="padding:7px 8px">${stTag}</td>
               ${tdAcoes}
             </tr>`;
@@ -3101,6 +3097,75 @@
     }
   }
 
+  function minMinMembroKebab(btn, id, novoStatus, funcaoAtual) {
+    // Fecha qualquer dropdown aberto
+    document.querySelectorAll('.min-kebab-menu').forEach(m => {
+      if (m !== btn._kebabMenu) m.remove();
+    });
+    if (btn._kebabMenu && document.contains(btn._kebabMenu)) {
+      btn._kebabMenu.remove();
+      btn._kebabMenu = null;
+      return;
+    }
+    const ativo = novoStatus === 'inativo'; // novoStatus é o PRÓXIMO status, logo se é 'inativo' o atual é ativo
+    const menu = document.createElement('div');
+    menu.className = 'min-kebab-menu';
+    menu.style.cssText = 'position:absolute;right:0;top:100%;z-index:9999;background:var(--bg2);border:1px solid var(--bd2);border-radius:7px;box-shadow:0 4px 16px rgba(0,0,0,.15);min-width:150px;overflow:hidden;margin-top:2px';
+    menu.innerHTML = `
+      <button onclick="minMinEditarMembro('${id}',${JSON.stringify(funcaoAtual)})" style="display:block;width:100%;text-align:left;padding:9px 14px;background:none;border:none;font-size:13px;color:var(--tx1);cursor:pointer">Editar função</button>
+      <button onclick="minMinToggleMembroStatus('${id}','${novoStatus}')" style="display:block;width:100%;text-align:left;padding:9px 14px;background:none;border:none;font-size:13px;color:var(--tx1);cursor:pointer">${ativo ? 'Inativar' : 'Reativar'}</button>
+      <button onclick="minMinRemoverMembro('${id}')" style="display:block;width:100%;text-align:left;padding:9px 14px;background:none;border:none;font-size:13px;color:var(--rose);cursor:pointer">Remover</button>`;
+    btn.parentElement.style.position = 'relative';
+    btn.parentElement.appendChild(menu);
+    btn._kebabMenu = menu;
+    setTimeout(() => {
+      document.addEventListener('click', function handler(e) {
+        if (!menu.contains(e.target) && e.target !== btn) {
+          menu.remove();
+          btn._kebabMenu = null;
+          document.removeEventListener('click', handler);
+        }
+      });
+    }, 10);
+  }
+
+  function minMinEditarMembro(id, funcaoAtual) {
+    document.querySelectorAll('.min-kebab-menu').forEach(m => m.remove());
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center';
+    modal.innerHTML = `
+      <div style="background:var(--bg2);border-radius:10px;padding:24px;width:320px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+        <p style="margin:0 0 14px;font-size:14px;font-weight:600;color:var(--tx1)">Editar função</p>
+        <input id="min-edit-funcao" type="text" value="${escH(funcaoAtual)}"
+          style="width:100%;padding:8px 10px;border:1px solid var(--bd2);border-radius:6px;font-size:13px;background:var(--bg1);color:var(--tx1);box-sizing:border-box"
+          placeholder="Ex.: Líder, Tesoureiro, Membro...">
+        <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
+          <button onclick="this.closest('[style*=fixed]').remove()"
+            class="tbt" style="font-size:12px;padding:5px 14px">Cancelar</button>
+          <button onclick="minMinSalvarFuncao('${id}')"
+            class="tbt" style="font-size:12px;padding:5px 14px;background:var(--accent);color:#fff;border-color:var(--accent)">Salvar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    setTimeout(() => document.getElementById('min-edit-funcao')?.focus(), 50);
+  }
+
+  async function minMinSalvarFuncao(id) {
+    const input = document.getElementById('min-edit-funcao');
+    const funcao = input?.value?.trim();
+    if (!funcao) { input?.focus(); return; }
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_membros?id=eq.${id}`, {
+        method: 'PATCH', headers: _hdrJson(), body: JSON.stringify({ funcao }),
+      });
+      if (!r.ok) throw new Error(r.status);
+      document.querySelector('[style*="fixed"][style*="10000"]')?.remove();
+      await _carregarMembros(_ministerioAtual);
+    } catch (e) {
+      alert('Erro ao salvar: ' + e.message);
+    }
+  }
+
   async function minMinAdicionarMembroSetor() {
     const pessoaId = document.getElementById('mst-add-pessoa').value;
     if (!pessoaId) { _showErr('mst-membros-err', 'Selecione uma pessoa.'); return; }
@@ -3258,6 +3323,9 @@
   window.minMinAdicionarMembro    = minMinAdicionarMembro;
   window.minMinToggleMembroStatus = minMinToggleMembroStatus;
   window.minMinRemoverMembro      = minMinRemoverMembro;
+  window.minMinMembroKebab        = minMinMembroKebab;
+  window.minMinEditarMembro       = minMinEditarMembro;
+  window.minMinSalvarFuncao       = minMinSalvarFuncao;
   window.minMinNovoSetor          = minMinNovoSetor;
   window.minMinEditarSetor        = minMinEditarSetor;
   window.minMinToggleSetorStatus    = minMinToggleSetorStatus;
