@@ -390,7 +390,13 @@ async function salvarRegistro(tab, recordId = null) {
 
     T("✅ Registro salvo!", recordId ? "Alteração gravada no Supabase" : "Novo registro criado no Supabase");
     modal.remove();
-    if (["MEMBROS","VISITANTES"].includes(tab)) _invalidarCacheMembresia();
+    if (["MEMBROS","VISITANTES"].includes(tab)) {
+      _invalidarCacheMembresia();
+      if (typeof listarMembros === "function") {
+        if (document.getElementById("memb-cad-list"))   listarMembros("memb-cad-list",   "memb-cad-count");
+        if (document.getElementById("sec-list"))         listarMembros("sec-list",         null);
+      }
+    }
     if (tab === "AGENDA" && typeof window.carregarAgendaDash === "function") await window.carregarAgendaDash();
     if (currentListTab === tab) await listarAba(tab);
     await loadKPIs();
@@ -409,7 +415,13 @@ async function deletarRegistro(tab, recordId) {
   try {
     await apiWrite("delete", tab, { _row: recordId });
     T("🗑 Registro excluído", `${SCHEMA.labels[tab] || tab} removido`);
-    if (["MEMBROS","VISITANTES"].includes(tab)) _invalidarCacheMembresia();
+    if (["MEMBROS","VISITANTES"].includes(tab)) {
+      _invalidarCacheMembresia();
+      if (typeof listarMembros === "function") {
+        if (document.getElementById("memb-cad-list")) listarMembros("memb-cad-list", "memb-cad-count");
+        if (document.getElementById("sec-list"))      listarMembros("sec-list",       null);
+      }
+    }
     if (currentListTab === tab) await listarAba(tab);
     await loadKPIs();
   } catch (e) {
