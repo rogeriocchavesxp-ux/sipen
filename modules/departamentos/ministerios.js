@@ -2500,7 +2500,7 @@
               : '';
             return `<tr style="border-bottom:1px solid var(--bd1)">
               <td style="padding:7px 8px;color:var(--tx1);font-weight:500">${nome}</td>
-              <td style="padding:7px 8px;color:var(--tx2)">${escH(funcao)}</td>
+              <td style="padding:7px 8px;color:var(--tx2)">${funcao}</td>
               <td style="padding:7px 8px">${stTag}</td>
               ${tdAcoes}
             </tr>`;
@@ -3136,7 +3136,7 @@
     modal.innerHTML = `
       <div style="background:var(--bg2);border-radius:10px;padding:24px;width:320px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
         <p style="margin:0 0 14px;font-size:14px;font-weight:600;color:var(--tx1)">Editar função</p>
-        <input id="min-edit-funcao" type="text" value="${escH(funcaoAtual)}"
+        <input id="min-edit-funcao" type="text"
           style="width:100%;padding:8px 10px;border:1px solid var(--bd2);border-radius:6px;font-size:13px;background:var(--bg1);color:var(--tx1);box-sizing:border-box"
           placeholder="Ex.: Líder, Tesoureiro, Membro...">
         <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
@@ -3146,6 +3146,8 @@
             class="tbt" style="font-size:12px;padding:5px 14px;background:var(--accent);color:#fff;border-color:var(--accent)">Salvar</button>
         </div>
       </div>`;
+    const inp = modal.querySelector('#min-edit-funcao');
+    if (inp) inp.value = funcaoAtual || '';
     document.body.appendChild(modal);
     setTimeout(() => document.getElementById('min-edit-funcao')?.focus(), 50);
   }
