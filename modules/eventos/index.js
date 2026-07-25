@@ -501,7 +501,7 @@
   }
 
   function _trInscricao(i, evt, isAdmin) {
-    const tipoLabels = { membro: "Membro", nao_membro: "Não membro", visitante: "Visitante", crianca: "Criança", adolescente: "Adolescente" };
+    const tipoLabels = { membro: "Membro da IPPenha", nao_membro: "Membro de outra Igreja", visitante: "Visitante", crianca: "Criança", adolescente: "Adolescente" };
     return `<tr>
       <td style="padding:10px 8px">
         <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${_eh(i.nome)}</div>
@@ -681,7 +681,7 @@
     const fH = h => h ? String(h).slice(0,5) : "";
     const fM = v => v != null ? "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : "—";
 
-    const TIPO_LBL   = { membro:"Membro", nao_membro:"Não membro", visitante:"Visitante", crianca:"Criança", adolescente:"Adolescente" };
+    const TIPO_LBL   = { membro:"Membro da IPPenha", nao_membro:"Membro de outra Igreja", visitante:"Visitante", crianca:"Criança", adolescente:"Adolescente" };
     const STATUS_LBL = { pendente:"Pendente", confirmada:"Confirmada", cancelada:"Cancelada", presente:"Presente", ausente:"Ausente" };
     const STATUS_COR = { pendente:"#B45309", confirmada:"#1D4ED8", presente:"#15803D", cancelada:"#6B7280", ausente:"#6B7280" };
 
@@ -1321,7 +1321,7 @@ tr:nth-child(even) td{background:#f9fafb}
         ${opts.map(([k, v]) => `<option value="${_ea(k)}"${k === defVal ? " selected" : ""}>${_eh(v)}</option>`).join("")}
       </select></div>`;
 
-    const tipoOpts = [["membro","Membro"],["nao_membro","Não membro"],["visitante","Visitante"],["crianca","Criança"],["adolescente","Adolescente"]];
+    const tipoOpts = [["membro","Membro da IPPenha"],["nao_membro","Membro de outra Igreja"],["visitante","Visitante"],["crianca","Criança (até 11 anos)"],["adolescente","Adolescente (12–17 anos)"]];
     const statusOpts = Object.entries(STATUS_INSCR).map(([k, v]) => [k, v.label]);
     const respHidden = inscr?.tipo === "crianca" || inscr?.tipo === "adolescente" ? "block" : "none";
 
@@ -1704,7 +1704,7 @@ tr:nth-child(even) td{background:#f9fafb}
             <th style="width:80px;text-align:center">Assinatura</th>
           </tr></thead>
           <tbody>${inscrs.map((i, n) => {
-            const tipoLabels = { membro: "Membro", nao_membro: "Não membro", visitante: "Visitante", crianca: "Criança", adolescente: "Adolescente" };
+            const tipoLabels = { membro: "Membro da IPPenha", nao_membro: "Membro de outra Igreja", visitante: "Visitante", crianca: "Criança", adolescente: "Adolescente" };
             return `<tr>
               <td style="padding:9px 8px;font-size:11px;color:var(--tx3)">${n + 1}</td>
               <td style="padding:9px 8px;font-size:12.5px;font-weight:600;color:var(--tx1)">${_eh(i.nome)}</td>
@@ -1761,7 +1761,7 @@ tr:nth-child(even) td{background:#f9fafb}
           <th>Inscrito em</th>
         </tr></thead>
         <tbody>${rows.map(i => {
-          const tipoLabels = { membro: "Membro", nao_membro: "Não membro", visitante: "Visitante", crianca: "Criança", adolescente: "Adolescente" };
+          const tipoLabels = { membro: "Membro da IPPenha", nao_membro: "Membro de outra Igreja", visitante: "Visitante", crianca: "Criança", adolescente: "Adolescente" };
           return `<tr style="cursor:pointer" onclick="eveAbrirDetalhe('${_ea(i.evento_id)}')">
             <td style="padding:10px 8px;font-size:12.5px;font-weight:600;color:var(--tx1)">${_eh(i.nome)}</td>
             <td style="padding:10px 8px;font-size:12px;color:var(--tx2)">${_eh(evtMap[i.evento_id] || "—")}</td>
@@ -1837,7 +1837,7 @@ tr:nth-child(even) td{background:#f9fafb}
         <div class="card">
           <div class="ctit">Por Tipo de Inscrito</div>
           ${Object.entries(tipoCount).map(([tipo, count]) => {
-            const tipoLabels = { membro: "Membro", nao_membro: "Não membro", visitante: "Visitante", crianca: "Criança", adolescente: "Adolescente" };
+            const tipoLabels = { membro: "Membro da IPPenha", nao_membro: "Membro de outra Igreja", visitante: "Visitante", crianca: "Criança", adolescente: "Adolescente" };
             return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 4px;border-bottom:1px solid var(--bd1)">
               <span style="font-size:12px;color:var(--tx2)">${_eh(tipoLabels[tipo] || tipo)}</span>
               <span style="font-size:13px;font-weight:700;color:var(--sky)">${count}</span>
