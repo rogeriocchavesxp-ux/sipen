@@ -169,6 +169,9 @@
     _limparForm();
     modal.style.display = "flex";
 
+    const histBtn = v("mem-tab-hist-btn");
+    if (histBtn) histBtn.style.display = membroId ? "block" : "none";
+
     const sec = v("mem-acesso-section");
     if (sec) sec.style.display = _podeGerenciarAcessoFacial() ? "block" : "none";
 
@@ -190,6 +193,8 @@
     const sf = v("mem-soc-form"); if (sf) sf.style.display = "none";
     const ms = v("mem-min-sel");  if (ms) delete ms.dataset.loaded;
     const ss = v("mem-soc-sel");  if (ss) delete ss.dataset.loaded;
+    const hl = v("mem-hist-lista"); if (hl) delete hl.dataset.loaded;
+    if (typeof window.membMudarTab === "function") window.membMudarTab("dados");
   }
 
   function _limparForm() {
@@ -614,6 +619,80 @@
     await _carregarParticipacoes(_pessoaIdAtual, _nomeMembroAtual);
   };
 
+  /* ══ HISTÓRICO ════════════════════════════════════════════════ */
+
+  const _EVT_CFG = {
+    ingresso:             { symbol:"✝",  r:42,  g:181, b:192, cat:"Ingresso"    },
+    batismo:              { symbol:"💧", r:74,  g:156, b:245, cat:"Batismo"     },
+    status_membro:        { symbol:"◎",  r:212, g:168, b:67,  cat:"Status"      },
+    ministerio_entrada:   { symbol:"◉",  r:58,  g:170, b:92,  cat:"Ministério"  },
+    ministerio_inativado: { symbol:"◌",  r:139, g:107, b:193, cat:"Ministério"  },
+    ministerio_reativado: { symbol:"◉",  r:58,  g:170, b:92,  cat:"Ministério"  },
+    ministerio_removido:  { symbol:"✕",  r:224, g:85,  b:85,  cat:"Ministério"  },
+    ministerio_funcao:    { symbol:"✎",  r:212, g:168, b:67,  cat:"Ministério"  },
+    sociedade_entrada:    { symbol:"⬟",  r:212, g:168, b:67,  cat:"Sociedade"   },
+    sociedade_saida:      { symbol:"⬠",  r:139, g:107, b:193, cat:"Sociedade"   },
+    sociedade_cargo:      { symbol:"✎",  r:212, g:168, b:67,  cat:"Sociedade"   },
+  };
+
+  function _renderEvento(evt) {
+    const c = _EVT_CFG[evt.evento_tipo] || { symbol:"◆", r:139, g:107, b:193, cat: evt.evento_tipo };
+    const data = evt.data_evento
+      ? new Date(evt.data_evento + "T00:00:00").toLocaleDateString("pt-BR")
+      : "—";
+    return `<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--bd1)">
+      <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:32px">
+        <div style="width:32px;height:32px;border-radius:50%;background:rgba(${c.r},${c.g},${c.b},.15);border:1.5px solid rgba(${c.r},${c.g},${c.b},.35);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">${c.symbol}</div>
+        <div style="width:1px;flex:1;background:var(--bd1);margin-top:4px;min-height:8px"></div>
+      </div>
+      <div style="flex:1;min-width:0;padding-bottom:4px">
+        <div style="font-size:9.5px;font-weight:700;color:rgba(${c.r},${c.g},${c.b},1);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px">${c.cat}</div>
+        <div style="font-size:13px;color:var(--tx1);line-height:1.4">${escapeHtml(evt.descricao)}</div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:2px">${data}</div>
+      </div>
+    </div>`;
+  }
+
+  async function _carregarHistorico(pessoaId) {
+    const lista = v("mem-hist-lista");
+    if (!lista) return;
+    lista.dataset.loaded = "1";
+    lista.innerHTML = `<div style="color:var(--tx3);text-align:center;padding:24px 0;font-size:13px">Carregando…</div>`;
+    try {
+      const r = await fetch(
+        `${apiBaseUrl()}/rest/v1/pessoa_eventos?pessoa_id=eq.${encodeURIComponent(pessoaId)}&order=data_evento.desc.nullslast,created_at.desc&limit=200`,
+        { headers: apiHeaders() }
+      );
+      const eventos = r.ok ? await r.json() : [];
+      if (!eventos.length) {
+        lista.innerHTML = `<div style="color:var(--tx3);text-align:center;padding:24px 0;font-size:13px">Nenhum evento registrado ainda.</div>`;
+        return;
+      }
+      lista.innerHTML = eventos.map(_renderEvento).join("") +
+        `<div style="font-size:10.5px;color:var(--tx3);text-align:center;padding:12px 0;margin-top:4px">
+           Eventos registrados automaticamente a partir desta versão do SIPEN.
+         </div>`;
+    } catch (e) {
+      lista.innerHTML = `<div style="color:var(--rose);padding:12px;font-size:13px">Erro ao carregar: ${escapeHtml(e.message)}</div>`;
+    }
+  }
+
+  window.membMudarTab = function (tab) {
+    ["dados","part","hist"].forEach(t => {
+      const el = v("mem-tab-" + t); if (el) el.style.display = "none";
+    });
+    const show = v("mem-tab-" + tab); if (show) show.style.display = "block";
+    document.querySelectorAll(".mem-tab-btn").forEach(btn => {
+      btn.classList.toggle("mem-tab-on", btn.dataset.tab === tab);
+    });
+    const nota = v("mem-hist-nota"); if (nota) nota.style.display = tab === "hist" ? "block" : "none";
+    const salvar = v("mem-novo-salvar"); if (salvar) salvar.style.display = tab === "hist" ? "none" : "block";
+    if (tab === "hist" && _pessoaIdAtual) {
+      const hl = v("mem-hist-lista");
+      if (hl && !hl.dataset.loaded) _carregarHistorico(_pessoaIdAtual);
+    }
+  };
+
   function _invalidarCache() {
     if (typeof listarMembros === "function") {
       listarMembros("memb-cad-list", "memb-cad-count");
@@ -627,177 +706,204 @@
 <div id="modal-novo-membro"
      style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:16px"
      onclick="if(event.target===this)membFecharModal()">
-  <div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:720px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+  <div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:720px;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.4)">
 
-    <div style="padding:16px 24px 14px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg-card);z-index:1">
-      <div>
-        <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Membresia · IPPenha</div>
-        <div id="mem-modal-title" style="font-size:17px;font-weight:700;color:var(--tx1)">Novo Membro</div>
+    <!-- Cabeçalho + abas (fixo no topo) -->
+    <div style="flex-shrink:0;border-bottom:1px solid var(--bd1);border-radius:12px 12px 0 0;background:var(--bg-card)">
+      <div style="padding:16px 24px 10px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Membresia · IPPenha</div>
+          <div id="mem-modal-title" style="font-size:17px;font-weight:700;color:var(--tx1)">Novo Membro</div>
+        </div>
+        <button onclick="membFecharModal()" style="background:none;border:none;font-size:22px;color:var(--tx3);cursor:pointer;padding:4px 8px;border-radius:6px">×</button>
       </div>
-      <button onclick="membFecharModal()" style="background:none;border:none;font-size:22px;color:var(--tx3);cursor:pointer;padding:4px 8px;border-radius:6px">×</button>
+      <div style="display:flex;padding:0 20px;gap:0">
+        <button class="mem-tab-btn mem-tab-on" data-tab="dados" onclick="membMudarTab('dados')">Dados</button>
+        <button class="mem-tab-btn" data-tab="part" onclick="membMudarTab('part')">Participações</button>
+        <button class="mem-tab-btn" id="mem-tab-hist-btn" data-tab="hist" onclick="membMudarTab('hist')" style="display:none">Histórico</button>
+      </div>
     </div>
 
-    <div style="padding:20px 24px">
+    <!-- Área rolável -->
+    <div style="flex:1;overflow-y:auto;min-height:0">
 
       <div id="mem-novo-erro"
-           style="display:none;background:rgba(224,85,85,.12);border:1px solid var(--rose);border-radius:8px;padding:10px 14px;font-size:12.5px;color:var(--rose);margin-bottom:16px"></div>
+           style="display:none;margin:16px 24px 0;background:rgba(224,85,85,.12);border:1px solid var(--rose);border-radius:8px;padding:10px 14px;font-size:12.5px;color:var(--rose)"></div>
 
-      <div class="mem-section-hd">Informações Pessoais</div>
+      <!-- Aba: Dados -->
+      <div id="mem-tab-dados" style="padding:20px 24px">
 
-      <div class="mem-grid-3">
-        <div>
-          <label class="mem-lbl">Nome completo <span style="color:var(--rose)">*</span></label>
-          <input id="mem-f-nome" type="text" placeholder="Nome completo" class="mem-inp" />
-        </div>
-        <div>
-          <label class="mem-lbl">E-mail</label>
-          <input id="mem-f-email" type="email" placeholder="email@exemplo.com" class="mem-inp" />
-        </div>
-        <div>
-          <label class="mem-lbl">Status <span style="color:var(--rose)">*</span></label>
-          <select id="mem-f-status" class="mem-inp">
-            <option value="">Selecione…</option>
-            <option value="ativo">Ativo</option>
-            <option value="inativo">Inativo</option>
-            <option value="transferido">Transferido</option>
-            <option value="afastado">Afastado</option>
-            <option value="falecido">Falecido</option>
-            <option value="disciplinado">Disciplinado</option>
-          </select>
-        </div>
-        <div>
-          <label class="mem-lbl">Telefone</label>
-          <input id="mem-f-telefone" type="tel" placeholder="(11) 99999-9999" class="mem-inp" />
-        </div>
-        <div>
-          <label class="mem-lbl">Celular</label>
-          <input id="mem-f-celular" type="tel" placeholder="(11) 99999-9999" class="mem-inp" />
-        </div>
-        <div>
-          <label class="mem-lbl">Data de Nascimento</label>
-          <input id="mem-f-nascimento" type="date" class="mem-inp" />
-        </div>
-      </div>
+        <div class="mem-section-hd">Informações Pessoais</div>
 
-      <div class="mem-section-hd" style="margin-top:4px">Informações Eclesiásticas</div>
-
-      <div class="mem-grid-3">
-        <div>
-          <label class="mem-lbl">Tipo de Membro</label>
-          <select id="mem-f-tipo-membro" class="mem-inp">
-            <option value="">Nenhum</option>
-            <option value="comungante">Comungante</option>
-            <option value="nao_comungante">Não Comungante</option>
-          </select>
-        </div>
-        <div>
-          <label class="mem-lbl">Forma de Ingresso <span style="color:var(--rose)">*</span></label>
-          <select id="mem-f-tipo-ingresso" class="mem-inp">
-            <option value="">Selecione…</option>
-            <option value="batismo">Batismo</option>
-            <option value="profissao_de_fe">Profissão de Fé</option>
-            <option value="transferencia">Transferência</option>
-            <option value="restauracao">Restauração</option>
-            <option value="outro">Outro</option>
-          </select>
-        </div>
-        <div>
-          <label class="mem-lbl">Data de Ingresso</label>
-          <input id="mem-f-ingresso" type="date" class="mem-inp" />
-        </div>
-        <div>
-          <label class="mem-lbl">Função</label>
-          <select id="mem-f-funcao" class="mem-inp">
-            <option value="membro">Membro</option>
-            <option value="pastor">Pastor</option>
-            <option value="presbitero">Presbítero</option>
-            <option value="diacono">Diácono</option>
-            <option value="supervisor">Supervisor</option>
-            <option value="coordenador">Coordenador</option>
-            <option value="lider_ministerio">Líder de Ministério</option>
-            <option value="lider_pg">Líder de PG</option>
-            <option value="secretario">Secretário(a)</option>
-            <option value="tesoureiro">Tesoureiro(a)</option>
-            <option value="colaborador">Colaborador</option>
-            <option value="colaborador_membro">Colaborador - Membro</option>
-          </select>
-        </div>
-        <div>
-          <label class="mem-lbl">Vínculo</label>
-          <select id="mem-f-cong" class="mem-inp">
-            <option value="">Carregando…</option>
-          </select>
-        </div>
-        <div>
-          <label class="mem-lbl">Data de Batismo</label>
-          <input id="mem-f-batismo" type="date" class="mem-inp" />
-        </div>
-        <div style="grid-column:span 2">
-          <label class="mem-lbl">Nº de Registro</label>
-          <input id="mem-f-registro" type="text" placeholder="Ex.: 0342" class="mem-inp" />
-        </div>
-      </div>
-
-      <div class="mem-section-hd" style="margin-top:4px">Participações</div>
-
-      <div id="mem-part-novo" style="color:var(--tx3);font-size:12px;text-align:center;padding:10px 0;margin-bottom:20px">
-        Salve o membro primeiro para gerenciar participações.
-      </div>
-
-      <div id="mem-part-edit" style="display:none;margin-bottom:20px">
-
-        <div style="margin-bottom:14px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em">Ministérios</div>
-            <button onclick="membMinMostrarForm()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);cursor:pointer">+ Adicionar</button>
+        <div class="mem-grid-3">
+          <div>
+            <label class="mem-lbl">Nome completo <span style="color:var(--rose)">*</span></label>
+            <input id="mem-f-nome" type="text" placeholder="Nome completo" class="mem-inp" />
           </div>
-          <div id="mem-min-lista"></div>
-          <div id="mem-min-form" style="display:none;flex-direction:column;gap:8px;padding:10px;background:var(--bg-surface,var(--bg-card));border-radius:8px;border:1px solid var(--bd2);margin-top:8px">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-              <select id="mem-min-sel" class="mem-inp"><option value="">Selecione…</option></select>
-              <input id="mem-min-funcao" type="text" class="mem-inp" placeholder="Função (ex.: Membro, Líder)" />
-            </div>
-            <div style="display:flex;gap:8px;justify-content:flex-end">
-              <button onclick="membMinOcultarForm()" style="font-size:12px;padding:5px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--tx2);cursor:pointer">Cancelar</button>
-              <button onclick="membMinSalvar()" style="font-size:12px;padding:5px 14px;border-radius:6px;border:none;background:var(--teal);color:#fff;cursor:pointer;font-weight:600">Adicionar</button>
-            </div>
+          <div>
+            <label class="mem-lbl">E-mail</label>
+            <input id="mem-f-email" type="email" placeholder="email@exemplo.com" class="mem-inp" />
+          </div>
+          <div>
+            <label class="mem-lbl">Status <span style="color:var(--rose)">*</span></label>
+            <select id="mem-f-status" class="mem-inp">
+              <option value="">Selecione…</option>
+              <option value="ativo">Ativo</option>
+              <option value="inativo">Inativo</option>
+              <option value="transferido">Transferido</option>
+              <option value="afastado">Afastado</option>
+              <option value="falecido">Falecido</option>
+              <option value="disciplinado">Disciplinado</option>
+            </select>
+          </div>
+          <div>
+            <label class="mem-lbl">Telefone</label>
+            <input id="mem-f-telefone" type="tel" placeholder="(11) 99999-9999" class="mem-inp" />
+          </div>
+          <div>
+            <label class="mem-lbl">Celular</label>
+            <input id="mem-f-celular" type="tel" placeholder="(11) 99999-9999" class="mem-inp" />
+          </div>
+          <div>
+            <label class="mem-lbl">Data de Nascimento</label>
+            <input id="mem-f-nascimento" type="date" class="mem-inp" />
           </div>
         </div>
 
-        <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em">Sociedades</div>
-            <button onclick="membSocMostrarForm()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);cursor:pointer">+ Adicionar</button>
+        <div class="mem-section-hd" style="margin-top:4px">Informações Eclesiásticas</div>
+
+        <div class="mem-grid-3">
+          <div>
+            <label class="mem-lbl">Tipo de Membro</label>
+            <select id="mem-f-tipo-membro" class="mem-inp">
+              <option value="">Nenhum</option>
+              <option value="comungante">Comungante</option>
+              <option value="nao_comungante">Não Comungante</option>
+            </select>
           </div>
-          <div id="mem-soc-lista"></div>
-          <div id="mem-soc-form" style="display:none;flex-direction:column;gap:8px;padding:10px;background:var(--bg-surface,var(--bg-card));border-radius:8px;border:1px solid var(--bd2);margin-top:8px">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-              <select id="mem-soc-sel" class="mem-inp"><option value="">Selecione…</option></select>
-              <input id="mem-soc-cargo" type="text" class="mem-inp" placeholder="Cargo / função" />
-            </div>
-            <div style="display:flex;gap:8px;justify-content:flex-end">
-              <button onclick="membSocOcultarForm()" style="font-size:12px;padding:5px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--tx2);cursor:pointer">Cancelar</button>
-              <button onclick="membSocSalvar()" style="font-size:12px;padding:5px 14px;border-radius:6px;border:none;background:var(--teal);color:#fff;cursor:pointer;font-weight:600">Adicionar</button>
-            </div>
+          <div>
+            <label class="mem-lbl">Forma de Ingresso <span style="color:var(--rose)">*</span></label>
+            <select id="mem-f-tipo-ingresso" class="mem-inp">
+              <option value="">Selecione…</option>
+              <option value="batismo">Batismo</option>
+              <option value="profissao_de_fe">Profissão de Fé</option>
+              <option value="transferencia">Transferência</option>
+              <option value="restauracao">Restauração</option>
+              <option value="outro">Outro</option>
+            </select>
           </div>
+          <div>
+            <label class="mem-lbl">Data de Ingresso</label>
+            <input id="mem-f-ingresso" type="date" class="mem-inp" />
+          </div>
+          <div>
+            <label class="mem-lbl">Função</label>
+            <select id="mem-f-funcao" class="mem-inp">
+              <option value="membro">Membro</option>
+              <option value="pastor">Pastor</option>
+              <option value="presbitero">Presbítero</option>
+              <option value="diacono">Diácono</option>
+              <option value="supervisor">Supervisor</option>
+              <option value="coordenador">Coordenador</option>
+              <option value="lider_ministerio">Líder de Ministério</option>
+              <option value="lider_pg">Líder de PG</option>
+              <option value="secretario">Secretário(a)</option>
+              <option value="tesoureiro">Tesoureiro(a)</option>
+              <option value="colaborador">Colaborador</option>
+              <option value="colaborador_membro">Colaborador - Membro</option>
+            </select>
+          </div>
+          <div>
+            <label class="mem-lbl">Vínculo</label>
+            <select id="mem-f-cong" class="mem-inp">
+              <option value="">Carregando…</option>
+            </select>
+          </div>
+          <div>
+            <label class="mem-lbl">Data de Batismo</label>
+            <input id="mem-f-batismo" type="date" class="mem-inp" />
+          </div>
+          <div style="grid-column:span 2">
+            <label class="mem-lbl">Nº de Registro</label>
+            <input id="mem-f-registro" type="text" placeholder="Ex.: 0342" class="mem-inp" />
+          </div>
+        </div>
+
+        <div id="mem-acesso-section" style="display:none;background:rgba(42,181,192,.05);border:1px solid rgba(42,181,192,.2);border-radius:8px;padding:14px 16px">
+          <div style="font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Controle de Acesso</div>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
+            <input type="checkbox" id="mem-f-acesso-facial" style="width:16px;height:16px;accent-color:var(--teal);cursor:pointer;flex-shrink:0">
+            <span>
+              <span style="font-size:13px;font-weight:600;color:var(--tx1)">Acesso facial liberado</span>
+              <span style="display:block;font-size:10.5px;color:var(--tx3);margin-top:1px">Libera o acesso à portaria via reconhecimento facial</span>
+            </span>
+          </label>
         </div>
 
       </div>
 
-      <div id="mem-acesso-section" style="display:none;background:rgba(42,181,192,.05);border:1px solid rgba(42,181,192,.2);border-radius:8px;padding:14px 16px;margin-top:4px">
-        <div style="font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Controle de Acesso</div>
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
-          <input type="checkbox" id="mem-f-acesso-facial" style="width:16px;height:16px;accent-color:var(--teal);cursor:pointer;flex-shrink:0">
-          <span>
-            <span style="font-size:13px;font-weight:600;color:var(--tx1)">Acesso facial liberado</span>
-            <span style="display:block;font-size:10.5px;color:var(--tx3);margin-top:1px">Libera o acesso à portaria via reconhecimento facial</span>
-          </span>
-        </label>
+      <!-- Aba: Participações -->
+      <div id="mem-tab-part" style="display:none;padding:20px 24px">
+
+        <div id="mem-part-novo" style="color:var(--tx3);font-size:12px;text-align:center;padding:10px 0">
+          Salve o membro primeiro para gerenciar participações.
+        </div>
+
+        <div id="mem-part-edit" style="display:none">
+
+          <div style="margin-bottom:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em">Ministérios</div>
+              <button onclick="membMinMostrarForm()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);cursor:pointer">+ Adicionar</button>
+            </div>
+            <div id="mem-min-lista"></div>
+            <div id="mem-min-form" style="display:none;flex-direction:column;gap:8px;padding:10px;background:var(--bg-surface,var(--bg-card));border-radius:8px;border:1px solid var(--bd2);margin-top:8px">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <select id="mem-min-sel" class="mem-inp"><option value="">Selecione…</option></select>
+                <input id="mem-min-funcao" type="text" class="mem-inp" placeholder="Função (ex.: Membro, Líder)" />
+              </div>
+              <div style="display:flex;gap:8px;justify-content:flex-end">
+                <button onclick="membMinOcultarForm()" style="font-size:12px;padding:5px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--tx2);cursor:pointer">Cancelar</button>
+                <button onclick="membMinSalvar()" style="font-size:12px;padding:5px 14px;border-radius:6px;border:none;background:var(--teal);color:#fff;cursor:pointer;font-weight:600">Adicionar</button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em">Sociedades</div>
+              <button onclick="membSocMostrarForm()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);cursor:pointer">+ Adicionar</button>
+            </div>
+            <div id="mem-soc-lista"></div>
+            <div id="mem-soc-form" style="display:none;flex-direction:column;gap:8px;padding:10px;background:var(--bg-surface,var(--bg-card));border-radius:8px;border:1px solid var(--bd2);margin-top:8px">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <select id="mem-soc-sel" class="mem-inp"><option value="">Selecione…</option></select>
+                <input id="mem-soc-cargo" type="text" class="mem-inp" placeholder="Cargo / função" />
+              </div>
+              <div style="display:flex;gap:8px;justify-content:flex-end">
+                <button onclick="membSocOcultarForm()" style="font-size:12px;padding:5px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--tx2);cursor:pointer">Cancelar</button>
+                <button onclick="membSocSalvar()" style="font-size:12px;padding:5px 14px;border-radius:6px;border:none;background:var(--teal);color:#fff;cursor:pointer;font-weight:600">Adicionar</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
 
-    </div>
+      <!-- Aba: Histórico -->
+      <div id="mem-tab-hist" style="display:none;padding:20px 24px">
+        <div id="mem-hist-lista">
+          <div style="color:var(--tx3);text-align:center;padding:24px 0;font-size:13px">Carregando histórico…</div>
+        </div>
+      </div>
 
-    <div style="padding:14px 24px;border-top:1px solid var(--bd1);display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:var(--bg-card)">
+    </div><!-- fim área rolável -->
+
+    <!-- Rodapé fixo -->
+    <div style="flex-shrink:0;padding:14px 24px;border-top:1px solid var(--bd1);display:flex;gap:10px;justify-content:flex-end;align-items:center;background:var(--bg-card);border-radius:0 0 12px 12px">
+      <div id="mem-hist-nota" style="display:none;font-size:10.5px;color:var(--tx3);flex:1">
+        Saídas de ministérios e mudanças de status anteriores a esta versão podem não constar.
+      </div>
       <button onclick="membFecharModal()"
               style="padding:8px 18px;border-radius:8px;border:1px solid var(--bd2);background:none;color:var(--tx2);font-size:13px;cursor:pointer">
         Cancelar
@@ -843,14 +949,28 @@
     outline:none;
     box-sizing:border-box;
   }
-  .mem-inp:focus {
-    border-color:var(--ac);
-  }
+  .mem-inp:focus { border-color:var(--ac); }
   .mem-grid-3 {
     display:grid;
     grid-template-columns:repeat(3,1fr);
     gap:10px;
     margin-bottom:20px;
+  }
+  .mem-tab-btn {
+    padding:9px 16px;
+    border:none;
+    background:none;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--tx3);
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    margin-bottom:-1px;
+    transition:color .15s,border-color .15s;
+  }
+  .mem-tab-on {
+    color:var(--teal);
+    border-bottom-color:var(--teal);
   }
   @media(max-width:580px) {
     .mem-grid-3 { grid-template-columns:repeat(2,1fr); }
