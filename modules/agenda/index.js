@@ -55,6 +55,293 @@ async function agSalasSelectPopular(id) {
   }
 }
 
+/* ── FORMULÁRIO CUSTOMIZADO DE AGENDA ────────────────────────── */
+const AG_TIPOS_COR = {
+  "Culto":       "#dc2626",
+  "Reunião":     "#ea580c",
+  "Congresso":   "#2563eb",
+  "Conferência": "#7c3aed",
+  "Evento":      "#059669",
+  "Casamento":   "#db2777",
+  "Aniversário": "#d97706",
+  "Outros":      "#6b7280",
+};
+
+// Espaços carregados uma vez e reutilizados
+let _agEspacosCache = null;
+async function _agCarregarEspacos() {
+  if (_agEspacosCache) return _agEspacosCache;
+  try {
+    const r = await fetch(`${apiBaseUrl()}/rest/v1/espacos?ativo=eq.true&order=grupo.asc,ordem.asc,nome.asc`, { headers: apiHeaders() });
+    _agEspacosCache = r.ok ? await r.json() : [];
+  } catch(_) { _agEspacosCache = []; }
+  return _agEspacosCache;
+}
+
+// Popup secundário de seleção de espaços
+function agAbrirEspacos() {
+  const selecionados = new Set(
+    (document.getElementById("ag-f-espaco-txt")?.value || "").split(",").map(s=>s.trim()).filter(Boolean)
+  );
+  const lista = _agEspacosCache || [];
+  const grupos = {};
+  lista.forEach(e => {
+    const g = e.grupo || "Outros";
+    if (!grupos[g]) grupos[g] = [];
+    grupos[g].push(e);
+  });
+
+  let pop = document.getElementById("ag-esp-popup");
+  if (!pop) { pop = document.createElement("div"); pop.id = "ag-esp-popup"; document.body.appendChild(pop); }
+  pop.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px";
+  pop.innerHTML = `
+    <div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:460px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.3)">
+      <div style="padding:16px 20px 12px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:14px;font-weight:700;color:var(--tx1)">Selecionar espaços</div>
+        <button onclick="document.getElementById('ag-esp-popup').style.display='none'" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer;padding:0;line-height:1">✕</button>
+      </div>
+      <div style="overflow-y:auto;padding:16px 20px;flex:1">
+        ${Object.entries(grupos).map(([g, items]) => `
+          <div style="margin-bottom:14px">
+            <div style="font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">${escapeHtml(g)}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              ${items.map(e => {
+                const sel = selecionados.has(e.nome);
+                return `<button type="button" class="ag-esp-chip" data-nome="${escapeHtml(e.nome)}" data-sel="${sel?'1':'0'}"
+                  style="padding:5px 12px;border-radius:20px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s;border:2px solid;${sel ? "background:var(--teal);color:#fff;border-color:var(--teal)" : "background:transparent;color:var(--tx2);border-color:var(--bd2)"}">
+                  ${escapeHtml(e.nome)}
+                </button>`;
+              }).join("")}
+            </div>
+          </div>`).join("")}
+        ${lista.length === 0 ? `<div style="color:var(--tx3);font-size:12px">Nenhum espaço cadastrado.</div>` : ""}
+      </div>
+      <div style="padding:12px 20px;border-top:1px solid var(--bd1);display:flex;justify-content:flex-end;gap:8px">
+        <button onclick="document.getElementById('ag-esp-popup').style.display='none'" style="padding:8px 16px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:12.5px;cursor:pointer">Cancelar</button>
+        <button onclick="agConfirmarEspacos()" style="padding:8px 18px;border-radius:7px;border:none;background:var(--teal);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer">Confirmar</button>
+      </div>
+    </div>`;
+
+  pop.querySelectorAll(".ag-esp-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const sel = btn.dataset.sel === "1";
+      btn.dataset.sel = sel ? "0" : "1";
+      if (!sel) {
+        btn.style.background = "var(--teal)"; btn.style.color = "#fff"; btn.style.borderColor = "var(--teal)";
+      } else {
+        btn.style.background = "transparent"; btn.style.color = "var(--tx2)"; btn.style.borderColor = "var(--bd2)";
+      }
+    });
+  });
+}
+window.agAbrirEspacos = agAbrirEspacos;
+
+function agConfirmarEspacos() {
+  const selecionados = [...document.querySelectorAll("#ag-esp-popup .ag-esp-chip[data-sel='1']")].map(b => b.dataset.nome);
+  const txt = document.getElementById("ag-f-espaco-txt");
+  const preview = document.getElementById("ag-f-espaco-preview");
+  if (txt) txt.value = selecionados.join(", ");
+  if (preview) {
+    if (selecionados.length) {
+      preview.innerHTML = selecionados.map(n => `<span style="padding:3px 9px;border-radius:4px;background:rgba(42,181,192,.12);color:var(--teal);font-size:11px;font-weight:600;border:1px solid rgba(42,181,192,.3)">${escapeHtml(n)}</span>`).join(" ");
+    } else {
+      preview.innerHTML = `<span style="color:var(--tx3);font-size:11.5px">Nenhum espaço selecionado</span>`;
+    }
+  }
+  document.getElementById("ag-esp-popup").style.display = "none";
+}
+window.agConfirmarEspacos = agConfirmarEspacos;
+
+async function agAbrirForm(r = null) {
+  await _agCarregarEspacos();
+  const isEdit = !!r?.id;
+  const tipoAtual = r?.tipo || "";
+  const espacoAtual = r?.espaco || "";
+  const espacosSel = espacoAtual.split(",").map(s=>s.trim()).filter(Boolean);
+
+  let modal = document.getElementById("ag-form-modal");
+  if (!modal) { modal = document.createElement("div"); modal.id = "ag-form-modal"; document.body.appendChild(modal); }
+  modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto";
+
+  const fi = `width:100%;background:var(--bg-input,var(--bg-surface));border:1px solid var(--bd2);border-radius:7px;color:var(--tx1);font-size:12.5px;padding:8px 11px;outline:none;box-sizing:border-box`;
+  const lbl = t => `<label style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:5px">${t}</label>`;
+
+  modal.innerHTML = `
+    <div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:600px;box-shadow:0 8px 32px rgba(0,0,0,.25);overflow:hidden">
+      <div style="padding:18px 22px 14px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px">Agenda</div>
+          <div style="font-size:16px;font-weight:700;color:var(--tx1)">${isEdit ? "Editar evento" : "Novo evento"}</div>
+        </div>
+        <button onclick="document.getElementById('ag-form-modal').style.display='none'" style="background:none;border:none;color:var(--tx3);font-size:20px;cursor:pointer;padding:0;line-height:1">✕</button>
+      </div>
+
+      <div style="padding:20px 22px;display:flex;flex-direction:column;gap:16px">
+
+        <!-- Tipo -->
+        <div>
+          ${lbl("Tipo de evento")}
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${Object.entries(AG_TIPOS_COR).map(([t, cor]) => `
+              <button type="button" class="ag-tipo-chip" data-tipo="${escapeHtml(t)}"
+                style="padding:5px 13px;border-radius:20px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .12s;border:2px solid;${tipoAtual===t ? `background:${cor};color:#fff;border-color:${cor}` : `background:transparent;color:var(--tx2);border-color:var(--bd2)`}">
+                ${escapeHtml(t)}
+              </button>`).join("")}
+          </div>
+          <input type="hidden" id="ag-f-tipo" value="${escapeHtml(tipoAtual)}">
+        </div>
+
+        <!-- Título -->
+        <div>
+          ${lbl("Título *")}
+          <input id="ag-f-titulo" type="text" value="${escapeHtml(r?.titulo||"")}" placeholder="Nome do evento" style="${fi}">
+        </div>
+
+        <!-- Data / Horários -->
+        <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:10px">
+          <div>${lbl("Data *")}<input id="ag-f-data" type="date" value="${r?.data||""}" style="${fi}"></div>
+          <div>${lbl("Início")}<input id="ag-f-h-inicio" type="time" value="${r?.hora_inicio||""}" style="${fi}"></div>
+          <div>${lbl("Fim")}<input id="ag-f-h-fim" type="time" value="${r?.hora_fim||""}" style="${fi}"></div>
+        </div>
+
+        <!-- Recorrência / Dia / Mês -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div>${lbl("Recorrência")}
+            <select id="ag-f-recorrencia" style="${fi}">
+              ${["Único","Semanal","Quinzenal","Mensal","Anual"].map(v=>`<option value="${v}" ${(r?.recorrencia||"Único")===v?"selected":""}>${v}</option>`).join("")}
+            </select>
+          </div>
+          <div>${lbl("Dia da semana")}
+            <select id="ag-f-dia-semana" style="${fi}">
+              <option value="">—</option>
+              ${["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"].map(v=>`<option value="${v}" ${r?.dia_semana===v?"selected":""}>${v}</option>`).join("")}
+            </select>
+          </div>
+          <div>${lbl("Mês")}
+            <select id="ag-f-mes" style="${fi}">
+              <option value="">—</option>
+              ${["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map(v=>`<option value="${v}" ${r?.mes===v?"selected":""}>${v}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+
+        <!-- Organizador / Responsável -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>${lbl("Organizador")}<input id="ag-f-organizador" type="text" value="${escapeHtml(r?.organizador||"")}" style="${fi}"></div>
+          <div>${lbl("Responsável")}<input id="ag-f-responsavel" type="text" value="${escapeHtml(r?.responsavel||"")}" style="${fi}"></div>
+        </div>
+
+        <!-- Solicitante / Telefone -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>${lbl("Solicitante")}<input id="ag-f-solicitante" type="text" value="${escapeHtml(r?.solicitante_txt||"")}" style="${fi}"></div>
+          <div>${lbl("Telefone")}<input id="ag-f-telefone" type="tel" value="${escapeHtml(r?.solicitante_tel||r?.telefone||"")}" style="${fi}"></div>
+        </div>
+
+        <!-- Espaços -->
+        <div>
+          ${lbl("Espaços")}
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div id="ag-f-espaco-preview" style="flex:1;display:flex;flex-wrap:wrap;gap:5px;min-height:30px;align-items:center">
+              ${espacosSel.length ? espacosSel.map(n=>`<span style="padding:3px 9px;border-radius:4px;background:rgba(42,181,192,.12);color:var(--teal);font-size:11px;font-weight:600;border:1px solid rgba(42,181,192,.3)">${escapeHtml(n)}</span>`).join(" ") : `<span style="color:var(--tx3);font-size:11.5px">Nenhum espaço selecionado</span>`}
+            </div>
+            <button type="button" onclick="agAbrirEspacos()" style="flex-shrink:0;padding:6px 12px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap">Selecionar →</button>
+          </div>
+          <input type="hidden" id="ag-f-espaco-txt" value="${escapeHtml(espacoAtual)}">
+        </div>
+
+        <!-- Observação -->
+        <div>
+          ${lbl("Observação")}
+          <textarea id="ag-f-obs" rows="3" style="${fi}resize:vertical;font-family:inherit">${escapeHtml(r?.observacao||"")}</textarea>
+        </div>
+
+        <!-- Status -->
+        <div>
+          ${lbl("Status")}
+          <select id="ag-f-status" style="${fi}">
+            ${[["aguardando_aprovacao","Aguardando Aprovação"],["em_analise","Em Análise"],["ajuste_solicitado","Ajuste Solicitado"],["confirmado","Confirmado"],["recusado","Recusado"],["cancelado","Cancelado"],["reagendado","Reagendado"],["arquivado","Arquivado"]].map(([v,l])=>`<option value="${v}" ${(r?.status||"confirmado")===v?"selected":""}>${l}</option>`).join("")}
+          </select>
+        </div>
+
+      </div>
+
+      <div style="padding:14px 22px;border-top:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div>
+          ${isEdit ? `<button onclick="agExcluirDoForm('${r.id}')" style="padding:8px 14px;border-radius:7px;border:1px solid rgba(224,85,85,.4);background:rgba(224,85,85,.06);color:var(--rose);font-size:12px;font-weight:600;cursor:pointer">Excluir</button>` : ""}
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="document.getElementById('ag-form-modal').style.display='none'" style="padding:8px 16px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:12.5px;cursor:pointer">Cancelar</button>
+          <button onclick="agSalvarForm('${r?.id||""}')" style="padding:8px 20px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer">Salvar</button>
+        </div>
+      </div>
+    </div>`;
+
+  modal.querySelectorAll(".ag-tipo-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const cor = AG_TIPOS_COR[btn.dataset.tipo] || "#6b7280";
+      modal.querySelectorAll(".ag-tipo-chip").forEach(b => {
+        b.style.background = "transparent"; b.style.color = "var(--tx2)"; b.style.borderColor = "var(--bd2)";
+      });
+      btn.style.background = cor; btn.style.color = "#fff"; btn.style.borderColor = cor;
+      document.getElementById("ag-f-tipo").value = btn.dataset.tipo;
+    });
+  });
+}
+window.agAbrirForm = agAbrirForm;
+
+async function agSalvarForm(id) {
+  const titulo = document.getElementById("ag-f-titulo")?.value?.trim();
+  if (!titulo) { T("Campo obrigatório", "Informe o título do evento."); return; }
+  const payload = {
+    titulo,
+    tipo:            document.getElementById("ag-f-tipo")?.value || null,
+    data:            document.getElementById("ag-f-data")?.value || null,
+    hora_inicio:     document.getElementById("ag-f-h-inicio")?.value || null,
+    hora_fim:        document.getElementById("ag-f-h-fim")?.value || null,
+    recorrencia:     document.getElementById("ag-f-recorrencia")?.value || null,
+    dia_semana:      document.getElementById("ag-f-dia-semana")?.value || null,
+    mes:             document.getElementById("ag-f-mes")?.value || null,
+    organizador:     document.getElementById("ag-f-organizador")?.value?.trim() || null,
+    responsavel:     document.getElementById("ag-f-responsavel")?.value?.trim() || null,
+    solicitante_txt: document.getElementById("ag-f-solicitante")?.value?.trim() || null,
+    solicitante_tel: document.getElementById("ag-f-telefone")?.value?.trim() || null,
+    espaco:          document.getElementById("ag-f-espaco-txt")?.value?.trim() || null,
+    observacao:      document.getElementById("ag-f-obs")?.value?.trim() || null,
+    status:          document.getElementById("ag-f-status")?.value || "confirmado",
+  };
+  try {
+    const isEdit = !!id;
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/agenda${isEdit ? `?id=eq.${id}` : ""}`, {
+      method: isEdit ? "PATCH" : "POST",
+      headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    document.getElementById("ag-form-modal").style.display = "none";
+    T("Salvo", isEdit ? "Evento atualizado." : "Evento criado.");
+    if (typeof carregarAgendaDash === "function") carregarAgendaDash();
+    if (typeof agCarregarConfirmados === "function") agCarregarConfirmados();
+  } catch(e) { T("Erro", e.message); }
+}
+window.agSalvarForm = agSalvarForm;
+
+async function agExcluirDoForm(id) {
+  if (!confirm("Excluir este evento? Esta ação não pode ser desfeita.")) return;
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${id}`, {
+      method: "PATCH",
+      headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+      body: JSON.stringify({ deleted_at: new Date().toISOString() }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    document.getElementById("ag-form-modal").style.display = "none";
+    T("Excluído", "Evento removido.");
+    if (typeof carregarAgendaDash === "function") carregarAgendaDash();
+    if (typeof agCarregarConfirmados === "function") agCarregarConfirmados();
+  } catch(e) { T("Erro", e.message); }
+}
+window.agExcluirDoForm = agExcluirDoForm;
+
 /* ── AGENDA FUNCTIONS ─────────────────────── */
 const fmtDataBrCurto = d => { if(!d) return ""; const [,m,dia] = String(d).slice(0,10).split("-"); return `${dia}/${m}`; };
 let _agendaCache = null;
@@ -144,7 +431,7 @@ async function carregarAgendaDash() {
               <div style="font-size:10px;color:var(--tx3)">${e.hora_inicio?e.hora_inicio.slice(0,5):""} ${e.hora_fim?"→ "+e.hora_fim.slice(0,5):""}${e.data_encerramento&&e.data_encerramento!==e.data?" · até "+fmtDataBrCurto(e.data_encerramento):""}</div>
               <div style="font-size:10px;color:var(--teal);margin-top:1px">${escapeHtml(e.espaco||"")}${e.organizador?" · "+escapeHtml(e.organizador):""}</div>
             </div>
-            <button onclick='openCrudForm("AGENDA",${safeJsonForHtml(e)})' style="background:none;border:1px solid var(--bd1);border-radius:4px;color:var(--tx3);font-size:10px;padding:3px 6px;cursor:pointer;flex-shrink:0">✏️</button>
+            <button onclick='agAbrirForm(${safeJsonForHtml(e)})' style="background:none;border:1px solid var(--bd1);border-radius:4px;color:var(--tx3);font-size:10px;padding:3px 6px;cursor:pointer;flex-shrink:0">✏️</button>
           </div>`;
         }).join("");
       }
@@ -467,7 +754,7 @@ function agRenderEventList(evs, occurrenceDate) {
             ${occurrenceDate && e.recorrencia && e.data !== occurrenceDate ? `<div style="font-size:9px;color:var(--tx4);margin-top:1px">início: ${fmtDataBrCurto(e.data)}${e.data_encerramento&&e.data_encerramento!==e.data?" · até "+fmtDataBrCurto(e.data_encerramento):""}</div>` : ""}
           </div>
           ${e.recorrencia?`<span style="font-size:9px;background:rgba(42,181,192,.1);color:var(--teal);border-radius:3px;padding:1px 5px;flex-shrink:0;white-space:nowrap">${e.recorrencia}</span>`:""}
-          <button onclick='openCrudForm("AGENDA",${safeJsonForHtml(e)})' style="background:none;border:1px solid var(--bd1);border-radius:4px;color:var(--tx3);font-size:10px;padding:2px 6px;cursor:pointer;flex-shrink:0">✏️</button>
+          <button onclick='agAbrirForm(${safeJsonForHtml(e)})' style="background:none;border:1px solid var(--bd1);border-radius:4px;color:var(--tx3);font-size:10px;padding:2px 6px;cursor:pointer;flex-shrink:0">✏️</button>
         </div>`).join("")}
     </div>`;
   }).join("");
@@ -1816,7 +2103,7 @@ function agSolKebab(btn, id) {
   menu.style.cssText = "position:absolute;right:0;top:calc(100% + 4px);z-index:200;background:var(--bg-card);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);min-width:180px;overflow:hidden";
   const rJson = JSON.stringify(r||{}).replace(/'/g,"&#39;");
   menu.innerHTML = `
-    <button onclick='openCrudForm("AGENDA",JSON.parse(this.dataset.r))' data-r='${rJson}' style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:transparent;color:var(--tx1);font-size:12px;cursor:pointer;text-align:left" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='transparent'">
+    <button onclick='agAbrirForm(JSON.parse(this.dataset.r))' data-r='${rJson}' style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:transparent;color:var(--tx1);font-size:12px;cursor:pointer;text-align:left" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='transparent'">
       ✏️ Editar
     </button>
     ${temTermo ? `
