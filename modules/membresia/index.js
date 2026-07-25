@@ -30,7 +30,7 @@
     const btn = v("mem-novo-salvar");
     if (!btn) return;
     btn.disabled = busy;
-    btn.textContent = busy ? "Salvando…" : "Salvar Membro";
+    btn.textContent = busy ? "Salvando…" : (_editandoId ? "Salvar alterações" : "Cadastrar Membro");
   }
 
   function dateOrNull(val) {
@@ -186,6 +186,7 @@
       "mem-f-nome",
       "mem-f-email",
       "mem-f-telefone",
+      "mem-f-celular",
       "mem-f-nascimento",
       "mem-f-status",
       "mem-f-tipo-membro",
@@ -233,6 +234,7 @@
       set("mem-f-nome", data.nome);
       set("mem-f-email", data.email);
       set("mem-f-telefone", data.telefone);
+      set("mem-f-celular", data.celular);
       set("mem-f-nascimento", data.data_nascimento);
       set("mem-f-status", data.status);
       set("mem-f-tipo-membro", normalizarTipoMembro(data.tipo_membro));
@@ -257,7 +259,6 @@
   function _validar() {
     if (!gv("mem-f-nome")) return "Nome é obrigatório.";
     if (!gv("mem-f-status")) return "Status é obrigatório.";
-    if (!gv("mem-f-tipo-membro")) return "Tipo de membro é obrigatório.";
     if (!gv("mem-f-tipo-ingresso")) return "Forma de ingresso é obrigatória.";
 
     const email = gv("mem-f-email");
@@ -335,6 +336,7 @@
       nome: gv("mem-f-nome"),
       email: email,
       telefone: gv("mem-f-telefone") || null,
+      celular: gv("mem-f-celular") || null,
       data_nascimento: dateOrNull(gv("mem-f-nascimento"))
     };
 
@@ -408,6 +410,7 @@
       nome: gv("mem-f-nome"),
       email: email,
       telefone: gv("mem-f-telefone") || null,
+      celular: gv("mem-f-celular") || null,
       data_nascimento: dateOrNull(gv("mem-f-nascimento"))
     };
 
@@ -465,9 +468,9 @@
 <div id="modal-novo-membro"
      style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:16px"
      onclick="if(event.target===this)membFecharModal()">
-  <div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+  <div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:720px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)">
 
-    <div style="padding:20px 24px 16px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg-card);z-index:1">
+    <div style="padding:16px 24px 14px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg-card);z-index:1">
       <div>
         <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Membresia · IPPenha</div>
         <div id="mem-modal-title" style="font-size:17px;font-weight:700;color:var(--tx1)">Novo Membro</div>
@@ -475,42 +478,22 @@
       <button onclick="membFecharModal()" style="background:none;border:none;font-size:22px;color:var(--tx3);cursor:pointer;padding:4px 8px;border-radius:6px">×</button>
     </div>
 
-    <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px">
+    <div style="padding:20px 24px">
 
       <div id="mem-novo-erro"
-           style="display:none;background:rgba(224,85,85,.12);border:1px solid var(--rose);border-radius:8px;padding:10px 14px;font-size:12.5px;color:var(--rose)"></div>
+           style="display:none;background:rgba(224,85,85,.12);border:1px solid var(--rose);border-radius:8px;padding:10px 14px;font-size:12.5px;color:var(--rose);margin-bottom:16px"></div>
 
-      <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--bd1);padding-bottom:6px">
-        Dados Pessoais
-      </div>
+      <div class="mem-section-hd">Informações Pessoais</div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div style="grid-column:1/-1">
+      <div class="mem-grid-3">
+        <div>
           <label class="mem-lbl">Nome completo <span style="color:var(--rose)">*</span></label>
-          <input id="mem-f-nome" type="text" placeholder="Nome completo do membro" class="mem-inp" />
+          <input id="mem-f-nome" type="text" placeholder="Nome completo" class="mem-inp" />
         </div>
-
         <div>
           <label class="mem-lbl">E-mail</label>
           <input id="mem-f-email" type="email" placeholder="email@exemplo.com" class="mem-inp" />
         </div>
-
-        <div>
-          <label class="mem-lbl">Telefone / Celular</label>
-          <input id="mem-f-telefone" type="tel" placeholder="(11) 99999-9999" class="mem-inp" />
-        </div>
-
-        <div>
-          <label class="mem-lbl">Data de Nascimento</label>
-          <input id="mem-f-nascimento" type="date" class="mem-inp" />
-        </div>
-      </div>
-
-      <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--bd1);padding-bottom:6px;margin-top:4px">
-        Dados Eclesiásticos
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div>
           <label class="mem-lbl">Status <span style="color:var(--rose)">*</span></label>
           <select id="mem-f-status" class="mem-inp">
@@ -523,16 +506,31 @@
             <option value="disciplinado">Disciplinado</option>
           </select>
         </div>
-
         <div>
-          <label class="mem-lbl">Tipo de Membro <span style="color:var(--rose)">*</span></label>
+          <label class="mem-lbl">Telefone</label>
+          <input id="mem-f-telefone" type="tel" placeholder="(11) 99999-9999" class="mem-inp" />
+        </div>
+        <div>
+          <label class="mem-lbl">Celular</label>
+          <input id="mem-f-celular" type="tel" placeholder="(11) 99999-9999" class="mem-inp" />
+        </div>
+        <div>
+          <label class="mem-lbl">Data de Nascimento</label>
+          <input id="mem-f-nascimento" type="date" class="mem-inp" />
+        </div>
+      </div>
+
+      <div class="mem-section-hd" style="margin-top:4px">Informações Eclesiásticas</div>
+
+      <div class="mem-grid-3">
+        <div>
+          <label class="mem-lbl">Tipo de Membro</label>
           <select id="mem-f-tipo-membro" class="mem-inp">
             <option value="">Nenhum</option>
             <option value="comungante">Comungante</option>
             <option value="nao_comungante">Não Comungante</option>
           </select>
         </div>
-
         <div>
           <label class="mem-lbl">Forma de Ingresso <span style="color:var(--rose)">*</span></label>
           <select id="mem-f-tipo-ingresso" class="mem-inp">
@@ -544,19 +542,12 @@
             <option value="outro">Outro</option>
           </select>
         </div>
-
         <div>
           <label class="mem-lbl">Data de Ingresso</label>
           <input id="mem-f-ingresso" type="date" class="mem-inp" />
         </div>
-
         <div>
-          <label class="mem-lbl">Data de Batismo</label>
-          <input id="mem-f-batismo" type="date" class="mem-inp" />
-        </div>
-
-        <div>
-          <label class="mem-lbl">Função na Congregação</label>
+          <label class="mem-lbl">Função</label>
           <select id="mem-f-funcao" class="mem-inp">
             <option value="membro">Membro</option>
             <option value="pastor">Pastor</option>
@@ -572,22 +563,24 @@
             <option value="colaborador_membro">Colaborador - Membro</option>
           </select>
         </div>
-
         <div>
           <label class="mem-lbl">Vínculo</label>
           <select id="mem-f-cong" class="mem-inp">
             <option value="">Carregando…</option>
           </select>
         </div>
-
         <div>
+          <label class="mem-lbl">Data de Batismo</label>
+          <input id="mem-f-batismo" type="date" class="mem-inp" />
+        </div>
+        <div style="grid-column:span 2">
           <label class="mem-lbl">Nº de Registro</label>
           <input id="mem-f-registro" type="text" placeholder="Ex.: 0342" class="mem-inp" />
         </div>
       </div>
 
       <div id="mem-acesso-section" style="display:none;background:rgba(42,181,192,.05);border:1px solid rgba(42,181,192,.2);border-radius:8px;padding:14px 16px;margin-top:4px">
-        <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Controle de Acesso</div>
+        <div style="font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Controle de Acesso</div>
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
           <input type="checkbox" id="mem-f-acesso-facial" style="width:16px;height:16px;accent-color:var(--teal);cursor:pointer;flex-shrink:0">
           <span>
@@ -599,15 +592,14 @@
 
     </div>
 
-    <div style="padding:16px 24px;border-top:1px solid var(--bd1);display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:var(--bg-card)">
+    <div style="padding:14px 24px;border-top:1px solid var(--bd1);display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:var(--bg-card)">
       <button onclick="membFecharModal()"
-              style="padding:9px 20px;border-radius:8px;border:1px solid var(--bd2);background:none;color:var(--tx2);font-size:13px;cursor:pointer">
+              style="padding:8px 18px;border-radius:8px;border:1px solid var(--bd2);background:none;color:var(--tx2);font-size:13px;cursor:pointer">
         Cancelar
       </button>
-
       <button id="mem-novo-salvar" onclick="membSalvar()"
-              style="padding:9px 22px;border-radius:8px;border:none;background:var(--grd);color:#fff;font-size:13px;font-weight:600;cursor:pointer">
-        Salvar Membro
+              style="padding:8px 22px;border-radius:8px;border:none;background:var(--grd);color:#fff;font-size:13px;font-weight:600;cursor:pointer">
+        Cadastrar Membro
       </button>
     </div>
 
@@ -615,20 +607,29 @@
 </div>
 
 <style>
+  .mem-section-hd {
+    font-size:10px;
+    font-weight:700;
+    color:var(--teal);
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    padding-bottom:8px;
+    margin-bottom:12px;
+    border-bottom:1px solid var(--bd1);
+  }
   .mem-lbl {
     display:block;
-    font-size:11px;
+    font-size:10.5px;
     font-weight:600;
-    color:var(--tx2);
+    color:var(--tx3);
     text-transform:uppercase;
     letter-spacing:.05em;
-    margin-bottom:5px;
+    margin-bottom:4px;
   }
-
   .mem-inp {
     width:100%;
-    padding:9px 12px;
-    border-radius:8px;
+    padding:8px 10px;
+    border-radius:7px;
     border:1px solid var(--bd2);
     background:var(--bg-input,var(--bg-card));
     color:var(--tx1);
@@ -637,22 +638,29 @@
     outline:none;
     box-sizing:border-box;
   }
-
   .mem-inp:focus {
     border-color:var(--ac);
   }
-
-  @media(max-width:520px) {
+  .mem-grid-3 {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-bottom:20px;
+  }
+  @media(max-width:580px) {
+    .mem-grid-3 { grid-template-columns:repeat(2,1fr); }
     #modal-novo-membro > div {
       border-radius:12px 12px 0 0;
       max-height:96vh;
       margin-top:auto;
     }
-
     #modal-novo-membro {
       align-items:flex-end;
       padding:0;
     }
+  }
+  @media(max-width:380px) {
+    .mem-grid-3 { grid-template-columns:1fr; }
   }
 </style>`;
 
