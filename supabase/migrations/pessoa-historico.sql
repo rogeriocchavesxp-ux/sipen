@@ -53,7 +53,7 @@ BEGIN
       (NEW.pessoa_id, 'ministerio_entrada',
        'Entrou no ministério: ' || COALESCE(v_nome, 'Ministério'),
        NEW.id, 'ministerio_membros', CURRENT_DATE)
-    ON CONFLICT (referencia_id, evento_tipo) DO NOTHING;
+    ON CONFLICT DO NOTHING;
 
   ELSIF TG_OP = 'UPDATE' THEN
     IF NEW.status IS DISTINCT FROM OLD.status THEN
@@ -64,7 +64,7 @@ BEGIN
           (OLD.pessoa_id, 'ministerio_inativado',
            'Desvinculado do ministério: ' || COALESCE(v_nome, 'Ministério'),
            OLD.id, 'ministerio_membros', CURRENT_DATE)
-        ON CONFLICT (referencia_id, evento_tipo) DO NOTHING;
+        ON CONFLICT DO NOTHING;
       ELSIF NEW.status = 'ativo' THEN
         INSERT INTO public.pessoa_eventos
           (pessoa_id, evento_tipo, descricao, referencia_id, referencia_tipo, data_evento)
@@ -143,7 +143,7 @@ BEGIN
       (NEW.pessoa_id, 'sociedade_entrada',
        'Entrou na sociedade: ' || NEW.orgao,
        NEW.id, 'nomeados', COALESCE(NEW.data_inicio, CURRENT_DATE))
-    ON CONFLICT (referencia_id, evento_tipo) DO NOTHING;
+    ON CONFLICT DO NOTHING;
 
   ELSIF TG_OP = 'UPDATE' THEN
     IF OLD.deleted_at IS NULL AND NEW.deleted_at IS NOT NULL THEN
@@ -153,7 +153,7 @@ BEGIN
         (NEW.pessoa_id, 'sociedade_saida',
          'Desligado da sociedade: ' || NEW.orgao,
          NEW.id, 'nomeados', CURRENT_DATE)
-      ON CONFLICT (referencia_id, evento_tipo) DO NOTHING;
+      ON CONFLICT DO NOTHING;
     END IF;
     IF NEW.cargo IS DISTINCT FROM OLD.cargo AND NEW.cargo IS NOT NULL AND OLD.deleted_at IS NULL THEN
       INSERT INTO public.pessoa_eventos
@@ -196,7 +196,7 @@ SELECT
   COALESCE(mb.data_ingresso::timestamptz, now())
 FROM public.membros mb
 WHERE mb.data_ingresso IS NOT NULL
-ON CONFLICT (referencia_id, evento_tipo) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- Batismo (quando diferente da data de ingresso)
 INSERT INTO public.pessoa_eventos
@@ -225,7 +225,7 @@ SELECT
   mm.created_at
 FROM public.ministerio_membros mm
 JOIN public.ministerios m ON m.id = mm.ministerio_id
-ON CONFLICT (referencia_id, evento_tipo) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- Entrada em sociedades
 INSERT INTO public.pessoa_eventos
@@ -239,7 +239,7 @@ SELECT
   COALESCE(n.criado_em, now())
 FROM public.nomeados n
 WHERE n.orgao_tipo = 'sociedade' AND n.pessoa_id IS NOT NULL
-ON CONFLICT (referencia_id, evento_tipo) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- Saída de sociedades já registradas
 INSERT INTO public.pessoa_eventos
@@ -253,4 +253,4 @@ SELECT
   COALESCE(n.deleted_at, now())
 FROM public.nomeados n
 WHERE n.orgao_tipo = 'sociedade' AND n.pessoa_id IS NOT NULL AND n.deleted_at IS NOT NULL
-ON CONFLICT (referencia_id, evento_tipo) DO NOTHING;
+ON CONFLICT DO NOTHING;
