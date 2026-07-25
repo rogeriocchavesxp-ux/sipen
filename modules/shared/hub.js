@@ -24,7 +24,7 @@ function _fmt(iso){
 }
 async function _cnt(table,qs){
   try{
-    const r=await fetch(`${apiBaseUrl()}/${table}?select=id${qs||''}`,{
+    const r=await fetch(`${apiBaseUrl()}/rest/v1/${table}?select=id${qs||''}`,{
       headers:{...apiHeaders(),'Prefer':'count=exact','Range':'0-0'}
     });
     const m=(r.headers.get('Content-Range')||'').match(/\/(\d+)$/);
@@ -455,10 +455,10 @@ function renderLiderancaDash(){
   const hdrs=typeof apiHeaders==='function'?apiHeaders():{};
   if(!api) return;
   Promise.all([
-    _cnt('rest/v1/pastores','&deleted_at=is.null'),
-    _cnt('rest/v1/conselho_nomeados','&deleted_at=is.null'),
-    _cnt('rest/v1/conselho_ordenados','&deleted_at=is.null&status=eq.ativo'),
-    _cnt('rest/v1/conselho_seminaristas','&deleted_at=is.null'),
+    _cnt('pastores','&deleted_at=is.null'),
+    _cnt('conselho_nomeados','&deleted_at=is.null'),
+    _cnt('conselho_ordenados','&deleted_at=is.null&status=eq.ativo'),
+    _cnt('conselho_seminaristas','&deleted_at=is.null'),
   ]).then(([pastores,nomeados,ordenados,seminario])=>{
     _set('k-lid-pastores',  pastores  ?? '—');
     _set('k-lid-nomeados',  nomeados  ?? '—');
