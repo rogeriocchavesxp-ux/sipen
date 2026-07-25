@@ -265,28 +265,23 @@ GRANT EXECUTE ON FUNCTION public.requisitar_espaco_ocupado(
 ) TO anon, authenticated;
 
 
--- ── 6. Backfill agenda: renumerar todos os protocolos → 6 dígitos ─────
+-- ── 6. Backfill agenda: renumerar protocolos antigos → 6 dígitos ──────
 -- Zera a sequência do ano corrente para recomeçar do 1
 DELETE FROM public.agenda_protocolo_seq WHERE ano = EXTRACT(YEAR FROM CURRENT_DATE)::INTEGER;
 
--- Nulifica todos os formatos antigos (4 dígitos ou data+UUID)
-UPDATE public.agenda SET protocolo = NULL
-WHERE deleted_at IS NULL
-  AND protocolo IS NOT NULL
-  AND (
-    protocolo ~ '^AG-\d{4}-\d{4}$'           -- formato antigo 4 dígitos
-    OR protocolo ~ '^AG-\d{8}-[A-Z0-9]{6}$'  -- formato data+UUID
-  );
-
--- Regera em ordem cronológica com o novo padrão de 6 dígitos
+-- Atualiza diretamente (sem passar por NULL) em ordem cronológica
 DO $$
 DECLARE r RECORD;
 BEGIN
   FOR r IN
     SELECT id
     FROM public.agenda
-    WHERE protocolo IS NULL
-      AND deleted_at IS NULL
+    WHERE deleted_at IS NULL
+      AND protocolo IS NOT NULL
+      AND (
+        protocolo ~ '^AG-\d{4}-\d{4}$'
+        OR protocolo ~ '^AG-\d{8}-[A-Z0-9]{6}$'
+      )
     ORDER BY COALESCE(data, created_at::date, CURRENT_DATE) ASC, created_at ASC
   LOOP
     UPDATE public.agenda
@@ -296,25 +291,20 @@ BEGIN
 END $$;
 
 
--- ── 7. Backfill requisições: renumerar todos os protocolos → 6 dígitos
--- Zera a sequência do ano corrente para recomeçar do 1
+-- ── 7. Backfill requisições: renumerar protocolos antigos → 6 dígitos ─
+-- Inicializa a sequência do ano corrente (DELETE idempotente)
 DELETE FROM public.requisicoes_espaco_seq WHERE ano = EXTRACT(YEAR FROM CURRENT_DATE)::INTEGER;
 
--- Nulifica todos os formatos UUID existentes
-UPDATE public.requisicoes_espaco SET protocolo = NULL
-WHERE deleted_at IS NULL
-  AND protocolo IS NOT NULL
-  AND protocolo ~ '^REQ-\d{4}-[A-Z0-9]{6}$';
-
--- Regera em ordem cronológica com o novo padrão de 6 dígitos
+-- Atualiza diretamente (sem passar por NULL) em ordem cronológica
 DO $$
 DECLARE r RECORD;
 BEGIN
   FOR r IN
     SELECT id
     FROM public.requisicoes_espaco
-    WHERE protocolo IS NULL
-      AND deleted_at IS NULL
+    WHERE deleted_at IS NULL
+      AND protocolo IS NOT NULL
+      AND protocolo ~ '^REQ-\d{4}-[A-Z0-9]{6}$'
     ORDER BY COALESCE(data_solicitada, created_at::date, CURRENT_DATE) ASC, created_at ASC
   LOOP
     UPDATE public.requisicoes_espaco
