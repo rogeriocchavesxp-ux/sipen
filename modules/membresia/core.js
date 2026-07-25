@@ -153,7 +153,7 @@ async function listarMembros(containerId, countId, filtroFixo = {}, somenteInati
     if (!_membCache.length) {
       _membCache = await apiRead("MEMBROS");
     }
-    let rows = _membCache;
+    let rows = _membCache.filter(r => r.funcao !== "colaborador");
     // filtro fixo (tipo_ingresso, status, etc.)
     if (filtroFixo && Object.keys(filtroFixo).length) {
       rows = rows.filter(row => Object.entries(filtroFixo).every(([k, v]) =>
@@ -213,31 +213,34 @@ async function carregarMembresiaDash() {
     _membCache = membros;
     _visCache  = visitantes;
 
+    // Colaborador puro não entra no rol de membros
+    const membros_rol = membros.filter(r => r.funcao !== "colaborador");
+
     const anoAtual      = new Date().getFullYear();
-    const ativos        = membros.filter(r => r.status === "ativo").length;
-    const batizados     = membros.filter(r => r.batizado === true || (r.data_batismo && r.data_batismo !== null)).length;
-    const transferidos  = membros.filter(r => r.tipo_ingresso === "transferência").length;
-    const homens        = membros.filter(r => r.genero === "M").length;
-    const mulheres      = membros.filter(r => r.genero === "F").length;
-    const criancas      = membros.filter(r => {
+    const ativos        = membros_rol.filter(r => r.status === "ativo").length;
+    const batizados     = membros_rol.filter(r => r.batizado === true || (r.data_batismo && r.data_batismo !== null)).length;
+    const transferidos  = membros_rol.filter(r => r.tipo_ingresso === "transferência").length;
+    const homens        = membros_rol.filter(r => r.genero === "M").length;
+    const mulheres      = membros_rol.filter(r => r.genero === "F").length;
+    const criancas      = membros_rol.filter(r => {
       if (!r.data_nascimento) return false;
       try { return (anoAtual - new Date(r.data_nascimento + "T00:00:00").getFullYear()) <= 12; } catch { return false; }
     }).length;
 
     sv("md-membros-ativos",  ativos.toLocaleString("pt-BR"));
-    sv("md-membros-total",   `${membros.length.toLocaleString("pt-BR")} no total`);
+    sv("md-membros-total",   `${membros_rol.length.toLocaleString("pt-BR")} no total`);
     sv("md-homens",          homens.toLocaleString("pt-BR"));
     sv("md-mulheres",        mulheres.toLocaleString("pt-BR"));
     sv("md-criancas",        criancas.toLocaleString("pt-BR"));
     sv("md-batizados",       batizados.toLocaleString("pt-BR"));
-    sv("md-batizados-sub",   `${Math.round(batizados / Math.max(membros.length, 1) * 100)}% dos membros`);
+    sv("md-batizados-sub",   `${Math.round(batizados / Math.max(membros_rol.length, 1) * 100)}% dos membros`);
     sv("md-transferencias",  transferidos.toLocaleString("pt-BR"));
 
-    sv("md-ve-batismos",   membros.filter(r => r.tipo_ingresso === "batismo").length);
-    sv("md-ve-prof",       membros.filter(r => r.tipo_ingresso === "profissão de fé").length);
+    sv("md-ve-batismos",   membros_rol.filter(r => r.tipo_ingresso === "batismo").length);
+    sv("md-ve-prof",       membros_rol.filter(r => r.tipo_ingresso === "profissão de fé").length);
     sv("md-ve-trans",      transferidos);
-    sv("md-ve-inativos",   membros.filter(r => ["inativo","afastado","disciplinado"].includes(r.status)).length);
-    sv("md-ve-falecidos",  membros.filter(r => r.status === "falecido").length);
+    sv("md-ve-inativos",   membros_rol.filter(r => ["inativo","afastado","disciplinado"].includes(r.status)).length);
+    sv("md-ve-falecidos",  membros_rol.filter(r => r.status === "falecido").length);
 
     // Gráfico de barras por congregação
     const el = document.getElementById("md-cong-bars");

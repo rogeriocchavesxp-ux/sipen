@@ -558,12 +558,18 @@
         <div>
           <label class="mem-lbl">Função na Congregação</label>
           <select id="mem-f-funcao" class="mem-inp">
-            <option value="">Sem função especial</option>
+            <option value="membro">Membro</option>
+            <option value="pastor">Pastor</option>
+            <option value="presbitero">Presbítero</option>
+            <option value="diacono">Diácono</option>
+            <option value="supervisor">Supervisor</option>
+            <option value="coordenador">Coordenador</option>
             <option value="lider_ministerio">Líder de Ministério</option>
             <option value="lider_pg">Líder de PG</option>
             <option value="secretario">Secretário(a)</option>
             <option value="tesoureiro">Tesoureiro(a)</option>
-            <option value="membro">Membro</option>
+            <option value="colaborador">Colaborador</option>
+            <option value="colaborador_membro">Colaborador - Membro</option>
           </select>
         </div>
 
