@@ -184,7 +184,7 @@ const _VIEW_MAP = {
   "infra":       "modules/infraestrutura/view.html?v=6.45.13",
   "dem":         "modules/demandas/view.html?v=6.45.13",
   "rel":         "modules/relatorios/view.html?v=6.45.13",
-  "memb":        "modules/membresia/view.html?v=6.45.13",
+  "memb":        "modules/membresia/view.html?v=6.49.90",
   "proj":        "modules/projetos/view.html",
   "diac":        "modules/diaconal/view.html?v=6.45.13",
   "cong":        "modules/congregacoes/view.html",
