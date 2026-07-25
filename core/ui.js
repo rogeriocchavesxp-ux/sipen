@@ -132,6 +132,23 @@ const _COL_PT_UI = {
 };
 const _colLabelUI = c => _COL_PT_UI[c] || c.replace(/_/g," ").replace(/\b\w/g, l => l.toUpperCase());
 
+async function _popularSelectCongregacoesCrud(el) {
+  const val = el.dataset.valorAtual || "";
+  try {
+    const r = await fetch(`${apiBaseUrl()}/rest/v1/congregacoes?deleted_at=is.null&order=nome.asc`, { headers: apiHeaders() });
+    const rows = r.ok ? await r.json() : [];
+    el.innerHTML = `<option value="">— Sem congregação (Sede) —</option>`;
+    rows.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.dataset.nome = c.nome;
+      opt.textContent = c.nome;
+      if (c.id === val) opt.selected = true;
+      el.appendChild(opt);
+    });
+  } catch (_) {}
+}
+
 async function _popularSelectEspacosCrud(el) {
   const val = el.dataset.valorAtual || "";
   try {
@@ -192,6 +209,12 @@ function openCrudForm(tab, preset = null) {
         ${escapeHtml(lbl)}</label></div>`;
     }
     const spanStyle = spanFull ? "grid-column:1 / -1" : "";
+    if (tipo === "congregacoes-select") {
+      const valorAtual = (preset?.congregacao_id || "");
+      return `<div style="${spanStyle}">${label}<select data-field="${escapeHtmlAttr(f)}" data-tipo-async="congregacoes" data-valor-atual="${escapeHtmlAttr(String(valorAtual))}" style="${inputStyle}">
+        <option value="">Carregando congregações…</option>
+      </select></div>`;
+    }
     if (tipo === "espacos-select") {
       const valorAtual = (preset?.espaco_id || val || "");
       return `<div style="${spanStyle}">${label}<select data-field="${escapeHtmlAttr(f)}" data-tipo-async="espacos" data-valor-atual="${escapeHtmlAttr(String(valorAtual))}" style="${inputStyle}">
@@ -245,8 +268,9 @@ function openCrudForm(tab, preset = null) {
       </div>
     </div>`;
 
-  // População assíncrona de selects de espaços
+  // População assíncrona de selects de espaços e congregações
   modal.querySelectorAll('[data-tipo-async="espacos"]').forEach(el => _popularSelectEspacosCrud(el));
+  modal.querySelectorAll('[data-tipo-async="congregacoes"]').forEach(el => _popularSelectCongregacoesCrud(el));
 }
 
 async function salvarRegistro(tab, recordId = null) {
@@ -328,7 +352,12 @@ async function salvarRegistro(tab, recordId = null) {
       delete data.__pessoa_id;
 
       const CAMPOS_PESSOA  = ["nome","email","telefone","celular","data_nascimento"];
-      const CAMPOS_MEMBRO  = ["status","tipo_ingresso","funcao","data_batismo","data_ingresso","batizado","casado_na_igreja"];
+      const CAMPOS_MEMBRO  = ["status","tipo_ingresso","funcao","data_batismo","data_ingresso","batizado","casado_na_igreja","tipo_membro"];
+      // congregacao field stores the UUID from the congregacoes-select
+      if (data.congregacao !== undefined) {
+        data.congregacao_id = data.congregacao || null;
+        delete data.congregacao;
+      }
 
       const payloadPessoa = {};
       const payloadMembro = {};
@@ -337,6 +366,7 @@ async function salvarRegistro(tab, recordId = null) {
         else if (CAMPOS_MEMBRO.includes(k)) payloadMembro[k] = v || null;
       });
       if (data.numero_registro) payloadMembro.numero_registro = data.numero_registro;
+      if (data.congregacao_id !== undefined) payloadMembro.congregacao_id = data.congregacao_id;
 
       if (pessoaId && Object.keys(payloadPessoa).length) {
         const rP = await fetch(`${apiBaseUrl()}/rest/v1/pessoas?id=eq.${encodeURIComponent(pessoaId)}`, {
