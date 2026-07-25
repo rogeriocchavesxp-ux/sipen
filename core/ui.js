@@ -137,7 +137,7 @@ async function _popularSelectCongregacoesCrud(el) {
   try {
     const r = await fetch(`${apiBaseUrl()}/rest/v1/congregacoes?deleted_at=is.null&order=nome.asc`, { headers: apiHeaders() });
     const rows = r.ok ? await r.json() : [];
-    el.innerHTML = `<option value="">Sede</option>`;
+    el.innerHTML = `<option value="">Nenhum</option>`;
     rows.forEach(c => {
       const opt = document.createElement("option");
       opt.value = c.id;

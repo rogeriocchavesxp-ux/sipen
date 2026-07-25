@@ -144,7 +144,7 @@
     if (!sel) return;
 
     sel.innerHTML =
-      '<option value="">Sede</option>' +
+      '<option value="">Nenhum</option>' +
       _congregacoes
         .map(c => `<option value="${c.id}">${escapeHtml(c.nome)}</option>`)
         .join("");
