@@ -170,8 +170,8 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.solicitar_agendamento FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.solicitar_agendamento TO anon, authenticated;
+REVOKE ALL ON FUNCTION public.solicitar_agendamento(TEXT,DATE,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,INTEGER,TEXT,BOOLEAN,DATE) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.solicitar_agendamento(TEXT,DATE,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,INTEGER,TEXT,BOOLEAN,DATE) TO anon, authenticated;
 
 
 -- ── 5. requisitar_espaco_ocupado: substituir UUID por sequencial ──────
