@@ -313,12 +313,37 @@ async function agSalvarForm(id) {
     const isEdit = !!id;
     const res = await fetch(`${apiBaseUrl()}/rest/v1/agenda${isEdit ? `?id=eq.${id}` : ""}`, {
       method: isEdit ? "PATCH" : "POST",
-      headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+      headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=representation" },
       body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+    // Ao criar novo evento na Agenda, gera entrada em Programações com status pendente
+    if (!isEdit) {
+      const novoId = Array.isArray(rows) ? rows[0]?.id : rows?.id;
+      if (novoId) {
+        const usuario = typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL : null;
+        await fetch(`${apiBaseUrl()}/rest/v1/eventos`, {
+          method: "POST",
+          headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+          body: JSON.stringify({
+            titulo:          payload.titulo,
+            descricao:       payload.observacao || null,
+            data_inicio:     payload.data || null,
+            hora_inicio:     payload.hora_inicio || null,
+            hora_fim:        payload.hora_fim || null,
+            local_nome:      payload.espaco || null,
+            status:          "pendente",
+            agenda_id:       novoId,
+            criado_por:      usuario?.auth_user_id || null,
+            criado_por_nome: usuario?.nome || usuario?.email || "Sistema",
+            criado_em:       new Date().toISOString(),
+          }),
+        });
+      }
+    }
     document.getElementById("ag-form-modal").style.display = "none";
-    T("Salvo", isEdit ? "Evento atualizado." : "Evento criado.");
+    T("Salvo", isEdit ? "Evento atualizado." : "Evento criado e enviado para Programações.");
     if (typeof carregarAgendaDash === "function") carregarAgendaDash();
     if (typeof agCarregarConfirmados === "function") agCarregarConfirmados();
   } catch(e) { T("Erro", e.message); }
