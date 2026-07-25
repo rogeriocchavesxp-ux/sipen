@@ -183,6 +183,12 @@ function agAbrirEspacos() {
         <button onclick="document.getElementById('ag-esp-popup').style.display='none'" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer;padding:0;line-height:1">✕</button>
       </div>
       <div style="overflow-y:auto;padding:16px 20px;flex:1">
+        <div style="margin-bottom:14px">
+          <div style="font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Opção especial</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${(() => { const sel = selecionados.has("Não necessário"); return `<button type="button" class="ag-esp-chip" data-nome="Não necessário" data-nenhum="1" data-sel="${sel?'1':'0'}" style="padding:5px 12px;border-radius:20px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s;border:2px solid;font-style:italic;${sel ? "background:var(--teal);color:#fff;border-color:var(--teal)" : "background:transparent;color:var(--tx2);border-color:var(--bd2)"}">Não necessário</button>`; })()}
+          </div>
+        </div>
         ${Object.entries(grupos).map(([g, items]) => `
           <div style="margin-bottom:14px">
             <div style="font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">${escapeHtml(g)}</div>
@@ -204,14 +210,24 @@ function agAbrirEspacos() {
       </div>
     </div>`;
 
+  const _agEspStyle = (b, on) => {
+    b.dataset.sel = on ? "1" : "0";
+    b.style.background   = on ? "var(--teal)" : "transparent";
+    b.style.color        = on ? "#fff"        : "var(--tx2)";
+    b.style.borderColor  = on ? "var(--teal)" : "var(--bd2)";
+  };
   pop.querySelectorAll(".ag-esp-chip").forEach(btn => {
     btn.addEventListener("click", () => {
-      const sel = btn.dataset.sel === "1";
-      btn.dataset.sel = sel ? "0" : "1";
-      if (!sel) {
-        btn.style.background = "var(--teal)"; btn.style.color = "#fff"; btn.style.borderColor = "var(--teal)";
+      const on = btn.dataset.sel !== "1";
+      if (btn.dataset.nenhum === "1") {
+        // "Não necessário" selecionado → desmarca todos os outros
+        pop.querySelectorAll(".ag-esp-chip:not([data-nenhum])").forEach(b => _agEspStyle(b, false));
+        _agEspStyle(btn, on);
       } else {
-        btn.style.background = "transparent"; btn.style.color = "var(--tx2)"; btn.style.borderColor = "var(--bd2)";
+        // Espaço real selecionado → desmarca "Não necessário"
+        const nenhum = pop.querySelector(".ag-esp-chip[data-nenhum='1']");
+        if (nenhum && on) _agEspStyle(nenhum, false);
+        _agEspStyle(btn, on);
       }
     });
   });
@@ -438,6 +454,10 @@ async function _agNotificarResponsaveis(acao, evento, extras = {}) {
 async function agSalvarForm(id) {
   const titulo = document.getElementById("ag-f-titulo")?.value?.trim();
   if (!titulo) { T("Campo obrigatório", "Informe o título do evento."); return; }
+  const _fTipo   = document.getElementById("ag-f-tipo")?.value;
+  const _fEspaco = document.getElementById("ag-f-espaco-txt")?.value?.trim();
+  if (!_fTipo)   { T("Campo obrigatório", "Selecione o tipo do evento (Culto, Reunião, Evento…)."); return; }
+  if (!_fEspaco) { T("Campo obrigatório", "Selecione ao menos um espaço (ou 'Não necessário')."); return; }
   const payload = {
     titulo,
     tipo:            document.getElementById("ag-f-tipo")?.value || null,
