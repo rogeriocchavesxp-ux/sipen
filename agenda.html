@@ -105,6 +105,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .state-icon{font-size:36px;margin-bottom:12px}
 .state-txt{font-size:13px}
 
+/* ── Legenda ── */
+.legenda{display:flex;flex-wrap:wrap;gap:8px 14px;padding:12px 0 16px}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;color:var(--tx2);white-space:nowrap}
+.leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
 /* ── Footer ── */
 .site-footer{text-align:center;padding:20px;font-size:11px;color:var(--tx3);border-top:1px solid var(--bd);background:var(--card);margin-top:40px}
 </style>
@@ -133,6 +138,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <button class="vtog" id="btn-list" onclick="setView('list')">Lista</button>
     </div>
   </div>
+
+  <!-- Legenda -->
+  <div class="legenda" id="legenda"></div>
 
   <!-- Calendário -->
   <div id="view-cal">
@@ -186,6 +194,29 @@ const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const HDR   = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY };
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+
+const TIPO_COR = {
+  "Culto":       { bg:"rgba(220,38,38,.12)",   tx:"#dc2626", bd:"#dc2626"  },
+  "Reunião":     { bg:"rgba(234,88,12,.10)",   tx:"#ea580c", bd:"#ea580c"  },
+  "Congresso":   { bg:"rgba(37,99,235,.10)",   tx:"#2563eb", bd:"#2563eb"  },
+  "Conferência": { bg:"rgba(124,58,237,.10)",  tx:"#7c3aed", bd:"#7c3aed"  },
+  "Ensaio":      { bg:"rgba(8,145,178,.10)",   tx:"#0891b2", bd:"#0891b2"  },
+  "Evento":      { bg:"rgba(5,150,105,.10)",   tx:"#059669", bd:"#059669"  },
+  "Casamento":   { bg:"rgba(219,39,119,.10)",  tx:"#db2777", bd:"#db2777"  },
+  "Aniversário": { bg:"rgba(217,119,6,.10)",   tx:"#d97706", bd:"#d97706"  },
+};
+const COR_DEFAULT = { bg:"var(--gr-bg)", tx:"var(--gr)", bd:"var(--gr)" };
+
+function corEvento(tipo) { return TIPO_COR[tipo] || COR_DEFAULT; }
+
+function renderLegenda() {
+  const el = document.getElementById("legenda");
+  if (!el) return;
+  const tipos = Object.entries(TIPO_COR).map(([nome, c]) =>
+    `<div class="leg-item"><div class="leg-dot" style="background:${c.bd}"></div>${nome}</div>`
+  );
+  el.innerHTML = tipos.join("");
+}
 const DIAS  = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
 
 let _todos = [];
@@ -202,6 +233,7 @@ async function carregar() {
     _todos = res.ok ? await res.json() : [];
   } catch(_) { _todos = []; }
   document.getElementById("state-loading").style.display = "none";
+  renderLegenda();
   renderizar();
 }
 
@@ -259,11 +291,10 @@ function renderCal(evs) {
 
     const MAX = 3;
     dayEvs.slice(0, MAX).forEach(ev => {
+      const c = corEvento(ev.tipo);
       const el = document.createElement("div");
       el.className = "cal-ev";
-      if (ev.tipo === "Culto") {
-        el.style.cssText = "background:rgba(220,38,38,.12);color:#dc2626;border-left-color:#dc2626";
-      }
+      el.style.cssText = `background:${c.bg};color:${c.tx};border-left-color:${c.bd}`;
       el.innerHTML = (ev.hora_inicio ? `<span class="cal-ev-hora">${fmtH(ev.hora_inicio)}</span>` : "") + esc(ev.titulo);
       el.onclick = () => abrirModal(ev);
       cell.appendChild(el);
@@ -304,7 +335,8 @@ function renderList() {
     const sem = DIAS[d.getDay()];
     const card = document.createElement("div");
     card.className = "ev-card";
-    if (ev.tipo === "Culto") card.style.borderLeft = "3px solid #dc2626";
+    const cc = corEvento(ev.tipo);
+    card.style.borderLeft = `3px solid ${cc.bd}`;
     card.onclick = () => abrirModal(ev);
     const horario = ev.hora_inicio ? fmtH(ev.hora_inicio) + (ev.hora_fim ? " – " + fmtH(ev.hora_fim) : "") : "";
     card.innerHTML = `
@@ -329,8 +361,10 @@ function abrirModal(ev) {
   const dataFmt = d ? `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()} (${DIAS[d.getDay()]})` : "";
   const horario = ev.hora_inicio ? fmtH(ev.hora_inicio) + (ev.hora_fim ? " – " + fmtH(ev.hora_fim) : "") : "";
 
+  const mc = corEvento(ev.tipo);
   document.getElementById("modal-titulo").textContent = ev.titulo || "Evento";
   document.getElementById("modal-body").innerHTML = `
+    ${ev.tipo ? `<div style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:6px;font-size:10.5px;font-weight:700;background:${mc.bg};color:${mc.tx};border:1px solid ${mc.bd};margin-bottom:12px">${esc(ev.tipo)}</div>` : ""}
     ${dataFmt  ? `<div class="modal-row"><span class="modal-icon">📅</span><span>${esc(dataFmt)}</span></div>` : ""}
     ${horario  ? `<div class="modal-row"><span class="modal-icon">🕐</span><span>${esc(horario)}</span></div>` : ""}
     ${ev.espaco ? `<div class="modal-row"><span class="modal-icon">📍</span><span>${esc(ev.espaco)}</span></div>` : ""}
