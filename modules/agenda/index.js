@@ -13,6 +13,57 @@ VIEW_AUTOLOAD["agenda-historico"]     = null;
 VIEW_AUTOLOAD["agenda-config"]        = null;
 
 
+/* ── ESTADO: dias do evento em edição ───────────────────────── */
+let _agDiasState = [];
+
+function _agRenderizarDias() {
+  const container = document.getElementById("ag-dias-list");
+  if (!container) return;
+  const fi = `width:100%;background:var(--bg-input,var(--bg-surface));border:1px solid var(--bd2);border-radius:7px;color:var(--tx1);font-size:12.5px;padding:8px 11px;outline:none;box-sizing:border-box`;
+  const lbl = t => `<label style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:5px">${t}</label>`;
+  container.innerHTML = _agDiasState.map((d, idx) => `
+    <div style="display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:8px;align-items:end;padding:10px;background:var(--bg-surface);border:1px solid var(--bd1);border-radius:8px">
+      <div>${lbl(idx === 0 ? "Data *" : "Data")}
+        <input id="ag-dia-data-${idx}" type="date" value="${d.data||""}" style="${fi}" oninput="_agSincDia(${idx})">
+      </div>
+      <div>${lbl("Início")}
+        <input id="ag-dia-ini-${idx}" type="time" value="${d.hora_inicio||""}" style="${fi}">
+      </div>
+      <div>${lbl("Fim")}
+        <input id="ag-dia-fim-${idx}" type="time" value="${d.hora_fim||""}" style="${fi}">
+      </div>
+      <div style="padding-bottom:1px">
+        ${idx > 0
+          ? `<button type="button" onclick="_agRemoverDia(${idx})" title="Remover dia"
+               style="width:32px;height:36px;border-radius:7px;border:1px solid rgba(224,85,85,.4);background:rgba(224,85,85,.06);color:var(--rose);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>`
+          : `<div style="width:32px"></div>`}
+      </div>
+    </div>`).join("");
+}
+
+window._agAdicionarDia = function() {
+  const ultimo = _agDiasState[_agDiasState.length - 1] || {};
+  let proxData = "";
+  if (ultimo.data) {
+    const d = new Date(ultimo.data + "T12:00:00");
+    d.setDate(d.getDate() + 1);
+    proxData = d.toISOString().slice(0, 10);
+  }
+  _agDiasState.push({ data: proxData, hora_inicio: ultimo.hora_inicio || "", hora_fim: ultimo.hora_fim || "" });
+  _agRenderizarDias();
+};
+
+window._agRemoverDia = function(idx) {
+  _agDiasState.splice(idx, 1);
+  _agRenderizarDias();
+};
+
+window._agSincDia = function(idx) {
+  // Mantém estado ao re-renderizar (evita perder valores digitados nos outros campos)
+  const d = document.getElementById(`ag-dia-data-${idx}`);
+  if (d && _agDiasState[idx]) _agDiasState[idx].data = d.value;
+};
+
 /* ── SALAS DA IGREJA — carregadas do cadastro central ──────── */
 function agSalasSelect(id, valorAtual = "") {
   const inputStyle = `width:100%;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none`;
@@ -255,6 +306,13 @@ async function agAbrirForm(r = null) {
   const isEdit = !!r?.id;
   const tipoAtual = r?.tipo || "";
   const espacoAtual = r?.espaco || "";
+
+  // Inicializa estado de dias
+  if (Array.isArray(r?.dias) && r.dias.length > 0) {
+    _agDiasState = r.dias.map(d => ({ data: d.data||"", hora_inicio: d.hora_inicio||"", hora_fim: d.hora_fim||"" }));
+  } else {
+    _agDiasState = [{ data: r?.data||"", hora_inicio: r?.hora_inicio||"", hora_fim: r?.hora_fim||"" }];
+  }
   const espacosSel = espacoAtual.split(",").map(s=>s.trim()).filter(Boolean);
 
   let modal = document.getElementById("ag-form-modal");
@@ -295,11 +353,14 @@ async function agAbrirForm(r = null) {
           <input id="ag-f-titulo" type="text" value="${escapeHtml(r?.titulo||"")}" placeholder="Nome do evento" style="${fi}">
         </div>
 
-        <!-- Data / Horários -->
-        <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:10px">
-          <div>${lbl("Data *")}<input id="ag-f-data" type="date" value="${r?.data||""}" style="${fi}"></div>
-          <div>${lbl("Início")}<input id="ag-f-h-inicio" type="time" value="${r?.hora_inicio||""}" style="${fi}"></div>
-          <div>${lbl("Fim")}<input id="ag-f-h-fim" type="time" value="${r?.hora_fim||""}" style="${fi}"></div>
+        <!-- Dias do evento -->
+        <div>
+          ${lbl("Dias do evento")}
+          <div id="ag-dias-list" style="display:flex;flex-direction:column;gap:8px"></div>
+          <button type="button" onclick="_agAdicionarDia()"
+            style="margin-top:8px;padding:5px 14px;border-radius:6px;border:1px dashed var(--bd2);background:transparent;color:var(--tx3);font-size:11px;font-weight:600;cursor:pointer">
+            ＋ Adicionar dia
+          </button>
         </div>
 
         <!-- Recorrência / Dia / Mês -->
@@ -373,6 +434,8 @@ async function agAbrirForm(r = null) {
         </div>
       </div>
     </div>`;
+
+  _agRenderizarDias();
 
   modal.querySelectorAll(".ag-tipo-chip").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -458,12 +521,27 @@ async function agSalvarForm(id) {
   const _fEspaco = document.getElementById("ag-f-espaco-txt")?.value?.trim();
   if (!_fTipo)   { T("Campo obrigatório", "Selecione o tipo do evento (Culto, Reunião, Evento…)."); return; }
   if (!_fEspaco) { T("Campo obrigatório", "Selecione ao menos um espaço (ou 'Não necessário')."); return; }
+
+  // Coleta dias do estado, lendo valores atuais dos inputs
+  const diasColetados = _agDiasState.map((_, idx) => ({
+    data:        document.getElementById(`ag-dia-data-${idx}`)?.value || "",
+    hora_inicio: document.getElementById(`ag-dia-ini-${idx}`)?.value  || "",
+    hora_fim:    document.getElementById(`ag-dia-fim-${idx}`)?.value  || "",
+  })).filter(d => d.data);
+
+  if (!diasColetados.length) { T("Campo obrigatório", "Informe ao menos uma data para o evento."); return; }
+
+  const primeiroDia = diasColetados[0];
+  const ultimoDia   = diasColetados[diasColetados.length - 1];
+
   const payload = {
     titulo,
     tipo:            document.getElementById("ag-f-tipo")?.value || null,
-    data:            document.getElementById("ag-f-data")?.value || null,
-    hora_inicio:     document.getElementById("ag-f-h-inicio")?.value || null,
-    hora_fim:        document.getElementById("ag-f-h-fim")?.value || null,
+    data:            primeiroDia.data,
+    hora_inicio:     primeiroDia.hora_inicio || null,
+    hora_fim:        primeiroDia.hora_fim    || null,
+    data_encerramento: ultimoDia.data !== primeiroDia.data ? ultimoDia.data : null,
+    dias:            diasColetados.length > 1 ? diasColetados : null,
     recorrencia:     document.getElementById("ag-f-recorrencia")?.value || null,
     dia_semana:      document.getElementById("ag-f-dia-semana")?.value || null,
     mes:             document.getElementById("ag-f-mes")?.value || null,
@@ -608,7 +686,7 @@ async function carregarAgendaDash() {
             </div>
             <div style="flex:1;min-width:0">
               <div style="font-size:11.5px;font-weight:600;color:var(--tx1);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(e.titulo||"—")}</div>
-              <div style="font-size:10px;color:var(--tx3)">${e.hora_inicio?e.hora_inicio.slice(0,5):""} ${e.hora_fim?"→ "+e.hora_fim.slice(0,5):""}${e.data_encerramento&&e.data_encerramento!==e.data?" · até "+fmtDataBrCurto(e.data_encerramento):""}</div>
+              <div style="font-size:10px;color:var(--tx3)">${e.hora_inicio?e.hora_inicio.slice(0,5):""} ${e.hora_fim?"→ "+e.hora_fim.slice(0,5):""}${e.data_encerramento&&e.data_encerramento!==e.data?" · até "+fmtDataBrCurto(e.data_encerramento):""}${Array.isArray(e.dias)&&e.dias.length>1?` · <strong>${e.dias.length} dias</strong>`:""}</div>
               <div style="font-size:10px;color:var(--teal);margin-top:1px">${escapeHtml(e.espaco||"")}${e.organizador?" · "+escapeHtml(e.organizador):""}</div>
             </div>
             <button onclick='agAbrirForm(${safeJsonForHtml(e)})' style="background:none;border:1px solid var(--bd1);border-radius:4px;color:var(--tx3);font-size:10px;padding:3px 6px;cursor:pointer;flex-shrink:0">✏️</button>
