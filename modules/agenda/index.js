@@ -1473,70 +1473,68 @@ function agAprovarSolicitacao(r) {
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
       <div style="font-size:22px">✅</div>
       <div>
-        <div style="font-size:14px;font-weight:800;color:var(--tx1)">Aprovar e criar evento</div>
-        <div style="font-size:10.5px;color:var(--tx3)">${escapeHtml(r.titulo||"—")}${r.solicitante ? " · " + nomePropio(r.solicitante) : ""}</div>
+        <div style="font-size:14px;font-weight:800;color:var(--tx1)">Confirmar e aprovar evento</div>
+        <div style="font-size:10.5px;color:var(--tx3)">${escapeHtml(r.titulo||"—")}${r.solicitante_txt ? " · " + escapeHtml(r.solicitante_txt) : ""}</div>
       </div>
       <button onclick="document.getElementById('ag-aprov-modal')?.remove()" style="margin-left:auto;background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div style="grid-column:1/-1"><label class="flb">Título do evento *</label><input id="ag-ap-titulo" class="fi2" value="${escapeHtml(r.titulo||'')}" placeholder="Título do evento na agenda"></div>
-      <div><label class="flb">Data *</label><input id="ag-ap-data" type="date" class="fi2"></div>
-      <div><label class="flb">Horário início *</label><input id="ag-ap-hi" type="time" class="fi2" value="08:00"></div>
-      <div><label class="flb">Horário fim</label><input id="ag-ap-hf" type="time" class="fi2" value="10:00"></div>
-      <div><label class="flb">Espaço / Ambiente</label>${agSalasSelect("ag-ap-esp", r.local_id || r.local || "")}</div>
-      <div style="grid-column:1/-1"><label class="flb">Organizador</label><input id="ag-ap-org" class="fi2" value="${escapeHtml(r.responsavel||r.solicitante||'')}" placeholder="Responsável pelo evento"></div>
-      <div style="grid-column:1/-1"><label class="flb">Descrição</label><textarea id="ag-ap-desc" class="fi2" rows="3" placeholder="Detalhes do evento">${escapeHtml(r.descricao||'')}</textarea></div>
+      <div><label class="flb">Data *</label><input id="ag-ap-data" type="date" class="fi2" value="${escapeHtml(r.data||'')}"></div>
+      <div><label class="flb">Horário início *</label><input id="ag-ap-hi" type="time" class="fi2" value="${escapeHtml(String(r.hora_inicio||'08:00').slice(0,5))}"></div>
+      <div><label class="flb">Horário fim</label><input id="ag-ap-hf" type="time" class="fi2" value="${escapeHtml(String(r.hora_fim||'10:00').slice(0,5))}"></div>
+      <div><label class="flb">Espaço / Ambiente</label>${agSalasSelect("ag-ap-esp", r.espaco_id || r.espaco || "")}</div>
+      <div style="grid-column:1/-1"><label class="flb">Organizador</label><input id="ag-ap-org" class="fi2" value="${escapeHtml(r.organizador||r.responsavel||r.solicitante_txt||'')}" placeholder="Responsável pelo evento"></div>
     </div>
     <label style="display:flex;align-items:center;gap:9px;margin-top:14px;cursor:pointer;user-select:none">
-      <input type="checkbox" id="ag-ap-interno" style="width:16px;height:16px;accent-color:var(--sky);cursor:pointer">
+      <input type="checkbox" id="ag-ap-interno" ${r.visibilidade === "interna" ? "checked" : ""} style="width:16px;height:16px;accent-color:var(--sky);cursor:pointer">
       <span style="font-size:12.5px;color:var(--tx2)">Atividade interna <span style="color:var(--tx3);font-size:11px">— não aparece na Área do Membro</span></span>
     </label>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
       <button class="btn" onclick="document.getElementById('ag-aprov-modal')?.remove()">Cancelar</button>
-      <button class="btn btn-p" onclick="agConfirmarAprovacao('${r.id}')">Confirmar e criar evento</button>
+      <button class="btn btn-p" onclick="_agSalvarDetalhesEAprovar('${r.id}')">Confirmar e aprovar</button>
     </div>
   </div>`;
   agSalasSelectPopular("ag-ap-esp");
 }
 
-async function agConfirmarAprovacao(demandaId) {
-  const titulo = (document.getElementById("ag-ap-titulo")?.value || "").trim();
-  const data   = document.getElementById("ag-ap-data")?.value || "";
-  const hi     = document.getElementById("ag-ap-hi")?.value || "";
-  const hf     = document.getElementById("ag-ap-hf")?.value || null;
+async function _agSalvarDetalhesEAprovar(agendaId) {
+  const titulo  = (document.getElementById("ag-ap-titulo")?.value || "").trim();
+  const data    = document.getElementById("ag-ap-data")?.value || "";
+  const hi      = document.getElementById("ag-ap-hi")?.value || "";
+  const hf      = document.getElementById("ag-ap-hf")?.value || null;
   const espEl   = document.getElementById("ag-ap-esp");
   const espId   = espEl?.value?.trim() || null;
   const espNome = espEl?.selectedOptions[0]?.dataset?.nome || null;
-  const org    = (document.getElementById("ag-ap-org")?.value || "").trim() || null;
-  const desc   = (document.getElementById("ag-ap-desc")?.value || "").trim() || null;
+  const org     = (document.getElementById("ag-ap-org")?.value || "").trim() || null;
 
   if (!titulo || !data || !hi) return T("Campos obrigatórios", "Preencha título, data e horário de início.");
 
-  const nomeMeses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const nomeMeses  = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
   const diasSemana = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
   const dt = new Date(data + "T12:00:00");
-  const mes = nomeMeses[dt.getMonth()];
-  const diaSemana = diasSemana[dt.getDay()];
 
   try {
-    const resAg = await fetch(`${apiBaseUrl()}/rest/v1/agenda`, {
-      method: "POST",
-      headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
-      body: JSON.stringify({ titulo, data, hora_inicio: hi, hora_fim: hf, espaco: espNome, espaco_id: espId, organizador: org, descricao: desc, status: "confirmado", mes, dia_semana: diaSemana, recorrencia: "Único", visibilidade: document.getElementById("ag-ap-interno")?.checked ? "interna" : "publica" })
-    });
-    if (!resAg.ok) throw new Error(await resAg.text());
-
-    const resDem = await fetch(`${apiBaseUrl()}/rest/v1/demandas?id=eq.${demandaId}`, {
+    const resPatch = await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${agendaId}`, {
       method: "PATCH",
       headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
-      body: JSON.stringify({ status: "Concluída" })
+      body: JSON.stringify({
+        titulo,
+        data,
+        hora_inicio:  hi,
+        hora_fim:     hf,
+        espaco:       espNome,
+        espaco_id:    espId,
+        organizador:  org,
+        mes:          nomeMeses[dt.getMonth()],
+        dia_semana:   diasSemana[dt.getDay()],
+        visibilidade: document.getElementById("ag-ap-interno")?.checked ? "interna" : "publica",
+      }),
     });
-    if (!resDem.ok) throw new Error(await resDem.text());
+    if (!resPatch.ok) throw new Error(await resPatch.text());
 
     document.getElementById("ag-aprov-modal")?.remove();
-    _agendaCache = null;
-    T("Evento criado!", `"${titulo}" adicionado ao calendário como confirmado.`);
-    carregarSolicitacoesAgenda();
+    await agAprovarAgendamento(agendaId);
   } catch(e) { T("Erro ao aprovar", e.message); }
 }
 
@@ -1761,7 +1759,7 @@ window.agConfirmarAjuste            = agConfirmarAjuste;
 window.agEmAnalise                = agEmAnalise;
 window.agRecusarSolicitacao       = agRecusarSolicitacao;
 window.agAprovarSolicitacao       = agAprovarSolicitacao;
-window.agConfirmarAprovacao       = agConfirmarAprovacao;
+window._agSalvarDetalhesEAprovar  = _agSalvarDetalhesEAprovar;
 
 /* ── Aprovações com suporte a entradas do módulo Eventos ──── */
 
