@@ -284,7 +284,7 @@ const WA_CFG = (function(){
 
     el.innerHTML = `<div style="color:var(--tx3);font-size:11px;padding:4px 0">Buscando...</div>`;
     const raw = await _fetch(
-      `/rest/v1/pessoas?select=id,nome,celular,whatsapp,telefone&nome=ilike.*${encodeURIComponent(q)}*&limit=20&order=nome`
+      `/rest/v1/pessoas?select=id,nome,celular,whatsapp,telefone&nome=ilike.*${encodeURIComponent(q)}*&deleted_at=is.null&limit=20&order=nome`
     );
 
     if(!raw || !raw.length){
