@@ -289,6 +289,56 @@ async function agAbrirForm(r = null) {
 }
 window.agAbrirForm = agAbrirForm;
 
+// Notifica todos os responsáveis do módulo AGENDA via WhatsApp
+async function _agNotificarResponsaveis(acao, evento) {
+  if (typeof WA === "undefined") return;
+  try {
+    const res = await fetch(
+      `${apiBaseUrl()}/rest/v1/whatsapp_modulo_responsaveis?modulo=eq.AGENDA&ativo=eq.true&select=id,pessoas(nome,celular,whatsapp,telefone)`,
+      { headers: apiHeaders() }
+    );
+    if (!res.ok) return;
+    const resps = await res.json();
+    if (!resps.length) return;
+
+    const fmtD = d => { if (!d) return ""; const [y,m,dia] = String(d).slice(0,10).split("-"); return `${dia}/${m}/${y}`; };
+    const fmtH = h => h ? String(h).slice(0,5) : "";
+    const data    = fmtD(evento.data);
+    const horario = evento.hora_inicio ? fmtH(evento.hora_inicio) + (evento.hora_fim ? " – " + fmtH(evento.hora_fim) : "") : "";
+    const espaco  = evento.espaco ? `\n📍 ${evento.espaco}` : "";
+
+    const acoes = {
+      criado:  `✅ *Novo evento agendado*`,
+      editado: `✏️ *Evento atualizado*`,
+      excluido:`🗑 *Evento removido da agenda*`,
+    };
+    const cabecalho = acoes[acao] || `📋 *Agenda*`;
+
+    const msg = `${cabecalho}\n\n`
+      + `📌 *${evento.titulo || "—"}*\n`
+      + (data    ? `📅 ${data}${horario ? " às " + horario : ""}\n` : "")
+      + espaco
+      + (evento.tipo ? `\n🏷 ${evento.tipo}` : "")
+      + `\n\n_Enviado automaticamente pelo SIPEN_`;
+
+    for (const r of resps) {
+      const tel = r.pessoas?.whatsapp || r.pessoas?.celular || r.pessoas?.telefone;
+      if (!tel) continue;
+      WA.send({
+        para:        tel,
+        nome:        r.pessoas?.nome || "",
+        mensagem:    msg,
+        modulo:      "AGENDA",
+        referenciaT: "evento",
+        referenciaId: evento.id || null,
+        chave:       `AGENDA_${acao}_${evento.id || "novo"}_${Date.now()}`,
+      });
+    }
+  } catch(e) {
+    console.warn("[AGENDA] WA notify error:", e.message);
+  }
+}
+
 async function agSalvarForm(id) {
   const titulo = document.getElementById("ag-f-titulo")?.value?.trim();
   if (!titulo) { T("Campo obrigatório", "Informe o título do evento."); return; }
@@ -319,29 +369,29 @@ async function agSalvarForm(id) {
     if (!res.ok) throw new Error(await res.text());
     const rows = await res.json();
     // Ao criar novo evento na Agenda, gera entrada em Programações com status pendente
-    if (!isEdit) {
-      const novoId = Array.isArray(rows) ? rows[0]?.id : rows?.id;
-      if (novoId) {
-        const usuario = typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL : null;
-        await fetch(`${apiBaseUrl()}/rest/v1/eventos`, {
-          method: "POST",
-          headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
-          body: JSON.stringify({
-            titulo:          payload.titulo,
-            descricao:       payload.observacao || null,
-            data_inicio:     payload.data || null,
-            hora_inicio:     payload.hora_inicio || null,
-            hora_fim:        payload.hora_fim || null,
-            local_nome:      payload.espaco || null,
-            status:          "pendente",
-            agenda_id:       novoId,
-            criado_por:      usuario?.auth_user_id || null,
-            criado_por_nome: usuario?.nome || usuario?.email || "Sistema",
-            criado_em:       new Date().toISOString(),
-          }),
-        });
-      }
+    const novoId = Array.isArray(rows) ? rows[0]?.id : rows?.id;
+    if (!isEdit && novoId) {
+      const usuario = typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL : null;
+      await fetch(`${apiBaseUrl()}/rest/v1/eventos`, {
+        method: "POST",
+        headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+        body: JSON.stringify({
+          titulo:          payload.titulo,
+          descricao:       payload.observacao || null,
+          data_inicio:     payload.data || null,
+          hora_inicio:     payload.hora_inicio || null,
+          hora_fim:        payload.hora_fim || null,
+          local_nome:      payload.espaco || null,
+          status:          "pendente",
+          agenda_id:       novoId,
+          criado_por:      usuario?.auth_user_id || null,
+          criado_por_nome: usuario?.nome || usuario?.email || "Sistema",
+          criado_em:       new Date().toISOString(),
+        }),
+      });
     }
+    // Notifica responsáveis do módulo AGENDA via WhatsApp
+    _agNotificarResponsaveis(isEdit ? "editado" : "criado", { ...payload, id: novoId || id });
     document.getElementById("ag-form-modal").style.display = "none";
     T("Salvo", isEdit ? "Evento atualizado." : "Evento criado e enviado para Programações.");
     if (typeof carregarAgendaDash === "function") carregarAgendaDash();
@@ -352,6 +402,12 @@ window.agSalvarForm = agSalvarForm;
 
 async function agExcluirDoForm(id) {
   if (!confirm("Excluir este evento? Esta ação não pode ser desfeita.")) return;
+  // Busca dados antes de excluir para compor a mensagem
+  let dadosEvento = { id };
+  try {
+    const r = await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${id}&select=titulo,data,hora_inicio,hora_fim,espaco,tipo&limit=1`, { headers: apiHeaders() });
+    if (r.ok) dadosEvento = { id, ...((await r.json())[0] || {}) };
+  } catch(_) {}
   try {
     const res = await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${id}`, {
       method: "PATCH",
@@ -359,6 +415,7 @@ async function agExcluirDoForm(id) {
       body: JSON.stringify({ deleted_at: new Date().toISOString() }),
     });
     if (!res.ok) throw new Error(await res.text());
+    _agNotificarResponsaveis("excluido", dadosEvento);
     document.getElementById("ag-form-modal").style.display = "none";
     T("Excluído", "Evento removido.");
     if (typeof carregarAgendaDash === "function") carregarAgendaDash();
