@@ -866,7 +866,21 @@ function agGerarOcorrencias(r, de, ate) {
     return (r.data >= de && r.data <= ate) ? [r] : [];
   }
   if (rec === "Único" || rec === "Eventual" || rec === "Esporádico") {
-    return (r.data >= de && r.data <= ate) ? [r] : [];
+    // Evento multi-dia: gera uma ocorrência por dia no intervalo [de, ate]
+    const result = [];
+    let cursor = new Date(r.data + "T12:00:00");
+    const end   = new Date(r.data_encerramento + "T12:00:00");
+    while (cursor <= end) {
+      const dateStr = cursor.toISOString().split("T")[0];
+      if (dateStr >= de && dateStr <= ate) {
+        const diaInfo = Array.isArray(r.dias) ? r.dias.find(d => d.data === dateStr) : null;
+        result.push({ ...r, data: dateStr,
+          hora_inicio: diaInfo?.hora_inicio ?? r.hora_inicio,
+          hora_fim:    diaInfo?.hora_fim    ?? r.hora_fim });
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return result;
   }
   if (fimSerie < de) return [];
   const base = new Date(r.data + "T12:00:00");

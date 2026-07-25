@@ -350,7 +350,7 @@ async function carregarDados() {
     sv("k-mes", rows.filter(r=>r.mes===mes).length);
     sv("k-conf", rows.filter(r=>r.status==="confirmado").length);
 
-    const prox = rows.filter(r=>r.data>=hoje).slice(0,40);
+    const prox = rows.filter(r=>(r.data_encerramento||r.data)>=hoje).slice(0,40);
     renderEvs(prox, "l-proximos");
   } catch(e) {
     sv("l-proximos",`<div style="color:var(--rose)">Erro: ${esc(e.message)}</div>`);
