@@ -574,7 +574,7 @@
         </div>
 
         <div>
-          <label class="mem-lbl">Congregação</label>
+          <label class="mem-lbl">Vínculo</label>
           <select id="mem-f-cong" class="mem-inp">
             <option value="">Carregando…</option>
           </select>
