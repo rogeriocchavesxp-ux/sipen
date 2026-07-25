@@ -235,8 +235,8 @@ SELECT
   'sociedade_entrada',
   'Entrou na sociedade: ' || n.orgao,
   n.id, 'nomeados',
-  COALESCE(n.data_inicio, n.criado_em::date),
-  COALESCE(n.criado_em, now())
+  COALESCE(n.data_inicio, n.created_at::date),
+  COALESCE(n.created_at, now())
 FROM public.nomeados n
 WHERE n.orgao_tipo = 'sociedade' AND n.pessoa_id IS NOT NULL
 ON CONFLICT DO NOTHING;
