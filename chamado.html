@@ -1721,6 +1721,7 @@ function _coletarAgendamento(cat, sub) {
   if (!agValidarPeriodo()) return { ok: false, msg: "O encerramento precisa ocorrer após o início da programação." };
   const multiDia = dataF && dataF !== dataI;
   const espacos = [...document.querySelectorAll("#f-ag-spaces input:checked")].map(c => c.value);
+  if (espacos.length === 0) return { ok: false, msg: "Selecione ao menos um espaço para a programação (ou 'Não necessário', se o evento não precisar de espaço físico)." };
   const linhas = [
     "━━━ Dados da Programação ━━━",
     multiDia
