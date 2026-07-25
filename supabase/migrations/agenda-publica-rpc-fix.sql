@@ -25,8 +25,7 @@ RETURNS TABLE (
   descricao         TEXT,
   observacao        TEXT,
   recorrencia       TEXT,
-  status            TEXT,
-  dias              JSONB
+  status            TEXT
 )
 LANGUAGE sql
 SECURITY DEFINER
@@ -49,8 +48,7 @@ AS $$
     descricao,
     observacao,
     recorrencia,
-    status,
-    dias
+    status
   FROM public.agenda
   WHERE status = 'confirmado'
     AND deleted_at IS NULL
