@@ -144,7 +144,7 @@
     if (!sel) return;
 
     sel.innerHTML =
-      '<option value="">IPPenha — Sede (sem congregação)</option>' +
+      '<option value="">Sede</option>' +
       _congregacoes
         .map(c => `<option value="${c.id}">${escapeHtml(c.nome)}</option>`)
         .join("");
