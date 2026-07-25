@@ -106,6 +106,57 @@ async function agSalasSelectPopular(id) {
   }
 }
 
+/* ── DEPARTAMENTO ORGANIZADOR — select populado do banco ─────── */
+const _AG_TIPO_LABEL = {
+  MUSICA: "Música", JOVENS: "Jovens", INFANTIL: "Infantil",
+  INTERCESSAO: "Intercessão", EVANGELISMO: "Evangelismo",
+  DIACONIA: "Diaconia", COMUNICACAO: "Comunicação",
+  ACOLHIMENTO: "Acolhimento & Integração", SOCIEDADE: "Sociedade",
+  OUTRO: "Outro",
+};
+
+async function _agPopularOrganizador() {
+  const el = document.getElementById("ag-f-organizador");
+  if (!el) return;
+  const valorAtual = el.dataset.valorAtual || "";
+  try {
+    const r = await fetch(
+      `${apiBaseUrl()}/rest/v1/ministerios?ativo=eq.true&order=tipo.asc,nome.asc&select=nome,tipo`,
+      { headers: apiHeaders() }
+    );
+    const rows = r.ok ? await r.json() : [];
+    const grupos = {};
+    rows.forEach(m => {
+      const g = _AG_TIPO_LABEL[m.tipo] || "Geral";
+      if (!grupos[g]) grupos[g] = [];
+      grupos[g].push(m.nome);
+    });
+    el.innerHTML = `<option value="">— Selecione o departamento —</option>`;
+    Object.entries(grupos).forEach(([g, nomes]) => {
+      const grp = document.createElement("optgroup");
+      grp.label = g;
+      nomes.forEach(nome => {
+        const opt = document.createElement("option");
+        opt.value = nome;
+        opt.textContent = nome;
+        if (nome === valorAtual) opt.selected = true;
+        grp.appendChild(opt);
+      });
+      el.appendChild(grp);
+    });
+    // Fallback: valor salvo não está mais na lista (ex: nome mudou)
+    if (valorAtual && !el.value) {
+      const opt = document.createElement("option");
+      opt.value = valorAtual;
+      opt.textContent = valorAtual;
+      opt.selected = true;
+      el.insertBefore(opt, el.children[1]);
+    }
+  } catch (_) {
+    el.innerHTML = `<option value="${escapeHtml(valorAtual)}">${escapeHtml(valorAtual) || "— Selecione —"}</option>`;
+  }
+}
+
 /* ── AUTOCOMPLETE DE PESSOAS (organizador / responsável) ─────── */
 const _agBuscaTimer = {};
 
@@ -384,9 +435,14 @@ async function agAbrirForm(r = null) {
           </div>
         </div>
 
-        <!-- Organizador / Responsável -->
+        <!-- Departamento Organizador / Responsável -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          ${_agAutocompleteHtml("organizador", "Organizador", r?.organizador||"", fi)}
+          <div>
+            ${lbl("Departamento Organizador")}
+            <select id="ag-f-organizador" style="${fi}" data-valor-atual="${escapeHtml(r?.organizador||"")}">
+              <option value="">Carregando…</option>
+            </select>
+          </div>
           ${_agAutocompleteHtml("responsavel", "Responsável", r?.responsavel||"", fi)}
         </div>
 
@@ -436,6 +492,7 @@ async function agAbrirForm(r = null) {
     </div>`;
 
   _agRenderizarDias();
+  _agPopularOrganizador();
 
   modal.querySelectorAll(".ag-tipo-chip").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -565,7 +622,7 @@ async function agSalvarForm(id) {
     const novoId = Array.isArray(rows) ? rows[0]?.id : rows?.id;
     // Notifica responsáveis do módulo AGENDA via WhatsApp
     // (a entrada em Programações é criada automaticamente pelo trigger no banco)
-    const orgTel  = document.getElementById("ag-f-organizador-tel")?.value || "";
+    const orgTel  = "";
     const respTel = document.getElementById("ag-f-responsavel-tel")?.value || "";
     _agNotificarResponsaveis(isEdit ? "editado" : "criado", { ...payload, id: novoId || id }, { orgTel, respTel });
     document.getElementById("ag-form-modal").style.display = "none";
