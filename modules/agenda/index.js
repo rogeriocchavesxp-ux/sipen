@@ -1367,7 +1367,16 @@ function _agRenderSolTabela() {
 
   // Bloco de solicitações regulares
   const solHtml = rows.length ? `<div style="overflow-x:auto">
-    <table style="width:100%;border-collapse:collapse;font-size:11.5px;min-width:780px">
+    <table style="width:100%;border-collapse:collapse;font-size:11.5px;table-layout:fixed">
+      <colgroup>
+        <col style="width:130px">
+        <col style="width:220px">
+        <col style="width:150px">
+        <col style="width:180px">
+        <col style="width:110px">
+        <col style="width:120px">
+        <col style="width:160px">
+      </colgroup>
       <thead><tr style="border-bottom:1px solid var(--bd2);background:var(--bg-surface)">
         <th style="${thStyle}">Protocolo</th>
         <th style="${thStyle}">Título</th>
@@ -1386,8 +1395,8 @@ function _agRenderSolTabela() {
         };
         return `<tr style="border-bottom:1px solid var(--bd1)" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
           <td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:var(--tx3)">${escapeHtml(r.protocolo||"—")}</td>
-          <td style="padding:8px 10px;color:var(--tx1);font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(r.titulo||'')}">${escapeHtml(r.titulo||"—")}</td>
-          <td style="padding:8px 10px;color:var(--tx2);font-size:11px">${escapeHtml(r.solicitante_txt||r.solicitante||"—")}</td>
+          <td style="padding:8px 10px;color:var(--tx1);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(r.titulo||'')}">${escapeHtml(r.titulo||"—")}</td>
+          <td style="padding:8px 10px;color:var(--tx2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.solicitante_txt||r.solicitante||"—")}</td>
           <td style="padding:8px 10px;color:var(--tx2);font-size:11px;white-space:nowrap">
             ${r.data ? fmtD(r.data) : "—"}
             ${r.hora_inicio ? `<div style="font-size:10px;color:var(--tx3)">${String(r.hora_inicio).slice(0,5)}${r.hora_fim ? " → " + String(r.hora_fim).slice(0,5) : ""}</div>` : ""}
