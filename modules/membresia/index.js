@@ -527,7 +527,7 @@
         <div>
           <label class="mem-lbl">Tipo de Membro <span style="color:var(--rose)">*</span></label>
           <select id="mem-f-tipo-membro" class="mem-inp">
-            <option value="">Selecione…</option>
+            <option value="">Nenhum</option>
             <option value="comungante">Comungante</option>
             <option value="nao_comungante">Não Comungante</option>
           </select>
