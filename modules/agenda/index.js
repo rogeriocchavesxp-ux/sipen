@@ -464,29 +464,9 @@ async function agSalvarForm(id) {
     });
     if (!res.ok) throw new Error(await res.text());
     const rows = await res.json();
-    // Ao criar novo evento na Agenda, gera entrada em Programações com status pendente
     const novoId = Array.isArray(rows) ? rows[0]?.id : rows?.id;
-    if (!isEdit && novoId) {
-      const usuario = typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL : null;
-      await fetch(`${apiBaseUrl()}/rest/v1/eventos`, {
-        method: "POST",
-        headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
-        body: JSON.stringify({
-          titulo:          payload.titulo,
-          descricao:       payload.observacao || null,
-          data_inicio:     payload.data || null,
-          hora_inicio:     payload.hora_inicio || null,
-          hora_fim:        payload.hora_fim || null,
-          local_nome:      payload.espaco || null,
-          status:          "pendente",
-          agenda_id:       novoId,
-          criado_por:      usuario?.auth_user_id || null,
-          criado_por_nome: usuario?.nome || usuario?.email || "Sistema",
-          criado_em:       new Date().toISOString(),
-        }),
-      });
-    }
     // Notifica responsáveis do módulo AGENDA via WhatsApp
+    // (a entrada em Programações é criada automaticamente pelo trigger no banco)
     const orgTel  = document.getElementById("ag-f-organizador-tel")?.value || "";
     const respTel = document.getElementById("ag-f-responsavel-tel")?.value || "";
     _agNotificarResponsaveis(isEdit ? "editado" : "criado", { ...payload, id: novoId || id }, { orgTel, respTel });
