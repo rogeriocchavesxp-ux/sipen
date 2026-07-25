@@ -2042,7 +2042,7 @@ async function agAprovarAgendamento(id) {
       const horario = data.hora_inicio
         ? String(data.hora_inicio).slice(0, 5) + (data.hora_fim ? ` → ${String(data.hora_fim).slice(0, 5)}` : "")
         : "";
-      const termoLink = data.token_termo ? `\n\n📄 *Termo de Compromisso:*\nhttps://sipen.com.br/termo?t=${data.token_termo}\n\n_Por favor, acesse o link acima, leia e assine o Termo de Compromisso e Responsabilidade para confirmar o uso do espaço._` : "";
+      const termoLink = data.token_termo ? `\n\n📄 *Termo de Compromisso:*\nhttps://sipen.com.br/termo?t=${data.token_termo}\n\n⚠️ *Atenção:* o agendamento só é concluído após a leitura e assinatura do Termo de Compromisso e Responsabilidade. O evento somente aparecerá na agenda pública da igreja após a aceitação do termo.\n\n_Por favor, acesse o link acima e assine para confirmar o uso do espaço._` : "";
       const msg = `Olá${data.solicitante ? `, ${data.solicitante.split(" ")[0]}` : ""}! Seu pedido de agendamento foi *aprovado* ✅\n\n`
         + `📋 *${data.titulo || "Agendamento"}*\n`
         + (fmtData(data.data) ? `📅 ${fmtData(data.data)}${horario ? " · " + horario : ""}\n` : "")
@@ -2291,7 +2291,7 @@ function agReenviarTermo(id) {
     + (r.data ? `📅 ${fmtD(r.data)}\n` : "")
     + (r.espaco ? `📍 ${r.espaco}\n` : "")
     + (r.protocolo ? `🔖 Protocolo: ${r.protocolo}\n` : "")
-    + `\n📄 *Termo de Compromisso:*\nhttps://sipen.com.br/termo?t=${r.token_termo}\n\n_Por favor, acesse o link acima, leia e assine para confirmar o uso do espaço._`;
+    + `\n📄 *Termo de Compromisso:*\nhttps://sipen.com.br/termo?t=${r.token_termo}\n\n⚠️ *Atenção:* o agendamento só é concluído após a leitura e assinatura do Termo de Compromisso e Responsabilidade. O evento somente aparecerá na agenda pública da igreja após a aceitação do termo.\n\n_Por favor, acesse o link acima e assine para confirmar o uso do espaço._`;
   if (typeof WA !== "undefined") {
     WA.send({ para: _tel, nome: r.solicitante_txt || "Solicitante", mensagem: msg, modulo: "AGENDA", origem_id: id });
   } else {
