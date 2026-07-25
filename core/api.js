@@ -121,7 +121,7 @@ const SCHEMA = {
   },
   campos: {
     AGENDA:        ["titulo","tipo","data","hora_inicio","hora_fim","dia_semana","mes","recorrencia","organizador","responsavel","solicitante_tel","espaco","observacao","status"],
-    MEMBROS:       ["nome","email","telefone","data_nascimento","status","tipo_membro","data_ingresso","tipo_ingresso","funcao","congregacao","data_batismo","numero_registro"],
+    MEMBROS:       ["nome","email","telefone","celular","data_nascimento","status","tipo_membro","data_ingresso","tipo_ingresso","funcao","congregacao","data_batismo","numero_registro"],
     VISITANTES:    ["nome","telefone","email","data_primeira_visita","origem","interesse_nivel","congregacao","obs"],
     DEMANDAS:      ["titulo","descricao","solicitante","area","subcategoria","status","prioridade","responsavel","data_abertura","data_conclusao"],
     FINANCEIRO:    ["tipo","categoria","descricao","valor","data_lancamento","status","responsavel","observacoes"],
