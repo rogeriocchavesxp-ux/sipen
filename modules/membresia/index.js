@@ -8,6 +8,10 @@
 
   let _congregacoes = [];
   let _editandoId = null;
+  let _pessoaIdAtual = null;
+  let _nomeMembroAtual = null;
+
+  const _MIN_IC = { MUSICA:'🎵', JOVENS:'🔥', INFANTIL:'👶', INTERCESSAO:'🙏', EVANGELISMO:'✝️', DIACONIA:'🤝', COMUNICACAO:'📢', ACOLHIMENTO:'🤗', OUTRO:'⭐' };
 
   function sb() { return getSupabase(); }
   function v(id) { return document.getElementById(id); }
@@ -178,7 +182,14 @@
     if (modal) modal.style.display = "none";
 
     _editandoId = null;
+    _pessoaIdAtual = null;
+    _nomeMembroAtual = null;
     setErro("");
+
+    const mf = v("mem-min-form"); if (mf) mf.style.display = "none";
+    const sf = v("mem-soc-form"); if (sf) sf.style.display = "none";
+    const ms = v("mem-min-sel");  if (ms) delete ms.dataset.loaded;
+    const ss = v("mem-soc-sel");  if (ss) delete ss.dataset.loaded;
   }
 
   function _limparForm() {
@@ -213,6 +224,11 @@
 
     const chk = v("mem-f-acesso-facial");
     if (chk) chk.checked = false;
+
+    const pe = v("mem-part-edit"); if (pe) pe.style.display = "none";
+    const pn = v("mem-part-novo"); if (pn) pn.style.display = "block";
+    const ml = v("mem-min-lista"); if (ml) ml.innerHTML = "";
+    const sl = v("mem-soc-lista"); if (sl) sl.innerHTML = "";
   }
 
   async function _preencherForm(membroId) {
@@ -250,6 +266,8 @@
           || (await sb().from("membros").select("pessoa_id").eq("id", membroId).single()).data?.pessoa_id;
         if (pessoaId) await _carregarStatusFacial(pessoaId);
       }
+
+      if (data.pessoa_id) await _carregarParticipacoes(data.pessoa_id, data.nome);
     } catch (e) {
       console.error("[membresia] preencherForm:", e.message);
       toast("Erro ao carregar dados", e.message);
@@ -455,6 +473,147 @@
     if (acessoFacial !== null) await _sincronizarAcessoFacial(membro.pessoa_id, acessoFacial);
   }
 
+  /* ══ PARTICIPAÇÕES (Ministérios e Sociedades) ═══════════════ */
+
+  async function _carregarParticipacoes(pessoaId, nome) {
+    _pessoaIdAtual = pessoaId;
+    _nomeMembroAtual = nome;
+
+    const pe = v("mem-part-edit"); if (pe) pe.style.display = "block";
+    const pn = v("mem-part-novo"); if (pn) pn.style.display = "none";
+
+    try {
+      const [rMin, rSoc] = await Promise.all([
+        fetch(`${apiBaseUrl()}/rest/v1/ministerio_membros?pessoa_id=eq.${encodeURIComponent(pessoaId)}&select=id,funcao,status,ministerios(id,nome,tipo)&order=ministerios(nome).asc`, { headers: apiHeaders() }),
+        fetch(`${apiBaseUrl()}/rest/v1/nomeados?orgao_tipo=eq.sociedade&pessoa_id=eq.${encodeURIComponent(pessoaId)}&deleted_at=is.null&select=id,orgao,cargo,status&order=orgao.asc`, { headers: apiHeaders() })
+      ]);
+      _renderMinLista(rMin.ok ? await rMin.json() : []);
+      _renderSocLista(rSoc.ok ? await rSoc.json() : []);
+    } catch (e) {
+      console.warn("[membresia] carregarParticipacoes:", e.message);
+    }
+  }
+
+  function _renderMinLista(lista) {
+    const el = v("mem-min-lista");
+    if (!el) return;
+    if (!lista.length) {
+      el.innerHTML = `<div style="color:var(--tx3);font-size:12px;padding:6px 0">Nenhum ministério vinculado.</div>`;
+      return;
+    }
+    el.innerHTML = lista.map(m => {
+      const min = m.ministerios || {};
+      const ic = _MIN_IC[min.tipo] || "⭐";
+      const cor = m.status === "ativo" ? "var(--gr)" : "var(--tx3)";
+      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd1)">
+        <span style="font-size:14px;flex-shrink:0">${ic}</span>
+        <span style="flex:1;font-size:12.5px;color:var(--tx1);font-weight:500">${escapeHtml(min.nome || "—")}</span>
+        <span style="font-size:11px;color:var(--tx3)">${escapeHtml(m.funcao || "")}</span>
+        <span style="font-size:10px;font-weight:600;color:${cor}">● ${m.status === "ativo" ? "ativo" : "inativo"}</span>
+        <button data-id="${m.id}" onclick="membMinRemover(this.dataset.id)" style="background:none;border:none;color:var(--rose);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;opacity:.7" title="Remover">×</button>
+      </div>`;
+    }).join("");
+  }
+
+  function _renderSocLista(lista) {
+    const el = v("mem-soc-lista");
+    if (!el) return;
+    if (!lista.length) {
+      el.innerHTML = `<div style="color:var(--tx3);font-size:12px;padding:6px 0">Nenhuma sociedade vinculada.</div>`;
+      return;
+    }
+    el.innerHTML = lista.map(s => {
+      const cor = s.status === "ativo" ? "var(--gr)" : "var(--tx3)";
+      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd1)">
+        <span style="flex:1;font-size:12.5px;color:var(--tx1);font-weight:500">${escapeHtml(s.orgao || "—")}</span>
+        <span style="font-size:11px;color:var(--tx3)">${escapeHtml(s.cargo || "")}</span>
+        <span style="font-size:10px;font-weight:600;color:${cor}">● ${s.status === "ativo" ? "ativo" : "inativo"}</span>
+        <button data-id="${s.id}" onclick="membSocRemover(this.dataset.id)" style="background:none;border:none;color:var(--rose);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;opacity:.7" title="Remover">×</button>
+      </div>`;
+    }).join("");
+  }
+
+  window.membMinMostrarForm = async function () {
+    const form = v("mem-min-form");
+    if (!form) return;
+    form.style.display = "flex";
+    const sel = v("mem-min-sel");
+    if (!sel || sel.dataset.loaded) return;
+    sel.innerHTML = "<option value=''>Carregando…</option>";
+    const r = await fetch(`${apiBaseUrl()}/rest/v1/ministerios?ativo=eq.true&select=id,nome,tipo&order=nome.asc`, { headers: apiHeaders() });
+    const lista = r.ok ? await r.json() : [];
+    sel.innerHTML = "<option value=''>Selecione um ministério…</option>" +
+      lista.map(m => `<option value="${m.id}">${_MIN_IC[m.tipo] || "⭐"} ${escapeHtml(m.nome)}</option>`).join("");
+    sel.dataset.loaded = "1";
+  };
+
+  window.membMinOcultarForm = function () {
+    const f = v("mem-min-form"); if (f) f.style.display = "none";
+    const s = v("mem-min-sel"); if (s) delete s.dataset.loaded;
+  };
+
+  window.membMinSalvar = async function () {
+    const sel = v("mem-min-sel");
+    const minId = sel?.value;
+    if (!minId) { toast("Selecione um ministério", ""); return; }
+    const funcao = (v("mem-min-funcao")?.value || "Membro").trim() || "Membro";
+    const { error } = await sb().from("ministerio_membros").insert({ ministerio_id: minId, pessoa_id: _pessoaIdAtual, funcao, status: "ativo" });
+    if (error) { toast(error.code === "23505" ? "Já faz parte deste ministério" : "Erro: " + error.message, ""); return; }
+    membMinOcultarForm();
+    if (v("mem-min-funcao")) v("mem-min-funcao").value = "";
+    await _carregarParticipacoes(_pessoaIdAtual, _nomeMembroAtual);
+  };
+
+  window.membMinRemover = async function (id) {
+    if (!confirm("Remover deste ministério?")) return;
+    await sb().from("ministerio_membros").delete().eq("id", id);
+    await _carregarParticipacoes(_pessoaIdAtual, _nomeMembroAtual);
+  };
+
+  window.membSocMostrarForm = async function () {
+    const form = v("mem-soc-form");
+    if (!form) return;
+    form.style.display = "flex";
+    const sel = v("mem-soc-sel");
+    if (!sel || sel.dataset.loaded) return;
+    sel.innerHTML = "<option value=''>Carregando…</option>";
+    const r = await fetch(`${apiBaseUrl()}/rest/v1/sociedades?ativo=eq.true&select=id,sigla,nome,orgao,ic&order=sigla.asc`, { headers: apiHeaders() });
+    const lista = r.ok ? await r.json() : [];
+    sel.innerHTML = "<option value=''>Selecione uma sociedade…</option>" +
+      lista.map(s => `<option value="${escapeHtml(s.orgao)}">${s.ic || ""} ${escapeHtml(s.sigla)} – ${escapeHtml(s.nome)}</option>`).join("");
+    sel.dataset.loaded = "1";
+  };
+
+  window.membSocOcultarForm = function () {
+    const f = v("mem-soc-form"); if (f) f.style.display = "none";
+    const s = v("mem-soc-sel"); if (s) delete s.dataset.loaded;
+  };
+
+  window.membSocSalvar = async function () {
+    const sel = v("mem-soc-sel");
+    const orgao = sel?.value;
+    if (!orgao) { toast("Selecione uma sociedade", ""); return; }
+    const cargo = (v("mem-soc-cargo")?.value || "Membro").trim() || "Membro";
+    const { error } = await sb().from("nomeados").insert({
+      nome: _nomeMembroAtual || gv("mem-f-nome") || "Membro",
+      orgao_tipo: "sociedade",
+      orgao,
+      cargo,
+      pessoa_id: _pessoaIdAtual,
+      status: "ativo"
+    });
+    if (error) { toast("Erro: " + error.message, ""); return; }
+    membSocOcultarForm();
+    if (v("mem-soc-cargo")) v("mem-soc-cargo").value = "";
+    await _carregarParticipacoes(_pessoaIdAtual, _nomeMembroAtual);
+  };
+
+  window.membSocRemover = async function (id) {
+    if (!confirm("Remover desta sociedade?")) return;
+    await sb().from("nomeados").update({ deleted_at: new Date().toISOString() }).eq("id", id);
+    await _carregarParticipacoes(_pessoaIdAtual, _nomeMembroAtual);
+  };
+
   function _invalidarCache() {
     if (typeof listarMembros === "function") {
       listarMembros("memb-cad-list", "memb-cad-count");
@@ -577,6 +736,52 @@
           <label class="mem-lbl">Nº de Registro</label>
           <input id="mem-f-registro" type="text" placeholder="Ex.: 0342" class="mem-inp" />
         </div>
+      </div>
+
+      <div class="mem-section-hd" style="margin-top:4px">Participações</div>
+
+      <div id="mem-part-novo" style="color:var(--tx3);font-size:12px;text-align:center;padding:10px 0;margin-bottom:20px">
+        Salve o membro primeiro para gerenciar participações.
+      </div>
+
+      <div id="mem-part-edit" style="display:none;margin-bottom:20px">
+
+        <div style="margin-bottom:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em">Ministérios</div>
+            <button onclick="membMinMostrarForm()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);cursor:pointer">+ Adicionar</button>
+          </div>
+          <div id="mem-min-lista"></div>
+          <div id="mem-min-form" style="display:none;flex-direction:column;gap:8px;padding:10px;background:var(--bg-surface,var(--bg-card));border-radius:8px;border:1px solid var(--bd2);margin-top:8px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <select id="mem-min-sel" class="mem-inp"><option value="">Selecione…</option></select>
+              <input id="mem-min-funcao" type="text" class="mem-inp" placeholder="Função (ex.: Membro, Líder)" />
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end">
+              <button onclick="membMinOcultarForm()" style="font-size:12px;padding:5px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--tx2);cursor:pointer">Cancelar</button>
+              <button onclick="membMinSalvar()" style="font-size:12px;padding:5px 14px;border-radius:6px;border:none;background:var(--teal);color:#fff;cursor:pointer;font-weight:600">Adicionar</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em">Sociedades</div>
+            <button onclick="membSocMostrarForm()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);cursor:pointer">+ Adicionar</button>
+          </div>
+          <div id="mem-soc-lista"></div>
+          <div id="mem-soc-form" style="display:none;flex-direction:column;gap:8px;padding:10px;background:var(--bg-surface,var(--bg-card));border-radius:8px;border:1px solid var(--bd2);margin-top:8px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <select id="mem-soc-sel" class="mem-inp"><option value="">Selecione…</option></select>
+              <input id="mem-soc-cargo" type="text" class="mem-inp" placeholder="Cargo / função" />
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end">
+              <button onclick="membSocOcultarForm()" style="font-size:12px;padding:5px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--tx2);cursor:pointer">Cancelar</button>
+              <button onclick="membSocSalvar()" style="font-size:12px;padding:5px 14px;border-radius:6px;border:none;background:var(--teal);color:#fff;cursor:pointer;font-weight:600">Adicionar</button>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <div id="mem-acesso-section" style="display:none;background:rgba(42,181,192,.05);border:1px solid rgba(42,181,192,.2);border-radius:8px;padding:14px 16px;margin-top:4px">
