@@ -120,7 +120,7 @@ const SCHEMA = {
     COMISSOES:    "Comissões"
   },
   campos: {
-    AGENDA:        ["titulo","data","hora_inicio","hora_fim","dia_semana","mes","recorrencia","organizador","responsavel","solicitante_tel","espaco","observacao","status"],
+    AGENDA:        ["titulo","tipo","data","hora_inicio","hora_fim","dia_semana","mes","recorrencia","organizador","responsavel","solicitante_tel","espaco","observacao","status"],
     MEMBROS:       ["nome","email","telefone","data_nascimento","status","tipo_membro","data_ingresso","tipo_ingresso","funcao","congregacao","data_batismo","numero_registro"],
     VISITANTES:    ["nome","telefone","email","data_primeira_visita","origem","interesse_nivel","congregacao","obs"],
     DEMANDAS:      ["titulo","descricao","solicitante","area","subcategoria","status","prioridade","responsavel","data_abertura","data_conclusao"],
@@ -154,7 +154,7 @@ const SCHEMA = {
   },
   /* Tipos especiais para renderizar inputs corretos */
   tipos: {
-    AGENDA:     { data:"date", hora_inicio:"time", hora_fim:"time", dia_semana:"select:Domingo,Segunda-feira,Terça-feira,Quarta-feira,Quinta-feira,Sexta-feira,Sábado", mes:"select:Janeiro,Fevereiro,Março,Abril,Maio,Junho,Julho,Agosto,Setembro,Outubro,Novembro,Dezembro", status:"select:aguardando_aprovacao=Aguardando Aprovação,em_analise=Em Análise,ajuste_solicitado=Ajuste Solicitado,confirmado=Confirmado,recusado=Recusado,cancelado=Cancelado,reagendado=Reagendado,arquivado=Arquivado", recorrencia:"select:Único,Semanal,Quinzenal,Mensal,Anual", espaco:"espacos-select" },
+    AGENDA:     { tipo:"select:Culto,Reunião,Evento,Ensaio,Casamento,Aniversário,Congresso,Conferência,Outros", data:"date", hora_inicio:"time", hora_fim:"time", dia_semana:"select:Domingo,Segunda-feira,Terça-feira,Quarta-feira,Quinta-feira,Sexta-feira,Sábado", mes:"select:Janeiro,Fevereiro,Março,Abril,Maio,Junho,Julho,Agosto,Setembro,Outubro,Novembro,Dezembro", status:"select:aguardando_aprovacao=Aguardando Aprovação,em_analise=Em Análise,ajuste_solicitado=Ajuste Solicitado,confirmado=Confirmado,recusado=Recusado,cancelado=Cancelado,reagendado=Reagendado,arquivado=Arquivado", recorrencia:"select:Único,Semanal,Quinzenal,Mensal,Anual", espaco:"espacos-select" },
     MEMBROS:    { status:"select:ativo,inativo,transferido,falecido,disciplinado,afastado", tipo_membro:"select:comungante=Comungante,nao_comungante=Não Comungante", data_nascimento:"date", data_ingresso:"date", data_saida:"date", data_batismo:"date", batizado:"boolean", casado_na_igreja:"boolean", tipo_ingresso:"select:batismo,transferencia=Transferência,profissao_de_fe=Profissão de Fé,restauracao=Restauração,outro" },
     VISITANTES: { data_primeira_visita:"date", interesse_nivel:"select:baixo,médio,alto,convertido" },
     DEMANDAS:   { data_abertura: "date", data_conclusao: "date", status: "select:ABERTA=Aberta,EM_ANALISE=Em Análise,EM_ANDAMENTO=Em Andamento,PENDENTE=Pendente,CONCLUIDA=Concluída,CANCELADA=Cancelada", prioridade: "select:Baixa,Média,Alta,Urgente" },

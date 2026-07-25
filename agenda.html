@@ -261,6 +261,9 @@ function renderCal(evs) {
     dayEvs.slice(0, MAX).forEach(ev => {
       const el = document.createElement("div");
       el.className = "cal-ev";
+      if (ev.tipo === "Culto") {
+        el.style.cssText = "background:rgba(220,38,38,.12);color:#dc2626;border-left-color:#dc2626";
+      }
       el.innerHTML = (ev.hora_inicio ? `<span class="cal-ev-hora">${fmtH(ev.hora_inicio)}</span>` : "") + esc(ev.titulo);
       el.onclick = () => abrirModal(ev);
       cell.appendChild(el);
@@ -301,6 +304,7 @@ function renderList() {
     const sem = DIAS[d.getDay()];
     const card = document.createElement("div");
     card.className = "ev-card";
+    if (ev.tipo === "Culto") card.style.borderLeft = "3px solid #dc2626";
     card.onclick = () => abrirModal(ev);
     const horario = ev.hora_inicio ? fmtH(ev.hora_inicio) + (ev.hora_fim ? " – " + fmtH(ev.hora_fim) : "") : "";
     card.innerHTML = `

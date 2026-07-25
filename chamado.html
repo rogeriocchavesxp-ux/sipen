@@ -1138,7 +1138,7 @@ const CATS = [
   ]},
   { nome:"Limpeza e Organização",    icon:"🧹", resp:"Equipe de Limpeza / Zeladoria",   subcats:["Limpeza geral","Limpeza pós-evento","Organização de espaços","Solicitação de materiais de limpeza"] },
   { nome:"Agendamentos",             icon:"📅", resp:"Secretaria / Liderança",           subcats:[
-    { grupo:"Programação / Espaços", itens:["Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"] },
+    { grupo:"Programação / Espaços", itens:["Culto","Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"] },
     { grupo:"Agenda Pastoral",       itens:["Aconselhamento pastoral","Atendimento pastoral","Visita hospitalar","Visita no Lar","Visita na Empresa","Visita Carcerária"] },
   ]},
   { nome:"Secretaria",               icon:"📄", resp:"Secretaria / Conselho",            subcats:["Emissão de documentos","Elaboração de relatórios","Solicitação ao Conselho","Protocolos oficiais","Registro de atas/documentos"] },
@@ -1239,7 +1239,7 @@ document.addEventListener("click", function(e) {
   }
 });
 
-const PROG_SUBS = new Set(["Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"]);
+const PROG_SUBS = new Set(["Culto","Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"]);
 
 /* ── Comunicação: mapeamentos ──────────────────────────────── */
 const COM_SUBS = new Set([
@@ -2104,7 +2104,7 @@ function agIniciar(tipo) {
   // Monta tipo grid
   const tipoGrid = document.getElementById("ag2-tipo-grid");
   if (tipoGrid) {
-    const tipos = ["Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"];
+    const tipos = ["Culto","Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"];
     tipoGrid.innerHTML = tipos.map(t => {
       const sel = t === _ag2Tipo;
       return `<label class="ag2-tipo-lbl${sel ? " sel" : ""}">

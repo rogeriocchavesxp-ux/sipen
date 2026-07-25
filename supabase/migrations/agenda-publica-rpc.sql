@@ -12,6 +12,7 @@ CREATE OR REPLACE FUNCTION public.agenda_publica()
 RETURNS TABLE (
   id           UUID,
   titulo       TEXT,
+  tipo         TEXT,
   data         DATE,
   hora_inicio  TEXT,
   hora_fim     TEXT,
@@ -28,6 +29,7 @@ AS $$
   SELECT
     id,
     titulo,
+    tipo,
     data,
     hora_inicio,
     hora_fim,
