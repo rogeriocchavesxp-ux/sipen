@@ -192,6 +192,7 @@ function openCrudForm(tab, preset = null) {
   }
 
   const _fullWidthFields = (SCHEMA.fullWidth || {})[tab] || [];
+  const _fieldSpans      = (SCHEMA.fieldSpan  || {})[tab] || {};
   function renderField(f) {
     const val = preset && preset[f] != null ? preset[f] : "";
     const req = obrig.includes(f) ? ' <span style="color:var(--rose)">*</span>' : "";
@@ -208,7 +209,7 @@ function openCrudForm(tab, preset = null) {
         <input type="checkbox" data-field="${escapeHtmlAttr(f)}" data-type="boolean" ${checked} style="width:14px;height:14px;accent-color:var(--gr)">
         ${escapeHtml(lbl)}</label></div>`;
     }
-    const spanStyle = spanFull ? "grid-column:1 / -1" : "";
+    const spanStyle = spanFull ? "grid-column:1 / -1" : _fieldSpans[f] ? `grid-column:${_fieldSpans[f]}` : "";
     if (tipo === "congregacoes-select") {
       const valorAtual = (preset?.congregacao_id || "");
       return `<div style="${spanStyle}">${label}<select data-field="${escapeHtmlAttr(f)}" data-tipo-async="congregacoes" data-valor-atual="${escapeHtmlAttr(String(valorAtual))}" style="${inputStyle}">

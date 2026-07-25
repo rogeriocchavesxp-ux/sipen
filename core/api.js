@@ -165,11 +165,17 @@ const SCHEMA = {
   },
   /* Número de colunas do grid por tabela (padrão: 2) */
   gridCols: {
-    AGENDA: 3
+    AGENDA: 3,
+    MEMBROS: 3
   },
   /* Campos que ocupam largura total do grid */
   fullWidth: {
-    AGENDA: ["titulo","espaco","observacao","status"]
+    AGENDA: ["titulo","espaco","observacao","status"],
+    MEMBROS: ["nome"]
+  },
+  /* Span customizado por campo (grid-column value) */
+  fieldSpan: {
+    MEMBROS: { email:"span 2", funcao:"span 2", numero_registro:"span 2" }
   }
 };
 
