@@ -1,14 +1,16 @@
 /* ═══════════════════════════════════════════════════════
    SIPEN — Section Hubs
-   hub.js · v1.1.0
+   hub.js · v1.2.3
 ═══════════════════════════════════════════════════════ */
 (function(){
 
 function hubSec(sectionId){
   const sec=document.getElementById('sbs-'+sectionId);
-  const collapsed=!sec||sec.classList.contains('collapsed');
-  if(typeof sbsToggle==='function') sbsToggle(sectionId);
-  if(collapsed) go('hub-'+sectionId);
+  // Expand if collapsed; never collapse on header click (always navigate)
+  if(sec&&sec.classList.contains('collapsed')&&typeof sbsToggle==='function'){
+    sbsToggle(sectionId);
+  }
+  go('hub-'+sectionId);
 }
 window.hubSec=hubSec;
 
