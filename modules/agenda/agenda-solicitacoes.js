@@ -438,6 +438,3 @@ async function carregarHistorico() {
 }
 window.carregarHistorico = carregarHistorico;
 
-// legado (demandas)
-window.agSolicitarAjuste  = agSolicitarAjuste;
-window.agConfirmarAjuste  = agConfirmarAjuste;
