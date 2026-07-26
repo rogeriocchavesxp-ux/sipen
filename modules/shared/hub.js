@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    SIPEN — Section Hubs
-   hub.js · v1.2.3
+   hub.js · v1.2.4
 ═══════════════════════════════════════════════════════ */
 (function(){
 
@@ -229,9 +229,9 @@ function renderHubGov(){
 
   const mes=new Date().toISOString().slice(0,7);
   _cnt('membros','').then(n=>_set('k-gov-memb',n));
-  _cnt('conselho_nomeados','').then(n=>_set('k-gov-nomeados',n));
-  _cnt('pautas_reunioes',`&data=gte.${mes}-01`).then(n=>_set('k-gov-reun',n));
-  _cnt('demandas',`&categoria=eq.diaconal&status=neq.concluida`).then(n=>_set('k-gov-diac',n));
+  _cnt('nomeados','&deleted_at=is.null').then(n=>_set('k-gov-nomeados',n));
+  _cnt('conselho_reunioes',`&data_reuniao=gte.${mes}-01`).then(n=>_set('k-gov-reun',n));
+  _cnt('demandas',`&area=ilike.*iaconal*&status=neq.Conclu%C3%ADda`).then(n=>_set('k-gov-diac',n));
 }
 
 // ══════════════════════════════════════════════════════
@@ -458,7 +458,7 @@ function renderLiderancaDash(){
   if(!api) return;
   Promise.all([
     _cnt('pastores','&deleted_at=is.null'),
-    _cnt('conselho_nomeados','&deleted_at=is.null'),
+    _cnt('nomeados','&deleted_at=is.null'),
     _cnt('conselho_ordenados','&deleted_at=is.null&status=eq.ativo'),
     _cnt('conselho_seminaristas','&deleted_at=is.null'),
   ]).then(([pastores,nomeados,ordenados,seminario])=>{
