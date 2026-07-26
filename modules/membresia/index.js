@@ -490,12 +490,14 @@
     const pn = v("mem-part-novo"); if (pn) pn.style.display = "none";
 
     try {
-      const [rMin, rSoc] = await Promise.all([
+      const [rMin, rSoc, rLid] = await Promise.all([
         fetch(`${apiBaseUrl()}/rest/v1/ministerio_membros?pessoa_id=eq.${encodeURIComponent(pessoaId)}&select=id,funcao,status,ministerios(id,nome,tipo)&order=ministerios(nome).asc`, { headers: apiHeaders() }),
-        fetch(`${apiBaseUrl()}/rest/v1/nomeados?orgao_tipo=eq.sociedade&pessoa_id=eq.${encodeURIComponent(pessoaId)}&deleted_at=is.null&select=id,orgao,cargo,status&order=orgao.asc`, { headers: apiHeaders() })
+        fetch(`${apiBaseUrl()}/rest/v1/nomeados?orgao_tipo=eq.sociedade&pessoa_id=eq.${encodeURIComponent(pessoaId)}&deleted_at=is.null&select=id,orgao,cargo,status&order=orgao.asc`, { headers: apiHeaders() }),
+        fetch(`${apiBaseUrl()}/rest/v1/nomeados?orgao_tipo=eq.ministerio&pessoa_id=eq.${encodeURIComponent(pessoaId)}&deleted_at=is.null&select=id,orgao,cargo,funcao_lider,status&order=orgao.asc`, { headers: apiHeaders() })
       ]);
       _renderMinLista(rMin.ok ? await rMin.json() : []);
       _renderSocLista(rSoc.ok ? await rSoc.json() : []);
+      _renderLidLista(rLid.ok ? await rLid.json() : []);
     } catch (e) {
       console.warn("[membresia] carregarParticipacoes:", e.message);
     }
@@ -536,6 +538,22 @@
         <span style="font-size:11px;color:var(--tx3)">${escapeHtml(s.cargo || "")}</span>
         <span style="font-size:10px;font-weight:600;color:${cor}">● ${s.status === "ativo" ? "ativo" : "inativo"}</span>
         <button data-id="${s.id}" onclick="membSocRemover(this.dataset.id)" style="background:none;border:none;color:var(--rose);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;opacity:.7" title="Remover">×</button>
+      </div>`;
+    }).join("");
+  }
+
+  function _renderLidLista(lista) {
+    const el = v("mem-lid-lista");
+    if (!el) return;
+    if (!lista.length) {
+      el.innerHTML = `<div style="color:var(--tx3);font-size:12px;padding:6px 0">Nenhuma liderança vinculada.</div>`;
+      return;
+    }
+    el.innerHTML = lista.map(n => {
+      const label = n.funcao_lider || n.cargo || "—";
+      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd1)">
+        <span style="flex:1;font-size:12.5px;color:var(--tx1);font-weight:500">${escapeHtml(n.orgao || "—")}</span>
+        <span style="font-size:11px;color:var(--tx3)">${escapeHtml(label)}</span>
       </div>`;
     }).join("");
   }
@@ -869,6 +887,11 @@
                 <button onclick="membMinSalvar()" style="font-size:12px;padding:5px 14px;border-radius:6px;border:none;background:var(--teal);color:#fff;cursor:pointer;font-weight:600">Adicionar</button>
               </div>
             </div>
+          </div>
+
+          <div style="margin-bottom:14px">
+            <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Liderança em Ministérios</div>
+            <div id="mem-lid-lista"></div>
           </div>
 
           <div>
