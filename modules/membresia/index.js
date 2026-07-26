@@ -375,13 +375,14 @@
       return;
     }
 
+    const _funcaoInsert = normalizarFuncao(gv("mem-f-funcao"));
     const payloadMembro = {
       pessoa_id: pessoa.id,
       status: gv("mem-f-status"),
       tipo_membro: normalizarTipoMembro(gv("mem-f-tipo-membro")),
       tipo_ingresso: normalizarTipoIngresso(gv("mem-f-tipo-ingresso")),
       data_ingresso: dateOrNull(gv("mem-f-ingresso")),
-      funcao: normalizarFuncao(gv("mem-f-funcao")),
+      ...(_funcaoInsert != null ? { funcao: _funcaoInsert } : {}),
       congregacao_id: gv("mem-f-cong") || null,
       data_batismo: dateOrNull(gv("mem-f-batismo")),
       numero_registro: gv("mem-f-registro") || null,
@@ -448,12 +449,13 @@
       return;
     }
 
+    const _funcaoUpdate = normalizarFuncao(gv("mem-f-funcao"));
     const payloadMembro = {
       status: gv("mem-f-status"),
       tipo_membro: normalizarTipoMembro(gv("mem-f-tipo-membro")),
       tipo_ingresso: normalizarTipoIngresso(gv("mem-f-tipo-ingresso")),
       data_ingresso: dateOrNull(gv("mem-f-ingresso")),
-      funcao: normalizarFuncao(gv("mem-f-funcao")),
+      ...(_funcaoUpdate != null ? { funcao: _funcaoUpdate } : {}),
       congregacao_id: gv("mem-f-cong") || null,
       data_batismo: dateOrNull(gv("mem-f-batismo")),
       numero_registro: gv("mem-f-registro") || null,
