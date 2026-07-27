@@ -486,7 +486,7 @@
     _pessoaIdAtual = pessoaId;
     _nomeMembroAtual = nome;
 
-    const pe = v("mem-part-edit"); if (pe) pe.style.display = "block";
+    const pe = v("mem-part-edit"); if (pe) pe.style.display = "flex";
     const pn = v("mem-part-novo"); if (pn) pn.style.display = "none";
 
     try {
@@ -506,20 +506,24 @@
   function _renderMinLista(lista) {
     const el = v("mem-min-lista");
     if (!el) return;
+    const cnt = v("mem-min-count");
+    if (cnt) { cnt.textContent = lista.length || ""; cnt.style.display = lista.length ? "" : "none"; }
     if (!lista.length) {
-      el.innerHTML = `<div style="color:var(--tx3);font-size:12px;padding:6px 0">Nenhum ministério vinculado.</div>`;
+      el.innerHTML = `<div class="mpart-vazio"><div class="mpart-vazio-ic">⛪</div><div class="mpart-vazio-txt">Nenhum ministério vinculado</div><div class="mpart-vazio-sub">Clique em + Adicionar para incluir</div></div>`;
       return;
     }
     el.innerHTML = lista.map(m => {
       const min = m.ministerios || {};
       const ic = _MIN_IC[min.tipo] || "⭐";
-      const cor = m.status === "ativo" ? "var(--gr)" : "var(--tx3)";
-      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd1)">
-        <span style="font-size:14px;flex-shrink:0">${ic}</span>
-        <span style="flex:1;font-size:12.5px;color:var(--tx1);font-weight:500">${escapeHtml(min.nome || "—")}</span>
-        <span style="font-size:11px;color:var(--tx3)">${escapeHtml(m.funcao || "")}</span>
-        <span style="font-size:10px;font-weight:600;color:${cor}">● ${m.status === "ativo" ? "ativo" : "inativo"}</span>
-        <button data-id="${m.id}" onclick="membMinRemover(this.dataset.id)" style="background:none;border:none;color:var(--rose);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;opacity:.7" title="Remover">×</button>
+      const ativo = m.status === "ativo";
+      return `<div class="mpart-item">
+        <span class="mpart-item-ic">${ic}</span>
+        <div class="mpart-item-body">
+          <div class="mpart-item-nome">${escapeHtml(min.nome || "—")}</div>
+          ${m.funcao ? `<div class="mpart-item-meta">${escapeHtml(m.funcao)}</div>` : ""}
+        </div>
+        <span class="mpart-pill ${ativo ? "mpart-pill--gr" : "mpart-pill--off"}">${ativo ? "Ativo" : "Inativo"}</span>
+        <button data-id="${m.id}" onclick="membMinRemover(this.dataset.id)" class="mpart-del" title="Remover">✕</button>
       </div>`;
     }).join("");
   }
@@ -527,17 +531,22 @@
   function _renderSocLista(lista) {
     const el = v("mem-soc-lista");
     if (!el) return;
+    const cnt = v("mem-soc-count");
+    if (cnt) { cnt.textContent = lista.length || ""; cnt.style.display = lista.length ? "" : "none"; }
     if (!lista.length) {
-      el.innerHTML = `<div style="color:var(--tx3);font-size:12px;padding:6px 0">Nenhuma sociedade vinculada.</div>`;
+      el.innerHTML = `<div class="mpart-vazio"><div class="mpart-vazio-ic">🤝</div><div class="mpart-vazio-txt">Nenhuma sociedade vinculada</div><div class="mpart-vazio-sub">Clique em + Adicionar para incluir</div></div>`;
       return;
     }
     el.innerHTML = lista.map(s => {
-      const cor = s.status === "ativo" ? "var(--gr)" : "var(--tx3)";
-      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd1)">
-        <span style="flex:1;font-size:12.5px;color:var(--tx1);font-weight:500">${escapeHtml(s.orgao || "—")}</span>
-        <span style="font-size:11px;color:var(--tx3)">${escapeHtml(s.cargo || "")}</span>
-        <span style="font-size:10px;font-weight:600;color:${cor}">● ${s.status === "ativo" ? "ativo" : "inativo"}</span>
-        <button data-id="${s.id}" onclick="membSocRemover(this.dataset.id)" style="background:none;border:none;color:var(--rose);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;opacity:.7" title="Remover">×</button>
+      const ativo = s.status === "ativo";
+      return `<div class="mpart-item">
+        <span class="mpart-item-ic">🏛</span>
+        <div class="mpart-item-body">
+          <div class="mpart-item-nome">${escapeHtml(s.orgao || "—")}</div>
+          ${s.cargo ? `<div class="mpart-item-meta">${escapeHtml(s.cargo)}</div>` : ""}
+        </div>
+        <span class="mpart-pill ${ativo ? "mpart-pill--gr" : "mpart-pill--off"}">${ativo ? "Ativo" : "Inativo"}</span>
+        <button data-id="${s.id}" onclick="membSocRemover(this.dataset.id)" class="mpart-del" title="Remover">✕</button>
       </div>`;
     }).join("");
   }
@@ -545,15 +554,22 @@
   function _renderLidLista(lista) {
     const el = v("mem-lid-lista");
     if (!el) return;
+    const cnt = v("mem-lid-count");
+    if (cnt) { cnt.textContent = lista.length || ""; cnt.style.display = lista.length ? "" : "none"; }
     if (!lista.length) {
-      el.innerHTML = `<div style="color:var(--tx3);font-size:12px;padding:6px 0">Nenhuma liderança vinculada.</div>`;
+      el.innerHTML = `<div class="mpart-vazio"><div class="mpart-vazio-ic">👑</div><div class="mpart-vazio-txt">Nenhuma liderança vinculada</div><div class="mpart-vazio-sub">Vínculos de liderança são gerenciados pelos módulos correspondentes</div></div>`;
       return;
     }
     el.innerHTML = lista.map(n => {
-      const label = n.funcao_lider || n.cargo || "—";
-      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd1)">
-        <span style="flex:1;font-size:12.5px;color:var(--tx1);font-weight:500">${escapeHtml(n.orgao || "—")}</span>
-        <span style="font-size:11px;color:var(--tx3)">${escapeHtml(label)}</span>
+      const cargo = n.funcao_lider || n.cargo || "";
+      const ativo = n.status === "ativo";
+      return `<div class="mpart-item">
+        <span class="mpart-item-ic">👑</span>
+        <div class="mpart-item-body">
+          <div class="mpart-item-nome">${escapeHtml(n.orgao || "—")}</div>
+          ${cargo ? `<div class="mpart-item-meta">${escapeHtml(cargo)}</div>` : ""}
+        </div>
+        <span class="mpart-pill ${ativo ? "mpart-pill--amb" : "mpart-pill--off"}">${ativo ? "Ativo" : "Inativo"}</span>
       </div>`;
     }).join("");
   }
@@ -863,23 +879,29 @@
       </div>
 
       <!-- Aba: Participações -->
-      <div id="mem-tab-part" style="display:none;padding:20px 24px">
+      <div id="mem-tab-part" style="display:none;padding:16px 20px 20px">
 
         <div id="mem-part-novo" style="color:var(--tx3);font-size:12px;text-align:center;padding:10px 0">
           Salve o membro primeiro para gerenciar participações.
         </div>
 
-        <div id="mem-part-edit" style="display:none">
+        <div id="mem-part-edit" style="display:none;flex-direction:column;gap:12px">
 
-          <div style="margin-bottom:14px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-              <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em">Ministérios</div>
-              <button onclick="membMinMostrarForm()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);cursor:pointer">+ Adicionar</button>
+          <!-- Bloco: Ministérios -->
+          <div class="mpart-bloco">
+            <div class="mpart-hd mpart-hd--teal">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:15px;line-height:1">⛪</span>
+                <span class="mpart-titulo">Ministérios</span>
+                <span id="mem-min-count" class="mpart-badge mpart-badge--teal" style="display:none"></span>
+              </div>
+              <button onclick="membMinMostrarForm()" class="mpart-add mpart-add--teal">+ Adicionar</button>
             </div>
             <div id="mem-min-lista"></div>
-            <div id="mem-min-form" style="display:none;flex-direction:column;gap:8px;padding:10px;background:var(--bg-surface,var(--bg-card));border-radius:8px;border:1px solid var(--bd2);margin-top:8px">
+            <div id="mem-min-form" style="display:none;flex-direction:column;gap:8px;padding:12px 14px;border-top:1px solid var(--bd1);background:var(--bg-surface,var(--bg-card))">
+              <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em">Novo vínculo de ministério</div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-                <select id="mem-min-sel" class="mem-inp"><option value="">Selecione…</option></select>
+                <select id="mem-min-sel" class="mem-inp"><option value="">Selecione o ministério…</option></select>
                 <input id="mem-min-funcao" type="text" class="mem-inp" placeholder="Função (ex.: Membro, Líder)" />
               </div>
               <div style="display:flex;gap:8px;justify-content:flex-end">
@@ -889,25 +911,38 @@
             </div>
           </div>
 
-          <div style="margin-bottom:14px">
-            <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Liderança em Ministérios</div>
+          <!-- Bloco: Liderança -->
+          <div class="mpart-bloco">
+            <div class="mpart-hd mpart-hd--amb">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:15px;line-height:1">👑</span>
+                <span class="mpart-titulo">Liderança em Ministérios</span>
+                <span id="mem-lid-count" class="mpart-badge mpart-badge--amb" style="display:none"></span>
+              </div>
+            </div>
             <div id="mem-lid-lista"></div>
           </div>
 
-          <div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-              <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em">Sociedades</div>
-              <button onclick="membSocMostrarForm()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);cursor:pointer">+ Adicionar</button>
+          <!-- Bloco: Sociedades -->
+          <div class="mpart-bloco">
+            <div class="mpart-hd mpart-hd--sky">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:15px;line-height:1">🤝</span>
+                <span class="mpart-titulo">Sociedades Internas</span>
+                <span id="mem-soc-count" class="mpart-badge mpart-badge--sky" style="display:none"></span>
+              </div>
+              <button onclick="membSocMostrarForm()" class="mpart-add mpart-add--sky">+ Adicionar</button>
             </div>
             <div id="mem-soc-lista"></div>
-            <div id="mem-soc-form" style="display:none;flex-direction:column;gap:8px;padding:10px;background:var(--bg-surface,var(--bg-card));border-radius:8px;border:1px solid var(--bd2);margin-top:8px">
+            <div id="mem-soc-form" style="display:none;flex-direction:column;gap:8px;padding:12px 14px;border-top:1px solid var(--bd1);background:var(--bg-surface,var(--bg-card))">
+              <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em">Nova vinculação</div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-                <select id="mem-soc-sel" class="mem-inp"><option value="">Selecione…</option></select>
+                <select id="mem-soc-sel" class="mem-inp"><option value="">Selecione a sociedade…</option></select>
                 <input id="mem-soc-cargo" type="text" class="mem-inp" placeholder="Cargo / função" />
               </div>
               <div style="display:flex;gap:8px;justify-content:flex-end">
                 <button onclick="membSocOcultarForm()" style="font-size:12px;padding:5px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--tx2);cursor:pointer">Cancelar</button>
-                <button onclick="membSocSalvar()" style="font-size:12px;padding:5px 14px;border-radius:6px;border:none;background:var(--teal);color:#fff;cursor:pointer;font-weight:600">Adicionar</button>
+                <button onclick="membSocSalvar()" style="font-size:12px;padding:5px 14px;border-radius:6px;border:none;background:var(--sky,var(--teal));color:#fff;cursor:pointer;font-weight:600">Adicionar</button>
               </div>
             </div>
           </div>
@@ -1011,6 +1046,127 @@
   }
   @media(max-width:380px) {
     .mem-grid-3 { grid-template-columns:1fr; }
+  }
+
+  /* ── Aba Participações ──────────────────────────────────────── */
+  .mpart-bloco {
+    border:1px solid var(--bd1);
+    border-radius:10px;
+    overflow:hidden;
+    background:var(--bg-card);
+  }
+  .mpart-hd {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    border-bottom:1px solid var(--bd1);
+  }
+  .mpart-hd--teal { background:rgba(42,181,192,.06);  border-left:3px solid var(--teal); }
+  .mpart-hd--amb  { background:rgba(212,168,67,.06);  border-left:3px solid #d4a843; }
+  .mpart-hd--sky  { background:rgba(74,156,245,.06);  border-left:3px solid var(--sky,#4a9cf5); }
+  .mpart-titulo {
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--tx1);
+    letter-spacing:.01em;
+  }
+  .mpart-badge {
+    font-size:10px;
+    font-weight:700;
+    padding:1px 7px;
+    border-radius:10px;
+    line-height:1.6;
+  }
+  .mpart-badge--teal { background:rgba(42,181,192,.15);  color:var(--teal); }
+  .mpart-badge--amb  { background:rgba(212,168,67,.15);  color:#b07d10; }
+  .mpart-badge--sky  { background:rgba(74,156,245,.15);  color:var(--sky,#4a9cf5); }
+  .mpart-add {
+    font-size:11px;
+    font-weight:600;
+    padding:3px 10px;
+    border-radius:6px;
+    cursor:pointer;
+    border:1px solid;
+    background:transparent;
+    transition:background .12s, color .12s;
+  }
+  .mpart-add--teal { color:var(--teal);            border-color:rgba(42,181,192,.4); }
+  .mpart-add--sky  { color:var(--sky,#4a9cf5);     border-color:rgba(74,156,245,.4); }
+  .mpart-add--teal:hover { background:var(--teal);         color:#fff; }
+  .mpart-add--sky:hover  { background:var(--sky,#4a9cf5);  color:#fff; }
+  .mpart-item {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 14px;
+    border-bottom:1px solid var(--bd1);
+    transition:background .1s;
+  }
+  .mpart-item:last-child { border-bottom:none; }
+  .mpart-item:hover { background:var(--bg-hover,var(--bg-surface)); }
+  .mpart-item-ic {
+    font-size:16px;
+    line-height:1;
+    flex-shrink:0;
+    width:22px;
+    text-align:center;
+  }
+  .mpart-item-body { flex:1; min-width:0; }
+  .mpart-item-nome {
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--tx1);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .mpart-item-meta {
+    font-size:10.5px;
+    color:var(--tx3);
+    margin-top:1px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .mpart-pill {
+    font-size:9.5px;
+    font-weight:700;
+    padding:2px 8px;
+    border-radius:10px;
+    border:1px solid;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+  .mpart-pill--gr  { background:rgba(58,170,92,.1);  color:var(--gr);         border-color:rgba(58,170,92,.25); }
+  .mpart-pill--amb { background:rgba(212,168,67,.1); color:#b07d10;            border-color:rgba(212,168,67,.3); }
+  .mpart-pill--off { background:var(--bg-surface);    color:var(--tx3);        border-color:var(--bd1); }
+  .mpart-del {
+    background:none;
+    border:none;
+    color:var(--tx3);
+    cursor:pointer;
+    font-size:13px;
+    line-height:1;
+    padding:3px 4px;
+    border-radius:5px;
+    flex-shrink:0;
+    opacity:.6;
+    transition:opacity .1s, color .1s, background .1s;
+  }
+  .mpart-del:hover { opacity:1; color:var(--rose); background:rgba(224,85,85,.08); }
+  .mpart-vazio {
+    text-align:center;
+    padding:20px 16px;
+    color:var(--tx3);
+  }
+  .mpart-vazio-ic  { font-size:24px; margin-bottom:6px; opacity:.5; }
+  .mpart-vazio-txt { font-size:12px; font-weight:600; color:var(--tx2); }
+  .mpart-vazio-sub { font-size:10.5px; margin-top:3px; color:var(--tx3); }
+  @media(max-width:480px) {
+    .mpart-item-meta { display:none; }
+    .mpart-hd { padding:9px 12px; }
+    .mpart-item { padding:8px 12px; gap:8px; }
   }
 </style>`;
 
