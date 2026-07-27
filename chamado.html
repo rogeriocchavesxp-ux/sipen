@@ -529,6 +529,42 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
   border-top: 1px solid rgba(58,170,92,.22);
   font-size: 11.5px; color: var(--gr); font-weight: 600;
 }
+.fin-anexos-bloco {
+  margin-top: 16px;
+  padding: 14px;
+  background: rgba(42,181,192,.05);
+  border: 1px dashed rgba(42,181,192,.3);
+  border-radius: 10px;
+}
+.fin-anexos-titulo {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--teal, #2ab5c0);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 10px;
+}
+.fin-file-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--bd, #ddd);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  font-size: 12.5px;
+  color: #555;
+  width: 100%;
+  box-sizing: border-box;
+  user-select: none;
+}
+.fin-file-label:hover { border-color: var(--teal, #2ab5c0); background: rgba(42,181,192,.04); }
+.fin-file-label.tem-arquivo { border-color: var(--teal, #2ab5c0); background: rgba(42,181,192,.06); color: #1a8a94; }
+.fin-file-ic  { font-size: 16px; flex-shrink: 0; }
+.fin-file-txt { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fin-file-hint { font-size: 10.5px; color: #999; margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -680,6 +716,31 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
           <label for="f-fin-obs">Observações financeiras</label>
           <textarea id="f-fin-obs" placeholder="Informações adicionais relevantes para o pagamento" style="min-height:70px"></textarea>
         </div>
+
+        <div class="fin-anexos-bloco">
+          <div class="fin-anexos-titulo">📎 Documentos (opcional)</div>
+          <div class="row2">
+            <div class="field">
+              <label>Nota fiscal / Recibo</label>
+              <label class="fin-file-label" id="lbl-fin-nota">
+                <span class="fin-file-ic">📄</span>
+                <span class="fin-file-txt" id="txt-fin-nota">Selecionar arquivo</span>
+                <input type="file" id="f-fin-nota" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                  onchange="finAtualizarLabel('f-fin-nota','txt-fin-nota','lbl-fin-nota')">
+              </label>
+            </div>
+            <div class="field">
+              <label>Boleto / Comprovante</label>
+              <label class="fin-file-label" id="lbl-fin-boleto">
+                <span class="fin-file-ic">🧾</span>
+                <span class="fin-file-txt" id="txt-fin-boleto">Selecionar arquivo</span>
+                <input type="file" id="f-fin-boleto" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                  onchange="finAtualizarLabel('f-fin-boleto','txt-fin-boleto','lbl-fin-boleto')">
+              </label>
+            </div>
+          </div>
+          <div class="fin-file-hint">PDF, JPG ou PNG · máx. 10 MB por arquivo</div>
+        </div>
       </div>
 
       <!-- ── Financeiro: Reembolso ───────────────────── -->
@@ -738,6 +799,31 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
         <div class="field">
           <label for="f-reimb-obs">Observações</label>
           <textarea id="f-reimb-obs" placeholder="Informações adicionais..." style="min-height:70px"></textarea>
+        </div>
+
+        <div class="fin-anexos-bloco">
+          <div class="fin-anexos-titulo">📎 Documentos (opcional)</div>
+          <div class="row2">
+            <div class="field">
+              <label>Nota fiscal / Recibo</label>
+              <label class="fin-file-label" id="lbl-reimb-nota">
+                <span class="fin-file-ic">📄</span>
+                <span class="fin-file-txt" id="txt-reimb-nota">Selecionar arquivo</span>
+                <input type="file" id="f-reimb-nota" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                  onchange="finAtualizarLabel('f-reimb-nota','txt-reimb-nota','lbl-reimb-nota')">
+              </label>
+            </div>
+            <div class="field">
+              <label>Comprovante de pagamento</label>
+              <label class="fin-file-label" id="lbl-reimb-comp">
+                <span class="fin-file-ic">🧾</span>
+                <span class="fin-file-txt" id="txt-reimb-comp">Selecionar arquivo</span>
+                <input type="file" id="f-reimb-comp" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                  onchange="finAtualizarLabel('f-reimb-comp','txt-reimb-comp','lbl-reimb-comp')">
+              </label>
+            </div>
+          </div>
+          <div class="fin-file-hint">PDF, JPG ou PNG · máx. 10 MB por arquivo</div>
         </div>
       </div>
 
@@ -1886,6 +1972,11 @@ async function enviarChamado() {
       return; // não mostra screen-ok ainda
     }
 
+    // Upload de anexos financeiros (não bloqueia o fluxo)
+    if (cat === "Financeiro") {
+      _uploadAnexosPublicos(newId, sub).catch(() => {});
+    }
+
     document.getElementById("ok-numero").textContent = protocolo || ticket;
     const okProtoEl = document.getElementById("ok-protocolo");
     if (okProtoEl) {
@@ -1899,6 +1990,73 @@ async function enviarChamado() {
     btn.disabled    = false;
     btn.textContent = "Enviar Solicitação";
     mostrarErro(e.message || "Falha ao enviar. Tente novamente.");
+  }
+}
+
+/* ── Anexos financeiros — link público ─────────────────────── */
+
+function finAtualizarLabel(inputId, txtId, lblId) {
+  const file = document.getElementById(inputId)?.files?.[0];
+  const txt  = document.getElementById(txtId);
+  const lbl  = document.getElementById(lblId);
+  if (!txt || !lbl) return;
+  if (file) {
+    txt.textContent = file.name;
+    lbl.classList.add("tem-arquivo");
+  } else {
+    txt.textContent = "Selecionar arquivo";
+    lbl.classList.remove("tem-arquivo");
+  }
+}
+
+async function _uploadAnexosPublicos(demandaId, sub) {
+  const BUCKET = "financial-documents";
+  const mapa = sub === "Reembolso"
+    ? [
+        { inputId: "f-reimb-nota", tipo: "nota_fiscal"  },
+        { inputId: "f-reimb-comp", tipo: "boleto"        },
+      ]
+    : [
+        { inputId: "f-fin-nota",   tipo: "nota_fiscal"  },
+        { inputId: "f-fin-boleto", tipo: "boleto"        },
+      ];
+
+  for (const { inputId, tipo } of mapa) {
+    const file = document.getElementById(inputId)?.files?.[0];
+    if (!file) continue;
+    if (file.size > 10 * 1024 * 1024) continue;
+
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `financeiro/publico/${demandaId}/${tipo}/${Date.now()}_${safe}`;
+
+    try {
+      // Upload para Storage
+      const upRes = await fetch(
+        `${SB_URL}/storage/v1/object/${BUCKET}/${path}`,
+        {
+          method:  "POST",
+          headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": file.type },
+          body: file,
+        }
+      );
+      if (!upRes.ok) continue;
+
+      // Registrar em financeiro_anexos
+      await fetch(`${SB_URL}/rest/v1/financeiro_anexos`, {
+        method:  "POST",
+        headers: { ...HDRS, "Prefer": "return=minimal" },
+        body: JSON.stringify({
+          demanda_id:    demandaId,
+          tipo_arquivo:  tipo,
+          nome_original: file.name,
+          storage_bucket: BUCKET,
+          storage_path:  path,
+          mime_type:     file.type,
+          tamanho_bytes: file.size,
+          criado_por:    document.getElementById("f-nome")?.value || "link_publico",
+        }),
+      });
+    } catch (_) { /* falha silenciosa — chamado já foi criado */ }
   }
 }
 
