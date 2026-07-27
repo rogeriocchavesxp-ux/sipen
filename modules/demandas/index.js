@@ -837,6 +837,7 @@ function fmtD(d) {
 
     if (!rows.length) return "";
 
+    const demId = dem.id || dem._row;
     return `
       <div class="card" style="margin-top:0;border:1px solid rgba(61,160,85,.3);background:rgba(61,160,85,.03)">
         <div class="ctit" style="color:var(--gr)">💰 Dados Financeiros</div>
@@ -847,7 +848,33 @@ function fmtD(d) {
               <td style="color:var(--tx1)">${val}</td>
             </tr>`).join("")}
         </table>
+        <div id="dem-anx-pub-${demId}"></div>
       </div>`;
+  }
+
+  async function _carregarAnexosDemanda(demId) {
+    const placeholder = document.getElementById(`dem-anx-pub-${demId}`);
+    if (!placeholder) return;
+    try {
+      const sb = _sbClient();
+      const { data } = await sb
+        .from("financeiro_anexos")
+        .select("*")
+        .eq("demanda_id", demId)
+        .is("solicitacao_id", null)
+        .is("deleted_at", null);
+      if (!data || data.length === 0) return;
+      const TIPO_LABEL = { nota_fiscal: "Nota Fiscal", boleto: "Boleto", comprovante: "Comprovante" };
+      placeholder.innerHTML = `
+        <div style="border-top:1px solid var(--bd1);margin-top:10px;padding-top:10px">
+          <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Anexos enviados</div>
+          ${data.map(a => `
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <button onclick="demAbrirAnexo('${escapeHtmlAttr(a.storage_path)}')" style="padding:4px 14px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--blue);font-size:11.5px;cursor:pointer;font-family:var(--ff)">📎 ${escapeHtml(a.nome_original || a.tipo_arquivo || "Arquivo")}</button>
+              ${a.tipo_arquivo ? `<span style="font-size:10.5px;color:var(--tx3)">${TIPO_LABEL[a.tipo_arquivo] || a.tipo_arquivo}</span>` : ""}
+            </div>`).join("")}
+        </div>`;
+    } catch(_) {}
   }
 
   function _temFinancialData(dem) {
@@ -1281,6 +1308,7 @@ function fmtD(d) {
         </div>
       </div>`;
     _carregarAndamentos(id, dem);
+    _carregarAnexosDemanda(id);
     _popularSelectEspacos("dem-edit-local");
   }
 
