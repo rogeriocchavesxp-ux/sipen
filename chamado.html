@@ -564,6 +564,21 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 .fin-file-ic  { font-size: 15px; flex-shrink: 0; opacity: .65; }
 .fin-file-txt { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fin-file-hint { font-size: 10.5px; color: var(--tx3); margin-top: 6px; }
+.fin-file-row  { display: flex; gap: 8px; align-items: stretch; }
+.fin-file-row .fin-file-label { flex: 1; width: auto; }
+.fin-cam-btn {
+  flex-shrink: 0;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1.5px solid var(--inpbd);
+  background: var(--inp);
+  color: var(--tx2);
+  font-size: 17px;
+  cursor: pointer;
+  transition: border-color .15s;
+  line-height: 1;
+}
+.fin-cam-btn:hover { border-color: var(--acc); }
 </style>
 </head>
 <body>
@@ -720,21 +735,29 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
           <div class="fin-anexos-titulo">📎 Documentos — opcional</div>
           <div class="field">
             <label>Nota fiscal / Recibo</label>
-            <label class="fin-file-label" id="lbl-fin-nota">
-              <span class="fin-file-ic">📄</span>
-              <span class="fin-file-txt" id="txt-fin-nota">Selecionar arquivo</span>
-              <input type="file" id="f-fin-nota" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
-                onchange="finAtualizarLabel('f-fin-nota','txt-fin-nota','lbl-fin-nota')">
-            </label>
+            <div class="fin-file-row">
+              <label class="fin-file-label" id="lbl-fin-nota">
+                <span class="fin-file-ic">📄</span>
+                <span class="fin-file-txt" id="txt-fin-nota">Selecionar arquivo</span>
+                <input type="file" id="f-fin-nota" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                  onchange="finAtualizarLabel('f-fin-nota','txt-fin-nota','lbl-fin-nota')">
+              </label>
+              <button type="button" class="fin-cam-btn" title="Tirar foto"
+                onclick="finCapturarFoto('f-fin-nota','txt-fin-nota','lbl-fin-nota')">📷</button>
+            </div>
           </div>
           <div class="field">
             <label>Boleto / Comprovante</label>
-            <label class="fin-file-label" id="lbl-fin-boleto">
-              <span class="fin-file-ic">🧾</span>
-              <span class="fin-file-txt" id="txt-fin-boleto">Selecionar arquivo</span>
-              <input type="file" id="f-fin-boleto" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
-                onchange="finAtualizarLabel('f-fin-boleto','txt-fin-boleto','lbl-fin-boleto')">
-            </label>
+            <div class="fin-file-row">
+              <label class="fin-file-label" id="lbl-fin-boleto">
+                <span class="fin-file-ic">🧾</span>
+                <span class="fin-file-txt" id="txt-fin-boleto">Selecionar arquivo</span>
+                <input type="file" id="f-fin-boleto" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                  onchange="finAtualizarLabel('f-fin-boleto','txt-fin-boleto','lbl-fin-boleto')">
+              </label>
+              <button type="button" class="fin-cam-btn" title="Tirar foto"
+                onclick="finCapturarFoto('f-fin-boleto','txt-fin-boleto','lbl-fin-boleto')">📷</button>
+            </div>
           </div>
           <div class="fin-file-hint">PDF, JPG ou PNG · máx. 10 MB por arquivo</div>
         </div>
@@ -802,21 +825,29 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
           <div class="fin-anexos-titulo">📎 Documentos — opcional</div>
           <div class="field">
             <label>Nota fiscal / Recibo</label>
-            <label class="fin-file-label" id="lbl-reimb-nota">
-              <span class="fin-file-ic">📄</span>
-              <span class="fin-file-txt" id="txt-reimb-nota">Selecionar arquivo</span>
-              <input type="file" id="f-reimb-nota" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
-                onchange="finAtualizarLabel('f-reimb-nota','txt-reimb-nota','lbl-reimb-nota')">
-            </label>
+            <div class="fin-file-row">
+              <label class="fin-file-label" id="lbl-reimb-nota">
+                <span class="fin-file-ic">📄</span>
+                <span class="fin-file-txt" id="txt-reimb-nota">Selecionar arquivo</span>
+                <input type="file" id="f-reimb-nota" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                  onchange="finAtualizarLabel('f-reimb-nota','txt-reimb-nota','lbl-reimb-nota')">
+              </label>
+              <button type="button" class="fin-cam-btn" title="Tirar foto"
+                onclick="finCapturarFoto('f-reimb-nota','txt-reimb-nota','lbl-reimb-nota')">📷</button>
+            </div>
           </div>
           <div class="field">
             <label>Comprovante de pagamento</label>
-            <label class="fin-file-label" id="lbl-reimb-comp">
-              <span class="fin-file-ic">🧾</span>
-              <span class="fin-file-txt" id="txt-reimb-comp">Selecionar arquivo</span>
-              <input type="file" id="f-reimb-comp" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
-                onchange="finAtualizarLabel('f-reimb-comp','txt-reimb-comp','lbl-reimb-comp')">
-            </label>
+            <div class="fin-file-row">
+              <label class="fin-file-label" id="lbl-reimb-comp">
+                <span class="fin-file-ic">🧾</span>
+                <span class="fin-file-txt" id="txt-reimb-comp">Selecionar arquivo</span>
+                <input type="file" id="f-reimb-comp" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                  onchange="finAtualizarLabel('f-reimb-comp','txt-reimb-comp','lbl-reimb-comp')">
+              </label>
+              <button type="button" class="fin-cam-btn" title="Tirar foto"
+                onclick="finCapturarFoto('f-reimb-comp','txt-reimb-comp','lbl-reimb-comp')">📷</button>
+            </div>
           </div>
           <div class="fin-file-hint">PDF, JPG ou PNG · máx. 10 MB por arquivo</div>
         </div>
@@ -1989,6 +2020,24 @@ async function enviarChamado() {
 }
 
 /* ── Anexos financeiros — link público ─────────────────────── */
+
+function finCapturarFoto(targetInputId, txtId, lblId) {
+  const tmp = document.createElement("input");
+  tmp.type    = "file";
+  tmp.accept  = "image/*";
+  tmp.capture = "environment";
+  tmp.onchange = () => {
+    const file = tmp.files[0];
+    if (!file) return;
+    try {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      document.getElementById(targetInputId).files = dt.files;
+    } catch(_) {}
+    finAtualizarLabel(targetInputId, txtId, lblId);
+  };
+  tmp.click();
+}
 
 function finAtualizarLabel(inputId, txtId, lblId) {
   const file = document.getElementById(inputId)?.files?.[0];
