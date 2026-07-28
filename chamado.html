@@ -1999,8 +1999,9 @@ async function enviarChamado() {
     }
 
     // Upload de anexos financeiros (não bloqueia o fluxo)
+    // Usa data.id (UUID real da demanda criada pela Edge Function)
     if (cat === "Financeiro") {
-      _uploadAnexosPublicos(newId, sub).catch(() => {});
+      _uploadAnexosPublicos(data.id || newId, sub).catch(() => {});
     }
 
     document.getElementById("ok-numero").textContent = protocolo || ticket;
