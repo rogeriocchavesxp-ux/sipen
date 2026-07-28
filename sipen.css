@@ -1771,6 +1771,14 @@ textarea.fi{resize:vertical;line-height:1.5}
 .tb-search::placeholder{color:var(--tx4)}
 .tb-search:focus{border-color:rgba(255,255,255,0.14);color:var(--tx2)}
 .tb-av-btn{width:28px!important;height:28px!important;padding:0!important;border-radius:50%!important;background:var(--grd)!important;border-color:transparent!important;color:#fff!important;font-size:11px!important;font-weight:700!important;justify-content:center;flex-shrink:0}
+.usr-menu-wrap{position:relative;flex-shrink:0}
+.usr-dd{position:absolute;top:calc(100% + 8px);right:0;min-width:200px;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.22);z-index:500;padding:6px 0;animation:usrDdIn .12s ease}
+@keyframes usrDdIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.usr-dd-info{padding:10px 14px 8px;font-size:11.5px;color:var(--tx3);min-height:30px}
+.usr-dd-sep{height:1px;background:var(--bd1);margin:4px 0}
+.usr-dd-item{display:flex;align-items:center;gap:9px;width:100%;padding:9px 14px;background:none;border:none;color:var(--tx1);font-size:12.5px;text-align:left;cursor:pointer;font-family:inherit;transition:background .1s}
+.usr-dd-item:hover{background:var(--bg-hover)}
+.usr-dd-sair{color:var(--rose)}
 
 html[data-theme="light"] .dash-row{border-bottom-color:rgba(0,0,0,0.04)}
 html[data-theme="light"] .dash-timeline .fi{border-bottom-color:rgba(0,0,0,0.04)}

@@ -429,6 +429,29 @@ async function deletarRegistro(tab, recordId) {
   }
 }
 
+/* ── Menu do usuário (avatar dropdown) ── */
+function usrMenuToggle() {
+  const dd = document.getElementById("usr-dd");
+  if (!dd) return;
+  const open = dd.style.display !== "none";
+  dd.style.display = open ? "none" : "block";
+  if (!open) {
+    setTimeout(() => {
+      document.addEventListener("click", _usrMenuOutsideClick, { once: true });
+    }, 0);
+  }
+}
+
+function usrMenuClose() {
+  const dd = document.getElementById("usr-dd");
+  if (dd) dd.style.display = "none";
+}
+
+function _usrMenuOutsideClick(e) {
+  const wrap = document.getElementById("usr-menu-wrap");
+  if (wrap && !wrap.contains(e.target)) usrMenuClose();
+}
+
 const styleEl = document.createElement("style");
 styleEl.textContent = "@keyframes spin{to{transform:rotate(360deg)}}";
 document.head.appendChild(styleEl);

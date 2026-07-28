@@ -629,6 +629,10 @@ function atualizarSidebarUsuario() {
   if (ur) ur.textContent = `${perfil.icon} ${perfil.nome}`;
   const tbav = document.getElementById("tb-avatar");
   if (tbav) { tbav.textContent = initials; }
+  const ddInfo = document.getElementById("usr-dd-info");
+  if (ddInfo) {
+    ddInfo.innerHTML = `<div style="font-weight:600;color:var(--tx1);margin-bottom:2px">${USUARIO_ATUAL.nome || "Usuário"}</div><div style="font-size:10.5px">${USUARIO_ATUAL.email || ""}</div>`;
+  }
 }
 
 /* ── PERMISSÕES ────────────────────────────── */

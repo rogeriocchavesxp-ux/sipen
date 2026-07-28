@@ -62,7 +62,17 @@
       <button class="tbt" onclick="T('WhatsApp','Serviço de notificações ativo — IPPenha')" title="WhatsApp">◎</button>
       <button class="tbt pri" onclick="openModal()">+ Nova Tarefa</button>
       <button class="tbt" onclick="T('3 alertas','Contratos a vencer e OS atrasadas')" title="Notificações">🔔 <span class="ndot"></span></button>
-      <button class="tbt tb-av-btn" onclick="T('Perfil','Em desenvolvimento')" title="Meu perfil"><span id="tb-avatar">?</span></button>
+      <div class="usr-menu-wrap" id="usr-menu-wrap">
+        <button class="tbt tb-av-btn" onclick="usrMenuToggle()" title="Menu do usuário"><span id="tb-avatar">?</span></button>
+        <div class="usr-dd" id="usr-dd" style="display:none">
+          <div class="usr-dd-info" id="usr-dd-info"></div>
+          <div class="usr-dd-sep"></div>
+          <button class="usr-dd-item" onclick="usrMenuClose();T('Perfil','Em desenvolvimento')">👤 Meu Perfil</button>
+          <button class="usr-dd-item" onclick="usrMenuClose();go('tutorial')">📖 Tutorial</button>
+          <div class="usr-dd-sep"></div>
+          <button class="usr-dd-item usr-dd-sair" onclick="usrMenuClose();doLogout()">↩ Sair</button>
+        </div>
+      </div>
     </div>
   </div>
   <div class="band" id="band" style="--mc:var(--gmd)"></div>

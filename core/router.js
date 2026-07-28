@@ -1,5 +1,6 @@
-const MC={geral:"var(--gmd)",admin:"var(--gold)",fin:"var(--gr)",jur:"var(--blue)",conselho:"var(--sky)",proj:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)",cong:"var(--gr)",diac:"var(--copper)",area:"var(--gr)",config:"var(--violet)",com:"var(--violet)",eve:"var(--sky)",acesso:"var(--sky)",chat:"var(--violet)"};
+const MC={tutorial:"var(--teal)",geral:"var(--gmd)",admin:"var(--gold)",fin:"var(--gr)",jur:"var(--blue)",conselho:"var(--sky)",proj:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)",cong:"var(--gr)",diac:"var(--copper)",area:"var(--gr)",config:"var(--violet)",com:"var(--violet)",eve:"var(--sky)",acesso:"var(--sky)",chat:"var(--violet)"};
 const CRUMB={
+  "tutorial":["","Tutorial","/ guia de uso do SIPEN"],
   geral:["","Dashboard Geral","/ IPPenha · visão executiva consolidada"],
   "cultos-dash":["Cultos","Dashboard","/ visão geral dos cultos"],
   "hub-igreja": ["","Vida da Igreja","/ cultos, pastoral e pequenos grupos"],
@@ -193,6 +194,7 @@ const _VIEW_MAP = {
   "area":        "modules/area-membro/view.html?v=6.45.13",
   "config":      "modules/config/view.html",
   "wa":          "modules/whatsapp/view.html",
+  "tutorial":    "modules/tutorial/view.html",
   "generic":     "modules/shared/view.html",
   "acesso":      "modules/acesso/view.html?v=6.45.13",
   "cultos":      "modules/cultos/view.html",
