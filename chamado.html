@@ -2083,7 +2083,11 @@ async function _uploadAnexosPublicos(demandaId, sub) {
           body: file,
         }
       );
-      if (!upRes.ok) continue;
+      if (!upRes.ok) {
+        const errBody = await upRes.json().catch(() => ({}));
+        console.warn("[chamado] Upload storage falhou:", upRes.status, errBody);
+        continue;
+      }
 
       // Registrar em financeiro_anexos
       await fetch(`${SB_URL}/rest/v1/financeiro_anexos`, {
