@@ -2090,7 +2090,7 @@ async function _uploadAnexosPublicos(demandaId, sub) {
       }
 
       // Registrar em financeiro_anexos
-      await fetch(`${SB_URL}/rest/v1/financeiro_anexos`, {
+      const dbRes = await fetch(`${SB_URL}/rest/v1/financeiro_anexos`, {
         method:  "POST",
         headers: { ...HDRS, "Prefer": "return=minimal" },
         body: JSON.stringify({
@@ -2104,7 +2104,11 @@ async function _uploadAnexosPublicos(demandaId, sub) {
           criado_por:    document.getElementById("f-nome")?.value || "link_publico",
         }),
       });
-    } catch (_) { /* falha silenciosa — chamado já foi criado */ }
+      if (!dbRes.ok) {
+        const dbErr = await dbRes.json().catch(() => ({}));
+        console.warn("[chamado] Insert financeiro_anexos falhou:", dbRes.status, dbErr);
+      }
+    } catch (e) { console.warn("[chamado] Erro no upload de anexo:", e.message); }
   }
 }
 
