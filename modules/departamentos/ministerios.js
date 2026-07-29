@@ -3510,7 +3510,7 @@
         <button class="min-tab" data-tab="membros"            onclick="minSocTab('membros')">${_socIcUsers}Membros <span id="soc-membro-count" style="font-size:11px;font-weight:400"></span></button>
         <button class="min-tab" data-tab="reunioes"           onclick="minSocTab('reunioes')">${_socIcReun}Reuniões</button>
         <button class="min-tab" data-tab="relatorios"         onclick="minSocTab('relatorios')">${_socIcBar}Relatórios</button>
-        <button class="min-tab" data-tab="adm"                onclick="minSocTab('adm')">${_socIcAdm}Administração</button>
+        <button class="min-tab" data-tab="adm"                onclick="minSocTab('adm')">${_socIcAdm}Configurações</button>
       </div>
       <div id="soc-tab-visao-geral"  class="min-tab-panel"><div id="soc-vg-content"><div style="color:var(--tx3);text-align:center;padding:32px">Carregando...</div></div></div>
       <div id="soc-tab-lideranca"    class="min-tab-panel" style="display:none"><div id="soc-lid-content"></div></div>
