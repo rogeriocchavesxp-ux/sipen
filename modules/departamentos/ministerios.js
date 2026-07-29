@@ -139,7 +139,7 @@
     grid.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center;grid-column:1/-1">Carregando...</div>';
 
     try {
-      let url = `${SUPABASE_URL}/rest/v1/ministerios?select=id,nome,descricao,tipo,ativo,supervisor&order=nome.asc`;
+      let url = `${SUPABASE_URL}/rest/v1/ministerios?select=id,nome,descricao,tipo,ativo,supervisor,conselheiro,coordenador&order=nome.asc`;
 
       if (!_isGestor()) {
         const ids = USUARIO_ATUAL?.ministerios;
@@ -173,12 +173,12 @@
       const contagem = {};
       cntRows.forEach(m => { contagem[m.ministerio_id] = (contagem[m.ministerio_id] || 0) + 1; });
 
-      // Resolver nomes dos supervisores em lote
-      const supIds = [...new Set(lista.filter(m => m.supervisor).map(m => m.supervisor))];
+      // Resolver nomes de supervisor/conselheiro/coordenador em lote
+      const pessoaIds = [...new Set(lista.flatMap(m => [m.supervisor, m.conselheiro, m.coordenador].filter(Boolean)))];
       const nomeSup = {};
-      if (supIds.length) {
+      if (pessoaIds.length) {
         const rSup = await fetch(
-          `${SUPABASE_URL}/rest/v1/pessoas?id=in.(${supIds.join(',')})&select=id,nome`,
+          `${SUPABASE_URL}/rest/v1/pessoas?id=in.(${pessoaIds.join(',')})&select=id,nome`,
           { headers: _hdr() }
         );
         const ps = rSup.ok ? await rSup.json() : [];
@@ -196,7 +196,7 @@
       grid.innerHTML = listaComPgs.map(m =>
         m.id === '__pgs__'
           ? _cardPgs()
-          : _cardMinisterio(m, contagem[m.id] || 0, nomeSup[m.supervisor] || null)
+          : _cardMinisterio(m, contagem[m.id] || 0, nomeSup[m.supervisor] || null, nomeSup[m.conselheiro] || null, nomeSup[m.coordenador] || null)
       ).join('');
 
       if (window._sbMinisterioId) {
@@ -211,13 +211,16 @@
     }
   }
 
-  function _cardMinisterio(m, qtdMembros, nomeSupervisor) {
+  function _cardMinisterio(m, qtdMembros, nomeSupervisor, nomeConselheiro, nomeCoordenador) {
     const ICONES = { MUSICA:'🎵', JOVENS:'🔥', INFANTIL:'👶', INTERCESSAO:'🙏', EVANGELISMO:'✝️', DIACONIA:'🤝', COMUNICACAO:'📢', ACOLHIMENTO:'🤗', OUTRO:'⭐' };
     const ic = ICONES[m.tipo] || '⭐';
     const inativoTag = m.ativo === false
       ? '<span style="font-size:10px;padding:2px 7px;background:#fee2e2;color:var(--rose);border-radius:20px;margin-left:6px">Inativo</span>'
       : '';
     const tipoLabel = m.tipo ? m.tipo.charAt(0) + m.tipo.slice(1).toLowerCase() : '';
+    const _pessoa = (label, nome, cor) => nome
+      ? `<div style="font-size:11px;color:var(--tx2);display:flex;gap:4px;margin-bottom:3px"><span style="color:var(--tx3);min-width:70px">${label}</span><span>${escapeHtml(nome)}</span></div>`
+      : '';
     return `
       <div class="card" style="cursor:pointer;transition:box-shadow .15s"
            onclick="minMinAbrir('${m.id}')"
@@ -230,7 +233,12 @@
             ${tipoLabel ? `<div style="font-size:11px;color:var(--tx3);margin-top:1px">${tipoLabel}</div>` : ''}
           </div>
         </div>
-        ${nomeSupervisor ? `<div style="font-size:12px;color:var(--tx2);margin-bottom:8px">👤 ${escapeHtml(nomeSupervisor)}</div>` : ''}
+        ${nomeSupervisor || nomeConselheiro || nomeCoordenador ? `
+        <div style="margin-bottom:8px">
+          ${_pessoa('Supervisor', nomeSupervisor)}
+          ${_pessoa('Conselheiro', nomeConselheiro)}
+          ${_pessoa('Coordenador', nomeCoordenador)}
+        </div>` : ''}
         <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--bd1);padding-top:8px;margin-top:4px">
           <span style="font-size:12px;color:var(--tx3)">👥 ${qtdMembros} membro${qtdMembros !== 1 ? 's' : ''}</span>
           <span style="font-size:11.5px;color:var(--violet)">Abrir →</span>
@@ -3397,11 +3405,27 @@
       const _sbNome = n => n.replace(/^Minist[eé]rio\s+d[eao]\s+/i, '').replace(/^Minist[eé]rio\s+/i, '');
       const _pgs = { id: '__pgs__', nome: 'Pequenos Grupos', tipo: '__pgs__' };
       const listaComPgs = [...lista, _pgs].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-      el.innerHTML = '<div class="sdiv"></div>' + listaComPgs.map(m =>
-        m.id === '__pgs__'
-          ? `<div class="si" onclick="go('pgs-dash')">⌂ Pequenos Grupos</div>`
-          : `<div class="si" data-mid="${m.id}" onclick="window._sbMinisterioId='${m.id}';go('min-min')">${_SB_ICONES[m.tipo]||'◆'} ${_sbNome(m.nome)}</div>`
-      ).join('');
+      el.innerHTML = '<div class="sdiv"></div>' + listaComPgs.map(m => {
+        if (m.id === '__pgs__') return `
+          <div class="mwrap" id="mw-pgs" data-modulo="PGS" style="margin:0">
+            <div class="mhdr" onclick="tog('pgs','pgs-dash')">
+              <div class="micon" style="background:rgba(82,196,110,0.14);border-color:rgba(82,196,110,0.25);color:var(--gbr)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+              <span class="mname">Pequenos Grupos</span>
+              <span class="marr">▶</span>
+            </div>
+            <div class="msub" id="ms-pgs">
+              <div class="si" onclick="go('pgs-lista')">Lista de PGs</div>
+              <div class="si" onclick="go('pgs-encontros')">Encontros</div>
+              <div class="si" onclick="go('pgs-participantes')">Participantes</div>
+              <div class="si" onclick="go('pgs-visitantes')">Visitantes</div>
+              <div class="si" onclick="go('pgs-estudos')">Estudos</div>
+              <div class="si" onclick="go('pgs-relatorios')">Relatórios</div>
+              <div class="si" onclick="go('pgs-oracao')">Pedidos de Oração</div>
+              <div class="si" onclick="go('pgs-historico')">Histórico</div>
+            </div>
+          </div>`;
+        return `<div class="si" data-mid="${m.id}" onclick="window._sbMinisterioId='${m.id}';go('min-min')">${_SB_ICONES[m.tipo]||'◆'} ${_sbNome(m.nome)}</div>`;
+      }).join('');
     } catch (e) { /* silencioso — sidebar não quebra */ }
   }
 
