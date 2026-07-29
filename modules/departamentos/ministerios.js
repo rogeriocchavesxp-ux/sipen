@@ -743,9 +743,12 @@
     const el = document.getElementById('min-min-fer-content');
     if (!el) return;
     const _lnk = (label, rota, desc) => `
-      <div class="si" onclick="go('${rota}')" style="display:flex;flex-direction:column;gap:2px;height:auto;padding:10px 12px;border-radius:8px;margin-bottom:4px">
-        <span style="font-size:13px;font-weight:500;color:var(--tx1)">${label}</span>
-        ${desc ? `<span style="font-size:11px;color:var(--tx3)">${desc}</span>` : ''}
+      <div onclick="go('${rota}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--bd1);margin-bottom:6px;transition:background .15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--tx1);line-height:1.3">${label}</div>
+          ${desc ? `<div style="font-size:11px;color:var(--tx3);margin-top:2px">${desc}</div>` : ''}
+        </div>
+        <span style="font-size:13px;color:var(--tx3);margin-left:10px">→</span>
       </div>`;
     el.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
