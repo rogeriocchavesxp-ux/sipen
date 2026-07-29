@@ -752,11 +752,11 @@
         <div class="card">
           <div class="ctit">Mensagens</div>
           ${_lnk('Dashboard',      'com-dash',         'Visão geral de comunicações')}
-          ${_lnk('Nova Mensagem',  'com-mensagens',    'Criar e enviar mensagem')}
-          ${_lnk('Mensagens',      'com-mensagens',    'Histórico de envios')}
+          ${_lnk('Mensagens',      'com-mensagens',    'Campanhas e envios segmentados')}
           ${_lnk('Agendamentos',   'com-agendamentos', 'Mensagens programadas')}
           ${_lnk('Modelos',        'com-modelos',      'Templates reutilizáveis')}
           ${_lnk('Histórico',      'com-historico',    'Registro completo')}
+          ${_lnk('Listas',         'com-listas',       'Listas de destinatários')}
         </div>
         <div class="card">
           <div class="ctit">Canais</div>
@@ -3360,22 +3360,14 @@
     if (!el) return;
     try {
       const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/ministerios?select=id,nome,tipo,sidebar_expandido&ativo=eq.true&order=nome.asc`,
+        `${SUPABASE_URL}/rest/v1/ministerios?select=id,nome,tipo&ativo=eq.true&order=nome.asc`,
         { headers: _hdr() }
       );
       if (!r.ok) return;
       const lista = await r.json();
       if (!lista.length) return;
       const _sbNome = n => n.replace(/^Minist[eé]rio\s+d[eao]\s+/i, '').replace(/^Minist[eé]rio\s+/i, '');
-      const normais = lista.filter(m => {
-        if (m.sidebar_expandido) {
-          const bloco = document.getElementById('mw-com');
-          if (bloco) bloco.dataset.mid = m.id;
-          return false;
-        }
-        return true;
-      });
-      el.innerHTML = '<div class="sdiv"></div>' + normais.map(m =>
+      el.innerHTML = '<div class="sdiv"></div>' + lista.map(m =>
         `<div class="si" data-mid="${m.id}" onclick="window._sbMinisterioId='${m.id}';go('min-min')">${_SB_ICONES[m.tipo]||'◆'} ${_sbNome(m.nome)}</div>`
       ).join('');
     } catch (e) { /* silencioso — sidebar não quebra */ }
