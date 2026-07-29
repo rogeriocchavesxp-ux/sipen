@@ -53,8 +53,12 @@
     <div class="crumb" id="crumb">
       <span class="c-pg">Dashboard Geral</span>
     </div>
-    <div class="tb-search-wrap">
-      <input class="tb-search" type="search" placeholder="Buscar..." autocomplete="off" readonly onclick="T('Busca','Em desenvolvimento')">
+    <div class="tb-search-wrap" id="tb-search-wrap">
+      <input class="tb-search" id="tb-search-input" type="search" placeholder="Buscar..." autocomplete="off"
+        oninput="buscaGlobalInput(this.value)"
+        onfocus="buscaGlobalInput(this.value)"
+        onkeydown="buscaGlobalKey(event)">
+      <div class="srch-dd" id="srch-dd" style="display:none"></div>
     </div>
     <div class="trr">
       <button class="tbt" id="btn-area-preview" onclick="areaTogglePreview()" title="Alternar visualização mobile/PC" style="display:none;font-size:11.5px">📱 Celular</button>

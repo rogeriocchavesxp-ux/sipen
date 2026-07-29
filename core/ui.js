@@ -452,6 +452,167 @@ function _usrMenuOutsideClick(e) {
   if (wrap && !wrap.contains(e.target)) usrMenuClose();
 }
 
+/* ── Busca Global ─────────────────────────────────────── */
+
+const _SRCH_PAGINAS = [
+  { ic:"📊", nm:"Dashboard Geral",          sub:"Visão executiva da IPPenha",               rota:"geral",           cor:"rgba(90,96,104,.15)" },
+  { ic:"👤", nm:"Membresia",                sub:"Cadastro e ficha de membros",               rota:"memb-dash",       cor:"rgba(107,174,214,.15)" },
+  { ic:"💰", nm:"Financeiro",               sub:"Contas, solicitações e reembolsos",         rota:"fin-dash",        cor:"rgba(58,170,92,.15)" },
+  { ic:"💰", nm:"Contas a Pagar",           sub:"Demandas financeiras a pagar",              rota:"fin-pagar",       cor:"rgba(58,170,92,.15)" },
+  { ic:"📅", nm:"Agenda",                   sub:"Agendamento de espaços e programações",     rota:"agenda-dash",     cor:"rgba(20,184,166,.15)" },
+  { ic:"📋", nm:"Demandas",                 sub:"Central de solicitações internas",          rota:"dem-dash",        cor:"rgba(224,85,85,.15)" },
+  { ic:"✝",  nm:"Pastoral",                sub:"Escala de pregação e atendimentos",         rota:"pastoral-dash",   cor:"rgba(20,184,166,.15)" },
+  { ic:"🏠", nm:"Pequenos Grupos",          sub:"PGs, encontros e participantes",            rota:"pgs-dash",        cor:"rgba(107,174,214,.15)" },
+  { ic:"📣", nm:"Comunicação",             sub:"WhatsApp e notificações",                   rota:"com-dash",        cor:"rgba(139,111,212,.15)" },
+  { ic:"📣", nm:"WhatsApp",                sub:"Envios e destinatários",                    rota:"wa-dash",         cor:"rgba(139,111,212,.15)" },
+  { ic:"🔧", nm:"Infraestrutura",           sub:"Ordens de serviço e manutenção",            rota:"infra-dash",      cor:"rgba(224,138,42,.15)" },
+  { ic:"⚖",  nm:"Conselho e Governança",   sub:"Atas, nomeados e deliberações",             rota:"conselho-dash",   cor:"rgba(74,156,245,.15)" },
+  { ic:"🤝", nm:"Junta Diaconal",           sub:"Escalas e famílias assistidas",             rota:"diac-dash",       cor:"rgba(180,120,60,.15)" },
+  { ic:"⚙",  nm:"Configurações",           sub:"Permissões e parâmetros do sistema",        rota:"config-dash",     cor:"rgba(139,111,212,.15)" },
+  { ic:"📅", nm:"Cultos",                   sub:"Programação e escala de cultos",            rota:"cultos-dash",     cor:"rgba(20,184,166,.15)" },
+  { ic:"📖", nm:"Tutorial",                sub:"Guia de uso do SIPEN",                      rota:"tutorial",        cor:"rgba(20,184,166,.15)" },
+];
+
+let _srchTimer = null;
+let _srchIdx   = -1;
+
+function buscaGlobalInput(q) {
+  clearTimeout(_srchTimer);
+  if (!q || q.trim().length < 2) { _srchFechar(); return; }
+  _srchTimer = setTimeout(() => _srchExecutar(q.trim()), 280);
+}
+
+function buscaGlobalKey(e) {
+  const dd = document.getElementById("srch-dd");
+  const items = dd ? [...dd.querySelectorAll(".srch-item")] : [];
+  if (e.key === "Escape") { _srchFechar(); document.getElementById("tb-search-input")?.blur(); return; }
+  if (e.key === "ArrowDown") { e.preventDefault(); _srchIdx = Math.min(_srchIdx + 1, items.length - 1); _srchFocar(items); return; }
+  if (e.key === "ArrowUp")   { e.preventDefault(); _srchIdx = Math.max(_srchIdx - 1, 0);                _srchFocar(items); return; }
+  if (e.key === "Enter" && _srchIdx >= 0 && items[_srchIdx]) { items[_srchIdx].click(); return; }
+}
+
+function _srchFocar(items) {
+  items.forEach((el, i) => el.classList.toggle("on", i === _srchIdx));
+  items[_srchIdx]?.scrollIntoView({ block:"nearest" });
+}
+
+function _srchFechar() {
+  const dd = document.getElementById("srch-dd");
+  if (dd) dd.style.display = "none";
+  _srchIdx = -1;
+}
+
+async function _srchExecutar(q) {
+  const dd = document.getElementById("srch-dd");
+  if (!dd) return;
+  _srchIdx = -1;
+
+  const ql = q.toLowerCase();
+
+  // 1. Páginas (estático, instantâneo)
+  const pags = _SRCH_PAGINAS.filter(p =>
+    p.nm.toLowerCase().includes(ql) || p.sub.toLowerCase().includes(ql)
+  ).slice(0, 4);
+
+  // Mostra resultado parcial imediato enquanto carrega
+  dd.style.display = "block";
+  dd.innerHTML = _srchRender(pags, [], [], q, true);
+
+  // 2. Membros + Demandas em paralelo
+  const [membros, demandas] = await Promise.all([
+    _srchMembros(q),
+    _srchDemandas(q),
+  ]);
+
+  dd.innerHTML = _srchRender(pags, membros, demandas, q, false);
+}
+
+async function _srchMembros(q) {
+  try {
+    const sb = typeof getSupabase === "function" ? getSupabase() : null;
+    if (!sb) return [];
+    const { data } = await sb.from("v_membros").select("id,nome,status,congregacao")
+      .ilike("nome", `%${q}%`).limit(4);
+    return data || [];
+  } catch(_) { return []; }
+}
+
+async function _srchDemandas(q) {
+  try {
+    const sb = typeof getSupabase === "function" ? getSupabase() : null;
+    if (!sb) return [];
+    const { data } = await sb.from("v_demandas").select("id,titulo,numero_chamado,area,status")
+      .or(`titulo.ilike.%${q}%,numero_chamado.ilike.%${q}%,solicitante.ilike.%${q}%`)
+      .limit(4);
+    return data || [];
+  } catch(_) { return []; }
+}
+
+function _srchRender(pags, membros, demandas, q, carregando) {
+  const STATUS_COR = { Ativo:"var(--gr)", Inativo:"var(--tx3)", Transferido:"var(--blue)" };
+  let html = "";
+
+  if (pags.length) {
+    html += `<div class="srch-grp-lbl">Módulos e Páginas</div>`;
+    html += pags.map(p => `
+      <div class="srch-item" onclick="document.getElementById('tb-search-input').value='';_srchFechar();go('${p.rota}')">
+        <div class="srch-item-ic" style="background:${p.cor}">${p.ic}</div>
+        <div class="srch-item-body">
+          <div class="srch-item-nm">${_srchHL(p.nm, q)}</div>
+          <div class="srch-item-sub">${p.sub}</div>
+        </div>
+      </div>`).join("");
+  }
+
+  if (membros.length) {
+    if (pags.length) html += `<div class="srch-sep"></div>`;
+    html += `<div class="srch-grp-lbl">Membros</div>`;
+    html += membros.map(m => `
+      <div class="srch-item" onclick="document.getElementById('tb-search-input').value='';_srchFechar();go('memb-dash')">
+        <div class="srch-item-ic" style="background:rgba(107,174,214,.15)">👤</div>
+        <div class="srch-item-body">
+          <div class="srch-item-nm">${_srchHL(m.nome||"—", q)}</div>
+          <div class="srch-item-sub">${m.congregacao||""}</div>
+        </div>
+        <span class="srch-item-tag" style="background:rgba(90,96,104,.1);color:${STATUS_COR[m.status]||"var(--tx3)"}">${m.status||""}</span>
+      </div>`).join("");
+  }
+
+  if (demandas.length) {
+    if (pags.length || membros.length) html += `<div class="srch-sep"></div>`;
+    html += `<div class="srch-grp-lbl">Demandas</div>`;
+    html += demandas.map(d => `
+      <div class="srch-item" onclick="document.getElementById('tb-search-input').value='';_srchFechar();window.demAbrirDetalhe&&demAbrirDetalhe('${d.id}','srch')">
+        <div class="srch-item-ic" style="background:rgba(224,85,85,.12)">📋</div>
+        <div class="srch-item-body">
+          <div class="srch-item-nm">${_srchHL(d.titulo||"—", q)}</div>
+          <div class="srch-item-sub">${d.numero_chamado||""} · ${d.area||""}</div>
+        </div>
+        <span class="srch-item-tag" style="background:rgba(90,96,104,.1);color:var(--tx3)">${d.status||""}</span>
+      </div>`).join("");
+  }
+
+  if (carregando && !pags.length) {
+    html = `<div class="srch-empty">Buscando…</div>`;
+  } else if (!carregando && !pags.length && !membros.length && !demandas.length) {
+    html = `<div class="srch-empty">Nenhum resultado para "<strong>${q}</strong>"</div>`;
+  }
+
+  return html;
+}
+
+function _srchHL(txt, q) {
+  if (!q) return escapeHtml(txt);
+  const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+  return escapeHtml(txt).replace(re, '<mark style="background:rgba(20,184,166,.25);color:inherit;border-radius:2px">$1</mark>');
+}
+
+// Fecha ao clicar fora
+document.addEventListener("click", e => {
+  const wrap = document.getElementById("tb-search-wrap");
+  if (wrap && !wrap.contains(e.target)) _srchFechar();
+});
+
 const styleEl = document.createElement("style");
 styleEl.textContent = "@keyframes spin{to{transform:rotate(360deg)}}";
 document.head.appendChild(styleEl);
