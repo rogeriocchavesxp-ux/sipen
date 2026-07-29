@@ -3409,7 +3409,7 @@
   }
 
   /* ══ SIDEBAR DINÂMICO ════════════════════════════════════════ */
-  const _SB_ICONES = { MUSICA:'♪', JOVENS:'◈', INFANTIL:'◎', INTERCESSAO:'✦', EVANGELISMO:'✝', DIACONIA:'◇', COMUNICACAO:'◉', ACOLHIMENTO:'◌', OUTRO:'◆' };
+  const _SB_ICONES = {};
 
   async function sbMinMinBuild() {
     const el = document.getElementById('sb-min-ministerios');
@@ -3444,7 +3444,7 @@
               <div class="si" onclick="go('pgs-historico')">Histórico</div>
             </div>
           </div>`;
-        return `<div class="si" data-mid="${m.id}" onclick="window._sbMinisterioId='${m.id}';go('min-min')">${_SB_ICONES[m.tipo]||'◆'} ${_sbNome(m.nome)}</div>`;
+        return `<div class="si" data-mid="${m.id}" onclick="window._sbMinisterioId='${m.id}';go('min-min')">${_sbNome(m.nome)}</div>`;
       }).join('');
     } catch (e) { /* silencioso — sidebar não quebra */ }
   }
