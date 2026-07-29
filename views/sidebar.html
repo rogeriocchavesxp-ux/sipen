@@ -89,25 +89,6 @@
           </div>
         </div>
 
-        <!-- Pequenos Grupos -->
-        <div class="mwrap" id="mw-pgs" data-modulo="PGS">
-          <div class="mhdr mhdr-noexpand" onclick="go('pgs-dash')">
-            <div class="micon" style="background:rgba(82,196,110,0.14);border-color:rgba(82,196,110,0.25);color:var(--gbr)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-            <span class="mname">Pequenos Grupos</span>
-            <span class="mbadge" style="background:rgba(61,160,85,0.12);color:var(--gbr);border:1px solid rgba(61,160,85,0.2)">9</span>
-            <span class="marr">▶</span>
-          </div>
-          <div class="msub" id="ms-pgs">
-            <div class="si" onclick="go('pgs-lista')">Lista de PGs</div>
-            <div class="si" onclick="go('pgs-encontros')">Encontros</div>
-            <div class="si" onclick="go('pgs-participantes')">Participantes</div>
-            <div class="si" onclick="go('pgs-visitantes')">Visitantes</div>
-            <div class="si" onclick="go('pgs-estudos')">Estudos</div>
-            <div class="si" onclick="go('pgs-relatorios')">Relatórios</div>
-            <div class="si" onclick="go('pgs-oracao')">Pedidos de Oração</div>
-            <div class="si" onclick="go('pgs-historico')">Histórico</div>
-          </div>
-        </div>
 
       </div>
     </div>
@@ -224,6 +205,24 @@
           <div class="msub" id="ms-min">
             <div class="si" onclick="go('min-min')">Todos os Ministérios</div>
             <div id="sb-min-ministerios"></div>
+            <div class="mwrap" id="mw-pgs" data-modulo="PGS" style="margin:0">
+              <div class="mhdr" onclick="tog('pgs','pgs-dash')">
+                <div class="micon" style="background:rgba(82,196,110,0.14);border-color:rgba(82,196,110,0.25);color:var(--gbr)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+                <span class="mname">Pequenos Grupos</span>
+                <span class="mbadge" style="background:rgba(61,160,85,0.12);color:var(--gbr);border:1px solid rgba(61,160,85,0.2)">9</span>
+                <span class="marr">▶</span>
+              </div>
+              <div class="msub" id="ms-pgs">
+                <div class="si" onclick="go('pgs-lista')">Lista de PGs</div>
+                <div class="si" onclick="go('pgs-encontros')">Encontros</div>
+                <div class="si" onclick="go('pgs-participantes')">Participantes</div>
+                <div class="si" onclick="go('pgs-visitantes')">Visitantes</div>
+                <div class="si" onclick="go('pgs-estudos')">Estudos</div>
+                <div class="si" onclick="go('pgs-relatorios')">Relatórios</div>
+                <div class="si" onclick="go('pgs-oracao')">Pedidos de Oração</div>
+                <div class="si" onclick="go('pgs-historico')">Histórico</div>
+              </div>
+            </div>
           </div>
         </div>
 
