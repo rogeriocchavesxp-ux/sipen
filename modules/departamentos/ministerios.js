@@ -768,7 +768,7 @@
   }
 
   /* ══ ABA: CONFIGURAÇÕES ══════════════════════════════════════ */
-  function _renderAdm() {
+  async function _renderAdm() {
     const el = document.getElementById('min-min-adm-content');
     if (!el) return;
     if (!_ministerioDataAtual) {
