@@ -41,14 +41,19 @@
   let _pastores = [];
   const _escala = new Map(); // "YYYY-MM-DD-culto_tipo" → {id, pastor_id, local, observacoes, status, origem}
 
+  /* ── Mapeia registro de oficiais para o formato pastor ──────── */
+  function _mapOficial(p) {
+    return { id:p.id, nome_completo:p.nome, nome_exibicao:p.nome, funcao:p.cargo||"pastor", unidade:p.congregacao||"", ativo:p.status==="ativo" };
+  }
+
   /* ── Supabase ────────────────────────────────────────────────── */
   async function _loadAll() {
     if (_st.loading) return;
     _st.loading = true;
     try {
-      const r = await fetch(`${apiBaseUrl()}/rest/v1/pastores?select=*&order=nome_completo.asc`, {headers:apiHeaders()});
-      if (r.ok) { const d=await r.json(); if(Array.isArray(d)&&d.length){_pastores=d;}else{console.warn("pastores: tabela vazia");_pastores=[];} }
-      else { console.warn("pastores: HTTP",r.status); _pastores=[]; }
+      const r = await fetch(`${apiBaseUrl()}/rest/v1/oficiais?cargo=eq.pastor&status=eq.ativo&deleted_at=is.null&select=id,nome,cargo,status,congregacao&order=nome.asc`, {headers:apiHeaders()});
+      if (r.ok) { const d=await r.json(); _pastores=Array.isArray(d)?d.map(_mapOficial):[]; }
+      else { console.warn("pastores (oficiais): HTTP",r.status); _pastores=[]; }
     } catch(e) { console.warn("pastores: erro de rede",e); _pastores=[]; }
     try {
       const r = await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao?select=*&order=data.asc&limit=3000`, {headers:apiHeaders()});
@@ -459,8 +464,8 @@
   window.ep_getEscala   = () => _escala;
   window.ep_refreshPastores = async function(){
     try{
-      const r=await fetch(`${apiBaseUrl()}/rest/v1/pastores?select=*&order=nome_completo.asc`,{headers:apiHeaders()});
-      if(r.ok){const d=await r.json();if(Array.isArray(d)&&d.length)_pastores=d;}
+      const r=await fetch(`${apiBaseUrl()}/rest/v1/oficiais?cargo=eq.pastor&status=eq.ativo&deleted_at=is.null&select=id,nome,cargo,status,congregacao&order=nome.asc`,{headers:apiHeaders()});
+      if(r.ok){const d=await r.json();if(Array.isArray(d))_pastores=d.map(_mapOficial);}
     }catch(e){}
     if(typeof pd_renderPastores==="function") pd_renderPastores();
   };
@@ -834,6 +839,7 @@
   function _isUuid(v){ return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(v||"")); }
   function _normalizarPastores(lista){
     return (Array.isArray(lista)?lista:[])
+      .map(p => p.nome_completo ? p : { id:p.id, nome_completo:p.nome, nome_exibicao:p.nome, funcao:p.cargo||"pastor", unidade:p.congregacao||"", ativo:p.status==="ativo" })
       .filter(p=>p&&_isUuid(p.id)&&p.ativo!==false)
       .sort((a,b)=>(a.nome_exibicao||a.nome_completo||"").localeCompare(b.nome_exibicao||b.nome_completo||"","pt-BR"));
   }
@@ -929,7 +935,7 @@
 	    if(_pastoresDp.length&&!force) return _pastoresDp;
 	    _pastoresLoading=(async()=>{
 	      try {
-	        const r=await fetch(`${apiBaseUrl()}/rest/v1/pastores?select=*&order=nome_completo.asc`,{headers:apiHeaders()});
+	        const r=await fetch(`${apiBaseUrl()}/rest/v1/oficiais?cargo=eq.pastor&status=eq.ativo&deleted_at=is.null&select=id,nome,cargo,status,congregacao&order=nome.asc`,{headers:apiHeaders()});
 	        if(r.ok){
 	          const d=await r.json();
 	          _pastoresDp=_normalizarPastores(d);
