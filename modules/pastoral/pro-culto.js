@@ -1840,7 +1840,7 @@ ${exp ? _expandedRow(it) : ''}`;
   };
 
   document.addEventListener("sipen:navigate", function(e) {
-    if (e.detail?.id === "pastoral-proculto") {
+    if (e.detail?.id === "proculto-dash") {
       _show(_nav === "detalhe" ? "detalhe" : "lista");
     }
   });

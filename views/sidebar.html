@@ -40,7 +40,7 @@
             <span class="marr">▶</span>
           </div>
           <div class="msub" id="ms-cultos">
-            <div class="si" onclick="go('pastoral-proculto')">Liturgia dos Cultos</div>
+            <div class="si" onclick="go('proculto-dash')">Liturgia dos Cultos</div>
           </div>
         </div>
 
@@ -52,7 +52,6 @@
             <span class="marr">▶</span>
           </div>
           <div class="msub" id="ms-escalas">
-            <div class="si" onclick="go('pastoral-preg')">Pregação</div>
             <div class="si" onclick="go('diac-escalas')">Junta Diaconal</div>
             <div class="si" onclick="go('min-esc')">Ministério de Música</div>
           </div>
@@ -225,6 +224,32 @@
           <div class="msub" id="ms-min">
             <div class="si" onclick="go('min-min')">Todos os Ministérios</div>
             <div id="sb-min-ministerios"></div>
+          </div>
+        </div>
+
+        <!-- Equipe Pastoral -->
+        <div class="mwrap" id="mw-equipe-pastoral">
+          <div class="mhdr" onclick="tog('equipe-pastoral')">
+            <div class="micon" style="background:rgba(58,176,184,0.14);border-color:rgba(58,176,184,0.25);color:var(--teal)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
+            <span class="mname">Equipe Pastoral</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-equipe-pastoral">
+            <div class="si" onclick="go('pastoral-dash')">Dashboard</div>
+            <div class="si" onclick="go('pastoral-preg')">Escala de Pregação</div>
+            <div class="si" onclick="go('pastoral-pastores')">Pastores</div>
+            <div class="si" onclick="go('pastoral-disp')">Disponibilidade</div>
+            <div class="si" onclick="go('pastoral-whatsapp')">WhatsApp</div>
+            <div class="si" onclick="go('pastoral-historico')">Histórico</div>
+            <div class="si" onclick="go('pastoral-relatorios')">Relatórios</div>
+          </div>
+        </div>
+
+        <!-- Pró-Culto -->
+        <div class="mwrap" id="mw-proculto">
+          <div class="mhdr mhdr-noexpand" onclick="go('proculto-dash')">
+            <div class="micon" style="background:rgba(58,176,184,0.14);border-color:rgba(58,176,184,0.25);color:var(--teal)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M5 9h14"/></svg></div>
+            <span class="mname">Pró-Culto</span>
           </div>
         </div>
 
