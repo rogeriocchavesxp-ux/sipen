@@ -2583,7 +2583,8 @@
       const isDiac = _ministerioDataAtual?.tipo === 'DIACONIA';
       if (isDiac) {
         const rDiac = await fetch(
-          `${SUPABASE_URL}/rest/v1/v_oficiais?select=id,nome,cargo,status&cargo=eq.diacono&status=in.(ativo,especial)&order=nome.asc`,
+          `${SUPABASE_URL}/rest/v1/oficiais?cargo=eq.diacono&status=in.(ativo,especial)&deleted_at=is.null` +
+          `&select=id,ata,fim_mandato,mandato_numero,status,pessoas(nome)&order=pessoas(nome).asc`,
           { headers: _hdr() }
         );
         const diaconos = rDiac.ok ? await rDiac.json() : [];
@@ -2594,18 +2595,28 @@
           el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Nenhum diácono cadastrado.</div>';
           return;
         }
+        const _fmtData = d => {
+          if (!d) return '—';
+          const [y, m, dia] = d.split('-');
+          return `${dia}/${m}/${y}`;
+        };
         el.innerHTML = `
           <table style="width:100%;border-collapse:collapse;font-size:13px">
             <thead><tr style="border-bottom:2px solid var(--bd1)">
               <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Nome</th>
+              <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Nº Ata</th>
+              <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Venc. Mandato</th>
               <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Status</th>
             </tr></thead>
             <tbody>${diaconos.map(d => {
+              const nome = (d.pessoas?.nome || '—').toUpperCase();
               const stTag = d.status === 'especial'
                 ? '<span style="font-size:11px;padding:2px 7px;background:rgba(245,158,11,0.12);color:var(--amber,#d97706);border-radius:20px">Especial</span>'
                 : '<span style="font-size:11px;padding:2px 7px;background:var(--greenbg,#d1fae5);color:var(--green,#059669);border-radius:20px">Ativo</span>';
               return `<tr style="border-bottom:1px solid var(--bd1)">
-                <td style="padding:7px 8px;color:var(--tx1);font-weight:500">${(d.nome || '—').toUpperCase()}</td>
+                <td style="padding:7px 8px;color:var(--tx1);font-weight:500">${nome}</td>
+                <td style="padding:7px 8px;color:var(--tx2)">${d.ata || '—'}</td>
+                <td style="padding:7px 8px;color:var(--tx2)">${_fmtData(d.fim_mandato)}</td>
                 <td style="padding:7px 8px">${stTag}</td>
               </tr>`;
             }).join('')}</tbody>
