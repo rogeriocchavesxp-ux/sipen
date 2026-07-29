@@ -353,10 +353,11 @@
       if (waBtn)    waBtn.style.display    = _recursosAtual.whatsapp     ? '' : 'none';
 
       // Abas específicas de Comunicação
-      const isCom = m.tipo === 'COMUNICACAO';
+      const isCom      = m.tipo === 'COMUNICACAO';
+      const isPastoral = (m.nome || '').toLowerCase().includes('equipe pastoral');
 
       const ferBtn = document.getElementById('min-min-tab-btn-fer');
-      if (ferBtn) ferBtn.style.display = isCom ? '' : 'none';
+      if (ferBtn) ferBtn.style.display = (isCom || isPastoral) ? '' : 'none';
       const solBtn  = document.getElementById('min-min-tab-btn-sol');
       if (solBtn)  solBtn.style.display  = isCom ? '' : 'none';
       const campBtn = document.getElementById('min-min-tab-btn-camp');
@@ -783,6 +784,25 @@
         </div>
         <span style="font-size:13px;color:var(--tx3);margin-left:10px">→</span>
       </div>`;
+    const m = _ministerioDataAtual;
+    const isPastoral = (m?.nome || '').toLowerCase().includes('equipe pastoral');
+    if (isPastoral) {
+      el.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="card">
+            <div class="ctit">Pregação</div>
+            ${_lnk('Escala de Pregação', 'pastoral-preg',  'Escala de pregadores')}
+            ${_lnk('Disponibilidade',    'pastoral-disp',  'Agenda de disponibilidade')}
+            ${_lnk('Histórico',          'pastoral-historico', 'Registro de pregações')}
+          </div>
+          <div class="card">
+            <div class="ctit">Comunicação</div>
+            ${_lnk('WhatsApp',  'pastoral-whatsapp',   'Envios e notificações')}
+            ${_lnk('Relatórios','pastoral-relatorios', 'Relatórios e indicadores')}
+          </div>
+        </div>`;
+      return;
+    }
     el.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="card">
