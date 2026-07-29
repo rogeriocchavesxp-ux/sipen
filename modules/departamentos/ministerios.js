@@ -190,8 +190,13 @@
         return;
       }
 
-      grid.innerHTML = lista.map(m =>
-        _cardMinisterio(m, contagem[m.id] || 0, nomeSup[m.supervisor] || null)
+      const _pgsEntry = { id: '__pgs__', nome: 'Pequenos Grupos', tipo: 'GRUPOS', ativo: true, supervisor: null };
+      const listaComPgs = [...lista, _pgsEntry].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+
+      grid.innerHTML = listaComPgs.map(m =>
+        m.id === '__pgs__'
+          ? _cardPgs()
+          : _cardMinisterio(m, contagem[m.id] || 0, nomeSup[m.supervisor] || null)
       ).join('');
 
       if (window._sbMinisterioId) {
@@ -228,6 +233,26 @@
         ${nomeSupervisor ? `<div style="font-size:12px;color:var(--tx2);margin-bottom:8px">👤 ${escapeHtml(nomeSupervisor)}</div>` : ''}
         <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--bd1);padding-top:8px;margin-top:4px">
           <span style="font-size:12px;color:var(--tx3)">👥 ${qtdMembros} membro${qtdMembros !== 1 ? 's' : ''}</span>
+          <span style="font-size:11.5px;color:var(--violet)">Abrir →</span>
+        </div>
+      </div>`;
+  }
+
+  function _cardPgs() {
+    return `
+      <div class="card" style="cursor:pointer;transition:box-shadow .15s"
+           onclick="go('pgs-dash')"
+           onmouseenter="this.style.boxShadow='0 4px 18px rgba(0,0,0,.12)'"
+           onmouseleave="this.style.boxShadow=''">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="width:38px;height:38px;border-radius:10px;background:rgba(82,196,110,0.14);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">⌂</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;color:var(--tx1);font-size:14px">Pequenos Grupos</div>
+            <div style="font-size:11px;color:var(--tx3);margin-top:1px">Grupos</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--bd1);padding-top:8px;margin-top:4px">
+          <span style="font-size:12px;color:var(--tx3)">Grupos de crescimento</span>
           <span style="font-size:11.5px;color:var(--violet)">Abrir →</span>
         </div>
       </div>`;
@@ -3370,8 +3395,12 @@
       const lista = await r.json();
       if (!lista.length) return;
       const _sbNome = n => n.replace(/^Minist[eé]rio\s+d[eao]\s+/i, '').replace(/^Minist[eé]rio\s+/i, '');
-      el.innerHTML = '<div class="sdiv"></div>' + lista.map(m =>
-        `<div class="si" data-mid="${m.id}" onclick="window._sbMinisterioId='${m.id}';go('min-min')">${_SB_ICONES[m.tipo]||'◆'} ${_sbNome(m.nome)}</div>`
+      const _pgs = { id: '__pgs__', nome: 'Pequenos Grupos', tipo: '__pgs__' };
+      const listaComPgs = [...lista, _pgs].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+      el.innerHTML = '<div class="sdiv"></div>' + listaComPgs.map(m =>
+        m.id === '__pgs__'
+          ? `<div class="si" onclick="go('pgs-dash')">⌂ Pequenos Grupos</div>`
+          : `<div class="si" data-mid="${m.id}" onclick="window._sbMinisterioId='${m.id}';go('min-min')">${_SB_ICONES[m.tipo]||'◆'} ${_sbNome(m.nome)}</div>`
       ).join('');
     } catch (e) { /* silencioso — sidebar não quebra */ }
   }
