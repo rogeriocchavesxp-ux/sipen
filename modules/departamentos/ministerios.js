@@ -319,11 +319,11 @@
       const waBtn    = document.getElementById('min-min-tab-btn-wa');
       if (waBtn)    waBtn.style.display    = _recursosAtual.whatsapp     ? '' : 'none';
 
-      const ferBtn = document.getElementById('min-min-tab-btn-fer');
-      if (ferBtn) ferBtn.style.display = m.sidebar_expandido ? '' : 'none';
-
       // Abas específicas de Comunicação
       const isCom = m.tipo === 'COMUNICACAO';
+
+      const ferBtn = document.getElementById('min-min-tab-btn-fer');
+      if (ferBtn) ferBtn.style.display = isCom ? '' : 'none';
       const solBtn  = document.getElementById('min-min-tab-btn-sol');
       if (solBtn)  solBtn.style.display  = isCom ? '' : 'none';
       const campBtn = document.getElementById('min-min-tab-btn-camp');
