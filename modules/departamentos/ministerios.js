@@ -355,9 +355,10 @@
       // Abas específicas de Comunicação
       const isCom      = m.tipo === 'COMUNICACAO';
       const isPastoral = (m.nome || '').toLowerCase().includes('equipe pastoral');
+      const isDiaconal = m.tipo === 'DIACONIA';
 
       const ferBtn = document.getElementById('min-min-tab-btn-fer');
-      if (ferBtn) ferBtn.style.display = (isCom || isPastoral) ? '' : 'none';
+      if (ferBtn) ferBtn.style.display = (isCom || isPastoral || isDiaconal) ? '' : 'none';
       const solBtn  = document.getElementById('min-min-tab-btn-sol');
       if (solBtn)  solBtn.style.display  = isCom ? '' : 'none';
       const campBtn = document.getElementById('min-min-tab-btn-camp');
@@ -786,6 +787,7 @@
       </div>`;
     const m = _ministerioDataAtual;
     const isPastoral = (m?.nome || '').toLowerCase().includes('equipe pastoral');
+    const isDiaconal = m?.tipo === 'DIACONIA';
     if (isPastoral) {
       el.innerHTML = `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
@@ -799,6 +801,24 @@
             <div class="ctit">Comunicação</div>
             ${_lnk('WhatsApp',  'pastoral-whatsapp',   'Envios e notificações')}
             ${_lnk('Relatórios','pastoral-relatorios', 'Relatórios e indicadores')}
+          </div>
+        </div>`;
+      return;
+    }
+    if (isDiaconal) {
+      el.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="card">
+            <div class="ctit">Equipe</div>
+            ${_lnk('Diáconos',          'diac-diaconos',  'Lista de diáconos')}
+            ${_lnk('Escalas de Serviço','diac-escalas',   'Escala de serviço')}
+            ${_lnk('Visitação Diaconal','diac-visitacao',  'Registro de visitações')}
+            ${_lnk('Relatórios Diaconais','diac-relatorios','Relatórios e indicadores')}
+            ${_lnk('Histórico e Atas',  'diac-historico', 'Registro histórico')}
+          </div>
+          <div class="card">
+            <div class="ctit">Demandas</div>
+            ${_lnk('Todas as Demandas', 'dem-todas', 'Painel geral de demandas')}
           </div>
         </div>`;
       return;
