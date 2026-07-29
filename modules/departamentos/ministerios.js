@@ -2581,21 +2581,47 @@
       if (statMb) statMb.textContent = ativos.length;
 
       const isDiac = _ministerioDataAtual?.tipo === 'DIACONIA';
-      const diacBanner = isDiac ? `
-        <div onclick="go('diac-diaconos')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--bd1);margin-bottom:14px;transition:background .15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
-          <div style="font-size:13px;font-weight:500;color:var(--tx1)">Diáconos</div>
-          <span style="font-size:13px;color:var(--tx3)">→</span>
-        </div>` : '';
+      if (isDiac) {
+        const rDiac = await fetch(
+          `${SUPABASE_URL}/rest/v1/v_oficiais?select=id,nome,cargo,status&cargo=eq.diacono&status=in.(ativo,especial)&order=nome.asc`,
+          { headers: _hdr() }
+        );
+        const diaconos = rDiac.ok ? await rDiac.json() : [];
+        cnt.textContent = `(${diaconos.length})`;
+        const statMb = document.getElementById('min-min-stat-membros');
+        if (statMb) statMb.textContent = diaconos.length;
+        if (!diaconos.length) {
+          el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Nenhum diácono cadastrado.</div>';
+          return;
+        }
+        el.innerHTML = `
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead><tr style="border-bottom:2px solid var(--bd1)">
+              <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Nome</th>
+              <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Status</th>
+            </tr></thead>
+            <tbody>${diaconos.map(d => {
+              const stTag = d.status === 'especial'
+                ? '<span style="font-size:11px;padding:2px 7px;background:rgba(245,158,11,0.12);color:var(--amber,#d97706);border-radius:20px">Especial</span>'
+                : '<span style="font-size:11px;padding:2px 7px;background:var(--greenbg,#d1fae5);color:var(--green,#059669);border-radius:20px">Ativo</span>';
+              return `<tr style="border-bottom:1px solid var(--bd1)">
+                <td style="padding:7px 8px;color:var(--tx1);font-weight:500">${(d.nome || '—').toUpperCase()}</td>
+                <td style="padding:7px 8px">${stTag}</td>
+              </tr>`;
+            }).join('')}</tbody>
+          </table>`;
+        return;
+      }
 
       if (lista.length === 0) {
-        el.innerHTML = diacBanner + '<div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Nenhum membro adicionado a este ministério.</div>';
+        el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Nenhum membro adicionado a este ministério.</div>';
         return;
       }
 
       const podeAct = _podeEditar();
       const thAcoes = podeAct ? '<th style="width:40px;padding:6px 8px"></th>' : '';
 
-      el.innerHTML = diacBanner + `
+      el.innerHTML = `
         <table style="width:100%;border-collapse:collapse;font-size:13px">
           <thead><tr style="border-bottom:2px solid var(--bd1)">
             <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Nome</th>
