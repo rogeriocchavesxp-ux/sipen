@@ -111,7 +111,7 @@ async function renderCultosDash(){
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
         <div class="card">
-          <div class="ctit">Próximos Cultos <span class="cact" onclick="go('pastoral-proculto')">Ver todos</span></div>
+          <div class="ctit">Próximos Cultos <span class="cact" onclick="go('proculto-dash')">Ver todos</span></div>
           <div id="c-dash-prox"><div style="padding:20px 0;text-align:center;color:var(--tx3);font-size:11.5px">Carregando...</div></div>
         </div>
         <div class="card">
