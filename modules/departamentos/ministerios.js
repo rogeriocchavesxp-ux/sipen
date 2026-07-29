@@ -810,11 +810,10 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
           <div class="card">
             <div class="ctit">Equipe</div>
-            ${_lnk('Diáconos',          'diac-diaconos',  'Lista de diáconos')}
-            ${_lnk('Escalas de Serviço','diac-escalas',   'Escala de serviço')}
-            ${_lnk('Visitação Diaconal','diac-visitacao',  'Registro de visitações')}
-            ${_lnk('Relatórios Diaconais','diac-relatorios','Relatórios e indicadores')}
-            ${_lnk('Histórico e Atas',  'diac-historico', 'Registro histórico')}
+            ${_lnk('Escalas de Serviço',  'diac-escalas',    'Escala de serviço')}
+            ${_lnk('Visitação Diaconal',  'diac-visitacao',  'Registro de visitações')}
+            ${_lnk('Relatórios Diaconais','diac-relatorios', 'Relatórios e indicadores')}
+            ${_lnk('Histórico e Atas',    'diac-historico',  'Registro histórico')}
           </div>
           <div class="card">
             <div class="ctit">Demandas</div>
@@ -2581,15 +2580,22 @@
       const statMb = document.getElementById('min-min-stat-membros');
       if (statMb) statMb.textContent = ativos.length;
 
+      const isDiac = _ministerioDataAtual?.tipo === 'DIACONIA';
+      const diacBanner = isDiac ? `
+        <div onclick="go('diac-diaconos')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--bd1);margin-bottom:14px;transition:background .15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
+          <div style="font-size:13px;font-weight:500;color:var(--tx1)">Diáconos</div>
+          <span style="font-size:13px;color:var(--tx3)">→</span>
+        </div>` : '';
+
       if (lista.length === 0) {
-        el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Nenhum membro adicionado a este ministério.</div>';
+        el.innerHTML = diacBanner + '<div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Nenhum membro adicionado a este ministério.</div>';
         return;
       }
 
       const podeAct = _podeEditar();
       const thAcoes = podeAct ? '<th style="width:40px;padding:6px 8px"></th>' : '';
 
-      el.innerHTML = `
+      el.innerHTML = diacBanner + `
         <table style="width:100%;border-collapse:collapse;font-size:13px">
           <thead><tr style="border-bottom:2px solid var(--bd1)">
             <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Nome</th>
