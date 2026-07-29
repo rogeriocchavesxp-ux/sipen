@@ -319,6 +319,9 @@
       const waBtn    = document.getElementById('min-min-tab-btn-wa');
       if (waBtn)    waBtn.style.display    = _recursosAtual.whatsapp     ? '' : 'none';
 
+      const ferBtn = document.getElementById('min-min-tab-btn-fer');
+      if (ferBtn) ferBtn.style.display = m.sidebar_expandido ? '' : 'none';
+
       // Abas específicas de Comunicação
       const isCom = m.tipo === 'COMUNICACAO';
       const solBtn  = document.getElementById('min-min-tab-btn-sol');
@@ -364,6 +367,7 @@
     const panel = document.getElementById('min-min-tab-' + tab);
     if (panel) panel.style.display = '';
     _tabAtual = tab;
+    if (tab === 'ferramentas'  && _ministerioAtual) _renderFerramentas();
     if (tab === 'adm'          && _ministerioAtual) _renderAdm();
     if (tab === 'lideranca'    && _ministerioAtual) _renderLideranca();
     if (tab === 'reunioes'     && _ministerioAtual) _carregarReunioes(_ministerioAtual);
@@ -734,8 +738,37 @@
     }
   }
 
-  /* ══ ABA ADMINISTRAÇÃO ═══════════════════════════════════════ */
-  async function _renderAdm() {
+  /* ══ ABA: FERRAMENTAS ════════════════════════════════════════ */
+  function _renderFerramentas() {
+    const el = document.getElementById('min-min-fer-content');
+    if (!el) return;
+    const _lnk = (label, rota, desc) => `
+      <div class="si" onclick="go('${rota}')" style="display:flex;flex-direction:column;gap:2px;height:auto;padding:10px 12px;border-radius:8px;margin-bottom:4px">
+        <span style="font-size:13px;font-weight:500;color:var(--tx1)">${label}</span>
+        ${desc ? `<span style="font-size:11px;color:var(--tx3)">${desc}</span>` : ''}
+      </div>`;
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card">
+          <div class="ctit">Mensagens</div>
+          ${_lnk('Dashboard',      'com-dash',         'Visão geral de comunicações')}
+          ${_lnk('Nova Mensagem',  'com-mensagens',    'Criar e enviar mensagem')}
+          ${_lnk('Mensagens',      'com-mensagens',    'Histórico de envios')}
+          ${_lnk('Agendamentos',   'com-agendamentos', 'Mensagens programadas')}
+          ${_lnk('Modelos',        'com-modelos',      'Templates reutilizáveis')}
+          ${_lnk('Histórico',      'com-historico',    'Registro completo')}
+        </div>
+        <div class="card">
+          <div class="ctit">Canais</div>
+          ${_lnk('Chat Interno',        'chat-inbox',       'Comunicação interna da equipe')}
+          ${_lnk('Solicitações de Arte','com-solicitacoes', 'Pedidos de design e arte')}
+          ${_lnk('WhatsApp',            'com-whatsapp',     'Envios via WhatsApp')}
+        </div>
+      </div>`;
+  }
+
+  /* ══ ABA: CONFIGURAÇÕES ══════════════════════════════════════ */
+  function _renderAdm() {
     const el = document.getElementById('min-min-adm-content');
     if (!el) return;
     if (!_ministerioDataAtual) {
