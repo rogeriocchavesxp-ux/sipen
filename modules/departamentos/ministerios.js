@@ -806,6 +806,10 @@
             <input type="checkbox" id="adm-ativo" ${m.ativo !== false ? 'checked' : ''} style="width:16px;height:16px;cursor:pointer">
             <label for="adm-ativo" style="font-size:13px;color:var(--tx2);cursor:pointer">Ministério ativo</label>
           </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="checkbox" id="adm-sidebar-exp" ${m.sidebar_expandido ? 'checked' : ''} style="width:16px;height:16px;cursor:pointer">
+            <label for="adm-sidebar-exp" style="font-size:13px;color:var(--tx2);cursor:pointer">Módulo expandido na sidebar</label>
+          </div>
           <div id="adm-info-err" style="color:var(--rose);font-size:12px;display:none"></div>
           <div style="display:flex;justify-content:flex-end">
             <button id="adm-info-btn" onclick="_admSalvarInfo()"
@@ -842,7 +846,8 @@
       supervisor:  document.getElementById('adm-supervisor')?.value  || null,
       conselheiro: document.getElementById('adm-conselheiro')?.value || null,
       coordenador: document.getElementById('adm-coordenador')?.value || null,
-      ativo:       document.getElementById('adm-ativo')?.checked    ?? true,
+      ativo:             document.getElementById('adm-ativo')?.checked     ?? true,
+      sidebar_expandido: document.getElementById('adm-sidebar-exp')?.checked ?? false,
     };
     try {
       const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerios?id=eq.${_ministerioAtual}`, {
@@ -3322,14 +3327,22 @@
     if (!el) return;
     try {
       const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/ministerios?select=id,nome,tipo&ativo=eq.true&order=nome.asc`,
+        `${SUPABASE_URL}/rest/v1/ministerios?select=id,nome,tipo,sidebar_expandido&ativo=eq.true&order=nome.asc`,
         { headers: _hdr() }
       );
       if (!r.ok) return;
       const lista = await r.json();
       if (!lista.length) return;
       const _sbNome = n => n.replace(/^Minist[eé]rio\s+d[eao]\s+/i, '').replace(/^Minist[eé]rio\s+/i, '');
-      el.innerHTML = '<div class="sdiv"></div>' + lista.map(m =>
+      const normais = lista.filter(m => {
+        if (m.sidebar_expandido) {
+          const bloco = document.getElementById('mw-com');
+          if (bloco) bloco.dataset.mid = m.id;
+          return false;
+        }
+        return true;
+      });
+      el.innerHTML = '<div class="sdiv"></div>' + normais.map(m =>
         `<div class="si" data-mid="${m.id}" onclick="window._sbMinisterioId='${m.id}';go('min-min')">${_SB_ICONES[m.tipo]||'◆'} ${_sbNome(m.nome)}</div>`
       ).join('');
     } catch (e) { /* silencioso — sidebar não quebra */ }
