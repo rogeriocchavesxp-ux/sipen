@@ -118,33 +118,46 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="card">
           <div class="ctit">Primeiros Passos</div>
-          ${[
-            ["1", "Acesse o Dashboard Geral para ter uma visão completa do sistema.", "geral"],
-            ["2", "Cadastre ou consulte membros no módulo de Membresia.", "memb-dash"],
-            ["3", "Abra uma demanda de manutenção ou financeira diretamente pelo menu.", "dem-dash"],
-            ["4", "Agende um espaço da igreja pelo módulo de Agenda.", "agenda-dash"],
-          ].map(([n, txt, rota]) => `
-            <div onclick="go('${rota}')" style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--bd1);cursor:pointer" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
-              <div style="width:22px;height:22px;border-radius:50%;background:rgba(20,184,166,.12);border:1px solid rgba(20,184,166,.3);color:var(--teal);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${n}</div>
-              <div style="font-size:12px;color:var(--tx2);line-height:1.5">${txt}</div>
-            </div>`).join("")}
+
+          <div onclick="go('geral')" class="tut-step" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+            <div class="tut-step-n">1</div>
+            <div class="tut-step-txt">Acesse o Dashboard Geral para ter uma visão completa do sistema.</div>
+          </div>
+          <div onclick="go('memb-dash')" class="tut-step" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+            <div class="tut-step-n">2</div>
+            <div class="tut-step-txt">Cadastre ou consulte membros no módulo de Membresia.</div>
+          </div>
+          <div onclick="go('dem-dash')" class="tut-step" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+            <div class="tut-step-n">3</div>
+            <div class="tut-step-txt">Abra uma demanda de manutenção ou financeira diretamente pelo menu.</div>
+          </div>
+          <div onclick="go('agenda-dash')" class="tut-step" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+            <div class="tut-step-n">4</div>
+            <div class="tut-step-txt">Agende um espaço da igreja pelo módulo de Agenda.</div>
+          </div>
         </div>
 
         <div class="card">
           <div class="ctit">Links Rápidos</div>
-          ${[
-            ["📋", "Nova Demanda",     () => "openModal()"],
-            ["📅", "Nova Agenda",      () => "go('agenda-form')"],
-            ["💰", "Contas a Pagar",   () => "go('fin-pagar')"],
-            ["👤", "Cadastrar Membro", () => "go('memb-form')"],
-            ["📣", "Enviar WhatsApp",  () => "go('wa-dash')"],
-            ["⚙",  "Configurações",   () => "go('config-dash')"],
-          ].map(([ic, label, fn]) => `
-            <div onclick="${fn()}" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd1);cursor:pointer" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
-              <span style="font-size:15px;width:22px;text-align:center">${ic}</span>
-              <span style="font-size:12.5px;color:var(--tx1)">${label}</span>
-              <span style="margin-left:auto;color:var(--tx3);font-size:11px">→</span>
-            </div>`).join("")}
+
+          <div onclick="openModal()" class="tut-link" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+            <span class="tut-link-ic">📋</span><span class="tut-link-lbl">Nova Demanda</span><span class="tut-link-arr">→</span>
+          </div>
+          <div onclick="go('agenda-dash')" class="tut-link" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+            <span class="tut-link-ic">📅</span><span class="tut-link-lbl">Agenda</span><span class="tut-link-arr">→</span>
+          </div>
+          <div onclick="go('fin-pagar')" class="tut-link" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+            <span class="tut-link-ic">💰</span><span class="tut-link-lbl">Contas a Pagar</span><span class="tut-link-arr">→</span>
+          </div>
+          <div onclick="go('memb-dash')" class="tut-link" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+            <span class="tut-link-ic">👤</span><span class="tut-link-lbl">Membresia</span><span class="tut-link-arr">→</span>
+          </div>
+          <div onclick="go('wa-dash')" class="tut-link" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+            <span class="tut-link-ic">📣</span><span class="tut-link-lbl">Enviar WhatsApp</span><span class="tut-link-arr">→</span>
+          </div>
+          <div onclick="go('config-dash')" class="tut-link" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+            <span class="tut-link-ic">⚙</span><span class="tut-link-lbl">Configurações</span><span class="tut-link-arr">→</span>
+          </div>
         </div>
       </div>
 
@@ -175,6 +188,13 @@
     }
     .tut-mod-nm  { font-size: 12.5px; font-weight: 700; color: var(--tx1); margin-bottom: 3px; }
     .tut-mod-dsc { font-size: 11px; color: var(--tx3); line-height: 1.5; }
+    .tut-step { display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid var(--bd1); cursor:pointer; }
+    .tut-step-n { width:22px; height:22px; border-radius:50%; background:rgba(20,184,166,.12); border:1px solid rgba(20,184,166,.3); color:var(--teal); font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .tut-step-txt { font-size:12px; color:var(--tx2); line-height:1.5; }
+    .tut-link { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--bd1); cursor:pointer; }
+    .tut-link-ic  { font-size:15px; width:22px; text-align:center; }
+    .tut-link-lbl { font-size:12.5px; color:var(--tx1); }
+    .tut-link-arr { margin-left:auto; color:var(--tx3); font-size:11px; }
     @media (max-width: 640px) {
       #v-tutorial .ct > div:last-child { grid-template-columns: 1fr; }
     }
