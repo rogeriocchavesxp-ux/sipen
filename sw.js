@@ -6,7 +6,7 @@
 // ⚠ Ao fazer deploy de uma nova versão, incremente CACHE_VERSION.
 // ════════════════════════════════════════════════════════════════
 
-const CACHE_VERSION = 'sipen-v6.51.3';
+const CACHE_VERSION = 'sipen-v6.51.4';
 
 // Base path — detectado automaticamente para funcionar em qualquer subdiretório
 // Ex.: GitHub Pages em /sipen/ → BASE = '/sipen'

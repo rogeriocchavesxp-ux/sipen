@@ -2582,12 +2582,14 @@
 
       const isDiac = _ministerioDataAtual?.tipo === 'DIACONIA';
       if (isDiac) {
-        const rDiac = await fetch(
-          `${SUPABASE_URL}/rest/v1/oficiais?cargo=eq.diacono&status=in.(ativo,especial)&deleted_at=is.null` +
-          `&select=id,ata,fim_mandato,mandato_numero,status,pessoas(nome)&order=pessoas(nome).asc`,
-          { headers: _hdr() }
-        );
-        const diaconos = rDiac.ok ? await rDiac.json() : [];
+        const [rVof, rOfc] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/v_oficiais?cargo=eq.diacono&status=in.(ativo,especial)&select=id,nome,status&order=nome.asc`, { headers: _hdr() }),
+          fetch(`${SUPABASE_URL}/rest/v1/oficiais?cargo=eq.diacono&status=in.(ativo,especial)&deleted_at=is.null&select=id,ata,fim_mandato`, { headers: _hdr() }),
+        ]);
+        const vof   = rVof.ok  ? await rVof.json()  : [];
+        const ofc   = rOfc.ok  ? await rOfc.json()  : [];
+        const ofcMap = Object.fromEntries(ofc.map(o => [o.id, o]));
+        const diaconos = vof.map(d => ({ ...d, ...ofcMap[d.id] }));
         cnt.textContent = `(${diaconos.length})`;
         const statMb = document.getElementById('min-min-stat-membros');
         if (statMb) statMb.textContent = diaconos.length;
@@ -2609,7 +2611,7 @@
               <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Status</th>
             </tr></thead>
             <tbody>${diaconos.map(d => {
-              const nome = (d.pessoas?.nome || '—').toUpperCase();
+              const nome = (d.nome || '—').toUpperCase();
               const stTag = d.status === 'especial'
                 ? '<span style="font-size:11px;padding:2px 7px;background:rgba(245,158,11,0.12);color:var(--amber,#d97706);border-radius:20px">Especial</span>'
                 : '<span style="font-size:11px;padding:2px 7px;background:var(--greenbg,#d1fae5);color:var(--green,#059669);border-radius:20px">Ativo</span>';
