@@ -3360,7 +3360,7 @@
     if (!el) return;
     try {
       const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/ministerios?select=id,nome,tipo&ativo=eq.true&order=nome.asc`,
+        `${SUPABASE_URL}/rest/v1/ministerios?select=id,nome,tipo,sidebar_expandido&ativo=eq.true&order=nome.asc`,
         { headers: _hdr() }
       );
       if (!r.ok) return;
@@ -3368,7 +3368,7 @@
       if (!lista.length) return;
       const _sbNome = n => n.replace(/^Minist[eé]rio\s+d[eao]\s+/i, '').replace(/^Minist[eé]rio\s+/i, '');
       const normais = lista.filter(m => {
-        if (m.tipo === 'COMUNICACAO') {
+        if (m.sidebar_expandido) {
           const bloco = document.getElementById('mw-com');
           if (bloco) bloco.dataset.mid = m.id;
           return false;
