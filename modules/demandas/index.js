@@ -1333,7 +1333,7 @@ function fmtD(d) {
           <div class="card">
             <div class="ctit">Alterar Status</div>
             <div style="font-size:11px;color:var(--tx3);margin-bottom:10px">Status atual: ${pillStatus(dem.status)}</div>
-            <div style="display:flex;flex-direction:column;gap:6px" id="dem-status-btns-${id}">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="dem-status-btns-${id}">
               ${(dem.area === "Financeiro"
                   ? [["Aberta","Aberta"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],["Aguardando Pagamento","Aguardando Pagamento"],["Pago","Pago"],["Cancelada","Cancelada"]]
                   : [["Aberta","Aberta"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],["Concluída","Concluída"],["Cancelada","Cancelada"]]
@@ -1342,7 +1342,7 @@ function fmtD(d) {
                   data-demid="${id}"
                   data-status="${st}"
                   onclick="demAtualizarStatus(this.dataset.demid, this.dataset.status)"
-                  style="text-align:left;padding:9px 14px;border-radius:6px;border:1px solid ${dem.status===st?"var(--gr)":"var(--bd2)"};background:${dem.status===st?"rgba(58,170,92,.1)":"var(--bg-card)"};color:${dem.status===st?"var(--gr)":"var(--tx1)"};font-size:12px;font-weight:${dem.status===st?"700":"400"};cursor:pointer;transition:all .15s"
+                  style="text-align:left;padding:7px 12px;border-radius:6px;border:1px solid ${dem.status===st?"var(--gr)":"var(--bd2)"};background:${dem.status===st?"rgba(58,170,92,.1)":"var(--bg-card)"};color:${dem.status===st?"var(--gr)":"var(--tx1)"};font-size:11.5px;font-weight:${dem.status===st?"700":"400"};cursor:pointer;transition:all .15s"
                   onmouseover="this.style.background=this.dataset.status==='${dem.status}'?'rgba(58,170,92,.1)':'var(--bg-hover)'"
                   onmouseout="this.style.background=this.dataset.status==='${dem.status}'?'rgba(58,170,92,.1)':'var(--bg-card)'">
                   ${dem.status===st?"✓ ":"○ "} ${label}
@@ -1356,22 +1356,22 @@ function fmtD(d) {
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px">
             <div style="grid-column:span 3">
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Título *</label>
-              <input id="dem-edit-titulo" type="text" value="${escapeHtmlAttr(dem.titulo || '')}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+              <input id="dem-edit-titulo" type="text" value="${escapeHtmlAttr(dem.titulo || '')}" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>
             <div style="grid-column:span 1">
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Responsável</label>
-              <input id="dem-edit-resp" type="text" value="${escapeHtmlAttr(dem.responsavel || dem.responsavel_txt || '')}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+              <input id="dem-edit-resp" type="text" value="${escapeHtmlAttr(dem.responsavel || dem.responsavel_txt || '')}" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>
             ${dem.area !== "Financeiro" ? `
             <div style="grid-column:span 3">
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Localização / Sala</label>
-              <select id="dem-edit-local" data-valor-atual="${dem.local_id || dem.local || ''}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+              <select id="dem-edit-local" data-valor-atual="${dem.local_id || dem.local || ''}" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
                 <option value="">Carregando espaços…</option>
               </select>
             </div>
             <div style="grid-column:span 1">
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Conclusão prevista</label>
-              <input id="dem-edit-venc" type="date" value="${dem.data_conclusao||''}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+              <input id="dem-edit-venc" type="date" value="${dem.data_conclusao||''}" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>` : `
             <input type="hidden" id="dem-edit-local" value="">
             <input type="hidden" id="dem-edit-venc" value="">`}
@@ -1382,7 +1382,7 @@ function fmtD(d) {
                 placeholder="Digite ao menos 2 caracteres para buscar..."
                 oninput="document.getElementById('dem-edit-sol-id').value='';window._demSolBuscar(this.value)"
                 onblur="setTimeout(()=>window._demSolFecharDd(),200)"
-                style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box" autocomplete="off">
+                style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box" autocomplete="off">
               <input id="dem-edit-sol-id" type="hidden" value="${escapeHtmlAttr(String(dem.solicitante_id||""))}">
               <div id="dem-edit-sol-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-card);border:1px solid var(--bd2);border-radius:0 0 7px 7px;z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
             </div>` : ""}
@@ -1431,7 +1431,7 @@ function fmtD(d) {
         <div class="card" style="margin-top:0">
           <div class="ctit">Andamentos da Demanda</div>
           ${_podeRegistrarAndamento(dem) ? `
-          <div style="display:flex;gap:8px;margin-bottom:16px;align-items:flex-end">
+          <div style="display:flex;gap:8px;margin-bottom:10px;align-items:flex-end">
             <textarea id="dem-and-txt-${id}" rows="2" placeholder="Escreva um andamento…"
               style="flex:1;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;resize:vertical;font-family:var(--ff);box-sizing:border-box"></textarea>
             <button data-and-btn="${id}" onclick="demRegistrarAndamento('${id}')"
