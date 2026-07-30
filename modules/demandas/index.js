@@ -866,8 +866,7 @@ function fmtD(d) {
         .select("*")
         .eq("demanda_id", demId)
         .is("solicitacao_id", null)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: true });
+        .is("deleted_at", null);
       if (!data || data.length === 0) { placeholder.innerHTML = ""; return; }
       const TIPO_LABEL = { nota_fiscal: "Nota Fiscal", boleto: "Boleto", comprovante: "Comprovante" };
       placeholder.innerHTML = `
