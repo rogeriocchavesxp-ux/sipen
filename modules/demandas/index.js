@@ -748,6 +748,89 @@ function fmtD(d) {
     }
   }
 
+  async function _carregarWADemanda(demandaId, dem) {
+    const el = document.getElementById("dem-wa-list-" + demandaId);
+    if (!el) return;
+    const base = (typeof SUPABASE_URL !== "undefined" ? SUPABASE_URL : "").trim().replace(/\/$/, "");
+    const hdrs = typeof apiHeaders === "function" ? apiHeaders() : {};
+    try {
+      const res = await fetch(
+        `${base}/rest/v1/whatsapp_mensagens?referencia_tipo=eq.demanda&referencia_id=eq.${demandaId}` +
+        `&select=id,para_numero,para_nome,mensagem,status,criado_em&order=criado_em.desc`,
+        { headers: hdrs }
+      );
+      const logs = res.ok ? await res.json() : [];
+      if (!logs.length) {
+        el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:8px 0">Nenhuma mensagem enviada para esta demanda.</div>`;
+        return;
+      }
+      const SC = { enviado: "var(--gr)", pendente: "var(--gold)", erro: "var(--rose)" };
+      const SL = { enviado: "Enviado",   pendente: "Pendente",    erro: "Erro" };
+      const modulo = _AREA_MODULO_WA[dem?.area] || "DEMANDAS";
+      const _dtFmt = iso => {
+        if (!iso) return "—";
+        const d = new Date(iso);
+        return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+      };
+      el.innerHTML = `<div class="tbl-wrap"><table class="tbl"><thead><tr>
+        <th style="white-space:nowrap">Data/Hora</th>
+        <th>Destinatário</th>
+        <th>Mensagem</th>
+        <th class="r">Status</th>
+      </tr></thead><tbody>${logs.map(r => {
+        const podeReenviar = r.status === "erro" || r.status === "pendente";
+        const reenviarBtn = podeReenviar
+          ? `<button
+               style="margin-left:8px;font-size:10px;padding:2px 7px;border-radius:4px;border:1px solid rgba(208,144,64,.4);background:rgba(208,144,64,.1);color:var(--amber);cursor:pointer;vertical-align:middle"
+               onclick="demWAReenviar(${JSON.stringify(r.id)},${JSON.stringify(r.para_numero)},${JSON.stringify(r.para_nome||"")},${JSON.stringify(r.mensagem||"")},${JSON.stringify(modulo)},${JSON.stringify(String(demandaId))},this)"
+             >Reenviar</button>`
+          : "";
+        return `<tr>
+          <td style="color:var(--tx3);white-space:nowrap;font-size:11px">${_dtFmt(r.criado_em)}</td>
+          <td style="font-size:11.5px">${escapeHtml(r.para_nome || r.para_numero || "—")}</td>
+          <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px" title="${escapeHtmlAttr(r.mensagem||"")}">${escapeHtml((r.mensagem||"").slice(0,55))}${(r.mensagem||"").length>55?"…":""}</td>
+          <td class="r" style="white-space:nowrap">
+            <span style="font-size:10.5px;font-weight:700;color:${SC[r.status]||"var(--tx3)"}">${SL[r.status]||escapeHtml(r.status||"—")}</span>
+            ${reenviarBtn}
+          </td>
+        </tr>`;
+      }).join("")}</tbody></table></div>`;
+    } catch(e) {
+      el.innerHTML = `<div style="color:var(--rose);font-size:11.5px;padding:8px 0">Erro ao carregar histórico WhatsApp.</div>`;
+    }
+  }
+
+  window.demWAReenviar = async function(msgId, numero, nome, mensagem, modulo, demandaId, btn) {
+    if (btn) { btn.disabled = true; btn.textContent = "…"; }
+    try {
+      if (typeof WA === "undefined") throw new Error("WA não definido");
+      const res = await WA.send({
+        para: numero, nome: nome || "", mensagem, modulo,
+        chave: `REENVIO_${msgId}_${Date.now()}`,
+      });
+      if (res.ok || res.status === "enviado" || res.status === "pendente") {
+        if (typeof T === "function") T("Reenviado", "Mensagem encaminhada com sucesso");
+      } else {
+        if (typeof T === "function") T("Erro ao reenviar", res.error || res.status || "Tente novamente");
+        if (btn) { btn.disabled = false; btn.textContent = "Reenviar"; }
+        return;
+      }
+    } catch(e) {
+      if (typeof T === "function") T("Erro ao reenviar", e.message);
+      if (btn) { btn.disabled = false; btn.textContent = "Reenviar"; }
+      return;
+    }
+    await _carregarWADemanda(demandaId, _ativo);
+  };
+
+  window.demNotificarResponsaveis = async function(demandaId) {
+    const dem = _ativo;
+    if (!dem) return;
+    if (typeof T === "function") T("Enviando…", "Notificando responsáveis via WhatsApp");
+    await _notificarResponsaveisWA(dem);
+    await _carregarWADemanda(demandaId, dem);
+  };
+
   window.demRegistrarAndamento = async function(demandaId) {
     const txtEl = document.getElementById("dem-and-txt-" + demandaId);
     const texto = txtEl ? txtEl.value.trim() : "";
@@ -1311,9 +1394,22 @@ function fmtD(d) {
             <div style="color:var(--tx3);font-size:12px;padding:8px 0">Carregando…</div>
           </div>
         </div>
+        <div class="card" style="margin-top:0">
+          <div class="ctit" style="display:flex;align-items:center;justify-content:space-between">
+            <span>WhatsApp</span>
+            <button onclick="demNotificarResponsaveis('${id}')"
+              style="font-size:11px;padding:4px 12px;border-radius:6px;border:1px solid rgba(58,170,92,.35);background:rgba(58,170,92,.08);color:var(--gr);cursor:pointer;font-weight:600">
+              Notificar Responsáveis
+            </button>
+          </div>
+          <div id="dem-wa-list-${id}">
+            <div style="color:var(--tx3);font-size:12px;padding:8px 0">Carregando…</div>
+          </div>
+        </div>
       </div>`;
     _carregarAndamentos(id, dem);
     _carregarAnexosDemanda(id);
+    _carregarWADemanda(id, dem);
     _popularSelectEspacos("dem-edit-local");
   }
 
