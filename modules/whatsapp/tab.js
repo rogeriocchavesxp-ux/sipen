@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    SIPEN — WhatsApp Tab Component
-   tab.js · v1.0
+   tab.js · v1.1
 
    Aba WhatsApp genérica reutilizada em todos os módulos.
    Registra VIEW_AUTOLOAD para cada módulo.
@@ -73,7 +73,7 @@ const WA_TAB = (function () {
       _fetch(`/rest/v1/whatsapp_modulo_config?modulo=eq.${encodeURIComponent(key)}&select=*`),
       _fetch(`/rest/v1/whatsapp_modulo_responsaveis?modulo=eq.${encodeURIComponent(key)}&select=id,ativo,pessoas(nome,celular,whatsapp,telefone)&order=pessoas(nome)`),
       _fetch(`/rest/v1/whatsapp_templates?modulo=eq.${encodeURIComponent(key)}&select=titulo,chave,ativo&order=titulo`),
-      _fetch(`/rest/v1/whatsapp_mensagens?modulo=eq.${encodeURIComponent(key)}&select=para_numero,mensagem,status,criado_em&order=criado_em.desc&limit=500`),
+      _fetch(`/rest/v1/whatsapp_mensagens?modulo=eq.${encodeURIComponent(key)}&select=id,para_numero,para_nome,mensagem,status,criado_em&order=criado_em.desc&limit=500`),
       _fetch(`/rest/v1/whatsapp_mensagens?modulo=eq.${encodeURIComponent(key)}&select=id&status=eq.enviado&criado_em=gte.${hoje}T00:00:00`),
     ]);
 
@@ -88,7 +88,7 @@ const WA_TAB = (function () {
     el.innerHTML = `
       ${_renderKpis(cfg, resps.length, aptos, enviodHoje, tplsAtivos)}
       ${_renderGrid(key, resps, tpls, cfg)}
-      ${_renderLogs(logs)}
+      ${_renderLogs(logs, key)}
     `;
   }
 
@@ -207,7 +207,7 @@ const WA_TAB = (function () {
 
   /* ── Logs de envio ────────────────────────────────── */
 
-  function _renderLogs(logs) {
+  function _renderLogs(logs, key) {
     const SC = { enviado: "var(--gr)", pendente: "var(--gold)", erro: "var(--rose)" };
     const SL = { enviado: "Enviado",   pendente: "Pendente",    erro: "Erro" };
 
@@ -223,16 +223,51 @@ const WA_TAB = (function () {
               <th>Mensagem</th>
               <th class="r">Status</th>
             </tr></thead>
-            <tbody>${logs.map(r => `
+            <tbody>${logs.map(r => {
+              const podeReenviar = r.status === "erro" || r.status === "pendente";
+              const reenviarBtn  = podeReenviar
+                ? `<button
+                     style="margin-left:8px;font-size:10px;padding:2px 7px;border-radius:4px;border:1px solid rgba(208,144,64,.4);background:rgba(208,144,64,.1);color:var(--amber);cursor:pointer;vertical-align:middle"
+                     onclick="WA_TAB.reenviar(${JSON.stringify(r.id)},${JSON.stringify(r.para_numero)},${JSON.stringify(r.para_nome||'')},${JSON.stringify(r.mensagem||'')},${JSON.stringify(key||'')},this)"
+                   >Reenviar</button>`
+                : "";
+              return `
               <tr>
                 <td class="wa" style="color:var(--tx3)">${_dt(r.criado_em)}</td>
                 <td class="mono">${_esc(r.para_numero || "—")}</td>
                 <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${_esc(r.mensagem || "")}">${_esc((r.mensagem || "").slice(0, 60))}${(r.mensagem || "").length > 60 ? "…" : ""}</td>
-                <td class="r"><span style="font-size:10.5px;font-weight:700;color:${SC[r.status] || "var(--tx3)"}">${SL[r.status] || _esc(r.status || "—")}</span></td>
-              </tr>`).join("")}
+                <td class="r" style="white-space:nowrap">
+                  <span style="font-size:10.5px;font-weight:700;color:${SC[r.status] || "var(--tx3)"}">${SL[r.status] || _esc(r.status || "—")}</span>
+                  ${reenviarBtn}
+                </td>
+              </tr>`;
+            }).join("")}
             </tbody>
           </table></div>`}
       </div>`;
+  }
+
+  /* ── Reenvio de mensagem com falha ────────────────── */
+
+  async function reenviar(id, numero, nome, mensagem, modulo, btn) {
+    if (btn) { btn.disabled = true; btn.textContent = "…"; }
+    try {
+      if (typeof WA === "undefined") throw new Error("WA não definido");
+      const chave = `REENVIO_${id}_${Date.now()}`;
+      const res = await WA.send({ para: numero, nome: nome || "", mensagem, modulo, chave });
+      if (res.ok || res.status === "enviado" || res.status === "pendente") {
+        if (typeof T === "function") T("Reenviado", "Mensagem encaminhada com sucesso");
+      } else {
+        if (typeof T === "function") T("Erro ao reenviar", res.error || res.status || "Tente novamente");
+        if (btn) { btn.disabled = false; btn.textContent = "Reenviar"; }
+        return;
+      }
+    } catch (e) {
+      if (typeof T === "function") T("Erro ao reenviar", e.message || "Tente novamente");
+      if (btn) { btn.disabled = false; btn.textContent = "Reenviar"; }
+      return;
+    }
+    await load(modulo);
   }
 
   /* ── VIEW_AUTOLOAD ────────────────────────────────── */
@@ -255,7 +290,7 @@ const WA_TAB = (function () {
   });
 
   /* ── API pública ──────────────────────────────────── */
-  return { load };
+  return { load, reenviar };
 
 })();
 
