@@ -209,16 +209,17 @@ body{font-family:var(--sans);background:var(--bg-body);color:var(--tx1);display:
 .slbl::after{display:none}
 
 /* Section accordion */
-.sb-section{margin:0 0 2px}
+.sb-section{margin:0 0 2px;border-top:1px solid var(--bd1)}
+.sb-section:first-of-type{border-top:none}
 .sb-section-hdr{
   display:flex;align-items:center;gap:7px;
-  padding:12px 14px 5px;
-  font-size:10px;letter-spacing:.06em;
-  text-transform:uppercase;color:var(--tx3);
+  padding:14px 14px 6px;
+  font-size:11px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--tx2);
   font-weight:700;cursor:pointer;user-select:none;
   transition:color .12s;
 }
-.sb-section-hdr:hover{color:var(--tx2)}
+.sb-section-hdr:hover{color:var(--tx1)}
 .sb-section-chv{
   font-size:8px;color:var(--tx3);
   transition:transform .22s ease;
