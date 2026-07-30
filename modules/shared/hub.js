@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    SIPEN — Section Hubs
-   hub.js · v1.2.6
+   hub.js · v1.2.7
 ═══════════════════════════════════════════════════════ */
 (function(){
 
@@ -68,18 +68,20 @@ const IC={
 
 // ── Primitivas de UI ───────────────────────────────────
 function _ball(svg,bg,color){
-  return `<div style="width:40px;height:40px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="color:${color}">${svg}</span></div>`;
+  return `<div style="width:36px;height:36px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="color:${color}">${svg}</span></div>`;
 }
 function _kpi(svg,bg,color,val,label,sub){
-  return `<div class="card" style="padding:18px 16px;display:flex;flex-direction:column">
-    <div style="margin-bottom:12px">${_ball(svg,bg,color)}</div>
-    <div style="font-size:30px;font-weight:800;color:var(--tx1);line-height:1">${val}</div>
-    <div style="font-size:13px;font-weight:600;color:var(--tx1);margin-top:5px">${label}</div>
-    <div style="font-size:11.5px;color:var(--tx3);margin-top:2px">${sub}</div>
+  return `<div class="card" style="padding:14px 16px;display:flex;align-items:center;gap:12px">
+    ${_ball(svg,bg,color)}
+    <div style="min-width:0">
+      <div style="font-size:24px;font-weight:800;color:var(--tx1);line-height:1">${val}</div>
+      <div style="font-size:12.5px;font-weight:600;color:var(--tx1);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sub}</div>
+    </div>
   </div>`;
 }
 function _mod(svg,bg,color,title,desc,route){
-  return `<div class="card" style="cursor:pointer;display:flex;align-items:center;gap:14px" onclick="go('${route}')">
+  return `<div class="card" style="padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:12px" onclick="go('${route}')">
     ${_ball(svg,bg,color)}
     <div style="flex:1;min-width:0">
       <div style="font-size:13px;font-weight:600;color:var(--tx1)">${title}</div>
