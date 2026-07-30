@@ -439,35 +439,28 @@ function fmtD(d) {
           <div id="dem-dash-lista"></div>
         </div>
 
-        <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="position:sticky;top:16px;align-self:start">
           <div class="card">
-            <div class="ctit">Pipeline de status</div>
-            ${pipeline.map(p => `
-              <div style="margin-bottom:9px;cursor:pointer" onclick="window.go('${p.view}')">
-                <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
-                  <span style="color:var(--tx2)">${p.label}</span>
-                  <span style="color:var(--tx1);font-weight:700">${p.val}</span>
-                </div>
-                <div style="height:5px;border-radius:3px;background:var(--bd1)">
-                  <div style="height:5px;border-radius:3px;background:${p.cor};width:${p.val?Math.max(Math.round(p.val/totalGeral*100),2):0}%;transition:width .3s"></div>
-                </div>
-              </div>`).join("")}
-          </div>
-
-          <div class="card">
-            <div class="ctit">Por categoria (em aberto)</div>
-            ${catRank.length === 0
-              ? '<div style="color:var(--tx3);font-size:11.5px">Sem dados</div>'
-              : catRank.map(([cat, qtd]) => `
-                <div style="margin-bottom:9px">
-                  <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
-                    <span style="color:var(--tx2)">${catIcon(cat)} ${cat}</span>
-                    <span style="color:var(--tx1);font-weight:700">${qtd}</span>
-                  </div>
-                  <div style="height:5px;border-radius:3px;background:var(--bd1)">
-                    <div style="height:5px;border-radius:3px;background:${catCor(cat)};width:${Math.round(qtd/maxCat*100)}%"></div>
-                  </div>
+            <div class="ctit">Visão Geral</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px">
+              ${pipeline.map(p => `
+                <div onclick="window.go('${p.view}')"
+                  style="cursor:pointer;padding:10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-page);transition:background .12s"
+                  onmouseover="this.style.background='var(--bg-hover)'"
+                  onmouseout="this.style.background='var(--bg-page)'">
+                  <div style="font-size:20px;font-weight:800;line-height:1;color:${p.val>0?p.cor:'var(--tx4)'}">${p.val}</div>
+                  <div style="font-size:10.5px;color:var(--tx3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.label}</div>
                 </div>`).join("")}
+            </div>
+            ${catRank.length > 0 ? `
+            <div style="border-top:1px solid var(--bd1);margin-top:12px;padding-top:10px">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:6px">Por categoria</div>
+              ${catRank.map(([cat, qtd]) => `
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bd1)">
+                  <span style="font-size:11.5px;color:var(--tx2)">${catIcon(cat)} ${cat}</span>
+                  <span style="font-size:12px;font-weight:700;color:${catCor(cat)}">${qtd}</span>
+                </div>`).join("")}
+            </div>` : ''}
           </div>
         </div>
       </div>`;
@@ -494,7 +487,7 @@ function fmtD(d) {
     if (id === "concluidas") return all.filter(r => ["Concluída","Pago"].includes(r.status));
     if (id === "prioridade") return all.filter(r => ["Alta","Urgente"].includes(r.prioridade));
     if (id === "historico")  return all;
-    return all.slice(0, 20); // todas: 20 mais recentes
+    return all.slice(0, 15); // todas: 15 mais recentes
   }
 
   function _renderDashChips() {
@@ -511,6 +504,11 @@ function fmtD(d) {
     if (!el) return;
     const rows = _dashGetRows(_dashFiltro);
     if (!rows.length) { el.innerHTML = '<div class="empty-state">Nenhuma demanda encontrada</div>'; return; }
+    const _verMais = _dashFiltro === "todas" && _cache.length > 15
+      ? `<div style="padding:10px 2px;text-align:center;border-top:1px solid var(--bd1)">
+           <span onclick="demDashFiltrar('historico')" style="cursor:pointer;font-size:11.5px;color:var(--blue);font-weight:600">Ver todas (${_cache.length}) →</span>
+         </div>`
+      : "";
     el.innerHTML = rows.map(r => {
       const meta = [
         escapeHtml(r.area) || "—",
@@ -531,7 +529,7 @@ function fmtD(d) {
           </div>
           <div style="font-size:11px;color:var(--tx3);padding:0 2px;line-height:1.4">${meta}</div>
         </div>`;
-    }).join("");
+    }).join("") + _verMais;
   }
 
   window.demDashFiltrar = function(id) {
