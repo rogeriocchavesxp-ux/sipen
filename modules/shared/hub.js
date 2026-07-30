@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    SIPEN — Section Hubs
-   hub.js · v1.2.5
+   hub.js · v1.2.6
 ═══════════════════════════════════════════════════════ */
 (function(){
 
@@ -157,7 +157,7 @@ function renderHubIgreja(){
 
   el.innerHTML=`
     <div class="hero">
-      <div class="hero-ic" style="background:rgba(90,200,250,0.12);border-color:rgba(90,200,250,0.28);font-size:22px">✝</div>
+      <div class="hero-ic" style="background:rgba(90,200,250,0.12);border-color:rgba(90,200,250,0.28)">${_sv24('<path d="M12 2v20"/><path d="M5 9h14"/>')}</div>
       <div>
         <div class="hero-lbl">Seção</div>
         <div class="hero-ttl">Vida da Igreja</div>
@@ -207,7 +207,7 @@ function renderHubGov(){
       <div>
         <div class="hero-lbl">Seção</div>
         <div class="hero-ttl">Governança</div>
-        <div class="hero-dsc">Conselho, liderança, secretaria e junta diaconal</div>
+        <div class="hero-dsc">Conselho, oficiais, secretaria, eleições e Junta Diaconal</div>
       </div>
     </div>
     <div class="ct">
@@ -217,10 +217,20 @@ function renderHubGov(){
         ${_kpi(IC.book,   bgSky+'0.12)', sky, '<span id="k-gov-reun">—</span>', 'Reuniões', 'Conselho este mês')}
         ${_kpi(IC.hands,  'rgba(184,122,86,0.12)', 'var(--copper)', '<span id="k-gov-diac">—</span>', 'Demandas Diaconais', 'Em aberto')}
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div class="card">
+          <div class="ctit">Reuniões Recentes <span class="cact" onclick="go('conselho-dash')">Ver todas</span></div>
+          <div id="gov-reun-list">${_vazio('Carregando…')}</div>
+        </div>
+        <div class="card">
+          <div class="ctit">Oficiais <span class="cact" onclick="go('conselho-nomeados')">Ver todos</span></div>
+          <div id="gov-nomeados-list">${_vazio('Carregando…')}</div>
+        </div>
+      </div>
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:10px">Módulos</div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
         ${_mod(IC.shield, bgSky+'0.12)', sky,            'Conselho e Governança', 'Reuniões, documentos, resoluções e comissões', 'conselho-dash')}
-        ${_mod(IC.users,  bgSky+'0.12)', sky,            'Liderança',             'Nomeados, ordenados e seminaristas',           'conselho-nomeados')}
+        ${_mod(IC.users,  bgSky+'0.12)', sky,            'Oficiais',              'Nomeados, ordenados e seminaristas',           'conselho-nomeados')}
         ${_mod(IC.book,   'rgba(58,170,92,0.12)',  'var(--gr)',    'Secretaria',            'Cadastro e gestão de membros',                 'memb-dash')}
         ${_mod(IC.vote,   bgSky+'0.12)', sky,            'Eleições',              'Indicações e processo eleitoral',              'conselho-eleicoes')}
         ${_mod(IC.hands,  'rgba(184,122,86,0.12)', 'var(--copper)', 'Junta Diaconal',      'Diáconos, escalas e visitação',                'diac-dash')}
@@ -232,6 +242,39 @@ function renderHubGov(){
   _cnt('nomeados','&deleted_at=is.null').then(n=>_set('k-gov-nomeados',n));
   _cnt('conselho_reunioes',`&data_reuniao=gte.${mes}-01`).then(n=>_set('k-gov-reun',n));
   _cnt('demandas',`&area=ilike.*iaconal*&status=neq.Conclu%C3%ADda`).then(n=>_set('k-gov-diac',n));
+
+  // Reuniões recentes
+  fetch(`${apiBaseUrl()}/rest/v1/conselho_reunioes?select=id,tipo,data_reuniao,status&order=data_reuniao.desc&limit=5`,{headers:apiHeaders()})
+    .then(r=>r.ok?r.json():[]).then(rows=>{
+      const el=document.getElementById('gov-reun-list');
+      if(!el) return;
+      if(!rows.length){el.innerHTML=_vazio('Nenhuma reunião registrada');return;}
+      el.innerHTML=rows.map(r=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd1)">
+          <div style="width:3px;height:36px;border-radius:2px;background:${bgSky}0.6);flex-shrink:0"></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${_esc(r.tipo||'Reunião')}</div>
+            <div style="font-size:11px;color:var(--tx3)">${_fmt(r.data_reuniao)}</div>
+          </div>
+          <div style="font-size:11px;color:var(--tx3);flex-shrink:0">${_esc(r.status||'')}</div>
+        </div>`).join('');
+    }).catch(()=>{const el=document.getElementById('gov-reun-list');if(el)el.innerHTML=_vazio('Dados não disponíveis');});
+
+  // Oficiais ativos
+  fetch(`${apiBaseUrl()}/rest/v1/nomeados?select=id,nome,funcao&deleted_at=is.null&limit=6`,{headers:apiHeaders()})
+    .then(r=>r.ok?r.json():[]).then(rows=>{
+      const el=document.getElementById('gov-nomeados-list');
+      if(!el) return;
+      if(!rows.length){el.innerHTML=_vazio('Nenhum oficial cadastrado');return;}
+      el.innerHTML=rows.map(r=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd1)">
+          <div style="width:3px;height:36px;border-radius:2px;background:${bgSky}0.6);flex-shrink:0"></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${_esc(r.nome||'')}</div>
+            <div style="font-size:11px;color:var(--tx3)">${_esc(r.funcao||'')}</div>
+          </div>
+        </div>`).join('');
+    }).catch(()=>{const el=document.getElementById('gov-nomeados-list');if(el)el.innerHTML=_vazio('Dados não disponíveis');});
 }
 
 // ══════════════════════════════════════════════════════
@@ -263,11 +306,20 @@ function renderHubDep(){
         ${_kpi(IC.proj,   bgVio+'0.12)', violet, '<span id="k-dep-proj">—</span>', 'Projetos',      'Em andamento')}
         ${_kpi(IC.church, 'rgba(58,170,92,0.12)', 'var(--gr)', totalCongs||'—', 'Congregações', 'Unidades ativas')}
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div class="card">
+          <div class="ctit">Departamentos <span class="cact" onclick="go('min-min')">Ver todos</span></div>
+          <div id="dep-min-list">${_vazio('Carregando…')}</div>
+        </div>
+        <div class="card">
+          <div class="ctit">Projetos <span class="cact" onclick="go('proj-lista')">Ver todos</span></div>
+          <div id="dep-proj-list">${_vazio('Carregando…')}</div>
+        </div>
+      </div>
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:10px">Módulos</div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
         ${_mod(IC.grid,   bgVio+'0.12)', violet,         'Todos os Departamentos','Ministérios, setores e grupos de serviço',    'min-min')}
         ${_mod(IC.star,   bgVio+'0.12)', violet,         'Sociedades Internas',  'UPH, SAF, UMP, UPA e UCP',                   'min-soc')}
-        ${_mod(IC.case,   bgVio+'0.12)', violet,         'Depto. Administrativo','Gestão e suporte administrativo',             'min-adm')}
         ${_mod(IC.proj,   bgVio+'0.12)', violet,         'Projetos',             'Projetos e acompanhamento de metas',          'proj-lista')}
         ${_mod(IC.church, 'rgba(58,170,92,0.12)', 'var(--gr)', 'Congregações',  'Unidades, cultos e membresia local',          'cong-dash')}
       </div>
@@ -276,6 +328,38 @@ function renderHubDep(){
   _cnt('ministerios','').then(n=>_set('k-dep-min',n));
   _cnt('sociedades','').then(n=>_set('k-dep-soc',n));
   _cnt('projetos','&status=eq.ativo').then(n=>_set('k-dep-proj',n));
+
+  // Lista de departamentos
+  fetch(`${apiBaseUrl()}/rest/v1/ministerios?select=id,nome,categoria&order=nome.asc&limit=6`,{headers:apiHeaders()})
+    .then(r=>r.ok?r.json():[]).then(rows=>{
+      const el=document.getElementById('dep-min-list');
+      if(!el) return;
+      if(!rows.length){el.innerHTML=_vazio('Nenhum departamento cadastrado');return;}
+      el.innerHTML=rows.map(r=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd1)">
+          <div style="width:3px;height:36px;border-radius:2px;background:${bgVio}0.6);flex-shrink:0"></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${_esc(r.nome||'')}</div>
+            <div style="font-size:11px;color:var(--tx3)">${_esc(r.categoria||'Departamento')}</div>
+          </div>
+        </div>`).join('');
+    }).catch(()=>{const el=document.getElementById('dep-min-list');if(el)el.innerHTML=_vazio('Dados não disponíveis');});
+
+  // Projetos em andamento
+  fetch(`${apiBaseUrl()}/rest/v1/projetos?select=id,nome,status&status=eq.ativo&order=nome.asc&limit=6`,{headers:apiHeaders()})
+    .then(r=>r.ok?r.json():[]).then(rows=>{
+      const el=document.getElementById('dep-proj-list');
+      if(!el) return;
+      if(!rows.length){el.innerHTML=_vazio('Nenhum projeto em andamento');return;}
+      el.innerHTML=rows.map(r=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd1)">
+          <div style="width:3px;height:36px;border-radius:2px;background:${bgVio}0.6);flex-shrink:0"></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${_esc(r.nome||'')}</div>
+            <div style="font-size:11px;color:var(--tx3)">${_esc(r.status||'Ativo')}</div>
+          </div>
+        </div>`).join('');
+    }).catch(()=>{const el=document.getElementById('dep-proj-list');if(el)el.innerHTML=_vazio('Dados não disponíveis');});
 }
 
 // ══════════════════════════════════════════════════════
@@ -307,12 +391,22 @@ function renderHubOp(){
         ${_kpi(IC.mega,   'rgba(139,111,212,0.12)', 'var(--violet)', '<span id="k-op-com">—</span>', 'Mensagens', 'Enviadas este mês')}
         ${_kpi(IC.ticket, 'rgba(74,156,245,0.12)', 'var(--sky)',    '<span id="k-op-eve">—</span>', 'Programações', 'Este mês')}
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div class="card">
+          <div class="ctit">Demandas Recentes <span class="cact" onclick="go('dem-dash')">Ver todas</span></div>
+          <div id="op-dem-list">${_vazio('Carregando…')}</div>
+        </div>
+        <div class="card">
+          <div class="ctit">Próximos Agendamentos <span class="cact" onclick="go('agenda-dash')">Ver todos</span></div>
+          <div id="op-agenda-list">${_vazio('Carregando…')}</div>
+        </div>
+      </div>
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:10px">Módulos</div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
         ${_mod(IC.inbox,  bgRose+'0.12)', rose,   'Central de Demandas', 'Solicitações, análise e acompanhamento',    'dem-dash')}
         ${_mod(IC.cal,    bgTeal+'0.12)', teal,   'Gestão de Agenda',    'Calendário, ambientes e agendamentos',      'agenda-dash')}
         ${_mod(IC.mega,   'rgba(139,111,212,0.12)', 'var(--violet)', 'Comunicação', 'Mensagens, modelos e WhatsApp', 'com-dash')}
-        ${_mod(IC.ticket, 'rgba(74,156,245,0.12)', 'var(--sky)', 'Programações', 'Eventos, inscrições e presenças',  'eve-dash')}
+        ${_mod(IC.ticket, 'rgba(74,156,245,0.12)', 'var(--sky)', 'Gestão de Eventos', 'Eventos, inscrições e presenças', 'eve-dash')}
       </div>
     </div>`;
 
@@ -320,6 +414,40 @@ function renderHubOp(){
   _cnt('agenda_eventos',`&status=eq.confirmado&data_inicio=gte.${mes}-01`).then(n=>_set('k-op-agenda',n));
   _cnt('com_mensagens',`&created_at=gte.${mes}-01`).then(n=>_set('k-op-com',n));
   _cnt('eventos',`&data_inicio=gte.${mes}-01`).then(n=>_set('k-op-eve',n));
+
+  // Demandas recentes
+  const hoje=new Date().toISOString().slice(0,10);
+  fetch(`${apiBaseUrl()}/rest/v1/demandas?select=id,titulo,status,area&status=in.(pendente,em_analise,em_andamento)&order=criado_em.desc&limit=5`,{headers:apiHeaders()})
+    .then(r=>r.ok?r.json():[]).then(rows=>{
+      const el=document.getElementById('op-dem-list');
+      if(!el) return;
+      if(!rows.length){el.innerHTML=_vazio('Nenhuma demanda aberta');return;}
+      el.innerHTML=rows.map(r=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd1)">
+          <div style="width:3px;height:36px;border-radius:2px;background:${bgRose}0.6);flex-shrink:0"></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${_esc(r.titulo||'Demanda')}</div>
+            <div style="font-size:11px;color:var(--tx3)">${_esc(r.area||'')}${r.area&&r.status?' · ':''}${_esc(r.status||'')}</div>
+          </div>
+        </div>`).join('');
+    }).catch(()=>{const el=document.getElementById('op-dem-list');if(el)el.innerHTML=_vazio('Dados não disponíveis');});
+
+  // Próximos agendamentos
+  fetch(`${apiBaseUrl()}/rest/v1/agenda_eventos?select=id,titulo,data_inicio,status&data_inicio=gte.${hoje}&order=data_inicio.asc&limit=5`,{headers:apiHeaders()})
+    .then(r=>r.ok?r.json():[]).then(rows=>{
+      const el=document.getElementById('op-agenda-list');
+      if(!el) return;
+      if(!rows.length){el.innerHTML=_vazio('Nenhum agendamento próximo');return;}
+      el.innerHTML=rows.map(r=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd1)">
+          <div style="width:3px;height:36px;border-radius:2px;background:${bgTeal}0.6);flex-shrink:0"></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${_esc(r.titulo||'Agendamento')}</div>
+            <div style="font-size:11px;color:var(--tx3)">${_fmt(r.data_inicio?.slice(0,10))}</div>
+          </div>
+          <div style="font-size:11px;color:var(--tx3);flex-shrink:0">${_esc(r.status||'')}</div>
+        </div>`).join('');
+    }).catch(()=>{const el=document.getElementById('op-agenda-list');if(el)el.innerHTML=_vazio('Dados não disponíveis');});
 }
 
 // ══════════════════════════════════════════════════════
