@@ -860,7 +860,21 @@
               ${_tog(mod.key, !!rec[mod.key])}
             </div>`).join('')}
         </div>
-      </div>`;
+      </div>
+      ${_podeEditarMinisterio() ? `
+      <div class="card" style="border-color:rgba(208,85,85,0.3)">
+        <div class="ctit" style="color:var(--rose)">Zona de Perigo</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(208,85,85,0.06);border-radius:8px">
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--tx1)">Excluir departamento</div>
+            <div style="font-size:11px;color:var(--tx3);margin-top:2px">Remove permanentemente este departamento e todos os seus dados</div>
+          </div>
+          <button onclick="_admExcluirMinisterio()"
+            style="padding:6px 16px;border-radius:8px;border:1px solid rgba(208,85,85,0.4);background:rgba(208,85,85,0.1);color:var(--rose);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">
+            Excluir
+          </button>
+        </div>
+      </div>` : ''}`;
   }
 
   async function _admSalvarInfo() {
@@ -906,6 +920,22 @@
     } catch (e) {
       _showErr('adm-info-err', 'Erro ao salvar: ' + e.message);
       btn.disabled = false; btn.textContent = 'Salvar';
+    }
+  }
+
+  async function _admExcluirMinisterio() {
+    const nome = _ministerioDataAtual?.nome || 'este departamento';
+    if (!confirm(`Tem certeza que deseja excluir "${nome}"?\n\nEsta ação não pode ser desfeita.`)) return;
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerios?id=eq.${_ministerioAtual}`, {
+        method: 'PATCH', headers: _hdrJson(),
+        body: JSON.stringify({ deleted_at: new Date().toISOString() }),
+      });
+      if (!r.ok) throw new Error(await r.text());
+      if (typeof T === 'function') T('Departamento excluído', nome);
+      minMinVoltarLista();
+    } catch (e) {
+      alert('Erro ao excluir: ' + e.message);
     }
   }
 
@@ -3392,8 +3422,9 @@
   window._mmSalvar         = _mmSalvar;
   window._mmbSalvar        = _mmbSalvar;
   window._mstSalvar        = _mstSalvar;
-  window._admSalvarInfo    = _admSalvarInfo;
-  window._admToggleRecurso = _admToggleRecurso;
+  window._admSalvarInfo       = _admSalvarInfo;
+  window._admToggleRecurso    = _admToggleRecurso;
+  window._admExcluirMinisterio = _admExcluirMinisterio;
   window.minMinNovaReuniao         = minMinNovaReuniao;
   window.minMinEditarReuniao       = minMinEditarReuniao;
   window.minMinToggleReuniaoStatus = minMinToggleReuniaoStatus;
