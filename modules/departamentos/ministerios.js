@@ -928,8 +928,7 @@
     if (!confirm(`Tem certeza que deseja excluir "${nome}"?\n\nEsta ação não pode ser desfeita.`)) return;
     try {
       const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerios?id=eq.${_ministerioAtual}`, {
-        method: 'PATCH', headers: _hdrJson(),
-        body: JSON.stringify({ deleted_at: new Date().toISOString() }),
+        method: 'DELETE', headers: _hdr(),
       });
       if (!r.ok) throw new Error(await r.text());
       if (typeof T === 'function') T('Departamento excluído', nome);
