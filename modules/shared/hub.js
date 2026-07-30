@@ -353,7 +353,7 @@ function renderHubAdm(){
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:10px">Módulos</div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
         ${_mod(IC.gear,   bgGold+'0.12)',  gold,  'Administração',          'Gestão administrativa geral',              'admin-dash')}
-        ${_mod(IC.wallet, bgGold+'0.12)',  gold,  'Financeiro',             'A pagar, CNAB e controle financeiro',      'fin-demandas')}
+        ${_mod(IC.wallet, bgGold+'0.12)',  gold,  'Gestão Financeira',       'A pagar, CNAB e controle financeiro',      'fin-demandas')}
         ${_mod(IC.wrench, bgAmber+'0.12)', amber, 'Patrimônio',             'Manutenção, conservação e espaços físicos','infra-dash')}
         ${_mod(IC.lock,   'rgba(88,152,212,0.12)', 'var(--sky)', 'Controle de Acesso', 'Estacionamento e acesso facial', 'admin-parking-controls')}
       </div>
