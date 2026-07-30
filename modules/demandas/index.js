@@ -1275,7 +1275,7 @@ function fmtD(d) {
       ["Solicitante",   `${nomePropio(dem.solicitante || dem.solicitante_txt || dem.nome_solicitante_externo) || "—"}${pillOrigem(dem.origem)}${dem.telefone_solicitante ? `<br><span style="color:var(--tx3);font-size:11px">📞 ${escapeHtml(dem.telefone_solicitante)}</span>` : ""}`],
       ["Responsável",   nomePropio(dem.responsavel || dem.responsavel_txt) || "—"],
       ["Abertura",      fmtD(dem.data_abertura||dem.criado_em)],
-      ["Conclusão prev.",fmtD(dem.data_conclusao)],
+      dem.data_conclusao ? ["Conclusão prev.",fmtD(dem.data_conclusao)] : null,
     ].filter(Boolean);
     if (dem.numero_chamado) {
       detailRows.unshift(["N° do chamado", `<span style="font-weight:700;color:var(--acc,#4a9cf5);letter-spacing:.04em">${escapeHtml(dem.numero_chamado)}</span>`]);
@@ -1316,7 +1316,7 @@ function fmtD(d) {
         </div>
       </div>
       <div class="ct">
-        <div class="g2">
+        <div class="g2" style="align-items:start">
           <div class="card">
             <div class="ctit">Detalhes</div>
             <table style="width:100%;font-size:11.5px;border-collapse:collapse">
@@ -1353,33 +1353,31 @@ function fmtD(d) {
         ${_renderFinancialData(dem)}
         <div class="card" style="margin-top:0">
           <div class="ctit">Editar Demanda</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
-            <div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px">
+            <div style="grid-column:span 3">
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Título *</label>
               <input id="dem-edit-titulo" type="text" value="${escapeHtmlAttr(dem.titulo || '')}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>
-            <div>
+            <div style="grid-column:span 1">
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Responsável</label>
               <input id="dem-edit-resp" type="text" value="${escapeHtmlAttr(dem.responsavel || dem.responsavel_txt || '')}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>
             ${dem.area !== "Financeiro" ? `
-            <div>
+            <div style="grid-column:span 3">
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Localização / Sala</label>
               <select id="dem-edit-local" data-valor-atual="${dem.local_id || dem.local || ''}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
                 <option value="">Carregando espaços…</option>
               </select>
             </div>
-            <div>
+            <div style="grid-column:span 1">
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Conclusão prevista</label>
               <input id="dem-edit-venc" type="date" value="${dem.data_conclusao||''}" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>` : `
             <input type="hidden" id="dem-edit-local" value="">
             <input type="hidden" id="dem-edit-venc" value="">`}
-          </div>
-          ${_podeEditarPrioridade() ? `
-          <div style="margin-top:12px">
-            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Solicitante</label>
-            <div style="position:relative">
+            ${_podeEditarPrioridade() ? `
+            <div style="grid-column:span 4;position:relative">
+              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Solicitante</label>
               <input id="dem-edit-sol-nome" type="text" value="${escapeHtmlAttr(dem.solicitante||dem.solicitante_txt||"")}"
                 placeholder="Digite ao menos 2 caracteres para buscar..."
                 oninput="document.getElementById('dem-edit-sol-id').value='';window._demSolBuscar(this.value)"
@@ -1387,8 +1385,8 @@ function fmtD(d) {
                 style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box" autocomplete="off">
               <input id="dem-edit-sol-id" type="hidden" value="${escapeHtmlAttr(String(dem.solicitante_id||""))}">
               <div id="dem-edit-sol-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-card);border:1px solid var(--bd2);border-radius:0 0 7px 7px;z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
-            </div>
-          </div>` : ""}
+            </div>` : ""}
+          </div>
           <div style="margin-top:12px">
             <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Descrição</label>
             <textarea id="dem-edit-desc" rows="3" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;resize:vertical;box-sizing:border-box">${escapeHtml(dem.descricao || '')}</textarea>
