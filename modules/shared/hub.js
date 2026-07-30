@@ -310,7 +310,7 @@ function renderHubOp(){
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:10px">Módulos</div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
         ${_mod(IC.inbox,  bgRose+'0.12)', rose,   'Central de Demandas', 'Solicitações, análise e acompanhamento',    'dem-dash')}
-        ${_mod(IC.cal,    bgTeal+'0.12)', teal,   'Agenda',              'Calendário, ambientes e agendamentos',      'agenda-dash')}
+        ${_mod(IC.cal,    bgTeal+'0.12)', teal,   'Gestão de Agenda',    'Calendário, ambientes e agendamentos',      'agenda-dash')}
         ${_mod(IC.mega,   'rgba(139,111,212,0.12)', 'var(--violet)', 'Comunicação', 'Mensagens, modelos e WhatsApp', 'com-dash')}
         ${_mod(IC.ticket, 'rgba(74,156,245,0.12)', 'var(--sky)', 'Programações', 'Eventos, inscrições e presenças',  'eve-dash')}
       </div>
