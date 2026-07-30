@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    SIPEN — Section Hubs
-   hub.js · v1.2.4
+   hub.js · v1.2.5
 ═══════════════════════════════════════════════════════ */
 (function(){
 
@@ -265,7 +265,7 @@ function renderHubDep(){
       </div>
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:10px">Módulos</div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
-        ${_mod(IC.users,  bgVio+'0.12)', violet,         'Ministérios',          'Grupos de serviço e louvor',                  'min-min')}
+        ${_mod(IC.grid,   bgVio+'0.12)', violet,         'Todos os Departamentos','Ministérios, setores e grupos de serviço',    'min-min')}
         ${_mod(IC.star,   bgVio+'0.12)', violet,         'Sociedades Internas',  'UPH, SAF, UMP, UPA e UCP',                   'min-soc')}
         ${_mod(IC.case,   bgVio+'0.12)', violet,         'Depto. Administrativo','Gestão e suporte administrativo',             'min-adm')}
         ${_mod(IC.proj,   bgVio+'0.12)', violet,         'Projetos',             'Projetos e acompanhamento de metas',          'proj-lista')}

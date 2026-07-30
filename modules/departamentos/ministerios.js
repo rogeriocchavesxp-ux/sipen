@@ -130,7 +130,7 @@
     _ministerioAtual = null;
 
     const heroTtl = document.querySelector('#v-min-min .hero-ttl');
-    if (heroTtl) heroTtl.textContent = 'Ministérios';
+    if (heroTtl) heroTtl.textContent = 'Todos os Departamentos';
 
     const heroAct = document.getElementById('min-min-hero-act');
     if (heroAct) heroAct.style.display = _isAdminGeral() ? '' : 'none';
@@ -2721,7 +2721,7 @@
     const heroAct = document.getElementById('min-min-hero-act');
     if (heroAct) heroAct.style.display = _isAdminGeral() ? '' : 'none';
     const heroTtl = document.querySelector('#v-min-min .hero-ttl');
-    if (heroTtl) heroTtl.textContent = 'Ministérios';
+    if (heroTtl) heroTtl.textContent = 'Todos os Departamentos';
     const cr = document.getElementById('crumb');
     if (cr) cr.innerHTML = `<span class="c-mod">Departamentos</span><span class="c-sep">/</span><span class="c-pg">Ministérios</span><span class="c-sub">/ grupos ministeriais</span>`;
     document.querySelectorAll('#sb-min-ministerios .si').forEach(el => el.classList.remove('on'));
