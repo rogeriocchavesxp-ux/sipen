@@ -3,7 +3,7 @@
 const _isPublicRoute = window.location.hash === "#pautas-reunioes";
 const _shellReady = _isPublicRoute ? Promise.resolve() : Promise.all([
   fetch("views/login.html?v=6.45.13").then(r => r.ok ? r.text() : ""),
-  fetch("views/sidebar.html?v=6.53.0").then(r => r.ok ? r.text() : ""),
+  fetch("views/sidebar.html?v=6.53.1").then(r => r.ok ? r.text() : ""),
   fetch("views/modals.html?v=6.45.13").then(r => r.ok ? r.text() : ""),
 ]).then(([loginHtml, sidebarHtml, modalsHtml]) => {
   document.body.insertAdjacentHTML("afterbegin", loginHtml);
@@ -13,7 +13,7 @@ const _shellReady = _isPublicRoute ? Promise.resolve() : Promise.all([
   document.body.insertAdjacentHTML("beforeend", modalsHtml);
   // Versão sempre reflete o init.js carregado — imune ao cache do sidebar.html
   const vEl = document.querySelector('.sb-sipen .sb-ver');
-  if (vEl) vEl.textContent = 'v6.53.1';
+  if (vEl) vEl.textContent = 'v6.53.2';
 });
 
 /* ── Sidebar mobile toggle ───────────────── */

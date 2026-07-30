@@ -266,22 +266,25 @@
             <div class="si" onclick="go('agenda-ambientes')">Ambientes e Recursos</div>
             <div class="si" onclick="go('agenda-conflitos')">Conflitos de Agenda</div>
             <div class="si" onclick="go('agenda-historico')">Histórico de Agendamentos</div>
-            <div class="sdiv"></div>
-            <div class="mwrap" id="mw-eve" data-modulo="EVENTOS" style="margin:0">
-              <div class="mhdr sb-grp-hdr open" style="color:var(--teal)!important" onclick="tog('eve','eve-dash')">
-                <span>Gestão de Eventos</span><span class="marr">▶</span>
-              </div>
-              <div class="msub open" id="ms-eve" style="padding-left:14px">
-                <div class="si" onclick="go('eve-todos')">Todas as Programações</div>
-                <div class="si" onclick="go('eve-reunioes')">Reuniões</div>
-                <div class="si" onclick="go('eve-ensaios')">Ensaios</div>
-                <div class="si" onclick="go('eve-inscricoes')">Inscrições</div>
-                <div class="si" onclick="go('eve-pagamentos')">Pagamentos</div>
-                <div class="si" onclick="go('eve-credenciamento')">Credenciamento</div>
-                <div class="si" onclick="go('eve-presenca')">Lista de Presença</div>
-                <div class="si" onclick="go('eve-relatorios')">Relatórios</div>
-              </div>
-            </div>
+          </div>
+        </div>
+
+        <!-- Gestão de Eventos -->
+        <div class="mwrap" id="mw-eve" data-modulo="EVENTOS">
+          <div class="mhdr" onclick="tog('eve','eve-dash')">
+            <div class="micon" style="background:rgba(42,181,192,0.14);border-color:rgba(42,181,192,0.25);color:var(--teal)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/></svg></div>
+            <span class="mname">Gestão de Eventos</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-eve">
+            <div class="si" onclick="go('eve-todos')">Todas as Programações</div>
+            <div class="si" onclick="go('eve-reunioes')">Reuniões</div>
+            <div class="si" onclick="go('eve-ensaios')">Ensaios</div>
+            <div class="si" onclick="go('eve-inscricoes')">Inscrições</div>
+            <div class="si" onclick="go('eve-pagamentos')">Pagamentos</div>
+            <div class="si" onclick="go('eve-credenciamento')">Credenciamento</div>
+            <div class="si" onclick="go('eve-presenca')">Lista de Presença</div>
+            <div class="si" onclick="go('eve-relatorios')">Relatórios</div>
           </div>
         </div>
 
