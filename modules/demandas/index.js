@@ -825,9 +825,60 @@ function fmtD(d) {
 
   window.demNotificarResponsaveis = async function(demandaId) {
     const dem = _ativo;
-    if (!dem) return;
-    if (typeof T === "function") T("Enviando…", "Notificando responsáveis via WhatsApp");
-    await _notificarResponsaveisWA(dem);
+    if (!dem) { if (typeof T === "function") T("Erro", "Demanda não identificada"); return; }
+    if (typeof WA === "undefined") { if (typeof T === "function") T("Erro", "Módulo WhatsApp não carregado"); return; }
+
+    const modulo = _AREA_MODULO_WA[dem.area];
+    if (!modulo) {
+      if (typeof T === "function") T("Área sem módulo WA", `Área "${dem.area}" não tem módulo WhatsApp configurado`);
+      return;
+    }
+
+    const base = (typeof SUPABASE_URL !== "undefined" ? SUPABASE_URL : "").trim().replace(/\/$/, "");
+    const hdrs = typeof apiHeaders === "function" ? apiHeaders() : {};
+
+    let rows = [];
+    try {
+      const res = await fetch(
+        `${base}/rest/v1/whatsapp_modulo_responsaveis?modulo=eq.${encodeURIComponent(modulo)}&ativo=eq.true` +
+        `&select=pessoa_id,pessoas(id,nome,whatsapp,telefone,celular)`,
+        { headers: hdrs }
+      );
+      rows = res.ok ? await res.json() : [];
+    } catch(e) {
+      if (typeof T === "function") T("Erro", "Falha ao buscar responsáveis: " + e.message);
+      return;
+    }
+
+    const aptos = rows.filter(r => r.pessoas && (r.pessoas.whatsapp || r.pessoas.celular || r.pessoas.telefone));
+    if (!aptos.length) {
+      if (typeof T === "function") T("Sem responsáveis", `Nenhum responsável ativo com telefone no módulo ${modulo}`);
+      return;
+    }
+
+    const msg = _montarMsgWA(dem);
+    let enviados = 0, erros = 0;
+    for (const row of aptos) {
+      const p = row.pessoas;
+      const tel = p.whatsapp || p.celular || p.telefone;
+      try {
+        const res = await WA.send({
+          para: tel, nome: p.nome, mensagem: msg, modulo,
+          referenciaT: "demanda", referenciaId: String(dem.id || ""),
+          chave: `DEM_NOVA_${dem.id}_${row.pessoa_id}_${Date.now()}`,
+        });
+        if (res.ok || res.status === "enviado" || res.status === "pendente") enviados++;
+        else erros++;
+      } catch(_) { erros++; }
+    }
+
+    if (enviados > 0 && erros === 0)
+      T("Notificação enviada", `${enviados} responsável(is) notificado(s) via WhatsApp`);
+    else if (enviados > 0)
+      T("Parcialmente enviado", `${enviados} enviado(s), ${erros} com erro`);
+    else
+      T("Falha no envio", `Nenhuma mensagem enviada — verifique o BotConversa`);
+
     await _carregarWADemanda(demandaId, dem);
   };
 
