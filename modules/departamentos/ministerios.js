@@ -139,7 +139,7 @@
     grid.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center;grid-column:1/-1">Carregando...</div>';
 
     try {
-      let url = `${SUPABASE_URL}/rest/v1/ministerios?select=id,nome,descricao,tipo,ativo,supervisor,conselheiro,coordenador&order=nome.asc`;
+      let url = `${SUPABASE_URL}/rest/v1/ministerios?select=id,nome,descricao,tipo,ativo,categoria,modulo_rota,supervisor,conselheiro,coordenador&order=nome.asc`;
 
       if (!_isGestor()) {
         const ids = USUARIO_ATUAL?.ministerios;
@@ -190,13 +190,8 @@
         return;
       }
 
-      const _pgsEntry = { id: '__pgs__', nome: 'Pequenos Grupos', tipo: 'GRUPOS', ativo: true, supervisor: null };
-      const listaComPgs = [...lista, _pgsEntry].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-
-      grid.innerHTML = listaComPgs.map(m =>
-        m.id === '__pgs__'
-          ? _cardPgs()
-          : _cardMinisterio(m, contagem[m.id] || 0, nomeSup[m.supervisor] || null, nomeSup[m.conselheiro] || null, nomeSup[m.coordenador] || null)
+      grid.innerHTML = lista.map(m =>
+        _cardMinisterio(m, contagem[m.id] || 0, nomeSup[m.supervisor] || null, nomeSup[m.conselheiro] || null, nomeSup[m.coordenador] || null)
       ).join('');
 
       if (window._sbMinisterioId) {
@@ -217,19 +212,23 @@
     const inativoTag = m.ativo === false
       ? '<span style="font-size:10px;padding:2px 7px;background:#fee2e2;color:var(--rose);border-radius:20px;margin-left:6px">Inativo</span>'
       : '';
+    const catLabel = m.categoria === 'essencial' ? '<span style="font-size:10px;padding:2px 6px;background:rgba(58,170,92,0.12);color:var(--gbr);border-radius:20px;margin-left:6px">Essencial</span>' : '';
     const tipoLabel = m.tipo ? m.tipo.charAt(0) + m.tipo.slice(1).toLowerCase() : '';
-    const _pessoa = (label, nome, cor) => nome
+    const _pessoa = (label, nome) => nome
       ? `<div style="font-size:11px;color:var(--tx2);display:flex;gap:4px;margin-bottom:3px"><span style="color:var(--tx3);min-width:70px">${label}</span><span>${escapeHtml(nome)}</span></div>`
       : '';
+    const onclick = m.categoria === 'essencial' && m.modulo_rota
+      ? `go('${m.modulo_rota}-dash')`
+      : `minMinAbrir('${m.id}')`;
     return `
       <div class="card" style="cursor:pointer;transition:box-shadow .15s"
-           onclick="minMinAbrir('${m.id}')"
+           onclick="${onclick}"
            onmouseenter="this.style.boxShadow='0 4px 18px rgba(0,0,0,.12)'"
            onmouseleave="this.style.boxShadow=''">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
           <div style="width:38px;height:38px;border-radius:10px;background:var(--violetbg);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${ic}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-weight:700;color:var(--tx1);font-size:14px">${escapeHtml(m.nome)}${inativoTag}</div>
+            <div style="font-weight:700;color:var(--tx1);font-size:14px">${escapeHtml(m.nome)}${inativoTag}${catLabel}</div>
             ${tipoLabel ? `<div style="font-size:11px;color:var(--tx3);margin-top:1px">${tipoLabel}</div>` : ''}
           </div>
         </div>
@@ -241,26 +240,6 @@
         </div>` : ''}
         <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--bd1);padding-top:8px;margin-top:4px">
           <span style="font-size:12px;color:var(--tx3)">👥 ${qtdMembros} membro${qtdMembros !== 1 ? 's' : ''}</span>
-          <span style="font-size:11.5px;color:var(--violet)">Abrir →</span>
-        </div>
-      </div>`;
-  }
-
-  function _cardPgs() {
-    return `
-      <div class="card" style="cursor:pointer;transition:box-shadow .15s"
-           onclick="go('pgs-dash')"
-           onmouseenter="this.style.boxShadow='0 4px 18px rgba(0,0,0,.12)'"
-           onmouseleave="this.style.boxShadow=''">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <div style="width:38px;height:38px;border-radius:10px;background:rgba(82,196,110,0.14);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">⌂</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-weight:700;color:var(--tx1);font-size:14px">Pequenos Grupos</div>
-            <div style="font-size:11px;color:var(--tx3);margin-top:1px">Grupos</div>
-          </div>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--bd1);padding-top:8px;margin-top:4px">
-          <span style="font-size:12px;color:var(--tx3)">Grupos de crescimento</span>
           <span style="font-size:11.5px;color:var(--violet)">Abrir →</span>
         </div>
       </div>`;
@@ -353,12 +332,8 @@
       if (waBtn)    waBtn.style.display    = _recursosAtual.whatsapp     ? '' : 'none';
 
       // Abas específicas de Comunicação
-      const isCom      = m.tipo === 'COMUNICACAO';
-      const isPastoral = (m.nome || '').toLowerCase().includes('equipe pastoral');
-      const isDiaconal = m.tipo === 'DIACONIA';
-
       const ferBtn = document.getElementById('min-min-tab-btn-fer');
-      if (ferBtn) ferBtn.style.display = (isCom || isPastoral || isDiaconal) ? '' : 'none';
+      if (ferBtn) ferBtn.style.display = 'none';
       const solBtn  = document.getElementById('min-min-tab-btn-sol');
       if (solBtn)  solBtn.style.display  = isCom ? '' : 'none';
       const campBtn = document.getElementById('min-min-tab-btn-camp');
@@ -785,61 +760,7 @@
         </div>
         <span style="font-size:13px;color:var(--tx3);margin-left:10px">→</span>
       </div>`;
-    const m = _ministerioDataAtual;
-    const isPastoral = (m?.nome || '').toLowerCase().includes('equipe pastoral');
-    const isDiaconal = m?.tipo === 'DIACONIA';
-    if (isPastoral) {
-      el.innerHTML = `
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-          <div class="card">
-            <div class="ctit">Pregação</div>
-            ${_lnk('Escala de Pregação', 'pastoral-preg',  'Escala de pregadores')}
-            ${_lnk('Disponibilidade',    'pastoral-disp',  'Agenda de disponibilidade')}
-            ${_lnk('Histórico',          'pastoral-historico', 'Registro de pregações')}
-          </div>
-          <div class="card">
-            <div class="ctit">Comunicação</div>
-            ${_lnk('WhatsApp',  'pastoral-whatsapp',   'Envios e notificações')}
-            ${_lnk('Relatórios','pastoral-relatorios', 'Relatórios e indicadores')}
-          </div>
-        </div>`;
-      return;
-    }
-    if (isDiaconal) {
-      el.innerHTML = `
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-          <div class="card">
-            <div class="ctit">Equipe</div>
-            ${_lnk('Escalas de Serviço',  'diac-escalas',    'Escala de serviço')}
-            ${_lnk('Visitação Diaconal',  'diac-visitacao',  'Registro de visitações')}
-            ${_lnk('Relatórios Diaconais','diac-relatorios', 'Relatórios e indicadores')}
-            ${_lnk('Histórico e Atas',    'diac-historico',  'Registro histórico')}
-          </div>
-          <div class="card">
-            <div class="ctit">Demandas</div>
-            ${_lnk('Todas as Demandas', 'dem-todas', 'Painel geral de demandas')}
-          </div>
-        </div>`;
-      return;
-    }
-    el.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-        <div class="card">
-          <div class="ctit">Mensagens</div>
-          ${_lnk('Dashboard',      'com-dash',         'Visão geral de comunicações')}
-          ${_lnk('Mensagens',      'com-mensagens',    'Campanhas e envios segmentados')}
-          ${_lnk('Agendamentos',   'com-agendamentos', 'Mensagens programadas')}
-          ${_lnk('Modelos',        'com-modelos',      'Templates reutilizáveis')}
-          ${_lnk('Histórico',      'com-historico',    'Registro completo')}
-          ${_lnk('Listas',         'com-listas',       'Listas de destinatários')}
-        </div>
-        <div class="card">
-          <div class="ctit">Canais</div>
-          ${_lnk('Chat Interno',        'chat-inbox',       'Comunicação interna da equipe')}
-          ${_lnk('Solicitações de Arte','com-solicitacoes', 'Pedidos de design e arte')}
-          ${_lnk('WhatsApp',            'com-whatsapp',     'Envios via WhatsApp')}
-        </div>
-      </div>`;
+    el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Sem ferramentas configuradas para este ministério.</div>';
   }
 
   /* ══ ABA: CONFIGURAÇÕES ══════════════════════════════════════ */
@@ -2580,52 +2501,6 @@
       const statMb = document.getElementById('min-min-stat-membros');
       if (statMb) statMb.textContent = ativos.length;
 
-      const isDiac = _ministerioDataAtual?.tipo === 'DIACONIA';
-      if (isDiac) {
-        const [rVof, rOfc] = await Promise.all([
-          fetch(`${SUPABASE_URL}/rest/v1/v_oficiais?cargo=eq.diacono&status=in.(ativo,especial)&select=id,nome,status&order=nome.asc`, { headers: _hdr() }),
-          fetch(`${SUPABASE_URL}/rest/v1/oficiais?cargo=eq.diacono&status=in.(ativo,especial)&deleted_at=is.null&select=id,ata,fim_mandato`, { headers: _hdr() }),
-        ]);
-        const vof   = rVof.ok  ? await rVof.json()  : [];
-        const ofc   = rOfc.ok  ? await rOfc.json()  : [];
-        const ofcMap = Object.fromEntries(ofc.map(o => [o.id, o]));
-        const diaconos = vof.map(d => ({ ...d, ...ofcMap[d.id] }));
-        cnt.textContent = `(${diaconos.length})`;
-        const statMb = document.getElementById('min-min-stat-membros');
-        if (statMb) statMb.textContent = diaconos.length;
-        if (!diaconos.length) {
-          el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Nenhum diácono cadastrado.</div>';
-          return;
-        }
-        const _fmtData = d => {
-          if (!d) return '—';
-          const [y, m, dia] = d.split('-');
-          return `${dia}/${m}/${y}`;
-        };
-        el.innerHTML = `
-          <table style="width:100%;border-collapse:collapse;font-size:13px">
-            <thead><tr style="border-bottom:2px solid var(--bd1)">
-              <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Nome</th>
-              <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Nº Ata</th>
-              <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Venc. Mandato</th>
-              <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Status</th>
-            </tr></thead>
-            <tbody>${diaconos.map(d => {
-              const nome = (d.nome || '—').toUpperCase();
-              const stTag = d.status === 'especial'
-                ? '<span style="font-size:11px;padding:2px 7px;background:rgba(245,158,11,0.12);color:var(--amber,#d97706);border-radius:20px">Especial</span>'
-                : '<span style="font-size:11px;padding:2px 7px;background:var(--greenbg,#d1fae5);color:var(--green,#059669);border-radius:20px">Ativo</span>';
-              return `<tr style="border-bottom:1px solid var(--bd1)">
-                <td style="padding:7px 8px;color:var(--tx1);font-weight:500">${nome}</td>
-                <td style="padding:7px 8px;color:var(--tx2)">${d.ata || '—'}</td>
-                <td style="padding:7px 8px;color:var(--tx2)">${_fmtData(d.fim_mandato)}</td>
-                <td style="padding:7px 8px">${stTag}</td>
-              </tr>`;
-            }).join('')}</tbody>
-          </table>`;
-        return;
-      }
-
       if (lista.length === 0) {
         el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Nenhum membro adicionado a este ministério.</div>';
         return;
@@ -3481,36 +3356,15 @@
     if (!el) return;
     try {
       const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/ministerios?select=id,nome,tipo&ativo=eq.true&order=nome.asc`,
+        `${SUPABASE_URL}/rest/v1/ministerios?select=id,nome,categoria&ativo=eq.true&categoria=neq.essencial&order=nome.asc`,
         { headers: _hdr() }
       );
       if (!r.ok) return;
       const lista = await r.json();
-      if (!lista.length) return;
       const _sbNome = n => n.replace(/^Minist[eé]rio\s+d[eao]\s+/i, '').replace(/^Minist[eé]rio\s+/i, '');
-      const _pgs = { id: '__pgs__', nome: 'Pequenos Grupos', tipo: '__pgs__' };
-      const listaComPgs = [...lista, _pgs].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-      el.innerHTML = '<div class="sdiv"></div>' + listaComPgs.map(m => {
-        if (m.id === '__pgs__') return `
-          <div class="mwrap" id="mw-pgs" data-modulo="PGS" style="margin:0">
-            <div class="mhdr" onclick="tog('pgs','pgs-dash')">
-              <div class="micon" style="background:rgba(82,196,110,0.14);border-color:rgba(82,196,110,0.25);color:var(--gbr)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-              <span class="mname">Pequenos Grupos</span>
-              <span class="marr">▶</span>
-            </div>
-            <div class="msub" id="ms-pgs">
-              <div class="si" onclick="go('pgs-lista')">Lista de PGs</div>
-              <div class="si" onclick="go('pgs-encontros')">Encontros</div>
-              <div class="si" onclick="go('pgs-participantes')">Participantes</div>
-              <div class="si" onclick="go('pgs-visitantes')">Visitantes</div>
-              <div class="si" onclick="go('pgs-estudos')">Estudos</div>
-              <div class="si" onclick="go('pgs-relatorios')">Relatórios</div>
-              <div class="si" onclick="go('pgs-oracao')">Pedidos de Oração</div>
-              <div class="si" onclick="go('pgs-historico')">Histórico</div>
-            </div>
-          </div>`;
-        return `<div class="si" data-mid="${m.id}" onclick="window._sbMinisterioId='${m.id}';go('min-min')">${_sbNome(m.nome)}</div>`;
-      }).join('');
+      el.innerHTML = lista.length
+        ? lista.map(m => `<div class="si" data-mid="${m.id}" onclick="window._sbMinisterioId='${m.id}';go('min-min')">${_sbNome(m.nome)}</div>`).join('')
+        : '';
     } catch (e) { /* silencioso — sidebar não quebra */ }
   }
 

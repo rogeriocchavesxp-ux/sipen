@@ -1,0 +1,162 @@
+  <!-- ════ DASHBOARD ══════════════════════════════════════════════ -->
+  <div class="view" id="v-evangelismo-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(58,170,92,0.12);border-color:rgba(58,170,92,0.28);color:var(--gbr)">✝</div>
+      <div>
+        <div class="hero-lbl">Departamento Essencial</div>
+        <div class="hero-ttl">Evangelização e Missões</div>
+        <div class="hero-dsc">Projetos, obreiros, campos missionários e atividades evangelísticas.</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="go('evangelismo-projetos')">+ Projeto</button>
+      </div>
+    </div>
+    <div class="bnav" style="--mc:var(--gbr)">
+      <div class="bni" onclick="go('evangelismo-dash')">Dashboard</div>
+      <div class="bni" onclick="go('evangelismo-projetos')">Projetos</div>
+      <div class="bni" onclick="go('evangelismo-obreiros')">Obreiros</div>
+      <div class="bni" onclick="go('evangelismo-campos')">Campos</div>
+      <div class="bni" onclick="go('evangelismo-relatorios')">Relatórios</div>
+      <div class="bni bni-sep"></div>
+      <div class="bni" onclick="go('evangelismo-config')">Configurações</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gbr)">✝</div><div class="kpi-body"><div class="kpi-lbl">Projetos ativos</div><div class="kpi-val" id="ev-kpi-projetos">—</div><div class="kpi-d nu">em andamento</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky)">◎</div><div class="kpi-body"><div class="kpi-lbl">Obreiros</div><div class="kpi-val" id="ev-kpi-obreiros">—</div><div class="kpi-d nu">ativos e apoiados</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(245,158,11,0.15);color:var(--amber)">◈</div><div class="kpi-body"><div class="kpi-lbl">Campos</div><div class="kpi-val" id="ev-kpi-campos">—</div><div class="kpi-d nu">missionários</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(138,107,193,0.15);color:var(--violet)">⊞</div><div class="kpi-body"><div class="kpi-lbl">Decisões</div><div class="kpi-val" id="ev-kpi-decisoes">—</div><div class="kpi-d nu">registradas no ano</div></div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Projetos evangelísticos</div>
+          <div id="ev-dash-projetos-list" style="color:var(--tx3);font-size:12px;padding:20px 0;text-align:center">Nenhum dado disponível</div>
+        </div>
+        <div class="card">
+          <div class="ctit">Campos missionários</div>
+          <div id="ev-dash-campos-list" style="color:var(--tx3);font-size:12px;padding:20px 0;text-align:center">Nenhum dado disponível</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ PROJETOS ════════════════════════════════════════════════ -->
+  <div class="view" id="v-evangelismo-projetos">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(58,170,92,0.12);color:var(--gbr)">✝</div>
+      <div><div class="hero-lbl">Evangelização e Missões</div><div class="hero-ttl">Projetos</div><div class="hero-dsc">Projetos e campanhas evangelísticas em andamento.</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('EVANGELISMO_PROJETOS')">+ Projeto</button></div>
+    </div>
+    <div class="bnav" style="--mc:var(--gbr)">
+      <div class="bni" onclick="go('evangelismo-dash')">Dashboard</div>
+      <div class="bni" onclick="go('evangelismo-projetos')">Projetos</div>
+      <div class="bni" onclick="go('evangelismo-obreiros')">Obreiros</div>
+      <div class="bni" onclick="go('evangelismo-campos')">Campos</div>
+      <div class="bni" onclick="go('evangelismo-relatorios')">Relatórios</div>
+      <div class="bni bni-sep"></div>
+      <div class="bni" onclick="go('evangelismo-config')">Configurações</div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Projetos <span id="ev-projetos-count" style="font-size:11px;font-weight:400;color:var(--tx3)"></span></div>
+        <div id="ev-projetos-list"><div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ OBREIROS ════════════════════════════════════════════════ -->
+  <div class="view" id="v-evangelismo-obreiros">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.12);color:var(--sky)">◎</div>
+      <div><div class="hero-lbl">Evangelização e Missões</div><div class="hero-ttl">Obreiros</div><div class="hero-dsc">Missionários, evangelistas e obreiros apoiados pela igreja.</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('EVANGELISMO_OBREIROS')">+ Obreiro</button></div>
+    </div>
+    <div class="bnav" style="--mc:var(--gbr)">
+      <div class="bni" onclick="go('evangelismo-dash')">Dashboard</div>
+      <div class="bni" onclick="go('evangelismo-projetos')">Projetos</div>
+      <div class="bni" onclick="go('evangelismo-obreiros')">Obreiros</div>
+      <div class="bni" onclick="go('evangelismo-campos')">Campos</div>
+      <div class="bni" onclick="go('evangelismo-relatorios')">Relatórios</div>
+      <div class="bni bni-sep"></div>
+      <div class="bni" onclick="go('evangelismo-config')">Configurações</div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Obreiros <span id="ev-obreiros-count" style="font-size:11px;font-weight:400;color:var(--tx3)"></span></div>
+        <div id="ev-obreiros-list"><div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ CAMPOS ═══════════════════════════════════════════════════ -->
+  <div class="view" id="v-evangelismo-campos">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(245,158,11,0.12);color:var(--amber)">◈</div>
+      <div><div class="hero-lbl">Evangelização e Missões</div><div class="hero-ttl">Campos</div><div class="hero-dsc">Campos missionários nacionais e internacionais.</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('EVANGELISMO_CAMPOS')">+ Campo</button></div>
+    </div>
+    <div class="bnav" style="--mc:var(--gbr)">
+      <div class="bni" onclick="go('evangelismo-dash')">Dashboard</div>
+      <div class="bni" onclick="go('evangelismo-projetos')">Projetos</div>
+      <div class="bni" onclick="go('evangelismo-obreiros')">Obreiros</div>
+      <div class="bni" onclick="go('evangelismo-campos')">Campos</div>
+      <div class="bni" onclick="go('evangelismo-relatorios')">Relatórios</div>
+      <div class="bni bni-sep"></div>
+      <div class="bni" onclick="go('evangelismo-config')">Configurações</div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Campos <span id="ev-campos-count" style="font-size:11px;font-weight:400;color:var(--tx3)"></span></div>
+        <div id="ev-campos-list"><div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ RELATÓRIOS ══════════════════════════════════════════════ -->
+  <div class="view" id="v-evangelismo-relatorios">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(58,170,92,0.12);color:var(--gbr)">⊞</div>
+      <div><div class="hero-lbl">Evangelização e Missões</div><div class="hero-ttl">Relatórios</div><div class="hero-dsc">Decisões, alcance e indicadores missionários.</div></div>
+    </div>
+    <div class="bnav" style="--mc:var(--gbr)">
+      <div class="bni" onclick="go('evangelismo-dash')">Dashboard</div>
+      <div class="bni" onclick="go('evangelismo-projetos')">Projetos</div>
+      <div class="bni" onclick="go('evangelismo-obreiros')">Obreiros</div>
+      <div class="bni" onclick="go('evangelismo-campos')">Campos</div>
+      <div class="bni" onclick="go('evangelismo-relatorios')">Relatórios</div>
+      <div class="bni bni-sep"></div>
+      <div class="bni" onclick="go('evangelismo-config')">Configurações</div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Relatórios</div>
+        <div id="ev-rel-content" style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Em desenvolvimento</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ CONFIGURAÇÕES ═══════════════════════════════════════════ -->
+  <div class="view" id="v-evangelismo-config">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(58,170,92,0.12);color:var(--gbr)">⚙</div>
+      <div><div class="hero-lbl">Evangelização e Missões</div><div class="hero-ttl">Configurações</div><div class="hero-dsc">Tipos de campo, categorias de projeto e parâmetros do módulo.</div></div>
+    </div>
+    <div class="bnav" style="--mc:var(--gbr)">
+      <div class="bni" onclick="go('evangelismo-dash')">Dashboard</div>
+      <div class="bni" onclick="go('evangelismo-projetos')">Projetos</div>
+      <div class="bni" onclick="go('evangelismo-obreiros')">Obreiros</div>
+      <div class="bni" onclick="go('evangelismo-campos')">Campos</div>
+      <div class="bni" onclick="go('evangelismo-relatorios')">Relatórios</div>
+      <div class="bni bni-sep"></div>
+      <div class="bni" onclick="go('evangelismo-config')">Configurações</div>
+    </div>
+    <div class="ct">
+      <div class="card" id="ev-config-content">
+        <div class="ctit">Módulo de Evangelização e Missões</div>
+        <div style="font-size:13px;color:var(--tx2);line-height:1.7">
+          Gerencie tipos de campo missionário, categorias de projeto, perfis de obreiro e parâmetros do departamento.<br>
+          <span style="font-size:12px;color:var(--tx3)">Configurações avançadas em desenvolvimento.</span>
+        </div>
+      </div>
+    </div>
+  </div>

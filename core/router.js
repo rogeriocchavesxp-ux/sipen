@@ -165,6 +165,25 @@ const CRUMB={
   "eve-sorteio":       ["Programações","Família de Oração","/ sorteio semanal de oração"],
   "acesso-relatorio":  ["Controle de Acesso","Relatório de Acessos","/ análise estatística — mai/2026"],
   "chat-inbox":        ["Comunicação","Chat Interno","/ mensagens entre usuários"],
+  "acao-social-dash":       ["Ação Social","Dashboard","/ visão geral"],
+  "acao-social-assistidos": ["Ação Social","Assistidos","/ famílias e pessoas em acompanhamento"],
+  "acao-social-beneficios": ["Ação Social","Benefícios","/ concessões e doações"],
+  "acao-social-parcerias":  ["Ação Social","Parcerias","/ entidades e ONGs parceiras"],
+  "acao-social-relatorios": ["Ação Social","Relatórios","/ indicadores e histórico"],
+  "acao-social-config":     ["Ação Social","Configurações","/ parâmetros do módulo"],
+  "ensino-dash":        ["Ensino","Dashboard","/ visão geral"],
+  "ensino-ebd":         ["Ensino","EBD","/ Escola Bíblica Dominical"],
+  "ensino-cursos":      ["Ensino","Cursos","/ bíblicos, teológicos e de formação"],
+  "ensino-professores": ["Ensino","Professores","/ corpo docente"],
+  "ensino-materiais":   ["Ensino","Materiais","/ apostilas e recursos didáticos"],
+  "ensino-relatorios":  ["Ensino","Relatórios","/ frequência e indicadores"],
+  "ensino-config":      ["Ensino","Configurações","/ parâmetros do módulo"],
+  "evangelismo-dash":      ["Evangelização e Missões","Dashboard","/ visão geral"],
+  "evangelismo-projetos":  ["Evangelização e Missões","Projetos","/ campanhas e projetos evangelísticos"],
+  "evangelismo-obreiros":  ["Evangelização e Missões","Obreiros","/ missionários e evangelistas"],
+  "evangelismo-campos":    ["Evangelização e Missões","Campos","/ campos missionários"],
+  "evangelismo-relatorios":["Evangelização e Missões","Relatórios","/ decisões e indicadores"],
+  "evangelismo-config":    ["Evangelização e Missões","Configurações","/ parâmetros do módulo"],
 };
 const SL={dash:"Dashboard",diaconos:"Diáconos",escalas:"Escalas de Serviço",familias:"Famílias Assistidas",social:"Ação Social e Beneficência",visitacao:"Visitação Diaconal",patrimonio:"Patrimônio e Apoio Operacional",solicitacoes:"Solicitações Diaconais",relatorios:"Relatórios Diaconais",historico:"Histórico e Atas",sec:"Secretaria e Cadastro",rh:"RH / Gestão de Pessoas",doc:"Documentos",aud:"Auditoria",fin:"Financeiro",con:"Contratos",est:"Controle de Estoque",demandas:"Processos e Demandas Jurídicas",contratos:"Contratos e Instrumentos",pareceres:"Pareceres",documentos:"Documentos Jurídicos",riscos:"Riscos e Pendências",historico:"Histórico",rel:"Relatórios Estratégicos",ind:"Indicadores",cong:"Congregações",nomeados:"Nomeados",ordenados:"Ordenados",ate:"Atendimentos",ora:"Pedidos de Oração",aco:"Acompanhamentos",reg:"Registros Pastorais",pri:"Casos Prioritários",min:"Ministérios",soc:"Sociedades Internas",adm:"Administração",com:"Comissões",lid:"Liderança Ministerial",esc:"Escalas",prog:"Programações",lit:"Liturgia dos Cultos",vol:"Voluntários",calendario:"Calendário Geral",solicitacoes:"Solicitações de Agendamento",aprovacoes:"Aprovações Pendentes",confirmados:"Eventos Confirmados",recusados:"Eventos Recusados",reagendamentos:"Reagendamentos e Ajustes",ambientes:"Ambientes e Recursos",conflitos:"Conflitos de Agenda",config:"Configurações da Agenda",lista:"Lista de PGs",encontros:"Encontros",participantes:"Participantes",visitantes:"Visitantes",estudos:"Estudos",relatorios:"Relatórios",oracao:"Pedidos de Oração",man:"Manutenção",lim:"Limpeza e Conservação",sol:"Solicitações Operacionais",pat:"Patrimônio",pre:"Prestadores",todas:"Todas as Solicitações",pend:"Pendentes",and:"Em Andamento",conc:"Concluídas",hist:"Histórico",mod:"Por Módulo",exp:"Exportações",uni:"Por Congregação",res:"Por Responsável",cad:"Cadastro de Membros",bat:"Batismos",prof:"Profissões de Fé",trans:"Transferências",vis:"Visitantes"};
 const MN={hub:"Hub",admin:"Administrativo",fin:"Financeiro",jur:"Jurídico",conselho:"Conselho",proj:"Projetos",pastoral:"Pastoral",min:"Departamentos",agenda:"Agenda",pgs:"Pequenos Grupos",infra:"Infraestrutura e Conservação",dem:"Demandas",rel:"Relatórios",memb:"Secretaria",cong:"Congregações",diac:"Junta Diaconal",area:"Área do Membro",com:"Comunicação",eve:"Eventos",acesso:"Controle de Acesso"};
@@ -206,6 +225,9 @@ const _VIEW_MAP = {
   "escalas":     "modules/shared/hub.html",
   "lideranca":   "modules/shared/hub.html",
   "chat":        "modules/chat/view.html?v=6.49.16",
+  "acao-social": "modules/acao-social/view.html?v=6.52.0",
+  "ensino":      "modules/ensino/view.html?v=6.52.0",
+  "evangelismo": "modules/evangelismo/view.html?v=6.52.0",
 };
 
 function _getViewFileForRoute(id) {

@@ -1,0 +1,193 @@
+  <!-- ════ DASHBOARD ══════════════════════════════════════════════ -->
+  <div class="view" id="v-ensino-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.12);border-color:rgba(74,156,245,0.28);color:var(--sky)">✦</div>
+      <div>
+        <div class="hero-lbl">Departamento Essencial</div>
+        <div class="hero-ttl">Ensino</div>
+        <div class="hero-dsc">Escola Bíblica Dominical, cursos, professores, materiais e formação cristã.</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="go('ensino-ebd')">Abrir EBD</button>
+      </div>
+    </div>
+    <div class="bnav" style="--mc:var(--sky)">
+      <div class="bni" onclick="go('ensino-dash')">Dashboard</div>
+      <div class="bni" onclick="go('ensino-ebd')">EBD</div>
+      <div class="bni" onclick="go('ensino-cursos')">Cursos</div>
+      <div class="bni" onclick="go('ensino-professores')">Professores</div>
+      <div class="bni" onclick="go('ensino-materiais')">Materiais</div>
+      <div class="bni" onclick="go('ensino-relatorios')">Relatórios</div>
+      <div class="bni bni-sep"></div>
+      <div class="bni" onclick="go('ensino-config')">Configurações</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky)">◎</div><div class="kpi-body"><div class="kpi-lbl">Turmas EBD</div><div class="kpi-val" id="ens-kpi-turmas">—</div><div class="kpi-d nu">turmas ativas</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(138,107,193,0.15);color:var(--violet)">◈</div><div class="kpi-body"><div class="kpi-lbl">Alunos</div><div class="kpi-val" id="ens-kpi-alunos">—</div><div class="kpi-d nu">matriculados</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gbr)">✝</div><div class="kpi-body"><div class="kpi-lbl">Professores</div><div class="kpi-val" id="ens-kpi-professores">—</div><div class="kpi-d nu">docentes ativos</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(245,158,11,0.15);color:var(--amber)">⊞</div><div class="kpi-body"><div class="kpi-lbl">Cursos ativos</div><div class="kpi-val" id="ens-kpi-cursos">—</div><div class="kpi-d nu">em andamento</div></div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Turmas EBD</div>
+          <div id="ens-dash-turmas-list" style="color:var(--tx3);font-size:12px;padding:20px 0;text-align:center">Nenhum dado disponível</div>
+        </div>
+        <div class="card">
+          <div class="ctit">Cursos em andamento</div>
+          <div id="ens-dash-cursos-list" style="color:var(--tx3);font-size:12px;padding:20px 0;text-align:center">Nenhum dado disponível</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ EBD ══════════════════════════════════════════════════════ -->
+  <div class="view" id="v-ensino-ebd">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.12);color:var(--sky)">✦</div>
+      <div><div class="hero-lbl">Ensino</div><div class="hero-ttl">Escola Bíblica Dominical</div><div class="hero-dsc">Turmas, frequência e conteúdo programático.</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('ENSINO_TURMAS')">+ Turma</button></div>
+    </div>
+    <div class="bnav" style="--mc:var(--sky)">
+      <div class="bni" onclick="go('ensino-dash')">Dashboard</div>
+      <div class="bni" onclick="go('ensino-ebd')">EBD</div>
+      <div class="bni" onclick="go('ensino-cursos')">Cursos</div>
+      <div class="bni" onclick="go('ensino-professores')">Professores</div>
+      <div class="bni" onclick="go('ensino-materiais')">Materiais</div>
+      <div class="bni" onclick="go('ensino-relatorios')">Relatórios</div>
+      <div class="bni bni-sep"></div>
+      <div class="bni" onclick="go('ensino-config')">Configurações</div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Turmas EBD <span id="ens-ebd-count" style="font-size:11px;font-weight:400;color:var(--tx3)"></span></div>
+        <div id="ens-ebd-list"><div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ CURSOS ═══════════════════════════════════════════════════ -->
+  <div class="view" id="v-ensino-cursos">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(138,107,193,0.12);color:var(--violet)">◈</div>
+      <div><div class="hero-lbl">Ensino</div><div class="hero-ttl">Cursos</div><div class="hero-dsc">Cursos bíblicos, teológicos e de formação cristã.</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('ENSINO_CURSOS')">+ Curso</button></div>
+    </div>
+    <div class="bnav" style="--mc:var(--sky)">
+      <div class="bni" onclick="go('ensino-dash')">Dashboard</div>
+      <div class="bni" onclick="go('ensino-ebd')">EBD</div>
+      <div class="bni" onclick="go('ensino-cursos')">Cursos</div>
+      <div class="bni" onclick="go('ensino-professores')">Professores</div>
+      <div class="bni" onclick="go('ensino-materiais')">Materiais</div>
+      <div class="bni" onclick="go('ensino-relatorios')">Relatórios</div>
+      <div class="bni bni-sep"></div>
+      <div class="bni" onclick="go('ensino-config')">Configurações</div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Cursos <span id="ens-cursos-count" style="font-size:11px;font-weight:400;color:var(--tx3)"></span></div>
+        <div id="ens-cursos-list"><div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ PROFESSORES ══════════════════════════════════════════════ -->
+  <div class="view" id="v-ensino-professores">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(58,170,92,0.12);color:var(--gbr)">✝</div>
+      <div><div class="hero-lbl">Ensino</div><div class="hero-ttl">Professores</div><div class="hero-dsc">Corpo docente e responsáveis por turmas e cursos.</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('ENSINO_PROFESSORES')">+ Professor</button></div>
+    </div>
+    <div class="bnav" style="--mc:var(--sky)">
+      <div class="bni" onclick="go('ensino-dash')">Dashboard</div>
+      <div class="bni" onclick="go('ensino-ebd')">EBD</div>
+      <div class="bni" onclick="go('ensino-cursos')">Cursos</div>
+      <div class="bni" onclick="go('ensino-professores')">Professores</div>
+      <div class="bni" onclick="go('ensino-materiais')">Materiais</div>
+      <div class="bni" onclick="go('ensino-relatorios')">Relatórios</div>
+      <div class="bni bni-sep"></div>
+      <div class="bni" onclick="go('ensino-config')">Configurações</div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Professores <span id="ens-prof-count" style="font-size:11px;font-weight:400;color:var(--tx3)"></span></div>
+        <div id="ens-prof-list"><div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ MATERIAIS ════════════════════════════════════════════════ -->
+  <div class="view" id="v-ensino-materiais">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(245,158,11,0.12);color:var(--amber)">⊞</div>
+      <div><div class="hero-lbl">Ensino</div><div class="hero-ttl">Materiais</div><div class="hero-dsc">Material didático, apostilas e recursos de ensino.</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('ENSINO_MATERIAIS')">+ Material</button></div>
+    </div>
+    <div class="bnav" style="--mc:var(--sky)">
+      <div class="bni" onclick="go('ensino-dash')">Dashboard</div>
+      <div class="bni" onclick="go('ensino-ebd')">EBD</div>
+      <div class="bni" onclick="go('ensino-cursos')">Cursos</div>
+      <div class="bni" onclick="go('ensino-professores')">Professores</div>
+      <div class="bni" onclick="go('ensino-materiais')">Materiais</div>
+      <div class="bni" onclick="go('ensino-relatorios')">Relatórios</div>
+      <div class="bni bni-sep"></div>
+      <div class="bni" onclick="go('ensino-config')">Configurações</div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Materiais <span id="ens-mat-count" style="font-size:11px;font-weight:400;color:var(--tx3)"></span></div>
+        <div id="ens-mat-list"><div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ RELATÓRIOS ══════════════════════════════════════════════ -->
+  <div class="view" id="v-ensino-relatorios">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.12);color:var(--sky)">◎</div>
+      <div><div class="hero-lbl">Ensino</div><div class="hero-ttl">Relatórios</div><div class="hero-dsc">Frequência, desempenho e indicadores do departamento.</div></div>
+    </div>
+    <div class="bnav" style="--mc:var(--sky)">
+      <div class="bni" onclick="go('ensino-dash')">Dashboard</div>
+      <div class="bni" onclick="go('ensino-ebd')">EBD</div>
+      <div class="bni" onclick="go('ensino-cursos')">Cursos</div>
+      <div class="bni" onclick="go('ensino-professores')">Professores</div>
+      <div class="bni" onclick="go('ensino-materiais')">Materiais</div>
+      <div class="bni" onclick="go('ensino-relatorios')">Relatórios</div>
+      <div class="bni bni-sep"></div>
+      <div class="bni" onclick="go('ensino-config')">Configurações</div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Relatórios</div>
+        <div id="ens-rel-content" style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Em desenvolvimento</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ CONFIGURAÇÕES ═══════════════════════════════════════════ -->
+  <div class="view" id="v-ensino-config">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.12);color:var(--sky)">⚙</div>
+      <div><div class="hero-lbl">Ensino</div><div class="hero-ttl">Configurações</div><div class="hero-dsc">Categorias de curso, faixas etárias de EBD e parâmetros do módulo.</div></div>
+    </div>
+    <div class="bnav" style="--mc:var(--sky)">
+      <div class="bni" onclick="go('ensino-dash')">Dashboard</div>
+      <div class="bni" onclick="go('ensino-ebd')">EBD</div>
+      <div class="bni" onclick="go('ensino-cursos')">Cursos</div>
+      <div class="bni" onclick="go('ensino-professores')">Professores</div>
+      <div class="bni" onclick="go('ensino-materiais')">Materiais</div>
+      <div class="bni" onclick="go('ensino-relatorios')">Relatórios</div>
+      <div class="bni bni-sep"></div>
+      <div class="bni" onclick="go('ensino-config')">Configurações</div>
+    </div>
+    <div class="ct">
+      <div class="card" id="ens-config-content">
+        <div class="ctit">Módulo de Ensino</div>
+        <div style="font-size:13px;color:var(--tx2);line-height:1.7">
+          Gerencie faixas etárias da EBD, categorias de curso, tipos de material e configurações do departamento.<br>
+          <span style="font-size:12px;color:var(--tx3)">Configurações avançadas em desenvolvimento.</span>
+        </div>
+      </div>
+    </div>
+  </div>

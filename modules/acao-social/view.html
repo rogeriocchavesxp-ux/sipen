@@ -1,0 +1,162 @@
+  <!-- ════ DASHBOARD ══════════════════════════════════════════════ -->
+  <div class="view" id="v-acao-social-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.28);color:var(--amber)">❤</div>
+      <div>
+        <div class="hero-lbl">Departamento Essencial</div>
+        <div class="hero-ttl">Ação Social</div>
+        <div class="hero-dsc">Assistência, benefícios, parcerias e acompanhamento social da igreja.</div>
+      </div>
+      <div class="hero-act">
+        <button class="tbt pri" onclick="go('acao-social-assistidos')">+ Assistido</button>
+      </div>
+    </div>
+    <div class="bnav" style="--mc:var(--amber)">
+      <div class="bni" onclick="go('acao-social-dash')">Dashboard</div>
+      <div class="bni" onclick="go('acao-social-assistidos')">Assistidos</div>
+      <div class="bni" onclick="go('acao-social-beneficios')">Benefícios</div>
+      <div class="bni" onclick="go('acao-social-parcerias')">Parcerias</div>
+      <div class="bni" onclick="go('acao-social-relatorios')">Relatórios</div>
+      <div class="bni bni-sep"></div>
+      <div class="bni" onclick="go('acao-social-config')">Configurações</div>
+    </div>
+    <div class="ct">
+      <div class="kpis c4">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(245,158,11,0.15);color:var(--amber)">◎</div><div class="kpi-body"><div class="kpi-lbl">Assistidos ativos</div><div class="kpi-val" id="as-kpi-assistidos">—</div><div class="kpi-d nu">famílias e pessoas</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,0.15);color:var(--gbr)">◈</div><div class="kpi-body"><div class="kpi-lbl">Benefícios no mês</div><div class="kpi-val" id="as-kpi-beneficios">—</div><div class="kpi-d nu">concessões realizadas</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,0.15);color:var(--sky)">⊞</div><div class="kpi-body"><div class="kpi-lbl">Parcerias ativas</div><div class="kpi-val" id="as-kpi-parcerias">—</div><div class="kpi-d nu">entidades parceiras</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(138,107,193,0.15);color:var(--violet)">✦</div><div class="kpi-body"><div class="kpi-lbl">Atendimentos</div><div class="kpi-val" id="as-kpi-atendimentos">—</div><div class="kpi-d nu">registros do ano</div></div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ctit">Assistidos recentes</div>
+          <div id="as-dash-assistidos-list" style="color:var(--tx3);font-size:12px;padding:20px 0;text-align:center">Nenhum dado disponível</div>
+        </div>
+        <div class="card">
+          <div class="ctit">Benefícios recentes</div>
+          <div id="as-dash-beneficios-list" style="color:var(--tx3);font-size:12px;padding:20px 0;text-align:center">Nenhum dado disponível</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ ASSISTIDOS ══════════════════════════════════════════════ -->
+  <div class="view" id="v-acao-social-assistidos">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(245,158,11,0.12);color:var(--amber)">◎</div>
+      <div><div class="hero-lbl">Ação Social</div><div class="hero-ttl">Assistidos</div><div class="hero-dsc">Famílias e pessoas em acompanhamento social.</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('ACAO_SOCIAL_ASSISTIDOS')">+ Assistido</button></div>
+    </div>
+    <div class="bnav" style="--mc:var(--amber)">
+      <div class="bni" onclick="go('acao-social-dash')">Dashboard</div>
+      <div class="bni" onclick="go('acao-social-assistidos')">Assistidos</div>
+      <div class="bni" onclick="go('acao-social-beneficios')">Benefícios</div>
+      <div class="bni" onclick="go('acao-social-parcerias')">Parcerias</div>
+      <div class="bni" onclick="go('acao-social-relatorios')">Relatórios</div>
+      <div class="bni bni-sep"></div>
+      <div class="bni" onclick="go('acao-social-config')">Configurações</div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Assistidos <span id="as-assistidos-count" style="font-size:11px;font-weight:400;color:var(--tx3)"></span></div>
+        <div id="as-assistidos-list"><div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ BENEFÍCIOS ══════════════════════════════════════════════ -->
+  <div class="view" id="v-acao-social-beneficios">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(58,170,92,0.12);color:var(--gbr)">◈</div>
+      <div><div class="hero-lbl">Ação Social</div><div class="hero-ttl">Benefícios</div><div class="hero-dsc">Concessões, doações e auxílios realizados.</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('ACAO_SOCIAL_BENEFICIOS')">+ Benefício</button></div>
+    </div>
+    <div class="bnav" style="--mc:var(--amber)">
+      <div class="bni" onclick="go('acao-social-dash')">Dashboard</div>
+      <div class="bni" onclick="go('acao-social-assistidos')">Assistidos</div>
+      <div class="bni" onclick="go('acao-social-beneficios')">Benefícios</div>
+      <div class="bni" onclick="go('acao-social-parcerias')">Parcerias</div>
+      <div class="bni" onclick="go('acao-social-relatorios')">Relatórios</div>
+      <div class="bni bni-sep"></div>
+      <div class="bni" onclick="go('acao-social-config')">Configurações</div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Benefícios <span id="as-beneficios-count" style="font-size:11px;font-weight:400;color:var(--tx3)"></span></div>
+        <div id="as-beneficios-list"><div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ PARCERIAS ═══════════════════════════════════════════════ -->
+  <div class="view" id="v-acao-social-parcerias">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(74,156,245,0.12);color:var(--sky)">⊞</div>
+      <div><div class="hero-lbl">Ação Social</div><div class="hero-ttl">Parcerias</div><div class="hero-dsc">Entidades, ONGs e instituições parceiras.</div></div>
+      <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('ACAO_SOCIAL_PARCERIAS')">+ Parceria</button></div>
+    </div>
+    <div class="bnav" style="--mc:var(--amber)">
+      <div class="bni" onclick="go('acao-social-dash')">Dashboard</div>
+      <div class="bni" onclick="go('acao-social-assistidos')">Assistidos</div>
+      <div class="bni" onclick="go('acao-social-beneficios')">Benefícios</div>
+      <div class="bni" onclick="go('acao-social-parcerias')">Parcerias</div>
+      <div class="bni" onclick="go('acao-social-relatorios')">Relatórios</div>
+      <div class="bni bni-sep"></div>
+      <div class="bni" onclick="go('acao-social-config')">Configurações</div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Parcerias <span id="as-parcerias-count" style="font-size:11px;font-weight:400;color:var(--tx3)"></span></div>
+        <div id="as-parcerias-list"><div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ RELATÓRIOS ══════════════════════════════════════════════ -->
+  <div class="view" id="v-acao-social-relatorios">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(138,107,193,0.12);color:var(--violet)">✦</div>
+      <div><div class="hero-lbl">Ação Social</div><div class="hero-ttl">Relatórios</div><div class="hero-dsc">Indicadores e histórico de atendimentos sociais.</div></div>
+    </div>
+    <div class="bnav" style="--mc:var(--amber)">
+      <div class="bni" onclick="go('acao-social-dash')">Dashboard</div>
+      <div class="bni" onclick="go('acao-social-assistidos')">Assistidos</div>
+      <div class="bni" onclick="go('acao-social-beneficios')">Benefícios</div>
+      <div class="bni" onclick="go('acao-social-parcerias')">Parcerias</div>
+      <div class="bni" onclick="go('acao-social-relatorios')">Relatórios</div>
+      <div class="bni bni-sep"></div>
+      <div class="bni" onclick="go('acao-social-config')">Configurações</div>
+    </div>
+    <div class="ct">
+      <div class="card">
+        <div class="ctit">Relatórios</div>
+        <div id="as-relatorios-content"><div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Em desenvolvimento</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ CONFIGURAÇÕES ═══════════════════════════════════════════ -->
+  <div class="view" id="v-acao-social-config">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(245,158,11,0.12);color:var(--amber)">⚙</div>
+      <div><div class="hero-lbl">Ação Social</div><div class="hero-ttl">Configurações</div><div class="hero-dsc">Tipos de benefício, categorias de assistência e parâmetros do módulo.</div></div>
+    </div>
+    <div class="bnav" style="--mc:var(--amber)">
+      <div class="bni" onclick="go('acao-social-dash')">Dashboard</div>
+      <div class="bni" onclick="go('acao-social-assistidos')">Assistidos</div>
+      <div class="bni" onclick="go('acao-social-beneficios')">Benefícios</div>
+      <div class="bni" onclick="go('acao-social-parcerias')">Parcerias</div>
+      <div class="bni" onclick="go('acao-social-relatorios')">Relatórios</div>
+      <div class="bni bni-sep"></div>
+      <div class="bni" onclick="go('acao-social-config')">Configurações</div>
+    </div>
+    <div class="ct">
+      <div class="card" id="as-config-content">
+        <div class="ctit">Módulo de Ação Social</div>
+        <div style="font-size:13px;color:var(--tx2);line-height:1.7">
+          Gerencie tipos de benefício, categorias de assistência, parcerias e regras do módulo.<br>
+          <span style="font-size:12px;color:var(--tx3)">Configurações avançadas em desenvolvimento.</span>
+        </div>
+      </div>
+    </div>
+  </div>
