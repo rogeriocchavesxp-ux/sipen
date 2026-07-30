@@ -853,6 +853,49 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
         </div>
       </div>
 
+      <!-- ── Administração: Uso do Estacionamento ──────── -->
+      <div class="card" id="estac-sec" style="display:none">
+        <div class="card-title">🚗 Dados do Estacionamento</div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-estac-data-i">Data de entrada <span class="req">*</span></label>
+            <input type="date" id="f-estac-data-i">
+          </div>
+          <div class="field">
+            <label for="f-estac-data-f">Data de saída</label>
+            <input type="date" id="f-estac-data-f">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-estac-hora-i">Horário de entrada <span class="req">*</span></label>
+            <input type="time" id="f-estac-hora-i">
+          </div>
+          <div class="field">
+            <label for="f-estac-hora-f">Horário de saída</label>
+            <input type="time" id="f-estac-hora-f">
+          </div>
+        </div>
+
+        <div class="row3">
+          <div class="field">
+            <label for="f-estac-cor">Cor do veículo <span class="req">*</span></label>
+            <input type="text" id="f-estac-cor" placeholder="Ex: Prata">
+          </div>
+          <div class="field">
+            <label for="f-estac-placa">Placa <span class="req">*</span></label>
+            <input type="text" id="f-estac-placa" placeholder="ABC-1234" maxlength="8"
+              oninput="this.value=this.value.toUpperCase()">
+          </div>
+          <div class="field">
+            <label for="f-estac-modelo">Modelo <span class="req">*</span></label>
+            <input type="text" id="f-estac-modelo" placeholder="Ex: Gol, Civic">
+          </div>
+        </div>
+      </div>
+
       <!-- ── Agendamentos: Programação ─────────────────── -->
       <div class="card" id="agend-prog" style="display:none">
         <div class="card-title">📅 Dados da Programação</div>
@@ -1245,6 +1288,7 @@ const CATS = [
     { grupo:"Contratos e Fornecedores",  itens:["Novo contrato","Renovação de contrato","Rescisão de contrato","Cadastro de fornecedor","Aditivo contratual"] },
     { grupo:"Compras e Aquisições",      itens:["Solicitação de compra","Cotação de preço","Aprovação de despesa","Prestação de contas"] },
     { grupo:"Recursos Humanos",          itens:["Cadastro de colaborador","Desligamento","Férias e afastamento","Benefícios","Voluntariado"] },
+    { grupo:"Estacionamento",            itens:["Uso do estacionamento"] },
     { grupo:"Planejamento e Documentos", itens:["Planejamento estratégico","Relatório administrativo","Documentação interna","Outros (Administração)"] },
   ]},
   { nome:"Manutenção", icon:"🛠", resp:"Departamento de Manutenção", subcats:[
@@ -1274,7 +1318,11 @@ const CATS = [
 /* ── Preenche categorias ───────────────────────────────────── */
 (function () {
   const sel = document.getElementById("f-cat");
-  [...CATS].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")).forEach(c => {
+  [...CATS].sort((a, b) => {
+    if (a.nome === 'Administração') return -1;
+    if (b.nome === 'Administração') return  1;
+    return a.nome.localeCompare(b.nome, "pt-BR");
+  }).forEach(c => {
     const o = document.createElement("option");
     o.value = c.nome;
     o.textContent = c.icon + " " + c.nome;
@@ -1448,6 +1496,29 @@ function _comValidarPrazo() {
   }
 }
 
+function _coletarEstacionamento(cat, sub) {
+  if (cat !== "Administração" || sub !== "Uso do estacionamento") return { ok: true, extra: "" };
+  const dataI  = g("f-estac-data-i");
+  const horaI  = g("f-estac-hora-i");
+  const cor    = g("f-estac-cor");
+  const placa  = g("f-estac-placa");
+  const modelo = g("f-estac-modelo");
+  if (!dataI)  return { ok: false, msg: "Informe a data de entrada no estacionamento." };
+  if (!horaI)  return { ok: false, msg: "Informe o horário de entrada no estacionamento." };
+  if (!cor)    return { ok: false, msg: "Informe a cor do veículo." };
+  if (!placa)  return { ok: false, msg: "Informe a placa do veículo." };
+  if (!modelo) return { ok: false, msg: "Informe o modelo do veículo." };
+  const dataF = g("f-estac-data-f");
+  const horaF = g("f-estac-hora-f");
+  const linhas = [
+    "━━━ Estacionamento ━━━",
+    `Entrada: ${fmtDataBR(dataI)}${horaI ? " às " + horaI : ""}`,
+    (dataF || horaF) ? `Saída: ${dataF ? fmtDataBR(dataF) : fmtDataBR(dataI)}${horaF ? " às " + horaF : ""}` : null,
+    `Veículo: ${modelo} · ${cor} · ${placa}`,
+  ].filter(Boolean).join("\n");
+  return { ok: true, extra: "\n\n" + linhas };
+}
+
 function _coletarComunicacao(cat, sub) {
   if (cat !== "Comunicação" || !COM_SUBS.has(sub)) return { ok: true, extra: "" };
   const areas    = [...document.querySelectorAll("input[name='com-area']:checked")].map(e => e.value);
@@ -1479,12 +1550,13 @@ function onSubChange() {
     if (sub === "Solicitação de pagamento") _show("fin-pag");
     if (sub === "Reembolso")               _show("fin-reimb");
   }
+  if (cat === "Administração" && sub === "Uso do estacionamento") _show("estac-sec");
   if (cat === "Agendamentos"  && PROG_SUBS.has(sub)) { agIniciar(sub); return; }
   if (cat === "Comunicação"   && COM_SUBS.has(sub))  { _show("com-sol-sec"); _ensureComSol(sub); }
 }
 
 function _ocultarExtras() {
-  ["fin-pag","fin-reimb","fin-pix-sec","fin-ted-sec","agend-prog","com-sol-sec"].forEach(_hide);
+  ["fin-pag","fin-reimb","fin-pix-sec","fin-ted-sec","agend-prog","com-sol-sec","estac-sec"].forEach(_hide);
 }
 
 function _ocultarFinanceiro() { _ocultarExtras(); }
@@ -1884,11 +1956,13 @@ async function enviarChamado() {
   if (!agend.ok) { mostrarErro(agend.msg); return; }
   const com   = _coletarComunicacao(cat, sub);
   if (!com.ok)   { mostrarErro(com.msg);   return; }
+  const estac = _coletarEstacionamento(cat, sub);
+  if (!estac.ok) { mostrarErro(estac.msg); return; }
 
   const catObj  = CATS.find(c => c.nome === cat);
   const resp    = catObj?.resp || "Administração Geral";
   const hoje    = new Date().toISOString().split("T")[0];
-  const descFinal = desc + fin.extra + agend.extra + com.extra;
+  const descFinal = desc + fin.extra + agend.extra + com.extra + estac.extra;
 
   const newId = crypto.randomUUID();
 
