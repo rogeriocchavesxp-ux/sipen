@@ -876,6 +876,7 @@ function fmtD(d) {
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
               <button onclick="demAbrirAnexo('${escapeHtmlAttr(a.storage_path)}')" style="padding:4px 14px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--blue);font-size:11.5px;cursor:pointer;font-family:var(--ff)">📎 ${escapeHtml(a.nome_original || a.tipo_arquivo || "Arquivo")}</button>
               ${a.tipo_arquivo ? `<span style="font-size:10.5px;color:var(--tx3)">${TIPO_LABEL[a.tipo_arquivo] || a.tipo_arquivo}</span>` : ""}
+              <button onclick="demExcluirAnexo('${escapeHtmlAttr(a.id)}','${escapeHtmlAttr(demId)}')" style="background:none;border:none;color:var(--rose);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;opacity:.7" title="Excluir">×</button>
             </div>`).join("")}
         </div>`;
     } catch(_) {}
@@ -1936,6 +1937,22 @@ function fmtD(d) {
       }
     };
     input.click();
+  };
+
+  window.demExcluirAnexo = async function(anexoId, demId) {
+    if (!confirm("Excluir este anexo?")) return;
+    const sb = _sbClient();
+    if (!sb) return;
+    try {
+      const { error } = await sb
+        .from("financeiro_anexos")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", anexoId);
+      if (error) throw error;
+      await _carregarAnexosDemanda(demId);
+    } catch(e) {
+      if (typeof T === "function") T("Erro ao excluir", e.message);
+    }
   };
 
   window.salvarNovaDemanda = async function() {
