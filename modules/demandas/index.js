@@ -838,6 +838,9 @@ function fmtD(d) {
     if (!rows.length) return "";
 
     const demId = dem.id || dem._row;
+    const btnNota  = `<button onclick="demAnexarDoc('${demId}','nota_fiscal')" style="padding:4px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);font-size:11px;cursor:pointer;font-family:var(--ff)">+ Nota Fiscal</button>`;
+    const btnBoleto = sub === "Solicitação de pagamento" ? `<button onclick="demAnexarDoc('${demId}','boleto')" style="padding:4px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);font-size:11px;cursor:pointer;font-family:var(--ff)">+ Boleto</button>` : "";
+    const btnComp  = sub === "Reembolso" ? `<button onclick="demAnexarDoc('${demId}','comprovante')" style="padding:4px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);font-size:11px;cursor:pointer;font-family:var(--ff)">+ Comprovante</button>` : "";
     return `
       <div class="card" style="margin-top:0;border:1px solid rgba(61,160,85,.3);background:rgba(61,160,85,.03)">
         <div class="ctit" style="color:var(--gr)">💰 Dados Financeiros</div>
@@ -848,6 +851,7 @@ function fmtD(d) {
               <td style="color:var(--tx1)">${val}</td>
             </tr>`).join("")}
         </table>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">${btnNota}${btnBoleto}${btnComp}</div>
         <div id="dem-anx-pub-${demId}"></div>
       </div>`;
   }
@@ -862,8 +866,9 @@ function fmtD(d) {
         .select("*")
         .eq("demanda_id", demId)
         .is("solicitacao_id", null)
-        .is("deleted_at", null);
-      if (!data || data.length === 0) return;
+        .is("deleted_at", null)
+        .order("created_at", { ascending: true });
+      if (!data || data.length === 0) { placeholder.innerHTML = ""; return; }
       const TIPO_LABEL = { nota_fiscal: "Nota Fiscal", boleto: "Boleto", comprovante: "Comprovante" };
       placeholder.innerHTML = `
         <div style="border-top:1px solid var(--bd1);margin-top:10px;padding-top:10px">
@@ -1889,6 +1894,49 @@ function fmtD(d) {
     } catch(e) {
       if (typeof T === "function") T("Erro ao abrir arquivo", e.message);
     }
+  };
+
+  window.demAnexarDoc = function(demId, tipo) {
+    const input = document.createElement("input");
+    input.type   = "file";
+    input.accept = ".pdf,.jpg,.jpeg,.png";
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+      const sb = _sbClient();
+      if (!sb) { if (typeof T === "function") T("Erro", "Serviço indisponível."); return; }
+      if (file.size > 10 * 1024 * 1024) { if (typeof T === "function") T("Arquivo muito grande", "Limite de 10 MB."); return; }
+      const btn = document.querySelector(`[onclick="demAnexarDoc('${demId}','${tipo}')"]`);
+      const orig = btn ? btn.textContent : "";
+      if (btn) { btn.textContent = "Enviando..."; btn.disabled = true; }
+      try {
+        const ts   = Date.now();
+        const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `financeiro/demandas/${demId}/${tipo}/${ts}_${safe}`;
+        const { error: upErr } = await sb.storage
+          .from("financial-documents")
+          .upload(path, file, { contentType: file.type, upsert: false });
+        if (upErr) throw new Error(upErr.message);
+        const u = typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL : null;
+        const { error: dbErr } = await sb.from("financeiro_anexos").insert({
+          demanda_id:     demId,
+          tipo_arquivo:   tipo,
+          nome_original:  file.name,
+          storage_bucket: "financial-documents",
+          storage_path:   path,
+          mime_type:      file.type,
+          tamanho_bytes:  file.size,
+          criado_por:     u?.nome || "",
+        });
+        if (dbErr) throw new Error(dbErr.message);
+        if (typeof T === "function") T("Arquivo enviado", file.name);
+        await _carregarAnexosDemanda(demId);
+      } catch(e) {
+        if (btn) { btn.textContent = orig; btn.disabled = false; }
+        if (typeof T === "function") T("Erro no upload", e.message);
+      }
+    };
+    input.click();
   };
 
   window.salvarNovaDemanda = async function() {
