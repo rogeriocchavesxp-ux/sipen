@@ -13,7 +13,7 @@ const _shellReady = _isPublicRoute ? Promise.resolve() : Promise.all([
   document.body.insertAdjacentHTML("beforeend", modalsHtml);
   // Versão sempre reflete o init.js carregado — imune ao cache do sidebar.html
   const vEl = document.querySelector('.sb-sipen .sb-ver');
-  if (vEl) vEl.textContent = 'v6.57.0';
+  if (vEl) vEl.textContent = 'v6.58.0';
 });
 
 /* ── Sidebar mobile toggle ───────────────── */

@@ -120,7 +120,7 @@ const SCHEMA = {
     COMISSOES:    "Comissões"
   },
   campos: {
-    AGENDA:        ["titulo","tipo","data","hora_inicio","hora_fim","dia_semana","mes","recorrencia","organizador","responsavel","solicitante_tel","espaco","observacao","status"],
+    AGENDA:        ["titulo","tipo","data","hora_inicio","hora_fim","dia_semana","mes","recorrencia","organizador","responsavel","solicitante_tel","espaco","status","observacao"],
     MEMBROS:       ["nome","email","telefone","celular","data_nascimento","status","tipo_membro","data_ingresso","tipo_ingresso","funcao","congregacao","data_batismo","numero_registro"],
     VISITANTES:    ["nome","telefone","email","data_primeira_visita","origem","interesse_nivel","congregacao","obs"],
     DEMANDAS:      ["titulo","descricao","solicitante","area","subcategoria","status","prioridade","responsavel","data_abertura","data_conclusao"],
@@ -170,22 +170,24 @@ const SCHEMA = {
   },
   /* Campos que ocupam largura total do grid */
   fullWidth: {
-    AGENDA: ["titulo","espaco","observacao","status"],
+    AGENDA: ["titulo","observacao"],
     MEMBROS: ["nome"]
   },
   /* Span customizado por campo (grid-column value) */
   fieldSpan: {
     AGENDA: {
-      tipo:         "span 2",
-      data:         "span 2",
-      hora_inicio:  "span 1",
-      hora_fim:     "span 1",
-      recorrencia:  "span 2",
-      dia_semana:   "span 2",
-      mes:          "span 2",
-      organizador:  "span 3",
-      responsavel:  "span 3",
-      solicitante_tel: "span 2"
+      tipo:            "span 2",
+      data:            "span 2",
+      hora_inicio:     "span 1",
+      hora_fim:        "span 1",
+      dia_semana:      "span 2",
+      mes:             "span 1",
+      recorrencia:     "span 1",
+      solicitante_tel: "span 2",
+      organizador:     "span 3",
+      responsavel:     "span 3",
+      espaco:          "span 4",
+      status:          "span 2"
     },
     MEMBROS: { email:"span 2", funcao:"span 2", numero_registro:"span 2" }
   }
@@ -414,6 +416,13 @@ async function apiWrite(action, sheet, payload) {
     const prioNormalizada = PRIO_VALIDAS.includes(body.prioridade) ? body.prioridade : "Média";
     body.prioridade = prioNormalizada;
   }
+
+  // Converter strings vazias para null em colunas time/date para evitar erro de tipo no PostgreSQL
+  const _tipos = (SCHEMA.tipos[sheet] || {});
+  Object.keys(body).forEach(k => {
+    const t = _tipos[k];
+    if ((t === "time" || t === "date") && body[k] === "") body[k] = null;
+  });
 
   let url = `${apiBaseUrl()}/rest/v1/${tbl}`;
   let method = "POST";
