@@ -222,6 +222,18 @@ function openCrudForm(tab, preset = null) {
         <option value="">Carregando espaços…</option>
       </select></div>`;
     }
+    if (tipo === "espacos-multi") {
+      return `<div style="grid-column:1/-1">
+        ${label}
+        <div id="crud-espacos-status" style="font-size:11px;color:var(--tx3);padding:6px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-input);margin-bottom:8px;line-height:1.4">
+          Selecione data e horário de início para verificar disponibilidade
+        </div>
+        <div id="crud-espacos-aviso" style="display:none;font-size:11.5px;color:#8A4000;padding:7px 10px;background:rgba(214,148,0,.09);border:1px solid rgba(214,148,0,.35);border-radius:6px;margin-bottom:8px"></div>
+        <div id="crud-espacos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px">
+          <div style="font-size:11px;color:var(--tx3)">Carregando espaços...</div>
+        </div>
+      </div>`;
+    }
     if (tipo.startsWith("select:")) {
       const opts = tipo.replace("select:","").split(",").map(o => {
         const sep = o.indexOf("=");
@@ -275,6 +287,120 @@ function openCrudForm(tab, preset = null) {
   // População assíncrona de selects de espaços e congregações
   modal.querySelectorAll('[data-tipo-async="espacos"]').forEach(el => _popularSelectEspacosCrud(el));
   modal.querySelectorAll('[data-tipo-async="congregacoes"]').forEach(el => _popularSelectCongregacoesCrud(el));
+  if (tab === "AGENDA") _initEspacosMultiCrud(modal, preset);
+}
+
+async function _initEspacosMultiCrud(modal, preset) {
+  const grid = modal.querySelector("#crud-espacos-grid");
+  if (!grid) return;
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/espacos?ativo=eq.true&order=ordem.asc`, { headers: apiHeaders() });
+    if (!res.ok) throw new Error();
+    const rows = await res.json();
+    const preSelected = preset?.espaco ? preset.espaco.split(",").map(s => s.trim()) : [];
+    grid.innerHTML = "";
+    const grupos = {};
+    rows.forEach(r => { if (!grupos[r.grupo]) grupos[r.grupo] = []; grupos[r.grupo].push(r); });
+    Object.entries(grupos).forEach(([grupo, itens]) => {
+      const hdr = document.createElement("div");
+      hdr.style.cssText = "grid-column:1/-1;font-size:9.5px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.08em;padding:6px 0 3px;border-bottom:1px solid var(--bd2);margin-top:6px";
+      hdr.textContent = grupo;
+      grid.appendChild(hdr);
+      itens.forEach(esp => {
+        const lbl = document.createElement("label");
+        lbl.className = "crud-espaco-chk";
+        lbl.dataset.espaco = esp.nome;
+        const sel = preSelected.includes(esp.nome);
+        lbl.style.cssText = `display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:6px;border:1.5px solid ${sel?"var(--gr)":"var(--bd2)"};background:${sel?"rgba(52,199,89,.08)":"var(--bg-input)"};cursor:pointer;font-size:11.5px;color:var(--tx1);user-select:none;transition:border-color .12s,background .12s`;
+        lbl.innerHTML = `<input type="checkbox" data-espaco="${escapeHtmlAttr(esp.nome)}" ${sel?"checked":""} style="width:14px;height:14px;accent-color:var(--gr);cursor:pointer;flex-shrink:0"><span>${escapeHtml(esp.nome)}</span><span class="crud-espaco-lock" style="display:none;margin-left:auto;font-size:10px;color:var(--tx3)">🔒</span>`;
+        lbl.querySelector("input").addEventListener("change", e => {
+          lbl.style.borderColor = e.target.checked ? "var(--gr)" : "var(--bd2)";
+          lbl.style.background  = e.target.checked ? "rgba(52,199,89,.08)" : "var(--bg-input)";
+        });
+        grid.appendChild(lbl);
+      });
+    });
+    if (!rows.length) grid.innerHTML = `<div style="font-size:11px;color:var(--tx3)">Nenhum espaço cadastrado.</div>`;
+    ["data","hora_inicio","hora_fim"].forEach(f => {
+      const el = modal.querySelector(`[data-field="${f}"]`);
+      if (el) el.addEventListener("change", () => _verificarDisponibilidadeAdmin(modal));
+    });
+    _verificarDisponibilidadeAdmin(modal);
+  } catch (_) {
+    grid.innerHTML = `<div style="grid-column:1/-1;font-size:11px;color:var(--rose)">Não foi possível carregar os espaços.</div>`;
+  }
+}
+
+async function _verificarDisponibilidadeAdmin(modal) {
+  const statusEl = modal.querySelector("#crud-espacos-status");
+  const avisoEl  = modal.querySelector("#crud-espacos-aviso");
+  const grid     = modal.querySelector("#crud-espacos-grid");
+  if (!grid || !statusEl) return;
+  const data = modal.querySelector("[data-field='data']")?.value;
+  const hi   = modal.querySelector("[data-field='hora_inicio']")?.value;
+  const hf   = modal.querySelector("[data-field='hora_fim']")?.value;
+  if (!data || !hi) {
+    statusEl.textContent = "Selecione data e horário de início para verificar disponibilidade";
+    statusEl.style.color = "var(--tx3)";
+    grid.querySelectorAll(".crud-espaco-chk").forEach(lbl => {
+      lbl.querySelector("input").disabled = false;
+      lbl.style.opacity = "";
+      lbl.style.pointerEvents = "";
+      lbl.querySelector(".crud-espaco-lock").style.display = "none";
+    });
+    return;
+  }
+  statusEl.textContent = "Verificando disponibilidade...";
+  statusEl.style.color = "var(--tx3)";
+  try {
+    const saveBtn = modal.querySelector("button[onclick*='salvarRegistro']");
+    const m = saveBtn?.getAttribute("onclick")?.match(/salvarRegistro\([^,]+,\s*("(?:[^"\\]|\\.)*"|null)/);
+    const excluirId = (m && m[1] !== "null") ? JSON.parse(m[1]) : null;
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/rpc/espacos_disponibilidade_admin`, {
+      method: "POST",
+      headers: { ...apiHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ p_data_inicio: data, p_hora_inicio: hi, p_data_fim: data, p_hora_fim: hf || null, p_excluir_id: excluirId })
+    });
+    if (!res.ok) throw new Error();
+    const dados = await res.json();
+    const dispMap = {};
+    dados.forEach(d => { dispMap[d.nome] = { disponivel: d.disponivel, conflito: d.conflito }; });
+    const removidos = [];
+    grid.querySelectorAll(".crud-espaco-chk").forEach(lbl => {
+      const inp  = lbl.querySelector("input");
+      const lock = lbl.querySelector(".crud-espaco-lock");
+      const nome = lbl.dataset.espaco;
+      if (!(nome in dispMap)) return;
+      if (!dispMap[nome].disponivel) {
+        if (inp.checked) { inp.checked = false; removidos.push(nome); lbl.style.borderColor = "var(--bd2)"; lbl.style.background = "var(--bg-input)"; }
+        inp.disabled = true;
+        lbl.style.opacity = ".45";
+        lbl.style.pointerEvents = "none";
+        lock.style.display = "";
+        const c = dispMap[nome].conflito;
+        lbl.title = c ? `Em uso: "${c.titulo}"${c.hora_inicio ? " · " + c.hora_inicio + (c.hora_fim ? "–" + c.hora_fim : "") : ""}` : "Indisponível neste horário";
+      } else {
+        inp.disabled = false;
+        lbl.style.opacity = "";
+        lbl.style.pointerEvents = "";
+        lock.style.display = "none";
+        lbl.title = "";
+      }
+    });
+    const livres  = dados.filter(d => d.disponivel).length;
+    const ocupados = dados.filter(d => !d.disponivel).length;
+    statusEl.textContent = ocupados > 0
+      ? `${livres} disponível${livres !== 1 ? "is" : ""} · ${ocupados} em uso neste horário`
+      : "Todos os espaços disponíveis para este horário";
+    statusEl.style.color = ocupados > 0 ? "#C07700" : "var(--gr)";
+    if (removidos.length && avisoEl) {
+      avisoEl.textContent = `${removidos.join(", ")} ${removidos.length > 1 ? "estão" : "está"} em uso e ${removidos.length > 1 ? "foram desmarcados" : "foi desmarcado"} automaticamente.`;
+      avisoEl.style.display = "";
+      setTimeout(() => { avisoEl.style.display = "none"; }, 6000);
+    }
+  } catch (_) {
+    statusEl.textContent = "Não foi possível verificar disponibilidade.";
+  }
 }
 
 async function salvarRegistro(tab, recordId = null) {
@@ -301,13 +427,14 @@ async function salvarRegistro(tab, recordId = null) {
       return T("Campo obrigatório", `Preencha o campo: ${f}`);
     }
   }
-  // Dual-write para AGENDA: espaco (UUID do select) → espaco_id + espaco (nome legível)
-  if (tab === "AGENDA" && data.espaco) {
-    const espEl = modal.querySelector("[data-field='espaco'][data-tipo-async='espacos']");
-    const espNome = espEl?.selectedOptions?.[0]?.dataset?.nome;
-    if (espNome) {
-      data.espaco_id = data.espaco; // UUID vem do value do select
-      data.espaco    = espNome;     // nome legível vem do data-nome
+  // Coleta espaços do widget multi-checkbox (substitui o select antigo)
+  if (tab === "AGENDA") {
+    const espacoGrid = modal.querySelector("#crud-espacos-grid");
+    if (espacoGrid) {
+      const nomes = [...espacoGrid.querySelectorAll("input[type=checkbox][data-espaco]:checked")]
+        .map(c => c.dataset.espaco);
+      data.espaco    = nomes.length ? nomes.join(", ") : null;
+      data.espaco_id = null;
     }
   }
   if (tab === "DEMANDAS") {
@@ -316,40 +443,6 @@ async function salvarRegistro(tab, recordId = null) {
     if (data.status === undefined) delete data.status;
     const _pv = ["Baixa","Média","Alta","Urgente"];
     data.prioridade = _pv.includes(data.prioridade) ? data.prioridade : "Média";
-  }
-
-  // Verificação de conflito de espaço antes de salvar evento de agenda
-  if (tab === "AGENDA" && data.espaco && data.data && data.hora_inicio
-      && !["cancelado","recusado","arquivado"].includes(data.status)) {
-    try {
-      const resDisp = await fetch(`${apiBaseUrl()}/rest/v1/rpc/espacos_disponibilidade_admin`, {
-        method: "POST",
-        headers: { ...apiHeaders(), "Content-Type": "application/json" },
-        body: JSON.stringify({
-          p_data_inicio: data.data,
-          p_hora_inicio: data.hora_inicio,
-          p_data_fim:    data.data_encerramento || data.data,
-          p_hora_fim:    data.hora_fim || "23:59",
-          p_excluir_id:  recordId || null
-        })
-      });
-      if (resDisp.ok) {
-        const listaDisp = await resDisp.json();
-        const conflito = Array.isArray(listaDisp)
-          ? listaDisp.find(d => !d.disponivel && d.nome === data.espaco)
-          : null;
-        if (conflito) {
-          const c = conflito.conflito;
-          const detalhe = c
-            ? `\n"${c.titulo}"${c.hora_inicio ? " · " + c.hora_inicio + (c.hora_fim ? "–" + c.hora_fim : "") : ""}${c.organizador ? " · " + c.organizador : ""}`
-            : "";
-          const prosseguir = confirm(
-            `Conflito de espaço: ${data.espaco} já está reservado neste horário.${detalhe}\n\nSalvar mesmo assim?`
-          );
-          if (!prosseguir) return;
-        }
-      }
-    } catch (_) { /* não bloqueia se a verificação falhar */ }
   }
 
   try {
