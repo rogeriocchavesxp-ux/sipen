@@ -47,6 +47,7 @@
   let _progEditandoId   = null;
   let _escalEditandoId  = null;
   let _supervisorDoMinisterioAtual = null;
+  let _lidAtual         = {};
 
   /* ══ SUPABASE HEADERS ════════════════════════════════════════ */
   // Usa o JWT do usuário autenticado (via sipenToken()) para que as
@@ -110,6 +111,21 @@
       ).join('');
   }
 
+  async function _carregarLiderancaMinisterio(ministerioId) {
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/nomeados?ministerio_id=eq.${ministerioId}&nivel=in.(supervisor,conselheiro,coordenador)&status=eq.ativo&deleted_at=is.null&select=id,nivel,nome,pessoa_id`,
+        { headers: _hdr() }
+      );
+      const rows = r.ok ? await r.json() : [];
+      const lid = {};
+      rows.forEach(n => { lid[n.nivel] = { id: n.id, nome: n.nome, pessoa_id: n.pessoa_id }; });
+      return lid;
+    } catch (_) {
+      return {};
+    }
+  }
+
   async function _restError(res) {
     try { return await res.json(); }
     catch (_) { return { message: await res.text().catch(() => res.statusText) }; }
@@ -139,7 +155,7 @@
     grid.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center;grid-column:1/-1">Carregando...</div>';
 
     try {
-      let url = `${SUPABASE_URL}/rest/v1/ministerios?select=id,nome,descricao,tipo,ativo,categoria,modulo_rota,supervisor,conselheiro,coordenador&order=nome.asc`;
+      let url = `${SUPABASE_URL}/rest/v1/ministerios?select=id,nome,descricao,tipo,ativo,categoria,modulo_rota&order=nome.asc`;
 
       if (!_isGestor()) {
         const ids = USUARIO_ATUAL?.ministerios;
@@ -150,10 +166,10 @@
         url += `&id=in.(${ids.join(',')})`;
       }
 
-      // Buscar lista, contagens e pessoas em paralelo
+      // Lista + contagem de membros (nomeados) em paralelo
       const [rMin, rCnt] = await Promise.all([
         fetch(url, { headers: _hdr() }),
-        fetch(`${SUPABASE_URL}/rest/v1/ministerio_membros?select=ministerio_id&status=eq.ativo`, { headers: _hdr() }),
+        fetch(`${SUPABASE_URL}/rest/v1/nomeados?nivel=eq.membro&status=eq.ativo&deleted_at=is.null&select=ministerio_id`, { headers: _hdr() }),
         _carregarPessoas(),
       ]);
 
@@ -171,28 +187,31 @@
 
       // Contagem de membros ativos por ministério
       const contagem = {};
-      cntRows.forEach(m => { contagem[m.ministerio_id] = (contagem[m.ministerio_id] || 0) + 1; });
-
-      // Resolver nomes de supervisor/conselheiro/coordenador em lote
-      const pessoaIds = [...new Set(lista.flatMap(m => [m.supervisor, m.conselheiro, m.coordenador].filter(Boolean)))];
-      const nomeSup = {};
-      if (pessoaIds.length) {
-        const rSup = await fetch(
-          `${SUPABASE_URL}/rest/v1/pessoas?id=in.(${pessoaIds.join(',')})&select=id,nome`,
-          { headers: _hdr() }
-        );
-        const ps = rSup.ok ? await rSup.json() : [];
-        ps.forEach(p => { nomeSup[p.id] = (p.nome || "").toUpperCase(); });
-      }
+      cntRows.forEach(m => { if (m.ministerio_id) contagem[m.ministerio_id] = (contagem[m.ministerio_id] || 0) + 1; });
 
       if (lista.length === 0) {
         grid.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center;grid-column:1/-1">Nenhum ministério encontrado.</div>';
         return;
       }
 
-      grid.innerHTML = lista.map(m =>
-        _cardMinisterio(m, contagem[m.id] || 0, nomeSup[m.supervisor] || null, nomeSup[m.conselheiro] || null, nomeSup[m.coordenador] || null)
-      ).join('');
+      // Liderança em lote via nomeados
+      const minIds = lista.map(m => m.id);
+      const lidMap = {};
+      const rLid = await fetch(
+        `${SUPABASE_URL}/rest/v1/nomeados?ministerio_id=in.(${minIds.join(',')})&nivel=in.(supervisor,conselheiro,coordenador)&status=eq.ativo&deleted_at=is.null&select=ministerio_id,nivel,nome`,
+        { headers: _hdr() }
+      );
+      if (rLid.ok) {
+        (await rLid.json()).forEach(n => {
+          if (!lidMap[n.ministerio_id]) lidMap[n.ministerio_id] = {};
+          lidMap[n.ministerio_id][n.nivel] = (n.nome || '').toUpperCase();
+        });
+      }
+
+      grid.innerHTML = lista.map(m => {
+        const l = lidMap[m.id] || {};
+        return _cardMinisterio(m, contagem[m.id] || 0, l.supervisor || null, l.conselheiro || null, l.coordenador || null);
+      }).join('');
 
       if (window._sbMinisterioId) {
         const pid = window._sbMinisterioId;
@@ -268,7 +287,7 @@
     try {
       const [rMin] = await Promise.all([
         fetch(
-          `${SUPABASE_URL}/rest/v1/ministerios?id=eq.${id}&select=id,nome,descricao,tipo,ativo,supervisor,conselheiro,coordenador,recursos`,
+          `${SUPABASE_URL}/rest/v1/ministerios?id=eq.${id}&select=id,nome,descricao,tipo,ativo,recursos`,
           { headers: _hdr() }
         ),
         _carregarPessoas(),
@@ -290,24 +309,15 @@
         return;
       }
 
-      _supervisorDoMinisterioAtual = m.supervisor || null;
       _recursosAtual  = m.recursos || {};
       _ministerioDataAtual = m;
 
-      // Nomes da liderança
-      const pessoaIds = [m.supervisor, m.conselheiro, m.coordenador].filter(Boolean);
-      const nomes = {};
-      if (pessoaIds.length) {
-        const rp = await fetch(
-          `${SUPABASE_URL}/rest/v1/pessoas?id=in.(${pessoaIds.join(',')})&select=id,nome`,
-          { headers: _hdr() }
-        );
-        const ps = rp.ok ? await rp.json() : [];
-        ps.forEach(p => { nomes[p.id] = (p.nome || '').toUpperCase(); });
-      }
+      // Liderança sempre de nomeados
+      _lidAtual = await _carregarLiderancaMinisterio(id);
+      _supervisorDoMinisterioAtual = _lidAtual.supervisor?.pessoa_id || null;
 
-      _renderHeader(m, nomes);
-      _renderDashboard(m, nomes);
+      _renderHeader(m, _lidAtual);
+      _renderDashboard(m);
 
       // Breadcrumb dinâmico
       const cr = document.getElementById('crumb');
@@ -393,7 +403,7 @@
   }
 
   /* ══ HEADER DO MINISTÉRIO ═══════════════════════════════════ */
-  function _renderHeader(m, nomes) {
+  function _renderHeader(m, lid) {
     const header = document.getElementById('min-min-detalhe-header');
     if (!header) return;
     const ICONES = { MUSICA:'🎵', JOVENS:'🔥', INFANTIL:'👶', INTERCESSAO:'🙏', EVANGELISMO:'✝️', DIACONIA:'🤝', COMUNICACAO:'📢', ACOLHIMENTO:'🤗', OUTRO:'⭐' };
@@ -401,8 +411,8 @@
     const ic  = ICONES[m.tipo] || '⭐';
     const rgb = CORES[m.tipo]  || '139,107,193';
 
-    const _card = (role, label, pessoaId, cor) => {
-      const nome = pessoaId && nomes[pessoaId] ? escapeHtml(nomes[pessoaId]) : null;
+    const _card = (role, label, cor) => {
+      const nome = lid[role]?.nome ? escapeHtml((lid[role].nome).toUpperCase()) : null;
       return `<div style="display:flex;align-items:center;gap:9px;padding:10px 14px;background:var(--bg2);border-radius:8px;min-width:160px;flex:1">
         <div style="width:32px;height:32px;border-radius:50%;background:rgba(${cor},.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgb(${cor})" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -429,9 +439,9 @@
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch">
-          ${_card('supervisor',   'Supervisor',   m.supervisor,   '58,170,92')}
-          ${_card('conselheiro',  'Conselheiro',  m.conselheiro,  '74,156,245')}
-          ${_card('coordenador',  'Coordenador',  m.coordenador,  '201,168,76')}
+          ${_card('supervisor',  'Supervisor',  '58,170,92')}
+          ${_card('conselheiro', 'Conselheiro', '74,156,245')}
+          ${_card('coordenador', 'Coordenador', '201,168,76')}
         </div>
       </div>`;
   }
@@ -448,7 +458,7 @@
     return { inicio: seg, fim: sab, label: `${seg.toLocaleDateString('pt-BR',{day:'2-digit',month:'long'})} a ${fmt(sab)}` };
   }
 
-  async function _renderDashboard(m, nomes) {
+  async function _renderDashboard(m) {
     const el = document.getElementById('min-min-dash-content');
     if (!el) return;
     _vgSemanaOffset = 0;
@@ -562,7 +572,7 @@
         fetch(`${SUPABASE_URL}/rest/v1/ministerio_escalas?ministerio_id=eq.${_ministerioAtual}&data=gte.${ini}&data=lte.${fim}&select=id,titulo,data,hora,ministerio_escala_pessoas(funcao)&order=data.asc`, { headers: hdrs }),
         fetch(`${SUPABASE_URL}/rest/v1/ministerio_programacoes?ministerio_id=eq.${_ministerioAtual}&data=gte.${hoje}&select=id,titulo,data,hora&order=data.asc&limit=3`, { headers: hdrs }),
         fetch(`${SUPABASE_URL}/rest/v1/ministerio_reunioes?ministerio_id=eq.${_ministerioAtual}&data=gte.${hoje}&select=id,titulo,data,hora&order=data.asc&limit=3`, { headers: hdrs }),
-        fetch(`${SUPABASE_URL}/rest/v1/ministerio_membros?ministerio_id=eq.${_ministerioAtual}&ativo=eq.true&select=id,criado_em,pessoas(nome)&order=criado_em.desc&limit=2`, { headers: hdrs }),
+        fetch(`${SUPABASE_URL}/rest/v1/nomeados?ministerio_id=eq.${_ministerioAtual}&nivel=eq.membro&status=eq.ativo&deleted_at=is.null&select=id,criado_em,pessoas(nome)&order=criado_em.desc&limit=2`, { headers: hdrs }),
         fetch(`${SUPABASE_URL}/rest/v1/ministerio_setores?ministerio_id=eq.${_ministerioAtual}&select=id,criado_em,nome&order=criado_em.desc&limit=1`, { headers: hdrs }),
         fetch(`${SUPABASE_URL}/rest/v1/ministerio_documentos?ministerio_id=eq.${_ministerioAtual}&select=id,nome,criado_em&order=criado_em.desc&limit=2`, { headers: hdrs }),
       ]);
@@ -672,76 +682,46 @@
     if (!el) return;
     el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Carregando liderança...</div>';
     try {
-      // Nomeados vinculados ao ministério
       const rn = await fetch(
-        `${SUPABASE_URL}/rest/v1/nomeados?ministerio_id=eq.${_ministerioAtual}&status=eq.ativo&deleted_at=is.null&select=id,cargo,funcao_lider,tipo_nomeacao,nome,orgao,pessoa_id,pessoas(id,nome)&order=funcao_lider.asc,nome.asc`,
+        `${SUPABASE_URL}/rest/v1/nomeados?ministerio_id=eq.${_ministerioAtual}&nivel=in.(supervisor,conselheiro,coordenador,lider_area)&status=eq.ativo&deleted_at=is.null&select=id,nivel,nome,pessoa_id&order=nivel.asc,nome.asc`,
         { headers: _hdr() }
       );
-      const nomeados = rn.ok ? await rn.json() : [];
+      const rows = rn.ok ? await rn.json() : [];
 
-      // Fallback: liderança da tabela ministerios (supervisor/conselheiro/coordenador)
-      const m = _ministerioDataAtual || {};
-      const pessoas = await _carregarPessoas();
-      const _pMap = {};
-      (pessoas || []).forEach(p => { _pMap[p.id] = p.nome; });
+      const NIVEL_ORDER = ['supervisor','conselheiro','coordenador','lider_area'];
+      const NIVEL_LABEL = { supervisor:'Supervisor', conselheiro:'Conselheiro', coordenador:'Coordenador', lider_area:'Líder de Área' };
+      const NIVEL_COR   = { supervisor:'58,170,92', conselheiro:'74,156,245', coordenador:'201,168,76', lider_area:'139,107,193' };
 
-      const FUNC_LABEL = { supervisor:'Supervisor', coordenador:'Coordenador', lider_area:'Líder de Área' };
-      const FUNC_COR   = { supervisor:'58,170,92', coordenador:'201,168,76', lider_area:'139,107,193' };
+      const grupos = {};
+      NIVEL_ORDER.forEach(k => { grupos[k] = []; });
+      rows.forEach(n => {
+        const k = n.nivel || 'outros';
+        if (!grupos[k]) grupos[k] = [];
+        grupos[k].push(escapeHtml((n.nome || '—').toUpperCase()));
+      });
 
-      const _nomeCard = (label, pessoaId, cor) => {
-        const nomePessoa = pessoaId ? (_pMap[pessoaId] || 'Nome não encontrado') : null;
-        return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg2);border-radius:8px;margin-bottom:6px">
-          <div style="width:34px;height:34px;border-radius:50%;background:rgba(${cor},.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgb(${cor})" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)">${label}</div>
-            <div style="font-size:13px;font-weight:600;color:${nomePessoa ? 'var(--tx1)' : 'var(--tx3)'}">${nomePessoa ? escapeHtml(nomePessoa) : 'Não informado'}</div>
-          </div>
+      const comDados = NIVEL_ORDER.filter(k => grupos[k]?.length);
+
+      el.innerHTML = `
+        <div class="card">
+          <div class="ctit">Liderança do Ministério</div>
+          ${comDados.length ? comDados.map(k => `
+            <div style="margin-bottom:14px">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:6px">${NIVEL_LABEL[k]}</div>
+              ${grupos[k].map(nome => `
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg2);border-radius:8px;margin-bottom:5px">
+                  <div style="width:30px;height:30px;border-radius:50%;background:rgba(${NIVEL_COR[k]},.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgb(${NIVEL_COR[k]})" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </div>
+                  <span style="font-size:13px;font-weight:600;color:var(--tx1)">${nome}</span>
+                </div>`).join('')}
+            </div>`).join('')
+          : `<div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Nenhuma liderança nomeada.</div>`}
+          ${_podeEditarMinisterio() ? `
+            <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bd1)">
+              <button class="tbt sec" style="font-size:12px" onclick="minMinTab('adm')">Gerenciar liderança</button>
+            </div>` : ''}
         </div>`;
-      };
-
-      if (nomeados.length) {
-        const grupos = {};
-        nomeados.forEach(n => {
-          const grupo = n.funcao_lider || n.cargo || 'Outros';
-          if (!grupos[grupo]) grupos[grupo] = [];
-          const nomePessoa = (n.pessoas && n.pessoas.nome) ? n.pessoas.nome : n.nome;
-          grupos[grupo].push(nomePessoa);
-        });
-
-        el.innerHTML = `
-          <div class="card">
-            <div class="ctit">Liderança do Ministério</div>
-            ${Object.entries(grupos).map(([func, nomes]) => `
-              <div style="margin-bottom:14px">
-                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:6px">${FUNC_LABEL[func] || func}</div>
-                ${nomes.map(n => `
-                  <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg2);border-radius:8px;margin-bottom:5px">
-                    <div style="width:30px;height:30px;border-radius:50%;background:rgba(${FUNC_COR[func]||'139,107,193'},.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgb(${FUNC_COR[func]||'139,107,193'})" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    </div>
-                    <span style="font-size:13px;font-weight:600;color:var(--tx1)">${escapeHtml(n)}</span>
-                  </div>`).join('')}
-              </div>`).join('')}
-          </div>`;
-      } else {
-        // Fallback para os campos diretos da tabela ministerios
-        const temAlgum = m.supervisor || m.conselheiro || m.coordenador;
-        el.innerHTML = `
-          <div class="card">
-            <div class="ctit">Liderança do Ministério</div>
-            ${temAlgum ? `
-              ${m.supervisor   ? _nomeCard('Supervisor',  m.supervisor,  '58,170,92')  : ''}
-              ${m.conselheiro  ? _nomeCard('Conselheiro', m.conselheiro, '74,156,245') : ''}
-              ${m.coordenador  ? _nomeCard('Coordenador', m.coordenador, '201,168,76') : ''}
-            ` : `<div style="color:var(--tx3);font-size:13px;padding:20px 0;text-align:center">Nenhuma liderança nomeada.</div>`}
-            ${_podeEditarMinisterio() ? `
-              <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bd1)">
-                <button class="tbt sec" style="font-size:12px" onclick="minMinTab('adm')">Gerenciar liderança</button>
-              </div>` : ''}
-          </div>`;
-      }
     } catch (e) {
       console.error('_renderLideranca:', e);
       el.innerHTML = '<div style="color:var(--rose);font-size:13px;padding:16px 0">Erro ao carregar liderança.</div>';
@@ -817,20 +797,6 @@
               <option value="OUTRO"       ${m.tipo==='OUTRO'      ?'selected':''}>Outro</option>
             </select>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
-            <div>
-              <label style="${_LB}">Supervisor</label>
-              <select id="adm-supervisor" style="${_INP}">${_optionsPessoa(m.supervisor || '')}</select>
-            </div>
-            <div>
-              <label style="${_LB}">Conselheiro</label>
-              <select id="adm-conselheiro" style="${_INP}">${_optionsPessoa(m.conselheiro || '')}</select>
-            </div>
-            <div>
-              <label style="${_LB}">Coordenador</label>
-              <select id="adm-coordenador" style="${_INP}">${_optionsPessoa(m.coordenador || '')}</select>
-            </div>
-          </div>
           <div style="display:flex;align-items:center;gap:8px">
             <input type="checkbox" id="adm-ativo" ${m.ativo !== false ? 'checked' : ''} style="width:16px;height:16px;cursor:pointer">
             <label for="adm-ativo" style="font-size:13px;color:var(--tx2);cursor:pointer">Ministério ativo</label>
@@ -844,6 +810,32 @@
             <button id="adm-info-btn" onclick="_admSalvarInfo()"
               style="padding:9px 24px;border-radius:8px;border:none;background:var(--violet);color:#fff;font-size:13px;font-weight:600;cursor:pointer">
               Salvar
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="ctit">Liderança</div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
+            <div>
+              <label style="${_LB}">Supervisor</label>
+              <select id="adm-supervisor" style="${_INP}">${_optionsPessoa(_lidAtual.supervisor?.pessoa_id || '')}</select>
+            </div>
+            <div>
+              <label style="${_LB}">Conselheiro</label>
+              <select id="adm-conselheiro" style="${_INP}">${_optionsPessoa(_lidAtual.conselheiro?.pessoa_id || '')}</select>
+            </div>
+            <div>
+              <label style="${_LB}">Coordenador</label>
+              <select id="adm-coordenador" style="${_INP}">${_optionsPessoa(_lidAtual.coordenador?.pessoa_id || '')}</select>
+            </div>
+          </div>
+          <div id="adm-lid-err" style="color:var(--rose);font-size:12px;display:none"></div>
+          <div style="display:flex;justify-content:flex-end">
+            <button id="adm-lid-btn" onclick="_admSalvarLideranca()"
+              style="padding:9px 24px;border-radius:8px;border:none;background:var(--violet);color:#fff;font-size:13px;font-weight:600;cursor:pointer">
+              Salvar Liderança
             </button>
           </div>
         </div>
@@ -884,11 +876,8 @@
     btn.disabled = true; btn.textContent = 'Salvando...';
     const payload = {
       nome,
-      descricao:   (document.getElementById('adm-desc')?.value    || '').trim() || null,
-      tipo:        document.getElementById('adm-tipo')?.value      || null,
-      supervisor:  document.getElementById('adm-supervisor')?.value  || null,
-      conselheiro: document.getElementById('adm-conselheiro')?.value || null,
-      coordenador: document.getElementById('adm-coordenador')?.value || null,
+      descricao:         (document.getElementById('adm-desc')?.value || '').trim() || null,
+      tipo:              document.getElementById('adm-tipo')?.value   || null,
       ativo:             document.getElementById('adm-ativo')?.checked     ?? true,
       sidebar_expandido: document.getElementById('adm-sidebar-exp')?.checked ?? false,
     };
@@ -898,21 +887,8 @@
       });
       if (!r.ok) throw new Error(await r.text());
       Object.assign(_ministerioDataAtual, payload);
-      _supervisorDoMinisterioAtual = payload.supervisor;
-      // Atualiza header e dashboard com novos nomes
-      const pessoaIds = [payload.supervisor, payload.conselheiro, payload.coordenador].filter(Boolean);
-      const nomes = {};
-      if (pessoaIds.length) {
-        const rp = await fetch(`${SUPABASE_URL}/rest/v1/pessoas?id=in.(${pessoaIds.join(',')})&select=id,nome`, { headers: _hdr() });
-        const ps = rp.ok ? await rp.json() : [];
-        ps.forEach(p => { nomes[p.id] = (p.nome || '').toUpperCase(); });
-      }
-      _renderHeader(_ministerioDataAtual, nomes);
-      _renderDashboard(_ministerioDataAtual, nomes);
-      // Atualiza counts no dashboard pós-save
-      const sm = document.getElementById('min-min-stat-membros');
-      const ss = document.getElementById('min-min-stat-setores');
-      // Re-carrega membros/setores para atualizar counts
+      _renderHeader(_ministerioDataAtual, _lidAtual);
+      _renderDashboard(_ministerioDataAtual);
       await Promise.all([_carregarMembros(_ministerioAtual), _carregarSetores(_ministerioAtual)]);
       _showErr('adm-info-err', '');
       btn.textContent = 'Salvo ✓';
@@ -920,6 +896,61 @@
     } catch (e) {
       _showErr('adm-info-err', 'Erro ao salvar: ' + e.message);
       btn.disabled = false; btn.textContent = 'Salvar';
+    }
+  }
+
+  async function _admSalvarLideranca() {
+    const btn = document.getElementById('adm-lid-btn');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    _showErr('adm-lid-err', '');
+    const ROLES = ['supervisor', 'conselheiro', 'coordenador'];
+    const ano   = new Date().getFullYear();
+    const m     = _ministerioDataAtual;
+    try {
+      for (const role of ROLES) {
+        const pessoaId = document.getElementById(`adm-${role}`)?.value || null;
+        const atual    = _lidAtual[role];
+        if ((atual?.pessoa_id || null) === (pessoaId || null)) continue;
+        // Desativar registro anterior
+        if (atual?.id) {
+          await fetch(`${SUPABASE_URL}/rest/v1/nomeados?id=eq.${atual.id}`, {
+            method: 'PATCH', headers: _hdrJson(),
+            body: JSON.stringify({ status: 'inativo', encerrado_em: new Date().toISOString() }),
+          });
+        }
+        // Criar novo registro
+        if (pessoaId) {
+          const nomePessoa = (_pessoasCache || []).find(p => p.id === pessoaId)?.nome || '';
+          await fetch(`${SUPABASE_URL}/rest/v1/nomeados`, {
+            method: 'POST', headers: _hdrJson(),
+            body: JSON.stringify({
+              pessoa_id:    pessoaId,
+              nome:         nomePessoa,
+              ministerio_id: _ministerioAtual,
+              nivel:        role,
+              cargo:        role.charAt(0).toUpperCase() + role.slice(1).replace('_', ' '),
+              orgao:        m?.nome || '',
+              orgao_tipo:   'ministerio',
+              status:       'ativo',
+              origem:       'lideranca',
+              ano,
+            }),
+          });
+        }
+        // Manter ministerios em sincronia (compatibilidade backward)
+        await fetch(`${SUPABASE_URL}/rest/v1/ministerios?id=eq.${_ministerioAtual}`, {
+          method: 'PATCH', headers: _hdrJson(),
+          body: JSON.stringify({ [role]: pessoaId || null }),
+        });
+      }
+      _lidAtual = await _carregarLiderancaMinisterio(_ministerioAtual);
+      _supervisorDoMinisterioAtual = _lidAtual.supervisor?.pessoa_id || null;
+      _renderHeader(_ministerioDataAtual, _lidAtual);
+      btn.textContent = 'Salvo ✓';
+      setTimeout(() => { if (btn) { btn.disabled = false; btn.textContent = 'Salvar Liderança'; } }, 2000);
+    } catch (e) {
+      _showErr('adm-lid-err', 'Erro ao salvar: ' + e.message);
+      btn.disabled = false; btn.textContent = 'Salvar Liderança';
     }
   }
 
@@ -1961,11 +1992,11 @@
       const id         = _ministerioAtual;
 
       const [rMb, rSt, rReu, rPrg, rAnivs, rReuRec, rPrgRec] = await Promise.all([
-        fetch(`${SUPABASE_URL}/rest/v1/ministerio_membros?ministerio_id=eq.${id}&status=eq.ativo&select=id`, { headers: _hdr() }),
+        fetch(`${SUPABASE_URL}/rest/v1/nomeados?ministerio_id=eq.${id}&nivel=eq.membro&status=eq.ativo&deleted_at=is.null&select=id`, { headers: _hdr() }),
         fetch(`${SUPABASE_URL}/rest/v1/ministerio_setores?ministerio_id=eq.${id}&ativo=eq.true&select=id`, { headers: _hdr() }),
         fetch(`${SUPABASE_URL}/rest/v1/ministerio_reunioes?ministerio_id=eq.${id}&status=eq.realizada&data=gte.${i30}&select=id`, { headers: _hdr() }),
         fetch(`${SUPABASE_URL}/rest/v1/ministerio_programacoes?ministerio_id=eq.${id}&status=eq.realizado&data=gte.${i30}&select=id`, { headers: _hdr() }),
-        fetch(`${SUPABASE_URL}/rest/v1/ministerio_membros?ministerio_id=eq.${id}&status=eq.ativo&select=pessoas(nome,data_nascimento)`, { headers: _hdr() }),
+        fetch(`${SUPABASE_URL}/rest/v1/nomeados?ministerio_id=eq.${id}&nivel=eq.membro&status=eq.ativo&deleted_at=is.null&select=pessoas(nome,data_nascimento)`, { headers: _hdr() }),
         fetch(`${SUPABASE_URL}/rest/v1/ministerio_reunioes?ministerio_id=eq.${id}&order=data.desc&limit=5&select=titulo,data,status`, { headers: _hdr() }),
         fetch(`${SUPABASE_URL}/rest/v1/ministerio_programacoes?ministerio_id=eq.${id}&order=data.desc&limit=5&select=titulo,data,tipo,status`, { headers: _hdr() }),
       ]);
@@ -2052,7 +2083,7 @@
     el.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center">Carregando membros...</div>';
     try {
       const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/ministerio_membros?ministerio_id=eq.${_ministerioAtual}&ativo=eq.true&select=pessoa_id,pessoas(id,nome,telefone)&order=pessoas(nome).asc`,
+        `${SUPABASE_URL}/rest/v1/nomeados?ministerio_id=eq.${_ministerioAtual}&nivel=eq.membro&status=eq.ativo&deleted_at=is.null&select=pessoa_id,pessoas(id,nome,telefone)&order=nome.asc`,
         { headers: _hdr() }
       );
       if (!r.ok) throw new Error(r.status);
@@ -2520,13 +2551,13 @@
     const cnt  = document.getElementById('min-min-membro-count');
     try {
       const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/ministerio_membros?ministerio_id=eq.${ministerioId}` +
-        `&select=id,funcao,status,pessoas(id,nome,telefone,email)&order=pessoas(nome).asc`,
+        `${SUPABASE_URL}/rest/v1/nomeados?ministerio_id=eq.${ministerioId}&nivel=eq.membro&deleted_at=is.null` +
+        `&select=id,cargo,status,nome,pessoa_id,pessoas(id,nome,telefone,email)&order=nome.asc`,
         { headers: _hdr() }
       );
       const lista = r.ok ? await r.json() : [];
       const ativos = lista.filter(x => x.status !== 'inativo');
-      cnt.textContent = `(${ativos.length})`;
+      if (cnt) cnt.textContent = `(${ativos.length})`;
       const statMb = document.getElementById('min-min-stat-membros');
       if (statMb) statMb.textContent = ativos.length;
 
@@ -2542,13 +2573,13 @@
         <table style="width:100%;border-collapse:collapse;font-size:13px">
           <thead><tr style="border-bottom:2px solid var(--bd1)">
             <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Nome</th>
-            <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Função</th>
+            <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Cargo</th>
             <th style="text-align:left;padding:6px 8px;color:var(--tx3);font-weight:600">Status</th>
             ${thAcoes}
           </tr></thead>
           <tbody>${lista.map(mb => {
-            const nome   = (mb.pessoas?.nome  || '—').toUpperCase();
-            const funcao = mb.funcao || 'Membro';
+            const nome   = (mb.pessoas?.nome || mb.nome || '—').toUpperCase();
+            const cargo  = mb.cargo || 'Membro';
             const ativo  = mb.status !== 'inativo';
             const stTag  = ativo
               ? '<span style="font-size:11px;padding:2px 7px;background:var(--greenbg,#d1fae5);color:var(--green,#059669);border-radius:20px">Ativo</span>'
@@ -2559,7 +2590,7 @@
                      <button onclick="minMinMembroKebab(this)"
                        data-id="${mb.id}"
                        data-novo-status="${ativo ? 'inativo' : 'ativo'}"
-                       data-funcao="${funcao.replace(/"/g,'&quot;')}"
+                       data-funcao="${cargo.replace(/"/g,'&quot;')}"
                        data-ativo="${ativo}"
                        style="background:none;border:1px solid var(--bd2);border-radius:5px;color:var(--tx2);font-size:15px;padding:2px 7px;cursor:pointer;line-height:1">⋯</button>
                    </div>
@@ -2567,7 +2598,7 @@
               : '';
             return `<tr style="border-bottom:1px solid var(--bd1)">
               <td style="padding:7px 8px;color:var(--tx1);font-weight:500">${nome}</td>
-              <td style="padding:7px 8px;color:var(--tx2)">${funcao}</td>
+              <td style="padding:7px 8px;color:var(--tx2)">${cargo}</td>
               <td style="padding:7px 8px">${stTag}</td>
               ${tdAcoes}
             </tr>`;
@@ -2954,16 +2985,11 @@
     let el = document.getElementById('min-min-modal-mb');
     if (el) return el;
 
-    const funcOpts = ['Membro','Líder','Apoio','Músico','Coordenador','Auxiliar','Intercessor','Comunicação'];
     const corpo = `
       ${_sel('mmb-pessoa', 'Pessoa', '<option value="">Carregando...</option>', true)}
       <div>
-        <label style="${_LB}">Função</label>
-        <input type="text" id="mmb-funcao" list="mmb-funcoes-dl"
-          placeholder="Ex: Membro, Músico..." style="${_INP}">
-        <datalist id="mmb-funcoes-dl">
-          ${funcOpts.map(f => `<option value="${f}">`).join('')}
-        </datalist>
+        <label style="${_LB}">Cargo / Descrição</label>
+        <input type="text" id="mmb-funcao" placeholder="Ex: Músico, Auxiliar, Apoio..." style="${_INP}">
       </div>
       ${_sel('mmb-status', 'Status',
         '<option value="ativo">Ativo</option><option value="inativo">Inativo</option>', false)}
@@ -3114,20 +3140,27 @@
     const btn = document.getElementById('mmb-btn');
     btn.disabled = true; btn.textContent = 'Salvando...';
 
+    const nomePessoa = (_pessoasCache || []).find(p => p.id === pessoaId)?.nome || '';
     const payload = Object.assign({
       ministerio_id: _ministerioAtual,
       pessoa_id:     pessoaId,
-      funcao:  (document.getElementById('mmb-funcao').value  || 'Membro').trim(),
-      status:  document.getElementById('mmb-status').value   || 'ativo',
+      nome:          nomePessoa,
+      nivel:         'membro',
+      cargo:         (document.getElementById('mmb-funcao').value || 'Membro').trim(),
+      orgao:         _ministerioDataAtual?.nome || '',
+      orgao_tipo:    'ministerio',
+      status:        document.getElementById('mmb-status').value || 'ativo',
+      origem:        'lideranca',
+      ano:           new Date().getFullYear(),
     }, _auditInsert());
 
     try {
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_membros`, {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/nomeados`, {
         method: 'POST', headers: _hdrJson(), body: JSON.stringify(payload),
       });
       if (!r.ok) {
-        if (r.status === 409) throw new Error('Esta pessoa já está neste ministério.');
-        throw new Error((await r.text()) || r.status);
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err?.message || r.status);
       }
       document.getElementById('min-min-modal-mb').style.display = 'none';
       await _carregarMembros(_ministerioAtual);
@@ -3141,8 +3174,9 @@
   /* ══ AÇÕES SOBRE MEMBROS ═════════════════════════════════════ */
   async function minMinToggleMembroStatus(id, novoStatus) {
     try {
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_membros?id=eq.${id}`, {
-        method: 'PATCH', headers: _hdrJson(), body: JSON.stringify({ status: novoStatus }),
+      const extra = novoStatus === 'inativo' ? { encerrado_em: new Date().toISOString() } : { encerrado_em: null };
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/nomeados?id=eq.${id}`, {
+        method: 'PATCH', headers: _hdrJson(), body: JSON.stringify({ status: novoStatus, ...extra }),
       });
       if (!r.ok) throw new Error(r.status);
       await _carregarMembros(_ministerioAtual);
@@ -3154,8 +3188,9 @@
   async function minMinRemoverMembro(id) {
     if (!confirm('Remover este membro do ministério?')) return;
     try {
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_membros?id=eq.${id}`, {
-        method: 'DELETE', headers: _hdr(),
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/nomeados?id=eq.${id}`, {
+        method: 'PATCH', headers: _hdrJson(),
+        body: JSON.stringify({ status: 'inativo', encerrado_em: new Date().toISOString() }),
       });
       if (!r.ok) throw new Error(r.status);
       await _carregarMembros(_ministerioAtual);
@@ -3241,8 +3276,8 @@
     const funcao = input?.value?.trim();
     if (!funcao) { input?.focus(); return; }
     try {
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerio_membros?id=eq.${id}`, {
-        method: 'PATCH', headers: _hdrJson(), body: JSON.stringify({ funcao }),
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/nomeados?id=eq.${id}`, {
+        method: 'PATCH', headers: _hdrJson(), body: JSON.stringify({ cargo: funcao }),
       });
       if (!r.ok) throw new Error(r.status);
       document.querySelector('[style*="fixed"][style*="10000"]')?.remove();
@@ -3423,6 +3458,7 @@
   window._mstSalvar        = _mstSalvar;
   window._admSalvarInfo       = _admSalvarInfo;
   window._admToggleRecurso    = _admToggleRecurso;
+  window._admSalvarLideranca  = _admSalvarLideranca;
   window._admExcluirMinisterio = _admExcluirMinisterio;
   window.minMinNovaReuniao         = minMinNovaReuniao;
   window.minMinEditarReuniao       = minMinEditarReuniao;
