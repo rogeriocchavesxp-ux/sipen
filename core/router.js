@@ -7,6 +7,7 @@ const CRUMB={
   "recursos-req":  ["Recursos","Requisições","/ solicitações de saída de estoque"],
   "recursos-mov":  ["Recursos","Movimentações","/ histórico de entradas e saídas"],
   "recursos-cat":  ["Recursos","Categorias","/ categorias de itens"],
+  "recursos-hist": ["Recursos","Histórico do Produto","/ entradas e saídas"],
   "proculto-dash":["Pró-Culto","Central Operacional dos Cultos","/ liturgia, avisos e preparação"],
   geral:["","Dashboard Geral","/ IPPenha · visão executiva consolidada"],
   "cultos-dash":["Cultos","Dashboard","/ visão geral dos cultos"],

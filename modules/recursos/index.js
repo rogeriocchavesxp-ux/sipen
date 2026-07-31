@@ -59,6 +59,7 @@
   let _itens       = null;
   let _filtroLista = '';
   let _filtroReq   = 'pendente';
+  let _itemAtual   = null;
 
   async function _loadCats(force) {
     if (_categorias && !force) return _categorias;
@@ -283,6 +284,7 @@
                     <td style="padding:9px 6px;color:var(--tx3)">${i.estoque_minimo}</td>
                     <td style="padding:9px 6px;color:var(--tx3)">${_esc(i.unidade)}</td>
                     <td style="padding:9px 6px;text-align:right;white-space:nowrap">
+                      <button onclick="recVerHistorico('${i.id}')" style="font-size:10.5px;padding:3px 10px;border-radius:5px;border:1px solid var(--bd2);background:none;color:var(--tx2);cursor:pointer;margin-right:4px">Histórico</button>
                       <button onclick="recAbrirNovaReq('${i.id}')" style="font-size:10.5px;padding:3px 10px;border-radius:5px;border:1px solid var(--bd2);background:none;color:var(--tx2);cursor:pointer;margin-right:4px">Solicitar</button>
                       ${_podeGerenciar() ? `<button onclick="recAbrirEntrada('${i.id}')" style="font-size:10.5px;padding:3px 10px;border-radius:5px;border:1px solid rgba(58,170,92,.4);background:rgba(58,170,92,.08);color:var(--gr);cursor:pointer">+ Entrada</button>` : ''}
                     </td>
@@ -757,6 +759,168 @@
     } catch(e) { alert('Erro: '+e.message); }
   };
 
+  // ══════════════════════════════════════════════════════
+  // HISTÓRICO POR PRODUTO
+  // ══════════════════════════════════════════════════════
+  window.recVerHistorico = function(itemId) {
+    _itemAtual = itemId;
+    go('recursos-hist');
+  };
+
+  async function renderHist() {
+    const el = document.getElementById('v-recursos-hist');
+    if (!el) return;
+
+    if (!_itemAtual) {
+      el.innerHTML = `<div class="hero">${_HERO_IC}<div><div class="hero-ttl">Histórico</div></div><div class="hero-act"><button class="tbt" onclick="go('recursos-lista')">← Voltar</button></div></div><div class="ct"><div class="card"><div style="color:var(--tx3);font-size:12px;padding:12px 0">Selecione um item na lista de estoque.</div></div></div>`;
+      return;
+    }
+
+    el.innerHTML = `<div class="ct" style="padding-top:20px"><div style="color:var(--tx3);font-size:12px;text-align:center;padding:40px 0">Carregando histórico…</div></div>`;
+
+    let item = null;
+    let movs = [];
+
+    try {
+      const [ri, rm] = await Promise.all([
+        fetch(`${_url()}/recursos_itens?id=eq.${_itemAtual}&select=*,categoria:recursos_categorias(nome,icone)`, { headers: _hdr() }),
+        fetch(`${_url()}/recursos_movimentos?item_id=eq.${_itemAtual}&select=*,nota:recursos_notas_fiscais(numero,serie)&order=criado_em.asc`, { headers: _hdr() }),
+      ]);
+      const itens = ri.ok ? await ri.json() : [];
+      item  = itens[0] || null;
+      movs  = rm.ok ? await rm.json() : [];
+    } catch {}
+
+    if (!item) {
+      el.innerHTML = `<div class="hero">${_HERO_IC}<div><div class="hero-ttl">Histórico</div></div><div class="hero-act"><button class="tbt" onclick="go('recursos-lista')">← Voltar</button></div></div><div class="ct"><div class="card"><div style="color:var(--rose);font-size:12px;padding:12px 0">Item não encontrado.</div></div></div>`;
+      return;
+    }
+
+    // ── Calcular saldo acumulado (ordem cronológica) ─────
+    let saldo = 0;
+    const comSaldo = movs.map(m => {
+      if (m.tipo === 'entrada') saldo += Number(m.quantidade);
+      else if (m.tipo === 'saida') saldo = Math.max(0, saldo - Number(m.quantidade));
+      else if (m.tipo === 'ajuste') saldo = Number(m.quantidade);
+      return { ...m, _saldo: saldo };
+    });
+    const linhas = [...comSaldo].reverse(); // exibir mais recente primeiro
+
+    // ── KPIs ────────────────────────────────────────────
+    const totEnt  = movs.filter(m => m.tipo === 'entrada').reduce((a, m) => a + Number(m.quantidade), 0);
+    const totSai  = movs.filter(m => m.tipo === 'saida').reduce((a, m) => a + Number(m.quantidade), 0);
+    const totAdj  = movs.filter(m => m.tipo === 'ajuste').length;
+    const nivel   = _nivel(item.estoque_atual, item.estoque_minimo);
+    const corSaldo = _corNivel(nivel);
+
+    const _pillTipo = (t) => {
+      const m = {
+        entrada: { bg:'rgba(58,170,92,.12)',    cl:'var(--gr)',    lbl:'Entrada' },
+        saida:   { bg:'rgba(208,104,104,.12)',  cl:'var(--rose)',  lbl:'Saída'   },
+        ajuste:  { bg:'rgba(212,168,67,.12)',   cl:'var(--gold)',  lbl:'Ajuste'  },
+      };
+      const s = m[t] || { bg:'var(--bd1)', cl:'var(--tx3)', lbl: t };
+      return `<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:${s.bg};color:${s.cl}">${s.lbl}</span>`;
+    };
+
+    const _sinal = (t, q) => {
+      const cor = t==='entrada'?'var(--gr)':t==='saida'?'var(--rose)':'var(--amber)';
+      const s   = t==='entrada'?'+':t==='saida'?'−':'~';
+      return `<span style="font-weight:700;color:${cor}">${s}${q} ${_esc(item.unidade)}</span>`;
+    };
+
+    el.innerHTML = `
+      <div class="hero">
+        ${_HERO_IC}
+        <div>
+          <div class="hero-lbl">Recursos · ${_esc(item.categoria?.icone||'')} ${_esc(item.categoria?.nome||'Estoque')}</div>
+          <div class="hero-ttl">${_esc(item.nome)}</div>
+          <div class="hero-dsc">Histórico completo de entradas e saídas</div>
+        </div>
+        <div class="hero-act">
+          <button class="tbt" onclick="go('recursos-lista')">← Voltar</button>
+          <button class="tbt" onclick="recAbrirNovaReq('${item.id}')" style="color:var(--tx2);border-color:var(--bd2)">Solicitar</button>
+          ${_podeGerenciar() ? `<button class="tbt" onclick="recAbrirEntrada('${item.id}')" style="color:var(--gr);border-color:rgba(58,170,92,.3)">+ Entrada</button>` : ''}
+        </div>
+      </div>
+      <div class="ct">
+
+        <!-- KPIs -->
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px">
+          <div class="card" style="padding:12px 14px;display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(208,144,64,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+            </div>
+            <div>
+              <div style="font-size:20px;font-weight:800;color:${corSaldo};line-height:1">${item.estoque_atual}</div>
+              <div style="font-size:11px;color:var(--tx2);font-weight:600;margin-top:2px">Saldo atual</div>
+              <div style="font-size:10px;color:var(--tx3)">mín ${item.estoque_minimo} ${_esc(item.unidade)}</div>
+            </div>
+          </div>
+          <div class="card" style="padding:12px 14px;display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(58,170,92,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gr)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/></svg>
+            </div>
+            <div>
+              <div style="font-size:20px;font-weight:800;color:var(--gr);line-height:1">+${totEnt}</div>
+              <div style="font-size:11px;color:var(--tx2);font-weight:600;margin-top:2px">Total entradas</div>
+              <div style="font-size:10px;color:var(--tx3)">${movs.filter(m=>m.tipo==='entrada').length} registro(s)</div>
+            </div>
+          </div>
+          <div class="card" style="padding:12px 14px;display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(208,104,104,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--rose)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V2"/><path d="m17 19-5 3-5-3"/></svg>
+            </div>
+            <div>
+              <div style="font-size:20px;font-weight:800;color:var(--rose);line-height:1">−${totSai}</div>
+              <div style="font-size:11px;color:var(--tx2);font-weight:600;margin-top:2px">Total saídas</div>
+              <div style="font-size:10px;color:var(--tx3)">${movs.filter(m=>m.tipo==='saida').length} registro(s)</div>
+            </div>
+          </div>
+          <div class="card" style="padding:12px 14px;display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(212,168,67,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+            </div>
+            <div>
+              <div style="font-size:20px;font-weight:800;color:var(--tx1);line-height:1">${movs.length}</div>
+              <div style="font-size:11px;color:var(--tx2);font-weight:600;margin-top:2px">Movimentos</div>
+              <div style="font-size:10px;color:var(--tx3)">${totAdj} ajuste(s)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabela de histórico -->
+        <div class="card">
+          <div class="ctit">Histórico de Movimentos</div>
+          ${linhas.length === 0
+            ? `<div style="color:var(--tx3);font-size:12px;padding:12px 0">Nenhum movimento registrado para este item.</div>`
+            : `<div style="overflow-x:auto">
+              <table style="width:100%;border-collapse:collapse;font-size:12px">
+                <thead>
+                  <tr style="border-bottom:1px solid var(--bd2)">
+                    ${['Data/Hora','Tipo','Quantidade','Saldo','Referência','Responsável'].map(h=>`<th style="text-align:left;padding:8px 6px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`).join('')}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${linhas.map(m => {
+                    const nfRef = m.nota?.numero ? `NF ${m.nota.numero}` : (m.observacao ? _esc(m.observacao.substring(0,40)) : '—');
+                    const corS  = m._saldo <= (item.estoque_minimo||0) ? 'var(--rose)' : 'var(--tx1)';
+                    return `<tr style="border-bottom:1px solid var(--bd1)">
+                      <td style="padding:9px 6px;color:var(--tx3);white-space:nowrap;font-variant-numeric:tabular-nums">${_fmtDT(m.criado_em)}</td>
+                      <td style="padding:9px 6px">${_pillTipo(m.tipo)}</td>
+                      <td style="padding:9px 6px">${_sinal(m.tipo, m.quantidade)}</td>
+                      <td style="padding:9px 6px;font-weight:700;color:${corS};font-variant-numeric:tabular-nums">${m._saldo} ${_esc(item.unidade)}</td>
+                      <td style="padding:9px 6px;color:var(--tx2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nfRef}</td>
+                      <td style="padding:9px 6px;color:var(--tx3)">${_esc(m.responsavel||'—')}</td>
+                    </tr>`;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>`}
+        </div>
+      </div>`;
+  }
+
   // ── Filtros ───────────────────────────────────────────
   window.recFiltrarLista = function(catId) { _filtroLista = catId; renderLista(); };
   window.recFiltrarReq   = function(status) { _filtroReq  = status; renderReq(); };
@@ -768,6 +932,7 @@
     VIEW_AUTOLOAD['recursos-req']   = { fn: renderReq };
     VIEW_AUTOLOAD['recursos-mov']   = { fn: renderMov };
     VIEW_AUTOLOAD['recursos-cat']   = { fn: renderCat };
+    VIEW_AUTOLOAD['recursos-hist']  = { fn: renderHist };
   }
 
 })();
