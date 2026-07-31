@@ -11,9 +11,11 @@
 --                        que são oficiais ordenados — ficam em `oficiais`, não nomeados)
 --   fonte='funcao'    → legado, mantido para não quebrar queries antigas
 
--- 1. Nova coluna: filtro por nivel de nomeados
+-- 1. Colunas (wa-listas-fonte.sql nunca executado — adicionamos aqui tudo)
 ALTER TABLE wa_listas
-  ADD COLUMN IF NOT EXISTS filtro_nivel TEXT[];
+  ADD COLUMN IF NOT EXISTS fonte          TEXT DEFAULT 'manual',
+  ADD COLUMN IF NOT EXISTS filtro_funcoes TEXT[],
+  ADD COLUMN IF NOT EXISTS filtro_nivel   TEXT[];
 
 -- 2. Atualizar listas que derivam naturalmente de nomeados
 --    (apenas líderes ministeriais — supervisores, coordenadores, líderes de área)
