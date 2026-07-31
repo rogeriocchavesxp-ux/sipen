@@ -51,7 +51,7 @@ const _newAutoloads = {
   "memb-prof":       { fn: () => listarMembros("memb-prof-list","memb-prof-count",{tipo_ingresso:"profissão de fé"}) },
   "memb-trans":      { fn: () => listarMembros("memb-trans-list","memb-trans-count",{tipo_ingresso:"transferência"}) },
   "memb-hist":       { fn: () => listarMembros("memb-hist-list","memb-hist-count",{},true) },
-  "memb-aniv":       { fn: () => carregarAniversariantes() },
+  "memb-aniv":       { fn: () => { carregarAniversariantes(); anivVerificarAgendamentoPendente(); } },
   "pgs-encontros":   { tab:"AGENDA",         id:"pgs-enc-list" },
   "pgs-participantes":{ tab:"MEMBROS",       id:"pgs-part-list" },
   "pgs-estudos":     { tab:"AGENDA",         id:"pgs-est-list" },

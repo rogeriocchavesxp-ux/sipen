@@ -370,6 +370,283 @@ async function carregarAniversariantes() {
   }
 }
 
+/* ── WhatsApp de Aniversariantes ─────────────────────────── */
+
+function anivTogglePainelWA() {
+  const painel = document.getElementById("aniv-wa-painel");
+  if (!painel) return;
+  if (painel.style.display === "none") {
+    anivAbrirPainelWA();
+  } else {
+    painel.style.display = "none";
+  }
+}
+window.anivTogglePainelWA = anivTogglePainelWA;
+
+async function anivAbrirPainelWA() {
+  const painel = document.getElementById("aniv-wa-painel");
+  if (!painel) return;
+  painel.style.display = "block";
+  painel.innerHTML = `<div class="card" style="border-color:rgba(82,196,110,0.3)"><div style="color:var(--tx3);font-size:11.5px;padding:8px 0">${spinner()} Carregando...</div></div>`;
+
+  try {
+    const token = typeof sipenToken === "function" ? sipenToken() : (SUPABASE_ANON_KEY || "");
+    const hdr   = { apikey: SUPABASE_ANON_KEY || "", Authorization: `Bearer ${token}` };
+    const base  = (SUPABASE_URL || "").trim().replace(/\/$/, "");
+
+    const [listasRes, agendRes] = await Promise.all([
+      fetch(`${base}/rest/v1/wa_listas?ativo=eq.true&select=id,nome,icone&order=nome`, { headers: hdr }),
+      fetch(`${base}/rest/v1/wa_agendamentos?tipo=eq.aniversariantes&recorrente=eq.true&select=id,lista_nome,horario_diario,ultimo_envio_em&order=criado_em.desc&limit=1`, { headers: hdr }),
+    ]);
+
+    const listas = listasRes.ok ? await listasRes.json() : [];
+    const agendamentos = agendRes.ok ? await agendRes.json() : [];
+    const agAtivo = agendamentos[0] || null;
+
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    const jaEnviadoHoje = agAtivo?.ultimo_envio_em
+      ? agAtivo.ultimo_envio_em.slice(0, 10) === todayStr
+      : false;
+
+    const anivHoje = (_membCache || []).filter(r => {
+      if (!r.data_nascimento) return false;
+      try {
+        const d = new Date(r.data_nascimento + "T00:00:00");
+        return d.getMonth() + 1 === today.getMonth() + 1 && d.getDate() === today.getDate();
+      } catch { return false; }
+    });
+
+    const fmtTel = t => t || "sem telefone";
+    const previewLinhas = anivHoje.length
+      ? anivHoje.map(r => `• ${r.nome} — ${fmtTel(r.celular || r.telefone || r.whatsapp)}`).join("\n")
+      : "_Nenhum aniversariante hoje_";
+
+    const listasOpts = listas.length
+      ? listas.map(l => `<option value="${l.id}">${l.icone || "📋"} ${escapeHtml(l.nome)}</option>`).join("")
+      : `<option value="">Nenhuma lista cadastrada</option>`;
+
+    painel.innerHTML = `
+      <div class="card" style="border:1.5px solid rgba(82,196,110,0.3);border-left:4px solid var(--gr)">
+        <div class="ctit" style="color:var(--gr)">💬 Enviar Aniversariantes via WhatsApp
+          <span class="cact" style="color:var(--tx3);font-weight:400" onclick="anivTogglePainelWA()">✕ Fechar</span>
+        </div>
+
+        ${jaEnviadoHoje ? `<div style="margin-bottom:12px;padding:8px 12px;border-radius:7px;background:rgba(58,170,92,.08);border:1px solid rgba(58,170,92,.2);font-size:11.5px;color:var(--gr)">
+          ✓ Agendamento recorrente já enviado hoje (${agAtivo.lista_nome}) às ${agAtivo.ultimo_envio_em ? new Date(agAtivo.ultimo_envio_em).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "—"}
+        </div>` : ""}
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Lista destinatária</div>
+            <select id="aniv-wa-lista" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;outline:none">
+              <option value="">— Selecionar lista —</option>
+              ${listasOpts}
+            </select>
+
+            <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin:14px 0 6px">Agendamento diário</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);cursor:pointer">
+                <input type="checkbox" id="aniv-wa-recorrente" onchange="anivToggleHorario()" style="cursor:pointer">
+                Repetir todos os dias
+              </label>
+            </div>
+            <div id="aniv-wa-horario-row" style="display:none;align-items:center;gap:8px">
+              <span style="font-size:11.5px;color:var(--tx3)">Horário:</span>
+              <input type="time" id="aniv-wa-horario" value="08:00" style="padding:5px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;outline:none">
+            </div>
+
+            <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+              <button onclick="anivEnviarAgora()" style="padding:8px 18px;border-radius:7px;border:1px solid rgba(82,196,110,.4);background:rgba(82,196,110,.1);color:var(--gr);font-size:12px;font-weight:700;cursor:pointer">📨 Enviar agora</button>
+              <button onclick="anivAgendarEnvio()" style="padding:8px 18px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:12px;font-weight:700;cursor:pointer">⏰ Agendar</button>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Preview da mensagem de hoje</div>
+            <div style="padding:12px 14px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-surface);font-size:11.5px;color:var(--tx2);line-height:1.7;white-space:pre-wrap;font-family:var(--mono)">🎂 *Aniversariantes de hoje — ${today.toLocaleDateString("pt-BR")}*\n\n${previewLinhas}\n\n📋 https://sipen.com.br/aniversariantes\n_SIPEN · IPPenha_</div>
+            <div style="margin-top:6px;font-size:10.5px;color:var(--tx3)">${anivHoje.length} aniversariante${anivHoje.length !== 1 ? "s" : ""} hoje · A mensagem é enviada para cada membro da lista selecionada</div>
+          </div>
+        </div>
+      </div>`;
+
+    anivVerificarAgendamentoPendente();
+  } catch (e) {
+    const painel = document.getElementById("aniv-wa-painel");
+    if (painel) painel.innerHTML = `<div class="card"><div style="color:var(--rose);font-size:11.5px">Erro ao carregar painel: ${escapeHtml(e.message)}</div></div>`;
+  }
+}
+window.anivAbrirPainelWA = anivAbrirPainelWA;
+
+function anivToggleHorario() {
+  const chk = document.getElementById("aniv-wa-recorrente");
+  const row = document.getElementById("aniv-wa-horario-row");
+  if (row) row.style.display = chk?.checked ? "flex" : "none";
+}
+window.anivToggleHorario = anivToggleHorario;
+
+function _anivMsgHoje() {
+  const today = new Date();
+  const anivHoje = (_membCache || []).filter(r => {
+    if (!r.data_nascimento) return false;
+    try {
+      const d = new Date(r.data_nascimento + "T00:00:00");
+      return d.getMonth() + 1 === today.getMonth() + 1 && d.getDate() === today.getDate();
+    } catch { return false; }
+  });
+  const linhas = anivHoje.length
+    ? anivHoje.map(r => `• ${r.nome} — ${r.celular || r.telefone || r.whatsapp || "sem telefone"}`).join("\n")
+    : "_Nenhum aniversariante hoje_";
+  return {
+    texto: `🎂 *Aniversariantes de hoje — ${today.toLocaleDateString("pt-BR")}*\n\n${linhas}\n\n📋 https://sipen.com.br/aniversariantes\n_SIPEN · IPPenha_`,
+    total: anivHoje.length,
+  };
+}
+
+async function anivEnviarAgora() {
+  const listaId = document.getElementById("aniv-wa-lista")?.value;
+  if (!listaId) { T("Selecione uma lista", "Escolha para qual lista enviar."); return; }
+
+  const { texto, total } = _anivMsgHoje();
+  if (!total) { T("Sem aniversariantes hoje", "Nenhum membro faz aniversário hoje."); return; }
+
+  const token = typeof sipenToken === "function" ? sipenToken() : (SUPABASE_ANON_KEY || "");
+  const hdr   = { apikey: SUPABASE_ANON_KEY || "", Authorization: `Bearer ${token}` };
+  const base  = (SUPABASE_URL || "").trim().replace(/\/$/, "");
+
+  try {
+    const membRes = await fetch(
+      `${base}/rest/v1/wa_lista_membros?lista_id=eq.${listaId}&ativo=eq.true&select=pessoas(id,nome,whatsapp,celular,telefone)`,
+      { headers: hdr }
+    );
+    if (!membRes.ok) throw new Error(await membRes.text());
+    const rows = await membRes.json();
+    const destinatarios = rows.map(r => r.pessoas).filter(Boolean);
+
+    if (!destinatarios.length) { T("Lista vazia", "A lista selecionada não tem membros."); return; }
+
+    T("Enviando...", `${destinatarios.length} destinatário${destinatarios.length !== 1 ? "s" : ""}`);
+
+    let enviados = 0;
+    let falhas   = 0;
+    for (const p of destinatarios) {
+      const tel = p.whatsapp || p.celular || p.telefone;
+      if (!tel) { falhas++; continue; }
+      try {
+        await WA.send({ para: tel, nome: p.nome, mensagem: texto, modulo: "MEMBRESIA", chave: `ANIV_DIA_${new Date().toISOString().slice(0,10)}_${p.id}` });
+        enviados++;
+      } catch { falhas++; }
+    }
+    T("Envio concluído", `${enviados} enviado${enviados !== 1 ? "s" : ""}${falhas ? ` · ${falhas} sem número` : ""}`);
+  } catch (e) { T("Erro ao enviar", e.message); }
+}
+window.anivEnviarAgora = anivEnviarAgora;
+
+async function anivAgendarEnvio() {
+  const listaId   = document.getElementById("aniv-wa-lista")?.value;
+  const recorrente = document.getElementById("aniv-wa-recorrente")?.checked || false;
+  const horario   = document.getElementById("aniv-wa-horario")?.value || "08:00";
+  const listaEl   = document.getElementById("aniv-wa-lista");
+  const listaNome = listaEl?.options[listaEl?.selectedIndex]?.text || "";
+
+  if (!listaId) { T("Selecione uma lista", "Escolha para qual lista agendar."); return; }
+
+  const [hh, mm] = horario.split(":");
+  const agendadoPara = new Date();
+  agendadoPara.setHours(parseInt(hh, 10), parseInt(mm, 10), 0, 0);
+  if (agendadoPara < new Date()) agendadoPara.setDate(agendadoPara.getDate() + (recorrente ? 0 : 1));
+
+  const token = typeof sipenToken === "function" ? sipenToken() : (SUPABASE_ANON_KEY || "");
+  const hdr   = { apikey: SUPABASE_ANON_KEY || "", Authorization: `Bearer ${token}`, "Content-Type": "application/json", Prefer: "return=minimal" };
+  const base  = (SUPABASE_URL || "").trim().replace(/\/$/, "");
+
+  try {
+    const res = await fetch(`${base}/rest/v1/wa_agendamentos`, {
+      method: "POST",
+      headers: hdr,
+      body: JSON.stringify({
+        lista_id:       listaId,
+        lista_nome:     listaNome.replace(/^[^\s]+\s/, ""),
+        mensagem:       "[Gerado automaticamente — aniversariantes do dia]",
+        tipo:           "aniversariantes",
+        recorrente,
+        horario_diario: recorrente ? horario : null,
+        agendado_para:  agendadoPara.toISOString(),
+        status:         "pendente",
+      }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    T(
+      recorrente ? "Agendamento recorrente salvo" : "Agendamento salvo",
+      recorrente ? `Todos os dias às ${horario} para "${listaNome.replace(/^[^\s]+\s/, "")}"` : `Agendado para ${agendadoPara.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}`
+    );
+    anivAbrirPainelWA();
+  } catch (e) { T("Erro ao agendar", e.message); }
+}
+window.anivAgendarEnvio = anivAgendarEnvio;
+
+async function anivVerificarAgendamentoPendente() {
+  try {
+    const token = typeof sipenToken === "function" ? sipenToken() : (SUPABASE_ANON_KEY || "");
+    const hdr   = { apikey: SUPABASE_ANON_KEY || "", Authorization: `Bearer ${token}` };
+    const base  = (SUPABASE_URL || "").trim().replace(/\/$/, "");
+    const today = new Date().toISOString().slice(0, 10);
+
+    const res = await fetch(
+      `${base}/rest/v1/wa_agendamentos?tipo=eq.aniversariantes&recorrente=eq.true&status=eq.pendente&select=id,lista_id,lista_nome,horario_diario,ultimo_envio_em&limit=10`,
+      { headers: hdr }
+    );
+    if (!res.ok) return;
+    const agendamentos = await res.json();
+
+    const agora = new Date();
+    for (const ag of agendamentos) {
+      const jaEnviouHoje = ag.ultimo_envio_em && ag.ultimo_envio_em.slice(0, 10) === today;
+      if (jaEnviouHoje) continue;
+      const [hh, mm] = (ag.horario_diario || "08:00").split(":");
+      const horarioPrevisto = new Date();
+      horarioPrevisto.setHours(parseInt(hh, 10), parseInt(mm, 10), 0, 0);
+      if (agora >= horarioPrevisto) {
+        await _anivDispararRecorrente(ag);
+      }
+    }
+  } catch (_) {}
+}
+window.anivVerificarAgendamentoPendente = anivVerificarAgendamentoPendente;
+
+async function _anivDispararRecorrente(ag) {
+  const token = typeof sipenToken === "function" ? sipenToken() : (SUPABASE_ANON_KEY || "");
+  const hdr   = { apikey: SUPABASE_ANON_KEY || "", Authorization: `Bearer ${token}` };
+  const base  = (SUPABASE_URL || "").trim().replace(/\/$/, "");
+
+  try {
+    if (!_membCache.length) _membCache = await apiRead("MEMBROS");
+    const { texto, total } = _anivMsgHoje();
+    if (!total) return;
+
+    const membRes = await fetch(
+      `${base}/rest/v1/wa_lista_membros?lista_id=eq.${ag.lista_id}&ativo=eq.true&select=pessoas(id,nome,whatsapp,celular,telefone)`,
+      { headers: hdr }
+    );
+    if (!membRes.ok) return;
+    const rows = await membRes.json();
+    const destinatarios = rows.map(r => r.pessoas).filter(Boolean);
+
+    for (const p of destinatarios) {
+      const tel = p.whatsapp || p.celular || p.telefone;
+      if (!tel) continue;
+      WA.send({ para: tel, nome: p.nome, mensagem: texto, modulo: "MEMBRESIA", chave: `ANIV_DIA_${new Date().toISOString().slice(0,10)}_${p.id}` }).catch(() => {});
+    }
+
+    await fetch(`${base}/rest/v1/wa_agendamentos?id=eq.${ag.id}`, {
+      method: "PATCH",
+      headers: { ...hdr, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({ ultimo_envio_em: new Date().toISOString() }),
+    });
+  } catch (_) {}
+}
+
 /* Filtrar lista do dashboard */
 function membresiaFiltrar() {
   const busca        = (document.getElementById("md-busca")?.value       || "").toLowerCase().trim();
