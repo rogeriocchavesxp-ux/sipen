@@ -112,7 +112,6 @@ window.agToggleVisibilidade = agToggleVisibilidade;
 function agConfKebab(btn, id) {
   document.querySelectorAll(".ag-kebab-menu").forEach(m => m.remove());
   const r = _agConfRows.find(x => x.id === id);
-  const temTermo = !!r?.token_termo;
   const menu = document.createElement("div");
   menu.className = "ag-kebab-menu";
   menu.style.cssText = "position:absolute;right:0;top:calc(100% + 4px);z-index:200;background:var(--bg-card);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);min-width:190px;overflow:hidden";
@@ -121,10 +120,9 @@ function agConfKebab(btn, id) {
     <button onclick='agAbrirForm(JSON.parse(this.dataset.r))' data-r='${rJson}' style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:transparent;color:var(--tx1);font-size:12px;cursor:pointer;text-align:left" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='transparent'">
       ✏️ Editar
     </button>
-    ${temTermo ? `
     <button onclick='agReenviarTermoConf("${id}")' style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:transparent;color:var(--tx1);font-size:12px;cursor:pointer;text-align:left" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='transparent'">
       📲 Reenviar Termo
-    </button>` : ""}
+    </button>
     <div style="height:1px;background:var(--bd1);margin:0 10px"></div>
     <button onclick='agExcluirSolicitacao("${id}")' style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:transparent;color:var(--rose);font-size:12px;cursor:pointer;text-align:left" onmouseover="this.style.background='rgba(224,85,85,.08)'" onmouseout="this.style.background='transparent'">
       🗑 Excluir
@@ -135,10 +133,29 @@ function agConfKebab(btn, id) {
 }
 window.agConfKebab = agConfKebab;
 
-function agReenviarTermoConf(id) {
+async function agReenviarTermoConf(id) {
   document.querySelectorAll(".ag-kebab-menu").forEach(m => m.remove());
-  const r = _agConfRows.find(x => x.id === id);
-  if (!r?.token_termo) return T("Sem token", "Este evento não possui link de termo gerado.");
+  let r = _agConfRows.find(x => x.id === id);
+  if (!r) return;
+
+  if (!r.token_termo) {
+    const novoToken = crypto.randomUUID();
+    try {
+      const res = await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${id}`, {
+        method: "PATCH",
+        headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+        body: JSON.stringify({ token_termo: novoToken }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      r = { ...r, token_termo: novoToken };
+      const idx = _agConfRows.findIndex(x => x.id === id);
+      if (idx !== -1) _agConfRows[idx] = r;
+    } catch(e) {
+      T("Erro ao gerar token", e.message);
+      return;
+    }
+  }
+
   const _tel = r?.solicitante_tel || r?.telefone;
   const nome  = (r.solicitante_txt || "").split(" ")[0] || "";
   const fmtD  = s => { if (!s) return ""; const [y,m,d] = String(s).slice(0,10).split("-"); return `${d}/${m}/${y}`; };
