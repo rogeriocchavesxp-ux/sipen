@@ -586,6 +586,64 @@ async function anivAgendarEnvio() {
 }
 window.anivAgendarEnvio = anivAgendarEnvio;
 
+/* Resolve destinatários de uma lista WA — três fontes possíveis:
+   'nomeados' → nomeados.nivel (fonte autoritativa)
+   'funcao'   → pessoas.funcao (legado)
+   'manual'   → wa_lista_membros */
+async function _anivResolverDestinatarios(listaId) {
+  const base = (SUPABASE_URL || "").trim().replace(/\/$/, "");
+  const token = typeof sipenToken === "function" ? sipenToken() : (SUPABASE_ANON_KEY || "");
+  const hdr   = { apikey: SUPABASE_ANON_KEY || "", Authorization: `Bearer ${token}` };
+
+  const listaRes = await fetch(
+    `${base}/rest/v1/wa_listas?id=eq.${listaId}&select=id,nome,fonte,filtro_nivel,filtro_funcoes&limit=1`,
+    { headers: hdr }
+  );
+  if (!listaRes.ok) throw new Error(await listaRes.text());
+  const [lista] = await listaRes.json();
+  if (!lista) throw new Error("Lista não encontrada.");
+
+  // nomeados: fonte autoritativa — consulta nomeados.nivel
+  if (lista.fonte === "nomeados" && lista.filtro_nivel?.length) {
+    const niveis = lista.filtro_nivel.join(",");
+    const nomRes = await fetch(
+      `${base}/rest/v1/nomeados?nivel=in.(${niveis})&status=eq.ativo&deleted_at=is.null&select=pessoa_id,nome`,
+      { headers: hdr }
+    );
+    if (!nomRes.ok) throw new Error(await nomRes.text());
+    const noms = await nomRes.json();
+    if (!noms.length) return [];
+
+    const ids = [...new Set(noms.map(n => n.pessoa_id).filter(Boolean))].join(",");
+    const pesRes = await fetch(
+      `${base}/rest/v1/pessoas?id=in.(${ids})&select=id,nome,whatsapp,celular,telefone`,
+      { headers: hdr }
+    );
+    if (!pesRes.ok) throw new Error(await pesRes.text());
+    return await pesRes.json();
+  }
+
+  // funcao: legado — consulta pessoas.funcao
+  if (lista.fonte === "funcao" && lista.filtro_funcoes?.length) {
+    const funcoes = lista.filtro_funcoes.join(",");
+    const pesRes = await fetch(
+      `${base}/rest/v1/pessoas?funcao=in.(${funcoes})&status=eq.ativo&select=id,nome,whatsapp,celular,telefone`,
+      { headers: hdr }
+    );
+    if (!pesRes.ok) throw new Error(await pesRes.text());
+    return await pesRes.json();
+  }
+
+  // manual: wa_lista_membros
+  const membRes = await fetch(
+    `${base}/rest/v1/wa_lista_membros?lista_id=eq.${listaId}&ativo=eq.true&select=pessoas(id,nome,whatsapp,celular,telefone)`,
+    { headers: hdr }
+  );
+  if (!membRes.ok) throw new Error(await membRes.text());
+  const rows = await membRes.json();
+  return rows.map(r => r.pessoas).filter(Boolean);
+}
+
 /* Wrappers chamados da tela WhatsApp — Membresia */
 async function anivWaEnviarAgora() {
   const listaId = document.getElementById("wa-aniv-lista")?.value;
@@ -594,19 +652,9 @@ async function anivWaEnviarAgora() {
   const { texto, total } = _anivMsgHoje();
   if (!total) { T("Sem aniversariantes hoje", "Nenhum membro faz aniversário hoje."); return; }
 
-  const token = typeof sipenToken === "function" ? sipenToken() : (SUPABASE_ANON_KEY || "");
-  const hdr   = { apikey: SUPABASE_ANON_KEY || "", Authorization: `Bearer ${token}` };
-  const base  = (SUPABASE_URL || "").trim().replace(/\/$/, "");
-
   try {
-    const membRes = await fetch(
-      `${base}/rest/v1/wa_lista_membros?lista_id=eq.${listaId}&ativo=eq.true&select=pessoas(id,nome,whatsapp,celular,telefone)`,
-      { headers: hdr }
-    );
-    if (!membRes.ok) throw new Error(await membRes.text());
-    const rows = await membRes.json();
-    const destinatarios = rows.map(r => r.pessoas).filter(Boolean);
-    if (!destinatarios.length) { T("Lista sem membros", "Adicione membros à lista em WhatsApp → Listas → 👥 Membros."); return; }
+    const destinatarios = await _anivResolverDestinatarios(listaId);
+    if (!destinatarios.length) { T("Lista vazia", "Nenhum membro com essa função está cadastrado."); return; }
     T("Enviando...", `${destinatarios.length} destinatário${destinatarios.length !== 1 ? "s" : ""}`);
     let enviados = 0, falhas = 0;
     const diaKey = new Date().toISOString().slice(0, 10);
