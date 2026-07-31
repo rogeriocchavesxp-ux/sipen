@@ -327,3 +327,118 @@ function agConfirmarEspacos() {
   document.getElementById("ag-esp-popup").style.display = "none";
 }
 window.agConfirmarEspacos = agConfirmarEspacos;
+
+/* ── WIDGET DE ESPAÇOS INLINE COM DISPONIBILIDADE ───────────── */
+async function _agCarregarEspacosWidget(modal, preSelected = []) {
+  const grid     = document.getElementById("ag-espaco-grid");
+  const statusEl = document.getElementById("ag-espaco-status");
+  if (!grid) return;
+  try {
+    const rows = await _agCarregarEspacos();
+    grid.innerHTML = "";
+    const grupos = {};
+    rows.forEach(r => { if (!grupos[r.grupo]) grupos[r.grupo] = []; grupos[r.grupo].push(r); });
+    Object.entries(grupos).forEach(([grupo, itens]) => {
+      const hdr = document.createElement("div");
+      hdr.style.cssText = "grid-column:1/-1;font-size:9.5px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.08em;padding:5px 0 3px;border-bottom:1px solid var(--bd2);margin-top:4px";
+      hdr.textContent = grupo;
+      grid.appendChild(hdr);
+      itens.forEach(esp => {
+        const sel = preSelected.includes(esp.nome);
+        const lbl = document.createElement("label");
+        lbl.className = "ag-espaco-chk";
+        lbl.dataset.espaco = esp.nome;
+        lbl.style.cssText = `display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:6px;border:1.5px solid ${sel?"var(--gr)":"var(--bd2)"};background:${sel?"rgba(52,199,89,.08)":"var(--bg-input)"};cursor:pointer;font-size:11.5px;color:var(--tx1);user-select:none;transition:border-color .12s,background .12s`;
+        lbl.innerHTML = `<input type="checkbox" data-espaco="${escapeHtmlAttr(esp.nome)}" ${sel?"checked":""} style="width:14px;height:14px;accent-color:var(--gr);cursor:pointer;flex-shrink:0">
+          <span style="flex:1">${escapeHtml(esp.nome)}</span>
+          <span class="ag-esp-occ" style="display:none;font-size:9px;font-weight:700;color:#C07700;white-space:nowrap">EM USO</span>`;
+        const inp = lbl.querySelector("input");
+        inp.addEventListener("change", () => {
+          if (!inp.dataset.ocupado) {
+            lbl.style.borderColor = inp.checked ? "var(--gr)" : "var(--bd2)";
+            lbl.style.background  = inp.checked ? "rgba(52,199,89,.08)" : "var(--bg-input)";
+          }
+        });
+        grid.appendChild(lbl);
+      });
+    });
+    if (!rows.length) grid.innerHTML = `<div style="grid-column:1/-1;font-size:11px;color:var(--tx3)">Nenhum espaço cadastrado.</div>`;
+
+    // Wire date/time change → re-verificar
+    const diasList = document.getElementById("ag-dias-list");
+    if (diasList) {
+      diasList.addEventListener("change", () => _agVerificarDisponibilidadeForm(modal));
+      diasList.addEventListener("input",  () => _agVerificarDisponibilidadeForm(modal));
+    }
+    _agVerificarDisponibilidadeForm(modal);
+  } catch (_) {
+    grid.innerHTML = `<div style="grid-column:1/-1;font-size:11px;color:var(--rose)">Não foi possível carregar os espaços.</div>`;
+  }
+}
+window._agCarregarEspacosWidget = _agCarregarEspacosWidget;
+
+async function _agVerificarDisponibilidadeForm(modal) {
+  const statusEl = document.getElementById("ag-espaco-status");
+  const grid     = document.getElementById("ag-espaco-grid");
+  if (!grid || !statusEl) return;
+  const data = document.getElementById("ag-dia-data-0")?.value;
+  const hi   = document.getElementById("ag-dia-ini-0")?.value;
+  const hf   = document.getElementById("ag-dia-fim-0")?.value;
+  // Reset ocupado markers
+  const resetOcc = () => grid.querySelectorAll(".ag-espaco-chk").forEach(lbl => {
+    const inp = lbl.querySelector("input");
+    const occ = lbl.querySelector(".ag-esp-occ");
+    delete inp.dataset.ocupado;
+    lbl.style.borderColor = inp.checked ? "var(--gr)" : "var(--bd2)";
+    lbl.style.background  = inp.checked ? "rgba(52,199,89,.08)" : "var(--bg-input)";
+    if (occ) occ.style.display = "none";
+    lbl.title = "";
+  });
+  if (!data || !hi) {
+    statusEl.textContent = "Preencha data e horário para verificar disponibilidade";
+    statusEl.style.color = "var(--tx3)";
+    resetOcc();
+    return;
+  }
+  statusEl.textContent = "Verificando disponibilidade...";
+  statusEl.style.color = "var(--tx3)";
+  try {
+    // Extrair id do evento atual do botão salvar
+    const saveBtn = document.querySelector("#ag-form-modal button[onclick*='agSalvarForm']");
+    const m = saveBtn?.getAttribute("onclick")?.match(/agSalvarForm\('([^']*)'\)/);
+    const excluirId = (m && m[1]) ? m[1] : null;
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/rpc/espacos_disponibilidade_admin`, {
+      method: "POST",
+      headers: { ...apiHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ p_data_inicio: data, p_hora_inicio: hi, p_data_fim: data, p_hora_fim: hf || null, p_excluir_id: excluirId || null })
+    });
+    if (!res.ok) throw new Error();
+    const dados = await res.json();
+    const dispMap = {};
+    dados.forEach(d => { dispMap[d.nome] = d; });
+    resetOcc();
+    let ocupados = 0;
+    grid.querySelectorAll(".ag-espaco-chk").forEach(lbl => {
+      const inp = lbl.querySelector("input");
+      const occ = lbl.querySelector(".ag-esp-occ");
+      const nome = lbl.dataset.espaco;
+      const info = dispMap[nome];
+      if (!info || info.disponivel) return;
+      ocupados++;
+      inp.dataset.ocupado = "true";
+      lbl.style.borderColor = inp.checked ? "#C07700" : "rgba(192,119,0,.4)";
+      lbl.style.background  = inp.checked ? "rgba(192,119,0,.08)" : "var(--bg-input)";
+      if (occ) occ.style.display = "";
+      const c = info.conflito;
+      lbl.title = c ? `Em uso: "${c.titulo}"${c.hora_inicio ? " · " + String(c.hora_inicio).slice(0,5) + (c.hora_fim ? "–" + String(c.hora_fim).slice(0,5) : "") : ""}` : "Em uso neste horário";
+    });
+    const livres = dados.filter(d => d.disponivel).length;
+    statusEl.textContent = ocupados > 0
+      ? `${livres} disponível${livres !== 1 ? "is" : ""} · ${ocupados} em uso neste horário`
+      : "Todos os espaços disponíveis para este horário";
+    statusEl.style.color = ocupados > 0 ? "#C07700" : "var(--gr)";
+  } catch (_) {
+    statusEl.textContent = "Não foi possível verificar disponibilidade.";
+  }
+}
+window._agVerificarDisponibilidadeForm = _agVerificarDisponibilidadeForm;

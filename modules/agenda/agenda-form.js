@@ -102,13 +102,13 @@ async function agAbrirForm(r = null) {
         <!-- Espaços -->
         <div>
           ${lbl("Espaços")}
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <div id="ag-f-espaco-preview" style="flex:1;display:flex;flex-wrap:wrap;gap:5px;min-height:30px;align-items:center">
-              ${espacosSel.length ? espacosSel.map(n=>`<span style="padding:3px 9px;border-radius:4px;background:rgba(42,181,192,.12);color:var(--teal);font-size:11px;font-weight:600;border:1px solid rgba(42,181,192,.3)">${escapeHtml(n)}</span>`).join(" ") : `<span style="color:var(--tx3);font-size:11.5px">Nenhum espaço selecionado</span>`}
-            </div>
-            <button type="button" onclick="agAbrirEspacos()" style="flex-shrink:0;padding:6px 12px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap">Selecionar →</button>
+          <div id="ag-espaco-status" style="font-size:11px;color:var(--tx3);padding:6px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-input);margin-bottom:8px;line-height:1.4">
+            Preencha data e horário para verificar disponibilidade
           </div>
-          <input type="hidden" id="ag-f-espaco-txt" value="${escapeHtml(espacoAtual)}">
+          <div id="ag-espaco-aviso" style="display:none;font-size:11.5px;color:#8A4000;padding:7px 10px;background:rgba(214,148,0,.09);border:1px solid rgba(214,148,0,.35);border-radius:6px;margin-bottom:8px"></div>
+          <div id="ag-espaco-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px">
+            <div style="font-size:11px;color:var(--tx3)">Carregando espaços...</div>
+          </div>
         </div>
 
         <!-- Observação -->
@@ -140,6 +140,7 @@ async function agAbrirForm(r = null) {
 
   _agRenderizarDias();
   _agPopularOrganizador();
+  _agCarregarEspacosWidget(modal, espacosSel);
 
   modal.querySelectorAll(".ag-tipo-chip").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -217,10 +218,25 @@ async function _agNotificarResponsaveis(acao, evento, extras = {}) {
 async function agSalvarForm(id) {
   const titulo = document.getElementById("ag-f-titulo")?.value?.trim();
   if (!titulo) { T("Campo obrigatório", "Informe o título do evento."); return; }
-  const _fTipo   = document.getElementById("ag-f-tipo")?.value;
-  const _fEspaco = document.getElementById("ag-f-espaco-txt")?.value?.trim();
-  if (!_fTipo)   { T("Campo obrigatório", "Selecione o tipo do evento (Culto, Reunião, Evento…)."); return; }
-  if (!_fEspaco) { T("Campo obrigatório", "Selecione ao menos um espaço (ou 'Não necessário')."); return; }
+  const _fTipo = document.getElementById("ag-f-tipo")?.value;
+  if (!_fTipo) { T("Campo obrigatório", "Selecione o tipo do evento (Culto, Reunião, Evento…)."); return; }
+
+  // Coletar espaços selecionados via checkboxes
+  const grid = document.getElementById("ag-espaco-grid");
+  const espacosSelecionados = grid
+    ? [...grid.querySelectorAll("input[type=checkbox][data-espaco]:checked")].map(c => c.dataset.espaco)
+    : [];
+  const espacosOcupados = grid
+    ? [...grid.querySelectorAll("input[type=checkbox][data-espaco]:checked[data-ocupado='true']")].map(c => c.dataset.espaco)
+    : [];
+
+  if (espacosOcupados.length) {
+    const lista = espacosOcupados.join(", ");
+    const confirmar = confirm(`⚠️ ${lista} ${espacosOcupados.length > 1 ? "estão" : "está"} em uso neste horário.\n\nDeseja salvar mesmo assim?`);
+    if (!confirmar) return;
+  }
+
+  const _fEspaco = espacosSelecionados.join(", ") || null;
 
   const diasColetados = _agDiasState.map((_, idx) => ({
     data:        document.getElementById(`ag-dia-data-${idx}`)?.value || "",
@@ -248,7 +264,7 @@ async function agSalvarForm(id) {
     responsavel:     document.getElementById("ag-f-responsavel")?.value?.trim() || null,
     solicitante_txt: document.getElementById("ag-f-solicitante")?.value?.trim() || null,
     solicitante_tel: document.getElementById("ag-f-telefone")?.value?.trim() || null,
-    espaco:          document.getElementById("ag-f-espaco-txt")?.value?.trim() || null,
+    espaco:          _fEspaco,
     observacao:      document.getElementById("ag-f-obs")?.value?.trim() || null,
     status:          document.getElementById("ag-f-status")?.value || "confirmado",
   };
