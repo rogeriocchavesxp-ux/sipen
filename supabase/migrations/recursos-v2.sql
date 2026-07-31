@@ -3,25 +3,34 @@
 -- Executar APÓS recursos-estoque.sql e hazal-dados.sql
 -- ═══════════════════════════════════════════════════════
 
--- 1. Itens: código de barras e custo unitário
+BEGIN;
+
+-- Lock explícito em ordem consistente para evitar deadlock
+LOCK TABLE recursos_itens IN SHARE ROW EXCLUSIVE MODE;
+LOCK TABLE recursos_movimentos IN SHARE ROW EXCLUSIVE MODE;
+
+-- 1. Dropar trigger ANTES de alterar constraint (evita deadlock)
+DROP TRIGGER IF EXISTS trg_atualizar_estoque ON recursos_movimentos;
+
+-- 2. Itens: código de barras e custo unitário
 ALTER TABLE recursos_itens
   ADD COLUMN IF NOT EXISTS codigo         text,
   ADD COLUMN IF NOT EXISTS custo_unitario numeric(12,2);
 
--- 2. Movimentos: custo, valor total, destino/setor
+-- 3. Movimentos: custo, valor total, destino/setor
 ALTER TABLE recursos_movimentos
   ADD COLUMN IF NOT EXISTS custo_unitario numeric(12,2),
   ADD COLUMN IF NOT EXISTS valor_total    numeric(12,2),
   ADD COLUMN IF NOT EXISTS destino_setor  text;
 
--- 3. Ampliar CHECK de tipo (ajuste_entrada e ajuste_saida)
+-- 4. Ampliar CHECK de tipo (ajuste_entrada e ajuste_saida)
 ALTER TABLE recursos_movimentos
   DROP CONSTRAINT IF EXISTS recursos_movimentos_tipo_check;
 ALTER TABLE recursos_movimentos
   ADD CONSTRAINT recursos_movimentos_tipo_check
   CHECK (tipo IN ('entrada','saida','ajuste','ajuste_entrada','ajuste_saida'));
 
--- 4. Trigger atualizado: novos tipos + custo_unitario no item
+-- 5. Função do trigger atualizada: novos tipos + custo_unitario no item
 CREATE OR REPLACE FUNCTION _fn_atualizar_estoque_recursos()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -40,13 +49,18 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 5. Categorias do modelo Excel (mantém as existentes)
+-- 6. Recriar trigger (após alterar constraint e função)
+CREATE TRIGGER trg_atualizar_estoque
+  AFTER INSERT ON recursos_movimentos
+  FOR EACH ROW EXECUTE FUNCTION _fn_atualizar_estoque_recursos();
+
+-- 7. Categorias do modelo Excel (mantém as existentes)
 INSERT INTO recursos_categorias (nome, icone) VALUES
   ('Higiene',    '🧴'),
   ('Utilidades', '🗑️')
 ON CONFLICT DO NOTHING;
 
--- 6. EANs dos produtos HAZAL já inseridos
+-- 8. EANs dos produtos HAZAL já inseridos
 UPDATE recursos_itens SET codigo = '2067179173223' WHERE nome ILIKE 'Talco Desinfetante%';
 UPDATE recursos_itens SET codigo = '2039605858905' WHERE nome ILIKE 'Papel Toalha Bobina Premium%';
 UPDATE recursos_itens SET codigo = '2063439717800' WHERE nome ILIKE 'Multiuso Original%';
@@ -70,7 +84,7 @@ UPDATE recursos_itens SET codigo = '2030640021101' WHERE nome ILIKE 'Papel Higi�
 UPDATE recursos_itens SET codigo = '2015421353602' WHERE nome ILIKE 'Saco de Lixo 100L preto%';
 UPDATE recursos_itens SET codigo = '2074374350960' WHERE nome ILIKE 'Multiuso Suprema%';
 
--- 7. Custo unitário inicial nos itens (última compra registrada na NF)
+-- 9. Custo unitário inicial nos itens (última compra registrada na NF)
 UPDATE recursos_itens SET custo_unitario = 13    WHERE nome ILIKE 'Talco Desinfetante%';
 UPDATE recursos_itens SET custo_unitario = 90    WHERE nome ILIKE 'Papel Toalha Bobina Premium%';
 UPDATE recursos_itens SET custo_unitario = 20    WHERE nome ILIKE 'Multiuso Original%';
@@ -93,3 +107,5 @@ UPDATE recursos_itens SET custo_unitario = 14    WHERE nome ILIKE 'Desinfetante 
 UPDATE recursos_itens SET custo_unitario = 6     WHERE nome ILIKE 'Papel Higiênico Paloma%';
 UPDATE recursos_itens SET custo_unitario = 70    WHERE nome ILIKE 'Saco de Lixo 100L preto%';
 UPDATE recursos_itens SET custo_unitario = 4     WHERE nome ILIKE 'Multiuso Suprema%';
+
+COMMIT;
