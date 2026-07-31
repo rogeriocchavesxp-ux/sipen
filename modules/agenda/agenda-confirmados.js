@@ -60,6 +60,7 @@ function _agRenderConfirmados() {
             <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Responsável</th>
             <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Visibilidade</th>
             <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Termo</th>
+            <th style="padding:9px 10px;width:40px"></th>
           </tr>
         </thead>
         <tbody>
@@ -77,6 +78,9 @@ function _agRenderConfirmados() {
                 </span>
               </td>
               <td style="padding:8px 10px">${termoBadge(r.status_termo)}</td>
+              <td style="padding:8px 6px;position:relative">
+                <button onclick="agConfKebab(this,'${r.id}')" style="padding:3px 7px;border-radius:4px;border:1px solid var(--bd1);background:var(--bg-card);color:var(--tx2);font-size:13px;cursor:pointer;line-height:1">⋯</button>
+              </td>
             </tr>`).join("")}
         </tbody>
       </table>
@@ -104,6 +108,56 @@ async function agToggleVisibilidade(id, el) {
   } catch(e) { T("Erro", e.message); }
 }
 window.agToggleVisibilidade = agToggleVisibilidade;
+
+function agConfKebab(btn, id) {
+  document.querySelectorAll(".ag-kebab-menu").forEach(m => m.remove());
+  const r = _agConfRows.find(x => x.id === id);
+  const temTermo = !!r?.token_termo;
+  const menu = document.createElement("div");
+  menu.className = "ag-kebab-menu";
+  menu.style.cssText = "position:absolute;right:0;top:calc(100% + 4px);z-index:200;background:var(--bg-card);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);min-width:190px;overflow:hidden";
+  const rJson = JSON.stringify(r||{}).replace(/'/g,"&#39;");
+  menu.innerHTML = `
+    <button onclick='agAbrirForm(JSON.parse(this.dataset.r))' data-r='${rJson}' style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:transparent;color:var(--tx1);font-size:12px;cursor:pointer;text-align:left" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='transparent'">
+      ✏️ Editar
+    </button>
+    ${temTermo ? `
+    <button onclick='agReenviarTermoConf("${id}")' style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:transparent;color:var(--tx1);font-size:12px;cursor:pointer;text-align:left" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='transparent'">
+      📲 Reenviar Termo
+    </button>` : ""}
+    <div style="height:1px;background:var(--bd1);margin:0 10px"></div>
+    <button onclick='agExcluirSolicitacao("${id}")' style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:transparent;color:var(--rose);font-size:12px;cursor:pointer;text-align:left" onmouseover="this.style.background='rgba(224,85,85,.08)'" onmouseout="this.style.background='transparent'">
+      🗑 Excluir
+    </button>`;
+  btn.parentElement.appendChild(menu);
+  const close = e => { if (!menu.contains(e.target) && e.target !== btn) { menu.remove(); document.removeEventListener("click", close); } };
+  setTimeout(() => document.addEventListener("click", close), 0);
+}
+window.agConfKebab = agConfKebab;
+
+function agReenviarTermoConf(id) {
+  document.querySelectorAll(".ag-kebab-menu").forEach(m => m.remove());
+  const r = _agConfRows.find(x => x.id === id);
+  if (!r?.token_termo) return T("Sem token", "Este evento não possui link de termo gerado.");
+  const _tel = r?.solicitante_tel || r?.telefone;
+  const nome  = (r.solicitante_txt || "").split(" ")[0] || "";
+  const fmtD  = s => { if (!s) return ""; const [y,m,d] = String(s).slice(0,10).split("-"); return `${d}/${m}/${y}`; };
+  const msg = `Olá${nome ? `, ${nome}` : ""}! Segue novamente o link do *Termo de Compromisso e Responsabilidade* referente ao seu agendamento:\n\n`
+    + `📋 *${r.titulo || "Agendamento"}*\n`
+    + (r.data ? `📅 ${fmtD(r.data)}\n` : "")
+    + (r.espaco ? `📍 ${r.espaco}\n` : "")
+    + (r.protocolo ? `🔖 Protocolo: ${r.protocolo}\n` : "")
+    + `\n📄 *Termo de Compromisso:*\nhttps://sipen.com.br/termo?t=${r.token_termo}\n\n⚠️ *Atenção:* o agendamento só é concluído após a leitura e assinatura do Termo de Compromisso e Responsabilidade.\n\n_Por favor, acesse o link acima e assine para confirmar o uso do espaço._`;
+  if (typeof WA !== "undefined" && _tel) {
+    WA.send({ para: _tel, nome: r.solicitante_txt || "Solicitante", mensagem: msg, modulo: "AGENDA", origem_id: id });
+    T("Termo reenviado", `Link enviado para ${_tel}.`);
+  } else {
+    const link = `https://sipen.com.br/termo?t=${r.token_termo}`;
+    navigator.clipboard?.writeText(link).catch(()=>{});
+    T("Link copiado", "Link do termo copiado para a área de transferência.");
+  }
+}
+window.agReenviarTermoConf = agReenviarTermoConf;
 
 function agSolKebab(btn, id) {
   document.querySelectorAll(".ag-kebab-menu").forEach(m => m.remove());
