@@ -31,25 +31,51 @@
   /* ── Classificação dos registros ──────────────────────────── */
 
   function _classificar(r) {
-    // Se o banco já tem a coluna tipo_nomeacao preenchida, usa diretamente
-    if (r.tipo_nomeacao) return r;
+    const clone = Object.assign({}, r);
+    if (!clone.area) clone.area = r.orgao;
 
-    const cargo    = _nomalizarCargo(r.cargo);
-    const orgTipo  = r.orgao_tipo || '';
-    const clone    = Object.assign({}, r);
+    // nivel é a fonte autoritativa — deriva tipo_nomeacao/funcao_lider dele
+    if (r.nivel) {
+      const GOV = ['presidente','vice_presidente','secretario','tesoureiro'];
+      if (GOV.includes(r.nivel)) {
+        clone.tipo_nomeacao = 'governo';
+      } else if (['supervisor','coordenador','lider_area'].includes(r.nivel)) {
+        clone.tipo_nomeacao = 'lider';
+        clone.funcao_lider  = r.nivel;
+      } else {
+        clone.tipo_nomeacao = 'membro';
+        clone.tipo_membro   = r.orgao_tipo || 'ministerio';
+      }
+      return clone;
+    }
 
+    // Legado: tipo_nomeacao já preenchido no banco
+    if (r.tipo_nomeacao) return clone;
+
+    const cargo   = _nomalizarCargo(r.cargo);
+    const orgTipo = r.orgao_tipo || '';
+
+    // Governo/Sociedade sem nivel → modelo de diretoria
+    if (['governo','sociedade'].includes(orgTipo)) {
+      clone.tipo_nomeacao = 'governo';
+      if (/vice.?presidente/.test(cargo))   clone.nivel = 'vice_presidente';
+      else if (/presidente/.test(cargo))    clone.nivel = 'presidente';
+      else if (/tesourei/.test(cargo))      clone.nivel = 'tesoureiro';
+      else if (/secretar/.test(cargo))      clone.nivel = 'secretario';
+      else                                  clone.nivel = 'presidente';
+      return clone;
+    }
+
+    // Ministério/Comissão/Grupo → modelo de liderança ministerial
     if (/supervisor|supervisao|pastor supervisor/.test(cargo) || cargo === 'pastor') {
       clone.tipo_nomeacao = 'lider';
       clone.funcao_lider  = 'supervisor';
-    } else if (/^coordena|^presidente|^vice.presidente|^dir[ei]|^regente/.test(cargo)) {
+    } else if (/^coordena|^responsavel|^gestao/.test(cargo)) {
       clone.tipo_nomeacao = 'lider';
       clone.funcao_lider  = 'coordenador';
-    } else if (/^lider|^lideranca|^responsavel|^gestao|^gerencia/.test(cargo)) {
+    } else if (/^lider|^lideranca|^regente/.test(cargo)) {
       clone.tipo_nomeacao = 'lider';
       clone.funcao_lider  = 'lider_area';
-    } else if (orgTipo === 'sociedade') {
-      clone.tipo_nomeacao = 'membro';
-      clone.tipo_membro   = 'sociedade';
     } else if (orgTipo === 'ministerio') {
       clone.tipo_nomeacao = 'membro';
       clone.tipo_membro   = 'ministerio';
@@ -58,7 +84,6 @@
       clone.tipo_membro   = orgTipo;
     }
 
-    if (!clone.area) clone.area = r.orgao;
     return clone;
   }
 
@@ -138,23 +163,21 @@
 
   function _atualizarKpis() {
     const rows    = _rows;
+    const governo = rows.filter(r => r.tipo_nomeacao === 'governo');
     const lideres = rows.filter(r => r.tipo_nomeacao === 'lider');
     const membros = rows.filter(r => r.tipo_nomeacao === 'membro');
     const socs    = membros.filter(r => r.tipo_membro === 'sociedade');
     const mins    = membros.filter(r => r.tipo_membro === 'ministerio');
 
     _sv('nom-kpi-total',   rows.length);
-    _sv('nom-kpi-lideres', lideres.length);
+    _sv('nom-kpi-lideres', governo.length + lideres.length);
     _sv('nom-kpi-membros', membros.length);
     _sv('nom-kpi-socs',    [...new Set(socs.map(r => r.orgao))].length);
 
-    // Subtextos
-    const lidsoc = lideres.filter(r => r.orgao_tipo === 'sociedade');
-    const kpiSubs = {
-      'nom-kpi-sub-lideres': `${lideres.filter(r=>r.funcao_lider==='supervisor').length} sup · ${lideres.filter(r=>r.funcao_lider==='coordenador').length} coord · ${lidsoc.length} soc`,
-      'nom-kpi-sub-membros': `${mins.length} em ministérios · ${socs.length} em sociedades`,
-    };
-    Object.entries(kpiSubs).forEach(([id, v]) => _sv(id, v));
+    _sv('nom-kpi-sub-lideres',
+      `${governo.length} diretores · ${lideres.filter(r=>r.funcao_lider==='supervisor').length} sup · ${lideres.filter(r=>r.funcao_lider==='coordenador').length} coord`
+    );
+    _sv('nom-kpi-sub-membros', `${mins.length} em ministérios · ${socs.length} em sociedades`);
   }
 
   /* ── Bloco colapsável (accordion nativo SIPEN) ───────────── */
@@ -213,26 +236,53 @@
     return `<div class="kpi-lbl" style="color:${cor};margin:14px 0 6px">${label}</div>`;
   }
 
-  /* ── Seção: LÍDERES ───────────────────────────────────────── */
+  /* ── Seção: GOVERNO / DIRETORIAS ─────────────────────────── */
+
+  function _renderSecaoGoverno(rows) {
+    const gov = rows.filter(r => r.tipo_nomeacao === 'governo');
+    if (!gov.length) return '';
+
+    const NIVEL_LABEL = {
+      presidente: 'Presidente', vice_presidente: 'Vice-Presidente',
+      secretario: 'Secretário', tesoureiro: 'Tesoureiro',
+    };
+    const NIVEL_ORDER = ['presidente','vice_presidente','secretario','tesoureiro'];
+    const NIVEL_COR   = {
+      presidente: 'var(--sky)', vice_presidente: 'var(--teal)',
+      secretario: 'var(--violet)', tesoureiro: 'var(--gold)',
+    };
+
+    const byOrgao = {};
+    gov.forEach(r => { (byOrgao[r.orgao || '—'] ||= []).push(r); });
+
+    return Object.keys(byOrgao).sort().map((orgao, idx) => {
+      const pessoas  = byOrgao[orgao];
+      const byNivel  = {};
+      pessoas.forEach(p => { (byNivel[p.nivel || 'presidente'] ||= []).push(p); });
+
+      const blocos = NIVEL_ORDER
+        .filter(n => byNivel[n]?.length)
+        .map(n => _bloco(`nom-gov-${idx}-${n}`, NIVEL_LABEL[n], NIVEL_COR[n] || 'var(--tx3)', '', byNivel[n], _linhaLider))
+        .join('');
+
+      return `
+        <div style="margin-bottom:10px">
+          <div class="kpi-lbl" style="color:var(--sky);margin:0 0 6px">${orgao}</div>
+          ${blocos}
+        </div>`;
+    }).join('');
+  }
+
+  /* ── Seção: LÍDERES (ministérios/comissões) ───────────────── */
 
   function _renderSecaoLideres(rows) {
     const lideres = rows.filter(r => r.tipo_nomeacao === 'lider');
     if (!lideres.length) return `<p style="color:var(--tx3);font-size:11.5px;padding:4px 0">Nenhum líder cadastrado para este ano.</p>`;
 
-    const lidsoc = lideres.filter(r => r.orgao_tipo === 'sociedade');
-    const lidgov = lideres.filter(r => r.orgao_tipo !== 'sociedade');
-
-    const bySoc = {};
-    lidsoc.forEach(r => { const k = r.orgao || '—'; (bySoc[k] = bySoc[k] || []).push(r); });
-    const htmlSocLid = Object.keys(bySoc).sort().map((o, i) =>
-      _bloco(`nom-soc-lid-${i}`, o, 'var(--gold)', '', bySoc[o], _linhaLider)
-    ).join('');
-
     return `
-      ${_bloco('nom-sup',   'Supervisores',    'var(--rose)',   '', lidgov.filter(r => r.funcao_lider === 'supervisor'),  _linhaLider)}
-      ${_bloco('nom-coord', 'Coordenadores',   'var(--sky)',    '', lidgov.filter(r => r.funcao_lider === 'coordenador'), _linhaLider)}
-      ${_bloco('nom-lider', 'Líderes de Área', 'var(--violet)', '', lidgov.filter(r => r.funcao_lider === 'lider_area'),  _linhaLider)}
-      ${lidsoc.length ? `${_subHeader('Liderança de Sociedades Internas', 'var(--gold)')}${htmlSocLid}` : ''}`;
+      ${_bloco('nom-sup',   'Supervisores',    'var(--rose)',   '', lideres.filter(r => r.funcao_lider === 'supervisor'),  _linhaLider)}
+      ${_bloco('nom-coord', 'Coordenadores',   'var(--sky)',    '', lideres.filter(r => r.funcao_lider === 'coordenador'), _linhaLider)}
+      ${_bloco('nom-lider', 'Líderes de Área', 'var(--violet)', '', lideres.filter(r => r.funcao_lider === 'lider_area'),  _linhaLider)}`;
   }
 
   /* ── Seção: MEMBROS ───────────────────────────────────────── */
@@ -334,6 +384,8 @@
       return `<span class="${MAP[status] || 'badge-justif'}">${_labelStatus(status)}</span>`;
     };
 
+    const govHtml = _renderSecaoGoverno(rows);
+
     container.innerHTML = `
       ${anual ? `
         <div class="alr" style="background:rgba(48,209,88,.06);border-color:rgba(48,209,88,.2)">
@@ -346,8 +398,14 @@
           </div>
         </div>` : ''}
 
+      ${govHtml ? `
+        <div class="card" style="margin-bottom:10px;padding:14px 16px">
+          <div class="ctit" style="margin-bottom:10px;color:var(--sky)">Governo e Diretorias</div>
+          ${govHtml}
+        </div>` : ''}
+
       <div class="card" style="margin-bottom:10px;padding:14px 16px">
-        <div class="ctit" style="margin-bottom:10px;color:var(--rose)">Líderes</div>
+        <div class="ctit" style="margin-bottom:10px;color:var(--rose)">Líderes Ministeriais</div>
         ${_renderSecaoLideres(rows)}
       </div>
 
@@ -585,24 +643,22 @@
             </div>
 
             <div id="nom-f-funcao-div" style="display:none">
-              <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Função do Líder</label>
+              <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Nível / Cargo no Órgão</label>
               <select id="nom-f-funcao" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
                 <option value="supervisor">Supervisor</option>
-                <option value="presidente">Presidente</option>
                 <option value="coordenador">Coordenador</option>
                 <option value="lider_area">Líder de Área</option>
-                <option value="conselheiro">Conselheiro</option>
-                <option value="tesoureiro">Tesoureiro</option>
               </select>
             </div>
 
             <div>
               <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Categoria Institucional <span style="color:var(--rose)">*</span></label>
-              <select id="nom-f-categoria" onchange="nomCarregarOrgaos()" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
+              <select id="nom-f-categoria" onchange="nomCarregarOrgaos(); nomAtualizarNivelOpts()" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none">
                 <option value="">— Selecione o tipo de estrutura —</option>
+                <option value="governo">Conselho / Junta Diaconal</option>
                 <option value="ministerio">Ministério</option>
                 <option value="sociedade">Sociedade Interna</option>
-                <option value="departamento">Departamento</option>
+                <option value="departamento">Departamento / Comissão</option>
                 <option value="congregacao">Congregação</option>
               </select>
             </div>
@@ -702,16 +758,23 @@
     if (_el('nom-f-nome-pid')) _el('nom-f-nome-pid').value = r.pessoa_id || '';
 
     // Tipo de nomeação + campos condicionais
-    sv('nom-f-tipo', r.tipo_nomeacao || '');
+    const tipoParaForm = r.tipo_nomeacao === 'governo' ? 'lider' : (r.tipo_nomeacao || '');
+    sv('nom-f-tipo', tipoParaForm);
     nomMostrarCampos();
-    if (r.funcao_lider) sv('nom-f-funcao', r.funcao_lider);
+    // Nivel: usa campo nivel do banco, depois funcao_lider como fallback legado
+    if (r.nivel)        sv('nom-f-funcao', r.nivel);
+    else if (r.funcao_lider) sv('nom-f-funcao', r.funcao_lider);
 
     // Categoria + Orgão (assíncrono)
-    const CAT_MAP = { ministerio:'ministerio', sociedade:'sociedade', comissao:'departamento', congregacao:'congregacao' };
+    const CAT_MAP = { ministerio:'ministerio', sociedade:'sociedade', comissao:'departamento', congregacao:'congregacao', governo:'governo' };
     const cat = CAT_MAP[r.orgao_tipo] || '';
     if (cat) {
       sv('nom-f-categoria', cat);
+      nomAtualizarNivelOpts();
       await nomCarregarOrgaos();
+      // Restaura nivel após nomCarregarOrgaos (que pode resetar o select)
+      if (r.nivel)             sv('nom-f-funcao', r.nivel);
+      else if (r.funcao_lider) sv('nom-f-funcao', r.funcao_lider);
       const orgSel = _el('nom-f-orgao-sel');
       const orgNome = (r.orgao || r.area || '').toLowerCase();
       if (orgSel && orgNome) {
@@ -738,9 +801,30 @@
     const tipo = (_el('nom-f-tipo') || {}).value;
     const fDiv = _el('nom-f-funcao-div');
     if (fDiv) fDiv.style.display = tipo === 'lider' ? '' : 'none';
-    // Limpa seleções dependentes ao trocar o tipo
     const catSel = _el('nom-f-categoria');
     if (catSel) { catSel.value = ''; nomCarregarOrgaos(); }
+    nomAtualizarNivelOpts();
+  }
+
+  function nomAtualizarNivelOpts() {
+    const cat = (_el('nom-f-categoria') || {}).value;
+    const sel = _el('nom-f-funcao');
+    if (!sel) return;
+
+    const GOV = [
+      { value:'presidente',      label:'Presidente' },
+      { value:'vice_presidente', label:'Vice-Presidente' },
+      { value:'secretario',      label:'Secretário' },
+      { value:'tesoureiro',      label:'Tesoureiro' },
+    ];
+    const MIN = [
+      { value:'supervisor',  label:'Supervisor' },
+      { value:'coordenador', label:'Coordenador' },
+      { value:'lider_area',  label:'Líder de Área' },
+    ];
+
+    const opts = ['governo','sociedade'].includes(cat) ? GOV : MIN;
+    sel.innerHTML = opts.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
   }
 
   /* ── Campos institucionais: carregamento dinâmico ─────────── */
@@ -770,7 +854,25 @@
 
     try {
       let items = [];
-      if (cat === 'ministerio') {
+      if (cat === 'governo') {
+        // Órgãos de governo são fixos — busca distintos do banco para refletir o cadastro real
+        const r = await fetch(
+          `${apiBaseUrl()}/rest/v1/nomeados?orgao_tipo=eq.governo&deleted_at=is.null&select=orgao&order=orgao.asc`,
+          { headers: apiHeaders() }
+        );
+        if (r.ok) {
+          const raw = await r.json();
+          const uniq = [...new Map(raw.map(x => [x.orgao, x])).values()];
+          items = uniq.map((x, i) => ({ id: `gov-${i}`, nome: x.orgao }));
+        }
+        // Fallback se tabela não tiver entradas ainda
+        if (!items.length) {
+          items = [
+            { id: 'gov-0', nome: 'Conselho da Igreja' },
+            { id: 'gov-1', nome: 'Junta Diaconal' },
+          ];
+        }
+      } else if (cat === 'ministerio') {
         const r = await fetch(`${apiBaseUrl()}/rest/v1/ministerios?ativo=eq.true&select=id,nome&order=nome.asc`, { headers: apiHeaders() });
         if (r.ok) items = await r.json();
       } else if (cat === 'sociedade') {
@@ -864,15 +966,19 @@
     if (!cat)     { T('Campo obrigatório', 'Selecione a categoria institucional.');    return; }
     if (!orgaoId) { T('Campo obrigatório', 'Selecione a área, ministério ou sociedade.'); return; }
 
-    const TIPO_MEMBRO_MAP = { ministerio:'ministerio', sociedade:'sociedade', departamento:'outro', congregacao:'congregacao' };
-    const ORGAO_TIPO_MAP  = { ministerio:'ministerio', sociedade:'sociedade', departamento:'comissao', congregacao:'congregacao' };
+    const TIPO_MEMBRO_MAP = { ministerio:'ministerio', sociedade:'sociedade', departamento:'outro', congregacao:'congregacao', governo:'outro' };
+    const ORGAO_TIPO_MAP  = { ministerio:'ministerio', sociedade:'sociedade', departamento:'comissao', congregacao:'congregacao', governo:'governo' };
+
+    const nivelSelecionado = tipo === 'lider' ? v('nom-f-funcao') : 'membro';
+    const tipoNomeacao     = ['governo','sociedade'].includes(cat) && tipo === 'lider' ? 'governo' : tipo;
 
     const payload = {
       nome,
       pessoa_id:     (_el('nom-f-nome-pid') || {}).value || null,
       ano:           parseInt(v('nom-f-ano')) || _anoAtivo,
-      tipo_nomeacao: tipo,
-      funcao_lider:  tipo === 'lider' ? v('nom-f-funcao') : null,
+      nivel:         nivelSelecionado,
+      tipo_nomeacao: tipoNomeacao,
+      funcao_lider:  tipo === 'lider' && !['governo','sociedade'].includes(cat) ? nivelSelecionado : null,
       tipo_membro:   tipo === 'membro' ? (TIPO_MEMBRO_MAP[cat] || 'ministerio') : null,
       orgao_tipo:    ORGAO_TIPO_MAP[cat] || 'ministerio',
       orgao:         orgaoNome,
@@ -1491,8 +1597,9 @@
   window.nomMenuExportar     = nomMenuExportar;
   window.nomNovoRegistro     = nomNovoRegistro;
   window.nomEditarRegistro   = nomEditarRegistro;
-  window.nomMostrarCampos    = nomMostrarCampos;
-  window.nomCarregarOrgaos   = nomCarregarOrgaos;
+  window.nomMostrarCampos       = nomMostrarCampos;
+  window.nomAtualizarNivelOpts  = nomAtualizarNivelOpts;
+  window.nomCarregarOrgaos      = nomCarregarOrgaos;
   window.nomCarregarSetores  = nomCarregarSetores;
   window.nomSalvarRegistro   = nomSalvarRegistro;
   window.nomBuscarPessoa     = nomBuscarPessoa;
