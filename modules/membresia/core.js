@@ -606,7 +606,7 @@ async function anivWaEnviarAgora() {
     if (!membRes.ok) throw new Error(await membRes.text());
     const rows = await membRes.json();
     const destinatarios = rows.map(r => r.pessoas).filter(Boolean);
-    if (!destinatarios.length) { T("Lista vazia", "A lista selecionada não tem membros."); return; }
+    if (!destinatarios.length) { T("Lista sem membros", "Adicione membros à lista em WhatsApp → Listas → 👥 Membros."); return; }
     T("Enviando...", `${destinatarios.length} destinatário${destinatarios.length !== 1 ? "s" : ""}`);
     let enviados = 0, falhas = 0;
     const diaKey = new Date().toISOString().slice(0, 10);
