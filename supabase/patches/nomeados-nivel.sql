@@ -68,9 +68,8 @@ AS $$
 $$;
 
 -- 4. RLS
--- ATENÇÃO: adapte o check de admin ao que existir no seu projeto.
--- Por padrão, verifica a coluna `role` na tabela `profiles`.
--- Se a tabela se chamar diferente, ajuste abaixo.
+-- Usa a função is_admin() já existente em supabase-v3-incremental.sql
+-- que verifica user_profiles.role = 'admin' AND ativo = true
 
 ALTER TABLE nomeados ENABLE ROW LEVEL SECURITY;
 
@@ -81,54 +80,55 @@ CREATE POLICY "nomeados_select" ON nomeados
   USING (deleted_at IS NULL);
 
 -- Insert: admin pode tudo; supervisor pode adicionar coord/lider no seu dept; coord pode adicionar lider
+-- Nota: em RLS WITH CHECK, a linha sendo inserida é referenciada sem prefixo (nivel, dept_id, etc.)
 DROP POLICY IF EXISTS "nomeados_insert" ON nomeados;
 CREATE POLICY "nomeados_insert" ON nomeados
   FOR INSERT TO authenticated
   WITH CHECK (
-    -- admin
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    -- admin (usa função existente no projeto)
+    public.is_admin()
     OR
     -- supervisor → pode inserir coordenador ou lider_area no seu dept
     (
-      NEW.nivel IN ('coordenador', 'lider_area')
-      AND NEW.dept_id IN (
-        SELECT dept_id FROM nomeados
-        WHERE pessoa_id = auth.uid() AND nivel = 'supervisor'
-          AND status = 'ativo' AND deleted_at IS NULL
+      nivel IN ('coordenador', 'lider_area')
+      AND dept_id IN (
+        SELECT dept_id FROM nomeados n2
+        WHERE n2.pessoa_id = auth.uid() AND n2.nivel = 'supervisor'
+          AND n2.status = 'ativo' AND n2.deleted_at IS NULL
       )
     )
     OR
     -- coordenador → pode inserir lider_area no seu dept
     (
-      NEW.nivel = 'lider_area'
-      AND NEW.dept_id IN (
-        SELECT dept_id FROM nomeados
-        WHERE pessoa_id = auth.uid() AND nivel IN ('supervisor','coordenador')
-          AND status = 'ativo' AND deleted_at IS NULL
+      nivel = 'lider_area'
+      AND dept_id IN (
+        SELECT dept_id FROM nomeados n2
+        WHERE n2.pessoa_id = auth.uid() AND n2.nivel IN ('supervisor','coordenador')
+          AND n2.status = 'ativo' AND n2.deleted_at IS NULL
       )
     )
   );
 
--- Update: mesma lógica
+-- Update: mesma lógica (USING filtra linhas visíveis; WITH CHECK valida o novo estado)
 DROP POLICY IF EXISTS "nomeados_update" ON nomeados;
 CREATE POLICY "nomeados_update" ON nomeados
   FOR UPDATE TO authenticated
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
     OR (
       nivel IN ('coordenador', 'lider_area')
       AND dept_id IN (
-        SELECT dept_id FROM nomeados
-        WHERE pessoa_id = auth.uid() AND nivel = 'supervisor'
-          AND status = 'ativo' AND deleted_at IS NULL
+        SELECT dept_id FROM nomeados n2
+        WHERE n2.pessoa_id = auth.uid() AND n2.nivel = 'supervisor'
+          AND n2.status = 'ativo' AND n2.deleted_at IS NULL
       )
     )
     OR (
       nivel = 'lider_area'
       AND dept_id IN (
-        SELECT dept_id FROM nomeados
-        WHERE pessoa_id = auth.uid() AND nivel IN ('supervisor','coordenador')
-          AND status = 'ativo' AND deleted_at IS NULL
+        SELECT dept_id FROM nomeados n2
+        WHERE n2.pessoa_id = auth.uid() AND n2.nivel IN ('supervisor','coordenador')
+          AND n2.status = 'ativo' AND n2.deleted_at IS NULL
       )
     )
   );
