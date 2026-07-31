@@ -1,4 +1,4 @@
-const MC={tutorial:"var(--teal)",geral:"var(--gmd)",admin:"var(--gold)",fin:"var(--gr)",jur:"var(--blue)",conselho:"var(--sky)",proj:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",dep:"var(--violet)",proculto:"var(--teal)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)",cong:"var(--gr)",diac:"var(--copper)",area:"var(--gr)",config:"var(--violet)",com:"var(--violet)",eve:"var(--sky)",acesso:"var(--sky)",chat:"var(--violet)",recursos:"var(--amber)"};
+const MC={tutorial:"var(--teal)",geral:"var(--gmd)",admin:"var(--gold)",fin:"var(--gr)",jur:"var(--blue)",conselho:"var(--sky)",proj:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",dep:"var(--violet)",proculto:"var(--teal)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)",cong:"var(--gr)",diac:"var(--copper)",area:"var(--gr)",config:"var(--violet)",com:"var(--violet)",eve:"var(--sky)",acesso:"var(--sky)",chat:"var(--violet)",recursos:"var(--amber)",compras:"var(--blue)"};
 const CRUMB={
   "tutorial":["","Tutorial","/ guia de uso do SIPEN"],
   "dep-adm-dash":["Administrativos","Dashboard","/ visão geral dos departamentos administrativos"],
@@ -8,6 +8,9 @@ const CRUMB={
   "recursos-mov":  ["Recursos","Movimentações","/ histórico de entradas e saídas"],
   "recursos-cat":  ["Recursos","Categorias","/ categorias de itens"],
   "recursos-hist": ["Recursos","Histórico do Produto","/ entradas e saídas"],
+  "compras-dash":    ["Compras","Dashboard","/ pedidos, cotações e aprovações"],
+  "compras-lista":   ["Compras","Todos os Pedidos","/ lista completa"],
+  "compras-detalhe": ["Compras","Detalhe do Pedido","/ itens e histórico de status"],
   "proculto-dash":["Pró-Culto","Central Operacional dos Cultos","/ liturgia, avisos e preparação"],
   geral:["","Dashboard Geral","/ IPPenha · visão executiva consolidada"],
   "cultos-dash":["Cultos","Dashboard","/ visão geral dos cultos"],
@@ -192,7 +195,7 @@ const CRUMB={
   "evangelismo-config":    ["Evangelização e Missões","Configurações","/ parâmetros do módulo"],
 };
 const SL={dash:"Dashboard",diaconos:"Diáconos",escalas:"Escalas de Serviço",familias:"Famílias Assistidas",social:"Ação Social e Beneficência",visitacao:"Visitação Diaconal",patrimonio:"Patrimônio e Apoio Operacional",solicitacoes:"Solicitações Diaconais",relatorios:"Relatórios Diaconais",historico:"Histórico e Atas",sec:"Secretaria e Cadastro",rh:"RH / Gestão de Pessoas",doc:"Documentos",aud:"Auditoria",fin:"Financeiro",con:"Contratos",est:"Controle de Estoque",demandas:"Processos e Demandas Jurídicas",contratos:"Contratos e Instrumentos",pareceres:"Pareceres",documentos:"Documentos Jurídicos",riscos:"Riscos e Pendências",historico:"Histórico",rel:"Relatórios Estratégicos",ind:"Indicadores",cong:"Congregações",nomeados:"Nomeados",ordenados:"Ordenados",ate:"Atendimentos",ora:"Pedidos de Oração",aco:"Acompanhamentos",reg:"Registros Pastorais",pri:"Casos Prioritários",min:"Ministérios",soc:"Sociedades Internas",adm:"Administração",com:"Comissões",lid:"Liderança Ministerial",esc:"Escalas",prog:"Programações",lit:"Liturgia dos Cultos",vol:"Voluntários",calendario:"Calendário Geral",solicitacoes:"Solicitações de Agendamento",aprovacoes:"Aprovações Pendentes",confirmados:"Eventos Confirmados",recusados:"Eventos Recusados",reagendamentos:"Reagendamentos e Ajustes",ambientes:"Ambientes e Recursos",conflitos:"Conflitos de Agenda",config:"Configurações da Agenda",lista:"Lista de PGs",encontros:"Encontros",participantes:"Participantes",visitantes:"Visitantes",estudos:"Estudos",relatorios:"Relatórios",oracao:"Pedidos de Oração",man:"Manutenção",lim:"Limpeza e Conservação",sol:"Solicitações Operacionais",pat:"Patrimônio",pre:"Prestadores",todas:"Todas as Solicitações",pend:"Pendentes",and:"Em Andamento",conc:"Concluídas",hist:"Histórico",mod:"Por Módulo",exp:"Exportações",uni:"Por Congregação",res:"Por Responsável",cad:"Cadastro de Membros",bat:"Batismos",prof:"Profissões de Fé",trans:"Transferências",vis:"Visitantes"};
-const MN={hub:"Hub",admin:"Administrativo",fin:"Financeiro",jur:"Jurídico",conselho:"Conselho",proj:"Projetos",pastoral:"Pastoral",min:"Departamentos",agenda:"Agenda",pgs:"Pequenos Grupos",infra:"Infraestrutura e Conservação",dem:"Demandas",rel:"Relatórios",memb:"Secretaria",cong:"Congregações",diac:"Junta Diaconal",area:"Área do Membro",com:"Comunicação",eve:"Eventos",acesso:"Controle de Acesso",recursos:"Recursos"};
+const MN={hub:"Hub",admin:"Administrativo",fin:"Financeiro",jur:"Jurídico",conselho:"Conselho",proj:"Projetos",pastoral:"Pastoral",min:"Departamentos",agenda:"Agenda",pgs:"Pequenos Grupos",infra:"Infraestrutura e Conservação",dem:"Demandas",rel:"Relatórios",memb:"Secretaria",cong:"Congregações",diac:"Junta Diaconal",area:"Área do Membro",com:"Comunicação",eve:"Eventos",acesso:"Controle de Acesso",recursos:"Recursos",compras:"Compras"};
 
 const _viewCache = {};
 const _VIEW_MAP = {
@@ -224,6 +227,7 @@ const _VIEW_MAP = {
   "tutorial":    "modules/tutorial/view.html",
   "dep":         "modules/dep-adm/view.html",
   "recursos":    "modules/recursos/view.html",
+  "compras":     "modules/compras/view.html",
   "proculto":    "modules/pastoral/view.html?v=6.46.1",
   "generic":     "modules/shared/view.html",
   "acesso":      "modules/acesso/view.html?v=6.45.13",
