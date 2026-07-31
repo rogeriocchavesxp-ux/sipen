@@ -176,7 +176,7 @@ async function agAprovarEntrada(agendaId, eventoId) {
     _agendaCache = null;
     _syncDemandaStatus(agendaId, "EM_ANDAMENTO");
     T("Evento aprovado!", "Aparecerá na Agenda geral para todos os usuários.");
-    agCarregarAprovacoes();
+    carregarSolicitacoesAgenda();
   } catch (e) { T("Erro ao aprovar", e.message); }
 }
 window.agAprovarEntrada = agAprovarEntrada;
@@ -219,7 +219,7 @@ async function agConfirmarRejeicao(agendaId, eventoId) {
     document.getElementById("ag-rejeitar-modal")?.remove();
     _agendaCache = null;
     T("Solicitação rejeitada.", motivo ? `Motivo registrado.` : "Sem motivo registrado.");
-    agCarregarAprovacoes();
+    carregarSolicitacoesAgenda();
   } catch (e) { T("Erro ao rejeitar", e.message); }
 }
 window.agConfirmarRejeicao = agConfirmarRejeicao;
@@ -232,7 +232,7 @@ async function agMarcarEmAnalise(id) {
       body: JSON.stringify({ status: "em_analise" }),
     });
     if (!res.ok) throw new Error(await res.text());
-    agCarregarAprovacoes();
+    carregarSolicitacoesAgenda();
   } catch (e) { T("Erro", e.message); }
 }
 window.agMarcarEmAnalise = agMarcarEmAnalise;
@@ -324,7 +324,7 @@ async function agAprovarAgendamento(id) {
 
     _comSyncStatus(id, "aprovar");
     _syncDemandaStatus(id, "CONCLUIDA");
-    agCarregarAprovacoes();
+    carregarSolicitacoesAgenda();
   } catch (e) { T("Erro ao aprovar", e.message); }
 }
 window.agAprovarAgendamento = agAprovarAgendamento;
@@ -387,7 +387,7 @@ async function agConfirmarRecusaAgendamento(id) {
     }
 
     _syncDemandaStatus(id, "CANCELADA");
-    agCarregarAprovacoes();
+    carregarSolicitacoesAgenda();
   } catch (e) { T("Erro ao recusar", e.message); }
 }
 window.agConfirmarRecusaAgendamento = agConfirmarRecusaAgendamento;

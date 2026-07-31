@@ -2,11 +2,10 @@
 VIEW_AUTOLOAD["agenda-dash"]          = { fn: carregarAgendaDash };
 VIEW_AUTOLOAD["agenda-calendario"]    = { tab:"AGENDA", id:"agenda-cal-list" };
 VIEW_AUTOLOAD["agenda-confirmados"]   = { fn: () => agCarregarConfirmados() };
-VIEW_AUTOLOAD["agenda-aprovacoes"]    = { fn: () => agCarregarAprovacoes() };
 VIEW_AUTOLOAD["agenda-recusados"]     = { tab:"AGENDA", id:"ag-rec-list",    filtro:{status:"cancelado"} };
 VIEW_AUTOLOAD["agenda-reagendamentos"]= { tab:"AGENDA", id:"ag-reag-list",   filtro:{status:"reagendado"} };
 VIEW_AUTOLOAD["agenda-ambientes"]     = null;
-VIEW_AUTOLOAD["agenda-solicitacoes"]  = null;
+VIEW_AUTOLOAD["agenda-solicitacoes"]  = { fn: () => carregarSolicitacoesAgenda() };
 VIEW_AUTOLOAD["agenda-conflitos"]     = null;
 VIEW_AUTOLOAD["agenda-historico"]     = null;
 VIEW_AUTOLOAD["agenda-config"]        = null;
