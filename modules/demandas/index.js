@@ -1331,6 +1331,11 @@ function fmtD(d) {
           <div class="card">
             <div class="ctit">Alterar Status</div>
             <div style="font-size:11px;color:var(--tx3);margin-bottom:10px">Status atual: ${pillStatus(dem.status)}</div>
+            ${dem.agenda_ref_id ? `
+            <div style="padding:12px 14px;border-radius:8px;border:1px solid rgba(74,156,245,.25);background:rgba(74,156,245,.06);font-size:11.5px;color:var(--tx2);line-height:1.6">
+              Este é um agendamento vinculado à Agenda.<br>
+              <strong style="color:var(--tx1)">O status é gerenciado exclusivamente por Gestão de Agenda → Aprovações Pendentes.</strong>
+            </div>` : `
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="dem-status-btns-${id}">
               ${(dem.area === "Financeiro"
                   ? [["Aberta","Aberta"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],["Aguardando Pagamento","Aguardando Pagamento"],["Pago","Pago"],["Cancelada","Cancelada"]]
@@ -1345,7 +1350,7 @@ function fmtD(d) {
                   onmouseout="this.style.background=this.dataset.status==='${dem.status}'?'rgba(58,170,92,.1)':'var(--bg-card)'">
                   ${dem.status===st?"✓ ":"○ "} ${label}
                 </button>`).join("")}
-            </div>
+            </div>`}
           </div>
         </div>
         ${_renderFinancialData(dem)}
@@ -1475,8 +1480,6 @@ function fmtD(d) {
       await apiWrite("update", "DEMANDAS", { _row: id, ...dbPayload });
       if (typeof T === "function") T("✅ Status atualizado", novoStatus);
 
-      // Se há agenda vinculada, sincroniza status
-      _syncAgendaFromDemanda(id, novoStatus).catch(() => {});
 
       // Cache armazena labels — não usar o dbPayload diretamente
       const cacheUpd = { status: novoStatus };
@@ -1498,40 +1501,6 @@ function fmtD(d) {
     }
   };
 
-  /* ── Sync agenda vinculada ──────────────────────────── */
-
-  async function _syncAgendaFromDemanda(demandaId, novoStatusLabel) {
-    const AGENDA_STATUS_MAP = {
-      "Concluída": "confirmado",
-      "Cancelada": "cancelado",
-    };
-    const agendaStatus = AGENDA_STATUS_MAP[novoStatusLabel];
-    if (!agendaStatus) return;
-    try {
-      const cacheItem = _cache.find(r => String(r.id || r._row) === String(demandaId));
-      const agendaRefId = cacheItem?.agenda_ref_id || null;
-      if (!agendaRefId) {
-        const r = await fetch(
-          `${apiBaseUrl()}/rest/v1/demandas?id=eq.${demandaId}&select=agenda_ref_id&limit=1`,
-          { headers: apiHeaders() }
-        );
-        const [d] = await r.json();
-        if (!d?.agenda_ref_id) return;
-        await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${d.agenda_ref_id}`, {
-          method: "PATCH",
-          headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
-          body: JSON.stringify({ status: agendaStatus }),
-        });
-      } else {
-        await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${agendaRefId}`, {
-          method: "PATCH",
-          headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
-          body: JSON.stringify({ status: agendaStatus }),
-        });
-      }
-      if (typeof _agendaCache !== "undefined") window._agendaCache = null;
-    } catch(_) {}
-  }
 
   /* ── Salvar edição ──────────────────────────────────── */
 
