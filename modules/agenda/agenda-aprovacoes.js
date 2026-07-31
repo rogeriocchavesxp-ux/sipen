@@ -174,6 +174,7 @@ async function agAprovarEntrada(agendaId, eventoId) {
     });
     if (!res.ok) throw new Error(await res.text());
     _agendaCache = null;
+    _syncDemandaStatus(agendaId, "EM_ANDAMENTO");
     T("Evento aprovado!", "Aparecerá na Agenda geral para todos os usuários.");
     agCarregarAprovacoes();
   } catch (e) { T("Erro ao aprovar", e.message); }

@@ -1475,6 +1475,9 @@ function fmtD(d) {
       await apiWrite("update", "DEMANDAS", { _row: id, ...dbPayload });
       if (typeof T === "function") T("✅ Status atualizado", novoStatus);
 
+      // Se há agenda vinculada, sincroniza status
+      _syncAgendaFromDemanda(id, novoStatus).catch(() => {});
+
       // Cache armazena labels — não usar o dbPayload diretamente
       const cacheUpd = { status: novoStatus };
       if (dbPayload.data_conclusao) cacheUpd.data_conclusao = dbPayload.data_conclusao;
@@ -1494,6 +1497,41 @@ function fmtD(d) {
       console.error("demAtualizarStatus:", e);
     }
   };
+
+  /* ── Sync agenda vinculada ──────────────────────────── */
+
+  async function _syncAgendaFromDemanda(demandaId, novoStatusLabel) {
+    const AGENDA_STATUS_MAP = {
+      "Concluída": "confirmado",
+      "Cancelada": "cancelado",
+    };
+    const agendaStatus = AGENDA_STATUS_MAP[novoStatusLabel];
+    if (!agendaStatus) return;
+    try {
+      const cacheItem = _cache.find(r => String(r.id || r._row) === String(demandaId));
+      const agendaRefId = cacheItem?.agenda_ref_id || null;
+      if (!agendaRefId) {
+        const r = await fetch(
+          `${apiBaseUrl()}/rest/v1/demandas?id=eq.${demandaId}&select=agenda_ref_id&limit=1`,
+          { headers: apiHeaders() }
+        );
+        const [d] = await r.json();
+        if (!d?.agenda_ref_id) return;
+        await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${d.agenda_ref_id}`, {
+          method: "PATCH",
+          headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+          body: JSON.stringify({ status: agendaStatus }),
+        });
+      } else {
+        await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${agendaRefId}`, {
+          method: "PATCH",
+          headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+          body: JSON.stringify({ status: agendaStatus }),
+        });
+      }
+      if (typeof _agendaCache !== "undefined") window._agendaCache = null;
+    } catch(_) {}
+  }
 
   /* ── Salvar edição ──────────────────────────────────── */
 
