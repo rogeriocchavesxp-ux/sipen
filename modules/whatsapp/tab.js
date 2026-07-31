@@ -85,11 +85,82 @@ const WA_TAB = (function () {
     const enviodHoje = Array.isArray(countHoje) ? countHoje.length : logs.filter(l => l.criado_em?.startsWith(hoje)).length;
     const tplsAtivos = tpls.filter(t => t.ativo).length;
 
+    let anivHtml = "";
+    if (key === "MEMBRESIA") {
+      const [listasRes, agendRec] = await Promise.all([
+        _fetch("/rest/v1/wa_listas?ativo=eq.true&select=id,nome,icone&order=nome"),
+        _fetch("/rest/v1/wa_agendamentos?tipo=eq.aniversariantes&recorrente=eq.true&status=eq.pendente&select=id,lista_nome,horario_diario,ultimo_envio_em&order=criado_em.desc&limit=1"),
+      ]);
+      anivHtml = _renderAnivCard(Array.isArray(listasRes) ? listasRes : [], Array.isArray(agendRec) ? agendRec[0] : null);
+    }
+
     el.innerHTML = `
       ${_renderKpis(cfg, resps.length, aptos, enviodHoje, tplsAtivos)}
+      ${anivHtml}
       ${_renderGrid(key, resps, tpls, cfg)}
       ${_renderLogs(logs, key)}
     `;
+
+    if (key === "MEMBRESIA" && typeof anivVerificarAgendamentoPendente === "function") {
+      anivVerificarAgendamentoPendente();
+    }
+  }
+
+  /* ── Aniversariantes do Dia (MEMBRESIA) ──────────── */
+
+  function _renderAnivCard(listas, agendAtivo) {
+    const today = new Date();
+    const todayStr = today.toISOString().slice(0, 10);
+    const jaEnviouHoje = agendAtivo?.ultimo_envio_em?.slice(0, 10) === todayStr;
+
+    const listasOpts = listas.length
+      ? listas.map(l => `<option value="${_esc(l.id)}">${_esc(l.icone || "📋")} ${_esc(l.nome)}</option>`).join("")
+      : `<option value="">Nenhuma lista cadastrada</option>`;
+
+    const agendBanner = agendAtivo ? `
+      <div style="margin-bottom:12px;padding:8px 12px;border-radius:7px;background:rgba(${jaEnviouHoje ? "58,170,92" : "208,144,64"},.08);border:1px solid rgba(${jaEnviouHoje ? "58,170,92" : "208,144,64"},.2);font-size:11.5px;color:var(--${jaEnviouHoje ? "gr" : "gold"})">
+        ${jaEnviouHoje
+          ? `✓ Enviado hoje para "${_esc(agendAtivo.lista_nome)}" · próximo envio amanhã às ${_esc(agendAtivo.horario_diario || "08:00")}`
+          : `⏰ Agendamento diário ativo: "${_esc(agendAtivo.lista_nome)}" às ${_esc(agendAtivo.horario_diario || "08:00")} — aguardando disparo`
+        }
+      </div>` : "";
+
+    return `
+      <div class="card" style="margin-bottom:16px;border:1.5px solid rgba(212,168,67,0.3);border-left:4px solid var(--gold)">
+        <div class="ctit" style="color:var(--gold)">🎂 Aniversariantes do Dia</div>
+        <div style="font-size:11.5px;color:var(--tx3);margin-bottom:14px">Envie a lista de aniversariantes de hoje para responsáveis e líderes</div>
+        ${agendBanner}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Lista destinatária</div>
+            <select id="wa-aniv-lista" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;outline:none;margin-bottom:14px">
+              <option value="">— Selecionar lista —</option>
+              ${listasOpts}
+            </select>
+
+            <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Agendamento diário</div>
+            <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--tx2);cursor:pointer;margin-bottom:8px">
+              <input type="checkbox" id="wa-aniv-recorrente" onchange="document.getElementById('wa-aniv-horario-row').style.display=this.checked?'flex':'none'" style="cursor:pointer">
+              Repetir todos os dias
+            </label>
+            <div id="wa-aniv-horario-row" style="display:none;align-items:center;gap:8px;margin-bottom:14px">
+              <span style="font-size:11.5px;color:var(--tx3)">Horário:</span>
+              <input type="time" id="wa-aniv-horario" value="08:00" style="padding:5px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;outline:none">
+            </div>
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onclick="anivWaEnviarAgora()" style="padding:8px 18px;border-radius:7px;border:1px solid rgba(212,168,67,.4);background:rgba(212,168,67,.1);color:var(--gold);font-size:12px;font-weight:700;cursor:pointer">📨 Enviar agora</button>
+              <button onclick="anivWaAgendar()" style="padding:8px 16px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:12px;font-weight:700;cursor:pointer">⏰ Agendar</button>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Preview da mensagem</div>
+            <div style="padding:12px 14px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-surface);font-size:11.5px;color:var(--tx2);line-height:1.7;white-space:pre-wrap;font-family:var(--mono)">🎂 *Aniversariantes de hoje — ${today.toLocaleDateString("pt-BR")}*\n\n• [nomes e telefones gerados no momento do envio]\n\n📋 https://sipen.com.br/aniversariantes\n_SIPEN · IPPenha_</div>
+            <div style="margin-top:6px;font-size:10.5px;color:var(--tx3)">A mensagem é enviada individualmente para cada membro da lista selecionada</div>
+          </div>
+        </div>
+      </div>`;
   }
 
   /* ── KPIs ─────────────────────────────────────────── */

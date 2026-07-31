@@ -586,6 +586,85 @@ async function anivAgendarEnvio() {
 }
 window.anivAgendarEnvio = anivAgendarEnvio;
 
+/* Wrappers chamados da tela WhatsApp — Membresia */
+async function anivWaEnviarAgora() {
+  const listaId = document.getElementById("wa-aniv-lista")?.value;
+  if (!listaId) { T("Selecione uma lista", "Escolha para qual lista enviar."); return; }
+  if (!_membCache.length) { try { _membCache = await apiRead("MEMBROS"); } catch(_){} }
+  const { texto, total } = _anivMsgHoje();
+  if (!total) { T("Sem aniversariantes hoje", "Nenhum membro faz aniversário hoje."); return; }
+
+  const token = typeof sipenToken === "function" ? sipenToken() : (SUPABASE_ANON_KEY || "");
+  const hdr   = { apikey: SUPABASE_ANON_KEY || "", Authorization: `Bearer ${token}` };
+  const base  = (SUPABASE_URL || "").trim().replace(/\/$/, "");
+
+  try {
+    const membRes = await fetch(
+      `${base}/rest/v1/wa_lista_membros?lista_id=eq.${listaId}&ativo=eq.true&select=pessoas(id,nome,whatsapp,celular,telefone)`,
+      { headers: hdr }
+    );
+    if (!membRes.ok) throw new Error(await membRes.text());
+    const rows = await membRes.json();
+    const destinatarios = rows.map(r => r.pessoas).filter(Boolean);
+    if (!destinatarios.length) { T("Lista vazia", "A lista selecionada não tem membros."); return; }
+    T("Enviando...", `${destinatarios.length} destinatário${destinatarios.length !== 1 ? "s" : ""}`);
+    let enviados = 0, falhas = 0;
+    const diaKey = new Date().toISOString().slice(0, 10);
+    for (const p of destinatarios) {
+      const tel = p.whatsapp || p.celular || p.telefone;
+      if (!tel) { falhas++; continue; }
+      try { await WA.send({ para: tel, nome: p.nome, mensagem: texto, modulo: "MEMBRESIA", chave: `ANIV_DIA_${diaKey}_${p.id}` }); enviados++; }
+      catch { falhas++; }
+    }
+    T("Envio concluído", `${enviados} enviado${enviados !== 1 ? "s" : ""}${falhas ? ` · ${falhas} sem número` : ""}`);
+    if (typeof WA_TAB !== "undefined") setTimeout(() => WA_TAB.load("MEMBRESIA"), 800);
+  } catch (e) { T("Erro ao enviar", e.message); }
+}
+window.anivWaEnviarAgora = anivWaEnviarAgora;
+
+async function anivWaAgendar() {
+  const listaId    = document.getElementById("wa-aniv-lista")?.value;
+  const recorrente = document.getElementById("wa-aniv-recorrente")?.checked || false;
+  const horario    = document.getElementById("wa-aniv-horario")?.value || "08:00";
+  const listaEl    = document.getElementById("wa-aniv-lista");
+  const listaNome  = listaEl?.options[listaEl?.selectedIndex]?.text?.replace(/^[^\s]+\s/, "") || "";
+
+  if (!listaId) { T("Selecione uma lista", "Escolha para qual lista agendar."); return; }
+
+  const [hh, mm] = horario.split(":");
+  const agendadoPara = new Date();
+  agendadoPara.setHours(parseInt(hh, 10), parseInt(mm, 10), 0, 0);
+  if (agendadoPara < new Date()) agendadoPara.setDate(agendadoPara.getDate() + 1);
+
+  const token = typeof sipenToken === "function" ? sipenToken() : (SUPABASE_ANON_KEY || "");
+  const hdr   = { apikey: SUPABASE_ANON_KEY || "", Authorization: `Bearer ${token}`, "Content-Type": "application/json", Prefer: "return=minimal" };
+  const base  = (SUPABASE_URL || "").trim().replace(/\/$/, "");
+
+  try {
+    const res = await fetch(`${base}/rest/v1/wa_agendamentos`, {
+      method: "POST",
+      headers: hdr,
+      body: JSON.stringify({
+        lista_id:       listaId,
+        lista_nome:     listaNome,
+        mensagem:       "[Gerado automaticamente — aniversariantes do dia]",
+        tipo:           "aniversariantes",
+        recorrente,
+        horario_diario: recorrente ? horario : null,
+        agendado_para:  agendadoPara.toISOString(),
+        status:         "pendente",
+      }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    T(
+      recorrente ? "Agendamento recorrente salvo" : "Agendamento salvo",
+      recorrente ? `Todos os dias às ${horario} para "${listaNome}"` : `Agendado para ${agendadoPara.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}`
+    );
+    if (typeof WA_TAB !== "undefined") setTimeout(() => WA_TAB.load("MEMBRESIA"), 400);
+  } catch (e) { T("Erro ao agendar", e.message); }
+}
+window.anivWaAgendar = anivWaAgendar;
+
 async function anivVerificarAgendamentoPendente() {
   try {
     const token = typeof sipenToken === "function" ? sipenToken() : (SUPABASE_ANON_KEY || "");
