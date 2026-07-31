@@ -21,7 +21,9 @@ window.agCarregarConfirmados = agCarregarConfirmados;
 function _agRenderConfirmados() {
   const el = document.getElementById("ag-conf-list");
   if (!el) return;
-  const mesSel = (document.getElementById("ag-conf-mes-sel") || {}).value || "";
+  const _hoje = new Date();
+  const _mesCorrente = `${_hoje.getFullYear()}-${String(_hoje.getMonth()+1).padStart(2,"0")}`;
+  const mesSel = (document.getElementById("ag-conf-mes-sel") || {}).value || _mesCorrente;
   const rows = mesSel ? _agConfRows.filter(r => r.data && r.data.slice(0,7) === mesSel) : _agConfRows;
 
   const meses = [...new Set(_agConfRows.map(r => r.data ? r.data.slice(0,7) : "").filter(Boolean))].sort().reverse();
