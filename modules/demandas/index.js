@@ -505,29 +505,35 @@ function fmtD(d) {
     const rows = _dashGetRows(_dashFiltro);
     if (!rows.length) { el.innerHTML = '<div class="empty-state">Nenhuma demanda encontrada</div>'; return; }
     const _verMais = _dashFiltro === "todas" && _cache.length > 15
-      ? `<div style="padding:10px 2px;text-align:center;border-top:1px solid var(--bd1)">
+      ? `<div style="padding:12px 0;text-align:center;border-top:1px solid var(--bd1)">
            <span onclick="demDashFiltrar('historico')" style="cursor:pointer;font-size:11.5px;color:var(--blue);font-weight:600">Ver todas (${_cache.length}) →</span>
          </div>`
       : "";
     el.innerHTML = rows.map(r => {
+      const corCat  = catCor(r.area);
       const meta = [
-        escapeHtml(r.area) || "—",
         r.subcategoria ? escapeHtml(r.subcategoria) : null,
         r.local        ? escapeHtml(r.local)        : null,
-        nomePropio(r.solicitante || r.solicitante_txt) || "—",
+        nomePropio(r.solicitante || r.solicitante_txt) || null,
         fmtD(r.data_abertura || r.criado_em),
-      ].filter(Boolean).join(" · ");
+      ].filter(Boolean).join("  ·  ");
       return `
         <div onclick="demAbrirDetalhe('${r.id||r._row}','dem-dash')"
-             style="cursor:pointer;border-bottom:1px solid var(--bd1);padding:9px 0"
+             style="cursor:pointer;display:flex;align-items:stretch;gap:0;padding:11px 0;border-bottom:1px solid var(--bd1);transition:background .1s"
              onmouseover="this.style.background='var(--bg-hover)'"
              onmouseout="this.style.background=''">
-          <div style="display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;padding:0 2px 5px">
-            <span style="font-size:10.5px;font-weight:700;color:var(--blue);font-family:var(--mono);letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.numero_chamado ? escapeHtml(r.numero_chamado) : "—"}</span>
-            <span style="font-size:12.5px;font-weight:600;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${catIcon(r.area)} ${escapeHtml(r.titulo) || "Sem título"}</span>
-            ${pillStatus(r.status)}
+          <div style="width:3px;border-radius:2px;background:${corCat};flex-shrink:0;margin-right:12px;align-self:stretch"></div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <span style="font-size:13px;font-weight:700;color:var(--tx1);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${catIcon(r.area)} ${escapeHtml(r.titulo) || "Sem título"}</span>
+              ${pillStatus(r.status)}
+              ${pillOrigem(r.origem)}
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              ${r.numero_chamado ? `<span style="font-size:10px;font-weight:700;color:var(--blue);font-family:var(--mono);letter-spacing:.04em;flex-shrink:0">${escapeHtml(r.numero_chamado)}</span><span style="color:var(--bd2);font-size:10px">·</span>` : ""}
+              <span style="font-size:10.5px;color:var(--tx3);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.area)||"—"}${meta ? `  ·  ${meta}` : ""}</span>
+            </div>
           </div>
-          <div style="font-size:11px;color:var(--tx3);padding:0 2px;line-height:1.4">${meta}</div>
         </div>`;
     }).join("") + _verMais;
   }
