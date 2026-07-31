@@ -227,8 +227,10 @@ function openCrudForm(tab, preset = null) {
         const sep = o.indexOf("=");
         return sep === -1 ? { value: o, label: o } : { value: o.slice(0, sep), label: o.slice(sep + 1) };
       });
+      const isOpcional = !obrig.includes(f);
       return `<div style="${spanStyle}"><label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">${escapeHtml(lbl)}${req}</label>
         <select data-field="${escapeHtmlAttr(f)}" style="${inputStyle}">
+          ${isOpcional ? `<option value="">—</option>` : ""}
           ${opts.map(o=>`<option value="${escapeHtmlAttr(o.value)}" ${String(val)===o.value?"selected":""}>${escapeHtml(o.label)}</option>`).join("")}
         </select></div>`;
     }
@@ -250,22 +252,23 @@ function openCrudForm(tab, preset = null) {
   const cols = (SCHEMA.gridCols || {})[tab] || 2;
   const tituloLabel = SCHEMA.labels[tab] ? tcPT(SCHEMA.labels[tab]) : tab;
   modal.innerHTML = `
-    <div style="width:min(760px,92vw);max-height:88vh;overflow:hidden;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;display:flex;flex-direction:column">
-      <div style="padding:14px 16px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between">
+    <div style="width:min(760px,92vw);max-height:88vh;overflow:hidden;background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;display:flex;flex-direction:column">
+      <div style="padding:16px 20px 14px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between">
         <div>
-          <div style="font-size:14px;font-weight:700;color:var(--tx1)">${preset ? "Editar" : "Novo"} · ${escapeHtml(tituloLabel)}</div>
+          <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">${preset ? "Editar" : "Novo registro"}</div>
+          <div style="font-size:16px;font-weight:700;color:var(--tx1);line-height:1.2">${escapeHtml(tituloLabel)}</div>
         </div>
-        <button onclick="document.getElementById('crud-modal').remove()" style="background:none;border:none;color:var(--tx3);font-size:16px;cursor:pointer">✕</button>
+        <button onclick="document.getElementById('crud-modal').remove()" style="background:var(--bg-surface);border:1px solid var(--bd2);border-radius:7px;color:var(--tx3);font-size:14px;cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center">✕</button>
       </div>
-      <div style="padding:16px;overflow:auto">
-        <div style="display:grid;grid-template-columns:repeat(${cols},minmax(0,1fr));gap:10px">
+      <div style="padding:18px 20px;overflow:auto;flex:1">
+        <div style="display:grid;grid-template-columns:repeat(${cols},minmax(0,1fr));gap:12px">
           ${fields.map(f => renderField(f)).join("")}
           ${tab === "MEMBROS" && preset?.pessoa_id ? `<input type="hidden" data-field="__pessoa_id" value="${escapeHtmlAttr(String(preset.pessoa_id))}">` : ""}
         </div>
       </div>
-      <div style="padding:14px 16px;border-top:1px solid var(--bd1);display:flex;justify-content:flex-end;gap:8px">
-        <button onclick="document.getElementById('crud-modal').remove()" style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:8px 12px;color:var(--tx2);cursor:pointer">Cancelar</button>
-        <button onclick='salvarRegistro(${JSON.stringify(tab)}, ${preset ? JSON.stringify(preset.id || null) : "null"})' style="background:var(--gr);border:none;border-radius:6px;padding:8px 16px;color:#fff;font-weight:600;cursor:pointer">💾 Salvar</button>
+      <div style="padding:14px 20px;border-top:1px solid var(--bd1);display:flex;justify-content:flex-end;gap:8px;background:var(--bg-page);border-radius:0 0 12px 12px">
+        <button onclick="document.getElementById('crud-modal').remove()" style="background:none;border:1px solid var(--bd2);border-radius:7px;padding:8px 16px;color:var(--tx2);font-size:12.5px;cursor:pointer">Cancelar</button>
+        <button onclick='salvarRegistro(${JSON.stringify(tab)}, ${preset ? JSON.stringify(preset.id || null) : "null"})' style="background:var(--gr);border:none;border-radius:7px;padding:8px 20px;color:#fff;font-weight:700;font-size:12.5px;cursor:pointer">Salvar</button>
       </div>
     </div>`;
 
@@ -286,6 +289,8 @@ async function salvarRegistro(tab, recordId = null) {
       data[field] = el.checked;
     } else if (el.type === "number") {
       data[field] = el.value !== "" ? Number(el.value) : null;
+    } else if (el.type === "time" || el.type === "date") {
+      data[field] = el.value || null;
     } else {
       data[field] = el.value;
     }
