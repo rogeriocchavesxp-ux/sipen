@@ -18,10 +18,10 @@ const DEPT_ADM = (function(){
   ];
 
   const FUNCOES = [
-    { key:'supervisor',     label:'Supervisor',      max:1 },
-    { key:'coordenador',    label:'Coordenador',     max:1 },
-    { key:'lider_setorial', label:'Líder Setorial',  max:null },
-    { key:'membro',         label:'Membro da Equipe',max:null },
+    { key:'supervisor',     label:'Supervisor',       nivel:'supervisor',  max:1 },
+    { key:'coordenador',    label:'Coordenador',      nivel:'coordenador', max:1 },
+    { key:'lider_setorial', label:'Líder Setorial',   nivel:'lider_area',  max:null },
+    { key:'membro',         label:'Membro da Equipe', nivel:'membro',      max:null },
   ];
 
   /* ── Estado ─────────────────────────────────────────────── */
@@ -85,7 +85,7 @@ const DEPT_ADM = (function(){
 
   async function _carregarMembros(deptId){
     const rows = await _fetch(
-      `dept_membros?departamento_id=eq.${encodeURIComponent(deptId)}&status=eq.ativo&select=id,funcao,status,data_inicio,observacoes,pessoa_id&order=funcao.asc,created_at.asc`
+      `nomeados?dept_id=eq.${encodeURIComponent(deptId)}&status=eq.ativo&deleted_at=is.null&select=id,nivel,cargo,status,data_inicio,obs,pessoa_id,nome&order=nivel.asc,nome.asc`
     );
     return Array.isArray(rows) ? rows : [];
   }
@@ -305,7 +305,7 @@ const DEPT_ADM = (function(){
     const admin = _isAdmin();
 
     const byFuncao = {};
-    for(const f of FUNCOES) byFuncao[f.key] = membros.filter(m=>m.funcao===f.key);
+    for(const f of FUNCOES) byFuncao[f.key] = membros.filter(m => m.nivel === f.nivel);
 
     const secoes = FUNCOES.map(f => {
       const lista = byFuncao[f.key]||[];
@@ -321,8 +321,8 @@ const DEPT_ADM = (function(){
             ? `<div style="color:var(--tx3);font-size:11.5px;padding:8px 0">Nenhum ${f.label.toLowerCase()} vinculado.</div>`
             : `<div style="display:flex;flex-direction:column;gap:4px">
                 ${lista.map(m => {
-                  const p = _pessoas.find(x=>x.id===m.pessoa_id);
-                  const nome = p ? _dn(p.nome) : `ID: ${m.pessoa_id}`;
+                  const nomeFallback = (_pessoas.find(x=>x.id===m.pessoa_id)||{}).nome||`ID: ${m.pessoa_id}`;
+                  const nome = _dn(m.nome || nomeFallback);
                   return `
                     <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd1)">
                       <div>
@@ -428,33 +428,44 @@ const DEPT_ADM = (function(){
     const btn = document.querySelector("#dept-adm-modal .btn-p");
     if(btn){ btn.disabled=true; btn.textContent="Salvando..."; }
 
+    const dept      = _deptById(deptId);
+    const pessoa    = _pessoas.find(p => p.id === pessoaId);
+    const funcaoCfg = FUNCOES.find(f => f.key === funcao);
+
     try{
-      await _fetch("dept_membros", {
+      await _fetch("nomeados", {
         method: "POST",
         body: JSON.stringify({
-          departamento_id: deptId,
-          pessoa_id:       pessoaId,
-          funcao,
-          status:          "ativo",
-          data_inicio:     inicio || null,
-          observacoes:     obs || null,
-          criado_por:      _authId(),
+          dept_id:     deptId,
+          pessoa_id:   pessoaId,
+          nome:        pessoa?.nome || "",
+          nivel:       funcaoCfg?.nivel || 'membro',
+          cargo:       funcaoCfg?.label || funcao,
+          orgao:       dept?.nome || "",
+          orgao_tipo:  'comissao',
+          status:      "ativo",
+          data_inicio: inicio || null,
+          obs:         obs || null,
+          origem:      'lideranca',
+          ano:         new Date().getFullYear(),
         }),
       });
       closeAddModal();
-      if(typeof T==="function") T("Pessoa adicionada","Vínculo registrado com sucesso.");
+      if(typeof T==="function") T("Pessoa adicionada","Vínculo registrado em Nomeações.");
       await abrirDetalhe(deptId);
     }catch(e){
       if(btn){ btn.disabled=false; btn.textContent="Adicionar"; }
-      const msg = e.message.includes("unique") ? "Essa pessoa já possui essa função neste departamento." : e.message;
-      if(typeof T==="function") T("Erro ao adicionar", msg);
+      if(typeof T==="function") T("Erro ao adicionar", e.message);
     }
   }
 
   async function removerMembro(membroId, deptId, nome){
     if(!confirm(`Remover ${nome} deste departamento?`)) return;
     try{
-      await _fetch(`dept_membros?id=eq.${encodeURIComponent(membroId)}`, { method:"DELETE" });
+      await _fetch(`nomeados?id=eq.${encodeURIComponent(membroId)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: 'inativo', encerrado_em: new Date().toISOString() }),
+      });
       if(typeof T==="function") T("Removido","Vínculo encerrado com sucesso.");
       await abrirDetalhe(deptId);
     }catch(e){
