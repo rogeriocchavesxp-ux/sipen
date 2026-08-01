@@ -39,7 +39,7 @@
     { id:"logistica",   nome:"Logística",               icon:"🚚",  cor:"var(--amber)",  resp:"Logística / Apoio ao Culto",
       subcats:["Montagem/desmontagem de estrutura","Transporte de equipamentos","Apoio em eventos","Organização de cadeiras e mesas"] },
     { id:"financeiro",  nome:"Financeiro",              icon:"💰",  cor:"var(--gr)",     resp:"Tesouraria / Financeiro",
-      subcats:["Solicitação de pagamento","Reembolso","Prestação de contas","Solicitação de verba","Orçamento de despesas"] },
+      subcats:["Dízimos","Solicitação de pagamento","Reembolso","Prestação de contas","Solicitação de verba","Orçamento de despesas"] },
     { id:"comunicacao", nome:"Comunicação e Divulgação",icon:"📢",  cor:"var(--violet)", resp:"Comunicação",
       subcats:["Divulgação de evento","Criação de arte","Publicação em redes sociais","Avisos para culto","Informativo semanal"] },
     { id:"secretaria",  nome:"Secretaria",              icon:"📄",  cor:"var(--blue)",   resp:"Secretaria / Conselho",
@@ -1683,7 +1683,7 @@ function fmtD(d) {
     m.querySelector("#dem-f-resp").value    = "";
     m.querySelector("#dem-f-venc").value    = "";
     /* Reset financial section */
-    ["dem-f-financeiro-section","dem-f-pag-section","dem-f-reimb-section",
+    ["dem-f-financeiro-section","dem-f-pag-section","dem-f-reimb-section","dem-f-dizimo-section",
      "dem-f-pix-section","dem-f-bank-section","dem-f-boleto-section","dem-f-agend-section"].forEach(id => {
       const el = m.querySelector("#" + id);
       if (el) el.style.display = "none";
@@ -1698,16 +1698,17 @@ function fmtD(d) {
      "dem-f-centro","dem-f-forma-pag","dem-f-chave-pix","dem-f-banco","dem-f-agencia",
      "dem-f-conta","dem-f-obs-fin","dem-f-reimb-nome","dem-f-reimb-valor",
      "dem-f-reimb-motivo","dem-f-reimb-forma-pag","dem-f-reimb-pix","dem-f-reimb-min",
-     "dem-f-reimb-pastor","dem-f-reimb-obs"].forEach(id => {
+     "dem-f-reimb-pastor","dem-f-reimb-obs",
+     "dem-f-dizimo-valor","dem-f-dizimo-mes","dem-f-dizimo-obs"].forEach(id => {
       const el = m.querySelector("#" + id);
       if (el) el.value = "";
     });
     /* Reset file inputs */
-    ["dem-f-upload-nf","dem-f-upload-reimb-nf"].forEach(id => {
+    ["dem-f-upload-nf","dem-f-upload-reimb-nf","dem-f-upload-dizimo"].forEach(id => {
       const el = m.querySelector("#" + id);
       if (el) el.value = "";
     });
-    ["dem-f-upload-nf-name","dem-f-upload-reimb-nf-name"].forEach(id => {
+    ["dem-f-upload-nf-name","dem-f-upload-reimb-nf-name","dem-f-upload-dizimo-name"].forEach(id => {
       const el = m.querySelector("#" + id);
       if (el) el.textContent = _FIN_UPLOAD_PLACEHOLDER;
     });
@@ -1770,18 +1771,20 @@ function fmtD(d) {
   function _toggleFinanceiroSection() {
     const cat      = document.getElementById("dem-f-cat")?.value;
     const sub      = document.getElementById("dem-f-sub")?.value;
-    const sec      = document.getElementById("dem-f-financeiro-section");
-    const agSec    = document.getElementById("dem-f-agend-section");
-    const pagSec   = document.getElementById("dem-f-pag-section");
-    const reimbSec = document.getElementById("dem-f-reimb-section");
+    const sec       = document.getElementById("dem-f-financeiro-section");
+    const agSec     = document.getElementById("dem-f-agend-section");
+    const pagSec    = document.getElementById("dem-f-pag-section");
+    const reimbSec  = document.getElementById("dem-f-reimb-section");
+    const dizimoSec = document.getElementById("dem-f-dizimo-section");
     if (!sec) return;
     const isFinanceiro = cat === "Financeiro";
     const isAgendProg  = cat === "Agendamentos" && _PROG_SUBS_INT.has(sub);
     const isPauta      = sub === "Pauta de Reunião";
-    sec.style.display             = isFinanceiro ? "" : "none";
-    if (agSec)    agSec.style.display    = isAgendProg ? "" : "none";
-    if (pagSec)   pagSec.style.display   = (isFinanceiro && sub === "Solicitação de pagamento") ? "flex" : "none";
-    if (reimbSec) reimbSec.style.display = (isFinanceiro && sub === "Reembolso")               ? "flex" : "none";
+    sec.style.display              = isFinanceiro ? "" : "none";
+    if (agSec)     agSec.style.display     = isAgendProg ? "" : "none";
+    if (pagSec)    pagSec.style.display    = (isFinanceiro && sub === "Solicitação de pagamento") ? "flex" : "none";
+    if (reimbSec)  reimbSec.style.display  = (isFinanceiro && sub === "Reembolso")               ? "flex" : "none";
+    if (dizimoSec) dizimoSec.style.display = (isFinanceiro && sub === "Dízimos")                 ? "flex" : "none";
     if (isFinanceiro) _toggleFormaPagamento();
     const localRow = document.getElementById("dem-f-local-row");
     const respRow  = document.getElementById("dem-f-resp-row");
@@ -2249,6 +2252,25 @@ function fmtD(d) {
       };
     }
 
+    if (cat === "Financeiro" && sub === "Dízimos") {
+      const valor = parseFloat(document.getElementById("dem-f-dizimo-valor")?.value || "0");
+      const mes   = document.getElementById("dem-f-dizimo-mes")?.value || null;
+      if (!valor || isNaN(valor) || valor <= 0) {
+        if (typeof T === "function") T("Campo obrigatório", "Informe o valor do dízimo");
+        return;
+      }
+      if (!mes) {
+        if (typeof T === "function") T("Campo obrigatório", "Selecione o mês de referência");
+        return;
+      }
+      financial_data = {
+        tipo:           "Dízimo",
+        valor,
+        mes_referencia: mes,
+        obs:            document.getElementById("dem-f-dizimo-obs")?.value?.trim() || "",
+      };
+    }
+
     /* ── Coleta dados de agendamento de programação ────── */
     let agend_extra = "";
     if (cat === "Agendamentos" && _PROG_SUBS_INT.has(sub)) {
@@ -2325,6 +2347,13 @@ function fmtD(d) {
       if (reimbNfFile) {
         try { financial_data.nota_fiscal = await _uploadAnexoFinanceiro(reimbNfFile, `tmp_${tempKey}`, "notas"); }
         catch(e) { uploadErrs.push(`Comprovante: ${e.message}`); }
+      }
+
+      /* Dízimos */
+      const dizimoFile = document.getElementById("dem-f-upload-dizimo")?.files?.[0];
+      if (dizimoFile) {
+        try { financial_data.comprovante = await _uploadAnexoFinanceiro(dizimoFile, `tmp_${tempKey}`, "notas"); }
+        catch(e) { uploadErrs.push(`Comprovante dízimo: ${e.message}`); }
       }
 
       if (uploadErrs.length) {
