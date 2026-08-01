@@ -109,39 +109,23 @@ async function _agPopularOrganizador() {
     const ministerios = rMin.ok ? await rMin.json() : [];
     const sociedades  = rSoc.ok ? await rSoc.json() : [];
 
-    const grupos = {};
-    ministerios.forEach(m => {
-      const g = _AG_TIPO_LABEL[m.tipo] || "Geral";
-      if (!grupos[g]) grupos[g] = [];
-      grupos[g].push(m);
-    });
-
     el.innerHTML = `<option value="">— Selecione o departamento —</option>`;
-    Object.entries(grupos).forEach(([g, items]) => {
-      const grp = document.createElement("optgroup");
-      grp.label = g;
-      items.forEach(m => {
-        const opt = document.createElement("option");
-        opt.value = m.nome; opt.textContent = m.nome;
-        opt.dataset.minId = m.id;
-        if (m.nome === valorAtual) opt.selected = true;
-        grp.appendChild(opt);
-      });
-      el.appendChild(grp);
+
+    ministerios.sort((a, b) => a.nome.localeCompare(b.nome, "pt")).forEach(m => {
+      const opt = document.createElement("option");
+      opt.value = m.nome; opt.textContent = m.nome;
+      opt.dataset.minId = m.id;
+      if (m.nome === valorAtual) opt.selected = true;
+      el.appendChild(opt);
     });
 
-    if (sociedades.length) {
-      const grp = document.createElement("optgroup");
-      grp.label = "Sociedades Internas";
-      sociedades.forEach(s => {
-        const label = s.sigla || s.nome;
-        const opt = document.createElement("option");
-        opt.value = label; opt.textContent = label;
-        if (label === valorAtual) opt.selected = true;
-        grp.appendChild(opt);
-      });
-      el.appendChild(grp);
-    }
+    sociedades.sort((a, b) => (a.sigla||a.nome).localeCompare(b.sigla||b.nome, "pt")).forEach(s => {
+      const label = s.sigla || s.nome;
+      const opt = document.createElement("option");
+      opt.value = label; opt.textContent = label;
+      if (label === valorAtual) opt.selected = true;
+      el.appendChild(opt);
+    });
 
     if (valorAtual && !el.value) {
       const opt = document.createElement("option");
