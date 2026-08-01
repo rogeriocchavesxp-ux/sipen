@@ -288,7 +288,7 @@
                     <td style="padding:9px 12px">
                       <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
                         <button class="tbt" onclick="oeAbrirFormCampanha('${c.id}')" style="font-size:10.5px;padding:3px 8px">Editar</button>
-                        <button class="tbt" onclick="oeAlterarStatus('${c.id}')" style="font-size:10.5px;padding:3px 8px">Status</button>
+                        <button class="tbt" onclick="oeAlterarStatus('${c.id}','${c.status}')" style="font-size:10.5px;padding:3px 8px">Status</button>
                       </div>
                     </td>
                   </tr>`;
@@ -570,12 +570,18 @@
   /* ── MODAL: FORMULÁRIO DE CAMPANHA ────────────────────── */
 
   window.oeAbrirFormCampanha = async function(id) {
+    const sb = _sb();
     let camp = null;
     if (id) {
-      const sb = _sb();
       const { data } = await sb.from("ofertas_especiais").select("*").eq("id", id).single();
       camp = data;
     }
+
+    // Busca departamentos e pessoas em paralelo
+    const [{ data: depts }, { data: pessoas }] = await Promise.all([
+      sb.from("departamentos").select("id,nome").order("nome"),
+      sb.from("pessoas").select("id,nome").eq("ativo", true).order("nome"),
+    ]);
 
     let modal = document.getElementById("oe-form-modal");
     if (!modal) {
@@ -587,6 +593,15 @@
     }
 
     const v = (f) => escapeHtmlAttr(camp?.[f] ?? "");
+    const selStyle = "width:100%;box-sizing:border-box;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:12.5px;padding:8px 10px;outline:none";
+
+    const deptOpts = (depts || []).map(d =>
+      `<option value="${escapeHtmlAttr(d.nome)}" ${camp?.departamento === d.nome ? "selected" : ""}>${escapeHtml(d.nome)}</option>`
+    ).join("");
+
+    const pessoaOpts = (pessoas || []).map(p =>
+      `<option value="${p.id}" ${camp?.responsavel_id === p.id ? "selected" : ""}>${escapeHtml(p.nome)}</option>`
+    ).join("");
 
     modal.innerHTML = `
       <div style="width:min(680px,96vw);max-height:90vh;overflow:auto;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:22px">
@@ -602,24 +617,33 @@
           <div>
             <label class="field-lbl">Título *</label>
             <input id="oe-f-titulo" value="${v("titulo")}" placeholder="Nome da campanha"
-                   style="width:100%;box-sizing:border-box;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:12.5px;padding:8px 10px;outline:none">
+                   style="${selStyle}">
           </div>
           <div>
             <label class="field-lbl">Descrição breve</label>
             <input id="oe-f-descricao" value="${v("descricao")}" placeholder="Resumo em uma linha"
-                   style="width:100%;box-sizing:border-box;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:12.5px;padding:8px 10px;outline:none">
+                   style="${selStyle}">
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div>
-              <label class="field-lbl">Categoria</label>
-              <input id="oe-f-categoria" value="${v("categoria")}" placeholder="Ex: Obra, Missão, Benevolência"
-                     style="width:100%;box-sizing:border-box;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:12.5px;padding:8px 10px;outline:none">
+              <label class="field-lbl">Departamento</label>
+              <select id="oe-f-departamento" style="${selStyle}">
+                <option value="">Nenhum</option>
+                ${deptOpts}
+              </select>
             </div>
             <div>
-              <label class="field-lbl">Departamento</label>
-              <input id="oe-f-departamento" value="${v("departamento")}" placeholder="Ex: Diaconal, Pastoral"
-                     style="width:100%;box-sizing:border-box;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:12.5px;padding:8px 10px;outline:none">
+              <label class="field-lbl">Responsável</label>
+              <select id="oe-f-responsavel" style="${selStyle}">
+                <option value="">Nenhum</option>
+                ${pessoaOpts}
+              </select>
             </div>
+          </div>
+          <div>
+            <label class="field-lbl">Categoria</label>
+            <input id="oe-f-categoria" value="${v("categoria")}" placeholder="Ex: Obra, Missão, Benevolência"
+                   style="${selStyle}">
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div>
@@ -689,7 +713,8 @@
         titulo,
         descricao:          document.getElementById("oe-f-descricao")?.value?.trim()    || null,
         categoria:          document.getElementById("oe-f-categoria")?.value?.trim()    || null,
-        departamento:       document.getElementById("oe-f-departamento")?.value?.trim() || null,
+        departamento:       document.getElementById("oe-f-departamento")?.value || null,
+        responsavel_id:     document.getElementById("oe-f-responsavel")?.value    || null,
         meta:               metaVal ? parseFloat(metaVal) : null,
         sem_meta:           !metaVal,
         valor_inicial:      parseFloat(document.getElementById("oe-f-valor-inicial")?.value || 0),
@@ -726,17 +751,19 @@
 
   /* ── MODAL: STATUS DA CAMPANHA ────────────────────────── */
 
-  window.oeAlterarStatus = function(id) {
+  window.oeAlterarStatus = function(id, currentStatus) {
     const camp = (_campanhas || []).find(c => c.id === id);
-    if (!camp) return;
+    const status  = currentStatus || camp?.status;
+    const titulo  = camp?.titulo || "";
+    if (!status) return;
 
-    const opcoes = Object.entries(STATUS_CFG).filter(([k]) => k !== camp.status);
+    const opcoes = Object.entries(STATUS_CFG).filter(([k]) => k !== status);
 
     let modal = document.getElementById("oe-status-modal");
     if (!modal) {
       modal = document.createElement("div");
       modal.id = "oe-status-modal";
-      modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:355;display:flex;align-items:center;justify-content:center;padding:18px";
+      modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:399;display:flex;align-items:center;justify-content:center;padding:18px";
       modal.onclick = ev => { if (ev.target === modal) modal.remove(); };
       document.body.appendChild(modal);
     }
@@ -745,8 +772,8 @@
       <div style="width:min(360px,96vw);background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:20px">
         <div class="ctit" style="margin-bottom:12px">Alterar status</div>
         <div style="font-size:12px;color:var(--tx2);margin-bottom:14px">
-          ${escapeHtml(camp.titulo)}<br>
-          <span style="font-size:11px">Status atual: </span>${_pillStatus(camp.status)}
+          ${titulo ? escapeHtml(titulo) + "<br>" : ""}
+          <span style="font-size:11px">Status atual: </span>${_pillStatus(status)}
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
           ${opcoes.map(([k, v]) => `
@@ -960,7 +987,7 @@
           </div>
           <div style="display:flex;gap:6px">
             <button class="tbt" onclick="oeAbrirFormCampanha('${id}')" style="font-size:11px;padding:4px 10px">Editar</button>
-            <button class="tbt" onclick="oeAlterarStatus('${id}')" style="font-size:11px;padding:4px 10px">${_pillStatus(camp.status)}</button>
+            <button class="tbt" onclick="oeAlterarStatus('${id}','${camp.status}')" style="font-size:11px;padding:4px 10px">${_pillStatus(camp.status)}</button>
             <button class="tbt pri" onclick="oeAbrirFormContrib('${id}')" style="font-size:11px;padding:4px 10px">+ Contribuição</button>
             <button class="tbt" onclick="document.getElementById('oe-det-modal').remove()">Fechar</button>
           </div>
