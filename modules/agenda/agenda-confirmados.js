@@ -8,11 +8,9 @@ let _agConfSortDir   = "asc";
 async function agCarregarConfirmados() {
   const el = document.getElementById("ag-conf-list");
   if (!el) return;
-  // Salva filtros antes de destruir o DOM com o spinner
+  // Salva o mês antes de destruir o DOM com o spinner (_agConfTipoSalvo e sort já são state puro)
   const mesSel = document.getElementById("ag-conf-mes-sel");
   if (mesSel?.value) _agConfMesSalvo = mesSel.value;
-  const tipoAtivo = document.querySelector(".ag-conf-tipo-chip.ativo");
-  if (tipoAtivo) _agConfTipoSalvo = tipoAtivo.dataset.tipo || "";
   el.innerHTML = `<div style="color:var(--tx3);font-size:11px">${typeof spinner==="function"?spinner():"⏳"} Carregando...</div>`;
   try {
     const url = `${apiBaseUrl()}/rest/v1/agenda?status=eq.confirmado&deleted_at=is.null&or=(recorrencia.neq.Data%20Especial,recorrencia.is.null)&order=data.desc&select=*`;
@@ -66,8 +64,7 @@ function _agRenderConfirmados() {
   const _hoje = new Date();
   const _mesCorrente = `${_hoje.getFullYear()}-${String(_hoje.getMonth()+1).padStart(2,"0")}`;
   const mesSel  = (document.getElementById("ag-conf-mes-sel") || {}).value || _agConfMesSalvo || _mesCorrente;
-  const tipoAtivo = document.querySelector(".ag-conf-tipo-chip.ativo");
-  const tipoSel = tipoAtivo ? (tipoAtivo.dataset.tipo || "") : _agConfTipoSalvo;
+  const tipoSel = _agConfTipoSalvo;
 
   const rowsMes = mesSel ? _agConfRows.flatMap(r => {
     if (!r.data) return [];
@@ -94,8 +91,8 @@ function _agRenderConfirmados() {
     return _agConfSortDir === "asc" ? va.localeCompare(vb, "pt") : vb.localeCompare(va, "pt");
   });
 
-  // Tipos presentes no mês selecionado (para os chips)
-  const tiposNoMes = [...new Set(rowsMes.map(r => r.tipo).filter(Boolean))].sort();
+  // Todos os tipos existentes no dataset (chips sempre visíveis)
+  const tiposNoMes = [...new Set(_agConfRows.map(r => r.tipo).filter(Boolean))].sort();
 
   // Meses com eventos (datas de início) + próximos 12 meses se há recorrentes
   const temRecorrente = _agConfRows.some(r => _REC_INDEF.includes(r.recorrencia));
