@@ -24,34 +24,35 @@ window.agCarregarConfirmados = agCarregarConfirmados;
 
 const _REC_INDEF = ["Semanal","Quinzenal","Mensal","Anual"];
 
-function _recorreNoMes(r, mes) {
-  if (!r.data) return false;
+// Retorna a data (string YYYY-MM-DD) da primeira ocorrência no mês, ou null se não houver
+function _primeiraOcorrenciaNoMes(r, mes) {
+  if (!r.data) return null;
   const [y, m] = mes.split("-").map(Number);
-  const p1 = `${mes}-01`;
-  const pu = `${mes}-${String(new Date(y, m, 0).getDate()).padStart(2,"0")}`;
-  if (r.data > pu) return false;
+  const p1  = `${mes}-01`;
+  const pu  = `${mes}-${String(new Date(y, m, 0).getDate()).padStart(2,"0")}`;
+  if (r.data > pu) return null;
   const fim = r.data_encerramento || "9999-12-31";
-  if (fim < p1) return false;
+  if (fim < p1) return null;
   const base = new Date(r.data + "T12:00:00");
-  const ini  = new Date(p1 + "T12:00:00");
-  const end  = new Date(pu + "T12:00:00");
+  const ini  = new Date(p1  + "T12:00:00");
+  const end  = new Date(pu  + "T12:00:00");
   const rec  = r.recorrencia;
   let cursor = new Date(base);
   if (rec === "Semanal" || rec === "Quinzenal") {
     const step = rec === "Semanal" ? 7 : 14;
     const diff = Math.round((ini - base) / 86400000);
     if (diff > 0) cursor = new Date(base.getTime() + Math.ceil(diff / step) * step * 86400000);
-    return cursor <= end;
+    return cursor <= end ? cursor.toISOString().split("T")[0] : null;
   }
   if (rec === "Mensal") {
     while (cursor < ini) { cursor = new Date(cursor); cursor.setMonth(cursor.getMonth() + 1); }
-    return cursor <= end;
+    return cursor <= end ? cursor.toISOString().split("T")[0] : null;
   }
   if (rec === "Anual") {
     while (cursor < ini) { cursor = new Date(cursor); cursor.setFullYear(cursor.getFullYear() + 1); }
-    return cursor <= end;
+    return cursor <= end ? cursor.toISOString().split("T")[0] : null;
   }
-  return false;
+  return null;
 }
 
 function _agRenderConfirmados() {
@@ -61,10 +62,13 @@ function _agRenderConfirmados() {
   const _mesCorrente = `${_hoje.getFullYear()}-${String(_hoje.getMonth()+1).padStart(2,"0")}`;
   const mesSel = (document.getElementById("ag-conf-mes-sel") || {}).value || _agConfMesSalvo || _mesCorrente;
 
-  const rows = mesSel ? _agConfRows.filter(r => {
-    if (!r.data) return false;
-    if (r.data.slice(0,7) === mesSel) return true;
-    return _REC_INDEF.includes(r.recorrencia) && _recorreNoMes(r, mesSel);
+  const rows = mesSel ? _agConfRows.flatMap(r => {
+    if (!r.data) return [];
+    if (r.data.slice(0,7) === mesSel) return [r]; // começa neste mês — mostra como está
+    if (!_REC_INDEF.includes(r.recorrencia)) return [];
+    const occData = _primeiraOcorrenciaNoMes(r, mesSel);
+    if (!occData) return [];
+    return [{ ...r, data: occData }]; // linha virtual com a data da ocorrência no mês
   }) : _agConfRows;
 
   // Meses com eventos (datas de início) + próximos 12 meses se há recorrentes
