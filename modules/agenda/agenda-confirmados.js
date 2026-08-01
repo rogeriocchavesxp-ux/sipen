@@ -1,9 +1,13 @@
 /* ── CONFIRMADOS: lista, termo e kebab menu ──────────────────── */
 let _agConfRows = [];
+let _agConfMesSalvo = "";
 
 async function agCarregarConfirmados() {
   const el = document.getElementById("ag-conf-list");
   if (!el) return;
+  // Salva o mês antes de destruir o DOM com o spinner
+  const mesSel = document.getElementById("ag-conf-mes-sel");
+  if (mesSel?.value) _agConfMesSalvo = mesSel.value;
   el.innerHTML = `<div style="color:var(--tx3);font-size:11px">${typeof spinner==="function"?spinner():"⏳"} Carregando...</div>`;
   try {
     const url = `${apiBaseUrl()}/rest/v1/agenda?status=eq.confirmado&deleted_at=is.null&or=(recorrencia.neq.Data%20Especial,recorrencia.is.null)&order=data.desc&select=*`;
@@ -55,7 +59,7 @@ function _agRenderConfirmados() {
   if (!el) return;
   const _hoje = new Date();
   const _mesCorrente = `${_hoje.getFullYear()}-${String(_hoje.getMonth()+1).padStart(2,"0")}`;
-  const mesSel = (document.getElementById("ag-conf-mes-sel") || {}).value || _mesCorrente;
+  const mesSel = (document.getElementById("ag-conf-mes-sel") || {}).value || _agConfMesSalvo || _mesCorrente;
 
   const rows = mesSel ? _agConfRows.filter(r => {
     if (!r.data) return false;
