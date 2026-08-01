@@ -1556,6 +1556,7 @@
     if (!cargo) { T('Campo obrigatório', 'Selecione o ofício'); return; }
 
     const payload = {
+      nome,
       cargo,
       status:         g('ofc-f-status') || 'ativo',
       posse:          g('ofc-f-posse')  || null,
@@ -1574,7 +1575,7 @@
         ? await fetch(`${api}/rest/v1/oficiais?id=eq.${_oficialId}`, { method: 'PATCH', headers: hdrs, body: JSON.stringify(payload) })
         : await fetch(`${api}/rest/v1/oficiais`, { method: 'POST', headers: hdrs, body: JSON.stringify(payload) });
 
-      if (!res.ok) { T('Erro ao salvar', `HTTP ${res.status}`); return; }
+      if (!res.ok) { const det = await res.text(); T('Erro ao salvar', det || `HTTP ${res.status}`); return; }
       (_el('oficial-modal') || { remove() {} }).remove();
       T('Salvo ✓', `${nomePropio(nome)} — ${cargo}`);
       if (typeof renderOficiaisOrdenados === 'function') renderOficiaisOrdenados();
