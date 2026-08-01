@@ -18,15 +18,61 @@ async function agCarregarConfirmados() {
 }
 window.agCarregarConfirmados = agCarregarConfirmados;
 
+const _REC_INDEF = ["Semanal","Quinzenal","Mensal","Anual"];
+
+function _recorreNoMes(r, mes) {
+  if (!r.data) return false;
+  const [y, m] = mes.split("-").map(Number);
+  const p1 = `${mes}-01`;
+  const pu = `${mes}-${String(new Date(y, m, 0).getDate()).padStart(2,"0")}`;
+  if (r.data > pu) return false;
+  const fim = r.data_encerramento || "9999-12-31";
+  if (fim < p1) return false;
+  const base = new Date(r.data + "T12:00:00");
+  const ini  = new Date(p1 + "T12:00:00");
+  const end  = new Date(pu + "T12:00:00");
+  const rec  = r.recorrencia;
+  let cursor = new Date(base);
+  if (rec === "Semanal" || rec === "Quinzenal") {
+    const step = rec === "Semanal" ? 7 : 14;
+    const diff = Math.round((ini - base) / 86400000);
+    if (diff > 0) cursor = new Date(base.getTime() + Math.ceil(diff / step) * step * 86400000);
+    return cursor <= end;
+  }
+  if (rec === "Mensal") {
+    while (cursor < ini) { cursor = new Date(cursor); cursor.setMonth(cursor.getMonth() + 1); }
+    return cursor <= end;
+  }
+  if (rec === "Anual") {
+    while (cursor < ini) { cursor = new Date(cursor); cursor.setFullYear(cursor.getFullYear() + 1); }
+    return cursor <= end;
+  }
+  return false;
+}
+
 function _agRenderConfirmados() {
   const el = document.getElementById("ag-conf-list");
   if (!el) return;
   const _hoje = new Date();
   const _mesCorrente = `${_hoje.getFullYear()}-${String(_hoje.getMonth()+1).padStart(2,"0")}`;
   const mesSel = (document.getElementById("ag-conf-mes-sel") || {}).value || _mesCorrente;
-  const rows = mesSel ? _agConfRows.filter(r => r.data && r.data.slice(0,7) === mesSel) : _agConfRows;
 
-  const meses = [...new Set(_agConfRows.map(r => r.data ? r.data.slice(0,7) : "").filter(Boolean))].sort().reverse();
+  const rows = mesSel ? _agConfRows.filter(r => {
+    if (!r.data) return false;
+    if (r.data.slice(0,7) === mesSel) return true;
+    return _REC_INDEF.includes(r.recorrencia) && _recorreNoMes(r, mesSel);
+  }) : _agConfRows;
+
+  // Meses com eventos (datas de início) + próximos 12 meses se há recorrentes
+  const temRecorrente = _agConfRows.some(r => _REC_INDEF.includes(r.recorrencia));
+  const mesesSet = new Set(_agConfRows.map(r => r.data ? r.data.slice(0,7) : "").filter(Boolean));
+  if (temRecorrente) {
+    for (let i = 0; i <= 11; i++) {
+      const d = new Date(_hoje.getFullYear(), _hoje.getMonth() + i, 1);
+      mesesSet.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`);
+    }
+  }
+  const meses = [...mesesSet].sort().reverse();
   const nomeMes = m => { const [y,mo] = m.split("-"); return ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][parseInt(mo)-1] + " " + y; };
 
   if (!_agConfRows.length) {
