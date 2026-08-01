@@ -2,6 +2,8 @@
 let _agConfRows = [];
 let _agConfMesSalvo  = "";
 let _agConfTipoSalvo = "";
+let _agConfSortCol   = "data";
+let _agConfSortDir   = "asc";
 
 async function agCarregarConfirmados() {
   const el = document.getElementById("ag-conf-list");
@@ -76,7 +78,21 @@ function _agRenderConfirmados() {
     return [{ ...r, data: occData }];
   }) : _agConfRows;
 
-  const rows = tipoSel ? rowsMes.filter(r => r.tipo === tipoSel) : rowsMes;
+  const rowsFiltrados = tipoSel ? rowsMes.filter(r => r.tipo === tipoSel) : rowsMes;
+
+  // Sort
+  const _cmpVal = (r, col) => {
+    if (col === "data")           return r.data || "";
+    if (col === "titulo")         return (r.titulo || "").toLowerCase();
+    if (col === "hora_inicio")    return r.hora_inicio || "";
+    if (col === "espaco")         return (r.espaco || "").toLowerCase();
+    if (col === "solicitante_txt") return (r.solicitante_txt || "").toLowerCase();
+    return "";
+  };
+  const rows = [...rowsFiltrados].sort((a, b) => {
+    const va = _cmpVal(a, _agConfSortCol), vb = _cmpVal(b, _agConfSortCol);
+    return _agConfSortDir === "asc" ? va.localeCompare(vb, "pt") : vb.localeCompare(va, "pt");
+  });
 
   // Tipos presentes no mês selecionado (para os chips)
   const tiposNoMes = [...new Set(rowsMes.map(r => r.tipo).filter(Boolean))].sort();
@@ -135,11 +151,11 @@ function _agRenderConfirmados() {
       <table style="width:100%;border-collapse:collapse;font-size:11.5px">
         <thead>
           <tr style="background:var(--bg-surface);border-bottom:2px solid var(--teal)">
-            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Título</th>
-            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Data</th>
-            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Horário</th>
-            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Espaço</th>
-            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Responsável</th>
+            ${[["titulo","Título"],["data","Data"],["hora_inicio","Horário"],["espaco","Espaço"],["solicitante_txt","Responsável"]].map(([col,lbl]) => {
+              const ativo = _agConfSortCol === col;
+              const seta  = ativo ? (_agConfSortDir === "asc" ? " ↑" : " ↓") : "";
+              return `<th onclick="_agConfSetSort('${col}')" style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:${ativo?"var(--teal)":"var(--tx1)"};font-weight:700;cursor:pointer;user-select:none;white-space:nowrap">${lbl}${seta}</th>`;
+            }).join("")}
             <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Visibilidade</th>
             <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Termo</th>
             <th style="padding:9px 10px;width:40px"></th>
@@ -175,6 +191,17 @@ function _agConfSetTipo(tipo) {
   _agRenderConfirmados();
 }
 window._agConfSetTipo = _agConfSetTipo;
+
+function _agConfSetSort(col) {
+  if (_agConfSortCol === col) {
+    _agConfSortDir = _agConfSortDir === "asc" ? "desc" : "asc";
+  } else {
+    _agConfSortCol = col;
+    _agConfSortDir = col === "data" ? "asc" : "asc";
+  }
+  _agRenderConfirmados();
+}
+window._agConfSetSort = _agConfSetSort;
 
 async function agToggleVisibilidade(id, el) {
   const atual = el.dataset.vis || "publica";
