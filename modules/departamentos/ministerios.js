@@ -48,6 +48,7 @@
   let _escalEditandoId  = null;
   let _supervisorDoMinisterioAtual = null;
   let _lidAtual         = {};
+  let _lidAtual         = {};
 
   /* ══ SUPABASE HEADERS ════════════════════════════════════════ */
   // Usa o JWT do usuário autenticado (via sipenToken()) para que as
@@ -124,6 +125,17 @@
     } catch (_) {
       return {};
     }
+  }
+
+  async function _carregarLiderancaMinisterio(ministerioId) {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/nomeados?ministerio_id=eq.${ministerioId}&nivel=in.(supervisor,conselheiro,coordenador)&status=eq.ativo&deleted_at=is.null&select=id,nivel,nome,pessoa_id`,
+      { headers: _hdr() }
+    );
+    const rows = r.ok ? await r.json() : [];
+    const lid = {};
+    rows.forEach(n => { lid[n.nivel] = { id: n.id, nome: n.nome, pessoa_id: n.pessoa_id }; });
+    return lid;
   }
 
   async function _restError(res) {
