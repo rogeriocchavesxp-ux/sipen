@@ -1,13 +1,16 @@
 /* ── CONFIRMADOS: lista, termo e kebab menu ──────────────────── */
 let _agConfRows = [];
-let _agConfMesSalvo = "";
+let _agConfMesSalvo  = "";
+let _agConfTipoSalvo = "";
 
 async function agCarregarConfirmados() {
   const el = document.getElementById("ag-conf-list");
   if (!el) return;
-  // Salva o mês antes de destruir o DOM com o spinner
+  // Salva filtros antes de destruir o DOM com o spinner
   const mesSel = document.getElementById("ag-conf-mes-sel");
   if (mesSel?.value) _agConfMesSalvo = mesSel.value;
+  const tipoAtivo = document.querySelector(".ag-conf-tipo-chip.ativo");
+  if (tipoAtivo) _agConfTipoSalvo = tipoAtivo.dataset.tipo || "";
   el.innerHTML = `<div style="color:var(--tx3);font-size:11px">${typeof spinner==="function"?spinner():"⏳"} Carregando...</div>`;
   try {
     const url = `${apiBaseUrl()}/rest/v1/agenda?status=eq.confirmado&deleted_at=is.null&or=(recorrencia.neq.Data%20Especial,recorrencia.is.null)&order=data.desc&select=*`;
@@ -60,16 +63,23 @@ function _agRenderConfirmados() {
   if (!el) return;
   const _hoje = new Date();
   const _mesCorrente = `${_hoje.getFullYear()}-${String(_hoje.getMonth()+1).padStart(2,"0")}`;
-  const mesSel = (document.getElementById("ag-conf-mes-sel") || {}).value || _agConfMesSalvo || _mesCorrente;
+  const mesSel  = (document.getElementById("ag-conf-mes-sel") || {}).value || _agConfMesSalvo || _mesCorrente;
+  const tipoAtivo = document.querySelector(".ag-conf-tipo-chip.ativo");
+  const tipoSel = tipoAtivo ? (tipoAtivo.dataset.tipo || "") : _agConfTipoSalvo;
 
-  const rows = mesSel ? _agConfRows.flatMap(r => {
+  const rowsMes = mesSel ? _agConfRows.flatMap(r => {
     if (!r.data) return [];
-    if (r.data.slice(0,7) === mesSel) return [r]; // começa neste mês — mostra como está
+    if (r.data.slice(0,7) === mesSel) return [r];
     if (!_REC_INDEF.includes(r.recorrencia)) return [];
     const occData = _primeiraOcorrenciaNoMes(r, mesSel);
     if (!occData) return [];
-    return [{ ...r, data: occData }]; // linha virtual com a data da ocorrência no mês
+    return [{ ...r, data: occData }];
   }) : _agConfRows;
+
+  const rows = tipoSel ? rowsMes.filter(r => r.tipo === tipoSel) : rowsMes;
+
+  // Tipos presentes no mês selecionado (para os chips)
+  const tiposNoMes = [...new Set(rowsMes.map(r => r.tipo).filter(Boolean))].sort();
 
   // Meses com eventos (datas de início) + próximos 12 meses se há recorrentes
   const temRecorrente = _agConfRows.some(r => _REC_INDEF.includes(r.recorrencia));
@@ -97,12 +107,28 @@ function _agRenderConfirmados() {
   const fmtH = h => h ? String(h).slice(0,5) : "";
 
   el.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;flex-wrap:wrap">
       <div style="font-size:10px;color:var(--tx3)">${rows.length} de ${_agConfRows.length} confirmado${_agConfRows.length!==1?"s":""}</div>
       <select id="ag-conf-mes-sel" onchange="_agRenderConfirmados()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:5px 10px;outline:none;cursor:pointer">
         <option value="">Todos os meses</option>
         ${meses.map(m => `<option value="${m}" ${m===mesSel?"selected":""}>${nomeMes(m)}</option>`).join("")}
       </select>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+      <button class="ag-conf-tipo-chip${!tipoSel?" ativo":""}" data-tipo=""
+        onclick="_agConfSetTipo('')"
+        style="padding:3px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid ${!tipoSel?"var(--teal)":"var(--bd2)"};background:${!tipoSel?"rgba(42,181,192,.12)":"var(--bg-card)"};color:${!tipoSel?"var(--teal)":"var(--tx2)"}">
+        Todos
+      </button>
+      ${tiposNoMes.map(t => {
+        const cor = (typeof AG_TIPOS_COR !== "undefined" && AG_TIPOS_COR[t]) || "#6b7280";
+        const ativo = tipoSel === t;
+        return `<button class="ag-conf-tipo-chip${ativo?" ativo":""}" data-tipo="${escapeHtmlAttr(t)}"
+          onclick="_agConfSetTipo('${escapeHtmlAttr(t)}')"
+          style="padding:3px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid ${ativo?cor:cor+"40"};background:${ativo?cor+"20":"var(--bg-card)"};color:${ativo?cor:cor}">
+          ${escapeHtml(t)}
+        </button>`;
+      }).join("")}
     </div>
     ${rows.length ? `
     <div style="overflow-x:auto">
@@ -143,6 +169,12 @@ function _agRenderConfirmados() {
     </div>` : `<div style="text-align:center;padding:24px 0;color:var(--tx3);font-size:12px">Nenhum evento neste mês.</div>`}`;
 }
 window._agRenderConfirmados = _agRenderConfirmados;
+
+function _agConfSetTipo(tipo) {
+  _agConfTipoSalvo = tipo;
+  _agRenderConfirmados();
+}
+window._agConfSetTipo = _agConfSetTipo;
 
 async function agToggleVisibilidade(id, el) {
   const atual = el.dataset.vis || "publica";
