@@ -1000,6 +1000,153 @@
     }
   }
 
+  /* ── DÍZIMOS — módulo dedicado ───────────────────────────── */
+
+  let _DIZ_CACHE = null;
+
+  async function renderDizimos() {
+    const el = document.getElementById("fin-dizimos-content");
+    if (!el) return;
+    el.innerHTML = `<div style="padding:24px;color:var(--tx3);font-size:13px;display:flex;align-items:center;gap:8px"><span style="display:inline-block;width:13px;height:13px;border:2px solid var(--gr);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite"></span> Carregando...</div>`;
+
+    try {
+      if (!_DIZ_CACHE) {
+        const base = typeof apiBaseUrl === "function" ? apiBaseUrl() : "";
+        const hdrs = typeof apiHeaders === "function" ? apiHeaders() : {};
+        const res  = await fetch(
+          `${base}/rest/v1/v_demandas?area=eq.Financeiro&subcategoria=eq.D%C3%ADzimos&order=criado_em.desc&limit=2000`,
+          { headers: hdrs }
+        );
+        _DIZ_CACHE = res.ok ? await res.json() : [];
+      }
+
+      const todos = _DIZ_CACHE;
+      const hoje  = new Date();
+      const mesAtual = hoje.toISOString().slice(0, 7);
+      const anoAtual = String(hoje.getFullYear());
+      const h12mAtras = new Date(hoje); h12mAtras.setMonth(h12mAtras.getMonth() - 12);
+
+      const fmtBRL  = v => (+v || 0).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+      const soma    = arr => arr.reduce((s, r) => s + (r.financial_data?.valor || 0), 0);
+      const doMes   = todos.filter(r => (r.criado_em || "").startsWith(mesAtual));
+      const doAno   = todos.filter(r => (r.criado_em || "").startsWith(anoAtual));
+
+      // Agrupar por dizimista
+      const mapa = {};
+      todos.forEach(r => {
+        const key = r.solicitante_id || r.solicitante || "—";
+        if (!mapa[key]) mapa[key] = { nome: r.solicitante || "—", id: r.solicitante_id, registros: [] };
+        mapa[key].registros.push(r);
+      });
+
+      const dizimistas = Object.values(mapa).map(d => {
+        const ult     = d.registros[0];
+        const totalAno = soma(d.registros.filter(r => (r.criado_em||"").startsWith(anoAtual)));
+        const recentes = d.registros.filter(r => new Date(r.criado_em) >= h12mAtras);
+        const mesesUnicos = new Set(recentes.map(r => (r.criado_em||"").slice(0,7))).size;
+        return { ...d, ult, totalAno, mesesUnicos };
+      }).sort((a, b) => new Date(b.ult?.criado_em||0) - new Date(a.ult?.criado_em||0));
+
+      const ativos = dizimistas.filter(d => d.mesesUnicos >= 1);
+
+      const badgeReg = n => {
+        if (n >= 10) return `<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:rgba(61,160,85,.15);color:var(--gr)">Regular</span>`;
+        if (n >= 6)  return `<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:rgba(42,181,192,.15);color:var(--teal)">Frequente</span>`;
+        if (n >= 1)  return `<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:rgba(201,168,76,.15);color:var(--amber)">Irregular</span>`;
+        return `<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--bg-surface);color:var(--tx3)">Inativo</span>`;
+      };
+
+      // Resumo mensal (últimos 12 meses)
+      const meses12 = [];
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+        const key = d.toISOString().slice(0, 7);
+        const label = d.toLocaleDateString("pt-BR", { month:"short", year:"2-digit" });
+        const regs = todos.filter(r => (r.criado_em||"").startsWith(key));
+        meses12.push({ key, label, total: soma(regs), qtd: regs.length });
+      }
+
+      const maxTotal = Math.max(...meses12.map(m => m.total), 1);
+
+      el.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div></div>
+          <button class="pbt" onclick="_DIZ_CACHE=null;renderDizimos()">↻ Atualizar</button>
+        </div>
+
+        <div class="kpis" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;background:var(--bg-card);border:1px solid var(--bd1);border-radius:var(--rl);overflow:hidden;margin-bottom:20px">
+          <div class="kpi" style="border-radius:0;border:none;border-right:1px solid var(--bd1)">
+            <div class="kpi-ico" style="background:rgba(61,160,85,.1);color:var(--gr)">📅</div>
+            <div class="kpi-body"><div class="kpi-lbl">Total do mês</div><div class="kpi-val">${fmtBRL(soma(doMes))}</div><div class="kpi-d nu">${doMes.length} reg.</div></div>
+          </div>
+          <div class="kpi" style="border-radius:0;border:none;border-right:1px solid var(--bd1)">
+            <div class="kpi-ico" style="background:rgba(61,160,85,.1);color:var(--gr)">📆</div>
+            <div class="kpi-body"><div class="kpi-lbl">Total do ano</div><div class="kpi-val">${fmtBRL(soma(doAno))}</div><div class="kpi-d nu">${doAno.length} reg.</div></div>
+          </div>
+          <div class="kpi" style="border-radius:0;border:none;border-right:1px solid var(--bd1)">
+            <div class="kpi-ico" style="background:rgba(42,181,192,.1);color:var(--teal)">👥</div>
+            <div class="kpi-body"><div class="kpi-lbl">Dizimistas ativos</div><div class="kpi-val">${ativos.length}</div><div class="kpi-d nu">últ. 12 meses</div></div>
+          </div>
+          <div class="kpi" style="border-radius:0;border:none">
+            <div class="kpi-ico" style="background:rgba(61,160,85,.1);color:var(--gr)">⌀</div>
+            <div class="kpi-body"><div class="kpi-lbl">Média/dizimista</div><div class="kpi-val">${ativos.length ? fmtBRL(soma(doAno)/ativos.length) : "—"}</div><div class="kpi-d nu">no ano</div></div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:0;overflow:hidden;margin-bottom:20px">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--bd1)">
+            <div class="ctit" style="margin:0">Arrecadação mensal</div>
+          </div>
+          <div style="padding:16px 16px 8px;display:flex;align-items:flex-end;gap:5px;height:90px">
+            ${meses12.map(m => {
+              const h = Math.max(4, Math.round((m.total / maxTotal) * 64));
+              return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:default" title="${m.label}: ${fmtBRL(m.total)} (${m.qtd} reg.)">
+                <div style="width:100%;height:${h}px;background:${m.key===mesAtual?'var(--gr)':'rgba(61,160,85,.35)'};border-radius:3px 3px 0 0;transition:opacity .15s" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'"></div>
+                <div style="font-size:9px;color:var(--tx3);white-space:nowrap">${m.label}</div>
+              </div>`;
+            }).join("")}
+          </div>
+        </div>
+
+        <div class="card" style="padding:0;overflow:hidden">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between">
+            <div class="ctit" style="margin:0">Dizimistas</div>
+            <span style="font-size:11px;color:var(--tx3)">${dizimistas.length} pessoa${dizimistas.length!==1?"s":""}</span>
+          </div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse">
+              <thead>
+                <tr style="background:var(--bg-surface)">
+                  <th style="padding:8px 12px;font-size:10.5px;font-weight:700;color:var(--tx3);text-align:left;text-transform:uppercase;letter-spacing:.05em">Membro</th>
+                  <th style="padding:8px 12px;font-size:10.5px;font-weight:700;color:var(--tx3);text-align:left;text-transform:uppercase;letter-spacing:.05em">Último dízimo</th>
+                  <th style="padding:8px 12px;font-size:10.5px;font-weight:700;color:var(--tx3);text-align:right;text-transform:uppercase;letter-spacing:.05em">Total no ano</th>
+                  <th style="padding:8px 12px;font-size:10.5px;font-weight:700;color:var(--tx3);text-align:center;text-transform:uppercase;letter-spacing:.05em">Meses/12</th>
+                  <th style="padding:8px 12px;font-size:10.5px;font-weight:700;color:var(--tx3);text-align:left;text-transform:uppercase;letter-spacing:.05em">Regularidade</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${dizimistas.length ? dizimistas.map(d => {
+                  const fd   = d.ult?.financial_data || {};
+                  const data = _fmtData(fd.mes_referencia || d.ult?.criado_em);
+                  return `<tr style="border-bottom:1px solid var(--bd1);cursor:pointer"
+                    onclick="window.demAbrirDetalhe&&demAbrirDetalhe('${d.ult?.id||""}','fin-dizimos')"
+                    onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+                    <td style="padding:10px 12px;font-size:12.5px;font-weight:500;color:var(--tx1)">${escapeHtml(nomePropio(d.nome)||"—")}</td>
+                    <td style="padding:10px 12px;font-size:12px;color:var(--tx2)">${data}</td>
+                    <td style="padding:10px 12px;font-size:12px;font-weight:700;color:var(--tx1);text-align:right;font-variant-numeric:tabular-nums">${d.totalAno ? fmtBRL(d.totalAno) : "—"}</td>
+                    <td style="padding:10px 12px;font-size:12px;color:var(--tx2);text-align:center">${d.mesesUnicos}/12</td>
+                    <td style="padding:10px 12px">${badgeReg(d.mesesUnicos)}</td>
+                  </tr>`;
+                }).join("") : `<tr><td colspan="5" style="padding:32px;text-align:center;color:var(--tx3);font-size:12.5px">Nenhum dízimo registrado</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+    } catch (e) {
+      el.innerHTML = `<div class="card" style="color:var(--rose)">Erro ao carregar: ${escapeHtml(e.message)}</div>`;
+    }
+  }
+
   window.finSetDizTab = function(tab) {
     _finDizTab = tab;
     renderDizimosOfertas();
@@ -1045,6 +1192,7 @@
       "fin-relatorios":      renderRelatorios,
       "fin-auditoria":       renderAuditoria,
       "fin-dizimos-ofertas": renderDizimosOfertas,
+      "fin-dizimos":         renderDizimos,
     };
     if (MAP[id]) MAP[id]();
   });
