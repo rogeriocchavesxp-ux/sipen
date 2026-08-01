@@ -2,7 +2,7 @@
     <div class="hero">
       <div class="hero-ic" style="background:rgba(61,160,85,0.12)">💰</div>
       <div><div class="hero-lbl">Módulo</div><div class="hero-ttl">Financeiro</div><div class="hero-dsc">Visão consolidada de receitas, despesas, saldo e alertas</div></div>
-      <div class="hero-act"><button class="tbt pri" onclick="go('fin-lancamentos')">+ Novo Lançamento</button></div>
+      <div class="hero-act"><button class="tbt pri" onclick="window.abrirModalNovaDemanda&&abrirModalNovaDemanda('Financeiro')">+ Novo Lançamento</button></div>
     </div>
     <div class="bnav" style="--mc:var(--gr)">
       <div class="bni" onclick="go('fin-dash')">Dashboard</div>
@@ -35,7 +35,7 @@
           <option value="cancelado">Cancelado</option>
         </select>
         <input id="fin-lanc-fbusca" type="text" placeholder="Buscar..." oninput="finFiltrarLanc()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:7px 10px;outline:none;width:150px">
-        <button class="tbt pri" onclick="alert('Formulário de novo lançamento — integração com backend em desenvolvimento')">+ Novo Lançamento</button>
+        <button class="tbt pri" onclick="window.abrirModalNovaDemanda&&abrirModalNovaDemanda('Financeiro')">+ Novo Lançamento</button>
       </div>
     </div>
     <div class="bnav" style="--mc:var(--gr)">
