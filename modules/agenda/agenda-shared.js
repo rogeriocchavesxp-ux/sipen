@@ -263,6 +263,7 @@ const AG_TIPOS_COR = {
   "Culto":       "#dc2626",
   "Reunião":     "#ea580c",
   "Ensaio":      "#0284c7",
+  "Aula":        "#0369a1",
   "Congresso":   "#2563eb",
   "Conferência": "#7c3aed",
   "Evento":      "#059669",

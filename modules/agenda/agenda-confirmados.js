@@ -94,8 +94,8 @@ function _agRenderConfirmados() {
     return _agConfSortDir === "asc" ? va.localeCompare(vb, "pt") : vb.localeCompare(va, "pt");
   });
 
-  // Todos os tipos existentes no dataset (chips sempre visíveis)
-  const tiposNoMes = [...new Set(_agConfRows.map(r => r.tipo).filter(Boolean))].sort();
+  // Lista fixa de tipos do sistema (chips sempre visíveis independente de dados)
+  const tiposNoMes = typeof AG_TIPOS_COR !== "undefined" ? Object.keys(AG_TIPOS_COR) : [];
 
   // Meses com eventos (datas de início) + próximos 12 meses se há recorrentes
   const temRecorrente = _agConfRows.some(r => _REC_INDEF.includes(r.recorrencia));
