@@ -1785,7 +1785,7 @@ function fmtD(d) {
     if (isFinanceiro) _toggleFormaPagamento();
     const localRow = document.getElementById("dem-f-local-row");
     const respRow  = document.getElementById("dem-f-resp-row");
-    if (localRow) localRow.style.display = isPauta ? "none" : "";
+    if (localRow) localRow.style.display = (isPauta || isFinanceiro) ? "none" : "";
     if (respRow)  respRow.style.display  = isPauta ? "none" : "";
   }
 
