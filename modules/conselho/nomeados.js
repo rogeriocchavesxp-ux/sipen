@@ -1555,8 +1555,11 @@
     if (!nome)  { T('Campo obrigatório', 'Informe o nome do oficial'); return; }
     if (!cargo) { T('Campo obrigatório', 'Selecione o ofício'); return; }
 
+    const pessoaId = g('ofc-f-nome-pid');
+    if (!pessoaId) { T('Campo obrigatório', 'Selecione o oficial clicando na sugestão da lista.'); return; }
+
     const payload = {
-      nome,
+      pessoa_id:      pessoaId,
       cargo,
       status:         g('ofc-f-status') || 'ativo',
       posse:          g('ofc-f-posse')  || null,
@@ -1565,8 +1568,6 @@
       mandato_numero: g('ofc-f-mandato') ? parseInt(g('ofc-f-mandato'), 10) : null,
       obs:            g('ofc-f-obs')    || null,
     };
-    const pessoaId = g('ofc-f-nome-pid');
-    if (pessoaId) payload.pessoa_id = pessoaId;
 
     try {
       const api  = apiBaseUrl();
@@ -1575,7 +1576,13 @@
         ? await fetch(`${api}/rest/v1/oficiais?id=eq.${_oficialId}`, { method: 'PATCH', headers: hdrs, body: JSON.stringify(payload) })
         : await fetch(`${api}/rest/v1/oficiais`, { method: 'POST', headers: hdrs, body: JSON.stringify(payload) });
 
-      if (!res.ok) { const det = await res.text(); T('Erro ao salvar', det || `HTTP ${res.status}`); return; }
+      if (!res.ok) {
+        const det = await res.text();
+        const msg = det?.includes('idx_oficiais_ativo') || det?.includes('unique')
+          ? 'Este oficial já possui este cargo ativo. Verifique o cadastro existente.'
+          : (det || `HTTP ${res.status}`);
+        T('Erro ao salvar', msg); return;
+      }
       (_el('oficial-modal') || { remove() {} }).remove();
       T('Salvo ✓', `${nomePropio(nome)} — ${cargo}`);
       if (typeof renderOficiaisOrdenados === 'function') renderOficiaisOrdenados();
