@@ -30,7 +30,7 @@
   }
 
   function _sb() {
-    return typeof _sbClient === "function" ? _sbClient() : null;
+    return typeof getSupabase === "function" ? getSupabase() : null;
   }
 
   function _loading(el) {
