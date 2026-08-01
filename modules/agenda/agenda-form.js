@@ -91,7 +91,7 @@ async function agAbrirForm(r = null) {
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
             <div>${lbl("Recorrência")}
               <select id="ag-f-recorrencia" style="${fi}">
-                ${["Único","Semanal","Quinzenal","Mensal","Anual"].map(v=>`<option value="${v}" ${(r?.recorrencia||"Único")===v?"selected":""}>${v}</option>`).join("")}
+                ${["Único","Semanal","Quinzenal","Mensal","Anual","Data Celebrativa"].map(v=>`<option value="${v}" ${(r?.recorrencia||"Único")===v?"selected":""}>${v}</option>`).join("")}
               </select>
             </div>
             <div>${lbl("Dia da semana")}

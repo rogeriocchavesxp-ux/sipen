@@ -6,7 +6,7 @@ async function agCarregarConfirmados() {
   if (!el) return;
   el.innerHTML = `<div style="color:var(--tx3);font-size:11px">${typeof spinner==="function"?spinner():"⏳"} Carregando...</div>`;
   try {
-    const url = `${apiBaseUrl()}/rest/v1/agenda?status=eq.confirmado&deleted_at=is.null&order=data.desc&select=*`;
+    const url = `${apiBaseUrl()}/rest/v1/agenda?status=eq.confirmado&deleted_at=is.null&recorrencia=neq.Data%20Celebrativa&order=data.desc&select=*`;
     const res = await fetch(url, { headers: apiHeaders() });
     if (!res.ok) throw new Error(await res.text());
     _agConfRows = await res.json();
