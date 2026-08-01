@@ -351,7 +351,9 @@ const STATUS_CFG = {
 };
 
 function brl(v) {
-  return "R$ " + Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const n = Number(v || 0).toFixed(2);
+  const [int, dec] = n.split(".");
+  return "R$ " + int.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "," + dec;
 }
 
 function fmtD(d) {

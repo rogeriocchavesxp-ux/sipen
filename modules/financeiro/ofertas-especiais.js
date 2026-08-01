@@ -14,9 +14,19 @@
   /* ── HELPERS ─────────────────────────────────────────── */
 
   function brl(v) {
-    return "R$ " + Number(v || 0).toLocaleString("pt-BR", {
-      minimumFractionDigits: 2, maximumFractionDigits: 2
-    });
+    const n = Number(v || 0).toFixed(2);
+    const [int, dec] = n.split(".");
+    return "R$ " + int.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "," + dec;
+  }
+
+  function parseBRL(s) {
+    if (!s) return 0;
+    // Aceita 100.000,00 ou 100000.00 ou 100000,00
+    const str = String(s).trim();
+    if (str.includes(",")) {
+      return parseFloat(str.replace(/\./g, "").replace(",", ".")) || 0;
+    }
+    return parseFloat(str) || 0;
   }
 
   function fmtD(d) {
@@ -679,12 +689,12 @@
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div>
               <label class="field-lbl">Meta (R$)</label>
-              <input id="oe-f-meta" type="number" min="0" step="0.01" value="${camp?.meta ?? ""}" placeholder="Deixe em branco para sem meta"
+              <input id="oe-f-meta" type="text" inputmode="decimal" value="${camp?.meta ? brl(camp.meta).replace("R$ ","") : ""}" placeholder="Ex: 100.000,00"
                      style="width:100%;box-sizing:border-box;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:12.5px;padding:8px 10px;outline:none">
             </div>
             <div>
               <label class="field-lbl">Valor inicial (já arrecadado)</label>
-              <input id="oe-f-valor-inicial" type="number" min="0" step="0.01" value="${camp?.valor_inicial ?? 0}"
+              <input id="oe-f-valor-inicial" type="text" inputmode="decimal" value="${camp?.valor_inicial ? brl(camp.valor_inicial).replace("R$ ","") : "0,00"}"
                      style="width:100%;box-sizing:border-box;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:12.5px;padding:8px 10px;outline:none">
             </div>
           </div>
@@ -746,9 +756,9 @@
         categoria:          document.getElementById("oe-f-categoria")?.value?.trim()    || null,
         departamento:       document.getElementById("oe-f-departamento")?.value || null,
         responsavel_id:     document.getElementById("oe-f-responsavel")?.value    || null,
-        meta:               metaVal ? parseFloat(metaVal) : null,
+        meta:               metaVal ? parseBRL(metaVal) : null,
         sem_meta:           !metaVal,
-        valor_inicial:      parseFloat(document.getElementById("oe-f-valor-inicial")?.value || 0),
+        valor_inicial:      parseBRL(document.getElementById("oe-f-valor-inicial")?.value),
         data_inicio:        document.getElementById("oe-f-data-inicio")?.value  || null,
         data_fim:           dataFim || null,
         sem_data_fim:       !dataFim,
@@ -881,7 +891,7 @@
             </div>
             <div>
               <label class="field-lbl">Valor (R$) *</label>
-              <input id="oe-cf-valor" type="number" min="0.01" step="0.01" placeholder="0,00"
+              <input id="oe-cf-valor" type="text" inputmode="decimal" placeholder="Ex: 500,00"
                      style="width:100%;box-sizing:border-box;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:12.5px;padding:8px 10px;outline:none">
             </div>
           </div>
@@ -918,7 +928,7 @@
     try {
       const campanhaId = document.getElementById("oe-cf-campanha")?.value;
       if (!campanhaId) throw new Error("Selecione uma campanha.");
-      const valor = parseFloat(document.getElementById("oe-cf-valor")?.value || 0);
+      const valor = parseBRL(document.getElementById("oe-cf-valor")?.value);
       if (!valor || valor <= 0) throw new Error("Valor inválido.");
       const nome = document.getElementById("oe-cf-nome")?.value?.trim();
 
@@ -1177,7 +1187,7 @@
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div>
               <label class="field-lbl">Valor (R$) *</label>
-              <input id="oe-cp-valor" type="number" min="0.01" step="0.01" placeholder="0,00" style="${inpStyle}">
+              <input id="oe-cp-valor" type="text" inputmode="decimal" placeholder="Ex: 500,00" style="${inpStyle}">
             </div>
             <div id="oe-cp-data-wrap">
               <label class="field-lbl">Data</label>
@@ -1239,7 +1249,7 @@
     try {
       const pessoaSel = document.getElementById("oe-cp-pessoa")?.value;
       const tipo      = document.querySelector("input[name='oe-cp-tipo']:checked")?.value || "unico";
-      const valor     = parseFloat(document.getElementById("oe-cp-valor")?.value || 0);
+      const valor = parseBRL(document.getElementById("oe-cp-valor")?.value);
       if (!valor || valor <= 0) throw new Error("Informe um valor válido.");
 
       let pessoa_id         = null;
