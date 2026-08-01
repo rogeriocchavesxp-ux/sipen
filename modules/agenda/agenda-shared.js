@@ -103,7 +103,7 @@ async function _agPopularOrganizador() {
   const valorAtual = el.dataset.valorAtual || "";
   try {
     const [rMin, rSoc] = await Promise.all([
-      fetch(`${apiBaseUrl()}/rest/v1/ministerios?ativo=eq.true&order=tipo.asc,nome.asc&select=nome,tipo`, { headers: apiHeaders() }),
+      fetch(`${apiBaseUrl()}/rest/v1/ministerios?ativo=eq.true&order=tipo.asc,nome.asc&select=id,nome,tipo`, { headers: apiHeaders() }),
       fetch(`${apiBaseUrl()}/rest/v1/sociedades?ativo=eq.true&order=sigla.asc&select=sigla,nome`, { headers: apiHeaders() }),
     ]);
     const ministerios = rMin.ok ? await rMin.json() : [];
@@ -113,17 +113,18 @@ async function _agPopularOrganizador() {
     ministerios.forEach(m => {
       const g = _AG_TIPO_LABEL[m.tipo] || "Geral";
       if (!grupos[g]) grupos[g] = [];
-      grupos[g].push(m.nome);
+      grupos[g].push(m);
     });
 
     el.innerHTML = `<option value="">— Selecione o departamento —</option>`;
-    Object.entries(grupos).forEach(([g, nomes]) => {
+    Object.entries(grupos).forEach(([g, items]) => {
       const grp = document.createElement("optgroup");
       grp.label = g;
-      nomes.forEach(nome => {
+      items.forEach(m => {
         const opt = document.createElement("option");
-        opt.value = nome; opt.textContent = nome;
-        if (nome === valorAtual) opt.selected = true;
+        opt.value = m.nome; opt.textContent = m.nome;
+        opt.dataset.minId = m.id;
+        if (m.nome === valorAtual) opt.selected = true;
         grp.appendChild(opt);
       });
       el.appendChild(grp);
@@ -147,10 +148,46 @@ async function _agPopularOrganizador() {
       opt.value = valorAtual; opt.textContent = valorAtual; opt.selected = true;
       el.insertBefore(opt, el.children[1]);
     }
+
+    el.onchange = _agAutoFillOrganizador;
   } catch (_) {
     el.innerHTML = `<option value="${escapeHtml(valorAtual)}">${escapeHtml(valorAtual) || "— Selecione —"}</option>`;
   }
 }
+
+async function _agAutoFillOrganizador() {
+  const sel = document.getElementById("ag-f-organizador");
+  if (!sel) return;
+  const opt = sel.options[sel.selectedIndex];
+  const minId = opt?.dataset?.minId;
+  if (!minId) return;
+  try {
+    const rn = await fetch(
+      `${apiBaseUrl()}/rest/v1/nomeados?ministerio_id=eq.${minId}&nivel=in.(supervisor,coordenador)&status=eq.ativo&deleted_at=is.null&select=nome,pessoa_id&order=nivel.asc&limit=1`,
+      { headers: apiHeaders() }
+    );
+    if (!rn.ok) return;
+    const nomeados = await rn.json();
+    if (!nomeados.length) return;
+    const { nome, pessoa_id } = nomeados[0];
+    const respInput = document.getElementById("ag-f-responsavel");
+    if (respInput) respInput.value = nome || "";
+    const telInput = document.getElementById("ag-f-telefone");
+    if (telInput) telInput.value = "";
+    if (pessoa_id) {
+      const rp = await fetch(
+        `${apiBaseUrl()}/rest/v1/pessoas?id=eq.${pessoa_id}&select=whatsapp,celular,telefone&limit=1`,
+        { headers: apiHeaders() }
+      );
+      if (rp.ok) {
+        const pp = await rp.json();
+        const tel = pp[0]?.whatsapp || pp[0]?.celular || pp[0]?.telefone || "";
+        if (telInput) telInput.value = tel;
+      }
+    }
+  } catch (_) {}
+}
+window._agAutoFillOrganizador = _agAutoFillOrganizador;
 
 /* ── AUTOCOMPLETE DE PESSOAS (organizador / responsável) ─────── */
 const _agBuscaTimer = {};
