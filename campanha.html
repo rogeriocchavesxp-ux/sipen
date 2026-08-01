@@ -254,6 +254,54 @@
     color: var(--tx3);
   }
 
+  .bank-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--bd);
+  }
+
+  .bank-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .bank-bradesco { background: #cc1f2d; color: #fff; }
+  .bank-itau     { background: #ec7000; color: #fff; font-size:16px; }
+  .bank-pix      { background: #32bcad; color: #fff; font-size:10px; letter-spacing:.5px; }
+  .bank-email    { background: var(--bg2); color: var(--tx2); font-size:18px; border:1px solid var(--bd); }
+
+  .bank-info { flex: 1; min-width: 0; }
+
+  .bank-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--tx3);
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    margin-bottom: 2px;
+  }
+
+  .bank-val {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--tx1);
+  }
+
+  .bank-cnpj {
+    font-size: 11px;
+    color: var(--tx3);
+    margin-top: 1px;
+  }
+
   .footer {
     text-align: center;
     font-size: 11.5px;
@@ -425,6 +473,46 @@ async function load() {
       <div class="sec-title">Finalidade dos recursos</div>
       <div class="finalidade-box">${escHtml(camp.finalidade_recursos)}</div>
     </div>` : ""}
+
+    <div class="card">
+      <div class="sec-title">Formas de contribuição</div>
+
+      <div class="bank-item">
+        <div class="bank-logo bank-pix">PIX</div>
+        <div class="bank-info">
+          <div class="bank-name">Chave PIX — CNPJ</div>
+          <div class="bank-val" id="pix-cnpj-val">62.946.058/0001-80</div>
+        </div>
+        <button class="btn-copy" onclick="copiarPix('62.946.058/0001-80')" id="btn-pix-cnpj">Copiar</button>
+      </div>
+
+      <div class="bank-item">
+        <div class="bank-logo bank-bradesco">B</div>
+        <div class="bank-info">
+          <div class="bank-name">Bradesco</div>
+          <div class="bank-val">Ag. 0118-0 &nbsp;|&nbsp; C/C 208606-9</div>
+          <div class="bank-cnpj">CNPJ 62.946.058/0001-80</div>
+        </div>
+      </div>
+
+      <div class="bank-item">
+        <div class="bank-logo bank-itau">i</div>
+        <div class="bank-info">
+          <div class="bank-name">Itaú</div>
+          <div class="bank-val">Ag. 0738 &nbsp;|&nbsp; C/C 51137-7</div>
+          <div class="bank-cnpj">CNPJ 62.946.058/0001-80</div>
+        </div>
+      </div>
+
+      <div class="bank-item" style="border-bottom:none">
+        <div class="bank-logo bank-email">@</div>
+        <div class="bank-info">
+          <div class="bank-name">E-mail da tesouraria</div>
+          <div class="bank-val">tesouraria.ippenha@gmail.com</div>
+        </div>
+        <button class="btn-copy" onclick="copiarPix('tesouraria.ippenha@gmail.com')">Copiar</button>
+      </div>
+    </div>
 
     <div class="footer">
       Igreja Presbiteriana de Penha &nbsp;·&nbsp; <a href="https://sipen.com.br" style="color:var(--tx3)">sipen.com.br</a>
