@@ -102,35 +102,49 @@ async function _agPopularOrganizador() {
   if (!el) return;
   const valorAtual = el.dataset.valorAtual || "";
   try {
-    const r = await fetch(
-      `${apiBaseUrl()}/rest/v1/ministerios?ativo=eq.true&order=tipo.asc,nome.asc&select=nome,tipo`,
-      { headers: apiHeaders() }
-    );
-    const rows = r.ok ? await r.json() : [];
+    const [rMin, rSoc] = await Promise.all([
+      fetch(`${apiBaseUrl()}/rest/v1/ministerios?ativo=eq.true&order=tipo.asc,nome.asc&select=nome,tipo`, { headers: apiHeaders() }),
+      fetch(`${apiBaseUrl()}/rest/v1/sociedades?ativo=eq.true&order=sigla.asc&select=sigla,nome`, { headers: apiHeaders() }),
+    ]);
+    const ministerios = rMin.ok ? await rMin.json() : [];
+    const sociedades  = rSoc.ok ? await rSoc.json() : [];
+
     const grupos = {};
-    rows.forEach(m => {
+    ministerios.forEach(m => {
       const g = _AG_TIPO_LABEL[m.tipo] || "Geral";
       if (!grupos[g]) grupos[g] = [];
       grupos[g].push(m.nome);
     });
+
     el.innerHTML = `<option value="">— Selecione o departamento —</option>`;
     Object.entries(grupos).forEach(([g, nomes]) => {
       const grp = document.createElement("optgroup");
       grp.label = g;
       nomes.forEach(nome => {
         const opt = document.createElement("option");
-        opt.value = nome;
-        opt.textContent = nome;
+        opt.value = nome; opt.textContent = nome;
         if (nome === valorAtual) opt.selected = true;
         grp.appendChild(opt);
       });
       el.appendChild(grp);
     });
+
+    if (sociedades.length) {
+      const grp = document.createElement("optgroup");
+      grp.label = "Sociedades Internas";
+      sociedades.forEach(s => {
+        const label = s.sigla || s.nome;
+        const opt = document.createElement("option");
+        opt.value = label; opt.textContent = label;
+        if (label === valorAtual) opt.selected = true;
+        grp.appendChild(opt);
+      });
+      el.appendChild(grp);
+    }
+
     if (valorAtual && !el.value) {
       const opt = document.createElement("option");
-      opt.value = valorAtual;
-      opt.textContent = valorAtual;
-      opt.selected = true;
+      opt.value = valorAtual; opt.textContent = valorAtual; opt.selected = true;
       el.insertBefore(opt, el.children[1]);
     }
   } catch (_) {
