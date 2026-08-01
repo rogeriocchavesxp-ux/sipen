@@ -623,6 +623,25 @@ async function _anivResolverDestinatarios(listaId) {
     return await pesRes.json();
   }
 
+  // oficiais: fonte autoritativa para pastores, presbíteros e diáconos
+  if (lista.fonte === "oficiais" && lista.filtro_funcoes?.length) {
+    const cargos = lista.filtro_funcoes.join(",");
+    const ofRes = await fetch(
+      `${base}/rest/v1/oficiais?cargo=in.(${cargos})&status=in.(ativo,especial)&deleted_at=is.null&select=pessoa_id`,
+      { headers: hdr }
+    );
+    if (!ofRes.ok) throw new Error(await ofRes.text());
+    const ofs = await ofRes.json();
+    if (!ofs.length) return [];
+    const ids = [...new Set(ofs.map(o => o.pessoa_id).filter(Boolean))].join(",");
+    const pesRes = await fetch(
+      `${base}/rest/v1/pessoas?id=in.(${ids})&select=id,nome,whatsapp,celular,telefone`,
+      { headers: hdr }
+    );
+    if (!pesRes.ok) throw new Error(await pesRes.text());
+    return await pesRes.json();
+  }
+
   // funcao: legado — consulta pessoas.funcao
   if (lista.fonte === "funcao" && lista.filtro_funcoes?.length) {
     const funcoes = lista.filtro_funcoes.join(",");
