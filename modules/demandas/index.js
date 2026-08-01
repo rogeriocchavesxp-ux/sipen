@@ -39,7 +39,7 @@
     { id:"logistica",   nome:"Logística",               icon:"🚚",  cor:"var(--amber)",  resp:"Logística / Apoio ao Culto",
       subcats:["Montagem/desmontagem de estrutura","Transporte de equipamentos","Apoio em eventos","Organização de cadeiras e mesas"] },
     { id:"financeiro",  nome:"Financeiro",              icon:"💰",  cor:"var(--gr)",     resp:"Tesouraria / Financeiro",
-      subcats:["Dízimos","Solicitação de pagamento","Reembolso","Prestação de contas","Solicitação de verba","Orçamento de despesas"] },
+      subcats:["Dízimos","Ofertas","Solicitação de pagamento","Reembolso","Prestação de contas","Solicitação de verba","Orçamento de despesas"] },
     { id:"comunicacao", nome:"Comunicação e Divulgação",icon:"📢",  cor:"var(--violet)", resp:"Comunicação",
       subcats:["Divulgação de evento","Criação de arte","Publicação em redes sociais","Avisos para culto","Informativo semanal"] },
     { id:"secretaria",  nome:"Secretaria",              icon:"📄",  cor:"var(--blue)",   resp:"Secretaria / Conselho",
@@ -1683,7 +1683,7 @@ function fmtD(d) {
     m.querySelector("#dem-f-resp").value    = "";
     m.querySelector("#dem-f-venc").value    = "";
     /* Reset financial section */
-    ["dem-f-financeiro-section","dem-f-pag-section","dem-f-reimb-section","dem-f-dizimo-section",
+    ["dem-f-financeiro-section","dem-f-pag-section","dem-f-reimb-section","dem-f-dizimo-section","dem-f-oferta-section",
      "dem-f-pix-section","dem-f-bank-section","dem-f-boleto-section","dem-f-agend-section"].forEach(id => {
       const el = m.querySelector("#" + id);
       if (el) el.style.display = "none";
@@ -1699,16 +1699,17 @@ function fmtD(d) {
      "dem-f-conta","dem-f-obs-fin","dem-f-reimb-nome","dem-f-reimb-valor",
      "dem-f-reimb-motivo","dem-f-reimb-forma-pag","dem-f-reimb-pix","dem-f-reimb-min",
      "dem-f-reimb-pastor","dem-f-reimb-obs",
-     "dem-f-dizimo-valor","dem-f-dizimo-mes","dem-f-dizimo-obs"].forEach(id => {
+     "dem-f-dizimo-valor","dem-f-dizimo-mes","dem-f-dizimo-obs",
+     "dem-f-oferta-valor","dem-f-oferta-data","dem-f-oferta-forma","dem-f-oferta-obs"].forEach(id => {
       const el = m.querySelector("#" + id);
       if (el) el.value = "";
     });
     /* Reset file inputs */
-    ["dem-f-upload-nf","dem-f-upload-reimb-nf","dem-f-upload-dizimo"].forEach(id => {
+    ["dem-f-upload-nf","dem-f-upload-reimb-nf","dem-f-upload-dizimo","dem-f-upload-oferta"].forEach(id => {
       const el = m.querySelector("#" + id);
       if (el) el.value = "";
     });
-    ["dem-f-upload-nf-name","dem-f-upload-reimb-nf-name","dem-f-upload-dizimo-name"].forEach(id => {
+    ["dem-f-upload-nf-name","dem-f-upload-reimb-nf-name","dem-f-upload-dizimo-name","dem-f-upload-oferta-name"].forEach(id => {
       const el = m.querySelector("#" + id);
       if (el) el.textContent = _FIN_UPLOAD_PLACEHOLDER;
     });
@@ -1784,7 +1785,9 @@ function fmtD(d) {
     if (agSec)     agSec.style.display     = isAgendProg ? "" : "none";
     if (pagSec)    pagSec.style.display    = (isFinanceiro && sub === "Solicitação de pagamento") ? "flex" : "none";
     if (reimbSec)  reimbSec.style.display  = (isFinanceiro && sub === "Reembolso")               ? "flex" : "none";
-    if (dizimoSec) dizimoSec.style.display = (isFinanceiro && sub === "Dízimos")                 ? "flex" : "none";
+    if (dizimoSec) dizimoSec.style.display = (isFinanceiro && sub === "Dízimos")  ? "flex" : "none";
+    const ofertaSec = document.getElementById("dem-f-oferta-section");
+    if (ofertaSec) ofertaSec.style.display = (isFinanceiro && sub === "Ofertas") ? "flex" : "none";
     if (isFinanceiro) _toggleFormaPagamento();
     const localRow = document.getElementById("dem-f-local-row");
     const respRow  = document.getElementById("dem-f-resp-row");
@@ -2252,6 +2255,21 @@ function fmtD(d) {
       };
     }
 
+    if (cat === "Financeiro" && sub === "Ofertas") {
+      const valor = parseFloat(document.getElementById("dem-f-oferta-valor")?.value || "0");
+      if (!valor || isNaN(valor) || valor <= 0) {
+        if (typeof T === "function") T("Campo obrigatório", "Informe o valor da oferta");
+        return;
+      }
+      financial_data = {
+        tipo:            "Oferta",
+        valor,
+        data_oferta:     document.getElementById("dem-f-oferta-data")?.value || null,
+        forma_pagamento: document.getElementById("dem-f-oferta-forma")?.value || "",
+        obs:             document.getElementById("dem-f-oferta-obs")?.value?.trim() || "",
+      };
+    }
+
     if (cat === "Financeiro" && sub === "Dízimos") {
       const valor = parseFloat(document.getElementById("dem-f-dizimo-valor")?.value || "0");
       const mes   = document.getElementById("dem-f-dizimo-mes")?.value || null;
@@ -2354,6 +2372,13 @@ function fmtD(d) {
       if (dizimoFile) {
         try { financial_data.comprovante = await _uploadAnexoFinanceiro(dizimoFile, `tmp_${tempKey}`, "notas"); }
         catch(e) { uploadErrs.push(`Comprovante dízimo: ${e.message}`); }
+      }
+
+      /* Ofertas */
+      const ofertaFile = document.getElementById("dem-f-upload-oferta")?.files?.[0];
+      if (ofertaFile) {
+        try { financial_data.comprovante = await _uploadAnexoFinanceiro(ofertaFile, `tmp_${tempKey}`, "notas"); }
+        catch(e) { uploadErrs.push(`Comprovante oferta: ${e.message}`); }
       }
 
       if (uploadErrs.length) {

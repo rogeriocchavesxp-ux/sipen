@@ -18,6 +18,8 @@
   let _SOLICITACOES   = null;
   let _ANEXOS         = null; // { [solicitacao_id]: [...] }
   let _DEM_FIN_CACHE  = null;
+  let _DIZOF_CACHE    = null;
+  let _finDizTab      = "dizimos";
 
   async function _loadSolicitacoes(force) {
     if (_SOLICITACOES !== null && !force) return;
@@ -880,18 +882,169 @@
     }
   };
 
+  /* ── RENDER: DÍZIMOS E OFERTAS ──────────────────────────── */
+
+  const _MESES_PT = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+
+  function _fmtMes(isoMonth) {
+    if (!isoMonth) return "—";
+    const [y, m] = isoMonth.split("-");
+    return `${_MESES_PT[parseInt(m,10)-1]}/${y}`;
+  }
+
+  function _fmtData(iso) {
+    if (!iso) return "—";
+    const d = iso.length >= 10 ? iso.slice(0,10) : iso;
+    const [y, m, dia] = d.split("-");
+    return `${dia}/${m}/${y}`;
+  }
+
+  async function renderDizimosOfertas() {
+    const el = document.getElementById("fin-dizof-content");
+    if (!el) return;
+    el.innerHTML = `<div style="padding:24px;color:var(--tx3);font-size:13px;display:flex;align-items:center;gap:8px"><span style="display:inline-block;width:13px;height:13px;border:2px solid var(--gr);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite"></span> Carregando...</div>`;
+
+    try {
+      if (!_DIZOF_CACHE) {
+        const base = typeof apiBaseUrl === "function" ? apiBaseUrl() : "";
+        const hdrs = typeof apiHeaders === "function" ? apiHeaders() : {};
+        const res  = await fetch(
+          `${base}/rest/v1/v_demandas?area=eq.Financeiro&subcategoria=in.(D%C3%ADzimos,Ofertas)&order=criado_em.desc&limit=500`,
+          { headers: hdrs }
+        );
+        _DIZOF_CACHE = res.ok ? await res.json() : [];
+      }
+
+      const tab      = _finDizTab;
+      const subcat   = tab === "dizimos" ? "Dízimos" : "Ofertas";
+      const filtrados = _DIZOF_CACHE.filter(r => r.subcategoria === subcat);
+
+      const hoje     = new Date();
+      const mesAtual = hoje.toISOString().slice(0, 7);
+      const anoAtual = String(hoje.getFullYear());
+
+      const doMes = filtrados.filter(r => (r.criado_em || "").startsWith(mesAtual));
+      const doAno = filtrados.filter(r => (r.criado_em || "").startsWith(anoAtual));
+      const comComp = filtrados.filter(r => r.financial_data?.comprovante || r.financial_data?.nota_fiscal);
+
+      const soma = arr => arr.reduce((s, r) => s + (r.financial_data?.valor || 0), 0);
+      const fmtBRL = v => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+      const linhas = filtrados.length
+        ? filtrados.map(r => {
+            const fd  = r.financial_data || {};
+            const lbl = _demLabel(r.status);
+            const cfg = _DEM_STATUS_CFG[lbl] || { bg:"rgba(90,96,104,.15)", cl:"var(--tx3)" };
+            const ref = tab === "dizimos"
+              ? _fmtMes(fd.mes_referencia)
+              : _fmtData(fd.data_oferta || r.criado_em);
+            const temComp = !!(fd.comprovante?.path || fd.nota_fiscal?.path);
+            return `<tr style="border-bottom:1px solid var(--bd1);cursor:pointer"
+              onclick="window.demAbrirDetalhe&&demAbrirDetalhe('${r.id||r._row}','fin-dizimos-ofertas')"
+              onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+              <td style="padding:9px 10px;font-size:12px;color:var(--tx1);font-weight:500;white-space:nowrap">${escapeHtml(nomePropio(r.solicitante||r.solicitante_txt)||"—")}</td>
+              <td style="padding:9px 10px;font-size:12px;color:var(--tx2)">${ref}</td>
+              <td style="padding:9px 10px;font-size:12px;font-weight:700;color:var(--tx1);font-variant-numeric:tabular-nums">${fd.valor ? fmtBRL(fd.valor) : "—"}</td>
+              <td style="padding:9px 10px;font-size:11px;color:${temComp?"var(--teal)":"var(--tx3)"}">${temComp?"📎 Anexado":"—"}</td>
+              <td style="padding:9px 10px"><span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;white-space:nowrap;background:${cfg.bg};color:${cfg.cl}">${lbl}</span></td>
+              <td style="padding:9px 10px;font-size:11px;color:var(--tx3)">${_fmtData(r.criado_em)}</td>
+            </tr>`;
+          }).join("")
+        : `<tr><td colspan="6" style="padding:32px;text-align:center;color:var(--tx3);font-size:12.5px">Nenhum registro encontrado</td></tr>`;
+
+      el.innerHTML = `
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:14px">
+          <div class="sni${tab==="dizimos"?" on":""}" onclick="window.finSetDizTab('dizimos')">Dízimos</div>
+          <div class="sni-sep"></div>
+          <div class="sni${tab==="ofertas"?" on":""}" onclick="window.finSetDizTab('ofertas')">Ofertas</div>
+        </div>
+
+        <div class="kpis" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;background:var(--bg-card);border:1px solid var(--bd1);border-radius:var(--rl);overflow:hidden;margin-bottom:16px">
+          <div class="kpi" style="border-radius:0;border:none;border-right:1px solid var(--bd1)">
+            <div class="kpi-ico" style="background:rgba(61,160,85,.1);color:var(--gr)">📅</div>
+            <div class="kpi-body"><div class="kpi-lbl">Total do mês</div><div class="kpi-val">${fmtBRL(soma(doMes))}</div><div class="kpi-d nu">${doMes.length} registro${doMes.length!==1?"s":""}</div></div>
+          </div>
+          <div class="kpi" style="border-radius:0;border:none;border-right:1px solid var(--bd1)">
+            <div class="kpi-ico" style="background:rgba(61,160,85,.1);color:var(--gr)">📆</div>
+            <div class="kpi-body"><div class="kpi-lbl">Total do ano</div><div class="kpi-val">${fmtBRL(soma(doAno))}</div><div class="kpi-d nu">${doAno.length} registro${doAno.length!==1?"s":""}</div></div>
+          </div>
+          <div class="kpi" style="border-radius:0;border:none">
+            <div class="kpi-ico" style="background:rgba(42,181,192,.1);color:var(--teal)">📎</div>
+            <div class="kpi-body"><div class="kpi-lbl">Com comprovante</div><div class="kpi-val">${comComp.length}</div><div class="kpi-d nu">de ${filtrados.length} total</div></div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:0;overflow:hidden">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between">
+            <div class="ctit" style="margin:0">${subcat}</div>
+            <span class="cact" style="font-size:11px" onclick="_DIZOF_CACHE=null;renderDizimosOfertas()">↻ Atualizar</span>
+          </div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse">
+              <thead>
+                <tr style="background:var(--bg-surface)">
+                  <th style="padding:8px 10px;font-size:10.5px;font-weight:700;color:var(--tx3);text-align:left;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap">Membro</th>
+                  <th style="padding:8px 10px;font-size:10.5px;font-weight:700;color:var(--tx3);text-align:left;text-transform:uppercase;letter-spacing:.05em">${tab==="dizimos"?"Mês ref.":"Data"}</th>
+                  <th style="padding:8px 10px;font-size:10.5px;font-weight:700;color:var(--tx3);text-align:left;text-transform:uppercase;letter-spacing:.05em">Valor</th>
+                  <th style="padding:8px 10px;font-size:10.5px;font-weight:700;color:var(--tx3);text-align:left;text-transform:uppercase;letter-spacing:.05em">Comprovante</th>
+                  <th style="padding:8px 10px;font-size:10.5px;font-weight:700;color:var(--tx3);text-align:left;text-transform:uppercase;letter-spacing:.05em">Status</th>
+                  <th style="padding:8px 10px;font-size:10.5px;font-weight:700;color:var(--tx3);text-align:left;text-transform:uppercase;letter-spacing:.05em">Enviado em</th>
+                </tr>
+              </thead>
+              <tbody>${linhas}</tbody>
+            </table>
+          </div>
+        </div>`;
+    } catch (e) {
+      el.innerHTML = `<div class="card" style="color:var(--rose)">Erro ao carregar: ${escapeHtml(e.message)}</div>`;
+    }
+  }
+
+  window.finSetDizTab = function(tab) {
+    _finDizTab = tab;
+    renderDizimosOfertas();
+  };
+
+  window.finRegistrarDizimo = function() {
+    if (window.abrirModalNovaDemanda) abrirModalNovaDemanda("Financeiro");
+    // Pre-select Dízimos after modal opens
+    setTimeout(() => {
+      const cat = document.getElementById("dem-f-cat");
+      const sub = document.getElementById("dem-f-sub");
+      if (cat && sub) {
+        cat.value = "Financeiro";
+        if (window.demOnCatChange) demOnCatChange();
+        setTimeout(() => { if (sub) { sub.value = "Dízimos"; if (window.demOnSubChange) demOnSubChange(); } }, 100);
+      }
+    }, 50);
+  };
+
+  window.finRegistrarOferta = function() {
+    if (window.abrirModalNovaDemanda) abrirModalNovaDemanda("Financeiro");
+    setTimeout(() => {
+      const cat = document.getElementById("dem-f-cat");
+      const sub = document.getElementById("dem-f-sub");
+      if (cat && sub) {
+        cat.value = "Financeiro";
+        if (window.demOnCatChange) demOnCatChange();
+        setTimeout(() => { if (sub) { sub.value = "Ofertas"; if (window.demOnSubChange) demOnSubChange(); } }, 100);
+      }
+    }, 50);
+  };
+
   /* ── HOOK INTO go() ──────────────────────────────────────── */
 
   document.addEventListener("sipen:navigate", ({ detail: { id } }) => {
     const MAP = {
-      "fin-dash":        () => renderDash(),
-      "fin-lancamentos": renderLancamentos,
-      "fin-fluxo":       renderFluxo,
-      "fin-pagar":       () => renderPagar(),
-      "fin-receber":     renderReceber,
-      "fin-categorias":  renderCategorias,
-      "fin-relatorios":  renderRelatorios,
-      "fin-auditoria":   renderAuditoria,
+      "fin-dash":            () => renderDash(),
+      "fin-lancamentos":     renderLancamentos,
+      "fin-fluxo":           renderFluxo,
+      "fin-pagar":           () => renderPagar(),
+      "fin-receber":         renderReceber,
+      "fin-categorias":      renderCategorias,
+      "fin-relatorios":      renderRelatorios,
+      "fin-auditoria":       renderAuditoria,
+      "fin-dizimos-ofertas": renderDizimosOfertas,
     };
     if (MAP[id]) MAP[id]();
   });
