@@ -518,19 +518,29 @@ async function load() {
     </div>
 
     <div class="card" id="card-contrib-form">
-      <div class="sec-title">Registrar minha contribuição</div>
-      <p style="font-size:13px;color:var(--tx2);margin-bottom:16px;line-height:1.5">
-        Após realizar a transferência, preencha os dados abaixo para que a tesouraria possa confirmar seu registro.
-      </p>
+      <div class="sec-title">Participar desta campanha</div>
 
       <div id="contrib-success" style="display:none;text-align:center;padding:24px 0">
         <div style="font-size:32px;margin-bottom:8px">✓</div>
-        <div style="font-size:16px;font-weight:700;color:var(--tx1);margin-bottom:4px">Contribuição registrada!</div>
-        <div style="font-size:13px;color:var(--tx3)">A tesouraria irá confirmar em breve.</div>
-        <button onclick="resetContribForm()" style="margin-top:16px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:8px 18px;font-size:13px;cursor:pointer;color:var(--tx2)">Registrar outra</button>
+        <div style="font-size:16px;font-weight:700;color:var(--tx1);margin-bottom:4px" id="contrib-success-title">Registrado!</div>
+        <div style="font-size:13px;color:var(--tx3)" id="contrib-success-sub">A tesouraria irá confirmar em breve.</div>
+        <button onclick="resetContribForm()" style="margin-top:16px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:8px 18px;font-size:13px;cursor:pointer;color:var(--tx2)">Registrar outro</button>
       </div>
 
       <div id="contrib-fields">
+        <!-- Seletor de tipo -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+          <label id="tipo-unico-lbl" style="display:flex;align-items:center;gap:8px;padding:11px 14px;border:2px solid var(--violet);border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:var(--tx1)">
+            <input type="radio" name="cf-tipo" value="unico" checked onchange="cfTipoChange()"> Já contribuí
+          </label>
+          <label id="tipo-rec-lbl" style="display:flex;align-items:center;gap:8px;padding:11px 14px;border:2px solid var(--bd);border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:var(--tx2)">
+            <input type="radio" name="cf-tipo" value="recorrente" onchange="cfTipoChange()"> Vou contribuir
+          </label>
+        </div>
+        <p id="cf-tipo-desc" style="font-size:12.5px;color:var(--tx3);margin-bottom:14px;line-height:1.5">
+          Informe os dados do pagamento que você já realizou para que a tesouraria possa confirmar.
+        </p>
+
         <div style="display:grid;gap:12px">
           <div>
             <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px">Seu nome <span style="font-weight:400;text-transform:none">(opcional)</span></label>
@@ -539,16 +549,18 @@ async function load() {
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div>
-              <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px">Valor contribuído *</label>
+              <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px">Valor (R$) *</label>
               <input id="cf-valor" type="text" inputmode="decimal" placeholder="Ex: 500,00" style="${inp}">
             </div>
-            <div>
+            <!-- Campo único: data do pagamento -->
+            <div id="cf-data-wrap">
               <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px">Data do pagamento</label>
               <input id="cf-data" type="date" value="${new Date().toISOString().split('T')[0]}" style="${inp}">
             </div>
           </div>
 
-          <div>
+          <!-- Campo único: forma de pagamento -->
+          <div id="cf-forma-wrap">
             <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px">Forma de pagamento</label>
             <select id="cf-forma" style="${inp}">
               <option value="pix">PIX</option>
@@ -560,8 +572,30 @@ async function load() {
             </select>
           </div>
 
+          <!-- Campos recorrentes -->
+          <div id="cf-rec-wrap" style="display:none;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px">Frequência</label>
+              <select id="cf-frequencia" style="${inp}">
+                <option value="mensal">Mensal</option>
+                <option value="quinzenal">Quinzenal</option>
+                <option value="semanal">Semanal</option>
+                <option value="bimestral">Bimestral</option>
+                <option value="trimestral">Trimestral</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px">Quantas vezes <span style="font-weight:400;text-transform:none">(opcional)</span></label>
+              <input id="cf-qtd" type="number" min="1" placeholder="Ex: 6" style="${inp}">
+            </div>
+          </div>
+          <div id="cf-inicio-wrap" style="display:none">
+            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px">Data de início</label>
+            <input id="cf-inicio" type="date" value="${new Date().toISOString().split('T')[0]}" style="${inp}">
+          </div>
+
           <div>
-            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px">Observações <span style="font-weight:400;text-transform:none">(ex: número do comprovante)</span></label>
+            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px" id="cf-obs-lbl">Observações <span style="font-weight:400;text-transform:none">(ex: número do comprovante)</span></label>
             <input id="cf-obs" type="text" placeholder="Referência, nº do comprovante, etc." style="${inp}">
           </div>
 
@@ -586,8 +620,39 @@ function parseBRL(s) {
   return parseFloat(str) || 0;
 }
 
+function cfTipoChange() {
+  const tipo = document.querySelector("input[name='cf-tipo']:checked")?.value;
+  const isRec = tipo === "recorrente";
+
+  const lblUnico = document.getElementById("tipo-unico-lbl");
+  const lblRec   = document.getElementById("tipo-rec-lbl");
+  if (lblUnico) { lblUnico.style.borderColor = isRec ? "var(--bd)" : "var(--violet)"; lblUnico.style.color = isRec ? "var(--tx2)" : "var(--tx1)"; }
+  if (lblRec)   { lblRec.style.borderColor   = isRec ? "var(--violet)" : "var(--bd)"; lblRec.style.color   = isRec ? "var(--tx1)" : "var(--tx2)"; }
+
+  const desc    = document.getElementById("cf-tipo-desc");
+  const btn     = document.getElementById("cf-btn");
+  const obsLbl  = document.getElementById("cf-obs-lbl");
+  const obsInp  = document.getElementById("cf-obs");
+
+  if (desc) desc.textContent = isRec
+    ? "Registre seu comprometimento de contribuição recorrente. A tesouraria irá acompanhar."
+    : "Informe os dados do pagamento que você já realizou para que a tesouraria possa confirmar.";
+
+  if (btn)    btn.textContent = isRec ? "Registrar comprometimento" : "Registrar contribuição";
+  if (obsLbl) obsLbl.innerHTML = isRec
+    ? 'Observações <span style="font-weight:400;text-transform:none">(opcional)</span>'
+    : 'Observações <span style="font-weight:400;text-transform:none">(ex: número do comprovante)</span>';
+  if (obsInp) obsInp.placeholder = isRec ? "Motivo, intenção, etc." : "Referência, nº do comprovante, etc.";
+
+  document.getElementById("cf-data-wrap")?.style  && (document.getElementById("cf-data-wrap").style.display   = isRec ? "none" : "");
+  document.getElementById("cf-forma-wrap")?.style  && (document.getElementById("cf-forma-wrap").style.display  = isRec ? "none" : "");
+  document.getElementById("cf-rec-wrap")?.style    && (document.getElementById("cf-rec-wrap").style.display    = isRec ? "grid" : "none");
+  document.getElementById("cf-inicio-wrap")?.style && (document.getElementById("cf-inicio-wrap").style.display = isRec ? "" : "none");
+}
+
 async function enviarContrib(campanhaId) {
-  const btn = document.getElementById("cf-btn");
+  const btn  = document.getElementById("cf-btn");
+  const tipo = document.querySelector("input[name='cf-tipo']:checked")?.value || "unico";
   const valor = parseBRL(document.getElementById("cf-valor")?.value);
   if (!valor || valor <= 0) {
     alert("Informe um valor válido.");
@@ -598,27 +663,56 @@ async function enviarContrib(campanhaId) {
   btn.textContent = "Registrando...";
 
   const nome = document.getElementById("cf-nome")?.value?.trim() || null;
-  const payload = {
-    campanha_id:        campanhaId,
-    nome_contribuinte:  nome,
-    anonimo:            !nome,
-    valor,
-    data:               document.getElementById("cf-data")?.value || new Date().toISOString().split("T")[0],
-    forma:              document.getElementById("cf-forma")?.value || "pix",
-    obs:                document.getElementById("cf-obs")?.value?.trim() || null,
-    origem:             "publico",
-    status_conciliacao: "aguardando",
-  };
+  let error;
 
-  const { error } = await sb.from("oe_contribuicoes").insert(payload);
+  if (tipo === "recorrente") {
+    const frequencia = document.getElementById("cf-frequencia")?.value || "mensal";
+    const qtd        = parseInt(document.getElementById("cf-qtd")?.value || 0) || null;
+    const obsBase    = document.getElementById("cf-obs")?.value?.trim() || null;
+    const obs        = [obsBase, qtd ? `${qtd} parcela${qtd > 1 ? "s" : ""}` : null].filter(Boolean).join(" · ") || null;
+
+    const payload = {
+      campanha_id:       campanhaId,
+      nome_contribuinte: nome,
+      tipo:              "recorrente",
+      valor,
+      frequencia,
+      data_inicio:       document.getElementById("cf-inicio")?.value || new Date().toISOString().split("T")[0],
+      status:            "ativo",
+      obs,
+    };
+    ({ error } = await sb.from("oe_comprometimentos").insert(payload));
+  } else {
+    const payload = {
+      campanha_id:        campanhaId,
+      nome_contribuinte:  nome,
+      anonimo:            !nome,
+      valor,
+      data:               document.getElementById("cf-data")?.value || new Date().toISOString().split("T")[0],
+      forma:              document.getElementById("cf-forma")?.value || "pix",
+      obs:                document.getElementById("cf-obs")?.value?.trim() || null,
+      origem:             "publico",
+      status_conciliacao: "aguardando",
+    };
+    ({ error } = await sb.from("oe_contribuicoes").insert(payload));
+  }
 
   if (error) {
     alert("Erro ao registrar: " + error.message);
     btn.disabled = false;
-    btn.textContent = "Registrar contribuição";
+    btn.textContent = tipo === "recorrente" ? "Registrar comprometimento" : "Registrar contribuição";
     return;
   }
 
+  const successTitle = document.getElementById("contrib-success-title");
+  const successSub   = document.getElementById("contrib-success-sub");
+  if (tipo === "recorrente") {
+    if (successTitle) successTitle.textContent = "Comprometimento registrado!";
+    if (successSub)   successSub.textContent   = "Obrigado! A tesouraria irá acompanhar suas contribuições.";
+  } else {
+    if (successTitle) successTitle.textContent = "Contribuição registrada!";
+    if (successSub)   successSub.textContent   = "A tesouraria irá confirmar em breve.";
+  }
   document.getElementById("contrib-fields").style.display = "none";
   document.getElementById("contrib-success").style.display = "block";
 }
@@ -626,9 +720,13 @@ async function enviarContrib(campanhaId) {
 function resetContribForm() {
   document.getElementById("contrib-fields").style.display = "";
   document.getElementById("contrib-success").style.display = "none";
-  document.getElementById("cf-nome").value = "";
-  document.getElementById("cf-valor").value = "";
-  document.getElementById("cf-obs").value = "";
+  ["cf-nome","cf-valor","cf-obs","cf-qtd"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  // Volta para tipo único
+  const radioUnico = document.querySelector("input[name='cf-tipo'][value='unico']");
+  if (radioUnico) { radioUnico.checked = true; cfTipoChange(); }
   const btn = document.getElementById("cf-btn");
   if (btn) { btn.disabled = false; btn.textContent = "Registrar contribuição"; }
 }

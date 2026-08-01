@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    SIPEN — Módulo Ofertas Especiais
-   ofertas-especiais.js · v1.0.0
+   ofertas-especiais.js · v1.1.3
    Campanhas · Contribuições · Conciliação · Relatórios
 ═══════════════════════════════════════════════════════ */
 
@@ -132,7 +132,8 @@
       const { data, error } = await sb
         .from("oe_contribuicoes")
         .select("id,campanha_id,data,valor,forma,nome_contribuinte,anonimo,status_conciliacao,origem,obs,criado_em,ofertas_especiais(titulo)")
-        .order("data", { ascending: false });
+        .order("data", { ascending: false })
+        .limit(500);
       if (error) throw error;
       _contribuicoes = data || [];
     } catch (e) {
@@ -255,9 +256,10 @@
     let rows = [..._campanhas];
     if (fstatus) rows = rows.filter(c => c.status === fstatus);
     if (fbusca)  rows = rows.filter(c =>
-      (c.titulo       || "").toLowerCase().includes(fbusca) ||
-      (c.categoria    || "").toLowerCase().includes(fbusca) ||
-      (c.departamento || "").toLowerCase().includes(fbusca)
+      (c.titulo          || "").toLowerCase().includes(fbusca) ||
+      (c.categoria       || "").toLowerCase().includes(fbusca) ||
+      (c.departamento    || "").toLowerCase().includes(fbusca) ||
+      (c.codigo_campanha || "").toLowerCase().includes(fbusca)
     );
 
     el.innerHTML = `
@@ -504,7 +506,7 @@
       if (!porMes[m]) porMes[m] = 0;
       porMes[m] += Number(r.valor || 0);
     });
-    const meses = Object.entries(porMes).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 12);
+    const meses = Object.entries(porMes).sort((a, b) => a[0].localeCompare(b[0])).slice(-12);
     const maxMes = Math.max(...meses.map(m => m[1]), 1);
 
     const NOMES_MES = ["","Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
@@ -729,6 +731,8 @@
           </div>
         </div>
 
+        <input type="hidden" id="oe-f-publicado-em" value="${camp?.publicado_em || ""}">
+        <input type="hidden" id="oe-f-encerrado-em" value="${camp?.encerrado_em || ""}">
         <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;border-top:1px solid var(--bd1);padding-top:14px">
           <button class="tbt" onclick="document.getElementById('oe-form-modal').remove()">Cancelar</button>
           <button class="tbt pri" id="oe-form-save" onclick="oeSalvarCampanha('${id || ""}')">
@@ -773,8 +777,13 @@
         const novoStatus = document.getElementById("oe-f-status")?.value;
         if (novoStatus) {
           payload.status = novoStatus;
-          if (novoStatus === "publicada") { payload.publica = true; payload.publicado_em = payload.publicado_em || new Date().toISOString(); }
-          if (novoStatus === "encerrada") { payload.encerrado_em = payload.encerrado_em || new Date().toISOString(); }
+          if (novoStatus === "publicada") {
+            payload.publica = true;
+            payload.publicado_em = document.getElementById("oe-f-publicado-em")?.value || new Date().toISOString();
+          }
+          if (novoStatus === "encerrada") {
+            payload.encerrado_em = document.getElementById("oe-f-encerrado-em")?.value || new Date().toISOString();
+          }
         }
         const { error } = await sb.from("ofertas_especiais").update(payload).eq("id", id);
         if (error) throw error;
@@ -794,43 +803,6 @@
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = old; }
     }
-  };
-
-  /* ── MODAL: STATUS DA CAMPANHA ────────────────────────── */
-
-  window.oeAlterarStatus = function(id, currentStatus) {
-    const camp = (_campanhas || []).find(c => c.id === id);
-    const status  = currentStatus || camp?.status;
-    const titulo  = camp?.titulo || "";
-    if (!status) return;
-
-    const opcoes = Object.entries(STATUS_CFG).filter(([k]) => k !== status);
-
-    let modal = document.getElementById("oe-status-modal");
-    if (!modal) {
-      modal = document.createElement("div");
-      modal.id = "oe-status-modal";
-      modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:399;display:flex;align-items:center;justify-content:center;padding:18px";
-      modal.onclick = ev => { if (ev.target === modal) modal.remove(); };
-      document.body.appendChild(modal);
-    }
-
-    modal.innerHTML = `
-      <div style="width:min(360px,96vw);background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:20px">
-        <div class="ctit" style="margin-bottom:12px">Alterar status</div>
-        <div style="font-size:12px;color:var(--tx2);margin-bottom:14px">
-          ${titulo ? escapeHtml(titulo) + "<br>" : ""}
-          <span style="font-size:11px">Status atual: </span>${_pillStatus(status)}
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
-          ${opcoes.map(([k, v]) => `
-          <button class="tbt" onclick="oeAplicarStatus('${id}','${k}')"
-                  style="width:100%;text-align:left;padding:7px 12px;font-size:12px;color:${v.cor}">
-            ${v.label}
-          </button>`).join("")}
-        </div>
-        <button class="tbt" onclick="document.getElementById('oe-status-modal').remove()" style="width:100%">Cancelar</button>
-      </div>`;
   };
 
   window.oeAplicarStatus = async function(id, status) {
@@ -980,15 +952,39 @@
     }
   };
 
-  window.oeDivergirContrib = async function(id) {
+  window.oeDivergirContrib = function(id) {
+    let modal = document.getElementById("oe-diverg-modal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "oe-diverg-modal";
+      modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:1030;display:flex;align-items:center;justify-content:center;padding:18px";
+      modal.onclick = ev => { if (ev.target === modal) modal.remove(); };
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = `
+      <div style="width:min(360px,96vw);background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:20px">
+        <div class="ctit" style="margin-bottom:12px">Marcar como divergente</div>
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:6px">Motivo / observação</label>
+        <textarea id="oe-diverg-obs" rows="3" placeholder="Descreva a divergência encontrada..."
+                  style="width:100%;box-sizing:border-box;resize:vertical;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:12.5px;padding:8px 10px;outline:none;margin-bottom:14px"></textarea>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="tbt" onclick="document.getElementById('oe-diverg-modal').remove()">Cancelar</button>
+          <button class="tbt" style="color:var(--rose);border-color:var(--rose)" onclick="oeDivergirConfirmar('${id}')">Confirmar divergência</button>
+        </div>
+      </div>`;
+  };
+
+  window.oeDivergirConfirmar = async function(id) {
     try {
+      const obs = document.getElementById("oe-diverg-obs")?.value?.trim() || null;
       const sb = _sb();
       const { error } = await sb.from("oe_contribuicoes")
-        .update({ status_conciliacao: "divergente" })
+        .update({ status_conciliacao: "divergente", obs })
         .eq("id", id);
       if (error) throw error;
       _contribuicoes = null;
-      if (typeof T === "function") T("Marcado como divergente", "Revise os dados.");
+      document.getElementById("oe-diverg-modal")?.remove();
+      if (typeof T === "function") T("Marcado como divergente", obs || "Revise os dados.");
       await renderOeConcil();
     } catch (e) {
       if (typeof T === "function") T("Erro", e.message);
@@ -1070,10 +1066,16 @@
         </div>` : ""}
 
         ${(comps || []).length > 0 ? (() => {
-          const totalComp = (comps || []).filter(c => c.status === "ativo").reduce((s,c) => s + Number(c.valor||0), 0);
+          const compsAtivos = (comps || []).filter(c => c.status === "ativo");
+          const totalUnico  = compsAtivos.filter(c => c.tipo === "unico").reduce((s,c) => s + Number(c.valor||0), 0);
+          const totalRec    = compsAtivos.filter(c => c.tipo === "recorrente").reduce((s,c) => s + Number(c.valor||0), 0);
+          const partes = [
+            totalUnico ? brl(totalUnico) + " único" : "",
+            totalRec   ? brl(totalRec)   + "/mês recorrente" : "",
+          ].filter(Boolean).join(" · ");
           return `
           <div class="ctit" style="margin-bottom:10px">Comprometimentos
-            <span style="font-size:10.5px;font-weight:400;color:var(--tx3);margin-left:6px">${comps.length} registro${comps.length!==1?"s":""} · ${brl(totalComp)} previsto/mês</span>
+            <span style="font-size:10.5px;font-weight:400;color:var(--tx3);margin-left:6px">${comps.length} registro${comps.length!==1?"s":""} ${partes ? "· " + partes : ""}</span>
           </div>
           <div style="overflow-x:auto;margin-bottom:18px"><table style="width:100%;border-collapse:collapse;font-size:12px">
             <thead><tr style="border-bottom:1px solid var(--bd2)">
@@ -1195,7 +1197,7 @@
             </div>
           </div>
 
-          <div id="oe-cp-recorrencia-wrap" style="display:none;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div id="oe-cp-recorrencia-wrap" style="display:none;grid-template-columns:1fr 1fr;gap:12px">
             <div>
               <label class="field-lbl">Frequência</label>
               <select id="oe-cp-frequencia" style="${inpStyle}">
