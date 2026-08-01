@@ -959,6 +959,8 @@
             </div>
           </div>
           <div style="display:flex;gap:6px">
+            <button class="tbt" onclick="oeAbrirFormCampanha('${id}')" style="font-size:11px;padding:4px 10px">Editar</button>
+            <button class="tbt" onclick="oeAlterarStatus('${id}')" style="font-size:11px;padding:4px 10px">${_pillStatus(camp.status)}</button>
             <button class="tbt pri" onclick="oeAbrirFormContrib('${id}')" style="font-size:11px;padding:4px 10px">+ Contribuição</button>
             <button class="tbt" onclick="document.getElementById('oe-det-modal').remove()">Fechar</button>
           </div>
