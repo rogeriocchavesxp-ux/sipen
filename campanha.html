@@ -333,23 +333,31 @@ async function load() {
   }
 
   // Tenta por codigo_campanha, depois por id
-  let { data: camp } = await sb.from("ofertas_especiais")
+  // Filtro publica=true aplicado pela RLS (policy anon) — não duplicado aqui
+  let { data: camp, error: e1 } = await sb.from("ofertas_especiais")
     .select("*")
     .eq("codigo_campanha", c)
-    .eq("publica", true)
     .maybeSingle();
 
   if (!camp) {
-    const { data } = await sb.from("ofertas_especiais")
+    const { data, error: e2 } = await sb.from("ofertas_especiais")
       .select("*")
       .eq("id", c)
-      .eq("publica", true)
       .maybeSingle();
     camp = data;
+    if (e2) { renderError("Erro ao carregar campanha.", e2.message); return; }
   }
 
   if (!camp) {
-    renderError("Campanha não encontrada.", "Verifique o link ou entre em contato com a IPPenha.");
+    renderError(
+      "Campanha não encontrada.",
+      "Ela pode não estar publicada ainda ou o link está incorreto."
+    );
+    return;
+  }
+
+  if (!camp.publica) {
+    renderError("Campanha não disponível.", "Esta campanha ainda não foi publicada.");
     return;
   }
 
