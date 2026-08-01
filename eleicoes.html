@@ -494,7 +494,11 @@ async function iniciarIndicacao() {
   if (!membros.length) {
     app.innerHTML = `<div class="loader"><div class="spinner"></div></div>`;
     try {
-      membros = await sbGet("v_eleicao_form_membros?select=pessoa_id,nome,data_nascimento,data_ingresso,congregacao&limit=2000");
+      const raw = await sbGet("pessoas?select=id,nome&deleted_at=is.null&order=nome&limit=2000");
+      membros = (raw || []).map(p => ({
+        pessoa_id: p.id, nome: p.nome,
+        congregacao: null, data_nascimento: null, data_ingresso: null,
+      }));
     } catch (e) { renderErro("Erro", e.message); return; }
   }
   renderIdentificacao();
