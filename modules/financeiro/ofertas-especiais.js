@@ -139,9 +139,11 @@
     _loading(el);
     await _loadCampanhas();
 
-    const ativas    = _campanhas.filter(c => ["publicada","em_andamento"].includes(c.status));
-    const encerradas = _campanhas.filter(c => ["encerrada","meta_atingida"].includes(c.status));
-    const pendentes  = _campanhas.filter(c => ["rascunho","aguardando_aprovacao","aprovada"].includes(c.status));
+    const ativas      = _campanhas.filter(c => ["publicada","em_andamento"].includes(c.status));
+    const encerradas  = _campanhas.filter(c => ["encerrada","meta_atingida"].includes(c.status));
+    const pendentes   = _campanhas.filter(c => ["rascunho","aguardando_aprovacao","aprovada"].includes(c.status));
+    const nAprovadas  = pendentes.filter(c => c.status === "aprovada").length;
+    const nAguardando = pendentes.filter(c => ["rascunho","aguardando_aprovacao"].includes(c.status)).length;
     const totArrecadado = ativas.reduce((s, c) => s + (c.arrecadado || 0), 0);
     const totMeta = ativas.filter(c => !c.sem_meta).reduce((s, c) => s + Number(c.meta || 0), 0);
 
@@ -159,7 +161,7 @@
         </div>
         <div class="kpi" style="border-radius:0;border:none;border-right:1px solid var(--bd1)">
           <div class="kpi-ico" style="background:rgba(212,168,67,.12);color:var(--gold)">◻</div>
-          <div class="kpi-body"><div class="kpi-lbl">Aguardando</div><div class="kpi-val">${pendentes.length}</div><div class="kpi-d nu">aprovação ou publicação</div></div>
+          <div class="kpi-body"><div class="kpi-lbl">Não publicadas</div><div class="kpi-val">${pendentes.length}</div><div class="kpi-d nu">${nAprovadas ? `${nAprovadas} aprovada${nAprovadas>1?"s":""}` : ""}${nAprovadas && nAguardando ? " · " : ""}${nAguardando ? `${nAguardando} a aprovar` : ""}${!pendentes.length ? "nenhuma pendente" : ""}</div></div>
         </div>
         <div class="kpi" style="border-radius:0;border:none">
           <div class="kpi-ico" style="background:rgba(90,96,104,.12);color:var(--tx2)">✓</div>
