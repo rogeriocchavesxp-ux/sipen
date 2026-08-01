@@ -223,6 +223,7 @@ async function _agPreencherTelSilent(campo, nome) {
 const AG_TIPOS_COR = {
   "Culto":       "#dc2626",
   "Reunião":     "#ea580c",
+  "Ensaio":      "#0284c7",
   "Congresso":   "#2563eb",
   "Conferência": "#7c3aed",
   "Evento":      "#059669",

@@ -67,7 +67,7 @@ async function agAbrirForm(r = null) {
             <div style="display:flex;flex-wrap:wrap;gap:6px">
               ${Object.entries(AG_TIPOS_COR).map(([t, cor]) => `
                 <button type="button" class="ag-tipo-chip" data-tipo="${escapeHtml(t)}"
-                  style="padding:5px 13px;border-radius:20px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .12s;border:2px solid;${tipoAtual===t ? `background:${cor};color:#fff;border-color:${cor}` : `background:transparent;color:var(--tx2);border-color:var(--bd2)`}">
+                  style="padding:4px 11px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s;border:1.5px solid;${tipoAtual===t ? `background:${cor};color:#fff;border-color:${cor}` : `background:${cor}12;color:${cor};border-color:${cor}35`}">
                   ${escapeHtml(t)}
                 </button>`).join("")}
             </div>
@@ -175,7 +175,8 @@ async function agAbrirForm(r = null) {
     btn.addEventListener("click", () => {
       const cor = AG_TIPOS_COR[btn.dataset.tipo] || "#6b7280";
       modal.querySelectorAll(".ag-tipo-chip").forEach(b => {
-        b.style.background = "transparent"; b.style.color = "var(--tx2)"; b.style.borderColor = "var(--bd2)";
+        const c = AG_TIPOS_COR[b.dataset.tipo] || "#6b7280";
+        b.style.background = c + "12"; b.style.color = c; b.style.borderColor = c + "35";
       });
       btn.style.background = cor; btn.style.color = "#fff"; btn.style.borderColor = cor;
       document.getElementById("ag-f-tipo").value = btn.dataset.tipo;
