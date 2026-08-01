@@ -355,31 +355,44 @@ async function _agCarregarEspacosWidget(modal, preSelected = []) {
   try {
     const rows = await _agCarregarEspacos();
     grid.innerHTML = "";
+    const _PRIO = ["templo","pátio","patio","cozinha"];
+    const _isPrio = n => _PRIO.some(p => n.toLowerCase().includes(p));
+    const _mkChk = (esp, sel, destaque) => {
+      const lbl = document.createElement("label");
+      lbl.className = "ag-espaco-chk";
+      lbl.dataset.espaco = esp.nome;
+      const borIdle = destaque ? "rgba(42,181,192,.4)" : "var(--bd2)";
+      const bgIdle  = destaque ? "rgba(42,181,192,.05)" : "var(--bg-input)";
+      lbl.style.cssText = `display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:6px;border:1.5px solid ${sel?"var(--gr)":borIdle};background:${sel?"rgba(52,199,89,.08)":bgIdle};cursor:pointer;font-size:11.5px;color:var(--tx1);user-select:none;transition:border-color .12s,background .12s`;
+      lbl.innerHTML = `<input type="checkbox" data-espaco="${escapeHtmlAttr(esp.nome)}" ${sel?"checked":""} style="width:14px;height:14px;accent-color:var(--gr);cursor:pointer;flex-shrink:0">
+        <span style="flex:1;font-weight:${destaque?"600":"400"}">${escapeHtml(esp.nome)}</span>
+        <span class="ag-esp-occ" style="display:none;font-size:9px;font-weight:700;color:#C07700;white-space:nowrap">EM USO</span>`;
+      const inp = lbl.querySelector("input");
+      inp.addEventListener("change", () => {
+        if (!inp.dataset.ocupado) {
+          lbl.style.borderColor = inp.checked ? "var(--gr)" : (destaque ? borIdle : "var(--bd2)");
+          lbl.style.background  = inp.checked ? "rgba(52,199,89,.08)" : (destaque ? bgIdle : "var(--bg-input)");
+        }
+      });
+      return lbl;
+    };
+    const principais = rows.filter(r => _isPrio(r.nome));
+    const resto      = rows.filter(r => !_isPrio(r.nome));
+    if (principais.length) {
+      const hdr = document.createElement("div");
+      hdr.style.cssText = "grid-column:1/-1;font-size:9.5px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;padding:5px 0 3px;border-bottom:1px solid rgba(42,181,192,.3);margin-top:4px";
+      hdr.textContent = "Principais";
+      grid.appendChild(hdr);
+      principais.forEach(esp => grid.appendChild(_mkChk(esp, preSelected.includes(esp.nome), true)));
+    }
     const grupos = {};
-    rows.forEach(r => { if (!grupos[r.grupo]) grupos[r.grupo] = []; grupos[r.grupo].push(r); });
+    resto.forEach(r => { if (!grupos[r.grupo]) grupos[r.grupo] = []; grupos[r.grupo].push(r); });
     Object.entries(grupos).forEach(([grupo, itens]) => {
       const hdr = document.createElement("div");
       hdr.style.cssText = "grid-column:1/-1;font-size:9.5px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.08em;padding:5px 0 3px;border-bottom:1px solid var(--bd2);margin-top:4px";
       hdr.textContent = grupo;
       grid.appendChild(hdr);
-      itens.forEach(esp => {
-        const sel = preSelected.includes(esp.nome);
-        const lbl = document.createElement("label");
-        lbl.className = "ag-espaco-chk";
-        lbl.dataset.espaco = esp.nome;
-        lbl.style.cssText = `display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:6px;border:1.5px solid ${sel?"var(--gr)":"var(--bd2)"};background:${sel?"rgba(52,199,89,.08)":"var(--bg-input)"};cursor:pointer;font-size:11.5px;color:var(--tx1);user-select:none;transition:border-color .12s,background .12s`;
-        lbl.innerHTML = `<input type="checkbox" data-espaco="${escapeHtmlAttr(esp.nome)}" ${sel?"checked":""} style="width:14px;height:14px;accent-color:var(--gr);cursor:pointer;flex-shrink:0">
-          <span style="flex:1">${escapeHtml(esp.nome)}</span>
-          <span class="ag-esp-occ" style="display:none;font-size:9px;font-weight:700;color:#C07700;white-space:nowrap">EM USO</span>`;
-        const inp = lbl.querySelector("input");
-        inp.addEventListener("change", () => {
-          if (!inp.dataset.ocupado) {
-            lbl.style.borderColor = inp.checked ? "var(--gr)" : "var(--bd2)";
-            lbl.style.background  = inp.checked ? "rgba(52,199,89,.08)" : "var(--bg-input)";
-          }
-        });
-        grid.appendChild(lbl);
-      });
+      itens.forEach(esp => grid.appendChild(_mkChk(esp, preSelected.includes(esp.nome), false)));
     });
     if (!rows.length) grid.innerHTML = `<div style="grid-column:1/-1;font-size:11px;color:var(--tx3)">Nenhum espaço cadastrado.</div>`;
 
