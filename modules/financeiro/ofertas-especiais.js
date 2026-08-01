@@ -1312,7 +1312,7 @@
     }
 
     const codigo   = camp.codigo_campanha || id;
-    const shareUrl = `${window.location.origin}/?campanha=${encodeURIComponent(codigo)}`;
+    const shareUrl = `${window.location.origin}/campanha.html?c=${encodeURIComponent(codigo)}`;
     const qrApi    = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(shareUrl)}&color=1a1d21&bgcolor=ffffff&margin=12`;
 
     let modal = document.getElementById("oe-share-modal");
