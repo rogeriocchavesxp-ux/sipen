@@ -1073,20 +1073,26 @@
   function oeCampKebab(btn, id, currentStatus) {
     document.querySelectorAll(".oe-kebab-menu").forEach(m => m.remove());
     const isCancelada = currentStatus === "cancelada" || currentStatus === "encerrada";
+
+    const rect = btn.getBoundingClientRect();
     const menu = document.createElement("div");
     menu.className = "oe-kebab-menu";
-    menu.style.cssText = "position:absolute;right:0;top:calc(100% + 4px);z-index:400;background:var(--bg-card);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.18);min-width:190px;overflow:hidden";
+    menu.style.cssText = `position:fixed;right:${window.innerWidth - rect.right}px;top:${rect.bottom + 4}px;z-index:1000;background:var(--bg-card);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.22);min-width:200px;overflow:hidden`;
+
     const item = (label, fn, danger) =>
       `<button onclick="${fn};document.querySelectorAll('.oe-kebab-menu').forEach(m=>m.remove())"
                style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:transparent;color:${danger ? "var(--rose)" : "var(--tx1)"};font-size:12px;cursor:pointer;text-align:left"
                onmouseover="this.style.background='${danger ? "rgba(224,85,85,.08)" : "var(--bg2)"}'"
                onmouseout="this.style.background='transparent'">${label}</button>`;
+
     menu.innerHTML =
       item("Editar campanha",    `oeAbrirFormCampanha('${id}')`) +
       item("Alterar status",     `oeAlterarStatus('${id}','${currentStatus}')`) +
+      item("Compartilhar / QR Code", `oeCompartilharCampanha('${id}')`) +
       (!isCancelada ? `<div style="height:1px;background:var(--bd1);margin:4px 10px"></div>` +
         item("Cancelar campanha", `oeAplicarStatus('${id}','cancelada')`, true) : "");
-    btn.parentElement.appendChild(menu);
+
+    document.body.appendChild(menu);
     const close = e => {
       if (!menu.contains(e.target) && e.target !== btn) {
         menu.remove();
@@ -1096,6 +1102,67 @@
     setTimeout(() => document.addEventListener("click", close), 0);
   }
   window.oeCampKebab = oeCampKebab;
+
+  /* ── MODAL: COMPARTILHAR / QR CODE ───────────────────── */
+
+  window.oeCompartilharCampanha = async function(id) {
+    let camp = (_campanhas || []).find(c => c.id === id);
+    if (!camp) {
+      const sb = _sb();
+      const { data } = await sb.from("ofertas_especiais")
+        .select("titulo,codigo_campanha,status,publica")
+        .eq("id", id).single();
+      camp = data || {};
+    }
+
+    const codigo   = camp.codigo_campanha || id;
+    const shareUrl = `${window.location.origin}/?campanha=${encodeURIComponent(codigo)}`;
+    const qrApi    = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(shareUrl)}&color=1a1d21&bgcolor=ffffff&margin=12`;
+
+    let modal = document.getElementById("oe-share-modal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "oe-share-modal";
+      modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:1010;display:flex;align-items:center;justify-content:center;padding:18px";
+      modal.onclick = ev => { if (ev.target === modal) modal.remove(); };
+      document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+      <div style="width:min(360px,96vw);background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:22px;text-align:center">
+        <div style="font-size:13px;font-weight:700;color:var(--tx1);margin-bottom:2px">${escapeHtml(camp.titulo || "")}</div>
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:18px">Link compartilhável da campanha</div>
+
+        <div style="background:#ffffff;border-radius:8px;padding:10px;display:inline-block;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.12)">
+          <img src="${qrApi}" width="200" height="200" alt="QR Code" style="display:block">
+        </div>
+
+        <div style="display:flex;gap:6px;margin-bottom:16px;text-align:left">
+          <input id="oe-share-url" readonly value="${shareUrl}"
+                 onclick="this.select()"
+                 style="flex:1;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:6px;color:var(--tx2);font-size:10.5px;padding:7px 10px;outline:none;min-width:0">
+          <button class="tbt pri" id="oe-share-copy" onclick="oeShareCopiar()" style="white-space:nowrap;font-size:11px;padding:6px 12px">Copiar</button>
+        </div>
+
+        ${!camp.publica ? `<div style="font-size:10.5px;color:var(--amber);margin-bottom:12px;text-align:left;background:rgba(212,168,67,.08);border-radius:6px;padding:8px 10px">
+          Esta campanha ainda não está pública. Publique-a para que o link funcione externamente.
+        </div>` : ""}
+
+        <button class="tbt" onclick="document.getElementById('oe-share-modal').remove()" style="width:100%">Fechar</button>
+      </div>`;
+  };
+
+  window.oeShareCopiar = function() {
+    const url = document.getElementById("oe-share-url")?.value;
+    const btn = document.getElementById("oe-share-copy");
+    if (!url || !btn) return;
+    navigator.clipboard.writeText(url).then(() => {
+      btn.textContent = "Copiado!";
+      setTimeout(() => { btn.textContent = "Copiar"; }, 2000);
+    }).catch(() => {
+      if (typeof T === "function") T("Erro", "Não foi possível copiar o link.");
+    });
+  };
 
   /* ── NAVIGATE EVENT ───────────────────────────────────── */
 
