@@ -578,11 +578,32 @@
       camp = data;
     }
 
-    // Busca departamentos e pessoas em paralelo
-    const [{ data: depts }, { data: pessoas }] = await Promise.all([
-      sb.from("departamentos").select("id,nome").order("nome"),
-      sb.from("pessoas").select("id,nome").eq("ativo", true).order("nome"),
-    ]);
+    // Departamentos: lista estática (não é tabela no banco)
+    const DEPTS_ESTATICOS = [
+      "Pastoral","Diaconal","Comunicação","Grupos de Paz",
+      "Secretaria","Tesouraria","Patrimônio","Infraestrutura",
+      "Ensino","Evangelismo","Ação Social","Missões","Juventude","Infantil",
+    ];
+
+    // Gerar próximo código automaticamente para nova campanha
+    let proximoCodigo = "";
+    if (!id) {
+      const ano = new Date().getFullYear();
+      const { data: ultimos } = await sb
+        .from("ofertas_especiais")
+        .select("codigo_campanha")
+        .like("codigo_campanha", `%/${ano}`)
+        .order("criado_em", { ascending: false });
+      const nums = (ultimos || [])
+        .map(r => parseInt((r.codigo_campanha || "").split("/")[0]))
+        .filter(n => !isNaN(n));
+      const proximo = (nums.length ? Math.max(...nums) : 0) + 1;
+      proximoCodigo = String(proximo).padStart(3, "0") + "/" + ano;
+    }
+
+    // Busca pessoas ativas
+    const { data: pessoas } = await sb
+      .from("pessoas").select("id,nome").eq("ativo", true).order("nome");
 
     let modal = document.getElementById("oe-form-modal");
     if (!modal) {
@@ -596,8 +617,8 @@
     const v = (f) => escapeHtmlAttr(camp?.[f] ?? "");
     const selStyle = "width:100%;box-sizing:border-box;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:12.5px;padding:8px 10px;outline:none";
 
-    const deptOpts = (depts || []).map(d =>
-      `<option value="${escapeHtmlAttr(d.nome)}" ${camp?.departamento === d.nome ? "selected" : ""}>${escapeHtml(d.nome)}</option>`
+    const deptOpts = DEPTS_ESTATICOS.map(nome =>
+      `<option value="${escapeHtmlAttr(nome)}" ${camp?.departamento === nome ? "selected" : ""}>${escapeHtml(nome)}</option>`
     ).join("");
 
     const pessoaOpts = (pessoas || []).map(p =>
@@ -687,7 +708,7 @@
             </div>
             <div>
               <label class="field-lbl">Código da campanha</label>
-              <input id="oe-f-codigo" value="${v("codigo_campanha")}" placeholder="Código único (opcional)"
+              <input id="oe-f-codigo" value="${camp ? v("codigo_campanha") : proximoCodigo}" placeholder="Ex: 001/2026"
                      style="width:100%;box-sizing:border-box;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:12.5px;padding:8px 10px;outline:none">
             </div>
           </div>
