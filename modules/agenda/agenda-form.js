@@ -115,6 +115,14 @@ async function agAbrirForm(r = null) {
             </select>
           </div>
 
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:9px 12px;border-radius:7px;border:1.5px solid ${r?.destaque?'rgba(217,119,6,.5)':'var(--bd2)'};background:${r?.destaque?'rgba(217,119,6,.07)':'transparent'}">
+            <input type="checkbox" id="ag-f-destaque" ${r?.destaque?"checked":""} style="width:16px;height:16px;accent-color:#d97706;cursor:pointer;flex-shrink:0">
+            <div>
+              <div style="font-size:12px;font-weight:600;color:var(--tx1)">Evento em Destaque</div>
+              <div style="font-size:10.5px;color:var(--tx3)">Aparece com destaque na agenda pública</div>
+            </div>
+          </label>
+
         </div>
 
         <!-- Tab 1: Espaço -->
@@ -297,6 +305,7 @@ async function agSalvarForm(id) {
     espaco:          _fEspaco,
     observacao:      document.getElementById("ag-f-obs")?.value?.trim() || null,
     status:          document.getElementById("ag-f-status")?.value || "confirmado",
+    destaque:        document.getElementById("ag-f-destaque")?.checked || false,
   };
   try {
     const isEdit = !!id;
