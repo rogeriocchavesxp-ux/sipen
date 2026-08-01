@@ -196,6 +196,10 @@ window._agSelecionarPessoa = function(campo, nome, tel) {
   if (inp) inp.value = nome;
   if (telInp) telInp.value = tel;
   if (dd) dd.style.display = "none";
+  if (campo === "responsavel" && tel) {
+    const telField = document.getElementById("ag-f-telefone");
+    if (telField && !telField.value) telField.value = tel;
+  }
 };
 
 window._agFecharDropdown = function(campo) {

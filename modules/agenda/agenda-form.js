@@ -148,7 +148,7 @@ async function agAbrirForm(r = null) {
 
           <div>
             ${lbl("Observação")}
-            <textarea id="ag-f-obs" rows="4" style="${fi}resize:vertical;font-family:inherit">${escapeHtml(r?.observacao||"")}</textarea>
+            <textarea id="ag-f-obs" rows="4" style="${fi}resize:vertical;font-family:inherit">${escapeHtml((r?.observacao && r.observacao !== "null") ? r.observacao : "")}</textarea>
           </div>
 
         </div>
