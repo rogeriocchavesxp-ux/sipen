@@ -27,35 +27,40 @@ window.agCarregarConfirmados = agCarregarConfirmados;
 
 const _REC_INDEF = ["Semanal","Quinzenal","Mensal","Anual"];
 
-// Retorna a data (string YYYY-MM-DD) da primeira ocorrência no mês, ou null se não houver
-function _primeiraOcorrenciaNoMes(r, mes) {
-  if (!r.data) return null;
+// Retorna todas as datas (YYYY-MM-DD) de ocorrências do evento no mês
+function _ocorrenciasNoMes(r, mes) {
+  if (!r.data) return [];
   const [y, m] = mes.split("-").map(Number);
   const p1  = `${mes}-01`;
   const pu  = `${mes}-${String(new Date(y, m, 0).getDate()).padStart(2,"0")}`;
-  if (r.data > pu) return null;
+  if (r.data > pu) return [];
   const fim = r.data_encerramento || "9999-12-31";
-  if (fim < p1) return null;
+  if (fim < p1) return [];
   const base = new Date(r.data + "T12:00:00");
   const ini  = new Date(p1  + "T12:00:00");
-  const end  = new Date(pu  + "T12:00:00");
+  const end  = new Date(Math.min(new Date(pu + "T12:00:00"), new Date(fim + "T12:00:00")));
   const rec  = r.recorrencia;
+  const datas = [];
   let cursor = new Date(base);
   if (rec === "Semanal" || rec === "Quinzenal") {
     const step = rec === "Semanal" ? 7 : 14;
     const diff = Math.round((ini - base) / 86400000);
     if (diff > 0) cursor = new Date(base.getTime() + Math.ceil(diff / step) * step * 86400000);
-    return cursor <= end ? cursor.toISOString().split("T")[0] : null;
-  }
-  if (rec === "Mensal") {
+    while (cursor <= end) {
+      datas.push(cursor.toISOString().split("T")[0]);
+      cursor = new Date(cursor.getTime() + step * 86400000);
+    }
+  } else if (rec === "Mensal") {
     while (cursor < ini) { cursor = new Date(cursor); cursor.setMonth(cursor.getMonth() + 1); }
-    return cursor <= end ? cursor.toISOString().split("T")[0] : null;
-  }
-  if (rec === "Anual") {
+    while (cursor <= end) {
+      datas.push(cursor.toISOString().split("T")[0]);
+      cursor = new Date(cursor); cursor.setMonth(cursor.getMonth() + 1);
+    }
+  } else if (rec === "Anual") {
     while (cursor < ini) { cursor = new Date(cursor); cursor.setFullYear(cursor.getFullYear() + 1); }
-    return cursor <= end ? cursor.toISOString().split("T")[0] : null;
+    if (cursor <= end) datas.push(cursor.toISOString().split("T")[0]);
   }
-  return null;
+  return datas;
 }
 
 function _agRenderConfirmados() {
@@ -70,9 +75,7 @@ function _agRenderConfirmados() {
     if (!r.data) return [];
     if (r.data.slice(0,7) === mesSel) return [r];
     if (!_REC_INDEF.includes(r.recorrencia)) return [];
-    const occData = _primeiraOcorrenciaNoMes(r, mesSel);
-    if (!occData) return [];
-    return [{ ...r, data: occData }];
+    return _ocorrenciasNoMes(r, mesSel).map(d => ({ ...r, data: d }));
   }) : _agConfRows;
 
   const rowsFiltrados = tipoSel ? rowsMes.filter(r => r.tipo === tipoSel) : rowsMes;
