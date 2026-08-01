@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    SIPEN — Módulo Ofertas Especiais
-   ofertas-especiais.js · v1.1.3
+   ofertas-especiais.js · v1.1.4
    Campanhas · Contribuições · Conciliação · Relatórios
 ═══════════════════════════════════════════════════════ */
 
@@ -729,6 +729,29 @@
             <textarea id="oe-f-finalidade" rows="2" placeholder="Descreva a finalidade dos recursos arrecadados"
                       style="width:100%;box-sizing:border-box;resize:vertical;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:12.5px;padding:8px 10px;outline:none">${escapeHtml(camp?.finalidade_recursos ?? "")}</textarea>
           </div>
+
+          <!-- Arte / imagem da campanha -->
+          <div>
+            <label class="field-lbl">Arte da campanha</label>
+            <input type="hidden" id="oe-f-imagem-url" value="${v("imagem_url")}">
+            <div id="oe-f-imagem-wrap" onclick="document.getElementById('oe-f-imagem').click()"
+                 style="border:2px dashed var(--bd2);border-radius:10px;cursor:pointer;overflow:hidden;min-height:80px;display:flex;align-items:center;justify-content:center;transition:border-color .15s"
+                 onmouseover="this.style.borderColor='var(--violet)'" onmouseout="this.style.borderColor='var(--bd2)'">
+              ${camp?.imagem_url
+                ? `<img id="oe-f-imagem-preview" src="${escapeHtmlAttr(camp.imagem_url)}" style="width:100%;max-height:200px;object-fit:cover;display:block">`
+                : `<div id="oe-f-imagem-placeholder" style="padding:24px;text-align:center;color:var(--tx3)">
+                     <div style="font-size:22px;margin-bottom:6px">🖼</div>
+                     <div style="font-size:12px">Clique para selecionar imagem</div>
+                     <div style="font-size:10.5px;margin-top:2px">JPG, PNG ou WEBP · máx. 2 MB</div>
+                   </div>`
+              }
+            </div>
+            <input type="file" id="oe-f-imagem" accept="image/jpeg,image/png,image/webp" style="display:none"
+                   onchange="oePreviewImagem(this)">
+            <div id="oe-f-imagem-actions" style="display:${camp?.imagem_url ? "flex" : "none"};gap:8px;margin-top:6px">
+              <button type="button" class="tbt" style="font-size:11px;padding:4px 10px" onclick="oeRemoverImagem()">Remover imagem</button>
+            </div>
+          </div>
         </div>
 
         <input type="hidden" id="oe-f-publicado-em" value="${camp?.publicado_em || ""}">
@@ -740,6 +763,37 @@
           </button>
         </div>
       </div>`;
+  };
+
+  window.oePreviewImagem = function(input) {
+    const file = input.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      if (typeof T === "function") T("Imagem muito grande", "Máximo 2 MB.");
+      input.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wrap = document.getElementById("oe-f-imagem-wrap");
+      if (wrap) wrap.innerHTML = `<img id="oe-f-imagem-preview" src="${e.target.result}" style="width:100%;max-height:200px;object-fit:cover;display:block">`;
+      const actions = document.getElementById("oe-f-imagem-actions");
+      if (actions) actions.style.display = "flex";
+    };
+    reader.readAsDataURL(file);
+  };
+
+  window.oeRemoverImagem = function() {
+    document.getElementById("oe-f-imagem-url").value = "";
+    document.getElementById("oe-f-imagem").value = "";
+    const wrap = document.getElementById("oe-f-imagem-wrap");
+    if (wrap) wrap.innerHTML = `<div id="oe-f-imagem-placeholder" style="padding:24px;text-align:center;color:var(--tx3)">
+      <div style="font-size:22px;margin-bottom:6px">🖼</div>
+      <div style="font-size:12px">Clique para selecionar imagem</div>
+      <div style="font-size:10.5px;margin-top:2px">JPG, PNG ou WEBP · máx. 2 MB</div>
+    </div>`;
+    const actions = document.getElementById("oe-f-imagem-actions");
+    if (actions) actions.style.display = "none";
   };
 
   window.oeSalvarCampanha = async function(id) {
@@ -769,10 +823,25 @@
         chave_pix:          document.getElementById("oe-f-pix")?.value?.trim()          || null,
         codigo_campanha:    document.getElementById("oe-f-codigo")?.value?.trim()       || null,
         finalidade_recursos: document.getElementById("oe-f-finalidade")?.value?.trim() || null,
+        imagem_url:         document.getElementById("oe-f-imagem-url")?.value           || null,
         atualizado_em:      new Date().toISOString(),
       };
 
       const sb = _sb();
+
+      // Upload da imagem se houver arquivo selecionado
+      const imgFile = document.getElementById("oe-f-imagem")?.files?.[0];
+      if (imgFile) {
+        if (btn) btn.textContent = "Enviando imagem...";
+        const ext  = imgFile.name.split(".").pop().toLowerCase() || "jpg";
+        const path = `campanhas/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: upErr } = await sb.storage.from("campanhas").upload(path, imgFile, { upsert: true, contentType: imgFile.type });
+        if (upErr) throw new Error("Falha no upload da imagem: " + upErr.message);
+        const { data: urlData } = sb.storage.from("campanhas").getPublicUrl(path);
+        payload.imagem_url = urlData.publicUrl;
+        if (btn) btn.textContent = "Salvando...";
+      }
+
       if (id) {
         const novoStatus = document.getElementById("oe-f-status")?.value;
         if (novoStatus) {

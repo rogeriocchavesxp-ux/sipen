@@ -435,7 +435,10 @@ async function load() {
   const inp = "width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--tx1);font-size:13px;padding:10px 12px;outline:none;font-family:inherit";
 
   wrap.innerHTML = `
-    <div class="card">
+    <div class="card" style="padding:${camp.imagem_url ? "0" : "22px 20px"}">
+      ${camp.imagem_url ? `<img src="${escHtml(camp.imagem_url)}" alt="${escHtml(camp.titulo)}"
+        style="width:100%;max-height:260px;object-fit:cover;border-radius:var(--radius) var(--radius) 0 0;display:block">
+        <div style="padding:22px 20px">` : ""}
       <span class="status-pill" style="color:${st.cor};background:${st.bg}">${st.label}</span>
       <div class="camp-titulo">${escHtml(camp.titulo)}</div>
       ${camp.descricao ? `<div class="camp-descricao">${escHtml(camp.descricao)}</div>` : ""}
@@ -459,6 +462,7 @@ async function load() {
         ${camp.categoria ? `<div class="info-item"><div class="info-lbl">Categoria</div><div class="info-val">${escHtml(camp.categoria)}</div></div>` : ""}
         ${camp.departamento ? `<div class="info-item"><div class="info-lbl">Departamento</div><div class="info-val">${escHtml(camp.departamento)}</div></div>` : ""}
       </div>` : ""}
+    ${camp.imagem_url ? "</div>" : ""}
     </div>
 
     ${camp.chave_pix ? `
