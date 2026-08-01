@@ -641,6 +641,15 @@
               </select>
             </div>
           </div>
+          ${camp ? `
+          <div>
+            <label class="field-lbl">Status</label>
+            <select id="oe-f-status" style="${selStyle}">
+              ${Object.entries(STATUS_CFG).map(([k, v]) =>
+                `<option value="${k}" ${camp.status === k ? "selected" : ""}>${v.label}</option>`
+              ).join("")}
+            </select>
+          </div>` : ""}
           <div>
             <label class="field-lbl">Categoria</label>
             <input id="oe-f-categoria" value="${v("categoria")}" placeholder="Ex: Obra, Missão, Benevolência"
@@ -730,6 +739,12 @@
 
       const sb = _sb();
       if (id) {
+        const novoStatus = document.getElementById("oe-f-status")?.value;
+        if (novoStatus) {
+          payload.status = novoStatus;
+          if (novoStatus === "publicada") { payload.publica = true; payload.publicado_em = payload.publicado_em || new Date().toISOString(); }
+          if (novoStatus === "encerrada") { payload.encerrado_em = payload.encerrado_em || new Date().toISOString(); }
+        }
         const { error } = await sb.from("ofertas_especiais").update(payload).eq("id", id);
         if (error) throw error;
       } else {
@@ -1282,8 +1297,7 @@
                onmouseout="this.style.background='transparent'">${label}</button>`;
 
     menu.innerHTML =
-      item("Editar campanha",    `oeAbrirFormCampanha('${id}')`) +
-      item("Alterar status",     `oeAlterarStatus('${id}','${currentStatus}')`) +
+      item("Editar campanha",        `oeAbrirFormCampanha('${id}')`) +
       item("Compartilhar / QR Code", `oeCompartilharCampanha('${id}')`) +
       (!isCancelada ? `<div style="height:1px;background:var(--bd1);margin:4px 10px"></div>` +
         item("Cancelar campanha", `oeAplicarStatus('${id}','cancelada')`, true) : "");
