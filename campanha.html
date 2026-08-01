@@ -432,6 +432,7 @@ async function load() {
 
   const dataIni = fmtD(camp.data_inicio);
   const dataFim = !camp.sem_data_fim ? fmtD(camp.data_fim) : null;
+  const inp = "width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--tx1);font-size:13px;padding:10px 12px;outline:none;font-family:inherit";
 
   wrap.innerHTML = `
     <div class="card">
@@ -516,10 +517,120 @@ async function load() {
       </div>
     </div>
 
+    <div class="card" id="card-contrib-form">
+      <div class="sec-title">Registrar minha contribuição</div>
+      <p style="font-size:13px;color:var(--tx2);margin-bottom:16px;line-height:1.5">
+        Após realizar a transferência, preencha os dados abaixo para que a tesouraria possa confirmar seu registro.
+      </p>
+
+      <div id="contrib-success" style="display:none;text-align:center;padding:24px 0">
+        <div style="font-size:32px;margin-bottom:8px">✓</div>
+        <div style="font-size:16px;font-weight:700;color:var(--tx1);margin-bottom:4px">Contribuição registrada!</div>
+        <div style="font-size:13px;color:var(--tx3)">A tesouraria irá confirmar em breve.</div>
+        <button onclick="resetContribForm()" style="margin-top:16px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:8px 18px;font-size:13px;cursor:pointer;color:var(--tx2)">Registrar outra</button>
+      </div>
+
+      <div id="contrib-fields">
+        <div style="display:grid;gap:12px">
+          <div>
+            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px">Seu nome <span style="font-weight:400;text-transform:none">(opcional)</span></label>
+            <input id="cf-nome" type="text" placeholder="Como prefere ser identificado" style="${inp}">
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px">Valor contribuído *</label>
+              <input id="cf-valor" type="text" inputmode="decimal" placeholder="Ex: 500,00" style="${inp}">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px">Data do pagamento</label>
+              <input id="cf-data" type="date" value="${new Date().toISOString().split('T')[0]}" style="${inp}">
+            </div>
+          </div>
+
+          <div>
+            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px">Forma de pagamento</label>
+            <select id="cf-forma" style="${inp}">
+              <option value="pix">PIX</option>
+              <option value="transferencia">Transferência bancária</option>
+              <option value="dinheiro">Dinheiro</option>
+              <option value="cartao">Cartão</option>
+              <option value="boleto">Boleto</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px">Observações <span style="font-weight:400;text-transform:none">(ex: número do comprovante)</span></label>
+            <input id="cf-obs" type="text" placeholder="Referência, nº do comprovante, etc." style="${inp}">
+          </div>
+
+          <button id="cf-btn" onclick="enviarContrib('${camp.id}')"
+                  style="width:100%;padding:13px;background:var(--violet);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px">
+            Registrar contribuição
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="footer">
       Igreja Presbiteriana de Penha &nbsp;·&nbsp; <a href="https://sipen.com.br" style="color:var(--tx3)">sipen.com.br</a>
     </div>
   `;
+}
+
+function parseBRL(s) {
+  if (!s) return 0;
+  const str = String(s).trim();
+  if (str.includes(",")) return parseFloat(str.replace(/\./g, "").replace(",", ".")) || 0;
+  return parseFloat(str) || 0;
+}
+
+async function enviarContrib(campanhaId) {
+  const btn = document.getElementById("cf-btn");
+  const valor = parseBRL(document.getElementById("cf-valor")?.value);
+  if (!valor || valor <= 0) {
+    alert("Informe um valor válido.");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Registrando...";
+
+  const nome = document.getElementById("cf-nome")?.value?.trim() || null;
+  const payload = {
+    campanha_id:        campanhaId,
+    nome_contribuinte:  nome,
+    anonimo:            !nome,
+    valor,
+    data:               document.getElementById("cf-data")?.value || new Date().toISOString().split("T")[0],
+    forma:              document.getElementById("cf-forma")?.value || "pix",
+    obs:                document.getElementById("cf-obs")?.value?.trim() || null,
+    origem:             "publico",
+    status_conciliacao: "aguardando",
+  };
+
+  const { error } = await sb.from("oe_contribuicoes").insert(payload);
+
+  if (error) {
+    alert("Erro ao registrar: " + error.message);
+    btn.disabled = false;
+    btn.textContent = "Registrar contribuição";
+    return;
+  }
+
+  document.getElementById("contrib-fields").style.display = "none";
+  document.getElementById("contrib-success").style.display = "block";
+}
+
+function resetContribForm() {
+  document.getElementById("contrib-fields").style.display = "";
+  document.getElementById("contrib-success").style.display = "none";
+  document.getElementById("cf-nome").value = "";
+  document.getElementById("cf-valor").value = "";
+  document.getElementById("cf-obs").value = "";
+  const btn = document.getElementById("cf-btn");
+  if (btn) { btn.disabled = false; btn.textContent = "Registrar contribuição"; }
 }
 
 function copiarPix(chave) {
