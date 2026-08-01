@@ -285,10 +285,9 @@
                     <td style="padding:9px 12px;text-align:right;color:var(--tx2)">${c.sem_meta ? "—" : brl(c.meta)}</td>
                     <td style="padding:9px 12px;text-align:right;color:var(--tx2);white-space:nowrap">${fmtD(c.data_inicio)}</td>
                     <td style="padding:9px 12px;text-align:right;color:var(--tx2);white-space:nowrap">${c.sem_data_fim ? "Aberta" : fmtD(c.data_fim)}</td>
-                    <td style="padding:9px 12px">
-                      <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
-                        <button class="tbt" onclick="oeAbrirFormCampanha('${c.id}')" style="font-size:10.5px;padding:3px 8px">Editar</button>
-                        <button class="tbt" onclick="oeAlterarStatus('${c.id}','${c.status}')" style="font-size:10.5px;padding:3px 8px">Status</button>
+                    <td style="padding:9px 12px;text-align:right">
+                      <div style="position:relative;display:inline-block" onclick="event.stopPropagation()">
+                        <button onclick="oeCampKebab(this,'${c.id}','${c.status}')" style="padding:3px 8px;border-radius:4px;border:1px solid var(--bd1);background:var(--bg-card);color:var(--tx2);font-size:15px;cursor:pointer;line-height:1">⋯</button>
                       </div>
                     </td>
                   </tr>`;
@@ -985,9 +984,10 @@
               ${camp.departamento ? `<span style="font-size:11px;color:var(--tx3)">${escapeHtml(camp.departamento)}</span>` : ""}
             </div>
           </div>
-          <div style="display:flex;gap:6px">
-            <button class="tbt" onclick="oeAbrirFormCampanha('${id}')" style="font-size:11px;padding:4px 10px">Editar</button>
-            <button class="tbt" onclick="oeAlterarStatus('${id}','${camp.status}')" style="font-size:11px;padding:4px 10px">${_pillStatus(camp.status)}</button>
+          <div style="display:flex;gap:6px;align-items:center">
+            <div style="position:relative;display:inline-block">
+              <button onclick="oeCampKebab(this,'${id}','${camp.status}')" style="padding:4px 9px;border-radius:4px;border:1px solid var(--bd1);background:var(--bg-card);color:var(--tx2);font-size:15px;cursor:pointer;line-height:1">⋯</button>
+            </div>
             <button class="tbt pri" onclick="oeAbrirFormContrib('${id}')" style="font-size:11px;padding:4px 10px">+ Contribuição</button>
             <button class="tbt" onclick="document.getElementById('oe-det-modal').remove()">Fechar</button>
           </div>
@@ -1067,6 +1067,35 @@
     _contribuicoes = null;
     await renderOeConcil();
   };
+
+  /* ── KEBAB MENU ──────────────────────────────────────── */
+
+  function oeCampKebab(btn, id, currentStatus) {
+    document.querySelectorAll(".oe-kebab-menu").forEach(m => m.remove());
+    const isCancelada = currentStatus === "cancelada" || currentStatus === "encerrada";
+    const menu = document.createElement("div");
+    menu.className = "oe-kebab-menu";
+    menu.style.cssText = "position:absolute;right:0;top:calc(100% + 4px);z-index:400;background:var(--bg-card);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.18);min-width:190px;overflow:hidden";
+    const item = (label, fn, danger) =>
+      `<button onclick="${fn};document.querySelectorAll('.oe-kebab-menu').forEach(m=>m.remove())"
+               style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:transparent;color:${danger ? "var(--rose)" : "var(--tx1)"};font-size:12px;cursor:pointer;text-align:left"
+               onmouseover="this.style.background='${danger ? "rgba(224,85,85,.08)" : "var(--bg2)"}'"
+               onmouseout="this.style.background='transparent'">${label}</button>`;
+    menu.innerHTML =
+      item("Editar campanha",    `oeAbrirFormCampanha('${id}')`) +
+      item("Alterar status",     `oeAlterarStatus('${id}','${currentStatus}')`) +
+      (!isCancelada ? `<div style="height:1px;background:var(--bd1);margin:4px 10px"></div>` +
+        item("Cancelar campanha", `oeAplicarStatus('${id}','cancelada')`, true) : "");
+    btn.parentElement.appendChild(menu);
+    const close = e => {
+      if (!menu.contains(e.target) && e.target !== btn) {
+        menu.remove();
+        document.removeEventListener("click", close);
+      }
+    };
+    setTimeout(() => document.addEventListener("click", close), 0);
+  }
+  window.oeCampKebab = oeCampKebab;
 
   /* ── NAVIGATE EVENT ───────────────────────────────────── */
 
