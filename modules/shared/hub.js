@@ -587,7 +587,7 @@ function renderLiderancaDash(){
   const hdrs=typeof apiHeaders==='function'?apiHeaders():{};
   if(!api) return;
   Promise.all([
-    _cnt('pastores','&deleted_at=is.null'),
+    _cnt('oficiais','&cargo=eq.pastor&status=in.(ativo,especial)&deleted_at=is.null'),
     _cnt('nomeados','&deleted_at=is.null'),
     _cnt('conselho_ordenados','&deleted_at=is.null&status=eq.ativo'),
     _cnt('conselho_seminaristas','&deleted_at=is.null'),

@@ -54,7 +54,7 @@
     try {
       const [depts, membros] = await Promise.all([
         _get('dept_administrativos?select=id,nome,slug,status,descricao&order=nome.asc').catch(() => []),
-        _get('dept_membros?status=eq.ativo&select=departamento_id').catch(() => []),
+        _get('nomeados?status=eq.ativo&deleted_at=is.null&dept_id=not.is.null&select=departamento_id:dept_id').catch(() => []),
       ]);
 
       const ativos = (Array.isArray(depts) ? depts : []).filter(d => d.status === 'ativo');
