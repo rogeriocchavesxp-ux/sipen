@@ -4,6 +4,7 @@
 
 let _membCache = [];    // cache de todos os membros
 let _visCache  = [];    // cache de todos os visitantes
+let _anivListasCache = [];
 
 function _podeEditarMembresia() {
   if (!USUARIO_ATUAL) return false;
@@ -395,11 +396,11 @@ async function anivAbrirPainelWA() {
     const base  = (SUPABASE_URL || "").trim().replace(/\/$/, "");
 
     const [listasRes, agendRes] = await Promise.all([
-      fetch(`${base}/rest/v1/wa_listas?ativo=eq.true&select=id,nome,icone&order=nome`, { headers: hdr }),
+      fetch(`${base}/rest/v1/wa_listas?ativo=eq.true&select=id,nome,icone,fonte&order=nome`, { headers: hdr }),
       fetch(`${base}/rest/v1/wa_agendamentos?tipo=eq.aniversariantes&recorrente=eq.true&select=id,lista_nome,horario_diario,ultimo_envio_em&order=criado_em.desc&limit=1`, { headers: hdr }),
     ]);
 
-    const listas = listasRes.ok ? await listasRes.json() : [];
+    const listas = listasRes.ok ? await listasRes.json() : []; _anivListasCache = listas;
     const agendamentos = agendRes.ok ? await agendRes.json() : [];
     const agAtivo = agendamentos[0] || null;
 
@@ -440,10 +441,15 @@ async function anivAbrirPainelWA() {
 
           <div>
             <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Lista destinatária</div>
-            <select id="aniv-wa-lista" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;outline:none">
+            <select id="aniv-wa-lista" onchange="anivOnListaChange()" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;outline:none">
               <option value="">— Selecionar lista —</option>
               ${listasOpts}
             </select>
+            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+              <button onclick="anivNovaListaForm()" style="font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid var(--bd2);background:transparent;color:var(--tx3);cursor:pointer">+ Nova lista</button>
+              <button id="aniv-btn-gerenciar" onclick="anivGerenciarMembros(document.getElementById('aniv-wa-lista').value)" style="display:none;font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);cursor:pointer">Gerenciar membros</button>
+            </div>
+            <div id="aniv-membros-mgr"></div>
 
             <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin:14px 0 6px">Agendamento diário</div>
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
@@ -486,6 +492,176 @@ function anivToggleHorario() {
 }
 window.anivToggleHorario = anivToggleHorario;
 
+function anivOnListaChange() {
+  const sel     = document.getElementById("aniv-wa-lista");
+  const listaId = sel?.value;
+  const mgr     = document.getElementById("aniv-membros-mgr");
+  const btnGer  = document.getElementById("aniv-btn-gerenciar");
+  if (mgr && mgr.innerHTML !== "") mgr.innerHTML = "";
+  const lista   = _anivListasCache.find(l => l.id === listaId);
+  if (btnGer) btnGer.style.display = (listaId && lista?.fonte === "manual") ? "inline-block" : "none";
+}
+window.anivOnListaChange = anivOnListaChange;
+
+function anivNovaListaForm() {
+  const mgr = document.getElementById("aniv-membros-mgr");
+  if (!mgr) return;
+  mgr.innerHTML = `
+    <div style="margin-top:10px;padding:12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-surface)">
+      <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Nova lista personalizada</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="aniv-nova-lista-nome" type="text" placeholder="Nome da lista..."
+          style="flex:1;padding:7px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;outline:none"
+          onkeydown="if(event.key==='Enter')anivCriarListaManual()">
+        <button onclick="anivCriarListaManual()" style="padding:7px 14px;border-radius:6px;border:1px solid rgba(82,196,110,.4);background:rgba(82,196,110,.1);color:var(--gr);font-size:12px;font-weight:700;cursor:pointer">Criar</button>
+        <button onclick="document.getElementById('aniv-membros-mgr').innerHTML=''" style="padding:7px 10px;border-radius:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx3);font-size:12px;cursor:pointer">Cancelar</button>
+      </div>
+    </div>`;
+  document.getElementById("aniv-nova-lista-nome")?.focus();
+}
+window.anivNovaListaForm = anivNovaListaForm;
+
+async function anivCriarListaManual() {
+  const nome = document.getElementById("aniv-nova-lista-nome")?.value?.trim();
+  if (!nome) { T("Nome obrigatório", "Digite um nome para a lista."); return; }
+
+  const token = typeof sipenToken === "function" ? sipenToken() : (SUPABASE_ANON_KEY || "");
+  const hdr   = { apikey: SUPABASE_ANON_KEY || "", Authorization: `Bearer ${token}`, "Content-Type": "application/json", Prefer: "return=representation" };
+  const base  = (SUPABASE_URL || "").trim().replace(/\/$/, "");
+
+  try {
+    const res = await fetch(`${base}/rest/v1/wa_listas`, {
+      method: "POST", headers: hdr,
+      body: JSON.stringify({ nome, fonte: "manual", ativo: true, icone: "📋" }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const [criada] = await res.json();
+    T("Lista criada", `"${nome}" criada.`);
+    await anivAbrirPainelWA();
+    const sel = document.getElementById("aniv-wa-lista");
+    if (sel && criada?.id) { sel.value = criada.id; anivOnListaChange(); }
+  } catch (e) { T("Erro ao criar lista", e.message); }
+}
+window.anivCriarListaManual = anivCriarListaManual;
+
+async function anivGerenciarMembros(listaId) {
+  const mgr = document.getElementById("aniv-membros-mgr");
+  if (!mgr || !listaId) return;
+  mgr.innerHTML = `<div style="margin-top:10px;padding:8px;color:var(--tx3);font-size:11.5px">${spinner()} Carregando...</div>`;
+  await anivReloadMembrosAniv(listaId);
+}
+window.anivGerenciarMembros = anivGerenciarMembros;
+
+async function anivReloadMembrosAniv(listaId) {
+  const mgr = document.getElementById("aniv-membros-mgr");
+  if (!mgr) return;
+
+  const token = typeof sipenToken === "function" ? sipenToken() : (SUPABASE_ANON_KEY || "");
+  const hdr   = { apikey: SUPABASE_ANON_KEY || "", Authorization: `Bearer ${token}` };
+  const base  = (SUPABASE_URL || "").trim().replace(/\/$/, "");
+
+  try {
+    const res = await fetch(
+      `${base}/rest/v1/wa_lista_membros?lista_id=eq.${listaId}&ativo=eq.true&select=id,pessoas(id,nome,whatsapp,celular,telefone)&order=pessoas(nome)`,
+      { headers: hdr }
+    );
+    const membros = res.ok ? await res.json() : [];
+
+    const linhasMembros = membros.map(m => {
+      const p   = m.pessoas;
+      const tel = p?.whatsapp || p?.celular || p?.telefone || "";
+      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd1)">
+        <span style="flex:1;font-size:12px;color:var(--tx1)">${escapeHtml(p?.nome || "?")}</span>
+        <span style="font-size:10.5px;color:${tel ? "var(--tx3)" : "var(--gold)"};font-family:var(--mono)">${escapeHtml(tel || "sem número")}</span>
+        <button onclick="anivRemoverMembroAniv('${m.id}','${listaId}')" style="padding:2px 8px;border-radius:5px;border:1px solid rgba(224,85,85,.3);background:rgba(224,85,85,.07);color:var(--rose);font-size:11px;cursor:pointer">× Remover</button>
+      </div>`;
+    }).join("");
+
+    mgr.innerHTML = `
+      <div style="margin-top:10px;padding:12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-surface)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em">Membros · ${membros.length}</div>
+          <button onclick="document.getElementById('aniv-membros-mgr').innerHTML=''" style="background:none;border:none;color:var(--tx3);font-size:13px;cursor:pointer;padding:0 4px">✕</button>
+        </div>
+        <div style="margin-bottom:8px">
+          <input id="aniv-busca-pessoa" type="text" placeholder="Buscar membro por nome..."
+            style="width:100%;box-sizing:border-box;padding:7px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;outline:none"
+            oninput="anivBuscarPessoaAniv(this.value,'${listaId}')">
+        </div>
+        <div id="aniv-busca-resultados" style="margin-bottom:8px"></div>
+        ${membros.length
+          ? `<div style="max-height:150px;overflow-y:auto">${linhasMembros}</div>`
+          : `<div style="text-align:center;padding:12px;color:var(--tx3);font-size:11.5px">Nenhum membro. Busque e adicione acima.</div>`
+        }
+      </div>`;
+  } catch (e) {
+    if (mgr) mgr.innerHTML = `<div style="color:var(--rose);font-size:11.5px;margin-top:8px">Erro: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+let _anivBuscaTimer = null;
+async function anivBuscarPessoaAniv(term, listaId) {
+  clearTimeout(_anivBuscaTimer);
+  const resultDiv = document.getElementById("aniv-busca-resultados");
+  if (!resultDiv) return;
+  if (!term || term.length < 2) { resultDiv.innerHTML = ""; return; }
+  _anivBuscaTimer = setTimeout(async () => {
+    const token = typeof sipenToken === "function" ? sipenToken() : (SUPABASE_ANON_KEY || "");
+    const hdr   = { apikey: SUPABASE_ANON_KEY || "", Authorization: `Bearer ${token}` };
+    const base  = (SUPABASE_URL || "").trim().replace(/\/$/, "");
+    resultDiv.innerHTML = `<span style="font-size:11px;color:var(--tx3)">Buscando...</span>`;
+    try {
+      const r = await fetch(
+        `${base}/rest/v1/pessoas?nome=ilike.*${encodeURIComponent(term)}*&select=id,nome,whatsapp,celular&order=nome&limit=8`,
+        { headers: hdr }
+      );
+      const pessoas = r.ok ? await r.json() : [];
+      if (!pessoas.length) { resultDiv.innerHTML = `<div style="font-size:11px;color:var(--tx3);padding:4px 0">Nenhum resultado.</div>`; return; }
+      resultDiv.innerHTML = `<div style="display:flex;flex-direction:column;gap:3px">` + pessoas.map(p => {
+        const tel = p.whatsapp || p.celular || "";
+        return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--bg2);border-radius:6px">
+          <span style="flex:1;font-size:12px;color:var(--tx1)">${escapeHtml(p.nome)}</span>
+          ${tel ? `<span style="font-size:10.5px;color:var(--tx3)">${escapeHtml(tel)}</span>` : ""}
+          <button onclick="anivAdicionarMembroAniv('${listaId}','${p.id}')"
+            style="padding:3px 10px;border-radius:5px;border:1px solid rgba(82,196,110,.4);background:rgba(82,196,110,.1);color:var(--gr);font-size:11px;cursor:pointer">+ Adicionar</button>
+        </div>`;
+      }).join("") + `</div>`;
+    } catch { resultDiv.innerHTML = ""; }
+  }, 300);
+}
+window.anivBuscarPessoaAniv = anivBuscarPessoaAniv;
+
+async function anivAdicionarMembroAniv(listaId, pessoaId) {
+  const token = typeof sipenToken === "function" ? sipenToken() : (SUPABASE_ANON_KEY || "");
+  const hdr   = { apikey: SUPABASE_ANON_KEY || "", Authorization: `Bearer ${token}`, "Content-Type": "application/json", Prefer: "return=minimal" };
+  const base  = (SUPABASE_URL || "").trim().replace(/\/$/, "");
+
+  const r = await fetch(`${base}/rest/v1/wa_lista_membros`, {
+    method: "POST", headers: hdr,
+    body: JSON.stringify({ lista_id: listaId, pessoa_id: pessoaId, ativo: true }),
+  });
+  if (!r.ok) {
+    const txt = await r.text();
+    if (!txt.includes("unique")) { T("Erro ao adicionar", "Não foi possível adicionar o membro."); return; }
+  }
+  const inp = document.getElementById("aniv-busca-pessoa");
+  const res = document.getElementById("aniv-busca-resultados");
+  if (inp) inp.value = "";
+  if (res) res.innerHTML = "";
+  await anivReloadMembrosAniv(listaId);
+}
+window.anivAdicionarMembroAniv = anivAdicionarMembroAniv;
+
+async function anivRemoverMembroAniv(membroId, listaId) {
+  const token = typeof sipenToken === "function" ? sipenToken() : (SUPABASE_ANON_KEY || "");
+  const hdr   = { apikey: SUPABASE_ANON_KEY || "", Authorization: `Bearer ${token}` };
+  const base  = (SUPABASE_URL || "").trim().replace(/\/$/, "");
+
+  await fetch(`${base}/rest/v1/wa_lista_membros?id=eq.${membroId}`, { method: "DELETE", headers: hdr });
+  await anivReloadMembrosAniv(listaId);
+}
+window.anivRemoverMembroAniv = anivRemoverMembroAniv;
+
 function _anivMsgHoje() {
   const today = new Date();
   const anivHoje = (_membCache || []).filter(r => {
@@ -511,18 +687,8 @@ async function anivEnviarAgora() {
   const { texto, total } = _anivMsgHoje();
   if (!total) { T("Sem aniversariantes hoje", "Nenhum membro faz aniversário hoje."); return; }
 
-  const token = typeof sipenToken === "function" ? sipenToken() : (SUPABASE_ANON_KEY || "");
-  const hdr   = { apikey: SUPABASE_ANON_KEY || "", Authorization: `Bearer ${token}` };
-  const base  = (SUPABASE_URL || "").trim().replace(/\/$/, "");
-
   try {
-    const membRes = await fetch(
-      `${base}/rest/v1/wa_lista_membros?lista_id=eq.${listaId}&ativo=eq.true&select=pessoas(id,nome,whatsapp,celular,telefone)`,
-      { headers: hdr }
-    );
-    if (!membRes.ok) throw new Error(await membRes.text());
-    const rows = await membRes.json();
-    const destinatarios = rows.map(r => r.pessoas).filter(Boolean);
+    const destinatarios = await _anivResolverDestinatarios(listaId);
 
     if (!destinatarios.length) { T("Lista vazia", "A lista selecionada não tem membros."); return; }
 
