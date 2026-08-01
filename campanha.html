@@ -542,9 +542,35 @@ async function load() {
         </p>
 
         <div style="display:grid;gap:12px">
+          <!-- Busca de membro -->
           <div>
-            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px">Seu nome <span style="font-weight:400;text-transform:none">(opcional)</span></label>
-            <input id="cf-nome" type="text" placeholder="Como prefere ser identificado" style="${inp}">
+            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px">Seu nome</label>
+
+            <!-- Membro selecionado -->
+            <div id="cf-membro-sel" style="display:none;align-items:center;gap:8px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.25);border-radius:8px;padding:9px 12px;margin-bottom:6px">
+              <span style="font-size:13px;font-weight:600;color:var(--tx1);flex:1" id="cf-membro-nome-exib"></span>
+              <button onclick="cfLimparMembro()" style="background:none;border:none;cursor:pointer;color:var(--tx3);font-size:16px;padding:0;line-height:1">×</button>
+            </div>
+
+            <!-- Campo de busca (oculto após seleção) -->
+            <div id="cf-busca-wrap" style="position:relative">
+              <input id="cf-nome-busca" type="text" placeholder="Digite seu nome para buscar..."
+                     oninput="cfNomeBuscar(this.value)"
+                     autocomplete="off"
+                     style="${inp}">
+              <div id="cf-nome-dd" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg);border:1px solid var(--bd);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:99;overflow:hidden;max-height:220px;overflow-y:auto"></div>
+            </div>
+
+            <!-- Checkbox não membro -->
+            <label style="display:flex;align-items:center;gap:8px;margin-top:8px;cursor:pointer;font-size:12.5px;color:var(--tx2)">
+              <input type="checkbox" id="cf-nao-membro" onchange="cfNaoMembroChange()">
+              Não sou membro
+            </label>
+
+            <!-- Campo nome manual (só aparece quando "Não sou membro") -->
+            <div id="cf-nome-manual-wrap" style="display:none;margin-top:8px">
+              <input id="cf-nome-manual" type="text" placeholder="Como prefere ser identificado (opcional)" style="${inp}">
+            </div>
           </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -613,6 +639,64 @@ async function load() {
   `;
 }
 
+// ── Estado do membro selecionado ──────────────────────────
+let _cfPessoaId   = null;
+let _cfPessoaNome = null;
+let _cfBuscaTimer = null;
+
+function cfNomeBuscar(q) {
+  clearTimeout(_cfBuscaTimer);
+  const dd = document.getElementById("cf-nome-dd");
+  if (!q || q.length < 2) { dd.style.display = "none"; return; }
+  _cfBuscaTimer = setTimeout(async () => {
+    const { data } = await sb.from("pessoas")
+      .select("id,nome")
+      .ilike("nome", `%${q}%`)
+      .eq("ativo", true)
+      .order("nome")
+      .limit(8);
+    if (!data || !data.length) { dd.style.display = "none"; return; }
+    dd.innerHTML = data.map(p => `
+      <button onclick="cfSelecionarMembro('${p.id}','${p.nome.replace(/'/g,"\\'")}',this)"
+              style="display:block;width:100%;text-align:left;padding:9px 14px;border:none;background:transparent;font-size:13px;color:var(--tx1);cursor:pointer;border-bottom:1px solid var(--bd)"
+              onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='transparent'">
+        ${p.nome}
+      </button>`).join("");
+    dd.style.display = "block";
+  }, 280);
+}
+
+function cfSelecionarMembro(id, nome) {
+  _cfPessoaId   = id;
+  _cfPessoaNome = nome;
+  document.getElementById("cf-nome-dd").style.display   = "none";
+  document.getElementById("cf-busca-wrap").style.display = "none";
+  document.getElementById("cf-membro-sel").style.display = "flex";
+  document.getElementById("cf-membro-nome-exib").textContent = nome;
+}
+
+function cfLimparMembro() {
+  _cfPessoaId   = null;
+  _cfPessoaNome = null;
+  document.getElementById("cf-membro-sel").style.display  = "none";
+  document.getElementById("cf-busca-wrap").style.display   = "";
+  document.getElementById("cf-nome-busca").value           = "";
+}
+
+function cfNaoMembroChange() {
+  const naoMembro = document.getElementById("cf-nao-membro")?.checked;
+  document.getElementById("cf-busca-wrap").style.display      = naoMembro ? "none" : "";
+  document.getElementById("cf-nome-manual-wrap").style.display = naoMembro ? "" : "none";
+  document.getElementById("cf-membro-sel").style.display      = "none";
+  cfLimparMembro();
+}
+
+function _cfGetNome() {
+  const naoMembro = document.getElementById("cf-nao-membro")?.checked;
+  if (naoMembro) return document.getElementById("cf-nome-manual")?.value?.trim() || null;
+  return _cfPessoaNome || null;
+}
+
 function parseBRL(s) {
   if (!s) return 0;
   const str = String(s).trim();
@@ -662,7 +746,7 @@ async function enviarContrib(campanhaId) {
   btn.disabled = true;
   btn.textContent = "Registrando...";
 
-  const nome = document.getElementById("cf-nome")?.value?.trim() || null;
+  const nome = _cfGetNome();
   let error;
 
   if (tipo === "recorrente") {
@@ -673,6 +757,7 @@ async function enviarContrib(campanhaId) {
 
     const payload = {
       campanha_id:       campanhaId,
+      pessoa_id:         _cfPessoaId || null,
       nome_contribuinte: nome,
       tipo:              "recorrente",
       valor,
@@ -720,11 +805,13 @@ async function enviarContrib(campanhaId) {
 function resetContribForm() {
   document.getElementById("contrib-fields").style.display = "";
   document.getElementById("contrib-success").style.display = "none";
-  ["cf-nome","cf-valor","cf-obs","cf-qtd"].forEach(id => {
+  ["cf-valor","cf-obs","cf-qtd","cf-nome-busca","cf-nome-manual"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = "";
   });
-  // Volta para tipo único
+  cfLimparMembro();
+  const naoMembro = document.getElementById("cf-nao-membro");
+  if (naoMembro) { naoMembro.checked = false; cfNaoMembroChange(); }
   const radioUnico = document.querySelector("input[name='cf-tipo'][value='unico']");
   if (radioUnico) { radioUnico.checked = true; cfTipoChange(); }
   const btn = document.getElementById("cf-btn");
