@@ -955,11 +955,10 @@
     const sb = _sb();
     const { data: camp } = await sb.from("ofertas_especiais").select("*").eq("id", id).single();
     if (!camp) return;
-    const { data: contribs } = await sb
-      .from("oe_contribuicoes")
-      .select("*")
-      .eq("campanha_id", id)
-      .order("data", { ascending: false });
+    const [{ data: contribs }, { data: comps }] = await Promise.all([
+      sb.from("oe_contribuicoes").select("*").eq("campanha_id", id).order("data", { ascending: false }),
+      sb.from("oe_comprometimentos").select("*,pessoas(nome)").eq("campanha_id", id).order("criado_em", { ascending: false }),
+    ]);
 
     const confirmadas = (contribs || []).filter(r => r.status_conciliacao === "confirmada");
     const arrecadado  = confirmadas.reduce((s, r) => s + Number(r.valor || 0), 0)
@@ -990,6 +989,7 @@
             <div style="position:relative;display:inline-block">
               <button onclick="oeCampKebab(this,'${id}','${camp.status}')" style="padding:4px 9px;border-radius:4px;border:1px solid var(--bd1);background:var(--bg-card);color:var(--tx2);font-size:15px;cursor:pointer;line-height:1">⋯</button>
             </div>
+            <button class="tbt" onclick="oeAbrirFormComprometimento('${id}')" style="font-size:11px;padding:4px 10px">+ Comprometimento</button>
             <button class="tbt pri" onclick="oeAbrirFormContrib('${id}')" style="font-size:11px;padding:4px 10px">+ Contribuição</button>
             <button class="tbt" onclick="document.getElementById('oe-det-modal').remove()">Fechar</button>
           </div>
@@ -1023,6 +1023,36 @@
           <span style="font-weight:600;color:var(--tx1)">Finalidade:</span> ${escapeHtml(camp.finalidade_recursos)}
         </div>` : ""}
 
+        ${(comps || []).length > 0 ? (() => {
+          const totalComp = (comps || []).filter(c => c.status === "ativo").reduce((s,c) => s + Number(c.valor||0), 0);
+          return `
+          <div class="ctit" style="margin-bottom:10px">Comprometimentos
+            <span style="font-size:10.5px;font-weight:400;color:var(--tx3);margin-left:6px">${comps.length} registro${comps.length!==1?"s":""} · ${brl(totalComp)} previsto/mês</span>
+          </div>
+          <div style="overflow-x:auto;margin-bottom:18px"><table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="border-bottom:1px solid var(--bd2)">
+              ${["Membro","Tipo","Valor","Frequência","Início","Status"].map(h =>
+                `<th style="text-align:left;padding:7px 8px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`
+              ).join("")}
+            </tr></thead>
+            <tbody>
+              ${comps.map(c => {
+                const nome = c.pessoas?.nome || c.nome_contribuinte || "—";
+                const sCor = { ativo: "var(--gr)", suspenso: "var(--amber)", concluido: "var(--tx3)", cancelado: "var(--rose)" }[c.status] || "var(--tx3)";
+                return `
+                <tr style="border-bottom:1px solid var(--bd1)">
+                  <td style="padding:7px 8px;color:var(--tx1);font-weight:500">${escapeHtml(nome)}</td>
+                  <td style="padding:7px 8px;color:var(--tx2)">${c.tipo === "recorrente" ? "Recorrente" : "Único"}</td>
+                  <td style="padding:7px 8px;font-weight:700;color:var(--gr)">${brl(c.valor)}</td>
+                  <td style="padding:7px 8px;color:var(--tx2)">${c.tipo === "recorrente" ? (FREQ_LABEL[c.frequencia] || c.frequencia || "—") : "—"}</td>
+                  <td style="padding:7px 8px;color:var(--tx2);white-space:nowrap">${fmtD(c.data_inicio)}</td>
+                  <td style="padding:7px 8px;font-size:11px;font-weight:600;color:${sCor}">${c.status.charAt(0).toUpperCase()+c.status.slice(1)}</td>
+                </tr>`;
+              }).join("")}
+            </tbody>
+          </table></div>`;
+        })() : ""}
+
         <div class="ctit">Contribuições</div>
         ${(contribs || []).length === 0
           ? '<div class="empty-state">Nenhuma contribuição registrada.</div>'
@@ -1050,6 +1080,170 @@
             </table></div>`
         }
       </div>`;
+  };
+
+  /* ── MODAL: COMPROMETIMENTO ──────────────────────────── */
+
+  const FREQ_LABEL = {
+    semanal: "Semanal", quinzenal: "Quinzenal",
+    mensal: "Mensal", bimestral: "Bimestral", trimestral: "Trimestral"
+  };
+
+  window.oeAbrirFormComprometimento = async function(campanhaId) {
+    const sb = _sb();
+    const { data: pessoas } = await sb
+      .from("pessoas").select("id,nome").eq("ativo", true).order("nome");
+
+    let modal = document.getElementById("oe-comp-modal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "oe-comp-modal";
+      modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:1020;display:flex;align-items:center;justify-content:center;padding:18px";
+      modal.onclick = ev => { if (ev.target === modal) modal.remove(); };
+      document.body.appendChild(modal);
+    }
+
+    const inpStyle = "width:100%;box-sizing:border-box;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:12.5px;padding:8px 10px;outline:none";
+
+    modal.innerHTML = `
+      <div style="width:min(520px,96vw);max-height:88vh;overflow:auto;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:22px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+          <div class="ctit" style="margin:0">Registrar comprometimento</div>
+          <button class="tbt" style="margin-left:auto" onclick="document.getElementById('oe-comp-modal').remove()">Fechar</button>
+        </div>
+
+        <div style="display:grid;gap:12px">
+          <div>
+            <label class="field-lbl">Membro</label>
+            <select id="oe-cp-pessoa" onchange="oeCompPessoaChange()" style="${inpStyle}">
+              <option value="">Selecionar membro...</option>
+              ${(pessoas || []).map(p => `<option value="${p.id}" data-nome="${escapeHtmlAttr(p.nome)}">${escapeHtml(p.nome)}</option>`).join("")}
+              <option value="__outro">Outro / Externo</option>
+            </select>
+          </div>
+          <div id="oe-cp-nome-wrap" style="display:none">
+            <label class="field-lbl">Nome</label>
+            <input id="oe-cp-nome" placeholder="Nome do contribuinte" style="${inpStyle}">
+          </div>
+
+          <div>
+            <label class="field-lbl">Tipo de contribuição</label>
+            <div style="display:flex;gap:8px">
+              <label style="display:flex;align-items:center;gap:6px;flex:1;padding:9px 12px;border:1px solid var(--bd2);border-radius:8px;cursor:pointer;font-size:12.5px;color:var(--tx1)">
+                <input type="radio" name="oe-cp-tipo" value="unico" checked onchange="oeCompTipoChange()"> Único
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;flex:1;padding:9px 12px;border:1px solid var(--bd2);border-radius:8px;cursor:pointer;font-size:12.5px;color:var(--tx1)">
+                <input type="radio" name="oe-cp-tipo" value="recorrente" onchange="oeCompTipoChange()"> Recorrente
+              </label>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label class="field-lbl">Valor (R$) *</label>
+              <input id="oe-cp-valor" type="number" min="0.01" step="0.01" placeholder="0,00" style="${inpStyle}">
+            </div>
+            <div id="oe-cp-data-wrap">
+              <label class="field-lbl">Data</label>
+              <input id="oe-cp-data-inicio" type="date" value="${hoje()}" style="${inpStyle}">
+            </div>
+          </div>
+
+          <div id="oe-cp-recorrencia-wrap" style="display:none;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label class="field-lbl">Frequência</label>
+              <select id="oe-cp-frequencia" style="${inpStyle}">
+                ${Object.entries(FREQ_LABEL).map(([k,v]) => `<option value="${k}">${v}</option>`).join("")}
+              </select>
+            </div>
+            <div>
+              <label class="field-lbl">Dia do mês (recorrência)</label>
+              <input id="oe-cp-dia" type="number" min="1" max="28" placeholder="Ex: 5" style="${inpStyle}">
+            </div>
+          </div>
+          <div id="oe-cp-datafim-wrap" style="display:none">
+            <label class="field-lbl">Data de término <span style="color:var(--tx3);font-weight:normal">(opcional)</span></label>
+            <input id="oe-cp-data-fim" type="date" style="${inpStyle}">
+          </div>
+
+          <div>
+            <label class="field-lbl">Observações</label>
+            <input id="oe-cp-obs" placeholder="Referência, motivo, etc." style="${inpStyle}">
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;border-top:1px solid var(--bd1);padding-top:14px">
+          <button class="tbt" onclick="document.getElementById('oe-comp-modal').remove()">Cancelar</button>
+          <button class="tbt pri" id="oe-cp-save" onclick="oeSalvarComprometimento('${campanhaId}')">Registrar</button>
+        </div>
+      </div>`;
+  };
+
+  window.oeCompPessoaChange = function() {
+    const sel = document.getElementById("oe-cp-pessoa");
+    const wrap = document.getElementById("oe-cp-nome-wrap");
+    if (wrap) wrap.style.display = sel?.value === "__outro" ? "" : "none";
+  };
+
+  window.oeCompTipoChange = function() {
+    const tipo = document.querySelector("input[name='oe-cp-tipo']:checked")?.value;
+    const recWrap  = document.getElementById("oe-cp-recorrencia-wrap");
+    const fimWrap  = document.getElementById("oe-cp-datafim-wrap");
+    const dataLbl  = document.querySelector("label[for='oe-cp-data-inicio'], #oe-cp-data-wrap .field-lbl");
+    if (recWrap) recWrap.style.display = tipo === "recorrente" ? "grid" : "none";
+    if (fimWrap) fimWrap.style.display = tipo === "recorrente" ? "" : "none";
+    if (dataLbl) dataLbl.textContent = tipo === "recorrente" ? "Data de início" : "Data";
+  };
+
+  window.oeSalvarComprometimento = async function(campanhaId) {
+    const btn = document.getElementById("oe-cp-save");
+    const old = btn?.textContent || "";
+    if (btn) { btn.disabled = true; btn.textContent = "Salvando..."; }
+
+    try {
+      const pessoaSel = document.getElementById("oe-cp-pessoa")?.value;
+      const tipo      = document.querySelector("input[name='oe-cp-tipo']:checked")?.value || "unico";
+      const valor     = parseFloat(document.getElementById("oe-cp-valor")?.value || 0);
+      if (!valor || valor <= 0) throw new Error("Informe um valor válido.");
+
+      let pessoa_id         = null;
+      let nome_contribuinte = null;
+
+      if (pessoaSel && pessoaSel !== "__outro") {
+        pessoa_id = pessoaSel;
+        nome_contribuinte = document.querySelector(`#oe-cp-pessoa option[value="${pessoaSel}"]`)?.dataset?.nome || null;
+      } else {
+        nome_contribuinte = document.getElementById("oe-cp-nome")?.value?.trim() || null;
+      }
+
+      const payload = {
+        campanha_id: campanhaId,
+        pessoa_id,
+        nome_contribuinte,
+        tipo,
+        valor,
+        data_inicio: document.getElementById("oe-cp-data-inicio")?.value || null,
+        obs: document.getElementById("oe-cp-obs")?.value?.trim() || null,
+      };
+
+      if (tipo === "recorrente") {
+        payload.frequencia      = document.getElementById("oe-cp-frequencia")?.value || "mensal";
+        payload.dia_recorrencia = parseInt(document.getElementById("oe-cp-dia")?.value || 0) || null;
+        payload.data_fim        = document.getElementById("oe-cp-data-fim")?.value || null;
+      }
+
+      const sb = _sb();
+      const { error } = await sb.from("oe_comprometimentos").insert(payload);
+      if (error) throw error;
+
+      document.getElementById("oe-comp-modal")?.remove();
+      if (typeof T === "function") T("Comprometimento registrado", brl(valor) + (tipo === "recorrente" ? " / " + (FREQ_LABEL[payload.frequencia] || "") : ""));
+      await oeAbrirCampanha(campanhaId);
+    } catch (e) {
+      if (typeof T === "function") T("Erro ao salvar", e.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = old; }
+    }
   };
 
   /* ── AÇÕES PÚBLICAS ───────────────────────────────────── */
