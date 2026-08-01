@@ -330,8 +330,9 @@ async function _initEspacosMultiCrud(modal, preset) {
     const rows = await res.json();
     const preSelected = preset?.espaco ? preset.espaco.split(",").map(s => s.trim()) : [];
     grid.innerHTML = "";
-    const _PRIO = ["templo","pátio","patio","cozinha"];
+    const _PRIO = ["templo","pátio","patio","cozinha","estacionamento","apoio mission","b01","b02"];
     const _isPrio = n => _PRIO.some(p => n.toLowerCase().includes(p));
+    const _natSort = (a, b) => a.nome.localeCompare(b.nome, "pt", { numeric: true, sensitivity: "base" });
     const _mkChk = (esp, sel, destaque) => {
       const lbl = document.createElement("label");
       lbl.className = "crud-espaco-chk";
@@ -346,7 +347,7 @@ async function _initEspacosMultiCrud(modal, preset) {
       });
       return lbl;
     };
-    const principais = rows.filter(r => _isPrio(r.nome));
+    const principais = rows.filter(r => _isPrio(r.nome)).sort(_natSort);
     const resto      = rows.filter(r => !_isPrio(r.nome));
     if (principais.length) {
       const hdr = document.createElement("div");
@@ -357,12 +358,12 @@ async function _initEspacosMultiCrud(modal, preset) {
     }
     const grupos = {};
     resto.forEach(r => { if (!grupos[r.grupo]) grupos[r.grupo] = []; grupos[r.grupo].push(r); });
-    Object.entries(grupos).forEach(([grupo, itens]) => {
+    Object.entries(grupos).sort(([a],[b]) => a.localeCompare(b,"pt")).forEach(([grupo, itens]) => {
       const hdr = document.createElement("div");
       hdr.style.cssText = "grid-column:1/-1;font-size:9.5px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.08em;padding:6px 0 3px;border-bottom:1px solid var(--bd2);margin-top:6px";
       hdr.textContent = grupo;
       grid.appendChild(hdr);
-      itens.forEach(esp => grid.appendChild(_mkChk(esp, preSelected.includes(esp.nome), false)));
+      itens.sort(_natSort).forEach(esp => grid.appendChild(_mkChk(esp, preSelected.includes(esp.nome), false)));
     });
     if (!rows.length) grid.innerHTML = `<div style="font-size:11px;color:var(--tx3)">Nenhum espaço cadastrado.</div>`;
     ["data","hora_inicio","hora_fim"].forEach(f => {
