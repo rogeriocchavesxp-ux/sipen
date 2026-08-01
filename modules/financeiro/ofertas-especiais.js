@@ -615,7 +615,7 @@
 
     // Busca pessoas ativas
     const { data: pessoas } = await sb
-      .from("pessoas").select("id,nome").eq("ativo", true).order("nome");
+      .from("pessoas").select("id,nome").is("deleted_at", null).order("nome");
 
     let modal = document.getElementById("oe-form-modal");
     if (!modal) {
@@ -1140,7 +1140,7 @@
   window.oeAbrirFormComprometimento = async function(campanhaId) {
     const sb = _sb();
     const { data: pessoas } = await sb
-      .from("pessoas").select("id,nome").eq("ativo", true).order("nome");
+      .from("pessoas").select("id,nome").is("deleted_at", null).order("nome");
 
     let modal = document.getElementById("oe-comp-modal");
     if (!modal) {

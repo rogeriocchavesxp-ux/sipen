@@ -652,7 +652,7 @@ function cfNomeBuscar(q) {
     const { data } = await sb.from("pessoas")
       .select("id,nome")
       .ilike("nome", `%${q}%`)
-      .eq("ativo", true)
+      .is("deleted_at", null)
       .order("nome")
       .limit(8);
     if (!data || !data.length) { dd.style.display = "none"; return; }

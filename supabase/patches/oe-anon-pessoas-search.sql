@@ -8,4 +8,4 @@ CREATE POLICY "anon_search_pessoas_ativas"
   ON public.pessoas
   FOR SELECT
   TO anon
-  USING (ativo = true);
+  USING (deleted_at IS NULL);
