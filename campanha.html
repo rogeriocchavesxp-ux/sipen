@@ -605,10 +605,11 @@ async function load() {
           <div id="cf-rec-wrap" style="display:none;grid-template-columns:1fr 1fr;gap:12px">
             <div>
               <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px">Frequência</label>
-              <select id="cf-frequencia" style="${inp}">
-                <option value="mensal">Mensal</option>
-                <option value="quinzenal">Quinzenal</option>
+              <select id="cf-frequencia" style="${inp}" onchange="cfFreqChange(this.value)">
+                <option value="uma_vez">Uma Vez</option>
                 <option value="semanal">Semanal</option>
+                <option value="quinzenal">Quinzenal</option>
+                <option value="mensal" selected>Mensal</option>
                 <option value="bimestral">Bimestral</option>
                 <option value="trimestral">Trimestral</option>
               </select>
@@ -735,6 +736,18 @@ function cfTipoChange() {
   document.getElementById("cf-forma-wrap")?.style  && (document.getElementById("cf-forma-wrap").style.display  = isRec ? "none" : "");
   document.getElementById("cf-rec-wrap")?.style    && (document.getElementById("cf-rec-wrap").style.display    = isRec ? "grid" : "none");
   document.getElementById("cf-inicio-wrap")?.style && (document.getElementById("cf-inicio-wrap").style.display = isRec ? "" : "none");
+  if (isRec) cfFreqChange(document.getElementById("cf-frequencia")?.value || "mensal");
+}
+
+function cfFreqChange(val) {
+  const umaVez = val === "uma_vez";
+  const qtdWrap = document.getElementById("cf-qtd")?.parentElement;
+  if (qtdWrap) qtdWrap.style.display = umaVez ? "none" : "";
+  const inicioWrap = document.getElementById("cf-inicio-wrap");
+  if (inicioWrap) {
+    const lbl = inicioWrap.querySelector("label");
+    if (lbl) lbl.childNodes[0].textContent = umaVez ? "Data prevista" : "Data de início";
+  }
 }
 
 async function enviarContrib(campanhaId) {
@@ -754,17 +767,18 @@ async function enviarContrib(campanhaId) {
 
   if (tipo === "recorrente") {
     const frequencia = document.getElementById("cf-frequencia")?.value || "mensal";
-    const qtd        = parseInt(document.getElementById("cf-qtd")?.value || 0) || null;
+    const umaVez     = frequencia === "uma_vez";
+    const qtd        = umaVez ? 1 : (parseInt(document.getElementById("cf-qtd")?.value || 0) || null);
     const obsBase    = document.getElementById("cf-obs")?.value?.trim() || null;
-    const obs        = [obsBase, qtd ? `${qtd} parcela${qtd > 1 ? "s" : ""}` : null].filter(Boolean).join(" · ") || null;
+    const obs        = [obsBase, qtd && !umaVez ? `${qtd} parcela${qtd > 1 ? "s" : ""}` : null].filter(Boolean).join(" · ") || null;
 
     const payload = {
       campanha_id:       campanhaId,
       pessoa_id:         _cfPessoaId || null,
       nome_contribuinte: nome,
-      tipo:              "recorrente",
+      tipo:              umaVez ? "unico" : "recorrente",
       valor,
-      frequencia,
+      frequencia:        umaVez ? null : frequencia,
       data_inicio:       document.getElementById("cf-inicio")?.value || new Date().toISOString().split("T")[0],
       status:            "ativo",
       obs,
