@@ -629,6 +629,17 @@ async function load() {
             <input id="cf-obs" type="text" placeholder="Referência, nº do comprovante, etc." style="${inp}">
           </div>
 
+          <div id="cf-comp-wrap">
+            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px">Comprovante <span style="font-weight:400;text-transform:none">(opcional)</span></label>
+            <div id="cf-comp-area" onclick="document.getElementById('cf-comp-file').click()"
+                 style="border:1.5px dashed var(--bd);border-radius:8px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--tx3)">
+              <span style="font-size:18px">📎</span>
+              <span id="cf-comp-label">Clique para anexar imagem ou PDF</span>
+              <button id="cf-comp-clear" onclick="event.stopPropagation();cfCompLimpar()" style="display:none;margin-left:auto;background:none;border:none;color:var(--tx3);cursor:pointer;font-size:16px;line-height:1">✕</button>
+            </div>
+            <input id="cf-comp-file" type="file" accept="image/*,.pdf" style="display:none" onchange="cfCompChange(this)">
+          </div>
+
           <button id="cf-btn" onclick="enviarContrib('${camp.id}')"
                   style="width:100%;padding:13px;background:var(--violet);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px">
             Registrar contribuição
@@ -699,6 +710,22 @@ function _cfGetNome() {
   const naoMembro = document.getElementById("cf-nao-membro")?.checked;
   if (naoMembro) return document.getElementById("cf-nome-manual")?.value?.trim() || null;
   return _cfPessoaNome || document.getElementById("cf-nome-busca")?.value?.trim() || null;
+}
+
+function cfCompChange(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { alert("Arquivo muito grande. Máximo 10 MB."); input.value = ""; return; }
+  document.getElementById("cf-comp-label").textContent = file.name;
+  document.getElementById("cf-comp-label").style.color = "var(--tx1)";
+  document.getElementById("cf-comp-clear").style.display = "";
+}
+
+function cfCompLimpar() {
+  document.getElementById("cf-comp-file").value = "";
+  document.getElementById("cf-comp-label").textContent = "Clique para anexar imagem ou PDF";
+  document.getElementById("cf-comp-label").style.color = "";
+  document.getElementById("cf-comp-clear").style.display = "none";
 }
 
 function cfMascaraValor(input) {
@@ -792,6 +819,31 @@ async function enviarContrib(campanhaId) {
     };
     ({ error } = await sb.from("oe_comprometimentos").insert(payload));
   } else {
+    let comprovante_url = null;
+    const compFile = document.getElementById("cf-comp-file")?.files?.[0];
+    if (compFile) {
+      if (btn) btn.textContent = "Enviando comprovante...";
+      const ext  = compFile.name.split(".").pop().toLowerCase() || "jpg";
+      const path = `comprovantes/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const resp = await fetch(`${SUPABASE_URL}/storage/v1/object/campanhas/${path}`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          "apikey": SUPABASE_ANON_KEY,
+          "Content-Type": compFile.type || "application/octet-stream",
+        },
+        body: compFile,
+      });
+      if (!resp.ok) {
+        const err = await resp.text().catch(() => `HTTP ${resp.status}`);
+        alert("Erro no upload do comprovante: " + err);
+        btn.disabled = false;
+        btn.textContent = "Registrar contribuição";
+        return;
+      }
+      comprovante_url = `${SUPABASE_URL}/storage/v1/object/public/campanhas/${path}`;
+    }
+
     const payload = {
       campanha_id:        campanhaId,
       nome_contribuinte:  nome,
@@ -800,6 +852,7 @@ async function enviarContrib(campanhaId) {
       data:               document.getElementById("cf-data")?.value || new Date().toISOString().split("T")[0],
       forma:              document.getElementById("cf-forma")?.value || "pix",
       obs:                document.getElementById("cf-obs")?.value?.trim() || null,
+      comprovante_url,
       origem:             "publico",
       status_conciliacao: "aguardando",
     };
@@ -834,6 +887,7 @@ function resetContribForm() {
     if (el) el.value = "";
   });
   cfLimparMembro();
+  cfCompLimpar();
   const naoMembro = document.getElementById("cf-nao-membro");
   if (naoMembro) { naoMembro.checked = false; cfNaoMembroChange(); }
   const radioUnico = document.querySelector("input[name='cf-tipo'][value='unico']");
