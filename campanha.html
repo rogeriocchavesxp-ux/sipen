@@ -634,7 +634,7 @@ async function load() {
             <div id="cf-comp-area" onclick="document.getElementById('cf-comp-file').click()"
                  style="border:1.5px dashed var(--bd);border-radius:8px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--tx3)">
               <span style="font-size:18px">📎</span>
-              <span id="cf-comp-label">Clique para anexar imagem ou PDF</span>
+              <span id="cf-comp-label">Clique aqui para anexar o Comprovante</span>
               <button id="cf-comp-clear" onclick="event.stopPropagation();cfCompLimpar()" style="display:none;margin-left:auto;background:none;border:none;color:var(--tx3);cursor:pointer;font-size:16px;line-height:1">✕</button>
             </div>
             <input id="cf-comp-file" type="file" accept="image/*,.pdf" style="display:none" onchange="cfCompChange(this)">
@@ -723,7 +723,7 @@ function cfCompChange(input) {
 
 function cfCompLimpar() {
   document.getElementById("cf-comp-file").value = "";
-  document.getElementById("cf-comp-label").textContent = "Clique para anexar imagem ou PDF";
+  document.getElementById("cf-comp-label").textContent = "Clique aqui para anexar o Comprovante";
   document.getElementById("cf-comp-label").style.color = "";
   document.getElementById("cf-comp-clear").style.display = "none";
 }
