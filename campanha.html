@@ -579,7 +579,7 @@ async function load() {
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div>
               <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);display:block;margin-bottom:5px">Valor (R$) *</label>
-              <input id="cf-valor" type="text" inputmode="decimal" placeholder="Ex: 500,00" style="${inp}">
+              <input id="cf-valor" type="text" inputmode="numeric" placeholder="Ex: 500,00" style="${inp}" oninput="cfMascaraValor(this)">
             </div>
             <!-- Campo único: data do pagamento -->
             <div id="cf-data-wrap">
@@ -699,6 +699,13 @@ function _cfGetNome() {
   const naoMembro = document.getElementById("cf-nao-membro")?.checked;
   if (naoMembro) return document.getElementById("cf-nome-manual")?.value?.trim() || null;
   return _cfPessoaNome || null;
+}
+
+function cfMascaraValor(input) {
+  let v = input.value.replace(/\D/g, "");
+  if (!v) { input.value = ""; return; }
+  v = (parseInt(v, 10) / 100).toFixed(2);
+  input.value = v.replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
 function parseBRL(s) {
