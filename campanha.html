@@ -698,7 +698,7 @@ function cfNaoMembroChange() {
 function _cfGetNome() {
   const naoMembro = document.getElementById("cf-nao-membro")?.checked;
   if (naoMembro) return document.getElementById("cf-nome-manual")?.value?.trim() || null;
-  return _cfPessoaNome || null;
+  return _cfPessoaNome || document.getElementById("cf-nome-busca")?.value?.trim() || null;
 }
 
 function cfMascaraValor(input) {
