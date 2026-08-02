@@ -80,6 +80,7 @@
     border-radius: var(--radius);
     padding: 22px 20px;
     margin-bottom: 14px;
+    overflow: hidden;
   }
 
   .status-pill {
@@ -435,7 +436,7 @@ async function load() {
   wrap.innerHTML = `
     <div class="card" style="padding:${camp.imagem_url ? "0" : "22px 20px"}">
       ${camp.imagem_url ? `<img src="${escHtml(camp.imagem_url)}" alt="${escHtml(camp.titulo)}"
-        style="width:100%;max-height:260px;object-fit:cover;border-radius:var(--radius) var(--radius) 0 0;display:block">
+        style="width:100%;height:auto;display:block;border-radius:var(--radius) var(--radius) 0 0">
         <div style="padding:22px 20px">` : ""}
       ${!["publicada","em_andamento"].includes(camp.status) ? `<span class="status-pill" style="color:${st.cor};background:${st.bg}">${st.label}</span>` : ""}
       <div class="camp-titulo">${escHtml(camp.titulo)}</div>
