@@ -7,6 +7,12 @@
 -- Após execução, nomeados é a única fonte de verdade para
 -- vínculos funcionais de qualquer natureza.
 
+-- 0. Colunas ausentes na definição original
+ALTER TABLE nomeados ADD COLUMN IF NOT EXISTS deleted_at    TIMESTAMPTZ;
+ALTER TABLE nomeados ADD COLUMN IF NOT EXISTS pessoa_id     UUID REFERENCES pessoas(id) ON DELETE SET NULL;
+ALTER TABLE nomeados ADD COLUMN IF NOT EXISTS ministerio_id UUID REFERENCES ministerios(id) ON DELETE SET NULL;
+ALTER TABLE nomeados ADD COLUMN IF NOT EXISTS nivel         TEXT;
+
 -- 1. Adicionar 'conselheiro' ao CHECK constraint de nivel
 ALTER TABLE nomeados DROP CONSTRAINT IF EXISTS nomeados_nivel_check;
 ALTER TABLE nomeados ADD CONSTRAINT nomeados_nivel_check
