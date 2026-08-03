@@ -54,7 +54,7 @@
     try {
       const [depts, membros] = await Promise.all([
         _get('dept_administrativos?select=id,nome,slug,status,descricao&order=nome.asc').catch(() => []),
-        _get('nomeados?status=eq.ativo&dept_id=not.is.null&select=departamento_id:dept_id').catch(() => []),
+        _get('nomeados?status=eq.ativo&dept_id=not.is.null&select=dept_id').catch(() => []),
       ]);
 
       const ativos = (Array.isArray(depts) ? depts : []).filter(d => d.status === 'ativo');
@@ -66,7 +66,8 @@
       // Contagem por departamento
       const countByDept = {};
       (Array.isArray(membros) ? membros : []).forEach(m => {
-        countByDept[m.departamento_id] = (countByDept[m.departamento_id] || 0) + 1;
+        const key = m.dept_id || m.departamento_id;
+        if (key) countByDept[key] = (countByDept[key] || 0) + 1;
       });
 
       // Demandas abertas e concluídas

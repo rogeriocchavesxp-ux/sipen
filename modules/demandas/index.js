@@ -1731,17 +1731,62 @@ function fmtD(d) {
       try {
         const base = typeof apiBaseUrl === "function" ? apiBaseUrl() : "";
         const hdrs = typeof apiHeaders === "function" ? apiHeaders() : {};
+        // Busca membros do departamento "Fornecedores"
         const r = await fetch(
-          `${base}/rest/v1/contratos?status=eq.Ativo&deleted_at=is.null&select=id,fornecedor,contato_fornecedor,titulo&order=fornecedor.asc&limit=200`,
+          `${base}/rest/v1/nomeados?dept_id=not.is.null&status=eq.ativo` +
+          `&select=id,pessoa_id,cargo,pessoas(id,nome,celular,telefone)` +
+          `&dept_administrativos!inner(nome)=eq.Fornecedores` +
+          `&order=pessoas(nome).asc&limit=200`,
           { headers: hdrs }
         );
-        _fornecedoresCache = r.ok ? await r.json() : [];
+        // Fallback: busca pelo nome do departamento via join
+        if (!r.ok) {
+          // tenta via dept_administrativos lookup
+          const rDept = await fetch(
+            `${base}/rest/v1/dept_administrativos?nome=eq.Fornecedores&select=id`,
+            { headers: hdrs }
+          );
+          const depts = rDept.ok ? await rDept.json() : [];
+          if (depts.length) {
+            const deptId = depts[0].id;
+            const rMembros = await fetch(
+              `${base}/rest/v1/nomeados?dept_id=eq.${deptId}&status=eq.ativo` +
+              `&select=pessoa_id,cargo,pessoas(id,nome,celular,telefone)&order=pessoas(nome).asc&limit=200`,
+              { headers: hdrs }
+            );
+            const membros = rMembros.ok ? await rMembros.json() : [];
+            _fornecedoresCache = membros
+              .filter(m => m.pessoas)
+              .map(m => ({
+                id:       m.pessoas.id,
+                nome:     m.pessoas.nome,
+                contato:  m.pessoas.celular || m.pessoas.telefone || "",
+                cargo:    m.cargo || "",
+              }));
+          } else {
+            _fornecedoresCache = [];
+          }
+        } else {
+          const membros = await r.json();
+          _fornecedoresCache = membros
+            .filter(m => m.pessoas)
+            .map(m => ({
+              id:       m.pessoas.id,
+              nome:     m.pessoas.nome,
+              contato:  m.pessoas.celular || m.pessoas.telefone || "",
+              cargo:    m.cargo || "",
+            }));
+        }
       } catch { _fornecedoresCache = []; }
     }
     const currentId = document.getElementById("dem-enc-forn-id")?.value || "";
+    if (!_fornecedoresCache.length) {
+      sel.innerHTML = `<option value="">Nenhum fornecedor cadastrado no departamento "Fornecedores"</option>`;
+      return;
+    }
     sel.innerHTML = `<option value="">— Selecione o fornecedor —</option>` +
       _fornecedoresCache.map(c =>
-        `<option value="${escapeHtmlAttr(c.id)}" data-contato="${escapeHtmlAttr(c.contato_fornecedor||"")}" ${c.id === currentId ? "selected" : ""}>${escapeHtml(c.fornecedor || c.titulo || c.id)}</option>`
+        `<option value="${escapeHtmlAttr(c.id)}" data-contato="${escapeHtmlAttr(c.contato)}" ${c.id === currentId ? "selected" : ""}>${escapeHtml(c.nome)}${c.cargo ? ` · ${escapeHtml(c.cargo)}` : ""}</option>`
       ).join("");
   }
 
