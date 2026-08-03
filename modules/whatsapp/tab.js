@@ -290,6 +290,7 @@ const WA_TAB = (function () {
           : `<div class="tbl-wrap"><table class="tbl">
             <thead><tr>
               <th style="white-space:nowrap">Data/Hora</th>
+              <th>Nome</th>
               <th>Número</th>
               <th>Mensagem</th>
               <th class="r">Status</th>
@@ -302,11 +303,20 @@ const WA_TAB = (function () {
                      onclick="WA_TAB.reenviar(${JSON.stringify(r.id)},${JSON.stringify(r.para_numero)},${JSON.stringify(r.para_nome||'')},${JSON.stringify(r.mensagem||'')},${JSON.stringify(key||'')},this)"
                    >Reenviar</button>`
                 : "";
+              const msgCurta = (r.mensagem || "").slice(0, 55);
+              const temMais  = (r.mensagem || "").length > 55;
               return `
               <tr>
-                <td class="wa" style="color:var(--tx3)">${_dt(r.criado_em)}</td>
-                <td class="mono">${_esc(r.para_numero || "—")}</td>
-                <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${_esc(r.mensagem || "")}">${_esc((r.mensagem || "").slice(0, 60))}${(r.mensagem || "").length > 60 ? "…" : ""}</td>
+                <td class="wa" style="color:var(--tx3);white-space:nowrap">${_dt(r.criado_em)}</td>
+                <td style="font-size:12px;font-weight:500;color:var(--tx1);white-space:nowrap">${_esc(r.para_nome || "—")}</td>
+                <td class="mono" style="color:var(--tx3)">${_esc(r.para_numero || "—")}</td>
+                <td style="max-width:240px">
+                  <span style="font-size:12px;color:var(--tx2)">${_esc(msgCurta)}${temMais ? "…" : ""}</span>
+                  ${temMais ? `<button
+                    style="margin-left:6px;font-size:10px;padding:1px 6px;border-radius:4px;border:1px solid var(--bd1);background:var(--bg-surface);color:var(--tx3);cursor:pointer;vertical-align:middle"
+                    onclick="WA_TAB.verMensagem(${JSON.stringify(r.para_nome||'')},${JSON.stringify(r.criado_em||'')},${JSON.stringify(r.mensagem||'')})"
+                  >ver</button>` : ""}
+                </td>
                 <td class="r" style="white-space:nowrap">
                   <span style="font-size:10.5px;font-weight:700;color:${SC[r.status] || "var(--tx3)"}">${SL[r.status] || _esc(r.status || "—")}</span>
                   ${reenviarBtn}
@@ -341,6 +351,34 @@ const WA_TAB = (function () {
     await load(modulo);
   }
 
+  /* ── Modal leitura de mensagem ───────────────────── */
+
+  function verMensagem(nome, criadoEm, mensagem) {
+    const exist = document.getElementById("wa-msg-modal");
+    if (exist) exist.remove();
+
+    const data = criadoEm ? new Date(criadoEm).toLocaleString("pt-BR") : "";
+    const div  = document.createElement("div");
+    div.id = "wa-msg-modal";
+    div.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px";
+    div.innerHTML = `
+      <div style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:12px;width:100%;max-width:480px;box-shadow:0 8px 40px rgba(0,0,0,.25);overflow:hidden">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--tx1)">${_esc(nome || "—")}</div>
+            <div style="font-size:11px;color:var(--tx3);margin-top:2px">${_esc(data)}</div>
+          </div>
+          <button onclick="document.getElementById('wa-msg-modal').remove()"
+            style="width:28px;height:28px;border-radius:50%;border:1px solid var(--bd1);background:var(--bg-surface);cursor:pointer;font-size:14px;color:var(--tx3);display:flex;align-items:center;justify-content:center">✕</button>
+        </div>
+        <div style="padding:18px;max-height:60vh;overflow-y:auto">
+          <pre style="font-family:var(--mono,monospace);font-size:12.5px;color:var(--tx2);white-space:pre-wrap;word-break:break-word;margin:0;line-height:1.6">${_esc(mensagem || "")}</pre>
+        </div>
+      </div>`;
+    div.addEventListener("click", e => { if (e.target === div) div.remove(); });
+    document.body.appendChild(div);
+  }
+
   /* ── VIEW_AUTOLOAD ────────────────────────────────── */
 
   const MODULO_VIEWS = {
@@ -361,7 +399,7 @@ const WA_TAB = (function () {
   });
 
   /* ── API pública ──────────────────────────────────── */
-  return { load, reenviar };
+  return { load, reenviar, verMensagem };
 
 })();
 
