@@ -1420,147 +1420,170 @@ function fmtD(d) {
         ${_renderFinancialData(dem)}
         <div class="card" style="margin-top:0">
           <div class="ctit">Editar Demanda</div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px">
+
+          <!-- Título + Solicitante -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px">
             <div style="grid-column:span ${_podeEditarPrioridade() ? "3" : "4"}">
-              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Título *</label>
-              <input id="dem-edit-titulo" type="text" value="${escapeHtmlAttr(dem.titulo || '')}" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+              <label style="font-size:10.5px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Título *</label>
+              <input id="dem-edit-titulo" type="text" value="${escapeHtmlAttr(dem.titulo || '')}" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>
             ${_podeEditarPrioridade() ? `
             <div style="position:relative">
-              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Solicitante</label>
+              <label style="font-size:10.5px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Solicitante</label>
               <input id="dem-edit-sol-nome" type="text" value="${escapeHtmlAttr(dem.solicitante||dem.solicitante_txt||"")}"
                 placeholder="Buscar por nome..."
                 oninput="document.getElementById('dem-edit-sol-id').value='';window._demSolBuscar(this.value)"
                 onblur="setTimeout(()=>window._demSolFecharDd(),200)"
-                style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box" autocomplete="off">
+                style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box" autocomplete="off">
               <input id="dem-edit-sol-id" type="hidden" value="${escapeHtmlAttr(String(dem.solicitante_id||""))}">
               <div id="dem-edit-sol-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-card);border:1px solid var(--bd2);border-radius:0 0 7px 7px;z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
             </div>` : ""}
             ${dem.area !== "Financeiro" ? `
             <div style="grid-column:span 3">
-              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Localização / Sala</label>
-              <select id="dem-edit-local" data-valor-atual="${dem.local_id || dem.local || ''}" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+              <label style="font-size:10.5px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Localização / Sala</label>
+              <select id="dem-edit-local" data-valor-atual="${dem.local_id || dem.local || ''}" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
                 <option value="">Carregando espaços…</option>
               </select>
             </div>
             <div>
-              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Conclusão prevista</label>
-              <input id="dem-edit-venc" type="date" value="${dem.data_conclusao||''}" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+              <label style="font-size:10.5px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Conclusão prevista</label>
+              <input id="dem-edit-venc" type="date" value="${dem.data_conclusao||''}" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>` : `
             <input type="hidden" id="dem-edit-local" value="">
             <input type="hidden" id="dem-edit-venc" value="">`}
           </div>
-          <div style="margin-top:14px;border:1px solid var(--bd1);border-radius:9px;padding:14px;background:var(--bg-surface)" id="dem-encaminhamento-bloco">
-            <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Encaminhamento</div>
-            <div style="display:flex;gap:6px;margin-bottom:10px">
+
+          <!-- Dados Financeiros (edição) — antes do Encaminhamento -->
+          ${(dem.area === "Financeiro") ? `
+          <div style="margin-top:10px;border:1px solid rgba(61,160,85,.25);border-radius:8px;padding:10px 12px;background:rgba(61,160,85,.03)">
+            <div style="font-size:10px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dados Financeiros</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+              ${_isFinSolPag ? `
+              <div>
+                <label style="font-size:10.5px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Tipo</label>
+                <select id="dem-edit-tipo" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px">
+                  ${["Pagamento","Reembolso","Adiantamento"].map(t => `<option${t===(_demFd.tipo||"Pagamento")?" selected":""}>${t}</option>`).join("")}
+                </select>
+              </div>
+              <div>
+                <label style="font-size:10.5px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Valor (R$)</label>
+                <input id="dem-edit-valor" type="text" inputmode="numeric"
+                  value="${_demFd.valor ? parseFloat(_demFd.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}) : ""}"
+                  placeholder="0,00" oninput="window._demMascaraValor(this)"
+                  style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
+              </div>
+              <div>
+                <label style="font-size:10.5px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Vencimento</label>
+                <input id="dem-edit-data-venc" type="date" value="${_demFd.data_vencimento||""}" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
+              </div>
+              <div>
+                <label style="font-size:10.5px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Forma de Pagamento</label>
+                <select id="dem-edit-forma-pgto" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px">
+                  <option value="">Selecione</option>
+                  ${["PIX","Boleto","Cartão de Crédito","Cartão de Débito","Dinheiro","Transferência Bancária","Débito em Conta","Cheque","Reembolso","Outro"].map(f => `<option${f===(_demFd.forma_pagamento||"")?" selected":""}>${f}</option>`).join("")}
+                </select>
+              </div>
+              <div style="grid-column:span 4">
+                <label style="font-size:10.5px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Beneficiário / Favorecido</label>
+                <input id="dem-edit-beneficiario" type="text" value="${escapeHtmlAttr(_demFd.beneficiario||"")}" placeholder="Nome completo" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
+              </div>` : `
+              <div style="grid-column:span 2">
+                <label style="font-size:10.5px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Reembolsado</label>
+                <input id="dem-edit-reimb-nome" type="text" value="${escapeHtmlAttr(_demFd.reimb_nome||"")}" placeholder="Nome de quem será reembolsado" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
+              </div>
+              <div>
+                <label style="font-size:10.5px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Valor (R$)</label>
+                <input id="dem-edit-valor" type="text" inputmode="numeric"
+                  value="${_demFd.valor ? parseFloat(_demFd.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}) : ""}"
+                  placeholder="0,00" oninput="window._demMascaraValor(this)"
+                  style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
+              </div>
+              <div>
+                <label style="font-size:10.5px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Forma de Pagamento</label>
+                <select id="dem-edit-forma-pgto" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px">
+                  <option value="">Selecione</option>
+                  ${["PIX","Boleto","Cartão de Crédito","Cartão de Débito","Dinheiro","Transferência Bancária","Débito em Conta","Cheque","Reembolso","Outro"].map(f => `<option${f===(_demFd.forma_pagamento||"")?" selected":""}>${f}</option>`).join("")}
+                </select>
+              </div>
+              <input type="hidden" id="dem-edit-data-venc" value="">`}
+            </div>
+          </div>` : ""}
+
+          <!-- Encaminhamento — label e tipo na mesma linha -->
+          <div style="margin-top:10px;border:1px solid var(--bd1);border-radius:8px;padding:10px 12px;background:var(--bg-surface)" id="dem-encaminhamento-bloco">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+              <span style="font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.07em;flex-shrink:0">Encaminhamento</span>
               <button id="dem-enc-btn-dept" onclick="window._demEncTipo('departamento')"
-                style="padding:5px 14px;border-radius:6px;border:1px solid var(--gr);background:var(--gr);color:#fff;font-size:12px;font-weight:600;cursor:pointer">Departamento</button>
+                style="padding:4px 12px;border-radius:6px;border:1px solid var(--gr);background:var(--gr);color:#fff;font-size:11.5px;font-weight:600;cursor:pointer">Departamento</button>
               <button id="dem-enc-btn-forn" onclick="window._demEncTipo('fornecedor')"
-                style="padding:5px 14px;border-radius:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:12px;cursor:pointer">Fornecedor</button>
+                style="padding:4px 12px;border-radius:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:11.5px;cursor:pointer">Fornecedor</button>
             </div>
             <input type="hidden" id="dem-enc-tipo" value="${escapeHtmlAttr(dem.responsavel_tipo || 'departamento')}">
             <input type="hidden" id="dem-enc-forn-id" value="${escapeHtmlAttr(String(dem.fornecedor_id || ''))}">
             <div id="dem-enc-dept-row">
               <select id="dem-enc-dept-nome"
                 data-current="${escapeHtmlAttr(dem.responsavel_tipo !== 'fornecedor' ? (dem.responsavel || dem.responsavel_txt || '') : '')}"
-                style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+                style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
                 <option value="">Carregando departamentos…</option>
               </select>
             </div>
             <div id="dem-enc-forn-row" style="display:none">
               <select id="dem-enc-forn-sel"
-                style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+                style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
                 <option value="">Carregando fornecedores…</option>
               </select>
-              <div style="font-size:11px;color:var(--tx3);margin-top:6px">O fornecedor receberá uma mensagem automática via WhatsApp ao salvar.</div>
+              <div style="font-size:11px;color:var(--tx3);margin-top:5px">Mensagem automática via WhatsApp ao salvar.</div>
             </div>
           </div>
 
-          <div style="margin-top:12px">
-            <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Descrição</label>
-            <textarea id="dem-edit-desc" rows="3" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;resize:vertical;box-sizing:border-box">${escapeHtml(dem.descricao || '')}</textarea>
+          <!-- Descrição com altura limitada -->
+          <div style="margin-top:10px">
+            <label style="font-size:10.5px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Descrição</label>
+            <textarea id="dem-edit-desc" rows="2"
+              style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;resize:vertical;max-height:100px;box-sizing:border-box;font-family:var(--ff);overflow-y:auto">${escapeHtml(dem.descricao || '')}</textarea>
           </div>
+
+          <!-- Recorrência (Financeiro) — inline -->
           ${(dem.area === "Financeiro") ? `
-          <div style="margin-top:16px;border:1px solid rgba(61,160,85,.3);border-radius:9px;padding:14px;background:rgba(61,160,85,.03)">
-            <div style="font-size:11px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px">💰 Dados Financeiros</div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-              ${_isFinSolPag ? `
-              <div>
-                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Tipo</label>
-                <select id="dem-edit-tipo" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px">
-                  ${["Pagamento","Reembolso","Adiantamento"].map(t => `<option${t===(_demFd.tipo||"Pagamento")?" selected":""}>${t}</option>`).join("")}
-                </select>
-              </div>
-              <div>
-                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Valor (R$)</label>
-                <input id="dem-edit-valor" type="number" step="0.01" min="0" value="${_demFd.valor||""}" placeholder="0,00" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
-              </div>
-              <div style="grid-column:span 2">
-                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Forma de Pagamento</label>
-                <select id="dem-edit-forma-pgto" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px">
-                  <option value="">Selecione</option>
-                  ${["PIX","Boleto","Cartão de Crédito","Cartão de Débito","Dinheiro","Transferência Bancária","Débito em Conta","Cheque","Reembolso","Outro"].map(f => `<option${f===(_demFd.forma_pagamento||"")?" selected":""}>${f}</option>`).join("")}
-                </select>
-              </div>
-              <div style="grid-column:span 4">
-                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Beneficiário / Favorecido</label>
-                <input id="dem-edit-beneficiario" type="text" value="${escapeHtmlAttr(_demFd.beneficiario||"")}" placeholder="Nome completo" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
-              </div>` : `
-              <div style="grid-column:span 2">
-                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Reembolsado</label>
-                <input id="dem-edit-reimb-nome" type="text" value="${escapeHtmlAttr(_demFd.reimb_nome||"")}" placeholder="Nome de quem será reembolsado" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
-              </div>
-              <div>
-                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Valor (R$)</label>
-                <input id="dem-edit-valor" type="number" step="0.01" min="0" value="${_demFd.valor||""}" placeholder="0,00" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
-              </div>
-              <div>
-                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Forma de Pagamento</label>
-                <select id="dem-edit-forma-pgto" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px">
-                  <option value="">Selecione</option>
-                  ${["PIX","Boleto","Cartão de Crédito","Cartão de Débito","Dinheiro","Transferência Bancária","Débito em Conta","Cheque","Reembolso","Outro"].map(f => `<option${f===(_demFd.forma_pagamento||"")?" selected":""}>${f}</option>`).join("")}
-                </select>
-              </div>`}
-            </div>
-          </div>
-          <div style="margin-top:14px;padding:12px;background:var(--bg-surface);border-radius:8px;border:1px solid var(--bd1)">
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--tx1)">
+          <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 10px;background:var(--bg-surface);border-radius:7px;border:1px solid var(--bd1)">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:500;color:var(--tx1);white-space:nowrap;flex-shrink:0">
               <input type="checkbox" id="dem-edit-rec" onchange="window._demRecToggle(this.checked)"
                 ${(_demFd.recorrencia?.ativa) ? "checked" : ""}
-                style="width:15px;height:15px;cursor:pointer;accent-color:var(--gr)">
-              Demanda Recorrente
+                style="width:14px;height:14px;cursor:pointer;accent-color:var(--gr)">
+              Recorrente
             </label>
-            <div id="dem-edit-rec-opts" style="display:${(_demFd.recorrencia?.ativa) ? "grid" : "none"};grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
-              <div>
-                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Frequência</label>
-                <select id="dem-edit-rec-freq" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px">
+            <div id="dem-edit-rec-opts" style="display:${(_demFd.recorrencia?.ativa) ? "flex" : "none"};gap:8px;align-items:flex-end;flex:1;flex-wrap:wrap">
+              <div style="flex:0 0 130px">
+                <label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:3px">Frequência</label>
+                <select id="dem-edit-rec-freq" style="width:100%;padding:5px 8px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px">
                   ${["Semanal","Quinzenal","Mensal","Bimestral","Trimestral"].map(f => `<option${f===(_demFd.recorrencia?.freq||"Mensal")?" selected":""}>${f}</option>`).join("")}
                 </select>
               </div>
-              <div>
-                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Válido até</label>
-                <input id="dem-edit-rec-limite" type="date" value="${_demFd.recorrencia?.limite||""}" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
+              <div style="flex:0 0 150px">
+                <label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:3px">Válido até</label>
+                <input id="dem-edit-rec-limite" type="date" value="${_demFd.recorrencia?.limite||""}" style="width:100%;padding:5px 8px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
               </div>
-              ${_demFd.recorrencia?.ativa && _demFd.recorrencia?.geradas ? `<div style="grid-column:span 2;font-size:11.5px;color:var(--tx3)">${_demFd.recorrencia.geradas} ocorrências já foram geradas.</div>` : ""}
+              ${_demFd.recorrencia?.geradas ? `<span style="font-size:11px;color:var(--tx3);align-self:center">${_demFd.recorrencia.geradas} ocorrências geradas</span>` : ""}
             </div>
           </div>` : ""}
-          <div style="margin-top:12px;display:flex;justify-content:flex-end">
-            <button onclick="demSalvarEdicao('${id}')" style="padding:8px 20px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer">Salvar alterações</button>
+
+          <div style="margin-top:10px;display:flex;justify-content:flex-end">
+            <button onclick="demSalvarEdicao('${id}')" style="padding:7px 20px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer">Salvar alterações</button>
           </div>
         </div>
         <div class="card" style="margin-top:0">
-          <div class="ctit">Andamentos da Demanda</div>
+          <div class="ctit">Andamentos</div>
           ${_podeRegistrarAndamento(dem) ? `
-          <div style="display:flex;gap:8px;margin-bottom:10px;align-items:flex-end">
+          <div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-end">
             <textarea id="dem-and-txt-${id}" rows="2" placeholder="Escreva um andamento…"
-              style="flex:1;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;resize:vertical;font-family:var(--ff);box-sizing:border-box"></textarea>
+              style="flex:1;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;resize:vertical;max-height:80px;font-family:var(--ff);box-sizing:border-box"></textarea>
             <button data-and-btn="${id}" onclick="demRegistrarAndamento('${id}')"
-              style="padding:9px 18px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">
+              style="padding:8px 16px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">
               Registrar
             </button>
           </div>` : ""}
           <div id="dem-and-list-${id}">
-            <div style="color:var(--tx3);font-size:12px;padding:8px 0">Carregando…</div>
+            <div style="color:var(--tx3);font-size:12px;padding:4px 0">Carregando…</div>
           </div>
         </div>
         <div class="card" style="margin-top:0">
@@ -1572,7 +1595,7 @@ function fmtD(d) {
             </button>
           </div>
           <div id="dem-wa-list-${id}">
-            <div style="color:var(--tx3);font-size:12px;padding:8px 0">Carregando…</div>
+            <div style="color:var(--tx3);font-size:12px;padding:4px 0">Carregando…</div>
           </div>
         </div>
       </div>`;
@@ -1687,11 +1710,17 @@ function fmtD(d) {
         const tipoEl   = document.getElementById("dem-edit-tipo");
         const benefEl  = document.getElementById("dem-edit-beneficiario");
         const reimbEl  = document.getElementById("dem-edit-reimb-nome");
-        if (valorEl)  { const v = parseFloat(valorEl.value || "0"); if (!isNaN(v) && v >= 0) novoFd.valor = v; }
-        if (formaEl)  novoFd.forma_pagamento = formaEl.value;
-        if (tipoEl)   novoFd.tipo = tipoEl.value;
-        if (benefEl)  novoFd.beneficiario = benefEl.value.trim();
-        if (reimbEl)  novoFd.reimb_nome = reimbEl.value.trim();
+        const dataVencEl = document.getElementById("dem-edit-data-venc");
+        if (valorEl) {
+          const raw = (valorEl.value || "").replace(/\./g, "").replace(",", ".");
+          const v = parseFloat(raw);
+          if (!isNaN(v) && v >= 0) novoFd.valor = v;
+        }
+        if (formaEl)    novoFd.forma_pagamento = formaEl.value;
+        if (tipoEl)     novoFd.tipo = tipoEl.value;
+        if (benefEl)    novoFd.beneficiario = benefEl.value.trim();
+        if (reimbEl)    novoFd.reimb_nome = reimbEl.value.trim();
+        if (dataVencEl) novoFd.data_vencimento = dataVencEl.value || null;
 
         // Recorrência
         const recEl   = document.getElementById("dem-edit-rec");
@@ -1865,7 +1894,14 @@ function fmtD(d) {
 
   window._demRecToggle = function(checked) {
     const el = document.getElementById("dem-edit-rec-opts");
-    if (el) el.style.display = checked ? "grid" : "none";
+    if (el) el.style.display = checked ? "flex" : "none";
+  };
+
+  window._demMascaraValor = function(input) {
+    let v = input.value.replace(/\D/g, "");
+    if (!v) { input.value = ""; return; }
+    v = (parseInt(v, 10) / 100).toFixed(2);
+    input.value = v.replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
   function _avançarData(d, freq) {
