@@ -1410,10 +1410,11 @@ function fmtD(d) {
             <input type="hidden" id="dem-enc-tipo" value="${escapeHtmlAttr(dem.responsavel_tipo || 'departamento')}">
             <input type="hidden" id="dem-enc-forn-id" value="${escapeHtmlAttr(String(dem.fornecedor_id || ''))}">
             <div id="dem-enc-dept-row">
-              <input id="dem-enc-dept-nome" type="text"
-                value="${escapeHtmlAttr(dem.responsavel_tipo !== 'fornecedor' ? (dem.responsavel || dem.responsavel_txt || '') : '')}"
-                placeholder="Nome do departamento responsável"
+              <select id="dem-enc-dept-nome"
+                data-current="${escapeHtmlAttr(dem.responsavel_tipo !== 'fornecedor' ? (dem.responsavel || dem.responsavel_txt || '') : '')}"
                 style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+                <option value="">Carregando departamentos…</option>
+              </select>
             </div>
             <div id="dem-enc-forn-row" style="display:none">
               <select id="dem-enc-forn-sel"
@@ -1698,9 +1699,10 @@ function fmtD(d) {
     }
   };
 
-  /* ── Encaminhamento — toggle tipo e carga de fornecedores ── */
+  /* ── Encaminhamento — toggle tipo e carga ───────────────── */
 
   let _fornecedoresCache = null;
+  let _departamentosCache = null;
 
   window._demEncTipo = async function(tipo) {
     document.getElementById("dem-enc-tipo").value = tipo;
@@ -1715,6 +1717,7 @@ function fmtD(d) {
       btnForn.style.background = "transparent"; btnForn.style.color = "var(--tx2)"; btnForn.style.borderColor = "var(--bd2)";
       rowDept.style.display = "block";
       rowForn.style.display = "none";
+      await _demCarregarDepartamentos();
     } else {
       btnForn.style.background = "var(--gr)"; btnForn.style.color = "#fff"; btnForn.style.borderColor = "var(--gr)";
       btnDept.style.background = "transparent"; btnDept.style.color = "var(--tx2)"; btnDept.style.borderColor = "var(--bd2)";
@@ -1724,6 +1727,28 @@ function fmtD(d) {
     }
   };
 
+  async function _demCarregarDepartamentos() {
+    const sel = document.getElementById("dem-enc-dept-nome");
+    if (!sel) return;
+    if (!_departamentosCache) {
+      try {
+        const base = typeof apiBaseUrl === "function" ? apiBaseUrl() : "";
+        const hdrs = typeof apiHeaders === "function" ? apiHeaders() : {};
+        const r = await fetch(
+          `${base}/rest/v1/ministerios?ativo=eq.true&select=id,nome&order=nome.asc&limit=200`,
+          { headers: hdrs }
+        );
+        _departamentosCache = r.ok ? await r.json() : [];
+      } catch { _departamentosCache = []; }
+    }
+    const atual = sel.dataset.current || sel.value;
+    sel.innerHTML = `<option value="">— Selecione o departamento —</option>` +
+      _departamentosCache.map(d =>
+        `<option value="${escapeHtmlAttr(d.nome)}"${d.nome === atual ? " selected" : ""}>${escapeHtml(d.nome)}</option>`
+      ).join("");
+    if (atual) sel.value = atual;
+  }
+
   async function _demCarregarFornecedores() {
     const sel = document.getElementById("dem-enc-forn-sel");
     if (!sel) return;
@@ -1731,51 +1756,28 @@ function fmtD(d) {
       try {
         const base = typeof apiBaseUrl === "function" ? apiBaseUrl() : "";
         const hdrs = typeof apiHeaders === "function" ? apiHeaders() : {};
-        // Busca membros do departamento "Fornecedores"
-        const r = await fetch(
-          `${base}/rest/v1/nomeados?dept_id=not.is.null&status=eq.ativo` +
-          `&select=id,pessoa_id,cargo,pessoas(id,nome,celular,telefone)` +
-          `&dept_administrativos!inner(nome)=eq.Fornecedores` +
-          `&order=pessoas(nome).asc&limit=200`,
+        const rDept = await fetch(
+          `${base}/rest/v1/dept_administrativos?nome=eq.Fornecedores&select=id`,
           { headers: hdrs }
         );
-        // Fallback: busca pelo nome do departamento via join
-        if (!r.ok) {
-          // tenta via dept_administrativos lookup
-          const rDept = await fetch(
-            `${base}/rest/v1/dept_administrativos?nome=eq.Fornecedores&select=id`,
+        const depts = rDept.ok ? await rDept.json() : [];
+        if (depts.length) {
+          const deptId = depts[0].id;
+          const rMembros = await fetch(
+            `${base}/rest/v1/nomeados?dept_id=eq.${deptId}&status=eq.ativo` +
+            `&select=id,nome,cargo,pessoas!nomeados_pessoa_id_fkey(id,celular,telefone)` +
+            `&order=nome.asc&limit=200`,
             { headers: hdrs }
           );
-          const depts = rDept.ok ? await rDept.json() : [];
-          if (depts.length) {
-            const deptId = depts[0].id;
-            const rMembros = await fetch(
-              `${base}/rest/v1/nomeados?dept_id=eq.${deptId}&status=eq.ativo` +
-              `&select=pessoa_id,cargo,pessoas(id,nome,celular,telefone)&order=pessoas(nome).asc&limit=200`,
-              { headers: hdrs }
-            );
-            const membros = rMembros.ok ? await rMembros.json() : [];
-            _fornecedoresCache = membros
-              .filter(m => m.pessoas)
-              .map(m => ({
-                id:       m.pessoas.id,
-                nome:     m.pessoas.nome,
-                contato:  m.pessoas.celular || m.pessoas.telefone || "",
-                cargo:    m.cargo || "",
-              }));
-          } else {
-            _fornecedoresCache = [];
-          }
+          const membros = rMembros.ok ? await rMembros.json() : [];
+          _fornecedoresCache = membros.map(m => ({
+            id:      m.id,
+            nome:    m.nome || m.pessoas?.nome || "—",
+            contato: m.pessoas?.celular || m.pessoas?.telefone || "",
+            cargo:   m.cargo || "",
+          }));
         } else {
-          const membros = await r.json();
-          _fornecedoresCache = membros
-            .filter(m => m.pessoas)
-            .map(m => ({
-              id:       m.pessoas.id,
-              nome:     m.pessoas.nome,
-              contato:  m.pessoas.celular || m.pessoas.telefone || "",
-              cargo:    m.cargo || "",
-            }));
+          _fornecedoresCache = [];
         }
       } catch { _fornecedoresCache = []; }
     }
