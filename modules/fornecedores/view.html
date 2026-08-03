@@ -1,0 +1,82 @@
+  <!-- ════ FORNECEDORES — DASHBOARD ════════════════════════════ -->
+  <div class="view" id="v-forn-dash">
+    <div class="hero">
+      <div class="hero-ic" style="background:rgba(224,138,42,0.12);border-color:rgba(224,138,42,0.28)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/><path d="M3 9l2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"/><path d="M12 3v6"/></svg>
+      </div>
+      <div>
+        <div class="hero-lbl">Módulo</div>
+        <div class="hero-ttl">Fornecedores</div>
+        <div class="hero-dsc">Prestadores de serviço e fornecedores parceiros da igreja</div>
+      </div>
+      <div class="hero-act" id="forn-hero-act"></div>
+    </div>
+
+    <div class="ct">
+      <!-- KPIs -->
+      <div class="kpis c4" id="forn-kpis" style="margin-bottom:16px"></div>
+
+      <!-- Filtros -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <input type="text" id="forn-busca" placeholder="Buscar fornecedor ou serviço..."
+          oninput="fornFiltrar()"
+          style="flex:1;min-width:180px;padding:7px 12px;border:1px solid var(--bd2);border-radius:8px;font-size:13px;background:var(--bg1);color:var(--tx1);outline:none">
+        <select id="forn-filtro-servico" onchange="fornFiltrar()"
+          style="padding:7px 12px;border:1px solid var(--bd2);border-radius:8px;font-size:13px;background:var(--bg1);color:var(--tx2);outline:none">
+          <option value="">Todos os serviços</option>
+        </select>
+      </div>
+
+      <!-- Lista -->
+      <div id="forn-lista"></div>
+    </div>
+  </div>
+
+  <!-- ════ MODAL — NOVO / EDITAR FORNECEDOR ══════════════════════ -->
+  <div class="mo" id="forn-modal" onclick="if(event.target===this)fornFecharModal()">
+    <div class="md" style="width:480px;max-width:96vw">
+      <div class="mh">
+        <span id="forn-modal-titulo">Novo Fornecedor</span>
+        <button class="mclose" onclick="fornFecharModal()">✕</button>
+      </div>
+      <div class="mb" style="display:flex;flex-direction:column;gap:14px">
+        <div>
+          <label style="display:block;font-size:11.5px;font-weight:600;color:var(--tx3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em">Nome <span style="color:var(--rose)">*</span></label>
+          <input type="text" id="forn-inp-nome" placeholder="Nome do fornecedor ou empresa"
+            style="width:100%;padding:8px 12px;border:1px solid var(--bd2);border-radius:8px;font-size:13px;background:var(--bg1);color:var(--tx1);outline:none;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="display:block;font-size:11.5px;font-weight:600;color:var(--tx3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em">Serviço / Especialidade</label>
+          <input type="text" id="forn-inp-servico" placeholder="Ex: Elétrica, Sonorização, Pintura..."
+            style="width:100%;padding:8px 12px;border:1px solid var(--bd2);border-radius:8px;font-size:13px;background:var(--bg1);color:var(--tx1);outline:none;box-sizing:border-box">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:600;color:var(--tx3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em">WhatsApp / Celular</label>
+            <input type="text" id="forn-inp-celular" placeholder="(21) 99999-9999"
+              style="width:100%;padding:8px 12px;border:1px solid var(--bd2);border-radius:8px;font-size:13px;background:var(--bg1);color:var(--tx1);outline:none;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:600;color:var(--tx3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em">Telefone Fixo</label>
+            <input type="text" id="forn-inp-telefone" placeholder="(21) 3333-3333"
+              style="width:100%;padding:8px 12px;border:1px solid var(--bd2);border-radius:8px;font-size:13px;background:var(--bg1);color:var(--tx1);outline:none;box-sizing:border-box">
+          </div>
+        </div>
+        <div>
+          <label style="display:block;font-size:11.5px;font-weight:600;color:var(--tx3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em">E-mail</label>
+          <input type="email" id="forn-inp-email" placeholder="email@exemplo.com"
+            style="width:100%;padding:8px 12px;border:1px solid var(--bd2);border-radius:8px;font-size:13px;background:var(--bg1);color:var(--tx1);outline:none;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="display:block;font-size:11.5px;font-weight:600;color:var(--tx3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em">Observações</label>
+          <textarea id="forn-inp-obs" rows="2" placeholder="Referências, condições de pagamento, avaliação..."
+            style="width:100%;padding:8px 12px;border:1px solid var(--bd2);border-radius:8px;font-size:13px;background:var(--bg1);color:var(--tx1);outline:none;resize:vertical;font-family:inherit;box-sizing:border-box"></textarea>
+        </div>
+        <div id="forn-modal-err" style="color:var(--rose);font-size:12px;display:none"></div>
+      </div>
+      <div class="mf">
+        <button class="tbt" onclick="fornFecharModal()">Cancelar</button>
+        <button class="tbt pri" id="forn-btn-salvar" onclick="fornSalvar()">Salvar</button>
+      </div>
+    </div>
+  </div>
