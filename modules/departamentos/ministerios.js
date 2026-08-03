@@ -342,6 +342,7 @@
       if (waBtn)    waBtn.style.display    = _recursosAtual.whatsapp     ? '' : 'none';
 
       // Abas específicas de Comunicação
+      const isCom  = m.tipo === 'COMUNICACAO';
       const ferBtn = document.getElementById('min-min-tab-btn-fer');
       if (ferBtn) ferBtn.style.display = 'none';
       const solBtn  = document.getElementById('min-min-tab-btn-sol');
