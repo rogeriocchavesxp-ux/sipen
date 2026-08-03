@@ -1322,6 +1322,7 @@ function fmtD(d) {
           <button class="tbt" data-dem-reenviar="${escapeHtmlAttr(id)}" style="color:var(--blue,#2563eb);border-color:rgba(37,99,235,.3)" onclick="demReenviarEmail('${escapeHtmlAttr(id)}')">
             ✉ Reenviar notificação
           </button>` : ""}
+          <button class="tbt" onclick="demDuplicar('${id}')">⧉ Duplicar</button>
           <button class="tbt" style="color:var(--rose);border-color:rgba(224,85,85,.3)" onclick="demExcluirDemanda('${id}')">🗑 Excluir</button>
         </div>
       </div>
@@ -1696,6 +1697,46 @@ function fmtD(d) {
     } catch(e) {
       if (typeof T === "function") T("Erro ao excluir", e.message || "Tente novamente");
       console.error("demExcluirDemanda:", e);
+    }
+  };
+
+  /* ── Duplicar demanda ───────────────────────────────────── */
+  window.demDuplicar = async function(id) {
+    if (!confirm("Duplicar esta demanda? Uma nova será criada com os mesmos dados.")) return;
+    const dem = _cache.find(x => x.id === id);
+    if (!dem) return;
+    const hoje = new Date().toISOString().split("T")[0];
+    const payload = {
+      area:             dem.area,
+      subcategoria:     dem.subcategoria      || null,
+      titulo:           (dem.titulo || "") + " (cópia)",
+      descricao:        dem.descricao         || null,
+      local:            dem.local             || null,
+      local_id:         dem.local_id          || null,
+      prioridade:       dem.prioridade        || "Média",
+      status:           "ABERTA",
+      solicitante:      dem.solicitante       || null,
+      solicitante_id:   dem.solicitante_id    || null,
+      created_by:       dem.solicitante_id    || null,
+      responsavel:      dem.responsavel       || null,
+      responsavel_tipo: dem.responsavel_tipo  || null,
+      fornecedor_id:    dem.fornecedor_id     || null,
+      data_abertura:    hoje,
+      data_conclusao:   dem.data_conclusao    || null,
+      financial_data:   dem.financial_data    || null,
+    };
+    try {
+      const result = await apiWrite("create", "DEMANDAS", payload);
+      _invalidate();
+      _atualizarBadge();
+      const novaId = result?.id || result?.[0]?.id;
+      if (novaId) {
+        window.demAbrirDetalhe(novaId, _origemView || "dem-todas");
+      } else {
+        window.go(_origemView || "dem-todas");
+      }
+    } catch(e) {
+      alert("Erro ao duplicar: " + e.message);
     }
   };
 
