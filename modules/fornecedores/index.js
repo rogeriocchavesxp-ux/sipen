@@ -178,7 +178,6 @@
             <thead>
               <tr>
                 <th>Nome</th>
-                <th>Documento</th>
                 <th>Contato</th>
                 <th>PIX</th>
                 <th>Banco / Ag / Conta</th>
@@ -222,7 +221,6 @@
           ${f.servico ? `<div style="font-size:11.5px;color:var(--amber);font-weight:500;margin-top:2px">${_esc(f.servico)}</div>` : ''}
           ${f.obs ? `<div style="font-size:11px;color:var(--tx3);margin-top:2px">${_esc(f.obs)}</div>` : ''}
         </td>
-        <td style="font-size:12.5px;color:var(--tx2)">${f.documento ? _esc(f.documento) : '<span style="color:var(--tx3)">—</span>'}</td>
         <td style="font-size:12.5px">${contato}</td>
         <td>${pix}</td>
         <td style="font-size:12px;color:var(--tx2)">${banco}</td>
