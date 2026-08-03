@@ -58,6 +58,40 @@
   let _todosForns = [];
   let _editandoId = null;
 
+  /* ── Dropdown de 3 pontos ────────────────────────────────────── */
+  function _getDD() {
+    let dd = document.getElementById('forn-row-dd');
+    if (!dd) {
+      dd = document.createElement('div');
+      dd.id = 'forn-row-dd';
+      dd.style.cssText = 'position:fixed;z-index:9999;background:var(--bg1);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);min-width:130px;display:none;overflow:hidden';
+      document.body.appendChild(dd);
+      document.addEventListener('click', e => {
+        if (!dd.contains(e.target) && !e.target.closest('.forn-dd-btn')) dd.style.display = 'none';
+      });
+    }
+    return dd;
+  }
+
+  function fornMenuAbrir(nomeadoId, nome, btn) {
+    const dd = _getDD();
+    const r  = btn.getBoundingClientRect();
+    dd.innerHTML = `
+      <button onclick="fornAbrirEditar('${nomeadoId}');document.getElementById('forn-row-dd').style.display='none'"
+        style="display:block;width:100%;text-align:left;padding:9px 14px;border:none;background:none;font-size:13px;color:var(--tx1);cursor:pointer"
+        onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='none'">Editar</button>
+      <button onclick="fornRemover('${nomeadoId}','${nome.replace(/'/g,"\\'")}');document.getElementById('forn-row-dd').style.display='none'"
+        style="display:block;width:100%;text-align:left;padding:9px 14px;border:none;background:none;font-size:13px;color:var(--rose);cursor:pointer"
+        onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='none'">Remover</button>`;
+    const ddW = 140;
+    let left = r.right - ddW;
+    if (left < 8) left = 8;
+    dd.style.top  = (r.bottom + 4) + 'px';
+    dd.style.left = left + 'px';
+    dd.style.display = 'block';
+  }
+  window.fornMenuAbrir = fornMenuAbrir;
+
   async function _getDeptId() {
     if (_fornDeptId) return _fornDeptId;
     const rows = await _get('dept_administrativos?nome=eq.Fornecedores&select=id&limit=1');
@@ -148,7 +182,7 @@
                 <th>Contato</th>
                 <th>PIX</th>
                 <th>Banco / Ag / Conta</th>
-                ${adm ? '<th style="text-align:right">Ações</th>' : ''}
+                ${adm ? '<th style="width:40px"></th>' : ''}
               </tr>
             </thead>
             <tbody>
@@ -175,9 +209,10 @@
       : '<span style="color:var(--tx3)">—</span>';
 
     const acoes = adm ? `
-      <td style="text-align:right;white-space:nowrap">
-        <button class="tbt" style="font-size:11px;padding:4px 10px" onclick="fornAbrirEditar('${f.id}')">Editar</button>
-        <button class="tbt" style="font-size:11px;padding:4px 10px;color:var(--rose);border-color:rgba(208,85,85,0.3)" onclick="fornRemover('${f.id}','${_esc(f.nome)}')">Remover</button>
+      <td style="text-align:center">
+        <button class="forn-dd-btn" onclick="fornMenuAbrir('${f.id}','${_esc(f.nome)}',this)"
+          style="background:none;border:none;color:var(--tx3);cursor:pointer;font-size:18px;padding:2px 6px;border-radius:6px;line-height:1"
+          onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='none'">⋯</button>
       </td>` : '';
 
     return `
