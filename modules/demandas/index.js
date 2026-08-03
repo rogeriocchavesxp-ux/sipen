@@ -1323,6 +1323,11 @@ function fmtD(d) {
           <button class="tbt" data-dem-reenviar="${escapeHtmlAttr(id)}" style="color:var(--blue,#2563eb);border-color:rgba(37,99,235,.3)" onclick="demReenviarEmail('${escapeHtmlAttr(id)}')">
             ✉ Reenviar notificação
           </button>` : ""}
+          ${dem.area === "Conselho" ? `
+          <button class="tbt" style="color:var(--sky);border-color:rgba(74,156,245,.3)"
+            onclick="pautasIncluirNaPauta('${escapeHtmlAttr(id)}','${escapeHtmlAttr(dem.titulo||"")}')">
+            ⚖️ Adicionar à Pauta
+          </button>` : ""}
           <button class="tbt" onclick="demDuplicar('${id}')">⧉ Duplicar</button>
           <button class="tbt" style="color:var(--rose);border-color:rgba(224,85,85,.3)" onclick="demExcluirDemanda('${id}')">🗑 Excluir</button>
         </div>

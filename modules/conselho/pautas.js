@@ -508,8 +508,9 @@
     el.insertAdjacentHTML("afterbegin", secHtml);
   }
 
-  window.pautasIncluirNaPauta = function(demandaId, titulo) {
+  window.pautasIncluirNaPauta = async function(demandaId, titulo) {
     _fecharModal();
+    if (!_reunioes) await _carregarReunioes();
     const opts = (_reunioes || [])
       .filter(r => r.status === "AGENDADA")
       .map(r => `<option value="${_ea(r.id)}">${_eh(r.titulo)} — ${_fmtData(r.data_reuniao)}</option>`)
