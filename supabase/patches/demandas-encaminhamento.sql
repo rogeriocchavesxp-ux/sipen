@@ -25,8 +25,11 @@ ALTER TABLE public.demanda_andamentos
   ADD COLUMN IF NOT EXISTS resp_novo     TEXT;
 
 -- ── PASSO 3: Atualizar v_demandas ────────────────────────────────
+-- DROP necessário porque CREATE OR REPLACE não aceita mudança de colunas
 
-CREATE OR REPLACE VIEW public.v_demandas AS
+DROP VIEW IF EXISTS public.v_demandas;
+
+CREATE VIEW public.v_demandas AS
 SELECT
   d.id,
   d.area,
