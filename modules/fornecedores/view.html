@@ -27,51 +27,82 @@
         </select>
       </div>
 
-      <!-- Lista -->
+      <!-- Tabela -->
       <div id="forn-lista"></div>
     </div>
   </div>
 
   <!-- ════ MODAL — NOVO / EDITAR FORNECEDOR ══════════════════════ -->
   <div class="mo" id="forn-modal" onclick="if(event.target===this)fornFecharModal()">
-    <div class="md" style="width:480px;max-width:96vw">
+    <div class="md" style="width:520px;max-width:96vw">
       <div class="mh">
         <span id="forn-modal-titulo">Novo Fornecedor</span>
         <button class="mclose" onclick="fornFecharModal()">✕</button>
       </div>
       <div class="mb" style="display:flex;flex-direction:column;gap:14px">
+
+        <!-- Identificação -->
+        <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);padding-bottom:4px;border-bottom:1px solid var(--bd1)">Identificação</div>
         <div>
-          <label style="display:block;font-size:11.5px;font-weight:600;color:var(--tx3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em">Nome <span style="color:var(--rose)">*</span></label>
-          <input type="text" id="forn-inp-nome" placeholder="Nome do fornecedor ou empresa"
-            style="width:100%;padding:8px 12px;border:1px solid var(--bd2);border-radius:8px;font-size:13px;background:var(--bg1);color:var(--tx1);outline:none;box-sizing:border-box">
-        </div>
-        <div>
-          <label style="display:block;font-size:11.5px;font-weight:600;color:var(--tx3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em">Serviço / Especialidade</label>
-          <input type="text" id="forn-inp-servico" placeholder="Ex: Elétrica, Sonorização, Pintura..."
-            style="width:100%;padding:8px 12px;border:1px solid var(--bd2);border-radius:8px;font-size:13px;background:var(--bg1);color:var(--tx1);outline:none;box-sizing:border-box">
+          <label class="forn-lbl">Nome <span style="color:var(--rose)">*</span></label>
+          <input type="text" id="forn-inp-nome" placeholder="Nome do fornecedor ou empresa" class="forn-inp">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div>
-            <label style="display:block;font-size:11.5px;font-weight:600;color:var(--tx3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em">WhatsApp / Celular</label>
-            <input type="text" id="forn-inp-celular" placeholder="(21) 99999-9999"
-              style="width:100%;padding:8px 12px;border:1px solid var(--bd2);border-radius:8px;font-size:13px;background:var(--bg1);color:var(--tx1);outline:none;box-sizing:border-box">
+            <label class="forn-lbl">Serviço / Especialidade</label>
+            <input type="text" id="forn-inp-servico" placeholder="Ex: Elétrica, Sonorização..." class="forn-inp">
           </div>
           <div>
-            <label style="display:block;font-size:11.5px;font-weight:600;color:var(--tx3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em">Telefone Fixo</label>
-            <input type="text" id="forn-inp-telefone" placeholder="(21) 3333-3333"
-              style="width:100%;padding:8px 12px;border:1px solid var(--bd2);border-radius:8px;font-size:13px;background:var(--bg1);color:var(--tx1);outline:none;box-sizing:border-box">
+            <label class="forn-lbl">CPF / CNPJ</label>
+            <input type="text" id="forn-inp-documento" placeholder="000.000.000-00 ou CNPJ" class="forn-inp">
+          </div>
+        </div>
+
+        <!-- Contato -->
+        <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);padding-bottom:4px;border-bottom:1px solid var(--bd1);margin-top:4px">Contato</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label class="forn-lbl">WhatsApp / Celular</label>
+            <input type="text" id="forn-inp-celular" placeholder="(21) 99999-9999" class="forn-inp">
+          </div>
+          <div>
+            <label class="forn-lbl">Telefone Fixo</label>
+            <input type="text" id="forn-inp-telefone" placeholder="(21) 3333-3333" class="forn-inp">
           </div>
         </div>
         <div>
-          <label style="display:block;font-size:11.5px;font-weight:600;color:var(--tx3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em">E-mail</label>
-          <input type="email" id="forn-inp-email" placeholder="email@exemplo.com"
-            style="width:100%;padding:8px 12px;border:1px solid var(--bd2);border-radius:8px;font-size:13px;background:var(--bg1);color:var(--tx1);outline:none;box-sizing:border-box">
+          <label class="forn-lbl">E-mail</label>
+          <input type="email" id="forn-inp-email" placeholder="email@exemplo.com" class="forn-inp">
         </div>
+
+        <!-- Dados de Pagamento -->
+        <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);padding-bottom:4px;border-bottom:1px solid var(--bd1);margin-top:4px">Dados de Pagamento</div>
         <div>
-          <label style="display:block;font-size:11.5px;font-weight:600;color:var(--tx3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em">Observações</label>
-          <textarea id="forn-inp-obs" rows="2" placeholder="Referências, condições de pagamento, avaliação..."
+          <label class="forn-lbl">Chave PIX</label>
+          <input type="text" id="forn-inp-pix" placeholder="CPF, e-mail, telefone ou chave aleatória" class="forn-inp">
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px">
+          <div>
+            <label class="forn-lbl">Banco</label>
+            <input type="text" id="forn-inp-banco" placeholder="Ex: Bradesco, Itaú..." class="forn-inp">
+          </div>
+          <div>
+            <label class="forn-lbl">Agência</label>
+            <input type="text" id="forn-inp-agencia" placeholder="0000" class="forn-inp">
+          </div>
+          <div>
+            <label class="forn-lbl">Conta</label>
+            <input type="text" id="forn-inp-conta" placeholder="00000-0" class="forn-inp">
+          </div>
+        </div>
+
+        <!-- Observações -->
+        <div>
+          <label class="forn-lbl">Observações</label>
+          <textarea id="forn-inp-obs" rows="2" placeholder="Referências, condições, avaliação..."
             style="width:100%;padding:8px 12px;border:1px solid var(--bd2);border-radius:8px;font-size:13px;background:var(--bg1);color:var(--tx1);outline:none;resize:vertical;font-family:inherit;box-sizing:border-box"></textarea>
         </div>
+
         <div id="forn-modal-err" style="color:var(--rose);font-size:12px;display:none"></div>
       </div>
       <div class="mf">
@@ -80,3 +111,14 @@
       </div>
     </div>
   </div>
+
+  <style>
+    .forn-lbl { display:block;font-size:11.5px;font-weight:600;color:var(--tx3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em }
+    .forn-inp { width:100%;padding:8px 12px;border:1px solid var(--bd2);border-radius:8px;font-size:13px;background:var(--bg1);color:var(--tx1);outline:none;box-sizing:border-box }
+    .forn-tbl { width:100%;border-collapse:collapse;font-size:13px }
+    .forn-tbl th { text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--tx3);padding:8px 12px;border-bottom:2px solid var(--bd1);white-space:nowrap }
+    .forn-tbl td { padding:10px 12px;border-bottom:1px solid var(--bd1);vertical-align:middle;color:var(--tx1) }
+    .forn-tbl tr:last-child td { border-bottom:none }
+    .forn-tbl tr:hover td { background:var(--bg2) }
+    .forn-pix-pill { display:inline-flex;align-items:center;gap:4px;background:rgba(22,163,74,0.1);border:1px solid rgba(22,163,74,0.25);color:var(--gr);border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:500 }
+  </style>

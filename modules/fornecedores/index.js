@@ -1,8 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    SIPEN — Fornecedores
    modules/fornecedores/index.js
-   Fornecedores = pessoas vinculadas ao departamento
-   "Fornecedores" em dept_administrativos via nomeados.
 ═══════════════════════════════════════════════════════ */
 (function () {
 
@@ -39,65 +37,73 @@
     return r.json();
   }
 
-  async function _delete(path) {
-    const base = (typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : '').replace(/\/$/, '');
-    const r = await fetch(base + '/rest/v1/' + path, { method: 'DELETE', headers: _hdr() });
-    if (!r.ok) throw new Error(await r.text());
+  function _esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  function _esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  const _MINORS = new Set(['de','da','do','das','dos','e','a','o','em','com','para','por','ou']);
+  function _titleCase(s) {
+    if (!s) return '';
+    return String(s).toLowerCase().replace(/\b\w+/g, (w, i) =>
+      (i === 0 || !_MINORS.has(w)) ? w.charAt(0).toUpperCase() + w.slice(1) : w
+    );
+  }
 
   function _isAdmin() {
     const p = String(typeof USUARIO_ATUAL !== 'undefined' ? (USUARIO_ATUAL?.perfil || '') : '').toUpperCase();
     return p.includes('ADMIN') || p.includes('ADM');
   }
 
-  // Estado
-  let _fornDeptId  = null;
-  let _todosForns  = [];
-  let _editandoId  = null; // nomeado.id em edição
+  let _fornDeptId = null;
+  let _todosForns = [];
+  let _editandoId = null;
 
-  /* ── Localiza o dept "Fornecedores" ──────────────────────────── */
   async function _getDeptId() {
     if (_fornDeptId) return _fornDeptId;
     const rows = await _get('dept_administrativos?nome=eq.Fornecedores&select=id&limit=1');
-    if (!rows.length) throw new Error('Departamento "Fornecedores" não encontrado. Crie-o em Departamentos.');
+    if (!rows.length) throw new Error('Departamento "Fornecedores" não encontrado.');
     _fornDeptId = rows[0].id;
     return _fornDeptId;
   }
 
-  /* ── Carrega fornecedores (nomeados + pessoas) ──────────────── */
   async function _carregar() {
     const deptId = await _getDeptId();
     return _get(
-      `nomeados?dept_id=eq.${deptId}&status=eq.ativo&select=id,nome,cargo,obs,pessoa_id,pessoas!nomeados_pessoa_id_fkey(id,celular,telefone,email)&order=nome.asc`
+      `nomeados?dept_id=eq.${deptId}&status=eq.ativo` +
+      `&select=id,nome,cargo,obs,pessoa_id,documento,pix,banco,agencia,conta,` +
+      `pessoas!nomeados_pessoa_id_fkey(id,celular,telefone,email)` +
+      `&order=nome.asc`
     );
   }
 
-  /* ── Monta lista plana para exibição ────────────────────────── */
   function _normalizar(rows) {
     return rows.map(n => ({
-      id:       n.id,
-      pessoaId: n.pessoa_id,
-      nome:     n.nome || '—',
-      servico:  n.cargo || '',
-      celular:  n.pessoas?.celular  || '',
-      telefone: n.pessoas?.telefone || '',
-      email:    n.pessoas?.email    || '',
-      obs:      n.obs || '',
+      id:        n.id,
+      pessoaId:  n.pessoa_id,
+      nome:      _titleCase(n.nome || ''),
+      servico:   _titleCase(n.cargo || ''),
+      documento: n.documento || '',
+      celular:   n.pessoas?.celular  || '',
+      telefone:  n.pessoas?.telefone || '',
+      email:     n.pessoas?.email    || '',
+      pix:       n.pix      || '',
+      banco:     n.banco    || '',
+      agencia:   n.agencia  || '',
+      conta:     n.conta    || '',
+      obs:       n.obs      || '',
     }));
   }
 
-  /* ── Renderiza KPIs ─────────────────────────────────────────── */
+  /* ── KPIs ────────────────────────────────────────────────────── */
   function _renderKpis(lista) {
     const el = document.getElementById('forn-kpis');
     if (!el) return;
-    const comWa  = lista.filter(f => f.celular).length;
-    const servicos = [...new Set(lista.map(f => f.servico).filter(Boolean))].length;
+    const comPix    = lista.filter(f => f.pix).length;
+    const servicos  = [...new Set(lista.map(f => f.servico).filter(Boolean))].length;
     el.innerHTML = [
-      { num: lista.length,  label: 'Fornecedores',    cor: 'var(--amber)', bg: 'rgba(224,138,42,0.1)' },
-      { num: comWa,         label: 'Com WhatsApp',    cor: 'var(--gr)',    bg: 'rgba(58,170,92,0.1)'  },
-      { num: servicos,      label: 'Tipos de serviço',cor: 'var(--blue)',  bg: 'rgba(74,156,245,0.1)' },
+      { num: lista.length, label: 'Fornecedores',    cor: 'var(--amber)', bg: 'rgba(224,138,42,0.1)' },
+      { num: comPix,       label: 'Com PIX',          cor: 'var(--gr)',    bg: 'rgba(58,170,92,0.1)'  },
+      { num: servicos,     label: 'Tipos de serviço', cor: 'var(--blue)',  bg: 'rgba(74,156,245,0.1)' },
     ].map(k => `
       <div class="card" style="padding:14px 16px;text-align:center">
         <div style="font-size:26px;font-weight:800;color:${k.cor};margin-bottom:4px">${k.num}</div>
@@ -105,7 +111,7 @@
       </div>`).join('');
   }
 
-  /* ── Renderiza select de filtro por serviço ─────────────────── */
+  /* ── Filtro por serviço ──────────────────────────────────────── */
   function _renderFiltroServico(lista) {
     const sel = document.getElementById('forn-filtro-servico');
     if (!sel) return;
@@ -115,7 +121,7 @@
       servicos.map(s => `<option value="${_esc(s)}"${s === atual ? ' selected' : ''}>${_esc(s)}</option>`).join('');
   }
 
-  /* ── Renderiza cards dos fornecedores ───────────────────────── */
+  /* ── Tabela ──────────────────────────────────────────────────── */
   function _renderLista(lista) {
     const el = document.getElementById('forn-lista');
     if (!el) return;
@@ -130,47 +136,63 @@
       return;
     }
 
+    const adm = _isAdmin();
     el.innerHTML = `
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
-        ${lista.map(f => _card(f)).join('')}
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="overflow-x:auto">
+          <table class="forn-tbl">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Documento</th>
+                <th>Contato</th>
+                <th>PIX</th>
+                <th>Banco / Ag / Conta</th>
+                ${adm ? '<th style="text-align:right">Ações</th>' : ''}
+              </tr>
+            </thead>
+            <tbody>
+              ${lista.map(f => _row(f, adm)).join('')}
+            </tbody>
+          </table>
+        </div>
       </div>`;
   }
 
-  function _card(f) {
-    const wa = (f.celular || '').replace(/\D/g, '');
-    const waBtn = wa
-      ? `<a href="https://wa.me/55${wa}" target="_blank" rel="noopener"
-           style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:7px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25d366;font-size:11.5px;font-weight:600;text-decoration:none;cursor:pointer">
-           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>
-           WhatsApp
-         </a>`
-      : `<span style="font-size:11px;color:var(--tx3)">Sem WhatsApp</span>`;
+  function _row(f, adm) {
+    const contato = [
+      f.celular  ? `<div>${_esc(f.celular)}</div>`  : '',
+      f.telefone ? `<div style="color:var(--tx3)">${_esc(f.telefone)}</div>` : '',
+      f.email    ? `<div style="color:var(--tx3);font-size:11.5px">${_esc(f.email)}</div>` : '',
+    ].join('') || '<span style="color:var(--tx3)">—</span>';
 
-    const admBtns = _isAdmin()
-      ? `<div style="display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd1)">
-           <button class="tbt" style="font-size:11px;padding:4px 10px" onclick="fornAbrirEditar('${f.id}')">Editar</button>
-           <button class="tbt" style="font-size:11px;padding:4px 10px;color:var(--rose);border-color:rgba(208,85,85,0.3)" onclick="fornRemover('${f.id}','${_esc(f.nome)}')">Remover</button>
-         </div>`
-      : '';
+    const banco = (f.banco || f.agencia || f.conta)
+      ? `<div style="font-size:12px">${_esc(f.banco || '')}${f.agencia ? ` · Ag ${_esc(f.agencia)}` : ''}${f.conta ? ` · C/C ${_esc(f.conta)}` : ''}</div>`
+      : '<span style="color:var(--tx3)">—</span>';
+
+    const pix = f.pix
+      ? `<span class="forn-pix-pill">PIX &nbsp;${_esc(f.pix)}</span>`
+      : '<span style="color:var(--tx3)">—</span>';
+
+    const acoes = adm ? `
+      <td style="text-align:right;white-space:nowrap">
+        <button class="tbt" style="font-size:11px;padding:4px 10px" onclick="fornAbrirEditar('${f.id}')">Editar</button>
+        <button class="tbt" style="font-size:11px;padding:4px 10px;color:var(--rose);border-color:rgba(208,85,85,0.3)" onclick="fornRemover('${f.id}','${_esc(f.nome)}')">Remover</button>
+      </td>` : '';
 
     return `
-      <div class="card" style="padding:16px">
-        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:10px">
-          <div style="width:40px;height:40px;border-radius:10px;background:rgba(224,138,42,0.1);border:1px solid rgba(224,138,42,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🏪</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13.5px;font-weight:700;color:var(--tx1);margin-bottom:2px">${_esc(f.nome)}</div>
-            ${f.servico ? `<div style="font-size:11.5px;color:var(--amber);font-weight:600">${_esc(f.servico)}</div>` : ''}
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">
-          ${f.celular  ? `<div style="font-size:12px;color:var(--tx2);display:flex;gap:6px"><span style="color:var(--tx3);min-width:60px">Celular</span>${_esc(f.celular)}</div>` : ''}
-          ${f.telefone ? `<div style="font-size:12px;color:var(--tx2);display:flex;gap:6px"><span style="color:var(--tx3);min-width:60px">Fixo</span>${_esc(f.telefone)}</div>` : ''}
-          ${f.email    ? `<div style="font-size:12px;color:var(--tx2);display:flex;gap:6px;overflow:hidden"><span style="color:var(--tx3);min-width:60px">E-mail</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(f.email)}</span></div>` : ''}
-          ${f.obs      ? `<div style="font-size:11.5px;color:var(--tx3);margin-top:2px;line-height:1.5">${_esc(f.obs)}</div>` : ''}
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">${waBtn}</div>
-        ${admBtns}
-      </div>`;
+      <tr>
+        <td>
+          <div style="font-weight:600;color:var(--tx1)">${_esc(f.nome)}</div>
+          ${f.servico ? `<div style="font-size:11.5px;color:var(--amber);font-weight:500;margin-top:2px">${_esc(f.servico)}</div>` : ''}
+          ${f.obs ? `<div style="font-size:11px;color:var(--tx3);margin-top:2px">${_esc(f.obs)}</div>` : ''}
+        </td>
+        <td style="font-size:12.5px;color:var(--tx2)">${f.documento ? _esc(f.documento) : '<span style="color:var(--tx3)">—</span>'}</td>
+        <td style="font-size:12.5px">${contato}</td>
+        <td>${pix}</td>
+        <td style="font-size:12px;color:var(--tx2)">${banco}</td>
+        ${acoes}
+      </tr>`;
   }
 
   /* ── Filtrar ─────────────────────────────────────────────────── */
@@ -178,7 +200,11 @@
     const busca   = (document.getElementById('forn-busca')?.value || '').toLowerCase();
     const servico = document.getElementById('forn-filtro-servico')?.value || '';
     const filtrado = _todosForns.filter(f => {
-      const matchTxt = !busca || f.nome.toLowerCase().includes(busca) || f.servico.toLowerCase().includes(busca);
+      const matchTxt = !busca ||
+        f.nome.toLowerCase().includes(busca) ||
+        f.servico.toLowerCase().includes(busca) ||
+        f.documento.toLowerCase().includes(busca) ||
+        f.pix.toLowerCase().includes(busca);
       const matchSrv = !servico || f.servico === servico;
       return matchTxt && matchSrv;
     });
@@ -225,12 +251,17 @@
     if (!f) return;
     _editandoId = nomeadoId;
     document.getElementById('forn-modal-titulo').textContent = 'Editar Fornecedor';
-    document.getElementById('forn-inp-nome').value     = f.nome;
-    document.getElementById('forn-inp-servico').value  = f.servico;
-    document.getElementById('forn-inp-celular').value  = f.celular;
-    document.getElementById('forn-inp-telefone').value = f.telefone;
-    document.getElementById('forn-inp-email').value    = f.email;
-    document.getElementById('forn-inp-obs').value      = f.obs;
+    document.getElementById('forn-inp-nome').value      = f.nome;
+    document.getElementById('forn-inp-servico').value   = f.servico;
+    document.getElementById('forn-inp-documento').value = f.documento;
+    document.getElementById('forn-inp-celular').value   = f.celular;
+    document.getElementById('forn-inp-telefone').value  = f.telefone;
+    document.getElementById('forn-inp-email').value     = f.email;
+    document.getElementById('forn-inp-pix').value       = f.pix;
+    document.getElementById('forn-inp-banco').value     = f.banco;
+    document.getElementById('forn-inp-agencia').value   = f.agencia;
+    document.getElementById('forn-inp-conta').value     = f.conta;
+    document.getElementById('forn-inp-obs').value       = f.obs;
     document.getElementById('forn-modal-err').style.display = 'none';
     document.getElementById('forn-modal').style.display = 'flex';
   }
@@ -243,27 +274,30 @@
   window.fornFecharModal = fornFecharModal;
 
   function _limparModal() {
-    ['forn-inp-nome','forn-inp-servico','forn-inp-celular','forn-inp-telefone','forn-inp-email','forn-inp-obs']
+    ['forn-inp-nome','forn-inp-servico','forn-inp-documento','forn-inp-celular',
+     'forn-inp-telefone','forn-inp-email','forn-inp-pix','forn-inp-banco',
+     'forn-inp-agencia','forn-inp-conta','forn-inp-obs']
       .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     const err = document.getElementById('forn-modal-err');
     if (err) err.style.display = 'none';
   }
 
-  /* ── Salvar (criar ou atualizar) ─────────────────────────────── */
+  /* ── Salvar ──────────────────────────────────────────────────── */
   async function fornSalvar() {
-    const nome     = (document.getElementById('forn-inp-nome')?.value || '').trim();
-    const servico  = (document.getElementById('forn-inp-servico')?.value || '').trim();
-    const celular  = (document.getElementById('forn-inp-celular')?.value || '').trim();
-    const telefone = (document.getElementById('forn-inp-telefone')?.value || '').trim();
-    const email    = (document.getElementById('forn-inp-email')?.value || '').trim();
-    const obs      = (document.getElementById('forn-inp-obs')?.value || '').trim();
+    const nome      = (document.getElementById('forn-inp-nome')?.value || '').trim();
+    const servico   = (document.getElementById('forn-inp-servico')?.value || '').trim();
+    const documento = (document.getElementById('forn-inp-documento')?.value || '').trim();
+    const celular   = (document.getElementById('forn-inp-celular')?.value || '').trim();
+    const telefone  = (document.getElementById('forn-inp-telefone')?.value || '').trim();
+    const email     = (document.getElementById('forn-inp-email')?.value || '').trim();
+    const pix       = (document.getElementById('forn-inp-pix')?.value || '').trim();
+    const banco     = (document.getElementById('forn-inp-banco')?.value || '').trim();
+    const agencia   = (document.getElementById('forn-inp-agencia')?.value || '').trim();
+    const conta     = (document.getElementById('forn-inp-conta')?.value || '').trim();
+    const obs       = (document.getElementById('forn-inp-obs')?.value || '').trim();
 
     const errEl = document.getElementById('forn-modal-err');
-    if (!nome) {
-      errEl.textContent = 'Nome é obrigatório.';
-      errEl.style.display = '';
-      return;
-    }
+    if (!nome) { errEl.textContent = 'Nome é obrigatório.'; errEl.style.display = ''; return; }
     errEl.style.display = 'none';
 
     const btn = document.getElementById('forn-btn-salvar');
@@ -272,11 +306,20 @@
     try {
       const deptId = await _getDeptId();
 
+      const nomeadoPayload = {
+        nome,
+        cargo:     servico   || null,
+        obs:       obs       || null,
+        documento: documento || null,
+        pix:       pix       || null,
+        banco:     banco     || null,
+        agencia:   agencia   || null,
+        conta:     conta     || null,
+      };
+
       if (_editandoId) {
-        // Atualiza nomeado
         const forn = _todosForns.find(x => x.id === _editandoId);
-        await _patch(`nomeados?id=eq.${_editandoId}`, { nome, cargo: servico || null, obs: obs || null });
-        // Atualiza pessoa se vinculada
+        await _patch(`nomeados?id=eq.${_editandoId}`, nomeadoPayload);
         if (forn?.pessoaId) {
           await _patch(`pessoas?id=eq.${forn.pessoaId}`, {
             celular:  celular  || null,
@@ -285,19 +328,14 @@
           });
         }
       } else {
-        // Cria pessoa
-        const pessoaPayload = { nome, celular: celular || null, telefone: telefone || null, email: email || null };
-        const [pessoa] = await _post('pessoas', pessoaPayload);
-        // Cria nomeado no dept Fornecedores
+        const [pessoa] = await _post('pessoas', { nome, celular: celular || null, telefone: telefone || null, email: email || null });
         await _post('nomeados', {
-          nome,
-          pessoa_id: pessoa.id,
-          dept_id:   deptId,
-          cargo:     servico || null,
-          obs:       obs     || null,
-          orgao_tipo:'comissao',
-          orgao:     'Fornecedores',
-          status:    'ativo',
+          ...nomeadoPayload,
+          pessoa_id:  pessoa.id,
+          dept_id:    deptId,
+          orgao_tipo: 'comissao',
+          orgao:      'Fornecedores',
+          status:     'ativo',
         });
       }
 
