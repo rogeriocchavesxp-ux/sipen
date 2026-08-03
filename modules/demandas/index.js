@@ -94,7 +94,8 @@
     try {
       if (typeof USUARIO_ATUAL === "undefined" || !USUARIO_ATUAL) return false;
       if (USUARIO_ATUAL.perfil === "ADMINISTRADOR_GERAL") return true;
-      const p = typeof PERFIS !== "undefined" ? PERFIS[USUARIO_ATUAL.perfil] : null;
+      const chave = (USUARIO_ATUAL.perfil || "").toLowerCase();
+      const p = typeof PERFIS !== "undefined" ? (PERFIS[chave] || PERFIS[USUARIO_ATUAL.perfil] || null) : null;
       return p ? (p.nivel >= 4) : false;
     } catch(_) { return false; }
   }
@@ -1462,6 +1463,27 @@ function fmtD(d) {
                 </select>
               </div>
             </div>
+          </div>
+          <div style="margin-top:14px;padding:12px;background:var(--bg-surface);border-radius:8px;border:1px solid var(--bd1)">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--tx1)">
+              <input type="checkbox" id="dem-edit-rec" onchange="window._demRecToggle(this.checked)"
+                ${(_demFd.recorrencia?.ativa) ? "checked" : ""}
+                style="width:15px;height:15px;cursor:pointer;accent-color:var(--gr)">
+              Demanda Recorrente
+            </label>
+            <div id="dem-edit-rec-opts" style="display:${(_demFd.recorrencia?.ativa) ? "grid" : "none"};grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Frequência</label>
+                <select id="dem-edit-rec-freq" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px">
+                  ${["Semanal","Quinzenal","Mensal","Bimestral","Trimestral"].map(f => `<option${f===(_demFd.recorrencia?.freq||"Mensal")?" selected":""}>${f}</option>`).join("")}
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Válido até</label>
+                <input id="dem-edit-rec-limite" type="date" value="${_demFd.recorrencia?.limite||""}" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
+              </div>
+              ${_demFd.recorrencia?.ativa && _demFd.recorrencia?.geradas ? `<div style="grid-column:span 2;font-size:11.5px;color:var(--tx3)">${_demFd.recorrencia.geradas} ocorrências já foram geradas.</div>` : ""}
+            </div>
           </div>` : ""}
           <div style="margin-top:12px;display:flex;justify-content:flex-end">
             <button onclick="demSalvarEdicao('${id}')" style="padding:8px 20px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer">Salvar alterações</button>
@@ -1611,9 +1633,50 @@ function fmtD(d) {
         if (tipoEl)   novoFd.tipo = tipoEl.value;
         if (benefEl)  novoFd.beneficiario = benefEl.value.trim();
         if (reimbEl)  novoFd.reimb_nome = reimbEl.value.trim();
+
+        // Recorrência
+        const recEl   = document.getElementById("dem-edit-rec");
+        const recFreq = document.getElementById("dem-edit-rec-freq")?.value || "Mensal";
+        const recLim  = document.getElementById("dem-edit-rec-limite")?.value || "";
+        const jaEraRec = !!existFd.recorrencia?.ativa;
+        if (recEl?.checked && recLim) {
+          novoFd.recorrencia = { ativa: true, freq: recFreq, limite: recLim, ...(jaEraRec ? { geradas: existFd.recorrencia.geradas } : {}) };
+        } else if (!recEl?.checked) {
+          delete novoFd.recorrencia;
+        }
+
         payload.financial_data = novoFd;
       }
       await apiWrite("update", "DEMANDAS", { _row: id, ...payload });
+
+      // Gerar ocorrências recorrentes (apenas na primeira ativação)
+      if (_isFinEdicao) {
+        const recEl   = document.getElementById("dem-edit-rec");
+        const recFreq = document.getElementById("dem-edit-rec-freq")?.value || "Mensal";
+        const recLim  = document.getElementById("dem-edit-rec-limite")?.value || "";
+        const existFd = (_ativo?.financial_data && typeof _ativo.financial_data === "object") ? _ativo.financial_data : {};
+        const jaEraRec = !!existFd.recorrencia?.ativa;
+        if (recEl?.checked && recLim && !jaEraRec) {
+          const demAtual = { ..._ativo, ...payload };
+          const cópias = _gerarOcorrencias(demAtual, recFreq, recLim, String(id));
+          if (cópias.length > 0) {
+            const sb = typeof getSupabase === "function" ? getSupabase() : null;
+            if (sb) {
+              const { error } = await sb.from("demandas").insert(cópias);
+              if (!error) {
+                // Atualiza campo geradas na demanda original
+                const fdAtual = { ...(payload.financial_data || existFd) };
+                if (fdAtual.recorrencia) fdAtual.recorrencia.geradas = cópias.length;
+                await apiWrite("update", "DEMANDAS", { _row: id, financial_data: fdAtual });
+                if (typeof T === "function") T("Recorrência ativada", `${cópias.length} ocorrências geradas até ${recLim}`);
+              } else {
+                console.error("Recorrência:", error.message);
+              }
+            }
+          }
+          _invalidate();
+        }
+      }
 
       // Registrar andamento automático se responsável mudou
       if (mudouResp) {
@@ -1738,6 +1801,61 @@ function fmtD(d) {
       alert("Erro ao duplicar: " + e.message);
     }
   };
+
+  /* ── Recorrência ────────────────────────────────────────── */
+
+  window._demRecToggle = function(checked) {
+    const el = document.getElementById("dem-edit-rec-opts");
+    if (el) el.style.display = checked ? "grid" : "none";
+  };
+
+  function _avançarData(d, freq) {
+    const next = new Date(d);
+    switch (freq) {
+      case "Semanal":    next.setDate(next.getDate() + 7);   break;
+      case "Quinzenal":  next.setDate(next.getDate() + 15);  break;
+      case "Bimestral":  next.setMonth(next.getMonth() + 2); break;
+      case "Trimestral": next.setMonth(next.getMonth() + 3); break;
+      default:           next.setMonth(next.getMonth() + 1); // Mensal
+    }
+    return next;
+  }
+
+  function _gerarOcorrencias(dem, freq, limite, origemId) {
+    const limDate = new Date(limite + "T12:00:00");
+    const cópias = [];
+    let next = _avançarData(new Date(dem.data_abertura + "T12:00:00"), freq);
+    const fdBase = { ...(dem.financial_data || {}) };
+    delete fdBase.recorrencia;
+
+    while (next <= limDate) {
+      const dataStr = next.toISOString().split("T")[0];
+      const mesRef  = next.toISOString().slice(0, 7);
+      const [ano, mes] = mesRef.split("-");
+      const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+      const sufixo = `${meses[parseInt(mes,10)-1]}/${ano}`;
+      cópias.push({
+        area:             dem.area,
+        subcategoria:     dem.subcategoria   || null,
+        titulo:           `${dem.titulo} — ${sufixo}`,
+        descricao:        dem.descricao      || null,
+        local:            dem.local          || null,
+        local_id:         dem.local_id       || null,
+        prioridade:       dem.prioridade     || "Média",
+        status:           "ABERTA",
+        solicitante:      dem.solicitante    || null,
+        solicitante_id:   dem.solicitante_id || null,
+        created_by:       dem.solicitante_id || null,
+        responsavel:      dem.responsavel    || null,
+        responsavel_tipo: dem.responsavel_tipo || null,
+        data_abertura:    dataStr,
+        data_conclusao:   null,
+        financial_data:   { ...fdBase, recorrencia: { ativa: true, freq, limite, origem_id: origemId, referencia: mesRef } },
+      });
+      next = _avançarData(next, freq);
+    }
+    return cópias;
+  }
 
   /* ── Encaminhamento — toggle tipo e carga ───────────────── */
 
