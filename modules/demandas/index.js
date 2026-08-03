@@ -925,72 +925,117 @@ function fmtD(d) {
   /* ── Dados financeiros: renderização no detalhe ─────── */
 
   function _renderFinancialData(dem) {
-    const sub      = dem.subcategoria || "";
-    const _isFin   = sub === "Solicitação de pagamento" || sub === "Reembolso";
-    const fd       = (dem.financial_data && typeof dem.financial_data === "object") ? dem.financial_data : {};
+    const sub    = dem.subcategoria || "";
+    const _isFin = sub === "Solicitação de pagamento" || sub === "Reembolso";
+    const fd     = (dem.financial_data && typeof dem.financial_data === "object") ? dem.financial_data : {};
     if (!_isFin && Object.keys(fd).length === 0) return "";
 
-    const fmtVal  = v => v ? `R$ ${parseFloat(v).toLocaleString("pt-BR", { minimumFractionDigits:2, maximumFractionDigits:2 })}` : "—";
-    const fmtAnexo = (meta, rotulo) => {
+    const fmtVal = v => v ? `R$ ${parseFloat(v).toLocaleString("pt-BR", { minimumFractionDigits:2, maximumFractionDigits:2 })}` : "—";
+
+    const kv = (lbl, val, span = 1) => `
+      <div style="grid-column:span ${span}">
+        <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">${lbl}</div>
+        <div style="font-size:12.5px;color:var(--tx1);font-weight:500;line-height:1.4;word-break:break-word">${val || "—"}</div>
+      </div>`;
+
+    const fmtAnexoBtn = (meta, rotulo) => {
       if (!meta?.storage_path) return null;
       const pathEnc = escapeHtmlAttr(meta.storage_path);
-      const btn = `<button onclick="demAbrirAnexo('${pathEnc}')" style="padding:4px 14px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--blue);font-size:11.5px;cursor:pointer;font-family:var(--ff)">📎 ${escapeHtml(meta.file_name || "Abrir arquivo")}</button>`;
-      return [rotulo, btn];
+      return `<button onclick="demAbrirAnexo('${pathEnc}')" style="padding:4px 14px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--blue);font-size:11.5px;cursor:pointer;font-family:var(--ff)">📎 ${escapeHtml(meta.file_name || rotulo)}</button>`;
     };
 
-    let rows = [];
+    const demId = dem.id || dem._row;
+    let html = "";
+
     if (sub === "Solicitação de pagamento") {
-      rows = [
-        ["Tipo",              fd.tipo || "—"],
-        ["Valor",             fmtVal(fd.valor)],
-        ["Vencimento",        fmtD(fd.data_vencimento)],
-        ["Beneficiário",      fd.beneficiario || "—"],
-        ["CPF / CNPJ",        fd.cpf_cnpj || "—"],
-        ["Centro de Custo",   fd.centro_custo || "—"],
-        ["Forma de Pagamento",fd.forma_pagamento || "—"],
-        fd.chave_pix ? ["Chave Pix",  fd.chave_pix] : null,
-        fd.banco     ? ["Banco",       fd.banco]     : null,
-        fd.agencia   ? ["Agência",     fd.agencia]   : null,
-        fd.conta     ? ["Conta",       fd.conta]     : null,
-        fmtAnexo(fd.boleto,      "Boleto"),
-        fmtAnexo(fd.nota_fiscal, "Nota Fiscal"),
-        ...(Array.isArray(fd.notas_fiscais) ? fd.notas_fiscais.map((nf, i) => {
-          const lbl = `Nota Fiscal ${i + 1}${nf.obs ? " — " + nf.obs : ""}${nf.valor ? " · R$ " + parseFloat(nf.valor).toLocaleString("pt-BR", { minimumFractionDigits:2, maximumFractionDigits:2 }) : ""}`;
-          return fmtAnexo(nf, lbl);
-        }) : []),
-        fd.obs       ? ["Observações", fd.obs]       : null,
-      ].filter(Boolean);
+      // Linha 1: campos curtos — Tipo | Valor | Vencimento | Forma de Pagamento
+      html += `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px 16px">
+        ${kv("Tipo", fd.tipo || "Pagamento")}
+        ${kv("Valor", fmtVal(fd.valor))}
+        ${kv("Vencimento", fmtD(fd.data_vencimento))}
+        ${kv("Forma de Pagamento", fd.forma_pagamento)}
+      </div>`;
+
+      // Linha 2: Beneficiário | CPF/CNPJ | Centro de Custo
+      if (fd.beneficiario || fd.cpf_cnpj || fd.centro_custo) {
+        html += `<div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px 16px;margin-top:10px">
+          ${kv("Beneficiário / Favorecido", fd.beneficiario)}
+          ${kv("CPF / CNPJ", fd.cpf_cnpj)}
+          ${kv("Centro de Custo", fd.centro_custo)}
+        </div>`;
+      }
+
+      // Linha 3: dados bancários (se houver)
+      const temPix   = fd.chave_pix;
+      const temBanco = fd.banco;
+      if (temPix || temBanco) {
+        const bancoStr = [fd.banco, fd.agencia && `Ag. ${fd.agencia}`, fd.conta && `Cc. ${fd.conta}`].filter(Boolean).join(" · ");
+        html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:10px">
+          ${temPix   ? kv("Chave PIX", `<span style="font-family:monospace;font-size:12px">${escapeHtml(fd.chave_pix)}</span>`) : "<div></div>"}
+          ${temBanco ? kv("Banco / Agência / Conta", escapeHtml(bancoStr)) : "<div></div>"}
+        </div>`;
+      }
+
+      // Observações (texto longo — largura total)
+      if (fd.obs) {
+        html += `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd1)">
+          <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Observações</div>
+          <div style="font-size:12px;color:var(--tx1);line-height:1.7">${escapeHtml(fd.obs)}</div>
+        </div>`;
+      }
+
+      // Anexos (boleto, notas fiscais)
+      const anexoBoleto = fmtAnexoBtn(fd.boleto, "Boleto");
+      const anexoNF     = fmtAnexoBtn(fd.nota_fiscal, "Nota Fiscal");
+      const anexosNFs   = Array.isArray(fd.notas_fiscais) ? fd.notas_fiscais.map((nf, i) => {
+        const lbl = `NF ${i+1}${nf.obs?" — "+nf.obs:""}${nf.valor?" · R$ "+parseFloat(nf.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}):""}`;
+        return fmtAnexoBtn(nf, lbl);
+      }).filter(Boolean) : [];
+      const todosAnexos = [anexoBoleto, anexoNF, ...anexosNFs].filter(Boolean);
+      if (todosAnexos.length) {
+        html += `<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">${todosAnexos.join("")}</div>`;
+      }
+
     } else if (sub === "Reembolso") {
-      rows = [
-        ["Reembolsado",       fd.reimb_nome || "—"],
-        ["Valor",             fmtVal(fd.valor)],
-        fd.motivo            ? ["Motivo",            fd.motivo]           : null,
-        ["Forma de Pagamento", fd.forma_pagamento || "—"],
-        fd.chave_pix         ? ["Chave Pix",          fd.chave_pix]        : null,
-        fd.ministerio    ? ["Ministério",         fd.ministerio]    : null,
-        fmtAnexo(fd.nota_fiscal, "Comprovante"),
-        fd.pastor_ciente ? ["Pastor / Aprovador", fd.pastor_ciente] : null,
-        fd.obs           ? ["Observações",        fd.obs]           : null,
-      ].filter(Boolean);
+      // Linha 1: Reembolsado | Valor | Forma de Pagamento
+      html += `<div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px 16px">
+        ${kv("Reembolsado", fd.reimb_nome)}
+        ${kv("Valor", fmtVal(fd.valor))}
+        ${kv("Forma de Pagamento", fd.forma_pagamento)}
+      </div>`;
+
+      // Linha 2: campos opcionais
+      if (fd.motivo || fd.ministerio || fd.pastor_ciente || fd.chave_pix) {
+        html += `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px 16px;margin-top:10px">
+          ${fd.motivo       ? kv("Motivo",              fd.motivo,        2) : ""}
+          ${fd.ministerio   ? kv("Ministério",           fd.ministerio,    1) : ""}
+          ${fd.chave_pix    ? kv("Chave PIX",            `<span style="font-family:monospace;font-size:12px">${escapeHtml(fd.chave_pix)}</span>`, 1) : ""}
+          ${fd.pastor_ciente? kv("Pastor / Aprovador",  fd.pastor_ciente, 2) : ""}
+        </div>`;
+      }
+
+      if (fd.obs) {
+        html += `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd1)">
+          <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Observações</div>
+          <div style="font-size:12px;color:var(--tx1);line-height:1.7">${escapeHtml(fd.obs)}</div>
+        </div>`;
+      }
+
+      const anexoComp = fmtAnexoBtn(fd.nota_fiscal, "Comprovante");
+      if (anexoComp) html += `<div style="margin-top:10px">${anexoComp}</div>`;
     }
 
-    if (!rows.length) return "";
+    if (!html) return "";
 
-    const demId = dem.id || dem._row;
-    const btnNota  = `<button onclick="demAnexarDoc('${demId}','nota_fiscal')" style="padding:4px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);font-size:11px;cursor:pointer;font-family:var(--ff)">+ Nota Fiscal</button>`;
+    const btnNota   = `<button onclick="demAnexarDoc('${demId}','nota_fiscal')" style="padding:4px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);font-size:11px;cursor:pointer;font-family:var(--ff)">+ Nota Fiscal</button>`;
     const btnBoleto = sub === "Solicitação de pagamento" ? `<button onclick="demAnexarDoc('${demId}','boleto')" style="padding:4px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);font-size:11px;cursor:pointer;font-family:var(--ff)">+ Boleto</button>` : "";
-    const btnComp  = sub === "Reembolso" ? `<button onclick="demAnexarDoc('${demId}','comprovante')" style="padding:4px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);font-size:11px;cursor:pointer;font-family:var(--ff)">+ Comprovante</button>` : "";
+    const btnComp   = sub === "Reembolso" ? `<button onclick="demAnexarDoc('${demId}','comprovante')" style="padding:4px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);font-size:11px;cursor:pointer;font-family:var(--ff)">+ Comprovante</button>` : "";
+
     return `
       <div class="card" style="margin-top:0;border:1px solid rgba(61,160,85,.3);background:rgba(61,160,85,.03)">
         <div class="ctit" style="color:var(--gr)">💰 Dados Financeiros</div>
-        <table style="width:100%;font-size:11.5px;border-collapse:collapse">
-          ${rows.map(([lbl, val], i) => `
-            <tr style="${i > 0 ? "border-top:1px solid var(--bd1)" : ""}">
-              <td style="color:var(--tx3);padding:7px 0;width:40%;vertical-align:top">${lbl}</td>
-              <td style="color:var(--tx1)">${val}</td>
-            </tr>`).join("")}
-        </table>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">${btnNota}${btnBoleto}${btnComp}</div>
+        <div style="margin-top:10px">${html}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid rgba(61,160,85,.15)">${btnNota}${btnBoleto}${btnComp}</div>
         <div id="dem-anx-pub-${demId}"></div>
       </div>`;
   }
@@ -1376,11 +1421,21 @@ function fmtD(d) {
         <div class="card" style="margin-top:0">
           <div class="ctit">Editar Demanda</div>
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px">
-            <div style="grid-column:span 3">
+            <div style="grid-column:span ${_podeEditarPrioridade() ? "3" : "4"}">
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Título *</label>
               <input id="dem-edit-titulo" type="text" value="${escapeHtmlAttr(dem.titulo || '')}" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>
-            <div style="grid-column:span 1"><!-- resp placeholder --></div>
+            ${_podeEditarPrioridade() ? `
+            <div style="position:relative">
+              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Solicitante</label>
+              <input id="dem-edit-sol-nome" type="text" value="${escapeHtmlAttr(dem.solicitante||dem.solicitante_txt||"")}"
+                placeholder="Buscar por nome..."
+                oninput="document.getElementById('dem-edit-sol-id').value='';window._demSolBuscar(this.value)"
+                onblur="setTimeout(()=>window._demSolFecharDd(),200)"
+                style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box" autocomplete="off">
+              <input id="dem-edit-sol-id" type="hidden" value="${escapeHtmlAttr(String(dem.solicitante_id||""))}">
+              <div id="dem-edit-sol-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-card);border:1px solid var(--bd2);border-radius:0 0 7px 7px;z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
+            </div>` : ""}
             ${dem.area !== "Financeiro" ? `
             <div style="grid-column:span 3">
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Localização / Sala</label>
@@ -1388,23 +1443,12 @@ function fmtD(d) {
                 <option value="">Carregando espaços…</option>
               </select>
             </div>
-            <div style="grid-column:span 1">
+            <div>
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Conclusão prevista</label>
               <input id="dem-edit-venc" type="date" value="${dem.data_conclusao||''}" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>` : `
             <input type="hidden" id="dem-edit-local" value="">
             <input type="hidden" id="dem-edit-venc" value="">`}
-            ${_podeEditarPrioridade() ? `
-            <div style="grid-column:span 4;position:relative">
-              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Solicitante</label>
-              <input id="dem-edit-sol-nome" type="text" value="${escapeHtmlAttr(dem.solicitante||dem.solicitante_txt||"")}"
-                placeholder="Digite ao menos 2 caracteres para buscar..."
-                oninput="document.getElementById('dem-edit-sol-id').value='';window._demSolBuscar(this.value)"
-                onblur="setTimeout(()=>window._demSolFecharDd(),200)"
-                style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box" autocomplete="off">
-              <input id="dem-edit-sol-id" type="hidden" value="${escapeHtmlAttr(String(dem.solicitante_id||""))}">
-              <div id="dem-edit-sol-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-card);border:1px solid var(--bd2);border-radius:0 0 7px 7px;z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
-            </div>` : ""}
           </div>
           <div style="margin-top:14px;border:1px solid var(--bd1);border-radius:9px;padding:14px;background:var(--bg-surface)" id="dem-encaminhamento-bloco">
             <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Encaminhamento</div>
@@ -1439,34 +1483,44 @@ function fmtD(d) {
           ${(dem.area === "Financeiro") ? `
           <div style="margin-top:16px;border:1px solid rgba(61,160,85,.3);border-radius:9px;padding:14px;background:rgba(61,160,85,.03)">
             <div style="font-size:11px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px">💰 Dados Financeiros</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
               ${_isFinSolPag ? `
               <div>
                 <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Tipo</label>
                 <select id="dem-edit-tipo" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px">
                   ${["Pagamento","Reembolso","Adiantamento"].map(t => `<option${t===(_demFd.tipo||"Pagamento")?" selected":""}>${t}</option>`).join("")}
                 </select>
-              </div>` : `
-              <div>
-                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Reembolsado</label>
-                <input id="dem-edit-reimb-nome" type="text" value="${escapeHtmlAttr(_demFd.reimb_nome||"")}" placeholder="Nome de quem será reembolsado" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
-              </div>`}
+              </div>
               <div>
                 <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Valor (R$)</label>
                 <input id="dem-edit-valor" type="number" step="0.01" min="0" value="${_demFd.valor||""}" placeholder="0,00" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
               </div>
-              ${_isFinSolPag ? `
-              <div>
-                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Beneficiário / Favorecido</label>
-                <input id="dem-edit-beneficiario" type="text" value="${escapeHtmlAttr(_demFd.beneficiario||"")}" placeholder="Nome completo" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
-              </div>` : ""}
-              <div>
-                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Forma de pagamento</label>
+              <div style="grid-column:span 2">
+                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Forma de Pagamento</label>
                 <select id="dem-edit-forma-pgto" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px">
                   <option value="">Selecione</option>
                   ${["PIX","Boleto","Cartão de Crédito","Cartão de Débito","Dinheiro","Transferência Bancária","Débito em Conta","Cheque","Reembolso","Outro"].map(f => `<option${f===(_demFd.forma_pagamento||"")?" selected":""}>${f}</option>`).join("")}
                 </select>
               </div>
+              <div style="grid-column:span 4">
+                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Beneficiário / Favorecido</label>
+                <input id="dem-edit-beneficiario" type="text" value="${escapeHtmlAttr(_demFd.beneficiario||"")}" placeholder="Nome completo" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
+              </div>` : `
+              <div style="grid-column:span 2">
+                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Reembolsado</label>
+                <input id="dem-edit-reimb-nome" type="text" value="${escapeHtmlAttr(_demFd.reimb_nome||"")}" placeholder="Nome de quem será reembolsado" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Valor (R$)</label>
+                <input id="dem-edit-valor" type="number" step="0.01" min="0" value="${_demFd.valor||""}" placeholder="0,00" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;box-sizing:border-box">
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Forma de Pagamento</label>
+                <select id="dem-edit-forma-pgto" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px">
+                  <option value="">Selecione</option>
+                  ${["PIX","Boleto","Cartão de Crédito","Cartão de Débito","Dinheiro","Transferência Bancária","Débito em Conta","Cheque","Reembolso","Outro"].map(f => `<option${f===(_demFd.forma_pagamento||"")?" selected":""}>${f}</option>`).join("")}
+                </select>
+              </div>`}
             </div>
           </div>
           <div style="margin-top:14px;padding:12px;background:var(--bg-surface);border-radius:8px;border:1px solid var(--bd1)">
