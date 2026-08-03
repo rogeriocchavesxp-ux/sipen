@@ -1730,16 +1730,22 @@ function fmtD(d) {
   async function _demCarregarDepartamentos() {
     const sel = document.getElementById("dem-enc-dept-nome");
     if (!sel) return;
-    if (!_departamentosCache) {
+    if (!_departamentosCache || !_departamentosCache.length) {
       try {
-        const base = typeof apiBaseUrl === "function" ? apiBaseUrl() : "";
-        const hdrs = typeof apiHeaders === "function" ? apiHeaders() : {};
+        const url  = (typeof SUPABASE_URL  !== "undefined" ? SUPABASE_URL  : "").replace(/\/$/, "");
+        const key  = typeof SUPABASE_ANON_KEY !== "undefined" ? SUPABASE_ANON_KEY : "";
+        const tok  = typeof sipenToken === "function" ? sipenToken() : key;
         const r = await fetch(
-          `${base}/rest/v1/ministerios?ativo=eq.true&select=id,nome&order=nome.asc&limit=200`,
-          { headers: hdrs }
+          `${url}/rest/v1/ministerios?select=id,nome&order=nome.asc&limit=300`,
+          { headers: { apikey: key, Authorization: `Bearer ${tok}` } }
         );
-        _departamentosCache = r.ok ? await r.json() : [];
-      } catch { _departamentosCache = []; }
+        const rows = r.ok ? await r.json() : [];
+        _departamentosCache = rows.length ? rows : null;
+      } catch { _departamentosCache = null; }
+    }
+    if (!_departamentosCache) {
+      sel.innerHTML = `<option value="">Nenhum departamento encontrado</option>`;
+      return;
     }
     const atual = sel.dataset.current || sel.value;
     sel.innerHTML = `<option value="">— Selecione o departamento —</option>` +
