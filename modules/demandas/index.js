@@ -1720,7 +1720,6 @@ function fmtD(d) {
       created_by:       dem.solicitante_id    || null,
       responsavel:      dem.responsavel       || null,
       responsavel_tipo: dem.responsavel_tipo  || null,
-      fornecedor_id:    dem.fornecedor_id     || null,
       data_abertura:    hoje,
       data_conclusao:   dem.data_conclusao    || null,
       financial_data:   dem.financial_data    || null,
