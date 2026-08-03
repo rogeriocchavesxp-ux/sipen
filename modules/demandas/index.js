@@ -1389,8 +1389,12 @@ function fmtD(d) {
                 </tr>`).join("")}
             </table>
             ${dem.descricao ? `
-              <div class="ctit" style="margin-top:16px">Descrição</div>
-              <div style="font-size:12px;color:var(--tx1);line-height:1.7;margin-top:6px">${escapeHtml(dem.descricao)}</div>` : ""}
+              <div class="ctit" style="margin-top:14px">Descrição</div>
+              <div id="dem-desc-display" style="font-size:12px;color:var(--tx1);line-height:1.7;margin-top:6px;max-height:96px;overflow:hidden;position:relative">
+                ${escapeHtml(dem.descricao)}
+                <div style="position:absolute;bottom:0;left:0;right:0;height:28px;background:linear-gradient(transparent,var(--bg-card))"></div>
+              </div>
+              <button onclick="window._demDescExpand(this)" style="font-size:11px;color:var(--blue,#4a9cf5);background:none;border:none;padding:4px 0 0;cursor:pointer;font-family:var(--ff)">Ver mais ▾</button>` : ""}
           </div>
           <div class="card">
             <div class="ctit">Alterar Status</div>
@@ -1895,6 +1899,16 @@ function fmtD(d) {
   window._demRecToggle = function(checked) {
     const el = document.getElementById("dem-edit-rec-opts");
     if (el) el.style.display = checked ? "flex" : "none";
+  };
+
+  window._demDescExpand = function(btn) {
+    const el = document.getElementById("dem-desc-display");
+    if (!el) return;
+    const expanded = el.style.maxHeight === "none";
+    el.style.maxHeight = expanded ? "96px" : "none";
+    el.style.overflow  = expanded ? "hidden" : "visible";
+    el.querySelector("div")?.remove();
+    btn.textContent = expanded ? "Ver mais ▾" : "Ver menos ▴";
   };
 
   window._demMascaraValor = function(input) {
