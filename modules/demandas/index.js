@@ -1678,7 +1678,6 @@ function fmtD(d) {
         responsavel:      encFornNome || "",
         responsavel_txt:  encFornNome || "",
         responsavel_tipo: encTipo,
-        fornecedor_id:    encFornId,
         data_conclusao:   venc,
       };
       if (prioEl && _podeEditarPrioridade()) payload.prioridade = prioEl.value;
