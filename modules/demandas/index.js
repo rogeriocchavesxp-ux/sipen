@@ -611,7 +611,7 @@ function fmtD(d) {
         <table style="width:100%;border-collapse:collapse;font-size:12px">
           <thead>
             <tr style="border-bottom:1px solid var(--bd2)">
-              ${["Categoria","Subcategoria","Título","Solicitante","Responsável","Valor","Status","Abertura","Conclusão"].map((h,i) =>
+              ${["Categoria","Subcategoria","Título","Solicitante","Responsável","Valor","Status","Abertura"].map((h,i) =>
                 `<th style="text-align:${i===5?"right":"left"};padding:8px 6px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`
               ).join("")}
             </tr>
@@ -632,7 +632,6 @@ function fmtD(d) {
                 <td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--tx1);white-space:nowrap">${r.financial_data?.valor != null ? `R$ ${parseFloat(r.financial_data.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}</td>
                 <td style="padding:8px 6px">${pillStatus(r.status)}</td>
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${fmtD(r.data_abertura||r.criado_em)}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${fmtD(r.data_conclusao)}</td>
               </tr>`).join("")}
           </tbody>
         </table>
@@ -1331,7 +1330,6 @@ function fmtD(d) {
         return escapeHtml(nome);
       })()],
       ["Abertura",      fmtD(dem.data_abertura||dem.criado_em)],
-      dem.data_conclusao ? ["Conclusão prev.",fmtD(dem.data_conclusao)] : null,
     ].filter(Boolean);
     if (dem.numero_chamado) {
       detailRows.unshift(["N° do chamado", `<span style="font-weight:700;color:var(--acc,#4a9cf5);letter-spacing:.04em">${escapeHtml(dem.numero_chamado)}</span>`]);
@@ -1452,16 +1450,13 @@ function fmtD(d) {
             </div>` : ""}
 
             ${dem.area !== "Financeiro" ? `
-            <div style="grid-column:span 9">
+            <div style="grid-column:span 12">
               <label class="dem-fl">Localização / Sala</label>
               <select id="dem-edit-local" data-valor-atual="${dem.local_id || dem.local || ''}" class="dem-fi">
                 <option value="">Carregando espaços…</option>
               </select>
             </div>
-            <div style="grid-column:span 3">
-              <label class="dem-fl">Conclusão prevista</label>
-              <input id="dem-edit-venc" type="date" value="${dem.data_conclusao||''}" class="dem-fi">
-            </div>` : ""}
+            <input type="hidden" id="dem-edit-venc" value="">` : ""}
 
             ${_isFinSolPag ? `
             <div style="grid-column:span 2">
@@ -3208,10 +3203,6 @@ function fmtD(d) {
               <label style="${_CP_LB}">Data de Abertura</label>
               <input type="date" id="cp-data-abertura" style="${_CP_INP}">
             </div>
-            <div>
-              <label style="${_CP_LB}">Data de Conclusão (opcional)</label>
-              <input type="date" id="cp-data-conclusao" style="${_CP_INP}">
-            </div>
           </div>
           <div id="cp-err" style="color:var(--rose);font-size:12px;display:none"></div>
         </div>
@@ -3238,7 +3229,6 @@ function fmtD(d) {
     document.getElementById('cp-prioridade').value     = dados?.prioridade     || 'Alta';
     document.getElementById('cp-status').value         = dados?.status         || 'ABERTA';
     document.getElementById('cp-data-abertura').value  = dados?.data_abertura  ? dados.data_abertura.slice(0,10)  : hoje;
-    document.getElementById('cp-data-conclusao').value = dados?.data_conclusao ? dados.data_conclusao.slice(0,10) : '';
     modal.style.display = 'flex';
   };
 
@@ -3264,7 +3254,6 @@ function fmtD(d) {
       status:         document.getElementById('cp-status').value       || 'ABERTA',
       area:           'Pastoral',
       data_abertura:  document.getElementById('cp-data-abertura').value  || null,
-      data_conclusao: document.getElementById('cp-data-conclusao').value || null,
     };
 
     try {
@@ -3447,7 +3436,7 @@ function fmtD(d) {
               <th style="padding:8px 2px;width:36px;vertical-align:middle;text-align:center">
                 <input type="checkbox" id="fin-dem-chk-all" ${todosSel?"checked":""} onchange="window._finToggleTodos(this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--gr)">
               </th>
-              ${["Categoria","Subcategoria","Título","Solicitante","Responsável","Valor","Forma Pgto.","Status","Abertura","Conclusão"].map((h,i) =>
+              ${["Categoria","Subcategoria","Título","Solicitante","Responsável","Valor","Forma Pgto.","Status","Abertura"].map((h,i) =>
                 `<th style="text-align:${i===5?"right":"left"};padding:8px 6px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`
               ).join("")}
             </tr>
@@ -3474,7 +3463,6 @@ function fmtD(d) {
                 <td style="padding:8px 6px;color:var(--tx2);font-size:11px;white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${escapeHtml(r.financial_data?.forma_pagamento||"—")}</td>
                 <td style="padding:8px 6px;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${pillStatus(r.status)}</td>
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${fmtD(r.data_abertura||r.criado_em)}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${r.id||r._row}','fin-demandas')">${fmtD(r.data_conclusao)}</td>
               </tr>`;
             }).join("")}
           </tbody>
@@ -3567,7 +3555,6 @@ function fmtD(d) {
           ${r.financial_data?.beneficiario?`<div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Beneficiário</div><div style="font-size:11.5px;color:#1a1a1a">${escapeHtml(r.financial_data.beneficiario)}</div></div>`:""}
           ${r.financial_data?.banco?`<div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Banco</div><div style="font-size:11.5px;color:#1a1a1a">${escapeHtml(r.financial_data.banco)}</div></div>`:""}
           <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Data de Abertura</div><div style="font-size:11.5px;color:#1a1a1a">${fmtD(r.data_abertura||r.criado_em)}</div></div>
-          <div><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Data de Conclusão</div><div style="font-size:11.5px;color:#1a1a1a">${fmtD(r.data_conclusao)}</div></div>
           ${r.descricao||r.observacoes?`<div style="grid-column:1/-1"><div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px">Observações</div><div style="font-size:11.5px;color:#1a1a1a;white-space:pre-wrap">${escapeHtml(r.descricao||r.observacoes)}</div></div>`:""}
         </div>
       </div>`;
