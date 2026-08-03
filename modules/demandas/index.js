@@ -1277,7 +1277,13 @@ function fmtD(d) {
       ["Subcategoria",  escapeHtml(dem.subcategoria)||"—"],
       dem.local ? ["Localização", escapeHtml(dem.local)] : null,
       ["Solicitante",   `${nomePropio(dem.solicitante || dem.solicitante_txt || dem.nome_solicitante_externo) || "—"}${pillOrigem(dem.origem)}${dem.telefone_solicitante ? `<br><span style="color:var(--tx3);font-size:11px">📞 ${escapeHtml(dem.telefone_solicitante)}</span>` : ""}`],
-      ["Responsável",   nomePropio(dem.responsavel || dem.responsavel_txt) || "—"],
+      ["Responsável",   (() => {
+        const nome = nomePropio(dem.responsavel || dem.responsavel_txt) || "—";
+        if (dem.responsavel_tipo === "fornecedor") {
+          return `${escapeHtml(nome)} <span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:8px;background:rgba(42,181,192,.12);color:var(--teal);vertical-align:middle;margin-left:4px">Fornecedor</span>`;
+        }
+        return escapeHtml(nome);
+      })()],
       ["Abertura",      fmtD(dem.data_abertura||dem.criado_em)],
       dem.data_conclusao ? ["Conclusão prev.",fmtD(dem.data_conclusao)] : null,
     ].filter(Boolean);
@@ -1367,10 +1373,7 @@ function fmtD(d) {
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Título *</label>
               <input id="dem-edit-titulo" type="text" value="${escapeHtmlAttr(dem.titulo || '')}" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
             </div>
-            <div style="grid-column:span 1">
-              <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Responsável</label>
-              <input id="dem-edit-resp" type="text" value="${escapeHtmlAttr(dem.responsavel || dem.responsavel_txt || '')}" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
-            </div>
+            <div style="grid-column:span 1"><!-- resp placeholder --></div>
             ${dem.area !== "Financeiro" ? `
             <div style="grid-column:span 3">
               <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Localização / Sala</label>
@@ -1396,6 +1399,31 @@ function fmtD(d) {
               <div id="dem-edit-sol-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-card);border:1px solid var(--bd2);border-radius:0 0 7px 7px;z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
             </div>` : ""}
           </div>
+          <div style="margin-top:14px;border:1px solid var(--bd1);border-radius:9px;padding:14px;background:var(--bg-surface)" id="dem-encaminhamento-bloco">
+            <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Encaminhamento</div>
+            <div style="display:flex;gap:6px;margin-bottom:10px">
+              <button id="dem-enc-btn-dept" onclick="window._demEncTipo('departamento')"
+                style="padding:5px 14px;border-radius:6px;border:1px solid var(--gr);background:var(--gr);color:#fff;font-size:12px;font-weight:600;cursor:pointer">Departamento</button>
+              <button id="dem-enc-btn-forn" onclick="window._demEncTipo('fornecedor')"
+                style="padding:5px 14px;border-radius:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:12px;cursor:pointer">Fornecedor</button>
+            </div>
+            <input type="hidden" id="dem-enc-tipo" value="${escapeHtmlAttr(dem.responsavel_tipo || 'departamento')}">
+            <input type="hidden" id="dem-enc-forn-id" value="${escapeHtmlAttr(String(dem.fornecedor_id || ''))}">
+            <div id="dem-enc-dept-row">
+              <input id="dem-enc-dept-nome" type="text"
+                value="${escapeHtmlAttr(dem.responsavel_tipo !== 'fornecedor' ? (dem.responsavel || dem.responsavel_txt || '') : '')}"
+                placeholder="Nome do departamento responsável"
+                style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+            </div>
+            <div id="dem-enc-forn-row" style="display:none">
+              <select id="dem-enc-forn-sel"
+                style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box">
+                <option value="">Carregando fornecedores…</option>
+              </select>
+              <div style="font-size:11px;color:var(--tx3);margin-top:6px">O fornecedor receberá uma mensagem automática via WhatsApp ao salvar.</div>
+            </div>
+          </div>
+
           <div style="margin-top:12px">
             <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Descrição</label>
             <textarea id="dem-edit-desc" rows="3" style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;resize:vertical;box-sizing:border-box">${escapeHtml(dem.descricao || '')}</textarea>
@@ -1469,6 +1497,9 @@ function fmtD(d) {
     _carregarAnexosDemanda(id);
     _carregarWADemanda(id, dem);
     _popularSelectEspacos("dem-edit-local");
+    // inicializar encaminhamento com tipo atual
+    const tipoAtual = dem.responsavel_tipo || "departamento";
+    window._demEncTipo(tipoAtual);
   }
 
   /* ── Atualizar status ───────────────────────────────── */
@@ -1517,17 +1548,45 @@ function fmtD(d) {
     const local_id        = localEditEl?.value?.trim() || null;
     const local           = localEditEl?.selectedOptions[0]?.dataset?.nome || null;
     const prioEl          = document.getElementById("dem-edit-prio");
-    const resp            = document.getElementById("dem-edit-resp")?.value?.trim();
     const venc            = document.getElementById("dem-edit-venc")?.value || null;
     const _isFinEdicao    = _ativo?.area === "Financeiro";
+
+    // Encaminhamento
+    const encTipo   = document.getElementById("dem-enc-tipo")?.value || "departamento";
+    const encFornSel = document.getElementById("dem-enc-forn-sel");
+    const encFornId = encTipo === "fornecedor" ? (encFornSel?.value || null) : null;
+    const encFornNome = encTipo === "fornecedor"
+      ? encFornSel?.selectedOptions[0]?.text || ""
+      : (document.getElementById("dem-enc-dept-nome")?.value?.trim() || "");
+    const encFornContato = encTipo === "fornecedor"
+      ? (encFornSel?.selectedOptions[0]?.dataset?.contato || "")
+      : "";
 
     if (!titulo) {
       if (typeof T === "function") T("Campo obrigatório", "Informe o título");
       return;
     }
+    if (encTipo === "fornecedor" && !encFornId) {
+      if (typeof T === "function") T("Campo obrigatório", "Selecione o fornecedor");
+      return;
+    }
 
     try {
-      const payload = { titulo, descricao: desc || "", local, local_id, responsavel: resp || "", data_conclusao: venc };
+      const respAnterior = _ativo?.responsavel || _ativo?.responsavel_txt || "";
+      const respNovo     = encTipo === "fornecedor" ? encFornNome : encFornNome;
+      const mudouResp    = respNovo && respNovo !== respAnterior;
+
+      const payload = {
+        titulo,
+        descricao:        desc || "",
+        local,
+        local_id,
+        responsavel:      encFornNome || "",
+        responsavel_txt:  encFornNome || "",
+        responsavel_tipo: encTipo,
+        fornecedor_id:    encFornId,
+        data_conclusao:   venc,
+      };
       if (prioEl && _podeEditarPrioridade()) payload.prioridade = prioEl.value;
       if (_podeEditarPrioridade()) {
         const solNome = document.getElementById("dem-edit-sol-nome")?.value?.trim();
@@ -1553,7 +1612,44 @@ function fmtD(d) {
         payload.financial_data = novoFd;
       }
       await apiWrite("update", "DEMANDAS", { _row: id, ...payload });
-      if (typeof T === "function") T("✅ Demanda atualizada!", "");
+
+      // Registrar andamento automático se responsável mudou
+      if (mudouResp) {
+        const sb = typeof getSupabase === "function" ? getSupabase() : null;
+        const usuNome = typeof USUARIO_ATUAL !== "undefined" ? (USUARIO_ATUAL?.nome || "") : "";
+        if (sb) {
+          sb.from("demanda_andamentos").insert({
+            demanda_id:    id,
+            usuario_nome:  usuNome,
+            texto:         `Responsável alterado: "${respAnterior || "—"}" → "${respNovo}"`,
+            automatico:    true,
+            tipo:          "troca_responsavel",
+            resp_anterior: respAnterior || "",
+            resp_novo:     respNovo,
+          }).then(() => {}).catch(e => console.warn("andamento resp:", e.message));
+        }
+
+        // Notificar fornecedor via WhatsApp (automático)
+        if (encTipo === "fornecedor" && encFornContato && typeof WA !== "undefined") {
+          const tit = _ativo?.titulo || titulo || "";
+          const desc2 = desc || _ativo?.descricao || "";
+          WA.send({
+            para:    encFornContato,
+            nome:    encFornNome,
+            mensagem:
+              `🔧 *Nova solicitação de serviço — IPPenha*\n\n` +
+              `*Assunto:* ${tit}\n` +
+              `*Categoria:* ${_ativo?.area || ""}${_ativo?.subcategoria ? " / " + _ativo.subcategoria : ""}\n` +
+              (desc2 ? `*Descrição:* ${desc2.slice(0, 200)}\n` : "") +
+              `\nPor favor, confirme o recebimento e entre em contato para agendamento.\n` +
+              `_SIPEN · IPPenha_`,
+            modulo:  "DEMANDAS",
+            chave:   `ENC_${id}_${Date.now()}`,
+          }).catch(e => console.warn("WA fornecedor:", e.message));
+        }
+      }
+
+      if (typeof T === "function") T("✅ Demanda atualizada!", mudouResp ? `Encaminhada para: ${respNovo}` : "");
 
       const idx = _cache.findIndex(r => String(r.id||r._row) === String(id));
       if (idx >= 0) Object.assign(_cache[idx], payload);
@@ -1601,6 +1697,53 @@ function fmtD(d) {
       console.error("demExcluirDemanda:", e);
     }
   };
+
+  /* ── Encaminhamento — toggle tipo e carga de fornecedores ── */
+
+  let _fornecedoresCache = null;
+
+  window._demEncTipo = async function(tipo) {
+    document.getElementById("dem-enc-tipo").value = tipo;
+
+    const btnDept = document.getElementById("dem-enc-btn-dept");
+    const btnForn = document.getElementById("dem-enc-btn-forn");
+    const rowDept = document.getElementById("dem-enc-dept-row");
+    const rowForn = document.getElementById("dem-enc-forn-row");
+
+    if (tipo === "departamento") {
+      btnDept.style.background = "var(--gr)"; btnDept.style.color = "#fff"; btnDept.style.borderColor = "var(--gr)";
+      btnForn.style.background = "transparent"; btnForn.style.color = "var(--tx2)"; btnForn.style.borderColor = "var(--bd2)";
+      rowDept.style.display = "block";
+      rowForn.style.display = "none";
+    } else {
+      btnForn.style.background = "var(--gr)"; btnForn.style.color = "#fff"; btnForn.style.borderColor = "var(--gr)";
+      btnDept.style.background = "transparent"; btnDept.style.color = "var(--tx2)"; btnDept.style.borderColor = "var(--bd2)";
+      rowDept.style.display = "none";
+      rowForn.style.display = "block";
+      await _demCarregarFornecedores();
+    }
+  };
+
+  async function _demCarregarFornecedores() {
+    const sel = document.getElementById("dem-enc-forn-sel");
+    if (!sel) return;
+    if (!_fornecedoresCache) {
+      try {
+        const base = typeof apiBaseUrl === "function" ? apiBaseUrl() : "";
+        const hdrs = typeof apiHeaders === "function" ? apiHeaders() : {};
+        const r = await fetch(
+          `${base}/rest/v1/contratos?status=eq.Ativo&deleted_at=is.null&select=id,fornecedor,contato_fornecedor,titulo&order=fornecedor.asc&limit=200`,
+          { headers: hdrs }
+        );
+        _fornecedoresCache = r.ok ? await r.json() : [];
+      } catch { _fornecedoresCache = []; }
+    }
+    const currentId = document.getElementById("dem-enc-forn-id")?.value || "";
+    sel.innerHTML = `<option value="">— Selecione o fornecedor —</option>` +
+      _fornecedoresCache.map(c =>
+        `<option value="${escapeHtmlAttr(c.id)}" data-contato="${escapeHtmlAttr(c.contato_fornecedor||"")}" ${c.id === currentId ? "selected" : ""}>${escapeHtml(c.fornecedor || c.titulo || c.id)}</option>`
+      ).join("");
+  }
 
   /* ── Autocomplete solicitante (edição) ─────────────── */
 
