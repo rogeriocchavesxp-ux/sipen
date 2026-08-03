@@ -1640,7 +1640,7 @@ function fmtD(d) {
     const desc            = document.getElementById("dem-edit-desc")?.value?.trim();
     const localEditEl     = document.getElementById("dem-edit-local");
     const local_id        = localEditEl?.value?.trim() || null;
-    const local           = localEditEl?.selectedOptions[0]?.dataset?.nome || null;
+    const local           = localEditEl?.selectedOptions?.[0]?.dataset?.nome || null;
     const prioEl          = document.getElementById("dem-edit-prio");
     const venc            = document.getElementById("dem-edit-venc")?.value || null;
     const _isFinEdicao    = _ativo?.area === "Financeiro";
