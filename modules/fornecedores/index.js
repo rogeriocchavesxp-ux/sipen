@@ -174,14 +174,21 @@
     el.innerHTML = `
       <div class="card" style="padding:0;overflow:hidden">
         <div style="overflow-x:auto">
-          <table class="forn-tbl">
+          <table class="forn-tbl" style="table-layout:fixed;width:100%">
+            <colgroup>
+              <col style="width:32%">
+              <col style="width:20%">
+              <col style="width:22%">
+              <col style="width:22%">
+              ${adm ? '<col style="width:40px">' : ''}
+            </colgroup>
             <thead>
               <tr>
                 <th>Nome</th>
                 <th>Contato</th>
                 <th>PIX</th>
                 <th>Banco / Ag / Conta</th>
-                ${adm ? '<th style="width:40px"></th>' : ''}
+                ${adm ? '<th></th>' : ''}
               </tr>
             </thead>
             <tbody>
@@ -193,18 +200,19 @@
   }
 
   function _row(f, adm) {
+    const trunc = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
     const contato = [
-      f.celular  ? `<div>${_esc(f.celular)}</div>`  : '',
-      f.telefone ? `<div style="color:var(--tx3)">${_esc(f.telefone)}</div>` : '',
-      f.email    ? `<div style="color:var(--tx3);font-size:11.5px">${_esc(f.email)}</div>` : '',
+      f.celular  ? `<div style="${trunc}">${_esc(f.celular)}</div>`  : '',
+      f.telefone ? `<div style="color:var(--tx3);${trunc}">${_esc(f.telefone)}</div>` : '',
+      f.email    ? `<div style="color:var(--tx3);font-size:11.5px;${trunc}">${_esc(f.email)}</div>` : '',
     ].join('') || '<span style="color:var(--tx3)">—</span>';
 
     const banco = (f.banco || f.agencia || f.conta)
-      ? `<div style="font-size:12px">${_esc(f.banco || '')}${f.agencia ? ` · Ag ${_esc(f.agencia)}` : ''}${f.conta ? ` · C/C ${_esc(f.conta)}` : ''}</div>`
+      ? `<div style="font-size:12px;${trunc}">${_esc(f.banco || '')}${f.agencia ? ` · Ag ${_esc(f.agencia)}` : ''}${f.conta ? ` · C/C ${_esc(f.conta)}` : ''}</div>`
       : '<span style="color:var(--tx3)">—</span>';
 
     const pix = f.pix
-      ? `<span class="forn-pix-pill">PIX &nbsp;${_esc(f.pix)}</span>`
+      ? `<div style="${trunc}"><span class="forn-pix-pill" style="max-width:100%;${trunc}">PIX &nbsp;${_esc(f.pix)}</span></div>`
       : '<span style="color:var(--tx3)">—</span>';
 
     const acoes = adm ? `
@@ -216,10 +224,9 @@
 
     return `
       <tr>
-        <td>
-          <div style="font-weight:600;color:var(--tx1)">${_esc(f.nome)}</div>
-          ${f.servico ? `<div style="font-size:11.5px;color:var(--amber);font-weight:500;margin-top:2px">${_esc(f.servico)}</div>` : ''}
-          ${f.obs ? `<div style="font-size:11px;color:var(--tx3);margin-top:2px">${_esc(f.obs)}</div>` : ''}
+        <td style="max-width:0">
+          <div style="font-weight:600;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${_esc(f.nome)}">${_esc(f.nome)}</div>
+          ${f.servico ? `<div style="font-size:11.5px;color:var(--amber);font-weight:500;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(f.servico)}</div>` : ''}
         </td>
         <td style="font-size:12.5px">${contato}</td>
         <td>${pix}</td>
