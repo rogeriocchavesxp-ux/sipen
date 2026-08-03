@@ -70,7 +70,7 @@
   async function _carregar() {
     const deptId = await _getDeptId();
     return _get(
-      `nomeados?dept_id=eq.${deptId}&status=eq.ativo&select=id,nome,cargo,obs,pessoa_id,pessoas(id,celular,telefone,email)&order=nome.asc`
+      `nomeados?dept_id=eq.${deptId}&status=eq.ativo&select=id,nome,cargo,obs,pessoa_id,pessoas!nomeados_pessoa_id_fkey(id,celular,telefone,email)&order=nome.asc`
     );
   }
 
