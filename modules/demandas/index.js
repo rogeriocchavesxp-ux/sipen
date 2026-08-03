@@ -1434,11 +1434,10 @@ function fmtD(d) {
           </div>
           <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px 8px">
 
-            <div style="grid-column:span ${_podeEditarPrioridade() ? "8" : "12"}">
+            <div style="grid-column:span 8">
               <label class="dem-fl">Título *</label>
               <input id="dem-edit-titulo" type="text" value="${escapeHtmlAttr(dem.titulo || '')}" class="dem-fi">
             </div>
-            ${_podeEditarPrioridade() ? `
             <div style="grid-column:span 4;position:relative">
               <label class="dem-fl">Solicitante</label>
               <input id="dem-edit-sol-nome" type="text" value="${escapeHtmlAttr(dem.solicitante||dem.solicitante_txt||"")}"
@@ -1447,7 +1446,7 @@ function fmtD(d) {
                 onblur="setTimeout(()=>window._demSolFecharDd(),200)">
               <input id="dem-edit-sol-id" type="hidden" value="${escapeHtmlAttr(String(dem.solicitante_id||""))}">
               <div id="dem-edit-sol-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-card);border:1px solid var(--bd2);border-radius:0 0 6px 6px;z-index:100;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
-            </div>` : ""}
+            </div>
 
             ${dem.area !== "Financeiro" ? `
             <div style="grid-column:span 12">
@@ -1681,13 +1680,11 @@ function fmtD(d) {
         data_conclusao:   venc,
       };
       if (prioEl && _podeEditarPrioridade()) payload.prioridade = prioEl.value;
-      if (_podeEditarPrioridade()) {
-        const solNome = document.getElementById("dem-edit-sol-nome")?.value?.trim();
-        const solId   = document.getElementById("dem-edit-sol-id")?.value || null;
-        if (solNome) {
-          payload.solicitante    = solNome;
-          payload.solicitante_id = solId || null;
-        }
+      const solNome = document.getElementById("dem-edit-sol-nome")?.value?.trim();
+      const solId   = document.getElementById("dem-edit-sol-id")?.value || null;
+      if (solNome) {
+        payload.solicitante    = solNome;
+        payload.solicitante_id = solId || null;
       }
       if (_isFinEdicao) {
         const existFd  = (_ativo?.financial_data && typeof _ativo.financial_data === "object") ? _ativo.financial_data : {};
