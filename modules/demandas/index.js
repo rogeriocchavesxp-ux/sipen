@@ -163,10 +163,11 @@
 
   const _STATUS_FECHADO = ["CONCLUIDA", "PAGO", "CANCELADA"];
 
-  function _toDb(st)    { return _STATUS_DB[st]    || st || "ABERTA"; }
-  function _toLabel(st) { return _STATUS_LABEL[st] || st || "Aberta"; }
+  function _toDb(st)    { return window.SIPEN?.status?.toDb    ? SIPEN.status.toDb(st)    : (_STATUS_DB[st]    || st || "ABERTA"); }
+  function _toLabel(st) { return window.SIPEN?.status?.toLabel ? SIPEN.status.toLabel(st) : (_STATUS_LABEL[st] || st || "Aberta"); }
 
   function pillStatus(st) {
+    if (window.SIPEN?.status?.pill) return SIPEN.status.pill(st);
     const label = _toLabel(st);
     const s = STATUS_CFG[label] || { bg:"rgba(90,96,104,.15)", cl:"var(--tx3)" };
     return `<span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;white-space:nowrap;background:${s.bg};color:${s.cl}">${label||"—"}</span>`;
