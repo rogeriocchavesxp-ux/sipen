@@ -2490,13 +2490,17 @@ function fmtD(d) {
     if (!storagePath) return;
     const sb = _sbClient();
     if (!sb) { if (typeof T === "function") T("Erro", "Serviço temporariamente indisponível."); return; }
+    // Abrir janela antes do await para não ser bloqueada pelo popup blocker
+    const w = window.open("", "_blank", "noopener,noreferrer");
     try {
       const { data, error } = await sb.storage
         .from("financial-documents")
         .createSignedUrl(storagePath, 3600);
       if (error) throw error;
-      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+      if (w) w.location.href = data.signedUrl;
+      else window.open(data.signedUrl, "_blank", "noopener,noreferrer");
     } catch(e) {
+      if (w) w.close();
       if (typeof T === "function") T("Erro ao abrir arquivo", e.message);
     }
   };
