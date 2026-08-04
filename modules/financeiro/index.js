@@ -172,6 +172,7 @@
 
   function _demLabel(st)  { return _DEM_STATUS_LABEL[st] || st || "Aberta"; }
   function _pillDem(st) {
+    if (window.SIPEN?.status?.pill) return SIPEN.status.pill(st);
     const label = _demLabel(st);
     const s = _DEM_STATUS_CFG[label] || { bg:"rgba(90,96,104,.15)", cl:"var(--tx3)" };
     return `<span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;white-space:nowrap;background:${s.bg};color:${s.cl}">${label}</span>`;
@@ -933,8 +934,6 @@
       const linhas = filtrados.length
         ? filtrados.map(r => {
             const fd  = r.financial_data || {};
-            const lbl = _demLabel(r.status);
-            const cfg = _DEM_STATUS_CFG[lbl] || { bg:"rgba(90,96,104,.15)", cl:"var(--tx3)" };
             const ref = tab === "dizimos"
               ? _fmtMes(fd.mes_referencia)
               : _fmtData(fd.data_oferta || r.criado_em);
@@ -946,7 +945,7 @@
               <td style="padding:9px 10px;font-size:12px;color:var(--tx2)">${ref}</td>
               <td style="padding:9px 10px;font-size:12px;font-weight:700;color:var(--tx1);font-variant-numeric:tabular-nums">${fd.valor ? fmtBRL(fd.valor) : "—"}</td>
               <td style="padding:9px 10px;font-size:11px;color:${temComp?"var(--teal)":"var(--tx3)"}">${temComp?"📎 Anexado":"—"}</td>
-              <td style="padding:9px 10px"><span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;white-space:nowrap;background:${cfg.bg};color:${cfg.cl}">${lbl}</span></td>
+              <td style="padding:9px 10px">${_pillDem(r.status)}</td>
               <td style="padding:9px 10px;font-size:11px;color:var(--tx3)">${_fmtData(r.criado_em)}</td>
             </tr>`;
           }).join("")
