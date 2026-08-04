@@ -841,7 +841,7 @@ window.submeter = async function() {
         tipo,
         congregacao:         indicante.congregacao || null,
         ip_dispositivo:      navigator.userAgent?.slice(0, 200) || null,
-        ...(obsPartes.length && { observacao: obsPartes.join("; ") }),
+        observacao:          obsPartes.length ? obsPartes.join("; ") : null,
       };
     });
 
