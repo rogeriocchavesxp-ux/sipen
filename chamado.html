@@ -896,6 +896,54 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
         </div>
       </div>
 
+      <!-- ── Controle de Acesso — Estacionamento ──────── -->
+      <div class="card" id="acesso-est-sec" style="display:none">
+        <div class="card-title">🅿 Solicitação de Controle do Estacionamento</div>
+        <div class="field">
+          <label for="f-cest-modelo">Modelo do veículo <span class="req">*</span></label>
+          <input type="text" id="f-cest-modelo" placeholder="Ex: Honda Civic, Volkswagen Gol">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="f-cest-placa">Placa <span class="req">*</span></label>
+            <input type="text" id="f-cest-placa" placeholder="ABC-1234" maxlength="8" oninput="this.value=this.value.toUpperCase()">
+          </div>
+          <div class="field">
+            <label for="f-cest-cor">Cor do veículo <span class="req">*</span></label>
+            <input type="text" id="f-cest-cor" placeholder="Ex: Prata">
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-cest-motivo">Motivo da solicitação <span class="req">*</span></label>
+          <select id="f-cest-motivo">
+            <option value="">— Selecione —</option>
+            <option value="Novo controle">Novo controle</option>
+            <option value="Controle com defeito">Controle com defeito</option>
+            <option value="Controle perdido">Controle perdido</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ── Controle de Acesso — Facial ───────────────── -->
+      <div class="card" id="acesso-facial-sec" style="display:none">
+        <div class="card-title">⊙ Cadastro de Acesso Facial</div>
+        <p style="font-size:12.5px;color:var(--tx2);margin:0 0 14px">Seus dados serão encaminhados para cadastro na leitora facial da portaria.</p>
+        <div class="row2">
+          <div class="field">
+            <label for="f-facial-cpf">CPF <span class="req">*</span></label>
+            <input type="text" id="f-facial-cpf" placeholder="000.000.000-00" maxlength="14" oninput="_fmtCpf(this)">
+          </div>
+          <div class="field">
+            <label for="f-facial-email">E-mail <span class="req">*</span></label>
+            <input type="email" id="f-facial-email" placeholder="seu@email.com">
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-facial-foto">Foto (selfie nítida, rosto centralizado) <span class="req">*</span></label>
+          <input type="file" id="f-facial-foto" accept="image/*" capture="user" style="padding:8px 0">
+        </div>
+      </div>
+
       <!-- ── Agendamentos: Programação ─────────────────── -->
       <div class="card" id="agend-prog" style="display:none">
         <div class="card-title">📅 Dados da Programação</div>
@@ -1288,7 +1336,7 @@ const CATS = [
     { grupo:"Contratos e Fornecedores",  itens:["Novo contrato","Renovação de contrato","Rescisão de contrato","Cadastro de fornecedor","Aditivo contratual"] },
     { grupo:"Compras e Aquisições",      itens:["Solicitação de compra","Cotação de preço","Aprovação de despesa","Prestação de contas"] },
     { grupo:"Recursos Humanos",          itens:["Cadastro de colaborador","Desligamento","Férias e afastamento","Benefícios","Voluntariado"] },
-    { grupo:"Estacionamento",            itens:["Uso do estacionamento"] },
+    { grupo:"Estacionamento",            itens:["Uso do estacionamento","Controle de Acesso — Estacionamento","Controle de Acesso — Facial"] },
     { grupo:"Planejamento e Documentos", itens:["Planejamento estratégico","Relatório administrativo","Documentação interna","Outros (Administração)"] },
   ]},
   { nome:"Manutenção", icon:"🛠", resp:"Departamento de Manutenção", subcats:[
@@ -1525,6 +1573,49 @@ function _coletarEstacionamento(cat, sub) {
   return { ok: true, extra: "\n\n" + linhas };
 }
 
+function _coletarAcessoEstacionamento(cat, sub) {
+  if (cat !== "Administração" || sub !== "Controle de Acesso — Estacionamento") return { ok: true, extra: "" };
+  const modelo = g("f-cest-modelo");
+  const placa  = g("f-cest-placa");
+  const cor    = g("f-cest-cor");
+  const motivo = g("f-cest-motivo");
+  if (!modelo) return { ok: false, msg: "Informe o modelo do veículo." };
+  if (!placa)  return { ok: false, msg: "Informe a placa do veículo." };
+  if (!cor)    return { ok: false, msg: "Informe a cor do veículo." };
+  if (!motivo) return { ok: false, msg: "Selecione o motivo da solicitação." };
+  const linhas = [
+    "━━━ Controle de Acesso — Estacionamento ━━━",
+    `Motivo: ${motivo}`,
+    `Veículo: ${modelo} · ${cor} · ${placa}`,
+  ].join("\n");
+  return { ok: true, extra: "\n\n" + linhas };
+}
+
+function _coletarAcessoFacial(cat, sub) {
+  if (cat !== "Administração" || sub !== "Controle de Acesso — Facial") return { ok: true, extra: "" };
+  const cpf   = g("f-facial-cpf");
+  const email = g("f-facial-email");
+  const foto  = document.getElementById("f-facial-foto")?.files?.[0];
+  if (!cpf)   return { ok: false, msg: "Informe o CPF." };
+  if (!email) return { ok: false, msg: "Informe o e-mail." };
+  if (!foto)  return { ok: false, msg: "Anexe uma foto para o cadastro facial." };
+  const linhas = [
+    "━━━ Cadastro de Acesso Facial ━━━",
+    `CPF: ${cpf}`,
+    `E-mail: ${email}`,
+    `Foto: ${foto.name}`,
+  ].join("\n");
+  return { ok: true, extra: "\n\n" + linhas };
+}
+
+function _fmtCpf(input) {
+  let v = input.value.replace(/\D/g, "").slice(0, 11);
+  if (v.length > 9)      v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2})/, "$1.$2.$3-$4");
+  else if (v.length > 6) v = v.replace(/^(\d{3})(\d{3})(\d{0,3})/, "$1.$2.$3");
+  else if (v.length > 3) v = v.replace(/^(\d{3})(\d{0,3})/, "$1.$2");
+  input.value = v;
+}
+
 function _coletarComunicacao(cat, sub) {
   if (cat !== "Comunicação" || !COM_SUBS.has(sub)) return { ok: true, extra: "" };
   const areas    = [...document.querySelectorAll("input[name='com-area']:checked")].map(e => e.value);
@@ -1556,13 +1647,15 @@ function onSubChange() {
     if (sub === "Solicitação de pagamento") _show("fin-pag");
     if (sub === "Reembolso")               _show("fin-reimb");
   }
-  if (cat === "Administração" && sub === "Uso do estacionamento") _show("estac-sec");
+  if (cat === "Administração" && sub === "Uso do estacionamento")            _show("estac-sec");
+  if (cat === "Administração" && sub === "Controle de Acesso — Estacionamento") _show("acesso-est-sec");
+  if (cat === "Administração" && sub === "Controle de Acesso — Facial")         _show("acesso-facial-sec");
   if (cat === "Agendamentos"  && PROG_SUBS.has(sub)) { agIniciar(sub); return; }
   if (cat === "Comunicação"   && COM_SUBS.has(sub))  { _show("com-sol-sec"); _ensureComSol(sub); }
 }
 
 function _ocultarExtras() {
-  ["fin-pag","fin-reimb","fin-pix-sec","fin-ted-sec","agend-prog","com-sol-sec","estac-sec"].forEach(_hide);
+  ["fin-pag","fin-reimb","fin-pix-sec","fin-ted-sec","agend-prog","com-sol-sec","estac-sec","acesso-est-sec","acesso-facial-sec"].forEach(_hide);
 }
 
 function _ocultarFinanceiro() { _ocultarExtras(); }
@@ -1964,11 +2057,15 @@ async function enviarChamado() {
   if (!com.ok)   { mostrarErro(com.msg);   return; }
   const estac = _coletarEstacionamento(cat, sub);
   if (!estac.ok) { mostrarErro(estac.msg); return; }
+  const acessoEst = _coletarAcessoEstacionamento(cat, sub);
+  if (!acessoEst.ok) { mostrarErro(acessoEst.msg); return; }
+  const acessoFacial = _coletarAcessoFacial(cat, sub);
+  if (!acessoFacial.ok) { mostrarErro(acessoFacial.msg); return; }
 
   const catObj  = CATS.find(c => c.nome === cat);
   const resp    = catObj?.resp || "Administração Geral";
   const hoje    = new Date().toISOString().split("T")[0];
-  const descFinal = desc + fin.extra + agend.extra + com.extra + estac.extra;
+  const descFinal = desc + fin.extra + agend.extra + com.extra + estac.extra + acessoEst.extra + acessoFacial.extra;
 
   const newId = crypto.randomUUID();
 
