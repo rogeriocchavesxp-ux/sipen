@@ -1560,6 +1560,40 @@ function fmtD(d) {
                   onmouseout="this.style.background=this.dataset.status==='${dem.status}'?'rgba(58,170,92,.1)':'var(--bg-card)'">
                   ${dem.status===st?"✓ ":"○ "} ${label}
                 </button>`).join("")}
+              <button onclick="demEncAbrir('${id}')" id="dem-enc-abrir-${id}"
+                style="grid-column:span 2;text-align:left;padding:7px 12px;border-radius:6px;
+                       border:1px solid var(--violet);background:rgba(139,111,212,.07);color:var(--violet);
+                       font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s">
+                → Encaminhar para Departamento / Fornecedor
+              </button>
+            </div>
+            <div id="dem-enc-s-panel-${id}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd1)">
+              <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Encaminhar para</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+                <button id="dem-enc-s-btn-dept-${id}" onclick="window._demEncSTipo('departamento','${id}')"
+                  style="padding:3px 10px;border-radius:5px;border:1px solid var(--gr);background:var(--gr);color:#fff;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">Departamento</button>
+                <button id="dem-enc-s-btn-forn-${id}" onclick="window._demEncSTipo('fornecedor','${id}')"
+                  style="padding:3px 10px;border-radius:5px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">Fornecedor</button>
+                <input type="hidden" id="dem-enc-s-tipo-${id}" value="departamento">
+                <input type="hidden" id="dem-enc-s-forn-id-${id}" value="${escapeHtmlAttr(String(dem.fornecedor_id || ''))}">
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div id="dem-enc-s-dept-row-${id}" style="flex:1;min-width:0">
+                  <select id="dem-enc-s-dept-${id}" class="dem-fi" style="margin:0;width:100%">
+                    <option value="">Carregando...</option>
+                  </select>
+                </div>
+                <div id="dem-enc-s-forn-row-${id}" style="flex:1;min-width:0;display:none">
+                  <select id="dem-enc-s-forn-${id}" class="dem-fi" style="margin:0;width:100%">
+                    <option value="">Carregando...</option>
+                  </select>
+                </div>
+                <button onclick="demSalvarEncaminhamento('${id}')"
+                  style="padding:7px 16px;border-radius:6px;border:none;background:var(--violet);color:#fff;
+                         font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">
+                  Confirmar
+                </button>
+              </div>
             </div>`}
           </div>
         </div>
@@ -2095,99 +2129,140 @@ function fmtD(d) {
   let _fornecedoresCache = null;
   let _departamentosCache = null;
 
-  window._demEncTipo = async function(tipo) {
-    document.getElementById("dem-enc-tipo").value = tipo;
-
-    const btnDept = document.getElementById("dem-enc-btn-dept");
-    const btnForn = document.getElementById("dem-enc-btn-forn");
-    const rowDept = document.getElementById("dem-enc-dept-row");
-    const rowForn = document.getElementById("dem-enc-forn-row");
-
-    if (tipo === "departamento") {
-      btnDept.style.background = "var(--gr)"; btnDept.style.color = "#fff"; btnDept.style.borderColor = "var(--gr)";
-      btnForn.style.background = "transparent"; btnForn.style.color = "var(--tx2)"; btnForn.style.borderColor = "var(--bd2)";
-      rowDept.style.display = "block";
-      rowForn.style.display = "none";
-      await _demCarregarDepartamentos();
-    } else {
-      btnForn.style.background = "var(--gr)"; btnForn.style.color = "#fff"; btnForn.style.borderColor = "var(--gr)";
-      btnDept.style.background = "transparent"; btnDept.style.color = "var(--tx2)"; btnDept.style.borderColor = "var(--bd2)";
-      rowDept.style.display = "none";
-      rowForn.style.display = "block";
-      await _demCarregarFornecedores();
-    }
-  };
-
-  async function _demCarregarDepartamentos() {
-    const sel = document.getElementById("dem-enc-dept-nome");
-    if (!sel) return;
-    if (!_departamentosCache || !_departamentosCache.length) {
+  async function _loadDeptOptions(sel, currentVal) {
+    if (!_departamentosCache) {
       try {
-        const url  = (typeof SUPABASE_URL  !== "undefined" ? SUPABASE_URL  : "").replace(/\/$/, "");
-        const key  = typeof SUPABASE_ANON_KEY !== "undefined" ? SUPABASE_ANON_KEY : "";
-        const tok  = typeof sipenToken === "function" ? sipenToken() : key;
-        const r = await fetch(
-          `${url}/rest/v1/ministerios?select=id,nome&order=nome.asc&limit=300`,
-          { headers: { apikey: key, Authorization: `Bearer ${tok}` } }
-        );
+        const url = (typeof SUPABASE_URL !== "undefined" ? SUPABASE_URL : "").replace(/\/$/, "");
+        const key = typeof SUPABASE_ANON_KEY !== "undefined" ? SUPABASE_ANON_KEY : "";
+        const tok = typeof sipenToken === "function" ? sipenToken() : key;
+        const r = await fetch(`${url}/rest/v1/ministerios?select=id,nome&order=nome.asc&limit=300`,
+          { headers: { apikey: key, Authorization: `Bearer ${tok}` } });
         const rows = r.ok ? await r.json() : [];
         _departamentosCache = rows.length ? rows : null;
       } catch { _departamentosCache = null; }
     }
-    if (!_departamentosCache) {
-      sel.innerHTML = `<option value="">Nenhum departamento encontrado</option>`;
-      return;
-    }
-    const atual = sel.dataset.current || sel.value;
+    if (!_departamentosCache) { sel.innerHTML = `<option value="">Nenhum departamento encontrado</option>`; return; }
     sel.innerHTML = `<option value="">— Selecione o departamento —</option>` +
       _departamentosCache.map(d =>
-        `<option value="${escapeHtmlAttr(d.nome)}"${d.nome === atual ? " selected" : ""}>${escapeHtml(d.nome)}</option>`
+        `<option value="${escapeHtmlAttr(d.nome)}"${d.nome === currentVal ? " selected" : ""}>${escapeHtml(d.nome)}</option>`
       ).join("");
-    if (atual) sel.value = atual;
+    if (currentVal) sel.value = currentVal;
   }
 
-  async function _demCarregarFornecedores() {
-    const sel = document.getElementById("dem-enc-forn-sel");
-    if (!sel) return;
+  async function _loadFornOptions(sel, currentId) {
     if (!_fornecedoresCache) {
       try {
         const base = typeof apiBaseUrl === "function" ? apiBaseUrl() : "";
         const hdrs = typeof apiHeaders === "function" ? apiHeaders() : {};
-        const rDept = await fetch(
-          `${base}/rest/v1/dept_administrativos?nome=eq.Fornecedores&select=id`,
-          { headers: hdrs }
-        );
+        const rDept = await fetch(`${base}/rest/v1/dept_administrativos?nome=eq.Fornecedores&select=id`, { headers: hdrs });
         const depts = rDept.ok ? await rDept.json() : [];
         if (depts.length) {
           const deptId = depts[0].id;
           const rMembros = await fetch(
             `${base}/rest/v1/nomeados?dept_id=eq.${deptId}&status=eq.ativo` +
-            `&select=id,nome,cargo,pessoas!nomeados_pessoa_id_fkey(id,celular,telefone)` +
-            `&order=nome.asc&limit=200`,
+            `&select=id,nome,cargo,pessoas!nomeados_pessoa_id_fkey(id,celular,telefone)&order=nome.asc&limit=200`,
             { headers: hdrs }
           );
           const membros = rMembros.ok ? await rMembros.json() : [];
           _fornecedoresCache = membros.map(m => ({
-            id:      m.id,
-            nome:    m.nome || m.pessoas?.nome || "—",
-            contato: m.pessoas?.celular || m.pessoas?.telefone || "",
-            cargo:   m.cargo || "",
+            id: m.id, nome: m.nome || m.pessoas?.nome || "—",
+            contato: m.pessoas?.celular || m.pessoas?.telefone || "", cargo: m.cargo || "",
           }));
-        } else {
-          _fornecedoresCache = [];
-        }
+        } else { _fornecedoresCache = []; }
       } catch { _fornecedoresCache = []; }
     }
-    const currentId = document.getElementById("dem-enc-forn-id")?.value || "";
-    if (!_fornecedoresCache.length) {
-      sel.innerHTML = `<option value="">Nenhum fornecedor cadastrado no departamento "Fornecedores"</option>`;
-      return;
-    }
+    if (!_fornecedoresCache?.length) { sel.innerHTML = `<option value="">Nenhum fornecedor cadastrado no departamento "Fornecedores"</option>`; return; }
     sel.innerHTML = `<option value="">— Selecione o fornecedor —</option>` +
       _fornecedoresCache.map(c =>
-        `<option value="${escapeHtmlAttr(c.id)}" data-contato="${escapeHtmlAttr(c.contato)}" ${c.id === currentId ? "selected" : ""}>${escapeHtml(c.nome)}${c.cargo ? ` · ${escapeHtml(c.cargo)}` : ""}</option>`
+        `<option value="${escapeHtmlAttr(c.id)}" data-contato="${escapeHtmlAttr(c.contato)}" ${String(c.id) === String(currentId) ? "selected" : ""}>${escapeHtml(c.nome)}${c.cargo ? ` · ${escapeHtml(c.cargo)}` : ""}</option>`
       ).join("");
   }
+
+  window._demEncTipo = async function(tipo) {
+    document.getElementById("dem-enc-tipo").value = tipo;
+    const btnDept = document.getElementById("dem-enc-btn-dept");
+    const btnForn = document.getElementById("dem-enc-btn-forn");
+    const rowDept = document.getElementById("dem-enc-dept-row");
+    const rowForn = document.getElementById("dem-enc-forn-row");
+    if (tipo === "departamento") {
+      btnDept.style.background = "var(--gr)"; btnDept.style.color = "#fff"; btnDept.style.borderColor = "var(--gr)";
+      btnForn.style.background = "transparent"; btnForn.style.color = "var(--tx2)"; btnForn.style.borderColor = "var(--bd2)";
+      rowDept.style.display = "block"; rowForn.style.display = "none";
+      const sel = document.getElementById("dem-enc-dept-nome");
+      if (sel) await _loadDeptOptions(sel, sel.dataset.current || sel.value);
+    } else {
+      btnForn.style.background = "var(--gr)"; btnForn.style.color = "#fff"; btnForn.style.borderColor = "var(--gr)";
+      btnDept.style.background = "transparent"; btnDept.style.color = "var(--tx2)"; btnDept.style.borderColor = "var(--bd2)";
+      rowDept.style.display = "none"; rowForn.style.display = "block";
+      const sel = document.getElementById("dem-enc-forn-sel");
+      const currentId = document.getElementById("dem-enc-forn-id")?.value || "";
+      if (sel) await _loadFornOptions(sel, currentId);
+    }
+  };
+
+  /* ── Encaminhamento via painel de status ─────────────── */
+
+  window._demEncSTipo = async function(tipo, pid) {
+    document.getElementById(`dem-enc-s-tipo-${pid}`).value = tipo;
+    const btnDept = document.getElementById(`dem-enc-s-btn-dept-${pid}`);
+    const btnForn = document.getElementById(`dem-enc-s-btn-forn-${pid}`);
+    const rowDept = document.getElementById(`dem-enc-s-dept-row-${pid}`);
+    const rowForn = document.getElementById(`dem-enc-s-forn-row-${pid}`);
+    if (tipo === "departamento") {
+      btnDept.style.background = "var(--gr)"; btnDept.style.color = "#fff"; btnDept.style.borderColor = "var(--gr)";
+      btnForn.style.background = "transparent"; btnForn.style.color = "var(--tx2)"; btnForn.style.borderColor = "var(--bd2)";
+      rowDept.style.display = "block"; rowForn.style.display = "none";
+      await _loadDeptOptions(document.getElementById(`dem-enc-s-dept-${pid}`), "");
+    } else {
+      btnForn.style.background = "var(--gr)"; btnForn.style.color = "#fff"; btnForn.style.borderColor = "var(--gr)";
+      btnDept.style.background = "transparent"; btnDept.style.color = "var(--tx2)"; btnDept.style.borderColor = "var(--bd2)";
+      rowDept.style.display = "none"; rowForn.style.display = "block";
+      const currentId = document.getElementById(`dem-enc-s-forn-id-${pid}`)?.value || "";
+      await _loadFornOptions(document.getElementById(`dem-enc-s-forn-${pid}`), currentId);
+    }
+  };
+
+  window.demEncAbrir = async function(pid) {
+    const panel = document.getElementById(`dem-enc-s-panel-${pid}`);
+    if (!panel) return;
+    const isOpen = panel.style.display !== "none";
+    panel.style.display = isOpen ? "none" : "block";
+    if (!isOpen) await window._demEncSTipo("departamento", pid);
+  };
+
+  window.demSalvarEncaminhamento = async function(pid) {
+    const tipo = document.getElementById(`dem-enc-s-tipo-${pid}`)?.value || "departamento";
+    let responsavel = "";
+    let fornecedor_id = null;
+    if (tipo === "fornecedor") {
+      const fSel = document.getElementById(`dem-enc-s-forn-${pid}`);
+      const selId = fSel?.value;
+      if (!selId) { if (typeof T === "function") T("Atenção", "Selecione um fornecedor"); return; }
+      const forn = (_fornecedoresCache || []).find(f => String(f.id) === String(selId));
+      responsavel = forn?.nome || ""; fornecedor_id = selId;
+    } else {
+      responsavel = document.getElementById(`dem-enc-s-dept-${pid}`)?.value?.trim() || "";
+      if (!responsavel) { if (typeof T === "function") T("Atenção", "Selecione um departamento"); return; }
+    }
+    try {
+      await apiWrite("update", "DEMANDAS", {
+        _row: pid, responsavel, responsavel_txt: responsavel,
+        responsavel_tipo: tipo, fornecedor_id: fornecedor_id || null,
+        status: _toDb("Em Andamento"),
+      });
+      const idx = _cache.findIndex(r => String(r.id || r._row) === String(pid));
+      if (idx >= 0) Object.assign(_cache[idx], { responsavel, responsavel_tipo: tipo, fornecedor_id: fornecedor_id || null, status: "Em Andamento" });
+      if (_ativo && String(_ativo.id || _ativo._row) === String(pid)) {
+        Object.assign(_ativo, { responsavel, responsavel_tipo: tipo, fornecedor_id: fornecedor_id || null, status: "Em Andamento" });
+        await _registrarAndamentoAuto(pid, `Encaminhado para "${responsavel}"`, "Em Andamento");
+        _renderDetalhe(_ativo);
+      }
+      _atualizarBadge();
+      if (typeof T === "function") T("✅ Encaminhado", `Para: ${responsavel}`);
+    } catch(e) {
+      if (typeof T === "function") T("Erro", e.message || "Tente novamente");
+    }
+  };
 
   /* ── Autocomplete solicitante (edição) ─────────────── */
 
