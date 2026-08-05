@@ -1648,7 +1648,12 @@ function onSubChange() {
     if (sub === "Reembolso")               _show("fin-reimb");
   }
   if (cat === "Administração" && sub === "Uso do estacionamento")            _show("estac-sec");
-  if (cat === "Administração" && sub === "Controle de Acesso — Estacionamento") _show("acesso-est-sec");
+  if (cat === "Administração" && sub === "Controle de Acesso — Estacionamento") {
+    _show("acesso-est-sec");
+    _hide("wrap-titulo"); _hide("wrap-desc"); _hide("wrap-local");
+    const t = document.getElementById("f-titulo"); if (t) t.value = "Solicitação de Controle de Acesso — Estacionamento";
+    const d = document.getElementById("f-desc");   if (d) d.value = "Solicitação de controle remoto para acesso ao estacionamento.";
+  }
   if (cat === "Administração" && sub === "Controle de Acesso — Facial") {
     _show("acesso-facial-sec");
     _hide("wrap-titulo"); _hide("wrap-desc"); _hide("wrap-local");
