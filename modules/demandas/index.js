@@ -185,6 +185,14 @@ function fmtD(d) {
     const s = d.split("T")[0].split("-");
     return `${s[2]}/${s[1]}/${s[0]}`;
   }
+  function fmtDT(d) {
+    if (!d) return "—";
+    const [date, time] = d.includes("T") ? d.split("T") : [d, null];
+    const [y, m, day] = date.split("-");
+    if (!time) return `${day}/${m}/${y}`;
+    const [h, min] = time.split(":");
+    return `${day}/${m}/${y} às ${h}:${min}`;
+  }
 
   function _sp() {
     return `<span style="display:inline-block;width:11px;height:11px;border:2px solid var(--gr);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px"></span>`;
@@ -632,7 +640,7 @@ function fmtD(d) {
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${nomePropio(r.responsavel || r.responsavel_txt) || "—"}</td>
                 <td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--tx1);white-space:nowrap">${r.financial_data?.valor != null ? `R$ ${parseFloat(r.financial_data.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}</td>
                 <td style="padding:8px 6px">${pillStatus(r.status)}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${fmtD(r.data_abertura||r.criado_em)}</td>
+                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${fmtDT(r.criado_em) || fmtD(r.data_abertura)}</td>
               </tr>`).join("")}
           </tbody>
         </table>
@@ -1330,7 +1338,7 @@ function fmtD(d) {
         }
         return escapeHtml(nome);
       })()],
-      ["Abertura",      fmtD(dem.data_abertura||dem.criado_em)],
+      ["Abertura",      fmtDT(dem.criado_em) || fmtD(dem.data_abertura)],
     ].filter(Boolean);
     if (dem.numero_chamado) {
       detailRows.unshift(["N° do chamado", `<span style="font-weight:700;color:var(--acc,#4a9cf5);letter-spacing:.04em">${escapeHtml(dem.numero_chamado)}</span>`]);
@@ -1350,7 +1358,7 @@ function fmtD(d) {
       <div class="hero">
         <div class="hero-ic" style="background:${catCor(dem.area)}18;border-color:${catCor(dem.area)}44;font-size:22px">${catIcon(dem.area)}</div>
         <div>
-          <div class="hero-lbl">Demanda · ${fmtD(dem.data_abertura||dem.criado_em)}</div>
+          <div class="hero-lbl">Demanda · ${fmtDT(dem.criado_em) || fmtD(dem.data_abertura)}</div>
           <div class="hero-ttl">${escapeHtml(dem.titulo) || "Sem título"}</div>
           <div class="hero-dsc" style="display:flex;gap:8px;align-items:center;margin-top:4px">
             ${pillStatus(dem.status)}
