@@ -3776,7 +3776,7 @@
                   </div>
                   <div style="display:flex;align-items:center;gap:8px">
                     ${r.data_inicio ? `<div style="font-size:11px;color:var(--tx3)">desde ${new Date(r.data_inicio+'T12:00:00').toLocaleDateString('pt-BR')}</div>` : ''}
-                    <button onclick="window._socMenuNomeado(event,'${r.id}','lider')" style="background:none;border:none;cursor:pointer;padding:3px 8px;color:var(--tx3);font-size:15px;border-radius:4px;line-height:1">⋯</button>
+                    <button onclick="window._socMenuNomeado(event,this,'${r.id}','lider')" style="background:none;border:none;cursor:pointer;padding:3px 8px;color:var(--tx3);font-size:15px;border-radius:4px;line-height:1">⋯</button>
                   </div>
                 </div>`).join('')}
             </div>`).join('')}
@@ -3804,7 +3804,7 @@
               <td style="font-size:11.5px;color:var(--tx3)">${_hEsc(r.cargo || '—')}</td>
               <td style="font-size:11.5px;color:var(--tx3)">${r.data_inicio ? new Date(r.data_inicio+'T12:00:00').toLocaleDateString('pt-BR') : '—'}</td>
               <td style="text-align:right;padding:4px 8px">
-                <button onclick="window._socMenuNomeado(event,'${r.id}','membro')" style="background:none;border:none;cursor:pointer;padding:3px 8px;color:var(--tx3);font-size:15px;border-radius:4px;line-height:1">⋯</button>
+                <button onclick="window._socMenuNomeado(event,this,'${r.id}','membro')" style="background:none;border:none;cursor:pointer;padding:3px 8px;color:var(--tx3);font-size:15px;border-radius:4px;line-height:1">⋯</button>
               </td>
             </tr>`).join('')}
         </tbody>
@@ -3950,10 +3950,10 @@
   window._socSalvarMembro = _socSalvarMembro;
 
   /* ── Menu ⋯ e remoção de nomeado ─────────────────────────── */
-  function _socMenuNomeado(evt, id, tipo) {
+  function _socMenuNomeado(evt, btn, id, tipo) {
     evt.stopPropagation();
     document.getElementById('_soc-ctx')?.remove();
-    const rect = evt.currentTarget.getBoundingClientRect();
+    const rect = btn.getBoundingClientRect();
     const menu = document.createElement('div');
     menu.id = '_soc-ctx';
     menu.style.cssText = 'position:fixed;z-index:9999;background:var(--bg-card,#1e2126);border:1px solid var(--bd2,#3a3f47);border-radius:8px;padding:4px;box-shadow:0 4px 16px rgba(0,0,0,.3);min-width:130px';
@@ -3972,11 +3972,10 @@
     if (!confirm(`Remover "${row?.nome || '?'}"?`)) return;
     try {
       const r = await fetch(`${SUPABASE_URL}/rest/v1/nomeados?id=eq.${id}`, {
-        method: 'PATCH', headers: _hdrJson(),
-        body: JSON.stringify({ deleted_at: new Date().toISOString() }),
+        method: 'DELETE', headers: _hdr(),
       });
-      if (!r.ok) throw new Error(r.status);
-      _socRows = _socRows.filter(r => r.id !== id);
+      if (!r.ok) throw new Error(`Erro ${r.status}`);
+      _socRows = _socRows.filter(row => row.id !== id);
       if (tipo === 'lider') { _socRenderLideranca(); _socRenderHeader(); }
       else                    _socRenderMembros();
       _socRenderVisaoGeral();
