@@ -3812,7 +3812,8 @@
   }
 
   /* ── Formulário: Adicionar Líder ────────────────────────── */
-  function _socMostrarFormLider() {
+  async function _socMostrarFormLider() {
+    await _carregarPessoas();
     const el = document.getElementById('soc-lid-form');
     if (!el) return;
     el.style.display = '';
@@ -3821,8 +3822,8 @@
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--tx2);margin-bottom:12px">Novo Líder</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
           <div>
-            <label style="${_LB}">Nome <span style="color:var(--rose)">*</span></label>
-            <input id="soc-lid-nome" type="text" placeholder="Nome completo" style="${_INP}">
+            <label style="${_LB}">Membro <span style="color:var(--rose)">*</span></label>
+            <select id="soc-lid-pessoa" style="${_INP}">${_optionsPessoa('')}</select>
           </div>
           <div>
             <label style="${_LB}">Cargo <span style="color:var(--rose)">*</span></label>
@@ -3851,21 +3852,22 @@
           <button onclick="window._socSalvarLider()" style="padding:7px 16px;border-radius:7px;border:none;background:var(--violet);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer">Salvar</button>
         </div>
       </div>`;
-    document.getElementById('soc-lid-nome')?.focus();
   }
   window._socMostrarFormLider = _socMostrarFormLider;
 
   async function _socSalvarLider() {
     if (!_socAtual) return;
-    const nome   = (document.getElementById('soc-lid-nome')?.value || '').trim();
-    const cargo  = (document.getElementById('soc-lid-cargo')?.value || '').trim();
-    const funcao = document.getElementById('soc-lid-funcao')?.value || null;
-    const data   = document.getElementById('soc-lid-data')?.value || null;
-    const errEl  = document.getElementById('soc-lid-err');
+    const pessoaSel  = document.getElementById('soc-lid-pessoa');
+    const pessoa_id  = pessoaSel?.value || null;
+    const nome       = pessoaSel?.options[pessoaSel.selectedIndex]?.text?.trim() || '';
+    const cargo      = (document.getElementById('soc-lid-cargo')?.value || '').trim();
+    const funcao     = document.getElementById('soc-lid-funcao')?.value || null;
+    const data       = document.getElementById('soc-lid-data')?.value || null;
+    const errEl      = document.getElementById('soc-lid-err');
     if (errEl) errEl.style.display = 'none';
-    if (!nome)  { if (errEl) { errEl.textContent = 'Nome é obrigatório.';  errEl.style.display = ''; } return; }
-    if (!cargo) { if (errEl) { errEl.textContent = 'Cargo é obrigatório.'; errEl.style.display = ''; } return; }
-    const payload = { orgao_tipo: 'sociedade', orgao: _socAtual.orgao, nome, cargo, tipo_nomeacao: 'lider', status: 'ativo' };
+    if (!pessoa_id) { if (errEl) { errEl.textContent = 'Selecione um membro.';  errEl.style.display = ''; } return; }
+    if (!cargo)     { if (errEl) { errEl.textContent = 'Cargo é obrigatório.';  errEl.style.display = ''; } return; }
+    const payload = { orgao_tipo: 'sociedade', orgao: _socAtual.orgao, nome, cargo, pessoa_id, tipo_nomeacao: 'lider', status: 'ativo' };
     if (funcao) payload.funcao_lider = funcao;
     if (data)   payload.data_inicio  = data;
     try {
@@ -3887,7 +3889,8 @@
   window._socSalvarLider = _socSalvarLider;
 
   /* ── Formulário: Adicionar Membro ────────────────────────── */
-  function _socMostrarFormMembro() {
+  async function _socMostrarFormMembro() {
+    await _carregarPessoas();
     const el = document.getElementById('soc-mem-form');
     if (!el) return;
     el.style.display = '';
@@ -3896,8 +3899,8 @@
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--tx2);margin-bottom:12px">Novo Membro</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
           <div>
-            <label style="${_LB}">Nome <span style="color:var(--rose)">*</span></label>
-            <input id="soc-mem-nome" type="text" placeholder="Nome completo" style="${_INP}">
+            <label style="${_LB}">Membro <span style="color:var(--rose)">*</span></label>
+            <select id="soc-mem-pessoa" style="${_INP}">${_optionsPessoa('')}</select>
           </div>
           <div>
             <label style="${_LB}">Cargo / Função</label>
@@ -3914,19 +3917,20 @@
           <button onclick="window._socSalvarMembro()" style="padding:7px 16px;border-radius:7px;border:none;background:var(--violet);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer">Salvar</button>
         </div>
       </div>`;
-    document.getElementById('soc-mem-nome')?.focus();
   }
   window._socMostrarFormMembro = _socMostrarFormMembro;
 
   async function _socSalvarMembro() {
     if (!_socAtual) return;
-    const nome  = (document.getElementById('soc-mem-nome')?.value || '').trim();
-    const cargo = (document.getElementById('soc-mem-cargo')?.value || '').trim() || 'Membro';
-    const data  = document.getElementById('soc-mem-data')?.value || null;
-    const errEl = document.getElementById('soc-mem-err');
+    const pessoaSel = document.getElementById('soc-mem-pessoa');
+    const pessoa_id = pessoaSel?.value || null;
+    const nome      = pessoaSel?.options[pessoaSel.selectedIndex]?.text?.trim() || '';
+    const cargo     = (document.getElementById('soc-mem-cargo')?.value || '').trim() || 'Membro';
+    const data      = document.getElementById('soc-mem-data')?.value || null;
+    const errEl     = document.getElementById('soc-mem-err');
     if (errEl) errEl.style.display = 'none';
-    if (!nome) { if (errEl) { errEl.textContent = 'Nome é obrigatório.'; errEl.style.display = ''; } return; }
-    const payload = { orgao_tipo: 'sociedade', orgao: _socAtual.orgao, nome, cargo, tipo_nomeacao: 'membro', status: 'ativo' };
+    if (!pessoa_id) { if (errEl) { errEl.textContent = 'Selecione um membro.'; errEl.style.display = ''; } return; }
+    const payload = { orgao_tipo: 'sociedade', orgao: _socAtual.orgao, nome, cargo, pessoa_id, tipo_nomeacao: 'membro', status: 'ativo' };
     if (data) payload.data_inicio = data;
     try {
       const r = await fetch(`${SUPABASE_URL}/rest/v1/nomeados`, {
