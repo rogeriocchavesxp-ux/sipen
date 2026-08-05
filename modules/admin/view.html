@@ -223,15 +223,8 @@
       </div>
     </div>
     <div class="bnav" style="--mc:var(--gold)">
-      <div class="bni" onclick="go('admin-dash')">Dashboard</div>
-      <div class="bni" onclick="go('admin-sec')" style="display:none">Secretaria</div>
-      <div class="bni" onclick="go('admin-rh')">RH</div>
-      <div class="bni" onclick="go('admin-con')">Contratos</div>
-      <div class="bni" onclick="go('admin-doc')">Documentos</div>
-      <div class="bni" onclick="go('admin-est')">Estoque</div>
-      <div class="bni" onclick="go('admin-pessoas')">Cadastro de Pessoas</div>
-      <div class="bni" onclick="go('admin-demandas')">Demandas</div>
-      <div class="bni" onclick="go('admin-espacos')">Espaços</div>
+      <div class="bni" onclick="go('admin-parking-controls')">Estacionamento</div>
+      <div class="bni" onclick="go('admin-facial')">Acesso Facial</div>
     </div>
     <div class="ct">
       <div class="ce-kpis">
@@ -240,6 +233,11 @@
         <div class="kpi ce-kpi"><div class="kpi-ico" style="background:rgba(208,104,104,.12);color:var(--rose)">✕</div><div class="kpi-body"><div class="kpi-lbl">Inativos</div><div class="kpi-val" id="af-kpi-inativos">0</div><div class="kpi-d nu">sem acesso</div></div></div>
         <div class="kpi ce-kpi"><div class="kpi-ico" style="background:rgba(212,168,67,.15);color:var(--gold)">!</div><div class="kpi-body"><div class="kpi-lbl">Não vinculados</div><div class="kpi-val" id="af-kpi-nv">0</div><div class="kpi-d wa">revisão pendente</div></div></div>
       </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="ctit">Solicitações Pendentes <span class="cact" onclick="afCarregarSolicitacoes()">↻</span></div>
+        <div id="af-sol-list"><div style="color:var(--tx3);font-size:11.5px;padding:8px 0">Carregando...</div></div>
+      </div>
+
       <div class="card">
         <div class="ctit">Filtros <span class="cact" onclick="afCarregar()">↻ Atualizar</span></div>
         <div style="display:grid;grid-template-columns:repeat(3,minmax(140px,1fr));gap:8px;margin-top:10px">

@@ -610,8 +610,71 @@
     win.document.close();
   }
 
+  /* ── solicitações pendentes (demandas do chamado) ── */
+
+  const _SOL_ATIVAS = ["Aberta","Em Análise","Em Andamento","Pendente","Aguardando Pagamento"];
+
+  async function afCarregarSolicitacoes() {
+    const el = document.getElementById('af-sol-list');
+    if (!el) return;
+    try {
+      const base = typeof apiBaseUrl === 'function' ? apiBaseUrl() : '';
+      const hdrs = typeof apiHeaders === 'function' ? apiHeaders({ 'Prefer': 'count=none' }) : {};
+      const url  = `${base}/rest/v1/v_demandas?select=id,numero_chamado,solicitante,status,criado_em&subcategoria=eq.Controle de Acesso — Facial&order=criado_em.desc&limit=100`;
+      const res  = await fetch(url, { method: 'GET', headers: hdrs });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const todas = Array.isArray(data) ? data : [];
+      const pendentes = todas.filter(r => _SOL_ATIVAS.includes(r.status));
+
+      if (!pendentes.length) {
+        el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:8px 0">Nenhuma solicitação pendente.</div>`;
+        return;
+      }
+
+      el.innerHTML = `<div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:11.5px">
+          <thead><tr style="border-bottom:1px solid var(--bd2)">
+            <th style="text-align:left;padding:8px 8px;color:var(--tx3);font-size:10px;text-transform:uppercase">Nº Chamado</th>
+            <th style="text-align:left;padding:8px 8px;color:var(--tx3);font-size:10px;text-transform:uppercase">Solicitante</th>
+            <th style="text-align:left;padding:8px 8px;color:var(--tx3);font-size:10px;text-transform:uppercase">Status</th>
+            <th style="text-align:left;padding:8px 8px;color:var(--tx3);font-size:10px;text-transform:uppercase">Data</th>
+            <th style="text-align:right;padding:8px 8px;color:var(--tx3);font-size:10px;text-transform:uppercase">Ação</th>
+          </tr></thead>
+          <tbody>${pendentes.map(r => {
+            const stCfg = {
+              'Aberta':{'bg':'rgba(74,156,245,.12)','cl':'var(--blue)'},
+              'Em Análise':{'bg':'rgba(212,168,67,.12)','cl':'var(--gold)'},
+              'Em Andamento':{'bg':'rgba(139,111,212,.12)','cl':'var(--violet)'},
+              'Pendente':{'bg':'rgba(224,138,42,.12)','cl':'var(--amber)'},
+              'Aguardando Pagamento':{'bg':'rgba(234,179,8,.12)','cl':'var(--amber)'},
+            }[r.status] || {'bg':'rgba(90,96,104,.15)','cl':'var(--tx3)'};
+            const pill = `<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:${stCfg.bg};color:${stCfg.cl}">${escapeHtml(r.status||'—')}</span>`;
+            const data = r.criado_em ? new Date(r.criado_em).toLocaleDateString('pt-BR') : '—';
+            return `<tr style="border-bottom:1px solid var(--bd1);cursor:pointer"
+                        onmouseover="this.style.background='var(--bg-hover)'"
+                        onmouseout="this.style.background=''">
+              <td style="padding:8px 8px;font-family:var(--mono);font-weight:700;color:var(--blue)">${escapeHtml(r.numero_chamado||'—')}</td>
+              <td style="padding:8px 8px;color:var(--tx1);font-weight:600">${escapeHtml(r.solicitante||'—')}</td>
+              <td style="padding:8px 8px">${pill}</td>
+              <td style="padding:8px 8px;color:var(--tx2)">${data}</td>
+              <td style="padding:8px 8px;text-align:right">
+                <button onclick="demAbrirDetalhe('${escapeHtmlAttr(String(r.id))}','admin-facial')"
+                  style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:5px;color:var(--teal);font-size:10px;font-weight:800;padding:4px 9px;cursor:pointer">Ver demanda</button>
+              </td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>`;
+    } catch(e) {
+      const el2 = document.getElementById('af-sol-list');
+      if (el2) el2.innerHTML = `<div style="color:var(--rose);font-size:11.5px">Erro ao carregar solicitações: ${escapeHtml(e.message)}</div>`;
+    }
+  }
+
   /* ── exports ─────────────────────────────────────── */
 
+  window.afCarregarSolicitacoes = afCarregarSolicitacoes;
   window.afCarregar          = afCarregar;
   window.afRender            = afRender;
   window.afAbrirModal        = afAbrirModal;
