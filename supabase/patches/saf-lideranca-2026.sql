@@ -77,4 +77,4 @@ FROM public.nomeados
 WHERE orgao_tipo = 'sociedade'
   AND orgao = (SELECT orgao FROM public.sociedades WHERE sigla = 'SAF' LIMIT 1)
   AND deleted_at IS NULL
-ORDER BY criado_em;
+ORDER BY cargo;

@@ -3628,7 +3628,7 @@
 
     try {
       const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/nomeados?orgao_tipo=eq.sociedade&orgao=eq.${encodeURIComponent(soc.orgao)}&deleted_at=is.null&select=id,nome,cargo,tipo_nomeacao,funcao_lider,data_inicio&order=tipo_nomeacao.asc,criado_em.asc`,
+        `${SUPABASE_URL}/rest/v1/nomeados?orgao_tipo=eq.sociedade&orgao=eq.${encodeURIComponent(soc.orgao)}&deleted_at=is.null&select=id,nome,cargo,tipo_nomeacao,funcao_lider,data_inicio&order=tipo_nomeacao.asc,cargo.asc`,
         { headers: _hdr() }
       );
       _socRows = r.ok ? await r.json() : [];
