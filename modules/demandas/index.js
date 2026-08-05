@@ -1052,7 +1052,7 @@ function fmtD(d) {
         .is("solicitacao_id", null)
         .is("deleted_at", null);
       if (!data || data.length === 0) { placeholder.innerHTML = ""; return; }
-      const TIPO_LABEL = { nota_fiscal: "Nota Fiscal", boleto: "Boleto", comprovante: "Comprovante" };
+      const TIPO_LABEL = { nota_fiscal: "Nota Fiscal", boleto: "Boleto", comprovante: "Comprovante", foto_facial: "Foto Facial" };
       placeholder.innerHTML = `
         <div style="border-top:1px solid var(--bd1);margin-top:10px;padding-top:10px">
           <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Anexos enviados</div>

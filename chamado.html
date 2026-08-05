@@ -2251,6 +2251,10 @@ async function _uploadAnexosPublicos(demandaId, sub) {
         { inputId: "f-reimb-nota", tipo: "nota_fiscal"  },
         { inputId: "f-reimb-comp", tipo: "boleto"        },
       ]
+    : sub === "Controle de Acesso — Facial"
+    ? [
+        { inputId: "f-facial-foto", tipo: "foto_facial" },
+      ]
     : [
         { inputId: "f-fin-nota",   tipo: "nota_fiscal"  },
         { inputId: "f-fin-boleto", tipo: "boleto"        },
