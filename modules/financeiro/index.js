@@ -158,7 +158,7 @@
   const _DEM_STATUS_LABEL = {
     "ABERTA": "Aberta", "EM_ANALISE": "Em Análise", "EM_ANDAMENTO": "Em Andamento",
     "AGUARDANDO_PAGAMENTO": "Aguardando Pagamento", "PENDENTE": "Pendente",
-    "CONCLUIDA": "Concluída", "CANCELADA": "Cancelada",
+    "CONCLUIDA": "Concluída", "CANCELADA": "Cancelada", "PAGO": "Pago",
   };
   const _DEM_STATUS_CFG = {
     "Aberta":                { bg:"rgba(74,156,245,.12)",  cl:"var(--blue)"   },
@@ -168,6 +168,7 @@
     "Pendente":              { bg:"rgba(224,138,42,.12)",  cl:"var(--amber)"  },
     "Concluída":             { bg:"rgba(58,170,92,.12)",   cl:"var(--gr)"     },
     "Cancelada":             { bg:"rgba(90,96,104,.15)",   cl:"var(--tx3)"    },
+    "Pago":                  { bg:"rgba(58,170,92,.12)",   cl:"var(--gr)"     },
   };
 
   function _demLabel(st)  { return _DEM_STATUS_LABEL[st] || st || "Aberta"; }
@@ -458,6 +459,7 @@
     if (!el) return;
 
     el.innerHTML = '<div class="empty-state">Carregando...</div>';
+    _DEM_FIN_CACHE = null;
     await Promise.all([_loadSolicitacoes(), _loadDemandasFin()]);
 
     const H  = hoje();
@@ -475,8 +477,10 @@
     const fprio   = document.getElementById("fin-pagar-fprio")?.value   || "";
     const fbusca  = (document.getElementById("fin-pagar-fbusca")?.value || "").toLowerCase();
 
+    const _FECHADAS = ["Pago", "Concluída", "Cancelada"];
     let rows = [...(_DEM_FIN_CACHE || [])];
     if (fstatus) rows = rows.filter(r => r.status === fstatus);
+    else rows = rows.filter(r => !_FECHADAS.includes(r.status));
     if (fprio)   rows = rows.filter(r => r.prioridade === fprio);
     if (fbusca)  rows = rows.filter(r =>
       (r.titulo       || "").toLowerCase().includes(fbusca) ||
@@ -503,6 +507,7 @@
             <option value="Em Andamento">Em Andamento</option>
             <option value="Aguardando Pagamento">Aguardando Pagamento</option>
             <option value="Pendente">Pendente</option>
+            <option value="Pago">Pago</option>
             <option value="Concluída">Concluída</option>
             <option value="Cancelada">Cancelada</option>
           </select>
