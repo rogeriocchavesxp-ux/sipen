@@ -1973,9 +1973,9 @@ function fmtD(d) {
       if (idx >= 0) Object.assign(_cache[idx], payload);
       if (_ativo && String(_ativo.id||_ativo._row) === String(id)) {
         Object.assign(_ativo, payload);
-        _renderDetalhe(_ativo);
       }
       _atualizarBadge();
+      if (typeof window.go === "function") window.go(_origemView || "dem-todas");
     } catch(e) {
       if (typeof T === "function") T("Erro ao atualizar", e.message || "Tente novamente");
       console.error("demSalvarEdicao:", e);
