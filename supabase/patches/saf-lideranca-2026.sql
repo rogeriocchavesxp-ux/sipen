@@ -31,7 +31,7 @@ BEGIN
     (orgao_tipo, orgao, nome, cargo, funcao_lider, tipo_nomeacao, status, pessoa_id, data_inicio)
   SELECT 'sociedade', v_orgao, p.nome, 'Conselheiro', 'conselheiro', 'lider', 'ativo', p.id, '2026-01-01'
   FROM public.pessoas p
-  WHERE p.nome ILIKE '%Hugo Alcântara%' AND p.deleted_at IS NULL LIMIT 1;
+  WHERE p.nome ILIKE '%Hugo Alcântara Miguel%' AND p.deleted_at IS NULL LIMIT 1;
 
   -- 3. Presidente
   INSERT INTO public.nomeados
