@@ -2193,9 +2193,8 @@ async function enviarChamado() {
       return; // não mostra screen-ok ainda
     }
 
-    // Upload de anexos financeiros (não bloqueia o fluxo)
-    // Usa data.id (UUID real da demanda criada pela Edge Function)
-    if (cat === "Financeiro") {
+    // Upload de anexos (não bloqueia o fluxo)
+    if (cat === "Financeiro" || sub === "Controle de Acesso — Facial") {
       _uploadAnexosPublicos(data.id || newId, sub).catch(() => {});
     }
 
