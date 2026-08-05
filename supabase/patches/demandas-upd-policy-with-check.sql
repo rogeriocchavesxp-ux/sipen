@@ -1,21 +1,27 @@
--- Corrige policy de UPDATE em demandas para aceitar qualquer valor
--- (sem WITH CHECK, PostgreSQL usa o USING como filtro pós-update,
---  silenciando atualizações que retornam 0 linhas sem erro)
+-- Corrige policy de UPDATE em demandas
+-- Problema: role 'administrador_geral' não estava na lista de roles permitidas,
+-- causando falha silenciosa (0 linhas atualizadas, HTTP 200 sem erro)
 
--- Ver policies atuais antes de aplicar:
-SELECT policyname, cmd, qual, with_check
-FROM pg_policies
-WHERE tablename = 'demandas' AND cmd = 'UPDATE';
+DROP POLICY IF EXISTS "demandas_update_roles_or_responsavel" ON public.demandas;
 
--- Recriar com WITH CHECK explícito:
-DROP POLICY IF EXISTS "demandas_upd" ON public.demandas;
-
-CREATE POLICY "demandas_upd" ON public.demandas
+CREATE POLICY "demandas_update_roles_or_responsavel" ON public.demandas
   FOR UPDATE TO authenticated
-  USING (deleted_at IS NULL)
-  WITH CHECK (true);
+  USING (
+    has_any_role(ARRAY['administrador_geral','admin','secretaria','pastor','tesoureiro','lider_pg'])
+    OR EXISTS (
+      SELECT 1 FROM pessoas p
+      WHERE p.auth_user_id = auth.uid() AND p.id = demandas.responsavel_id
+    )
+  )
+  WITH CHECK (
+    has_any_role(ARRAY['administrador_geral','admin','secretaria','pastor','tesoureiro','lider_pg'])
+    OR EXISTS (
+      SELECT 1 FROM pessoas p
+      WHERE p.auth_user_id = auth.uid() AND p.id = demandas.responsavel_id
+    )
+  );
 
--- Verificar:
-SELECT policyname, cmd, qual, with_check
+-- Verificar resultado:
+SELECT policyname, cmd, qual
 FROM pg_policies
 WHERE tablename = 'demandas' AND cmd = 'UPDATE';
