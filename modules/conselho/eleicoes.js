@@ -528,6 +528,7 @@
         <div class="bni ${_detTab==="candidatos"?"on":""}"   id="edt-cand"  onclick="eleicaoDetTab('candidatos')">Candidatos</div>
         <div class="bni ${_detTab==="votacao"?"on":""}"      id="edt-vot"   onclick="eleicaoDetTab('votacao')">Votação</div>
         <div class="bni ${_detTab==="compartilhar"?"on":""}" id="edt-comp"  onclick="eleicaoDetTab('compartilhar')">Compartilhar</div>
+        <div class="bni ${_detTab==="relatorio"?"on":""}"    id="edt-rel"   onclick="eleicaoDetTab('relatorio')">Relatório</div>
       </div>
       <div id="edt-content"></div>`;
 
@@ -536,7 +537,7 @@
 
   window.eleicaoDetTab = function(tab) {
     _detTab = tab;
-    const tabMap = { stats:"stats", indicacoes:"ind", candidatos:"cand", votacao:"vot", compartilhar:"comp" };
+    const tabMap = { stats:"stats", indicacoes:"ind", candidatos:"cand", votacao:"vot", compartilhar:"comp", relatorio:"rel" };
     Object.keys(tabMap).forEach(t => {
       document.getElementById(`edt-${tabMap[t]}`)?.classList.toggle("on", t === tab);
     });
@@ -549,6 +550,7 @@
     else if (_detTab === "candidatos")   _renderCandidatosTab();
     else if (_detTab === "votacao")      _renderVotacaoTab();
     else if (_detTab === "compartilhar") _renderCompartilhar();
+    else if (_detTab === "relatorio")   _renderRelatorio();
   }
 
   /* ── Stats ─────────────────────────────────────────── */
@@ -719,6 +721,176 @@
                 </tr>`;
               }).join("") : `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--tx3)">Nenhuma indicação encontrada.</td></tr>`}
             </tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+
+  /* ── Relatório ──────────────────────────────────────── */
+  function _renderRelatorio() {
+    const el = document.getElementById("edt-content");
+    if (!el) return;
+
+    if (!_indicacoes.length) {
+      el.innerHTML = `<div style="text-align:center;padding:48px;color:var(--tx3);font-size:13px">Nenhuma indicação registrada ainda.</div>`;
+      return;
+    }
+
+    const total = _indicacoes.length;
+    const diac  = _indicacoes.filter(i => i.tipo === "diacono").length;
+    const presb = _indicacoes.filter(i => i.tipo === "presbitero").length;
+    const nMembros = new Set(_indicacoes.map(i => (i.indicante_nome || "").trim()).filter(Boolean)).size;
+
+    // Rankings separados
+    const cntD = {}, cntP = {};
+    _indicacoes.forEach(i => {
+      const nome = (i.indicado_nome || "").trim();
+      if (!nome) return;
+      if (i.tipo === "diacono")    cntD[nome] = (cntD[nome] || 0) + 1;
+      else                         cntP[nome] = (cntP[nome] || 0) + 1;
+    });
+    const rankD = Object.entries(cntD).map(([nome,n])=>({nome,n})).sort((a,b)=>b.n-a.n);
+    const rankP = Object.entries(cntP).map(([nome,n])=>({nome,n})).sort((a,b)=>b.n-a.n);
+    const maxD  = rankD[0]?.n || 1;
+    const maxP  = rankP[0]?.n || 1;
+
+    // Agrupamento por indicante
+    const byInd = {};
+    _indicacoes.forEach(i => {
+      const ind  = (i.indicante_nome || "").trim();
+      const nome = (i.indicado_nome  || "").trim();
+      if (!ind || !nome) return;
+      if (!byInd[ind]) byInd[ind] = { D: [], P: [] };
+      if (i.tipo === "diacono") byInd[ind].D.push(nome);
+      else                      byInd[ind].P.push(nome);
+    });
+    const participantes = Object.entries(byInd)
+      .map(([nome, v]) => ({ nome, d: v.D.length, p: v.P.length, D: v.D, P: v.P }))
+      .sort((a,b) => (b.d+b.p)-(a.d+a.p) || a.nome.localeCompare(b.nome));
+
+    // Helpers
+    const skyBg  = "rgba(74,156,245,.12)";  const skyC  = "var(--sky)";
+    const tealBg = "rgba(42,181,192,.12)";  const tealC = "var(--teal)";
+
+    function _rrRow(r, pos, max, cor) {
+      const pct = Math.round(r.n / max * 100);
+      const hiC = pos <= 3 ? cor : "var(--tx3)";
+      return `<div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--bd1)">
+        <span style="font-size:10.5px;font-weight:700;color:${hiC};width:20px;text-align:right;flex-shrink:0">${pos}</span>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:500;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px">${_esc(r.nome)}</span>
+            <span style="font-size:13px;font-weight:700;color:var(--tx1);flex-shrink:0;margin-left:8px">${r.n}<span style="font-size:10px;color:var(--tx3);font-weight:400">×</span></span>
+          </div>
+          <div style="background:var(--bd1);border-radius:2px;height:3px">
+            <div style="height:100%;background:${cor};border-radius:2px;width:${pct}%"></div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    function _rrList(list, max, cor) {
+      let pos = 1, lastN = null, html = "";
+      list.forEach((r, i) => {
+        if (r.n !== lastN) { pos = i + 1; lastN = r.n; }
+        html += _rrRow(r, pos, max, cor);
+      });
+      return html;
+    }
+
+    function _detCard(m) {
+      const dHtml = m.D.length
+        ? m.D.map(n => `<span style="display:block;font-size:11.5px;color:var(--tx2);line-height:1.6">· ${_esc(n)}</span>`).join("")
+        : `<span style="font-size:11px;color:var(--tx3);font-style:italic">nenhuma</span>`;
+      const pHtml = m.P.length
+        ? m.P.map(n => `<span style="display:block;font-size:11.5px;color:var(--tx2);line-height:1.6">· ${_esc(n)}</span>`).join("")
+        : `<span style="font-size:11px;color:var(--tx3);font-style:italic">nenhuma</span>`;
+      return `<div style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:10px;padding:13px 14px">
+        <div style="font-size:12px;font-weight:700;color:var(--tx1);padding-bottom:8px;margin-bottom:9px;border-bottom:1px solid var(--bd1);display:flex;justify-content:space-between;align-items:center">
+          <span>${_esc(m.nome)}</span>
+          <span style="font-size:10.5px;font-weight:600;color:var(--tx3)">${m.d+m.p}×</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:${tealC};margin-bottom:5px">D · Diáconos (${m.d})</div>
+            ${dHtml}
+          </div>
+          <div>
+            <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:${skyC};margin-bottom:5px">P · Presbíteros (${m.p})</div>
+            ${pHtml}
+          </div>
+        </div>
+      </div>`;
+    }
+
+    const thS = "text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);font-weight:700";
+    const tdS = "padding:8px 10px;font-size:12px;color:var(--tx2)";
+
+    const ptRows = participantes.map((m, i) => {
+      const tot = m.d + m.p;
+      const tipo = (m.d > 0 && m.p > 0)
+        ? `<span style="font-size:10px;padding:2px 7px;border-radius:4px;background:rgba(58,170,92,.10);color:var(--gr);border:1px solid rgba(58,170,92,.25);font-weight:600">Ambos</span>`
+        : m.d > 0
+          ? `<span style="font-size:10px;padding:2px 7px;border-radius:4px;background:${tealBg};color:${tealC};font-weight:600">Diácono</span>`
+          : `<span style="font-size:10px;padding:2px 7px;border-radius:4px;background:${skyBg};color:${skyC};font-weight:600">Presbítero</span>`;
+      return `<tr style="border-bottom:1px solid var(--bd1)"
+          onmouseover="this.style.background='var(--bg-hover)'"
+          onmouseout="this.style.background=''">
+        <td style="${tdS};color:var(--tx3);font-size:11px">${String(i+1).padStart(2,"0")}</td>
+        <td style="${tdS};font-weight:600;color:var(--tx1)">${_esc(m.nome)}</td>
+        <td style="${tdS};text-align:center">${m.d || "—"}</td>
+        <td style="${tdS};text-align:center">${m.p || "—"}</td>
+        <td style="${tdS};text-align:center;font-weight:700;color:var(--tx1)">${tot}</td>
+        <td style="padding:8px 10px">${tipo}</td>
+      </tr>`;
+    }).join("");
+
+    el.innerHTML = `
+      <div class="kpis c4" style="margin-bottom:16px">
+        <div class="kpi"><div class="kpi-ico" style="background:${skyBg};color:${skyC}">◎</div><div class="kpi-body"><div class="kpi-lbl">Total indicações</div><div class="kpi-val">${total}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,.12);color:var(--gr)">◉</div><div class="kpi-body"><div class="kpi-lbl">Participantes</div><div class="kpi-val">${nMembros}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:${tealBg};color:${tealC}">D</div><div class="kpi-body"><div class="kpi-lbl">Indicações diáconos</div><div class="kpi-val">${diac}</div><div class="kpi-d nu">${rankD.length} candidato(s)</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:${skyBg};color:${skyC}">P</div><div class="kpi-body"><div class="kpi-lbl">Indicações presbíteros</div><div class="kpi-val">${presb}</div><div class="kpi-d nu">${rankP.length} candidato(s)</div></div></div>
+      </div>
+
+      <div class="g2" style="margin-bottom:16px">
+        ${rankD.length ? `
+        <div class="card">
+          <div class="ctit">Diáconos <span style="font-size:11px;color:var(--tx3);font-weight:400">${rankD.length} candidato(s)</span></div>
+          ${_rrList(rankD, maxD, tealC)}
+        </div>` : `<div class="card"><div style="padding:24px;text-align:center;color:var(--tx3);font-size:12px">Nenhuma indicação para diácono.</div></div>`}
+        ${rankP.length ? `
+        <div class="card">
+          <div class="ctit">Presbíteros <span style="font-size:11px;color:var(--tx3);font-weight:400">${rankP.length} candidato(s)</span></div>
+          ${_rrList(rankP, maxP, skyC)}
+        </div>` : `<div class="card"><div style="padding:24px;text-align:center;color:var(--tx3);font-size:12px">Nenhuma indicação para presbítero.</div></div>`}
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div class="ctit" style="margin-bottom:0">Indicações por membro</div>
+          <span style="font-size:11px;color:var(--tx3)">${nMembros} participante(s)</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px">
+          ${participantes.map(m => _detCard(m)).join("")}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ctit">Resumo por participante</div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr style="background:var(--bg-surface);border-bottom:2px solid var(--sky)">
+                <th style="${thS}">#</th>
+                <th style="${thS}">Nome</th>
+                <th style="${thS};text-align:center">D</th>
+                <th style="${thS};text-align:center">P</th>
+                <th style="${thS};text-align:center">Total</th>
+                <th style="${thS}">Tipo</th>
+              </tr>
+            </thead>
+            <tbody>${ptRows}</tbody>
           </table>
         </div>
       </div>`;
