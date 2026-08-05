@@ -3690,7 +3690,8 @@
   function _socRenderVisaoGeral() {
     const el  = document.getElementById('soc-vg-content');
     if (!el || !_socAtual) return;
-    const lideres = _socRows.filter(r => r.tipo_nomeacao === 'lider');
+    const lideres = _socRows.filter(r => r.tipo_nomeacao === 'lider')
+      .sort((a, b) => _socCargoPrio(a.cargo) - _socCargoPrio(b.cargo));
     const membros = _socRows.filter(r => r.tipo_nomeacao !== 'lider');
     const cnt     = document.getElementById('soc-membro-count');
     if (cnt) cnt.textContent = membros.length ? `(${membros.length})` : '';
@@ -3734,6 +3735,23 @@
       </div>`;
   }
 
+  /* ── Prioridade hierárquica de cargo ────────────────────── */
+  function _socCargoPrio(cargo) {
+    const c = (cargo || '').toLowerCase();
+    if (c.includes('pastor') || c.includes('supervisor')) return 0;
+    if (c.includes('conselheiro'))                        return 1;
+    if (c.includes('vice'))                               return 3;
+    if (c.includes('presidente'))                         return 2;
+    if (c.includes('1') && c.includes('secret'))          return 4;
+    if (c.includes('2') && c.includes('secret'))          return 5;
+    if (c.includes('1') && c.includes('tesour'))          return 6;
+    if (c.includes('2') && c.includes('tesour'))          return 7;
+    if (c.includes('tesour'))                             return 8;
+    if (c.includes('secret'))                             return 9;
+    if (c.includes('coordenador'))                        return 10;
+    return 99;
+  }
+
   /* ── Aba: Liderança ─────────────────────────────────────── */
   function _socRenderLideranca() {
     const el = document.getElementById('soc-lid-content');
@@ -3744,10 +3762,11 @@
     const FUNC_RGB   = { supervisor:'58,170,92', coordenador:'201,168,76', lider_area:'139,107,193', conselheiro:'74,156,245', tesoureiro:'224,138,42', presidente:'191,90,242' };
 
     const grupos = {};
-    lideres.forEach(r => {
-      const g = r.cargo || r.funcao_lider || 'Outros';
-      (grupos[g] = grupos[g] || []).push(r);
-    });
+    lideres.slice().sort((a, b) => _socCargoPrio(a.cargo) - _socCargoPrio(b.cargo))
+      .forEach(r => {
+        const g = r.cargo || r.funcao_lider || 'Outros';
+        (grupos[g] = grupos[g] || []).push(r);
+      });
 
     const _rgb = g => {
       const k = Object.keys(FUNC_RGB).find(k => g.toLowerCase().includes(k));
