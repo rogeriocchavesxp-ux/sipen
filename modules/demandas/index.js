@@ -1785,7 +1785,10 @@ function fmtD(d) {
       if (novoStatus === "Concluída" || novoStatus === "Pago") {
         dbPayload.data_conclusao = new Date().toISOString().split("T")[0];
       }
-      await apiWrite("update", "DEMANDAS", { _row: id, ...dbPayload });
+      const resultado = await apiWrite("update", "DEMANDAS", { _row: id, ...dbPayload });
+      if (Array.isArray(resultado) && resultado.length === 0) {
+        throw new Error("Nenhuma linha atualizada no banco — verifique a política de acesso (RLS)");
+      }
       if (typeof T === "function") T("✅ Status atualizado", novoStatus);
 
 

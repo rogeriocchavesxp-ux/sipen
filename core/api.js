@@ -405,15 +405,17 @@ async function apiWrite(action, sheet, payload) {
       "Em Andamento":"EM_ANDAMENTO","em andamento":"EM_ANDAMENTO",
       "Aguardando Pagamento":"AGUARDANDO_PAGAMENTO","aguardando pagamento":"AGUARDANDO_PAGAMENTO",
       "Concluída":"CONCLUIDA","concluída":"CONCLUIDA","Concluida":"CONCLUIDA","concluida":"CONCLUIDA",
+      "Pago":"PAGO","pago":"PAGO",
       "Cancelada":"CANCELADA","cancelada":"CANCELADA"
     };
     if (body.status !== undefined) {
       body.status = STATUS_DEMANDA_MAP[body.status] || body.status || "ABERTA";
     }
-    // Garantir que prioridade seja sempre um valor válido do enum prioridade_t
-    const PRIO_VALIDAS = ["Baixa", "Média", "Alta", "Urgente"];
-    const prioNormalizada = PRIO_VALIDAS.includes(body.prioridade) ? body.prioridade : "Média";
-    body.prioridade = prioNormalizada;
+    // Normalizar prioridade apenas quando explicitamente enviada no payload
+    if (body.prioridade !== undefined) {
+      const PRIO_VALIDAS = ["Baixa", "Média", "Alta", "Urgente"];
+      body.prioridade = PRIO_VALIDAS.includes(body.prioridade) ? body.prioridade : "Média";
+    }
   }
 
   // Converter strings vazias para null em colunas time/date para evitar erro de tipo no PostgreSQL
