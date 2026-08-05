@@ -630,17 +630,17 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
           </div>
         </div>
 
-        <div class="field">
+        <div class="field" id="wrap-titulo">
           <label for="f-titulo">Título <span class="req">*</span></label>
           <input type="text" id="f-titulo" placeholder="Descreva brevemente sua solicitação" maxlength="200">
         </div>
 
-        <div class="field">
+        <div class="field" id="wrap-desc">
           <label for="f-desc">Descrição detalhada <span class="req">*</span></label>
           <textarea id="f-desc" placeholder="Forneça todos os detalhes que possam ajudar no atendimento: quando ocorreu, urgência, contexto etc."></textarea>
         </div>
 
-        <div class="field">
+        <div class="field" id="wrap-local">
           <label for="f-local">Localização</label>
           <input type="text" id="f-local" placeholder="Ex: Hall da Secretaria, Templo Principal, Sala 3...">
         </div>
@@ -1649,13 +1649,19 @@ function onSubChange() {
   }
   if (cat === "Administração" && sub === "Uso do estacionamento")            _show("estac-sec");
   if (cat === "Administração" && sub === "Controle de Acesso — Estacionamento") _show("acesso-est-sec");
-  if (cat === "Administração" && sub === "Controle de Acesso — Facial")         _show("acesso-facial-sec");
+  if (cat === "Administração" && sub === "Controle de Acesso — Facial") {
+    _show("acesso-facial-sec");
+    _hide("wrap-titulo"); _hide("wrap-desc"); _hide("wrap-local");
+    const t = document.getElementById("f-titulo"); if (t) t.value = "Cadastro de Acesso Facial";
+    const d = document.getElementById("f-desc");   if (d) d.value = "Solicitação de cadastro para liberação na leitora facial.";
+  }
   if (cat === "Agendamentos"  && PROG_SUBS.has(sub)) { agIniciar(sub); return; }
   if (cat === "Comunicação"   && COM_SUBS.has(sub))  { _show("com-sol-sec"); _ensureComSol(sub); }
 }
 
 function _ocultarExtras() {
   ["fin-pag","fin-reimb","fin-pix-sec","fin-ted-sec","agend-prog","com-sol-sec","estac-sec","acesso-est-sec","acesso-facial-sec"].forEach(_hide);
+  ["wrap-titulo","wrap-desc","wrap-local"].forEach(_show);
 }
 
 function _ocultarFinanceiro() { _ocultarExtras(); }
