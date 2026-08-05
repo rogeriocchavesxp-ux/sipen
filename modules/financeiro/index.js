@@ -950,7 +950,7 @@
               <td style="padding:9px 10px;font-size:12px;color:var(--tx2)">${ref}</td>
               <td style="padding:9px 10px;font-size:12px;font-weight:700;color:var(--tx1);font-variant-numeric:tabular-nums">${fd.valor ? fmtBRL(fd.valor) : "—"}</td>
               <td style="padding:9px 10px;font-size:11px;color:${temComp?"var(--teal)":"var(--tx3)"}">${temComp?"📎 Anexado":"—"}</td>
-              <td style="padding:9px 10px">${_pillDem(r.status)}</td>
+              <td style="padding:9px 10px">${_pillDem(r.status === "CONCLUIDA" ? "PAGO" : r.status)}</td>
               <td style="padding:9px 10px;font-size:11px;color:var(--tx3)">${_fmtData(r.criado_em)}</td>
             </tr>`;
           }).join("")
