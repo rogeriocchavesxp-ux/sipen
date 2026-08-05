@@ -91,6 +91,7 @@
     dd.style.display = 'block';
   }
   window.fornMenuAbrir = fornMenuAbrir;
+  if (window.SIPEN?.register) SIPEN.register('fornecedores:abrirMenu', fornMenuAbrir);
 
   async function _getDeptId() {
     if (_fornDeptId) return _fornDeptId;

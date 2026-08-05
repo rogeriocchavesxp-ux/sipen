@@ -3437,6 +3437,7 @@
   window.sbMinMinBuild            = sbMinMinBuild;
   window.minMinLoad               = minMinLoad;
   window.minMinAbrir              = minMinAbrir;
+  if (window.SIPEN?.register) SIPEN.register('ministerios:abrirDetalhe', minMinAbrir);
   window.minMinVoltarLista        = minMinVoltarLista;
   window.minMinTab                = minMinTab;
   window.minMinNovo               = minMinNovo;
