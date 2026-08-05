@@ -204,7 +204,7 @@ function fmtD(d) {
   let _ativo = null;
   let _origemView = "dem-todas"; // rastreia de onde o detalhe foi aberto
   let _saving = false;           // guard: impede submit duplo em salvarNovaDemanda
-  let _dashFiltro = "todas";     // filtro ativo no dashboard
+  let _dashF = { area: null, status: null, prioridade: null, periodo: null };
 
   /* ── Estado: tela Admin Demandas ────────────────────── */
   const _ADM_KEY = "sipen_adm_dem_filtro";
@@ -445,7 +445,9 @@ function fmtD(d) {
             <div class="ctit" style="margin-bottom:0">Solicitações</div>
             <span class="cact" onclick="demRecarregarDash()">↻ Atualizar</span>
           </div>
-          <div id="dem-dash-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+          <div id="dem-dash-chips" style="display:flex;flex-wrap:nowrap;gap:6px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none"></div>
+          <div id="dem-dash-filtros" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>
+          <div id="dem-dash-tags" style="display:none;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center"></div>
           <div id="dem-dash-lista"></div>
         </div>
 
@@ -475,57 +477,155 @@ function fmtD(d) {
         </div>
       </div>`;
 
-    _renderDashChips();
-    _renderDashListaRows();
+    _dashRender();
   }
 
   window.demRecarregarDash = async function() { _invalidate(); await renderDash(); };
 
-  const _DASH_CHIPS = [
-    { id:"todas",      label:"Todas",           cor:"var(--blue)" },
-    { id:"analise",    label:"Em Análise",       cor:"var(--gold)" },
-    { id:"andamento",  label:"Em Andamento",     cor:"var(--violet)" },
-    { id:"concluidas", label:"Concluídas",        cor:"var(--gr)" },
-    { id:"prioridade", label:"Alta Prioridade",  cor:"var(--rose)" },
-    { id:"historico",  label:"Histórico",        cor:"var(--tx3)" },
+  /* ── Áreas para chips do Dashboard ─────────────────── */
+
+  const _DASH_AREAS = [
+    { id: null,    label: "Todas" },
+    { id: "adm",   label: "Administração",
+      match: r => ["Secretaria","Cadastro","Administrativo Geral","Logística","Comunicação e Divulgação","Apoio ao Culto","Ação Social / Hebron","Ensino (EBT)","Oração e Aconselhamento","Visitação","Administrativo"].includes(r.area) },
+    { id: "cons",  label: "Conselho",
+      match: r => r.area === "Conselho" },
+    { id: "fin",   label: "Financeiro",
+      match: r => r.area === "Financeiro" },
+    { id: "infra", label: "Infraestrutura e Conservação",
+      match: r => _INFRA_AREAS.includes(r.area) },
+    { id: "agenda",label: "Agenda",
+      match: r => ["Agendamentos","Eventos"].includes(r.area) },
   ];
 
-  function _dashGetRows(id) {
-    const all = [..._cache].sort((a,b) => (b.criado_em||"").localeCompare(a.criado_em||""));
-    if (id === "analise")    return all.filter(r => r.status === "Em Análise");
-    if (id === "andamento")  return all.filter(r => r.status === "Em Andamento");
-    if (id === "concluidas") return all.filter(r => ["Concluída","Pago"].includes(r.status));
-    if (id === "prioridade") return all.filter(r => ["Alta","Urgente"].includes(r.prioridade));
-    if (id === "historico")  return all;
-    return all.slice(0, 15); // todas: 15 mais recentes
+  function _dashHasFilter() {
+    return !!(  _dashF.area || _dashF.status || _dashF.prioridade || _dashF.periodo);
+  }
+
+  function _dashGetRows() {
+    let all = _filtrarVisibilidade([..._cache])
+      .sort((a,b) => (b.criado_em||"").localeCompare(a.criado_em||""));
+
+    const areaDef = _DASH_AREAS.find(a => a.id === _dashF.area);
+    if (areaDef?.match) all = all.filter(areaDef.match);
+
+    if (_dashF.status === "historico") {
+      // show all statuses
+    } else if (_dashF.status) {
+      all = all.filter(r => r.status === _dashF.status);
+    }
+
+    if (_dashF.prioridade) all = all.filter(r => ["Alta","Urgente"].includes(r.prioridade));
+
+    if (_dashF.periodo) {
+      const dias = { "7d": 7, "30d": 30, "90d": 90 }[_dashF.periodo] || 0;
+      if (dias) {
+        const limite = new Date(Date.now() - dias * 86400000).toISOString();
+        all = all.filter(r => (r.criado_em || r.data_abertura || "") >= limite);
+      }
+    }
+
+    return all;
   }
 
   function _renderDashChips() {
     const el = document.getElementById("dem-dash-chips");
     if (!el) return;
-    el.innerHTML = _DASH_CHIPS.map(c => {
-      const ativo = _dashFiltro === c.id;
-      return `<span onclick="demDashFiltrar('${c.id}')" style="cursor:pointer;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid ${ativo ? c.cor : 'var(--bd2)'};background:${ativo ? c.cor+'18' : 'transparent'};color:${ativo ? c.cor : 'var(--tx3)'};transition:all .12s">${c.label}</span>`;
+    const visible = _filtrarVisibilidade([..._cache]);
+    el.innerHTML = _DASH_AREAS.map(a => {
+      const count = a.match ? visible.filter(a.match).length : visible.length;
+      const ativo = _dashF.area === a.id;
+      return `<span onclick="demDashFiltrarArea(${JSON.stringify(a.id)})"
+        style="cursor:pointer;flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:11.5px;font-weight:600;
+               border:1px solid ${ativo ? 'var(--blue)' : 'var(--bd2)'};
+               background:${ativo ? 'rgba(74,156,245,.12)' : 'transparent'};
+               color:${ativo ? 'var(--blue)' : 'var(--tx3)'};transition:all .12s;white-space:nowrap">
+        ${a.label} <span style="font-size:10px;opacity:.7">${count}</span>
+      </span>`;
     }).join("");
+  }
+
+  function _renderDashFiltros() {
+    const el = document.getElementById("dem-dash-filtros");
+    if (!el) return;
+    const selStyle = `cursor:pointer;padding:4px 10px;border-radius:6px;font-size:11.5px;font-weight:500;
+      border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx2);outline:none`;
+    el.innerHTML = `
+      <select onchange="demDashFiltroStatus(this.value)" style="${selStyle}">
+        <option value="">Status</option>
+        <option value="Aberta"       ${_dashF.status==="Aberta"?"selected":""}>Aberta</option>
+        <option value="Em Análise"   ${_dashF.status==="Em Análise"?"selected":""}>Em Análise</option>
+        <option value="Em Andamento" ${_dashF.status==="Em Andamento"?"selected":""}>Em Andamento</option>
+        <option value="Pendente"     ${_dashF.status==="Pendente"?"selected":""}>Pendente</option>
+        <option value="Concluída"    ${_dashF.status==="Concluída"?"selected":""}>Concluída</option>
+        <option value="Pago"         ${_dashF.status==="Pago"?"selected":""}>Pago</option>
+        <option value="Cancelada"    ${_dashF.status==="Cancelada"?"selected":""}>Cancelada</option>
+        <option value="historico"    ${_dashF.status==="historico"?"selected":""}>Histórico (todas)</option>
+      </select>
+      <select onchange="demDashFiltroPrio(this.value)" style="${selStyle}">
+        <option value="">Prioridade</option>
+        <option value="alta" ${_dashF.prioridade==="alta"?"selected":""}>Alta / Urgente</option>
+      </select>
+      <select onchange="demDashFiltroPeriodo(this.value)" style="${selStyle}">
+        <option value="">Período</option>
+        <option value="7d"  ${_dashF.periodo==="7d"?"selected":""}>Últimos 7 dias</option>
+        <option value="30d" ${_dashF.periodo==="30d"?"selected":""}>Últimos 30 dias</option>
+        <option value="90d" ${_dashF.periodo==="90d"?"selected":""}>Últimos 90 dias</option>
+      </select>`;
+  }
+
+  function _renderDashTags() {
+    const el = document.getElementById("dem-dash-tags");
+    if (!el) return;
+    const tags = [];
+    if (_dashF.area) {
+      const a = _DASH_AREAS.find(x => x.id === _dashF.area);
+      if (a) tags.push({ label: a.label, clear: () => { _dashF.area = null; _dashRender(); } });
+    }
+    if (_dashF.status) {
+      const lbl = _dashF.status === "historico" ? "Histórico" : _dashF.status;
+      tags.push({ label: lbl, clear: () => { _dashF.status = null; _dashRender(); } });
+    }
+    if (_dashF.prioridade) {
+      tags.push({ label: "Alta Prioridade", clear: () => { _dashF.prioridade = null; _dashRender(); } });
+    }
+    if (_dashF.periodo) {
+      const lbl = { "7d":"7 dias","30d":"30 dias","90d":"90 dias" }[_dashF.periodo] || _dashF.periodo;
+      tags.push({ label: lbl, clear: () => { _dashF.periodo = null; _dashRender(); } });
+    }
+    if (!tags.length) { el.style.display = "none"; return; }
+    el.style.display = "flex";
+    el.innerHTML = tags.map((t, i) =>
+      `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;
+              font-size:11px;font-weight:600;background:rgba(74,156,245,.12);color:var(--blue);border:1px solid rgba(74,156,245,.3)">
+        ${escapeHtml(t.label)}
+        <span onclick="demDashRemoveTag(${i})" style="cursor:pointer;font-size:13px;line-height:1;opacity:.7">×</span>
+      </span>`
+    ).join("") +
+    `<span onclick="demDashLimpar()" style="cursor:pointer;font-size:11px;font-weight:600;color:var(--tx3);padding:3px 6px">Limpar filtros</span>`;
+    window._dashTagClearFns = tags.map(t => t.clear);
   }
 
   function _renderDashListaRows() {
     const el = document.getElementById("dem-dash-lista");
     if (!el) return;
-    const rows = _dashGetRows(_dashFiltro);
-    if (!rows.length) { el.innerHTML = '<div class="empty-state">Nenhuma demanda encontrada</div>'; return; }
-    const _verMais = _dashFiltro === "todas" && _cache.length > 15
+    let rows = _dashGetRows();
+    const temFiltro = _dashHasFilter();
+    const visible = _filtrarVisibilidade([..._cache]);
+    const _verMais = !temFiltro && visible.length > 15
       ? `<div style="padding:12px 0;text-align:center;border-top:1px solid var(--bd1)">
-           <span onclick="demDashFiltrar('historico')" style="cursor:pointer;font-size:11.5px;color:var(--blue);font-weight:600">Ver todas (${_cache.length}) →</span>
+           <span onclick="window.go('dem-todas')" style="cursor:pointer;font-size:11.5px;color:var(--blue);font-weight:600">Ver todas (${visible.length}) →</span>
          </div>`
       : "";
+    if (!temFiltro) rows = rows.slice(0, 15);
+    if (!rows.length) { el.innerHTML = '<div class="empty-state">Nenhuma demanda encontrada</div>' + _verMais; return; }
     el.innerHTML = rows.map(r => {
       const corCat  = catCor(r.area);
       const meta = [
         r.subcategoria ? escapeHtml(r.subcategoria) : null,
         r.local        ? escapeHtml(r.local)        : null,
         nomePropio(r.solicitante || r.solicitante_txt) || null,
-        fmtD(r.data_abertura || r.criado_em),
+        fmtDT(r.criado_em) || fmtD(r.data_abertura),
       ].filter(Boolean).join("  ·  ");
       return `
         <div onclick="demAbrirDetalhe('${r.id||r._row}','dem-dash')"
@@ -548,10 +648,45 @@ function fmtD(d) {
     }).join("") + _verMais;
   }
 
-  window.demDashFiltrar = function(id) {
-    _dashFiltro = id;
+  function _dashRender() {
     _renderDashChips();
+    _renderDashFiltros();
+    _renderDashTags();
     _renderDashListaRows();
+  }
+
+  window.demDashFiltrar = function(id) {
+    _dashF.area = id || null;
+    _dashRender();
+  };
+
+  window.demDashFiltrarArea = function(id) {
+    _dashF.area = id;
+    _dashRender();
+  };
+
+  window.demDashFiltroStatus = function(v) {
+    _dashF.status = v || null;
+    _dashRender();
+  };
+
+  window.demDashFiltroPrio = function(v) {
+    _dashF.prioridade = v || null;
+    _dashRender();
+  };
+
+  window.demDashFiltroPeriodo = function(v) {
+    _dashF.periodo = v || null;
+    _dashRender();
+  };
+
+  window.demDashRemoveTag = function(i) {
+    if (window._dashTagClearFns && window._dashTagClearFns[i]) window._dashTagClearFns[i]();
+  };
+
+  window.demDashLimpar = function() {
+    _dashF = { area: null, status: null, prioridade: null, periodo: null };
+    _dashRender();
   };
 
   /* ── Lista com filtros ──────────────────────────────── */
