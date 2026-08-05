@@ -3540,7 +3540,7 @@
     if (!el) return;
     const socs = await _socGetList();
     el.innerHTML = '<div class="sdiv"></div>' + socs.map(s =>
-      `<div class="si" data-soc="${s.sigla}" onclick="window._sbSocSigla='${s.sigla}';go('min-soc')">${s.ic} ${s.sigla}</div>`
+      `<div class="si" data-soc="${s.sigla}" onclick="window._sbSocSigla='${s.sigla}';go('min-soc')">${s.sigla}</div>`
     ).join('');
   }
 
@@ -3616,7 +3616,11 @@
       <div id="soc-tab-visao-geral"  class="min-tab-panel"><div id="soc-vg-content"><div style="color:var(--tx3);text-align:center;padding:32px">Carregando...</div></div></div>
       <div id="soc-tab-lideranca"    class="min-tab-panel" style="display:none"><div id="soc-lid-content"></div></div>
       <div id="soc-tab-membros"      class="min-tab-panel" style="display:none">
-        <div class="card"><div class="ctit">Membros</div><div id="soc-membros-list"><div style="color:var(--tx3);padding:16px">Carregando...</div></div></div>
+        <div class="card">
+          <div class="ctit" style="display:flex;justify-content:space-between;align-items:center"><span>Membros</span><button class="tbt sec" style="font-size:11.5px" onclick="window._socMostrarFormMembro()">+ Adicionar</button></div>
+          <div id="soc-mem-form" style="display:none"></div>
+          <div id="soc-membros-list"><div style="color:var(--tx3);padding:16px">Carregando...</div></div>
+        </div>
       </div>
       <div id="soc-tab-reunioes"     class="min-tab-panel" style="display:none"><div id="soc-reu-content"></div></div>
       <div id="soc-tab-relatorios"   class="min-tab-panel" style="display:none"><div id="soc-rel-content"></div></div>
@@ -3735,40 +3739,47 @@
     const el = document.getElementById('soc-lid-content');
     if (!el) return;
     const lideres = _socRows.filter(r => r.tipo_nomeacao === 'lider');
-    if (!lideres.length) {
-      el.innerHTML = `<div class="card"><div style="color:var(--tx3);text-align:center;padding:20px">Nenhuma liderança nomeada.</div></div>`;
-      return;
-    }
 
-    const FUNC_LABEL = { supervisor:'Supervisor', coordenador:'Coordenador', lider_area:'Líder de Área', conselheiro:'Conselheiro', tesoureiro:'Tesoureiro' };
-    const FUNC_RGB   = { supervisor:'58,170,92', coordenador:'201,168,76', lider_area:'139,107,193', conselheiro:'74,156,245', tesoureiro:'224,138,42' };
+    const FUNC_LABEL = { supervisor:'Supervisor', coordenador:'Coordenador', lider_area:'Líder de Área', conselheiro:'Conselheiro', tesoureiro:'Tesoureiro', presidente:'Presidente' };
+    const FUNC_RGB   = { supervisor:'58,170,92', coordenador:'201,168,76', lider_area:'139,107,193', conselheiro:'74,156,245', tesoureiro:'224,138,42', presidente:'191,90,242' };
 
     const grupos = {};
     lideres.forEach(r => {
-      const g = r.funcao_lider || r.cargo || 'Outros';
+      const g = r.cargo || r.funcao_lider || 'Outros';
       (grupos[g] = grupos[g] || []).push(r);
     });
 
+    const _rgb = g => {
+      const k = Object.keys(FUNC_RGB).find(k => g.toLowerCase().includes(k));
+      return FUNC_RGB[k] || '139,107,193';
+    };
+
     el.innerHTML = `
       <div class="card">
-        <div class="ctit">Liderança — ${_hEsc(_socAtual?.sigla || '')}</div>
-        ${Object.entries(grupos).map(([func, pessoas]) => `
-          <div style="margin-bottom:18px">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:8px">${FUNC_LABEL[func] || func}</div>
-            ${pessoas.map(r => `
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg2);border-radius:8px;margin-bottom:5px">
-                <div style="display:flex;align-items:center;gap:10px">
-                  <div style="width:30px;height:30px;border-radius:50%;background:rgba(${FUNC_RGB[func]||'139,107,193'},.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgb(${FUNC_RGB[func]||'139,107,193'})" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  </div>
-                  <div>
+        <div class="ctit" style="display:flex;justify-content:space-between;align-items:center">
+          <span>Liderança — ${_hEsc(_socAtual?.sigla || '')}</span>
+          <button class="tbt sec" style="font-size:11.5px" onclick="window._socMostrarFormLider()">+ Adicionar</button>
+        </div>
+        <div id="soc-lid-form" style="display:none"></div>
+        ${!lideres.length
+          ? '<div style="color:var(--tx3);text-align:center;padding:20px">Nenhuma liderança nomeada.</div>'
+          : Object.entries(grupos).map(([g, pessoas]) => `
+            <div style="margin-bottom:18px">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:8px">${FUNC_LABEL[g] || g}</div>
+              ${pessoas.map(r => `
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg2);border-radius:8px;margin-bottom:5px">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div style="width:30px;height:30px;border-radius:50%;background:rgba(${_rgb(g)},.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgb(${_rgb(g)})" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
                     <div style="font-size:13px;font-weight:600;color:var(--tx1)">${_hEsc(r.nome)}</div>
-                    ${r.cargo && r.cargo !== func ? `<div style="font-size:11px;color:var(--tx3)">${_hEsc(r.cargo)}</div>` : ''}
                   </div>
-                </div>
-                ${r.data_inicio ? `<div style="font-size:11px;color:var(--tx3)">desde ${new Date(r.data_inicio+'T12:00:00').toLocaleDateString('pt-BR')}</div>` : ''}
-              </div>`).join('')}
-          </div>`).join('')}
+                  <div style="display:flex;align-items:center;gap:8px">
+                    ${r.data_inicio ? `<div style="font-size:11px;color:var(--tx3)">desde ${new Date(r.data_inicio+'T12:00:00').toLocaleDateString('pt-BR')}</div>` : ''}
+                    <button onclick="window._socMenuNomeado(event,'${r.id}','lider')" style="background:none;border:none;cursor:pointer;padding:3px 8px;color:var(--tx3);font-size:15px;border-radius:4px;line-height:1">⋯</button>
+                  </div>
+                </div>`).join('')}
+            </div>`).join('')}
       </div>`;
   }
 
@@ -3784,7 +3795,7 @@
     el.innerHTML = `
       <table class="tbl">
         <thead><tr>
-          <th>Nome</th><th>Cargo / Função</th><th>Desde</th>
+          <th>Nome</th><th>Cargo / Função</th><th>Desde</th><th></th>
         </tr></thead>
         <tbody>
           ${membros.map(r => `
@@ -3792,10 +3803,184 @@
               <td style="font-size:12.5px;font-weight:500;color:var(--tx1)">${_hEsc(r.nome)}</td>
               <td style="font-size:11.5px;color:var(--tx3)">${_hEsc(r.cargo || '—')}</td>
               <td style="font-size:11.5px;color:var(--tx3)">${r.data_inicio ? new Date(r.data_inicio+'T12:00:00').toLocaleDateString('pt-BR') : '—'}</td>
+              <td style="text-align:right;padding:4px 8px">
+                <button onclick="window._socMenuNomeado(event,'${r.id}','membro')" style="background:none;border:none;cursor:pointer;padding:3px 8px;color:var(--tx3);font-size:15px;border-radius:4px;line-height:1">⋯</button>
+              </td>
             </tr>`).join('')}
         </tbody>
       </table>`;
   }
+
+  /* ── Formulário: Adicionar Líder ────────────────────────── */
+  function _socMostrarFormLider() {
+    const el = document.getElementById('soc-lid-form');
+    if (!el) return;
+    el.style.display = '';
+    el.innerHTML = `
+      <div style="padding:14px 0 10px;border-bottom:1px solid var(--bd1);margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--tx2);margin-bottom:12px">Novo Líder</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <label style="${_LB}">Nome <span style="color:var(--rose)">*</span></label>
+            <input id="soc-lid-nome" type="text" placeholder="Nome completo" style="${_INP}">
+          </div>
+          <div>
+            <label style="${_LB}">Cargo <span style="color:var(--rose)">*</span></label>
+            <input id="soc-lid-cargo" type="text" placeholder="Presidente, Conselheiro..." style="${_INP}">
+          </div>
+          <div>
+            <label style="${_LB}">Função (sistema)</label>
+            <select id="soc-lid-funcao" style="${_INP}">
+              <option value="">— sem função específica —</option>
+              <option value="presidente">Presidente</option>
+              <option value="supervisor">Supervisor</option>
+              <option value="conselheiro">Conselheiro</option>
+              <option value="coordenador">Coordenador</option>
+              <option value="tesoureiro">Tesoureiro</option>
+              <option value="lider_area">Líder de Área</option>
+            </select>
+          </div>
+          <div>
+            <label style="${_LB}">Desde</label>
+            <input id="soc-lid-data" type="date" style="${_INP}">
+          </div>
+        </div>
+        <div id="soc-lid-err" style="color:var(--rose);font-size:12px;display:none;margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button onclick="document.getElementById('soc-lid-form').style.display='none'" style="padding:7px 16px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:12.5px;cursor:pointer">Cancelar</button>
+          <button onclick="window._socSalvarLider()" style="padding:7px 16px;border-radius:7px;border:none;background:var(--violet);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer">Salvar</button>
+        </div>
+      </div>`;
+    document.getElementById('soc-lid-nome')?.focus();
+  }
+  window._socMostrarFormLider = _socMostrarFormLider;
+
+  async function _socSalvarLider() {
+    if (!_socAtual) return;
+    const nome   = (document.getElementById('soc-lid-nome')?.value || '').trim();
+    const cargo  = (document.getElementById('soc-lid-cargo')?.value || '').trim();
+    const funcao = document.getElementById('soc-lid-funcao')?.value || null;
+    const data   = document.getElementById('soc-lid-data')?.value || null;
+    const errEl  = document.getElementById('soc-lid-err');
+    if (errEl) errEl.style.display = 'none';
+    if (!nome)  { if (errEl) { errEl.textContent = 'Nome é obrigatório.';  errEl.style.display = ''; } return; }
+    if (!cargo) { if (errEl) { errEl.textContent = 'Cargo é obrigatório.'; errEl.style.display = ''; } return; }
+    const payload = { orgao_tipo: 'sociedade', orgao: _socAtual.orgao, nome, cargo, tipo_nomeacao: 'lider', status: 'ativo' };
+    if (funcao) payload.funcao_lider = funcao;
+    if (data)   payload.data_inicio  = data;
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/nomeados`, {
+        method: 'POST', headers: Object.assign({}, _hdrJson(), { 'Prefer': 'return=representation' }),
+        body: JSON.stringify(payload),
+      });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({})))?.message || `Erro ${r.status}`);
+      const [ins] = await r.json();
+      _socRows.push({ id: ins.id, nome, cargo, tipo_nomeacao: 'lider', funcao_lider: funcao || null, data_inicio: data || null });
+      document.getElementById('soc-lid-form').style.display = 'none';
+      _socRenderLideranca();
+      _socRenderVisaoGeral();
+      _socRenderHeader();
+    } catch (e) {
+      if (errEl) { errEl.textContent = e.message; errEl.style.display = ''; }
+    }
+  }
+  window._socSalvarLider = _socSalvarLider;
+
+  /* ── Formulário: Adicionar Membro ────────────────────────── */
+  function _socMostrarFormMembro() {
+    const el = document.getElementById('soc-mem-form');
+    if (!el) return;
+    el.style.display = '';
+    el.innerHTML = `
+      <div style="padding:14px 0 10px;border-bottom:1px solid var(--bd1);margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--tx2);margin-bottom:12px">Novo Membro</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <label style="${_LB}">Nome <span style="color:var(--rose)">*</span></label>
+            <input id="soc-mem-nome" type="text" placeholder="Nome completo" style="${_INP}">
+          </div>
+          <div>
+            <label style="${_LB}">Cargo / Função</label>
+            <input id="soc-mem-cargo" type="text" placeholder="Membro, Auxiliar..." style="${_INP}">
+          </div>
+          <div>
+            <label style="${_LB}">Desde</label>
+            <input id="soc-mem-data" type="date" style="${_INP}">
+          </div>
+        </div>
+        <div id="soc-mem-err" style="color:var(--rose);font-size:12px;display:none;margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button onclick="document.getElementById('soc-mem-form').style.display='none'" style="padding:7px 16px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:12.5px;cursor:pointer">Cancelar</button>
+          <button onclick="window._socSalvarMembro()" style="padding:7px 16px;border-radius:7px;border:none;background:var(--violet);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer">Salvar</button>
+        </div>
+      </div>`;
+    document.getElementById('soc-mem-nome')?.focus();
+  }
+  window._socMostrarFormMembro = _socMostrarFormMembro;
+
+  async function _socSalvarMembro() {
+    if (!_socAtual) return;
+    const nome  = (document.getElementById('soc-mem-nome')?.value || '').trim();
+    const cargo = (document.getElementById('soc-mem-cargo')?.value || '').trim() || 'Membro';
+    const data  = document.getElementById('soc-mem-data')?.value || null;
+    const errEl = document.getElementById('soc-mem-err');
+    if (errEl) errEl.style.display = 'none';
+    if (!nome) { if (errEl) { errEl.textContent = 'Nome é obrigatório.'; errEl.style.display = ''; } return; }
+    const payload = { orgao_tipo: 'sociedade', orgao: _socAtual.orgao, nome, cargo, tipo_nomeacao: 'membro', status: 'ativo' };
+    if (data) payload.data_inicio = data;
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/nomeados`, {
+        method: 'POST', headers: Object.assign({}, _hdrJson(), { 'Prefer': 'return=representation' }),
+        body: JSON.stringify(payload),
+      });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({})))?.message || `Erro ${r.status}`);
+      const [ins] = await r.json();
+      _socRows.push({ id: ins.id, nome, cargo, tipo_nomeacao: 'membro', funcao_lider: null, data_inicio: data || null });
+      document.getElementById('soc-mem-form').style.display = 'none';
+      _socRenderMembros();
+      _socRenderVisaoGeral();
+    } catch (e) {
+      if (errEl) { errEl.textContent = e.message; errEl.style.display = ''; }
+    }
+  }
+  window._socSalvarMembro = _socSalvarMembro;
+
+  /* ── Menu ⋯ e remoção de nomeado ─────────────────────────── */
+  function _socMenuNomeado(evt, id, tipo) {
+    evt.stopPropagation();
+    document.getElementById('_soc-ctx')?.remove();
+    const rect = evt.currentTarget.getBoundingClientRect();
+    const menu = document.createElement('div');
+    menu.id = '_soc-ctx';
+    menu.style.cssText = 'position:fixed;z-index:9999;background:var(--bg-card,#1e2126);border:1px solid var(--bd2,#3a3f47);border-radius:8px;padding:4px;box-shadow:0 4px 16px rgba(0,0,0,.3);min-width:130px';
+    menu.innerHTML = `<button onclick="window._socRemoverNomeado('${id}','${tipo}')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;cursor:pointer;font-size:12.5px;color:var(--rose);border-radius:5px">Remover</button>`;
+    document.body.appendChild(menu);
+    menu.style.top  = Math.min(rect.bottom + 4, window.innerHeight - 48) + 'px';
+    menu.style.left = Math.max(rect.right - 134, 8) + 'px';
+    const close = e => { if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('click', close); } };
+    setTimeout(() => document.addEventListener('click', close), 10);
+  }
+  window._socMenuNomeado = _socMenuNomeado;
+
+  async function _socRemoverNomeado(id, tipo) {
+    document.getElementById('_soc-ctx')?.remove();
+    const row = _socRows.find(r => r.id === id);
+    if (!confirm(`Remover "${row?.nome || '?'}"?`)) return;
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/nomeados?id=eq.${id}`, {
+        method: 'PATCH', headers: _hdrJson(),
+        body: JSON.stringify({ deleted_at: new Date().toISOString() }),
+      });
+      if (!r.ok) throw new Error(r.status);
+      _socRows = _socRows.filter(r => r.id !== id);
+      if (tipo === 'lider') { _socRenderLideranca(); _socRenderHeader(); }
+      else                    _socRenderMembros();
+      _socRenderVisaoGeral();
+    } catch (e) {
+      alert('Erro ao remover: ' + e.message);
+    }
+  }
+  window._socRemoverNomeado = _socRemoverNomeado;
 
   /* ── Aba: Relatórios ────────────────────────────────────── */
   function _socRenderRelatorios() {
