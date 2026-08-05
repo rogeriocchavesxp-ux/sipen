@@ -863,7 +863,7 @@ function fmtD(d) {
           </div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
-              <span style="font-size:12px;font-weight:600;color:var(--tx1)">${a.automatico ? "Sistema" : nomePropio(a.usuario_nome || "Usuário")}</span>
+              <span style="font-size:12px;font-weight:600;color:var(--tx1)">${nomePropio(a.usuario_nome) || "Sistema"}</span>
               <span style="font-size:10.5px;color:var(--tx3)">${dt}</span>
               ${a.status_demanda ? pillStatus(a.status_demanda) : ""}
             </div>

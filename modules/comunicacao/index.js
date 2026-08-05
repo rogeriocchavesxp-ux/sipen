@@ -457,7 +457,7 @@
       el.innerHTML = rows.map(a => `
         <div style="padding:10px 12px;border-radius:8px;background:${a.automatico ? "rgba(139,111,212,0.06)" : "var(--bg-surface)"};border:1px solid ${a.automatico ? "rgba(139,111,212,0.2)" : "var(--bd1)"};margin-bottom:6px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-            <span style="font-size:10.5px;font-weight:700;color:${a.automatico ? "var(--violet)" : "var(--tx2)"}">${a.automatico ? "Sistema" : _eh(a.usuario_nome || "—")}</span>
+            <span style="font-size:10.5px;font-weight:700;color:${a.automatico ? "var(--violet)" : "var(--tx2)"}">${_eh(a.usuario_nome) || "Sistema"}</span>
             <span style="font-size:10px;color:var(--tx4)">${_fmtD(a.criado_em)}</span>
           </div>
           <div style="font-size:12.5px;color:var(--tx1);white-space:pre-wrap">${_eh(a.texto)}</div>
