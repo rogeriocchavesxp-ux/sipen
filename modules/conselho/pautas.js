@@ -538,6 +538,7 @@
       </div>`;
     document.body.appendChild(overlay);
   };
+  if (window.SIPEN?.register) SIPEN.register('pautas:incluirNaPauta', window.pautasIncluirNaPauta);
 
   window._pautasConfirmarInclusao = async function(demandaId, titulo) {
     const reuniaoId = document.getElementById("sol-reuniao-sel")?.value;
