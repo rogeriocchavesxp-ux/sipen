@@ -81,7 +81,14 @@
   }
   function _membroCell(r){
     if(r.pessoa_id){
-      return `<span style="color:var(--tx1);font-weight:700">${escapeHtml(_dn(_pessoaNome(r.pessoa_id)))}</span>`;
+      const pessoa = _pessoas.find(p => p.id === r.pessoa_id);
+      if(pessoa){
+        const inativo = !!pessoa.deleted_at;
+        return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="color:var(--tx1);font-weight:700">${escapeHtml(_dn(pessoa.nome))}</span>
+          ${inativo ? `<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:999px;background:rgba(212,168,67,.15);color:#d4a843">inativo</span>` : ""}
+        </div>`;
+      }
     }
     return `<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
       <span style="display:inline-flex;align-items:center;border-radius:999px;padding:3px 8px;background:rgba(212,168,67,.15);color:#d4a843;font-size:10px;font-weight:800">Não vinculado</span>
@@ -109,14 +116,13 @@
   }
 
   async function _fetchTodasPessoas(sb){
-    // Supabase limita 1000 linhas por request (db-max-rows).
-    // Busca em páginas de 1000 até esgotar para garantir lista completa.
+    // Carrega todas as pessoas (incluindo soft-deletadas) para que controles
+    // antigos ainda mostrem o nome do titular corretamente.
     const PAGE = 1000;
     let all = [], from = 0;
     while(true){
       const { data, error } = await sb.from("pessoas")
-        .select("id,nome,email,celular,telefone")
-        .is("deleted_at", null)
+        .select("id,nome,email,celular,telefone,deleted_at")
         .order("nome", {ascending:true})
         .range(from, from + PAGE - 1);
       if(error) throw error;
@@ -219,7 +225,8 @@
       modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:340;display:flex;align-items:center;justify-content:center";
       document.body.appendChild(modal);
     }
-    const opts = `<option value="">— Selecionar pessoa —</option>` + _pessoas.map(p=>`<option value="${escapeHtmlAttr(p.id)}"${reg?.pessoa_id===p.id?" selected":""}>${escapeHtml(_dn(p.nome))}</option>`).join("");
+    const pessoasAtivas = _pessoas.filter(p => !p.deleted_at);
+    const opts = `<option value="">— Selecionar pessoa —</option>` + pessoasAtivas.map(p=>`<option value="${escapeHtmlAttr(p.id)}"${reg?.pessoa_id===p.id?" selected":""}>${escapeHtml(_dn(p.nome))}</option>`).join("");
     const status = reg?.status || "disponivel";
     modal.innerHTML = `<div style="width:min(720px,94vw);max-height:90vh;overflow:auto;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:20px">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><div style="font-size:20px">🅿</div><div><div style="font-size:14px;font-weight:800;color:var(--tx1)">${reg?"Editar":"Novo"} controle</div><div style="font-size:10.5px;color:var(--tx3)">Nice · código base 1EF9C96</div></div><button onclick="ceFecharModal()" style="margin-left:auto;background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button></div>
