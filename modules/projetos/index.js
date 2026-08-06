@@ -31,7 +31,20 @@
     obra: "Obra",
     legal: "Legal",
     infraestrutura: "Infraestrutura e Conservação",
-    administrativo: "Administrativo"
+    administrativo: "Administrativo",
+    tecnologia: "Tecnologia",
+    evento: "Montagem de Eventos",
+    acao_social: "Ação Social",
+  };
+
+  const ETAPA_TEMPLATES = {
+    infraestrutura: ["Vistoria inicial", "Levantamento de orçamento", "Aprovação e liberação", "Contratação", "Execução", "Vistoria final", "Entrega e documentação"],
+    obra: ["Projeto e aprovação", "Licitação e contratação", "Fundação e estrutura", "Acabamento", "Vistoria e AVCB", "Entrega"],
+    tecnologia: ["Levantamento de requisitos", "Análise e planejamento", "Design e prototipação", "Desenvolvimento", "Testes e validação", "Deploy / publicação", "Documentação"],
+    administrativo: ["Definição de escopo", "Aprovação da liderança", "Execução", "Revisão e ajustes", "Conclusão e registro"],
+    legal: ["Levantamento de documentação", "Análise jurídica", "Elaboração do documento", "Assinaturas", "Protocolo / Registro", "Arquivamento"],
+    evento: ["Definição do evento", "Planejamento e cronograma", "Contratação de fornecedores", "Divulgação", "Montagem e ensaio", "Realização do evento", "Desmontagem e avaliação"],
+    acao_social: ["Diagnóstico da necessidade", "Captação de recursos e doações", "Seleção de beneficiários", "Preparação dos materiais", "Execução da ação", "Acompanhamento e registro", "Avaliação e relatório"],
   };
 
   function _eh(v) {
@@ -245,12 +258,21 @@
       <div class="card">
         <div class="ctit" style="margin-bottom:14px">${_formId ? "Editar projeto" : "Novo projeto"}</div>
         <div class="frow"><div class="fg"><label class="flb">Nome *</label><input id="proj-nome" class="fi2" value="${_ea(d.nome || "")}" maxlength="160"></div><div class="fg"><label class="flb">Responsável</label><select id="proj-resp" class="fi2">${_membrosOptions(d.responsavel_id)}</select></div></div>
-        <div class="frow"><div class="fg"><label class="flb">Tipo</label><select id="proj-tipo" class="fi2">${Object.entries(TIPO_LABEL).map(([k,v]) => `<option value="${_ea(k)}" ${d.tipo===k?"selected":""}>${_eh(v)}</option>`).join("")}</select></div><div class="fg"><label class="flb">Prioridade</label><select id="proj-prio" class="fi2">${Object.entries(PRIO_CFG).map(([k,c]) => `<option value="${_ea(k)}" ${d.prioridade===k?"selected":""}>${_eh(c.label)}</option>`).join("")}</select></div></div>
+        <div class="frow"><div class="fg"><label class="flb">Tipo</label><select id="proj-tipo" class="fi2" ${!_formId ? 'onchange="projAtualizarTemplateEtapas()"' : ''}>${Object.entries(TIPO_LABEL).map(([k,v]) => `<option value="${_ea(k)}" ${d.tipo===k?"selected":""}>${_eh(v)}</option>`).join("")}</select></div><div class="fg"><label class="flb">Prioridade</label><select id="proj-prio" class="fi2">${Object.entries(PRIO_CFG).map(([k,c]) => `<option value="${_ea(k)}" ${d.prioridade===k?"selected":""}>${_eh(c.label)}</option>`).join("")}</select></div></div>
         <div class="frow"><div class="fg"><label class="flb">Status</label><select id="proj-status" class="fi2">${Object.entries(STATUS_CFG).map(([k,c]) => `<option value="${_ea(k)}" ${d.status===k?"selected":""}>${_eh(c.label)}</option>`).join("")}</select></div><div class="fg"><label class="flb">Data de início</label><input id="proj-inicio" type="date" class="fi2" value="${_ea(d.data_inicio || "")}"></div></div>
         <div class="frow"><div class="fg"><label class="flb">Data prevista</label><input id="proj-prevista" type="date" class="fi2" value="${_ea(d.data_prevista || "")}"></div><div class="fg"><label class="flb">Data de conclusão</label><input id="proj-conclusao" type="date" class="fi2" value="${_ea(d.data_conclusao || "")}"></div></div>
         <div class="fg"><label class="flb">Descrição</label><textarea id="proj-desc" class="fi2" rows="5">${_eh(d.descricao || "")}</textarea></div>
         <div class="ma"><button class="btn" onclick="${_formId ? `projAbrirDetalhe('${_ea(_formId)}')` : "go('proj-lista')"}">Cancelar</button><button class="btn btn-p" id="proj-save-btn" onclick="projSalvar()">Salvar</button></div>
       </div>
+      ${!_formId ? `
+      <div class="card" style="margin-top:10px" id="proj-etapas-template-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div class="ctit">Etapas sugeridas</div>
+          <button class="tbt" style="font-size:11px" onclick="projMarcarTodasEtapas()">Marcar todas</button>
+        </div>
+        <div style="font-size:11.5px;color:var(--tx3);margin-bottom:12px">Selecione as etapas que deseja incluir. Os nomes podem ser editados depois.</div>
+        <div id="proj-etapas-list"></div>
+      </div>` : ""}
     `;
   }
 
@@ -278,6 +300,28 @@
     finally { if (btn) { btn.disabled = false; btn.textContent = old; } }
   }
 
+  window.projAtualizarTemplateEtapas = function() {
+    const tipo = _view("proj-tipo")?.value || "administrativo";
+    const lista = _view("proj-etapas-list");
+    if (!lista) return;
+    const etapas = ETAPA_TEMPLATES[tipo] || [];
+    if (!etapas.length) {
+      lista.innerHTML = `<div style="font-size:11.5px;color:var(--tx3);padding:8px 0">Nenhuma etapa sugerida para este tipo.</div>`;
+      return;
+    }
+    lista.innerHTML = etapas.map((nome, i) => `
+      <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd1);cursor:pointer">
+        <input type="checkbox" id="proj-etapa-chk-${i}" data-nome="${_ea(nome)}" checked style="width:15px;height:15px;flex-shrink:0;accent-color:var(--gr)">
+        <span style="font-size:12px;color:var(--tx1)">${_eh(nome)}</span>
+      </label>`).join("");
+  };
+
+  window.projMarcarTodasEtapas = function() {
+    const chks = document.querySelectorAll("[id^='proj-etapa-chk-']");
+    const algumDesmarcado = [...chks].some(c => !c.checked);
+    chks.forEach(c => c.checked = algumDesmarcado);
+  };
+
   window.projInit = async function() {
     const btnNovo = document.getElementById("proj-btn-novo");
     if (btnNovo) btnNovo.style.display = _podeEditar() ? "" : "none";
@@ -304,6 +348,7 @@
       let dados = null;
       if (id) dados = await _carregarDetalhe(id);
       _renderForm(dados);
+      if (!id) window.projAtualizarTemplateEtapas();
     } catch(e) { _toast("Erro", e.message); }
   };
   window.projSalvar = async function() {
@@ -312,11 +357,29 @@
       await _withButton("proj-save-btn", "Salvando...", async () => {
         const payload = _payloadForm();
         let savedId = _formId;
+        const isNovo = !_formId;
         if (_formId) {
           await _fetchJson(`${_api()}/rest/v1/projetos?id=eq.${encodeURIComponent(_formId)}`, { method:"PATCH", headers:_headers({ "Prefer":"return=minimal" }), body:JSON.stringify(payload) });
         } else {
           const rows = await _fetchJson(`${_api()}/rest/v1/projetos`, { method:"POST", headers:_headers({ "Prefer":"return=representation" }), body:JSON.stringify(payload) });
           savedId = rows?.[0]?.id;
+        }
+        if (isNovo && savedId) {
+          const chks = document.querySelectorAll("[id^='proj-etapa-chk-']");
+          const etapasSelecionadas = [...chks].filter(c => c.checked).map((c, i) => ({
+            projeto_id: savedId,
+            nome: c.dataset.nome,
+            ordem: i + 1,
+            status: "pendente",
+            created_by: _user()?.id || null,
+          }));
+          if (etapasSelecionadas.length) {
+            await _fetchJson(`${_api()}/rest/v1/projeto_etapas`, {
+              method: "POST",
+              headers: _headers({ "Prefer": "return=minimal" }),
+              body: JSON.stringify(etapasSelecionadas),
+            });
+          }
         }
         _toast("Projeto salvo", "Dados atualizados com sucesso.");
         if (savedId) await window.projAbrirDetalhe(savedId); else { await go("proj-lista"); await window.projInit(); }
