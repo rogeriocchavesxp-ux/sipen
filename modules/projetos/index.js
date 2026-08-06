@@ -65,7 +65,21 @@
   function _podeEditar() {
     if (_user()?.perfil === "ADMINISTRADOR_GERAL") return true;
     const nivel = _perms().PROJETOS || "SEM_ACESSO";
-    return nivel === "COMPLETO" || nivel === "EDICAO";
+    if (nivel === "COMPLETO" || nivel === "EDICAO") return true;
+    if (_atual) {
+      const uid = _user()?.id;
+      if (uid && _atual.created_by === uid) return true;
+      const isEditor = (_atual.projeto_participantes || []).some(p => p.pessoa_id === uid && p.nivel === "editor");
+      if (isEditor) return true;
+    }
+    return false;
+  }
+  function _ehCriador() {
+    if (_user()?.perfil === "ADMINISTRADOR_GERAL") return true;
+    const nivel = _perms().PROJETOS || "SEM_ACESSO";
+    if (nivel === "COMPLETO") return true;
+    const uid = _user()?.id;
+    return uid && _atual && _atual.created_by === uid;
   }
   function _podeExcluir() { return _user()?.perfil === "ADMINISTRADOR_GERAL"; }
 
@@ -121,7 +135,7 @@
   }
 
   async function _carregarDetalhe(id) {
-    const url = `${_api()}/rest/v1/projetos?id=eq.${encodeURIComponent(id)}&select=*,projeto_etapas(*)&limit=1`;
+    const url = `${_api()}/rest/v1/projetos?id=eq.${encodeURIComponent(id)}&select=*,projeto_etapas(*),projeto_participantes(id,nivel,pessoa_id)&limit=1`;
     const rows = await _fetchJson(url, { headers: _headers() }) || [];
     _atual = rows[0] || null;
     if (_atual?.projeto_etapas) {
@@ -246,6 +260,47 @@
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px"><div class="ctit">Etapas</div>${canEdit ? `<button class="tbt pri" onclick="projNovaEtapa()">+ Adicionar etapa</button>` : ""}</div>
         ${etapaHtml || `<div style="color:var(--tx3);font-size:12px;padding:18px;text-align:center">Nenhuma etapa cadastrada.</div>`}
       </div>
+      ${(function() {
+        const participantes = _atual.projeto_participantes || [];
+        const criador = _ehCriador();
+        const uid = _user()?.id;
+        const jaParticipantes = new Set(participantes.map(p => p.pessoa_id));
+        const membrosDisponiveis = _membros.filter(m => !jaParticipantes.has(m.id));
+        const partHtml = participantes.map(p => {
+          const nome = _membroNome(p.pessoa_id);
+          const ini = nome.split(" ").slice(0,2).map(w=>w[0]||"").join("").toUpperCase();
+          const isEditor = p.nivel === "editor";
+          return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd1)">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:32px;height:32px;border-radius:50%;background:var(--bg-hover);border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--tx2);flex-shrink:0">${_eh(ini)}</div>
+              <div>
+                <div style="font-size:12px;font-weight:600;color:var(--tx1)">${_eh(nome)}</div>
+                <div style="font-size:10.5px;color:${isEditor?"var(--blue)":"var(--tx3)"}">
+                  ${isEditor?"Editor":"Visualizador"}
+                </div>
+              </div>
+            </div>
+            ${criador ? `<button class="tbt" style="font-size:11px;color:var(--rose)" onclick="projRemoverParticipante('${_ea(p.id)}','${_ea(_atual.id)}')">Remover</button>` : ""}
+          </div>`;
+        }).join("");
+        const addHtml = criador ? `
+          <div style="display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap">
+            <select id="proj-part-membro" class="fi2" style="flex:1;min-width:160px;margin:0">
+              <option value="">Selecionar membro...</option>
+              ${membrosDisponiveis.map(m=>`<option value="${_ea(m.id)}">${_eh(m.nome)}</option>`).join("")}
+            </select>
+            <select id="proj-part-nivel" class="fi2" style="margin:0;width:130px">
+              <option value="visualizador">Visualizador</option>
+              <option value="editor">Editor</option>
+            </select>
+            <button class="tbt pri" onclick="projAdicionarParticipante('${_ea(_atual.id)}')">Convidar</button>
+          </div>` : "";
+        return `<div class="card" style="margin-top:14px">
+          <div class="ctit" style="margin-bottom:${participantes.length?"10px":"0"}">Participantes</div>
+          ${partHtml || `<div style="color:var(--tx3);font-size:12px;padding:10px 0">Nenhum participante adicionado.</div>`}
+          ${addHtml}
+        </div>`;
+      })()}
     `;
   }
 
@@ -279,7 +334,7 @@
   function _payloadForm() {
     const nome = _view("proj-nome")?.value.trim();
     if (!nome) throw new Error("Informe o nome do projeto.");
-    return {
+    const payload = {
       nome,
       descricao: _view("proj-desc")?.value.trim() || null,
       tipo: _view("proj-tipo")?.value || "administrativo",
@@ -288,8 +343,10 @@
       responsavel_id: _view("proj-resp")?.value || null,
       data_inicio: _view("proj-inicio")?.value || null,
       data_prevista: _view("proj-prevista")?.value || null,
-      data_conclusao: _view("proj-conclusao")?.value || null
+      data_conclusao: _view("proj-conclusao")?.value || null,
     };
+    if (!_formId) payload.created_by = _user()?.id || null;
+    return payload;
   }
 
   async function _withButton(id, label, fn) {
@@ -299,6 +356,32 @@
     try { return await fn(); }
     finally { if (btn) { btn.disabled = false; btn.textContent = old; } }
   }
+
+  window.projAdicionarParticipante = async function(projetoId) {
+    const pessoaId = _view("proj-part-membro")?.value;
+    const nivel = _view("proj-part-nivel")?.value || "visualizador";
+    if (!pessoaId) { _toast("Atenção", "Selecione um membro"); return; }
+    try {
+      await _fetchJson(`${_api()}/rest/v1/projeto_participantes`, {
+        method: "POST",
+        headers: _headers({ "Prefer": "return=minimal" }),
+        body: JSON.stringify({ projeto_id: projetoId, pessoa_id: pessoaId, nivel, convidado_por: _user()?.id || null }),
+      });
+      _toast("Participante adicionado", _membroNome(pessoaId));
+      await window.projAbrirDetalhe(projetoId);
+    } catch(e) { _toast("Erro", e.message); }
+  };
+
+  window.projRemoverParticipante = async function(participanteId, projetoId) {
+    if (!confirm("Remover este participante do projeto?")) return;
+    try {
+      await _fetchJson(`${_api()}/rest/v1/projeto_participantes?id=eq.${encodeURIComponent(participanteId)}`, {
+        method: "DELETE",
+        headers: _headers(),
+      });
+      await window.projAbrirDetalhe(projetoId);
+    } catch(e) { _toast("Erro", e.message); }
+  };
 
   window.projAtualizarTemplateEtapas = function() {
     const tipo = _view("proj-tipo")?.value || "administrativo";
