@@ -412,6 +412,233 @@ function agRenderEventList(evs, occurrenceDate) {
   }).join("");
 }
 
+/* ── CALENDÁRIO GERAL — NOVA INTERFACE ──────────────────────────── */
+const _AGCAL_MESES_FULL = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const _AGCAL_MESES_ABR  = ["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"];
+const _AGCAL_DIAS_SEM   = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+const _AGCAL_DIAS_FULL  = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+
+let _agCalMesFiltro = new Date().getMonth(); // mês atual por padrão
+
+async function agCalCarregar() {
+  const tl = document.getElementById("agcal-timeline");
+  if (tl) tl.innerHTML = `<div style="color:var(--tx3);font-size:12px;text-align:center;padding:32px 0">${spinner()} Carregando eventos…</div>`;
+  try {
+    _agendaCache = null;
+    const rows = await getAgenda();
+    agCalRender(rows);
+  } catch(e) {
+    const tl2 = document.getElementById("agcal-timeline");
+    if (tl2) tl2.innerHTML = `<div style="color:var(--rose);text-align:center;padding:32px 0">Erro ao carregar: ${escapeHtml(e.message)}</div>`;
+  }
+}
+window.agCalCarregar = agCalCarregar;
+
+function agCalFiltrarMes(mesIdx) {
+  _agCalMesFiltro = mesIdx;
+  getAgenda().then(rows => agCalRender(rows)).catch(() => {});
+}
+window.agCalFiltrarMes = agCalFiltrarMes;
+
+function agCalAtualizar() {
+  _agendaCache = null;
+  agCalCarregar();
+}
+window.agCalAtualizar = agCalAtualizar;
+
+function agCalRender(rows) {
+  const anoAtual = new Date().getFullYear();
+  const hoje     = new Date().toISOString().split("T")[0];
+
+  // Contagem por mês (ocorrências reais no ano)
+  const countPorMes = Array(12).fill(0);
+  rows.forEach(r => {
+    if (!r.data) return;
+    const mesIdx = parseInt(r.data.slice(5,7)) - 1;
+    if (!isNaN(mesIdx)) countPorMes[mesIdx]++;
+  });
+
+  // Render tabs
+  const tabsEl = document.getElementById("agcal-mes-tabs");
+  if (tabsEl) {
+    const totalAnual = rows.length;
+    const tabs = [{ label: "Todos", idx: -1, count: totalAnual },
+      ..._AGCAL_MESES_ABR.map((m, i) => ({ label: m, idx: i, count: countPorMes[i] }))];
+    tabsEl.innerHTML = tabs.map(t => {
+      const ativo = t.idx === _agCalMesFiltro;
+      const isCurMes = t.idx === new Date().getMonth();
+      return `<button onclick="agCalFiltrarMes(${t.idx})"
+        style="flex-shrink:0;padding:6px 13px;border-radius:20px;
+        border:1.5px solid ${ativo ? 'var(--teal)' : isCurMes ? 'rgba(42,181,192,.35)' : 'var(--bd2)'};
+        background:${ativo ? 'var(--teal)' : 'transparent'};
+        color:${ativo ? '#fff' : isCurMes ? 'var(--teal)' : 'var(--tx2)'};
+        font-size:11px;font-weight:${ativo || isCurMes ? 700 : 500};cursor:pointer;white-space:nowrap;
+        display:inline-flex;align-items:center;gap:5px">
+        ${t.label}
+        ${t.count > 0 ? `<span style="background:${ativo ? 'rgba(255,255,255,.22)' : 'var(--bg-surface)'};color:${ativo ? '#fff' : 'var(--tx3)'};border-radius:10px;padding:0px 6px;font-size:9px;font-weight:700">${t.count}</span>` : ''}
+      </button>`;
+    }).join('');
+
+    // Auto-scroll para o mês ativo
+    setTimeout(() => {
+      const activeBtn = tabsEl.querySelectorAll("button")[_agCalMesFiltro >= 0 ? _agCalMesFiltro + 1 : 0];
+      if (activeBtn) activeBtn.scrollIntoView({ inline: "center", behavior: "smooth" });
+    }, 50);
+  }
+
+  // Filtrar e expandir ocorrências
+  let de, ate;
+  if (_agCalMesFiltro >= 0) {
+    const mesStr = String(_agCalMesFiltro + 1).padStart(2, "0");
+    const ultimoDia = new Date(anoAtual, _agCalMesFiltro + 1, 0).getDate();
+    de  = `${anoAtual}-${mesStr}-01`;
+    ate = `${anoAtual}-${mesStr}-${String(ultimoDia).padStart(2, "0")}`;
+  } else {
+    de  = `${anoAtual}-01-01`;
+    ate = `${anoAtual}-12-31`;
+  }
+
+  // Expandir ocorrências; eventos multi-dia não-recorrentes: só 1ª data no período
+  const seenMultiDay = new Set();
+  let evs = rows.flatMap(r => agGerarOcorrencias(r, de, ate)).filter(e => {
+    const rec = e.recorrencia || "Único";
+    const multiDay = e.data_encerramento && e.data_encerramento !== e.data;
+    if (multiDay && (rec === "Único" || rec === "Eventual" || rec === "Esporádico")) {
+      if (seenMultiDay.has(e.id)) return false;
+      seenMultiDay.add(e.id);
+    }
+    return true;
+  });
+
+  evs.sort((a, b) => ((a.data || "") + (a.hora_inicio || "")).localeCompare((b.data || "") + (b.hora_inicio || "")));
+
+  // Hero desc
+  const dscEl = document.getElementById("agcal-hero-dsc");
+  const label = _agCalMesFiltro >= 0 ? _AGCAL_MESES_FULL[_agCalMesFiltro] : "Ano todo";
+  if (dscEl) dscEl.textContent = `${evs.length} evento${evs.length !== 1 ? "s" : ""} · ${label} ${anoAtual}`;
+
+  // Destaque: próximos 2 eventos a partir de hoje
+  const proximos = evs.filter(e => e.data >= hoje).slice(0, 2);
+  _agCalRenderDestaque(proximos, hoje);
+  _agCalRenderTimeline(evs, hoje);
+}
+
+function _agCalRenderDestaque(proximos, hoje) {
+  const el = document.getElementById("agcal-destaque");
+  if (!el) return;
+  if (!proximos.length) { el.innerHTML = ""; return; }
+
+  el.innerHTML = `
+    <div style="margin-bottom:22px">
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--tx3);margin-bottom:10px">Próximos eventos</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
+        ${proximos.map(e => {
+          const cor = (typeof AG_TIPOS_COR !== "undefined" && AG_TIPOS_COR[e.tipo]) || "#2ab5c0";
+          const d = new Date((e.data || "") + "T12:00:00");
+          const diaNum  = (e.data || "").slice(8);
+          const mesAbr  = _AGCAL_MESES_ABR[d.getMonth()] || "";
+          const diaSem  = _AGCAL_DIAS_FULL[d.getDay()] || "";
+          const isHoje  = e.data === hoje;
+          const horario = e.hora_inicio ? e.hora_inicio.slice(0,5) + (e.hora_fim ? " → " + e.hora_fim.slice(0,5) : "") : "";
+          const multiDay = e.data_encerramento && e.data_encerramento !== e.data;
+          return `<div onclick='agAbrirForm(${safeJsonForHtml(e)})' style="background:var(--bg-card);border:1.5px solid ${cor}44;border-left:4px solid ${cor};border-radius:10px;padding:16px 18px;display:flex;gap:16px;cursor:pointer;transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 4px 20px ${cor}28'" onmouseout="this.style.boxShadow=''">
+            <div style="text-align:center;min-width:48px;padding-top:2px">
+              <div style="font-size:8px;font-weight:800;color:${cor};letter-spacing:.12em;text-transform:uppercase">${isHoje ? "HOJE" : mesAbr}</div>
+              <div style="font-size:28px;font-weight:800;color:var(--tx1);line-height:1.05;font-family:var(--mono)">${diaNum}</div>
+              <div style="font-size:8px;color:var(--tx3);font-weight:600;margin-top:1px">${diaSem.slice(0,3).toUpperCase()}</div>
+            </div>
+            <div style="flex:1;min-width:0">
+              ${e.tipo ? `<div style="display:inline-block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:${cor};background:${cor}18;border-radius:4px;padding:2px 8px;margin-bottom:7px">${escapeHtml(e.tipo)}</div>` : ""}
+              <div style="font-size:14px;font-weight:700;color:var(--tx1);margin-bottom:5px;line-height:1.3">${escapeHtml(e.titulo || "—")}</div>
+              ${horario ? `<div style="font-size:11px;color:var(--tx3);margin-bottom:3px;display:flex;align-items:center;gap:4px"><span style="opacity:.6">🕐</span> ${horario}</div>` : ""}
+              ${e.espaco ? `<div style="font-size:11px;color:var(--teal);display:flex;align-items:center;gap:4px"><span style="opacity:.7">📍</span> ${escapeHtml(e.espaco)}</div>` : ""}
+              ${multiDay ? `<div style="font-size:9.5px;color:var(--tx3);margin-top:5px">até ${(e.data_encerramento||"").slice(8)}/${(e.data_encerramento||"").slice(5,7)}</div>` : ""}
+              ${e.recorrencia && e.recorrencia !== "Único" ? `<div style="font-size:9px;color:var(--tx3);margin-top:4px;opacity:.8">↺ ${e.recorrencia}</div>` : ""}
+            </div>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>`;
+}
+
+function _agCalRenderTimeline(evs, hoje) {
+  const el = document.getElementById("agcal-timeline");
+  if (!el) return;
+
+  if (!evs.length) {
+    el.innerHTML = `<div style="text-align:center;padding:56px 0;color:var(--tx3);font-size:13px">Nenhum evento neste período</div>`;
+    return;
+  }
+
+  // Agrupar por data
+  const byDate = {};
+  evs.forEach(e => {
+    const k = e.data || "sem-data";
+    if (!byDate[k]) byDate[k] = [];
+    byDate[k].push(e);
+  });
+
+  let curMesLabel = null;
+  const html = Object.entries(byDate).sort(([a],[b]) => a.localeCompare(b)).map(([data, evsDia]) => {
+    const isPast   = data < hoje;
+    const isHoje   = data === hoje;
+    const d        = new Date(data + "T12:00:00");
+    const diaNum   = data.slice(8);
+    const diaSem   = _AGCAL_DIAS_SEM[d.getDay()];
+    const mesLabel = `${_AGCAL_MESES_FULL[d.getMonth()]} ${d.getFullYear()}`;
+
+    // Cabeçalho de mês
+    let mesHeader = "";
+    if (mesLabel !== curMesLabel) {
+      curMesLabel = mesLabel;
+      mesHeader = `<div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--teal);padding:${curMesLabel === mesLabel && !isHoje ? "20px" : "4px"} 0 10px;border-bottom:1px solid var(--bd1);margin-bottom:14px">${mesLabel}</div>`;
+    }
+
+    // Estilo do badge de data
+    const dateBg    = isHoje ? "var(--teal)" : isPast ? "transparent" : "var(--bg-surface)";
+    const dateColor = isHoje ? "#fff"        : isPast ? "var(--tx4)"  : "var(--tx1)";
+    const dateBd    = isHoje ? "none"        : isPast ? "1px solid var(--bd1)" : "1px solid var(--bd2)";
+
+    const cards = evsDia.map(e => {
+      const cor      = (typeof AG_TIPOS_COR !== "undefined" && AG_TIPOS_COR[e.tipo]) || "#6b7280";
+      const horario  = e.hora_inicio ? e.hora_inicio.slice(0,5) : "—";
+      const horFim   = e.hora_fim ? e.hora_fim.slice(0,5) : null;
+      const multiDay = e.data_encerramento && e.data_encerramento !== e.data;
+      return `<div onclick='agAbrirForm(${safeJsonForHtml(e)})'
+        style="display:flex;align-items:center;gap:0;background:var(--bg-card);border:1px solid var(--bd1);border-left:3px solid ${cor};border-radius:7px;padding:9px 14px;margin-bottom:5px;cursor:pointer;opacity:${isPast ? .6 : 1};transition:background .12s"
+        onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='var(--bg-card)'">
+        <div style="min-width:54px;flex-shrink:0">
+          <div style="font-size:11px;font-family:var(--mono);color:var(--tx3);font-weight:600">${horario}</div>
+          ${horFim ? `<div style="font-size:9px;color:var(--tx4);font-family:var(--mono)">→ ${horFim}</div>` : ""}
+        </div>
+        <div style="flex:1;min-width:0;padding:0 10px;overflow:hidden">
+          <div style="font-size:12.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(e.titulo || "—")}</div>
+          ${e.espaco ? `<div style="font-size:10px;color:var(--teal);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📍 ${escapeHtml(e.espaco)}</div>` : ""}
+          ${multiDay ? `<div style="font-size:9.5px;color:var(--tx3);margin-top:1px">até ${(e.data_encerramento||"").slice(8)}/${(e.data_encerramento||"").slice(5,7)}</div>` : ""}
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+          ${e.tipo ? `<span style="font-size:9px;font-weight:700;text-transform:uppercase;color:${cor};background:${cor}18;border-radius:4px;padding:2px 7px;letter-spacing:.04em;white-space:nowrap">${escapeHtml(e.tipo)}</span>` : ""}
+          ${e.recorrencia && e.recorrencia !== "Único" ? `<span style="font-size:9px;color:var(--tx3);background:var(--bg-surface);border-radius:4px;padding:2px 6px;white-space:nowrap">↺</span>` : ""}
+        </div>
+      </div>`;
+    }).join("");
+
+    return `${mesHeader}<div style="display:flex;gap:14px;margin-bottom:${isHoje ? 14 : 10}px">
+      <div style="flex-shrink:0;width:50px">
+        <div style="background:${dateBg};border:${dateBd};border-radius:8px;padding:6px 0;text-align:center">
+          <div style="font-size:8.5px;font-weight:700;color:${isHoje ? 'rgba(255,255,255,.8)' : isPast ? 'var(--tx4)' : 'var(--tx3)'};text-transform:uppercase;letter-spacing:.06em">${diaSem}</div>
+          <div style="font-size:19px;font-weight:800;font-family:var(--mono);line-height:1.15;color:${dateColor}">${diaNum}</div>
+        </div>
+        ${isHoje ? '<div style="font-size:7.5px;font-weight:800;color:var(--teal);text-align:center;margin-top:4px;text-transform:uppercase;letter-spacing:.1em">Hoje</div>' : ""}
+      </div>
+      <div style="flex:1;min-width:0;padding-top:2px">${cards}</div>
+    </div>`;
+  }).join("");
+
+  el.innerHTML = html;
+}
+
+// Compat: mantém função antiga para outros callers
 async function filtrarAgendaMes() {
   const mes = document.getElementById("ag-filtro-mes")?.value;
   _agendaCache = null;
@@ -419,7 +646,7 @@ async function filtrarAgendaMes() {
   const filtrados = mes ? rows.filter(r=>r.mes===mes) : rows;
   const count = document.getElementById("ag-cal-count");
   if (count) count.textContent = `· ${filtrados.length} eventos`;
-  renderModuloList(filtrados, "AGENDA", "agenda-cal-list");
+  if (document.getElementById("agenda-cal-list")) renderModuloList(filtrados, "AGENDA", "agenda-cal-list");
 }
 window.filtrarAgendaMes = filtrarAgendaMes;
 

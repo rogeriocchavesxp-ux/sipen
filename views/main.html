@@ -931,35 +931,27 @@
     </div>
   </div>
 
-  <!-- AGENDA CALENDÁRIO (lista completa) -->
+  <!-- AGENDA CALENDÁRIO GERAL -->
   <div class="view" id="v-agenda-calendario">
     <div class="hero">
       <div class="hero-ic" style="background:rgba(42,181,192,0.12)">📅</div>
-      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Calendário Geral</div><div class="hero-dsc">Todos os eventos de 2026</div></div>
+      <div>
+        <div class="hero-lbl">Agenda</div>
+        <div class="hero-ttl">Calendário Geral</div>
+        <div class="hero-dsc" id="agcal-hero-dsc">Carregando eventos…</div>
+      </div>
       <div class="hero-act">
-        <select id="ag-filtro-mes" onchange="filtrarAgendaMes()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:7px 10px;outline:none">
-          <option value="">Todos os meses</option>
-          <option value="Janeiro">Janeiro</option>
-          <option value="Fevereiro">Fevereiro</option>
-          <option value="Março">Março</option>
-          <option value="Abril">Abril</option>
-          <option value="Maio">Maio</option>
-          <option value="Junho">Junho</option>
-          <option value="Julho">Julho</option>
-          <option value="Agosto">Agosto</option>
-          <option value="Setembro">Setembro</option>
-          <option value="Outubro">Outubro</option>
-          <option value="Novembro">Novembro</option>
-          <option value="Dezembro">Dezembro</option>
-        </select>
+        <button class="tbt" onclick="agCalAtualizar()">↻ Atualizar</button>
         <button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Novo Evento</button>
       </div>
     </div>
     <div class="ct">
-      <div class="card">
-        <div class="ctit">Eventos <span class="csub" id="ag-cal-count"></span><span class="cact" onclick="listarModulo('AGENDA','agenda-cal-list')">↻ Atualizar</span></div>
-        <div id="agenda-cal-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
-      </div>
+      <!-- Tabs de mês -->
+      <div id="agcal-mes-tabs" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:22px;scrollbar-width:none;-webkit-overflow-scrolling:touch"></div>
+      <!-- Destaque: próximos eventos -->
+      <div id="agcal-destaque"></div>
+      <!-- Timeline -->
+      <div id="agcal-timeline"></div>
     </div>
   </div>
 
