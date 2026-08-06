@@ -4016,12 +4016,18 @@
   async function _socRemoverNomeado(id, tipo) {
     document.getElementById('_soc-ctx')?.remove();
     try {
-      const { error } = await getSupabase()
-        .from('nomeados')
-        .update({ deleted_at: new Date().toISOString(), status: 'inativo' })
-        .eq('id', id)
-        .is('deleted_at', null);
-      if (error) throw new Error(error.message || JSON.stringify(error));
+      const resp = await fetch(`${SUPABASE_URL}/rest/v1/nomeados?id=eq.${id}&deleted_at=is.null`, {
+        method: 'PATCH',
+        headers: Object.assign({}, _hdr(), {
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation,count=exact',
+        }),
+        body: JSON.stringify({ deleted_at: new Date().toISOString(), status: 'inativo' }),
+      });
+      const body = await resp.text().catch(() => '');
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${body}`);
+      const updated = JSON.parse(body || '[]');
+      if (!updated.length) throw new Error('Nenhuma linha atualizada — verifique a policy de UPDATE no Supabase (nomeados_upd WITH CHECK true).');
       _socRows = _socRows.filter(row => row.id !== id);
       if (tipo === 'lider') { _socRenderLideranca(); _socRenderHeader(); }
       else                    _socRenderMembros();
