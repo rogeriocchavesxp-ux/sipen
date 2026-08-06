@@ -982,7 +982,7 @@ async function _renderDepto() {
     _g('demandas?select=id,status'),
     _g('msg_campanhas?select=id&criado_em=gte.' + mesInicio),
     _g('ministerios?ativo=eq.true&select=id,nome,tipo&order=nome.asc'),
-    _g('ministerio_membros?ativo=eq.true&select=ministerio_id'),
+    _g('ministerio_membros?status=eq.ativo&select=ministerio_id'),
   ]);
 
   const totalMembros = Array.isArray(membros) ? membros.length : 0;
