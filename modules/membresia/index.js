@@ -299,7 +299,8 @@
       let query = sb()
         .from("pessoas")
         .select("id", { count: "exact", head: true })
-        .eq("email", email);
+        .eq("email", email)
+        .is("deleted_at", null);
 
       if (excluirId) query = query.neq("id", excluirId);
 
