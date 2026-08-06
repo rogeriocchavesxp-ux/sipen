@@ -495,6 +495,7 @@ async function entrarNoSistema() {
   testApiSilently();
   carregarPermissoesDB(); // popula _perfisUuidMap e PERMISSOES_DB em background
   if (typeof window.__chatOnLogin === "function") window.__chatOnLogin();
+  if (typeof window.__projVerificarConvites === "function") window.__projVerificarConvites();
 
   if (typeof window.demAtualizarLabels === "function") window.demAtualizarLabels();
   if (typeof window.aplicarMenuDemandasPorPerfil === "function") window.aplicarMenuDemandasPorPerfil();

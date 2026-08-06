@@ -69,7 +69,7 @@
     if (_atual) {
       const uid = _user()?.id;
       if (uid && _atual.created_by === uid) return true;
-      const isEditor = (_atual.projeto_participantes || []).some(p => p.pessoa_id === uid && p.nivel === "editor");
+      const isEditor = (_atual.projeto_participantes || []).some(p => p.pessoa_id === uid && p.nivel === "editor" && p.aceito === true);
       if (isEditor) return true;
     }
     return false;
@@ -135,7 +135,7 @@
   }
 
   async function _carregarDetalhe(id) {
-    const url = `${_api()}/rest/v1/projetos?id=eq.${encodeURIComponent(id)}&select=*,projeto_etapas(*),projeto_participantes(id,nivel,pessoa_id)&limit=1`;
+    const url = `${_api()}/rest/v1/projetos?id=eq.${encodeURIComponent(id)}&select=*,projeto_etapas(*),projeto_participantes(id,nivel,pessoa_id,aceito)&limit=1`;
     const rows = await _fetchJson(url, { headers: _headers() }) || [];
     _atual = rows[0] || null;
     if (_atual?.projeto_etapas) {
@@ -270,14 +270,14 @@
           const nome = _membroNome(p.pessoa_id);
           const ini = nome.split(" ").slice(0,2).map(w=>w[0]||"").join("").toUpperCase();
           const isEditor = p.nivel === "editor";
+          const estadoCor = p.aceito === true ? "var(--gr)" : p.aceito === false ? "var(--rose)" : "var(--amber)";
+          const estadoLbl = p.aceito === true ? "Aceito" : p.aceito === false ? "Recusado" : "Pendente";
           return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd1)">
             <div style="display:flex;align-items:center;gap:10px">
               <div style="width:32px;height:32px;border-radius:50%;background:var(--bg-hover);border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--tx2);flex-shrink:0">${_eh(ini)}</div>
               <div>
                 <div style="font-size:12px;font-weight:600;color:var(--tx1)">${_eh(nome)}</div>
-                <div style="font-size:10.5px;color:${isEditor?"var(--blue)":"var(--tx3)"}">
-                  ${isEditor?"Editor":"Visualizador"}
-                </div>
+                <div style="font-size:10.5px;color:var(--tx3)">${isEditor?"Editor":"Visualizador"} · <span style="color:${estadoCor}">${estadoLbl}</span></div>
               </div>
             </div>
             ${criador ? `<button class="tbt" style="font-size:11px;color:var(--rose)" onclick="projRemoverParticipante('${_ea(p.id)}','${_ea(_atual.id)}')">Remover</button>` : ""}
@@ -356,6 +356,69 @@
     try { return await fn(); }
     finally { if (btn) { btn.disabled = false; btn.textContent = old; } }
   }
+
+  function _fecharModalConvites() {
+    const m = document.getElementById("proj-convites-modal");
+    if (m) m.remove();
+  }
+
+  function _mostrarModalConvites(convites) {
+    const existing = document.getElementById("proj-convites-modal");
+    if (existing) existing.remove();
+    const rows = convites.map(c => `
+      <div id="proj-conv-row-${_ea(c.id)}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--bd1)">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--tx1)">${_eh(c.projetos?.nome || "Projeto")}</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:2px">Nível: <strong>${c.nivel === "editor" ? "Editor" : "Visualizador"}</strong></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button onclick="projResponderConvite('${_ea(c.id)}',true)" style="padding:6px 16px;border-radius:6px;border:none;background:var(--gr);color:#fff;font-size:12px;font-weight:600;cursor:pointer">Sim</button>
+          <button onclick="projResponderConvite('${_ea(c.id)}',false)" style="padding:6px 14px;border-radius:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:12px;cursor:pointer">Não</button>
+        </div>
+      </div>`).join("");
+    const modal = document.createElement("div");
+    modal.id = "proj-convites-modal";
+    modal.style.cssText = "position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px";
+    modal.innerHTML = `
+      <div style="background:var(--bg-card);border-radius:14px;padding:24px;max-width:460px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.45);border:1px solid var(--bd2)">
+        <div style="font-size:15px;font-weight:700;color:var(--tx1);margin-bottom:4px">Convite para projeto</div>
+        <div style="font-size:12px;color:var(--tx3);margin-bottom:16px">Você foi adicionado ao(s) projeto(s) abaixo. Deseja participar?</div>
+        <div id="proj-convites-lista">${rows}</div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  let _convitesPendentes = 0;
+
+  window.projResponderConvite = async function(conviteId, aceito) {
+    try {
+      await _fetchJson(`${_api()}/rest/v1/projeto_participantes?id=eq.${encodeURIComponent(conviteId)}`, {
+        method: "PATCH",
+        headers: _headers({ "Prefer": "return=minimal" }),
+        body: JSON.stringify({ aceito }),
+      });
+      const row = document.getElementById(`proj-conv-row-${conviteId}`);
+      if (row) row.remove();
+      _convitesPendentes = Math.max(0, _convitesPendentes - 1);
+      if (_convitesPendentes === 0) _fecharModalConvites();
+    } catch(e) { _toast("Erro", e.message); }
+  };
+
+  window.__projVerificarConvites = async function() {
+    const uid = _user()?.id;
+    if (!uid) return;
+    try {
+      const convites = await _fetchJson(
+        `${_api()}/rest/v1/projeto_participantes?pessoa_id=eq.${encodeURIComponent(uid)}&aceito=is.null&select=id,nivel,projeto_id,projetos(nome)`,
+        { headers: _headers() }
+      ) || [];
+      if (!convites.length) return;
+      _convitesPendentes = convites.length;
+      _mostrarModalConvites(convites);
+    } catch(e) {
+      console.warn("projVerificarConvites:", e.message);
+    }
+  };
 
   window.projAdicionarParticipante = async function(projetoId) {
     const pessoaId = _view("proj-part-membro")?.value;
