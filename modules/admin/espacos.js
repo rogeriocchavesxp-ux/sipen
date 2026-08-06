@@ -134,9 +134,10 @@ const ADM_ESP = (() => {
     document.querySelectorAll(".adm-esp-dropdown").forEach(d => d.remove());
     const e = _lista.find(x => x.id === id);
     if (!e) return;
+    const _rect = btn.getBoundingClientRect();
     const menu = document.createElement("div");
     menu.className = "adm-esp-dropdown";
-    menu.style.cssText = "position:absolute;right:0;top:100%;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:200;min-width:160px;padding:4px 0";
+    menu.style.cssText = `position:fixed;top:${_rect.bottom + 4}px;right:${window.innerWidth - _rect.right}px;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:9999;min-width:160px;padding:4px 0`;
     const acoes = [
       { label: "Editar",            fn: `ADM_ESP.editar('${id}')` },
       { label: e.ativo ? "Desativar" : "Ativar", fn: `ADM_ESP.toggleAtivo('${id}',${!e.ativo})` },
@@ -147,7 +148,7 @@ const ADM_ESP = (() => {
     menu.innerHTML = acoes.map(a =>
       `<div onclick="${a.fn};this.closest('.adm-esp-dropdown').remove()" style="padding:8px 14px;font-size:12.5px;cursor:pointer;color:${a.danger ? "var(--rose)" : "var(--tx1)"};white-space:nowrap" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">${a.label}</div>`
     ).join("");
-    btn.closest(".adm-esp-menu-wrap").appendChild(menu);
+    document.body.appendChild(menu);
     setTimeout(() => document.addEventListener("click", () => menu.remove(), { once: true }), 10);
   }
 

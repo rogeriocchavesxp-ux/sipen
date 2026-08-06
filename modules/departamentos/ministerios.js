@@ -3214,9 +3214,10 @@
       btn._kebabMenu = null;
       return;
     }
+    const _rect = btn.getBoundingClientRect();
     const menu = document.createElement('div');
     menu.className = 'min-kebab-menu';
-    menu.style.cssText = 'position:absolute;right:0;top:100%;z-index:9999;background:var(--bg2);border:1px solid var(--bd2);border-radius:7px;box-shadow:0 4px 16px rgba(0,0,0,.15);min-width:150px;overflow:hidden;margin-top:2px';
+    menu.style.cssText = `position:fixed;top:${_rect.bottom + 4}px;right:${window.innerWidth - _rect.right}px;z-index:9999;background:var(--bg2);border:1px solid var(--bd2);border-radius:7px;box-shadow:0 4px 16px rgba(0,0,0,.15);min-width:150px;overflow:hidden`;
 
     const btnEditar = document.createElement('button');
     btnEditar.textContent = 'Editar função';
@@ -3234,8 +3235,7 @@
     btnRemover.onclick = () => minMinRemoverMembro(id);
 
     menu.append(btnEditar, btnToggle, btnRemover);
-    btn.parentElement.style.position = 'relative';
-    btn.parentElement.appendChild(menu);
+    document.body.appendChild(menu);
     btn._kebabMenu = menu;
 
     setTimeout(() => {
