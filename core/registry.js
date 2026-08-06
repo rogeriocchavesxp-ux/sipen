@@ -2,25 +2,27 @@
   'use strict';
 
   const _STATUS_LABEL = {
-    "ABERTA":               "Aberta",
-    "EM_ANALISE":           "Em Análise",
-    "EM_ANDAMENTO":         "Em Andamento",
-    "PENDENTE":             "Pendente",
-    "AGUARDANDO_PAGAMENTO": "Aguardando Pagamento",
-    "CONCLUIDA":            "Concluída",
-    "PAGO":                 "Pago",
-    "CANCELADA":            "Cancelada",
+    "ABERTA":                "Aberta",
+    "EM_ANALISE":            "Em Análise",
+    "EM_ANDAMENTO":          "Em Andamento",
+    "PENDENTE":              "Pendente",
+    "AGUARDANDO_PAGAMENTO":  "Aguardando Pagamento",
+    "PAGAMENTO_AGENDADO":    "Pagamento Agendado",
+    "CONCLUIDA":             "Concluída",
+    "PAGO":                  "Pago",
+    "CANCELADA":             "Cancelada",
   };
 
   const _STATUS_DB = {
-    "Aberta":               "ABERTA",
-    "Em Análise":           "EM_ANALISE",
-    "Em Andamento":         "EM_ANDAMENTO",
-    "Pendente":             "PENDENTE",
-    "Aguardando Pagamento": "AGUARDANDO_PAGAMENTO",
-    "Concluída":            "CONCLUIDA",
-    "Pago":                 "PAGO",
-    "Cancelada":            "CANCELADA",
+    "Aberta":                "ABERTA",
+    "Em Análise":            "EM_ANALISE",
+    "Em Andamento":          "EM_ANDAMENTO",
+    "Pendente":              "PENDENTE",
+    "Aguardando Pagamento":  "AGUARDANDO_PAGAMENTO",
+    "Pagamento Agendado":    "PAGAMENTO_AGENDADO",
+    "Concluída":             "CONCLUIDA",
+    "Pago":                  "PAGO",
+    "Cancelada":             "CANCELADA",
   };
 
   const _STATUS_FECHADO = ["CONCLUIDA", "PAGO", "CANCELADA"];
@@ -31,6 +33,7 @@
     "Em Andamento":         { bg:"rgba(144,112,236,.12)", cl:"var(--purple)" },
     "Pendente":             { bg:"rgba(212,168,67,.12)",  cl:"var(--amber)" },
     "Aguardando Pagamento": { bg:"rgba(212,168,67,.12)",  cl:"var(--amber)" },
+    "Pagamento Agendado":   { bg:"rgba(74,156,245,.12)",  cl:"var(--sky)" },
     "Concluída":            { bg:"rgba(58,170,92,.12)",   cl:"var(--grn)" },
     "Pago":                 { bg:"rgba(58,170,92,.12)",   cl:"var(--grn)" },
     "Cancelada":            { bg:"rgba(224,85,85,.12)",   cl:"var(--red)" },

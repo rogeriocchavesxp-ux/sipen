@@ -75,7 +75,8 @@
     "Aberta":       { bg:"rgba(74,156,245,.12)",  cl:"var(--blue)"  },
     "Em Análise":   { bg:"rgba(212,168,67,.12)",  cl:"var(--gold)"  },
     "Em Andamento": { bg:"rgba(139,111,212,.12)", cl:"var(--violet)"},
-    "Aguardando Pagamento": { bg:"rgba(234,179,8,.12)", cl:"var(--amber)" },
+    "Aguardando Pagamento": { bg:"rgba(234,179,8,.12)",  cl:"var(--amber)" },
+    "Pagamento Agendado":   { bg:"rgba(74,156,245,.12)", cl:"var(--blue)"  },
     "Concluída":    { bg:"rgba(58,170,92,.12)",   cl:"var(--gr)"    },
     "Pago":         { bg:"rgba(58,170,92,.12)",   cl:"var(--gr)"    },
     "Cancelada":    { bg:"rgba(90,96,104,.15)",   cl:"var(--tx3)"   },
@@ -144,6 +145,7 @@
     "Em Análise":   "EM_ANALISE",
     "Em Andamento": "EM_ANDAMENTO",
     "Aguardando Pagamento": "AGUARDANDO_PAGAMENTO",
+    "Pagamento Agendado":   "PAGAMENTO_AGENDADO",
     "Pendente":     "PENDENTE",
     "Concluída":    "CONCLUIDA",
     "Pago":         "PAGO",
@@ -155,6 +157,7 @@
     "EM_ANALISE":   "Em Análise",
     "EM_ANDAMENTO": "Em Andamento",
     "AGUARDANDO_PAGAMENTO": "Aguardando Pagamento",
+    "PAGAMENTO_AGENDADO":   "Pagamento Agendado",
     "PENDENTE":     "Pendente",
     "CONCLUIDA":    "Concluída",
     "PAGO":         "Pago",
@@ -1485,6 +1488,10 @@ function fmtD(d) {
          <button class="tbt" style="margin-left:8px;padding:3px 8px;font-size:10.5px" onclick="go('fin-pagar')">Abrir Contas a Pagar</button>`
       ]);
     }
+    if (_toLabel(dem.status) === "Pagamento Agendado" && dem.financial_data?.agendado_para) {
+      const [ay, am, ad] = dem.financial_data.agendado_para.split("-");
+      detailRows.push(["Agendado para", `<span style="font-weight:600;color:var(--blue)">${ad}/${am}/${ay}</span>`]);
+    }
 
     const _demFd       = (dem.financial_data && typeof dem.financial_data === "object") ? dem.financial_data : {};
     const _isFinSolPag = dem.area === "Financeiro" && dem.subcategoria === "Solicitação de pagamento";
@@ -1548,18 +1555,31 @@ function fmtD(d) {
             </div>` : `
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="dem-status-btns-${id}">
               ${(dem.area === "Financeiro"
-                  ? [["Aberta","Aberta"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],["Aguardando Pagamento","Aguardando Pagamento"],["Pago","Pago"],["Cancelada","Cancelada"]]
+                  ? [["Aberta","Aberta"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],["Aguardando Pagamento","Aguardando Pagamento"],["Pagamento Agendado","Pagamento Agendado"],["Pago","Pago"],["Cancelada","Cancelada"]]
                   : [["Aberta","Aberta"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],["Concluída","Concluída"],["Cancelada","Cancelada"]]
-                ).map(([st, label]) => `
-                <button
-                  data-demid="${id}"
-                  data-status="${st}"
-                  onclick="demAtualizarStatus(this.dataset.demid, this.dataset.status)"
-                  style="text-align:left;padding:7px 12px;border-radius:6px;border:1px solid ${dem.status===st?"var(--gr)":"var(--bd2)"};background:${dem.status===st?"rgba(58,170,92,.1)":"var(--bg-card)"};color:${dem.status===st?"var(--gr)":"var(--tx1)"};font-size:11.5px;font-weight:${dem.status===st?"700":"400"};cursor:pointer;transition:all .15s"
-                  onmouseover="this.style.background=this.dataset.status==='${dem.status}'?'rgba(58,170,92,.1)':'var(--bg-hover)'"
-                  onmouseout="this.style.background=this.dataset.status==='${dem.status}'?'rgba(58,170,92,.1)':'var(--bg-card)'">
-                  ${dem.status===st?"✓ ":"○ "} ${label}
-                </button>`).join("")}
+                ).map(([st, label]) => {
+                  const isAtivo = dem.status === st;
+                  const isAgendamento = st === "Pagamento Agendado";
+                  const onclick = isAgendamento
+                    ? `demMostrarPanelAgendamento('${id}')`
+                    : `demAtualizarStatus(this.dataset.demid, this.dataset.status)`;
+                  return `<button
+                    data-demid="${id}"
+                    data-status="${st}"
+                    onclick="${onclick}"
+                    style="text-align:left;padding:7px 12px;border-radius:6px;border:1px solid ${isAtivo?"var(--gr)":"var(--bd2)"};background:${isAtivo?"rgba(58,170,92,.1)":"var(--bg-card)"};color:${isAtivo?"var(--gr)":"var(--tx1)"};font-size:11.5px;font-weight:${isAtivo?"700":"400"};cursor:pointer;transition:all .15s"
+                    onmouseover="this.style.background='${isAtivo?"rgba(58,170,92,.1)":"var(--bg-hover)"}'"
+                    onmouseout="this.style.background='${isAtivo?"rgba(58,170,92,.1)":"var(--bg-card)"}'">
+                    ${isAtivo?"✓ ":"○ "} ${label}
+                  </button>`;
+                }).join("")}
+              <div id="dem-agendamento-panel-${id}" style="display:none;grid-column:span 2;padding:10px 12px;border-radius:8px;border:1px solid rgba(74,156,245,.25);background:rgba(74,156,245,.06);margin-top:2px">
+                <div style="font-size:10.5px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Agendado para</div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <input type="date" id="dem-agendamento-data-${id}" class="dem-fi" style="flex:1;margin:0">
+                  <button onclick="demConfirmarAgendamento('${id}')" style="padding:7px 14px;border-radius:6px;border:none;background:var(--blue,#4a9cf5);color:#fff;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">Confirmar</button>
+                </div>
+              </div>
               <button onclick="demEncAbrir('${id}')" id="dem-enc-abrir-${id}"
                 style="grid-column:span 2;text-align:left;padding:7px 12px;border-radius:6px;
                        border:1px solid var(--violet);background:rgba(139,111,212,.07);color:var(--violet);
@@ -1812,6 +1832,57 @@ function fmtD(d) {
     }
   };
 
+
+  window.demMostrarPanelAgendamento = function(id) {
+    const panel = document.getElementById(`dem-agendamento-panel-${id}`);
+    if (!panel) return;
+    const oculto = panel.style.display === "none" || !panel.style.display;
+    panel.style.display = oculto ? "block" : "none";
+    if (oculto) {
+      const inp = document.getElementById(`dem-agendamento-data-${id}`);
+      if (inp) {
+        if (!inp.value) inp.value = new Date().toISOString().split("T")[0];
+        inp.focus();
+      }
+    }
+  };
+
+  window.demConfirmarAgendamento = async function(id) {
+    const inp = document.getElementById(`dem-agendamento-data-${id}`);
+    if (!inp || !inp.value) {
+      if (typeof T === "function") T("Atenção", "Selecione a data de agendamento");
+      return;
+    }
+    const dataISO = inp.value;
+    const dem = (_ativo && String(_ativo.id || _ativo._row) === String(id))
+      ? _ativo
+      : _cache.find(r => String(r.id || r._row) === String(id));
+    const fd = Object.assign({}, (dem?.financial_data || {}), { agendado_para: dataISO });
+    try {
+      const resultado = await apiWrite("update", "DEMANDAS", {
+        _row: id,
+        status: "PAGAMENTO_AGENDADO",
+        financial_data: fd,
+      });
+      if (Array.isArray(resultado) && resultado.length === 0) {
+        throw new Error("Nenhuma linha atualizada — verifique a política de acesso (RLS)");
+      }
+      const [ay, am, ad] = dataISO.split("-");
+      if (typeof T === "function") T("✅ Pagamento agendado", `Para ${ad}/${am}/${ay}`);
+      const cacheUpd = { status: "Pagamento Agendado", financial_data: fd };
+      const idx = _cache.findIndex(r => String(r.id || r._row) === String(id));
+      if (idx >= 0) Object.assign(_cache[idx], cacheUpd);
+      if (_ativo && String(_ativo.id || _ativo._row) === String(id)) {
+        Object.assign(_ativo, cacheUpd);
+        await _registrarAndamentoAuto(id, `Pagamento agendado para ${ad}/${am}/${ay}`, "Pagamento Agendado");
+        _renderDetalhe(_ativo);
+      }
+      _atualizarBadge();
+    } catch(e) {
+      if (typeof T === "function") T("Erro ao agendar", e.message || "Tente novamente");
+      console.error("demConfirmarAgendamento:", e);
+    }
+  };
 
   /* ── Salvar edição ──────────────────────────────────── */
 
