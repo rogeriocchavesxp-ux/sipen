@@ -3805,12 +3805,12 @@
                     <div style="width:30px;height:30px;border-radius:50%;background:rgba(${_rgb(g)},.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgb(${_rgb(g)})" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     </div>
-                    <div style="font-size:13px;font-weight:600;color:var(--tx1)">${_hEsc(r.nome)}</div>
+                    <div style="display:flex;flex-direction:column;gap:2px">
+                      <div style="font-size:13px;font-weight:600;color:var(--tx1)">${_hEsc(r.nome)}</div>
+                      ${r.data_inicio ? `<div style="font-size:11px;color:var(--tx3)">desde ${new Date(r.data_inicio+'T12:00:00').toLocaleDateString('pt-BR')}</div>` : ''}
+                    </div>
                   </div>
-                  <div style="display:flex;align-items:center;gap:8px">
-                    ${r.data_inicio ? `<div style="font-size:11px;color:var(--tx3)">desde ${new Date(r.data_inicio+'T12:00:00').toLocaleDateString('pt-BR')}</div>` : ''}
-                    <button onclick="window._socMenuNomeado(event,this,'${r.id}','lider')" style="background:none;border:none;cursor:pointer;padding:3px 8px;color:var(--tx3);font-size:15px;border-radius:4px;line-height:1">⋯</button>
-                  </div>
+                  <button onclick="window._socMenuNomeado(event,this,'${r.id}','lider')" style="background:none;border:none;cursor:pointer;padding:3px 8px;color:var(--tx3);font-size:15px;border-radius:4px;line-height:1;flex-shrink:0">⋯</button>
                 </div>`).join('')}
             </div>`).join('')}
       </div>`;
@@ -3989,11 +3989,25 @@
     const rect = btn.getBoundingClientRect();
     const menu = document.createElement('div');
     menu.id = '_soc-ctx';
-    menu.style.cssText = 'position:fixed;z-index:9999;background:var(--bg-card,#1e2126);border:1px solid var(--bd2,#3a3f47);border-radius:8px;padding:4px;box-shadow:0 4px 16px rgba(0,0,0,.3);min-width:130px';
-    menu.innerHTML = `<button onclick="window._socRemoverNomeado('${id}','${tipo}')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;cursor:pointer;font-size:12.5px;color:var(--rose);border-radius:5px">Remover</button>`;
+    menu.style.cssText = 'position:fixed;z-index:9999;background:var(--bg-card,#1e2126);border:1px solid var(--bd2,#3a3f47);border-radius:8px;padding:4px;box-shadow:0 4px 16px rgba(0,0,0,.3);min-width:150px';
+    const row = _socRows.find(r => r.id === id);
+    menu.innerHTML = `
+      <div style="padding:6px 10px 4px;font-size:11px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">${_hEsc(row?.nome || '')}</div>
+      <div style="height:1px;background:var(--bd2);margin:2px 0"></div>
+      <button id="_soc-ctx-rem" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;cursor:pointer;font-size:12.5px;color:var(--rose);border-radius:5px">Remover</button>`;
     document.body.appendChild(menu);
-    menu.style.top  = Math.min(rect.bottom + 4, window.innerHeight - 48) + 'px';
-    menu.style.left = Math.max(rect.right - 134, 8) + 'px';
+    menu.style.top  = Math.min(rect.bottom + 4, window.innerHeight - 56) + 'px';
+    menu.style.left = Math.max(rect.right - 154, 8) + 'px';
+    document.getElementById('_soc-ctx-rem').onclick = e => {
+      e.stopPropagation();
+      menu.innerHTML = `
+        <div style="padding:8px 10px;font-size:12px;color:var(--tx2)">Remover <strong>${_hEsc(row?.nome || '?')}</strong>?</div>
+        <div style="display:flex;gap:4px;padding:0 6px 6px">
+          <button onclick="document.getElementById('_soc-ctx')?.remove()" style="flex:1;padding:6px;border-radius:5px;border:1px solid var(--bd2);background:none;color:var(--tx2);font-size:12px;cursor:pointer">Cancelar</button>
+          <button id="_soc-ctx-conf" style="flex:1;padding:6px;border-radius:5px;border:none;background:var(--rose);color:#fff;font-size:12px;font-weight:600;cursor:pointer">Remover</button>
+        </div>`;
+      document.getElementById('_soc-ctx-conf').onclick = e => { e.stopPropagation(); window._socRemoverNomeado(id, tipo); };
+    };
     const close = e => { if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('click', close); } };
     setTimeout(() => document.addEventListener('click', close), 10);
   }
@@ -4001,8 +4015,6 @@
 
   async function _socRemoverNomeado(id, tipo) {
     document.getElementById('_soc-ctx')?.remove();
-    const row = _socRows.find(r => r.id === id);
-    if (!confirm(`Remover "${row?.nome || '?'}"?`)) return;
     try {
       const r = await fetch(`${SUPABASE_URL}/rest/v1/nomeados?id=eq.${id}`, {
         method: 'PATCH',
