@@ -472,13 +472,30 @@
     const vencBrv   = emAberto.filter(r => r.vencimento && r.vencimento >= H && r.vencimento <= S7);
     const totalAb   = emAberto.reduce((s, r) => s + Number(r.valor || 0), 0);
 
-    // List: from v_demandas area=Financeiro (same source as menu lateral)
+    // Normalize financeiro_solicitacoes → same shape as v_demandas rows
+    const _cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : "Aberta";
+    const solRows = (_SOLICITACOES || []).map(r => ({
+      _isSol: true,
+      id: r.id,
+      numero_chamado: null,
+      subcategoria: r.finalidade || "Financeiro",
+      titulo: r.finalidade || r.descricao || "Solicitação financeira",
+      solicitante: r.solicitante || null,
+      responsavel: r.responsavel || null,
+      financial_data: { valor: r.valor, forma_pagamento: r.forma_pagamento || null },
+      status: _cap(r.status),
+      data_abertura: r.created_at,
+      criado_em: r.created_at,
+      data_conclusao: r.pago_em || null,
+    }));
+
+    // List: merged from v_demandas + financeiro_solicitacoes
     const fstatus = document.getElementById("fin-pagar-fstatus")?.value || "__aberto";
     const fprio   = document.getElementById("fin-pagar-fprio")?.value   || "";
     const fbusca  = (document.getElementById("fin-pagar-fbusca")?.value || "").toLowerCase();
 
-    const _FECHADAS = ["Pago", "Concluída", "Cancelada"];
-    let rows = [...(_DEM_FIN_CACHE || [])];
+    const _FECHADAS = ["Pago", "Concluída", "Cancelada", "Cancelado"];
+    let rows = [...(_DEM_FIN_CACHE || []), ...solRows];
     if (fstatus === "__aberto") rows = rows.filter(r => !_FECHADAS.includes(r.status));
     else if (fstatus) rows = rows.filter(r => r.status === fstatus);
     if (fprio)   rows = rows.filter(r => r.prioridade === fprio);
@@ -539,8 +556,8 @@
                   <tr style="border-bottom:1px solid var(--bd1);cursor:pointer"
                       onmouseover="this.style.background='var(--bg-hover)'"
                       onmouseout="this.style.background=''"
-                      onclick="demAbrirDetalhe('${escapeHtmlAttr(String(r.id||r._row||""))}','fin-pagar')">
-                    <td style="padding:8px 6px;font-size:10.5px;font-weight:700;font-family:var(--mono);color:var(--blue);white-space:nowrap">${escapeHtml(r.numero_chamado||"—")}</td>
+                      onclick="${r._isSol ? `finVerSolicitacao('${escapeHtmlAttr(String(r.id))}')` : `demAbrirDetalhe('${escapeHtmlAttr(String(r.id||r._row||""))}','fin-pagar')`}">
+                    <td style="padding:8px 6px;font-size:10.5px;font-weight:700;font-family:var(--mono);color:${r._isSol?"var(--tx3)":"var(--blue)"};white-space:nowrap">${r._isSol ? "FS" : escapeHtml(r.numero_chamado||"—")}</td>
                     <td style="padding:8px 6px;color:var(--tx2);font-size:11px">${escapeHtml(r.subcategoria||"—")}</td>
                     <td style="padding:8px 6px;color:var(--tx1);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.titulo||"—")}</td>
                     <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${nomePropio(r.solicitante||r.solicitante_txt)||"—"}</td>
@@ -726,6 +743,47 @@
         <input id="${id}" value="${escapeHtmlAttr(value || "")}" placeholder="${escapeHtmlAttr(placeholder || "")}" style="width:100%;box-sizing:border-box;background:var(--bg-input,var(--bg-card));border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:12.5px;padding:8px 10px;outline:none">
       </div>`;
   }
+
+  window.finVerSolicitacao = function(id) {
+    const r = (_SOLICITACOES || []).find(x => String(x.id) === String(id));
+    if (!r) return;
+    const _fmtVal = v => v != null ? `R$ ${parseFloat(v).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—";
+    const _fmtDt  = iso => { if (!iso) return "—"; const d = iso.slice(0,10).split("-"); return `${d[2]}/${d[1]}/${d[0]}`; };
+    let modal = document.getElementById("fin-sol-modal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "fin-sol-modal";
+      modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:355;display:flex;align-items:center;justify-content:center;padding:18px";
+      modal.onclick = ev => { if (ev.target === modal) modal.remove(); };
+      document.body.appendChild(modal);
+    }
+    const capStatus = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : "Aberta";
+    const isPago = ["pago","cancelado"].includes((r.status||"").toLowerCase());
+    modal.innerHTML = `
+      <div style="width:min(520px,96vw);background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:20px">
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px">
+          <div style="flex:1">
+            <div class="ctit" style="margin:0">${escapeHtml(r.finalidade || r.descricao || "Solicitação financeira")}</div>
+            <div style="font-size:11px;color:var(--tx3);margin-top:3px">${r.fornecedor ? escapeHtml(r.fornecedor) : "Solicitação direta"}</div>
+          </div>
+          <button class="tbt" onclick="document.getElementById('fin-sol-modal').remove()">Fechar</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;font-size:12.5px">
+          <div><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;margin-bottom:3px">Valor</div><div style="font-weight:700;color:var(--tx1)">${_fmtVal(r.valor)}</div></div>
+          <div><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;margin-bottom:3px">Vencimento</div><div>${_fmtDt(r.vencimento)}</div></div>
+          <div><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;margin-bottom:3px">Solicitante</div><div>${escapeHtml(r.solicitante||"—")}</div></div>
+          <div><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;margin-bottom:3px">Status</div><div>${capStatus(r.status)}</div></div>
+          <div><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;margin-bottom:3px">Forma de pagamento</div><div>${escapeHtml(r.forma_pagamento||"—")}</div></div>
+          <div><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;margin-bottom:3px">Criado em</div><div>${_fmtDt(r.created_at)}</div></div>
+          ${r.pago_em ? `<div><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;margin-bottom:3px">Pago em</div><div>${_fmtDt(r.pago_em)}</div></div>` : ""}
+          ${r.descricao && r.descricao !== r.finalidade ? `<div style="grid-column:1/-1"><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;margin-bottom:3px">Descrição</div><div>${escapeHtml(r.descricao)}</div></div>` : ""}
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--bd1);padding-top:14px">
+          <button class="tbt" onclick="document.getElementById('fin-sol-modal').remove();finEditarDadosCnab('${escapeHtmlAttr(String(id))}')">Dados CNAB</button>
+          ${!isPago ? `<button class="tbt pri" onclick="document.getElementById('fin-sol-modal').remove();finMarcarPago('${escapeHtmlAttr(String(id))}')">✓ Marcar como pago</button>` : ""}
+        </div>
+      </div>`;
+  };
 
   window.finTipoOperacaoChange = function() {
     const tipo = _finCampo("fin-cnab-tipo");
