@@ -253,41 +253,22 @@ async function agReenviarTermoConf(id) {
   let r = _agConfRows.find(x => x.id === id);
   if (!r) return;
 
+  let token = r.token_termo;
   try {
-    const termoRes = await fetch(
-      `${apiBaseUrl()}/rest/v1/agenda_termos?ativo=eq.true&order=created_at.desc&limit=1`,
-      { headers: apiHeaders() }
-    );
-    const termos = termoRes.ok ? await termoRes.json() : [];
-    const termoId = termos[0]?.id || null;
-
-    if (!r.token_termo) {
-      const novoToken = crypto.randomUUID();
-      const res = await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${id}`, {
-        method: "PATCH",
-        headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
-        body: JSON.stringify({ token_termo: novoToken }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      r = { ...r, token_termo: novoToken };
-      const idx = _agConfRows.findIndex(x => x.id === id);
-      if (idx !== -1) _agConfRows[idx] = r;
-    }
-
-    // Garante registro em agenda_termo_aceites para tokens novos e legados sem registro
-    const aceitePayload = {
-      agenda_id: id,
-      token_acesso: r.token_termo,
-      nome_responsavel: r.solicitante_txt || null,
-    };
-    if (termoId) aceitePayload.termo_id = termoId;
-    await fetch(`${apiBaseUrl()}/rest/v1/agenda_termo_aceites`, {
+    // RPC SECURITY DEFINER: garante INSERT em agenda_termo_aceites (RLS bloqueia insert direto)
+    const rpcRes = await fetch(`${apiBaseUrl()}/rest/v1/rpc/reenviar_termo`, {
       method: "POST",
-      headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal,resolution=ignore-duplicates" },
-      body: JSON.stringify(aceitePayload),
+      headers: { ...apiHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ p_agenda_id: id }),
     });
+    const rpcData = await rpcRes.json();
+    if (!rpcData.ok) throw new Error(rpcData.erro || "Erro ao gerar link do termo.");
+    token = rpcData.token;
+    const idx = _agConfRows.findIndex(x => x.id === id);
+    if (idx !== -1) _agConfRows[idx] = { ..._agConfRows[idx], token_termo: token };
+    r = { ...r, token_termo: token };
   } catch(e) {
-    T("Erro ao gerar token", e.message);
+    T("Erro ao gerar termo", e.message);
     return;
   }
 
@@ -299,7 +280,7 @@ async function agReenviarTermoConf(id) {
     + (r.data ? `📅 ${fmtD(r.data)}\n` : "")
     + (r.espaco ? `📍 ${r.espaco}\n` : "")
     + (r.protocolo ? `🔖 Protocolo: ${r.protocolo}\n` : "")
-    + `\n📄 *Termo de Compromisso:*\nhttps://sipen.com.br/termo?t=${r.token_termo}\n\n⚠️ *Atenção:* o agendamento só é concluído após a leitura e assinatura do Termo de Compromisso e Responsabilidade.\n\n_Por favor, acesse o link acima e assine para confirmar o uso do espaço._`;
+    + `\n📄 *Termo de Compromisso:*\nhttps://sipen.com.br/termo?t=${token}\n\n⚠️ *Atenção:* o agendamento só é concluído após a leitura e assinatura do Termo de Compromisso e Responsabilidade.\n\n_Por favor, acesse o link acima e assine para confirmar o uso do espaço._`;
   if (typeof WA !== "undefined" && _tel) {
     WA.send({ para: _tel, nome: r.solicitante_txt || "Solicitante", mensagem: msg, modulo: "AGENDA", origem_id: id });
     T("Termo reenviado", `Link enviado para ${_tel}.`);
