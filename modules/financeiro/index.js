@@ -473,14 +473,14 @@
     const totalAb   = emAberto.reduce((s, r) => s + Number(r.valor || 0), 0);
 
     // List: from v_demandas area=Financeiro (same source as menu lateral)
-    const fstatus = document.getElementById("fin-pagar-fstatus")?.value || "";
+    const fstatus = document.getElementById("fin-pagar-fstatus")?.value || "__aberto";
     const fprio   = document.getElementById("fin-pagar-fprio")?.value   || "";
     const fbusca  = (document.getElementById("fin-pagar-fbusca")?.value || "").toLowerCase();
 
     const _FECHADAS = ["Pago", "Concluída", "Cancelada"];
     let rows = [...(_DEM_FIN_CACHE || [])];
-    if (fstatus) rows = rows.filter(r => r.status === fstatus);
-    else rows = rows.filter(r => !_FECHADAS.includes(r.status));
+    if (fstatus === "__aberto") rows = rows.filter(r => !_FECHADAS.includes(r.status));
+    else if (fstatus) rows = rows.filter(r => r.status === fstatus);
     if (fprio)   rows = rows.filter(r => r.prioridade === fprio);
     if (fbusca)  rows = rows.filter(r =>
       (r.titulo       || "").toLowerCase().includes(fbusca) ||
@@ -501,6 +501,7 @@
       <div class="card">
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
           <select id="fin-pagar-fstatus" onchange="finFiltrarPagar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:6px 10px;outline:none">
+            <option value="__aberto">Em aberto</option>
             <option value="">Todos os status</option>
             <option value="Aberta">Aberta</option>
             <option value="Em Análise">Em Análise</option>
