@@ -3644,16 +3644,25 @@
     const soc = _socAtual;
 
     // Top 3 cargos distintos ordenados por prioridade hierárquica
-    const _LABEL = { supervisor:'Supervisor', conselheiro:'Conselheiro', coordenador:'Coordenador',
-      presidente:'Presidente', tesoureiro:'Tesoureiro', lider_area:'Líder de Área',
-      lider:'Líder', líder:'Líder', secretario:'Secretário', secretário:'Secretário' };
+    const _LABEL = {
+      supervisor:'Supervisor', conselheiro:'Conselheiro', conselheira:'Conselheira',
+      coordenador:'Coordenador', coordenadora:'Coordenadora',
+      presidente:'Presidente', presidenta:'Presidenta',
+      'vice presidente':'Vice-Presidente', 'vice-presidente':'Vice-Presidente',
+      tesoureiro:'Tesoureiro', tesoureira:'Tesoureira',
+      lider_area:'Líder de Área', lider:'Líder', líder:'Líder',
+      secretario:'Secretário', secretária:'Secretária', secretario:'Secretário',
+      '1ª secretária':'1ª Secretária', '2ª secretária':'2ª Secretária',
+      '1ª secretario':'1º Secretário', '2ª secretario':'2º Secretário',
+    };
+    const _cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
     const _CORES = ['201,168,76','74,156,245','58,170,92'];
     const sorted = _socRows.filter(r => r.tipo_nomeacao === 'lider')
       .slice().sort((a, b) => _socCargoPrio(a.cargo) - _socCargoPrio(b.cargo));
     const seen = new Set(), top3 = [];
     for (const r of sorted) {
       const g = (r.cargo || r.funcao_lider || 'líder').toLowerCase().trim();
-      if (!seen.has(g)) { seen.add(g); top3.push({ label: _LABEL[g] || r.cargo || 'Líder', nome: r.nome }); }
+      if (!seen.has(g)) { seen.add(g); top3.push({ label: _LABEL[g] || _cap(r.cargo) || 'Líder', nome: r.nome }); }
       if (top3.length === 3) break;
     }
     while (top3.length < 3) top3.push({ label: ['Presidente','Conselheiro','Secretário'][top3.length], nome: null });
