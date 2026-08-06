@@ -109,7 +109,7 @@
         const PAGE = 1000;
         let all = [], from = 0;
         while(true){
-          const url = `${_api()}/rest/v1/v_membros?status=eq.ativo&select=id,nome&order=nome.asc&limit=${PAGE}&offset=${from}`;
+          const url = `${_api()}/rest/v1/v_membros?status=eq.ativo&select=id,pessoa_id,nome&order=nome.asc&limit=${PAGE}&offset=${from}`;
           const data = await _fetchJson(url, { headers: _headers() }) || [];
           if(!data.length) break;
           all = all.concat(data);
@@ -147,7 +147,7 @@
 
   function _membroNome(id) {
     if (!id) return "—";
-    return _membros.find(m => m.id === id)?.nome || "—";
+    return _membros.find(m => m.id === id || m.pessoa_id === id)?.nome || "—";
   }
   function _badgeStatus(s) {
     const cfg = STATUS_CFG[s] || ETAPA_STATUS[s] || { label: s || "—", cls: "pz" };
@@ -265,7 +265,7 @@
         const criador = _ehCriador();
         const uid = _user()?.id;
         const jaParticipantes = new Set(participantes.map(p => p.pessoa_id));
-        const membrosDisponiveis = _membros.filter(m => !jaParticipantes.has(m.id));
+        const membrosDisponiveis = _membros.filter(m => !jaParticipantes.has(m.pessoa_id || m.id));
         const partHtml = participantes.map(p => {
           const nome = _membroNome(p.pessoa_id);
           const ini = nome.split(" ").slice(0,2).map(w=>w[0]||"").join("").toUpperCase();
@@ -287,7 +287,7 @@
           <div style="display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap">
             <select id="proj-part-membro" class="fi2" style="flex:1;min-width:160px;margin:0">
               <option value="">Selecionar membro...</option>
-              ${membrosDisponiveis.map(m=>`<option value="${_ea(m.id)}">${_eh(m.nome)}</option>`).join("")}
+              ${membrosDisponiveis.map(m=>`<option value="${_ea(m.pessoa_id||m.id)}">${_eh(m.nome)}</option>`).join("")}
             </select>
             <select id="proj-part-nivel" class="fi2" style="margin:0;width:130px">
               <option value="visualizador">Visualizador</option>
