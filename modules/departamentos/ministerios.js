@@ -4016,12 +4016,12 @@
   async function _socRemoverNomeado(id, tipo) {
     document.getElementById('_soc-ctx')?.remove();
     try {
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/nomeados?id=eq.${id}`, {
-        method: 'PATCH',
-        headers: Object.assign({}, _hdr(), { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
-        body: JSON.stringify({ deleted_at: new Date().toISOString(), status: 'inativo' }),
-      });
-      if (!r.ok) throw new Error(`Erro ${r.status}: ${await r.text().catch(()=>'')}`);
+      const { error } = await getSupabase()
+        .from('nomeados')
+        .update({ deleted_at: new Date().toISOString(), status: 'inativo' })
+        .eq('id', id)
+        .is('deleted_at', null);
+      if (error) throw new Error(error.message || JSON.stringify(error));
       _socRows = _socRows.filter(row => row.id !== id);
       if (tipo === 'lider') { _socRenderLideranca(); _socRenderHeader(); }
       else                    _socRenderMembros();
