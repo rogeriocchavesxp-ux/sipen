@@ -469,15 +469,15 @@
   <div class="cover-meta">
     <div class="cover-meta-item">
       <div class="label">Versão</div>
-      <div class="value">v6.30.36</div>
+      <div class="value">v6.72.0</div>
     </div>
     <div class="cover-meta-item">
       <div class="label">Data</div>
-      <div class="value">Maio 2026</div>
+      <div class="value">Agosto 2026</div>
     </div>
     <div class="cover-meta-item">
       <div class="label">Módulos</div>
-      <div class="value">22 módulos</div>
+      <div class="value">30+ módulos</div>
     </div>
   </div>
   <div class="cover-footer">CONFIDENCIAL · IPPenha · Uso Interno</div>
@@ -629,8 +629,8 @@
 
   <div class="grid-3">
     <div class="card card-blue">
-      <h4>22 Módulos</h4>
-      <p style="font-size:9.5px;margin:0">Gestão completa: membros, finanças, agenda, demandas, conselho, pastoral, ministerial, infraestrutura, jurídico e mais.</p>
+      <h4>30+ Módulos</h4>
+      <p style="font-size:9.5px;margin:0">Gestão completa: membros, finanças, agenda, demandas, conselho, pastoral, ministerial, infraestrutura, jurídico, cultos, chat, ação social, ensino, evangelismo e mais.</p>
     </div>
     <div class="card card-green">
       <h4>Zero Dependências Frontend</h4>
@@ -768,31 +768,63 @@
   <h3>2.1 Organização de Pastas</h3>
   <div class="code-block">
 <span class="c-cm">sipen/</span>
-├── <span class="c-kw">index.html</span>             <span class="c-cm">← ponto de entrada único da SPA</span>
+├── <span class="c-kw">index.html</span>             <span class="c-cm">← ponto de entrada único da SPA (v6.72.0)</span>
 ├── <span class="c-kw">sipen.css</span>              <span class="c-cm">← design system global (variáveis, componentes)</span>
 ├── <span class="c-kw">manifest.json</span>          <span class="c-cm">← PWA manifest (ícones, nome, display)</span>
 ├── <span class="c-kw">sw.js</span>                  <span class="c-cm">← Service Worker (cache offline)</span>
 │
+├── <span class="c-cm">Páginas públicas (sem autenticação):</span>
+│   ├── chamado.html        <span class="c-cm">← formulário público de abertura de demanda</span>
+│   ├── aniversariantes.html<span class="c-cm">← painel público de aniversariantes</span>
+│   ├── agenda.html         <span class="c-cm">← agenda pública de eventos</span>
+│   ├── cadastro.html       <span class="c-cm">← auto-cadastro de visitantes</span>
+│   ├── inscricao.html      <span class="c-cm">← inscrição em eventos</span>
+│   ├── eleicoes.html       <span class="c-cm">← painel de eleições</span>
+│   ├── votacao.html        <span class="c-cm">← votação online</span>
+│   └── pautas-reunioes.html<span class="c-cm">← pautas públicas de reunião</span>
+│
 ├── <span class="c-fn">core/</span>                  <span class="c-cm">← infraestrutura da aplicação</span>
-│   ├── api.js             <span class="c-cm">← SUPABASE_URL, headers, fetch helpers</span>
-│   ├── auth.js            <span class="c-cm">← perfis, permissões, sessão</span>
+│   ├── api.js             <span class="c-cm">← SUPABASE_URL, headers, apiRead(), apiWrite()</span>
+│   ├── auth.js            <span class="c-cm">← perfis (11), permissões, sessão, carregarUsuarioLogado()</span>
 │   ├── init.js            <span class="c-cm">← bootstrap: auth check, nav, módulos</span>
 │   ├── router.js          <span class="c-cm">← CRUMB map, rotas hash (#modulo-view)</span>
+│   ├── registry.js        <span class="c-cm">← registro central de módulos ativos</span>
 │   ├── theme.js           <span class="c-cm">← dark/light mode, variáveis CSS</span>
-│   ├── ui.js              <span class="c-cm">← toast T(), modal helpers</span>
+│   ├── ui.js              <span class="c-cm">← toast T(), modal helpers, escapeHtml()</span>
 │   └── pwa.js             <span class="c-cm">← registro do Service Worker</span>
 │
 ├── <span class="c-fn">modules/</span>               <span class="c-cm">← cada pasta = 1 módulo de negócio</span>
-│   ├── agenda/            view.html + index.js
-│   ├── membresia/         view.html + index.js + core.js
-│   ├── financeiro/        view.html + index.js + cnab.js
-│   ├── conselho/          view.html + pautas.js + atas.js
-│   ├── demandas/          view.html + index.js
-│   ├── pastoral/          view.html + index.js + rede-cuidado.js
-│   ├── whatsapp/          config.js + index.js + tab.js
-│   ├── infraestrutura/    view.html
-│   ├── juridico/          view.html + contratos.js
-│   └── ...18 módulos no total
+│   ├── admin/             acesso-facial.js · estacionamento-controles.js
+│   │                      espacos.js · pessoas-externas.js
+│   ├── agenda/            index.js · agenda-shared.js · agenda-form.js
+│   │                      agenda-calendar.js · agenda-config.js
+│   │                      agenda-solicitacoes.js · agenda-aprovacoes.js
+│   │                      agenda-confirmados.js · agenda-requisicoes.js
+│   ├── membresia/         index.js + core.js
+│   ├── financeiro/        index.js + cnab.js + ofertas-especiais.js
+│   ├── conselho/          pautas.js · atas.js · eleicoes.js
+│   │                      nomeados.js · resolucoes.js
+│   ├── demandas/          index.js   <span class="c-cm">← filtro multidimensional: área+status+prioridade+período</span>
+│   ├── pastoral/          index.js + rede-cuidado.js + pro-culto.js
+│   ├── departamentos/     ministerios.js · admin.js · escala-musica.js
+│   ├── diaconal/          escalas.js + escala-grid.js
+│   ├── comunicacao/       index.js + mensagens.js + listas.js
+│   ├── whatsapp/          index.js · config.js · tab.js · listas.js
+│   ├── juridico/          contratos.js
+│   ├── congregacoes/      data.js + index.js
+│   ├── pgs/               index.js
+│   ├── eventos/           index.js
+│   ├── projetos/          index.js
+│   ├── fornecedores/      index.js
+│   ├── acao-social/       index.js
+│   ├── ensino/            index.js
+│   ├── evangelismo/       index.js
+│   ├── cultos/            index.js
+│   ├── chat/              index.js
+│   ├── dep-adm/           index.js
+│   ├── recursos/          index.js
+│   ├── compras/           index.js
+│   └── shared/            hub.js    <span class="c-cm">← hub compartilhado entre módulos</span>
 │
 ├── <span class="c-fn">views/</span>                 <span class="c-cm">← fragmentos HTML do shell</span>
 │   ├── main.html          <span class="c-cm">← área de conteúdo central</span>
@@ -821,32 +853,37 @@
     <tbody>
       <tr>
         <td class="td-code">core/api.js</td>
-        <td>URL do Supabase, anon key, funções de fetch autenticado, cliente supabase-js</td>
-        <td class="td-code">SUPABASE_URL, SUPABASE_ANON_KEY, apiHeaders(), apiBaseUrl(), getSupabase()</td>
+        <td>URL do Supabase, anon key, funções de fetch autenticado, helpers de CRUD</td>
+        <td class="td-code">SUPABASE_URL, SUPABASE_ANON_KEY, apiHeaders(), apiBaseUrl(), apiRead(), apiWrite(), getSupabase()</td>
       </tr>
       <tr>
         <td class="td-code">core/auth.js</td>
-        <td>Perfis (11), matriz de permissões, login, logout, verificação de nível de acesso</td>
-        <td class="td-code">PERFIS, PERMISSOES_MATRIZ, USUARIO_ATUAL, sipenLogin(), sipenLogout(), podeFazer()</td>
+        <td>Perfis (11), matriz de permissões, login, logout. Vincula auth_user_id → pessoas → membros para obter o perfil ativo</td>
+        <td class="td-code">PERFIS, PERMISSOES_MATRIZ, USUARIO_ATUAL, sipenLogin(), sipenLogout(), podeFazer(), carregarUsuarioLogado()</td>
       </tr>
       <tr>
         <td class="td-code">core/router.js</td>
-        <td>Mapa de rotas (CRUMB), roteamento por hash URL, breadcrumbs</td>
-        <td class="td-code">CRUMB, MC (cores), navegarPara(rota)</td>
+        <td>Mapa de rotas (CRUMB), roteamento por hash URL, breadcrumbs, alias go()</td>
+        <td class="td-code">CRUMB, MC (cores), go(rota), navegarPara(rota)</td>
       </tr>
       <tr>
         <td class="td-code">core/ui.js</td>
-        <td>Sistema de toast, modais genéricos, formatação de datas e valores</td>
+        <td>Sistema de toast, modais genéricos, formatação de datas e valores monetários</td>
         <td class="td-code">T(titulo, msg), escapeHtml(), fmtMoeda(), fmtData()</td>
       </tr>
       <tr>
         <td class="td-code">core/init.js</td>
-        <td>Bootstrap: verifica sessão, carrega sidebar, injeta módulo correto</td>
+        <td>Bootstrap: verifica sessão, carrega sidebar, injeta módulo correto na view</td>
         <td class="td-code">–</td>
       </tr>
       <tr>
+        <td class="td-code">core/registry.js</td>
+        <td>Registro central de módulos: garante que cada módulo seja inicializado uma única vez</td>
+        <td class="td-code">ModuleRegistry, registrarModulo()</td>
+      </tr>
+      <tr>
         <td class="td-code">core/theme.js</td>
-        <td>Dark/light mode, variáveis CSS dinâmicas, preferência persistida</td>
+        <td>Dark/light mode, variáveis CSS dinâmicas, preferência persistida em localStorage</td>
         <td class="td-code">toggleTheme(), THEME_ATUAL</td>
       </tr>
     </tbody>
@@ -1193,6 +1230,127 @@
       </div>
     </div>
 
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#fef3c7">🙏</div>
+        <div class="mod-title">Ação Social</div>
+      </div>
+      <div class="mod-desc">Gestão de ações sociais da igreja (projeto Hebron), famílias assistidas, doações, atendimentos e relatórios de beneficência.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">beneficência</span>
+        <span class="mod-tag">famílias</span>
+        <span class="mod-tag">Hebron</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#d1fae5">📚</div>
+        <div class="mod-title">Ensino (EBT)</div>
+      </div>
+      <div class="mod-desc">Escola Bíblica — turmas, professores, alunos, materiais e frequência. Relatórios de participação por faixa etária.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">EBT</span>
+        <span class="mod-tag">turmas</span>
+        <span class="mod-tag">professores</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#fee2e2">📣</div>
+        <div class="mod-title">Evangelismo</div>
+      </div>
+      <div class="mod-desc">Campanhas de evangelismo, contatos, interessados, acompanhamento e conversões registradas.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">campanhas</span>
+        <span class="mod-tag">contatos</span>
+        <span class="mod-tag">conversões</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#dbeafe">🎵</div>
+        <div class="mod-title">Cultos</div>
+      </div>
+      <div class="mod-desc">Programação e registro de cultos: pregadores, temas, cânticos, liturgia, equipe de apoio e lista de presença.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">liturgia</span>
+        <span class="mod-tag">pregadores</span>
+        <span class="mod-tag">presença</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#ede9fe">💬</div>
+        <div class="mod-title">Chat Interno</div>
+      </div>
+      <div class="mod-desc">Comunicação interna entre usuários do sistema. Mensagens diretas e por grupo, sem sair do SIPEN.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">mensagens</span>
+        <span class="mod-tag">interno</span>
+        <span class="mod-tag">grupos</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#d1fae5">🏢</div>
+        <div class="mod-title">Dep. Administrativo</div>
+      </div>
+      <div class="mod-desc">Área administrativa do departamento: documentos, processos internos, controles e comunicados do departamento de administração.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">dep-adm</span>
+        <span class="mod-tag">documentos</span>
+        <span class="mod-tag">processos</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#fef3c7">📦</div>
+        <div class="mod-title">Recursos</div>
+      </div>
+      <div class="mod-desc">Controle de recursos físicos e patrimoniais da igreja: equipamentos, salas, bens móveis e imóveis.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">patrimônio</span>
+        <span class="mod-tag">equipamentos</span>
+        <span class="mod-tag">salas</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#fee2e2">🛒</div>
+        <div class="mod-title">Compras</div>
+      </div>
+      <div class="mod-desc">Solicitações de compra, cotações, aprovações e controle de aquisições. Integrado com Fornecedores e Financeiro.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">compras</span>
+        <span class="mod-tag">cotações</span>
+        <span class="mod-tag">aprovações</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mod-header">
+        <div class="mod-icon" style="background:#dbeafe">🏪</div>
+        <div class="mod-title">Fornecedores</div>
+      </div>
+      <div class="mod-desc">Cadastro de fornecedores e prestadores de serviço, CNPJ, contatos, categorias e histórico de contratação. Vinculado a demandas e compras.</div>
+      <div class="mod-tags">
+        <span class="mod-tag">fornecedores</span>
+        <span class="mod-tag">prestadores</span>
+        <span class="mod-tag">CNPJ</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="callout" style="margin-top:20px">
+    <strong>Demandas — filtro multidimensional (v6.72.0):</strong> A Central de Demandas conta com filtros independentes por Área (chips: Todas / Administração / Conselho / Financeiro / Infraestrutura / Agenda), Status, Prioridade e Período, com tags de filtro ativo removíveis. O fluxo de encaminhamento agora inclui um painel colapsável no detalhe da demanda para selecionar Departamento ou Fornecedor antes de confirmar o encaminhamento.
   </div>
 </div>
 
@@ -1428,6 +1586,18 @@
       <tr><td class="td-code">whatsapp_ia_log</td><td>WhatsApp</td><td>Log de processamento Gemini: mensagem recebida, resposta IA, demanda criada.</td></tr>
       <tr><td class="td-code">email_notificacoes</td><td>E-mail</td><td>Fila e log de notificações enviadas por e-mail.</td></tr>
       <tr><td class="td-code">logs_sistema</td><td>Core</td><td>Auditoria geral de ações do sistema.</td></tr>
+      <tr><td class="td-code">fornecedores</td><td>Fornecedores</td><td>Cadastro de fornecedores e prestadores de serviço com CNPJ, categoria, contatos e histórico.</td></tr>
+      <tr><td class="td-code">ofertas_especiais</td><td>Financeiro</td><td>Ofertas avulsas e campanhas financeiras com metas, arrecadação e participantes.</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Views PostgreSQL</h4>
+  <table>
+    <thead>
+      <tr><th>View</th><th>Baseada em</th><th>Descrição</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="td-code">v_demandas</td><td>demandas + pessoas</td><td>Join entre demandas e pessoas (solicitante + responsável). Inclui numero_chamado gerado automaticamente. Usada pelo módulo de demandas para evitar múltiplas queries.</td></tr>
     </tbody>
   </table>
 
@@ -1891,7 +2061,7 @@ supabase functions deploy &lt;nome-da-function&gt; --project-ref erhwryfzpycahgs
       <tr><td>Supabase API URL</td><td class="td-code">https://erhwryfzpycahgsohhbh.supabase.co</td></tr>
       <tr><td>Supabase Dashboard</td><td class="td-code">https://supabase.com/dashboard/project/erhwryfzpycahgsohhbh</td></tr>
       <tr><td>Modelo IA</td><td class="td-code">gemini-2.5-flash-lite</td></tr>
-      <tr><td>Versão do Sistema</td><td class="td-code">v6.30.36</td></tr>
+      <tr><td>Versão do Sistema</td><td class="td-code">v6.72.0</td></tr>
     </tbody>
   </table>
 
@@ -1915,6 +2085,22 @@ supabase functions deploy &lt;nome-da-function&gt; --project-ref erhwryfzpycahgs
     <p style="font-size:10px;margin:0">O sistema segue <strong>Semantic Versioning</strong> informal: <code>v{major}.{minor}.{patch}</code>. Commits seguem Conventional Commits: <code>feat:</code>, <code>fix:</code>, <code>refactor:</code>, <code>chore:</code>. Cada alteração gera um commit dedicado.</p>
   </div>
 
+  <h3>Páginas Públicas (sem autenticação)</h3>
+  <table>
+    <thead>
+      <tr><th>Arquivo</th><th>URL</th><th>Finalidade</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="td-code">chamado.html</td><td class="td-code">/chamado</td><td>Formulário público para abertura de demanda — qualquer pessoa, sem login</td></tr>
+      <tr><td class="td-code">aniversariantes.html</td><td class="td-code">/aniversariantes</td><td>Painel público de aniversariantes do mês — projetado em telas da igreja</td></tr>
+      <tr><td class="td-code">agenda.html</td><td class="td-code">/agenda</td><td>Agenda pública de eventos — projetada ou compartilhada</td></tr>
+      <tr><td class="td-code">cadastro.html</td><td class="td-code">/cadastro</td><td>Auto-cadastro de visitantes e interessados</td></tr>
+      <tr><td class="td-code">inscricao.html</td><td class="td-code">/inscricao</td><td>Inscrição em eventos específicos com link dinâmico</td></tr>
+      <tr><td class="td-code">eleicoes.html / votacao.html</td><td class="td-code">/eleicoes · /votacao</td><td>Painel de eleições e votação online para membros</td></tr>
+      <tr><td class="td-code">pautas-reunioes.html</td><td class="td-code">/pautas-reunioes</td><td>Pautas de reunião de conselho — acesso restrito por link</td></tr>
+    </tbody>
+  </table>
+
   <h3>Manutenção e Pontos de Atenção</h3>
   <div class="callout warning">
     <strong>AREA_MODULO mapping:</strong> Existe em dois lugares — <code>supabase/functions/whatsapp-receive/index.ts</code> (usa area_id) e <code>modules/demandas/index.js</code> (usa area_nome). Ambos devem ser mantidos em sincronia quando novas áreas/módulos forem adicionados.
@@ -1925,10 +2111,16 @@ supabase functions deploy &lt;nome-da-function&gt; --project-ref erhwryfzpycahgs
   <div class="callout">
     <strong>Responsáveis WA:</strong> A tabela <code>whatsapp_modulo_responsaveis</code> deve ter ao menos um registro ativo por módulo. Se vazia, o sistema usa admins como fallback, o que pode gerar notificações em excesso para a liderança.
   </div>
+  <div class="callout">
+    <strong>Soft-delete:</strong> Registros de <code>pessoas</code> nunca são deletados fisicamente — são marcados com <code>deleted_at IS NOT NULL</code>. Toda query que busca pessoas ativas deve filtrar <code>.is("deleted_at", null)</code>. A coluna <code>auth_user_id</code> em <code>pessoas</code> deve estar vinculada ao registro <strong>ativo</strong> (não ao soft-deleted), ou o login retornará "perfil não ativo".
+  </div>
+  <div class="callout">
+    <strong>Versionamento obrigatório:</strong> Toda alteração em arquivo <code>.js</code> do projeto exige bump de versão no <code>index.html</code> na tag <code>&lt;script src="...?v=X.Y.Z"&gt;</code>, caso contrário o Service Worker do PWA pode servir a versão antiga em cache.
+  </div>
 
   <div style="margin-top:40px;padding:20px;background:var(--gray-50);border-radius:var(--radius);border:1px solid var(--border);text-align:center">
     <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px">SIPEN — Sistema Integrado de Gestão · IPPenha</div>
-    <div style="font-size:10px;color:var(--gray-400)">Documentação gerada em maio de 2026 · Versão v6.30.36</div>
+    <div style="font-size:10px;color:var(--gray-400)">Documentação gerada em agosto de 2026 · Versão v6.72.0</div>
     <div style="font-size:10px;color:var(--gray-400);margin-top:2px">CONFIDENCIAL · Uso Interno</div>
   </div>
 
