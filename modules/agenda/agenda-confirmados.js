@@ -256,12 +256,36 @@ async function agReenviarTermoConf(id) {
   if (!r.token_termo) {
     const novoToken = crypto.randomUUID();
     try {
+      // Buscar termo ativo para registro em agenda_termo_aceites
+      const termoRes = await fetch(
+        `${apiBaseUrl()}/rest/v1/agenda_termos?ativo=eq.true&order=created_at.desc&limit=1`,
+        { headers: apiHeaders() }
+      );
+      const termos = termoRes.ok ? await termoRes.json() : [];
+      const termoId = termos[0]?.id || null;
+
+      // Salvar token na agenda
       const res = await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${id}`, {
         method: "PATCH",
         headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
         body: JSON.stringify({ token_termo: novoToken }),
       });
       if (!res.ok) throw new Error(await res.text());
+
+      // Registrar em agenda_termo_aceites para que carregar_termo encontre o token
+      const aceitePayload = {
+        agenda_id: id,
+        token_acesso: novoToken,
+        nome_responsavel: r.solicitante_txt || null,
+      };
+      if (termoId) aceitePayload.termo_id = termoId;
+      const aceiteRes = await fetch(`${apiBaseUrl()}/rest/v1/agenda_termo_aceites`, {
+        method: "POST",
+        headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
+        body: JSON.stringify(aceitePayload),
+      });
+      if (!aceiteRes.ok) throw new Error(`Aceite: ${await aceiteRes.text()}`);
+
       r = { ...r, token_termo: novoToken };
       const idx = _agConfRows.findIndex(x => x.id === id);
       if (idx !== -1) _agConfRows[idx] = r;
