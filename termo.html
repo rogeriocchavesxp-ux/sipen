@@ -95,21 +95,49 @@
   .ok-sub { font-size: 12.5px; color: var(--tx2); margin-bottom: 16px; }
   .ok-detail { font-size: 12px; color: var(--tx3); }
 
-  /* Print */
+  /* Print / PDF */
+  .print-hdr { display: none; }
   @media print {
-    body { background: #fff; color: #000; font-size: 12pt; }
+    @page { size: A4; margin: 20mm 18mm; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { background: #fff !important; color: #111 !important; font-size: 10.5pt; font-family: Georgia, 'Times New Roman', serif; }
     .no-print { display: none !important; }
-    .termo-box { max-height: none; overflow: visible; border: none; padding: 0; }
-    .dados { border: 1px solid #ccc; }
-    .page { padding: 0; }
-    .hdr { margin-bottom: 20px; }
+    .hdr { display: none !important; }
+    .print-hdr { display: block !important; text-align: center; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 2px solid #111; }
+    .print-hdr-inst { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #555; margin-bottom: 3px; }
+    .print-hdr-title { font-size: 15pt; font-weight: 800; color: #000; }
+    .print-hdr-sub { font-size: 8.5pt; color: #555; margin-top: 2px; }
+    .page { padding: 0; max-width: 100%; }
+    .dados { border: 1px solid #aaa; background: #fff !important; page-break-inside: avoid; margin-bottom: 16px; }
+    .dados-title { color: #555 !important; }
+    .dado-lbl { color: #666 !important; }
+    .dado-val { color: #000 !important; }
+    .protocolo-badge { border: 1px solid #888; background: #f5f5f5 !important; color: #333 !important; }
+    .termo-box { max-height: none !important; overflow: visible !important; border: none !important; padding: 0 !important; background: transparent !important; }
+    .termo-header { border-bottom: 1px solid #ccc; }
+    .termo-inst { color: #666 !important; }
+    .termo-nome { color: #000 !important; }
+    .termo-h2 { color: #000 !important; }
+    .termo-p { color: #222 !important; }
+    .termo-ul { color: #222 !important; }
+    .termo-fill { background: #f9f9f9 !important; border: 1px solid #ccc; }
+    .termo-fill strong { color: #000 !important; }
+    .ok-card { background: #f0fff5 !important; border: 2px solid #2a9e52 !important; }
+    .ok-title { color: #1a6e38 !important; }
   }
 </style>
 </head>
 <body>
 <div class="page">
 
-  <!-- Header -->
+  <!-- Header visível apenas no PDF/impressão -->
+  <div class="print-hdr">
+    <div class="print-hdr-inst">Igreja Presbiteriana da Penha — SIPEN</div>
+    <div class="print-hdr-title">Termo de Compromisso e Responsabilidade</div>
+    <div class="print-hdr-sub">para Utilização de Espaços</div>
+  </div>
+
+  <!-- Header da tela -->
   <div class="hdr no-print">
     <svg class="hdr-logo" viewBox="0 0 81 48" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M2.84981 30.1073H2.19727V29.0006H5.43336C6.76509 29.0006 7.68398 29.934 7.68398 31.3073C7.68398 32.6807 6.75177 33.6407 5.43336 33.6407H4.14159V36.0808H2.8365V30.1073H2.84981ZM5.19365 32.5207C5.9261 32.5207 6.35226 32.0407 6.35226 31.3073C6.35226 30.574 5.93942 30.1073 5.22029 30.1073H4.1549V32.5207H5.19365Z" fill="#216F48"/>
@@ -453,7 +481,13 @@ async function aceitarTermo() {
   }
 }
 
-function imprimirTermo() { window.print(); }
+function imprimirTermo() {
+  const proto = document.getElementById("d-protocolo")?.textContent?.trim();
+  const original = document.title;
+  if (proto && proto !== "—") document.title = `Termo de Compromisso — ${proto} — IPPenha`;
+  window.print();
+  document.title = original;
+}
 
 carregar();
 </script>
