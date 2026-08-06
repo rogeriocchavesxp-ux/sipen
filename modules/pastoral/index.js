@@ -1370,7 +1370,7 @@
   setTimeout(_ajustarUiPorPerfil, 100);
 
   if(typeof VIEW_AUTOLOAD!=='undefined'){
-    VIEW_AUTOLOAD['pastoral-dash']={fn: _renderDash};
+    VIEW_AUTOLOAD['pastoral-dash']={fn: pd_renderDash};
   }
 
 })();
