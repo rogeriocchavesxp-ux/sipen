@@ -8,6 +8,7 @@
   let _membros = [];
   let _filtroStatus = "";
   let _filtroPrio = "";
+  let _filtroBusca = "";
   let _formId = null;
 
   const STATUS_CFG = {
@@ -28,13 +29,22 @@
     critica: { label: "Crítica", cls: "pl", cor: "var(--rose)" }
   };
   const TIPO_LABEL = {
-    obra: "Obra",
-    legal: "Legal",
+    obra:           "Obra",
+    legal:          "Legal",
     infraestrutura: "Infraestrutura e Conservação",
     administrativo: "Administrativo",
-    tecnologia: "Tecnologia",
-    evento: "Montagem de Eventos",
-    acao_social: "Ação Social",
+    tecnologia:     "Tecnologia",
+    evento:         "Montagem de Eventos",
+    acao_social:    "Ação Social",
+  };
+  const TIPO_CFG = {
+    obra:           { icon:"🏗",  cor:"var(--amber)",  bg:"rgba(255,159,10,.12)"  },
+    legal:          { icon:"⚖️", cor:"var(--violet)", bg:"rgba(191,90,242,.12)"  },
+    infraestrutura: { icon:"🔧", cor:"var(--blue)",   bg:"rgba(10,132,255,.12)"  },
+    administrativo: { icon:"📋", cor:"var(--teal)",   bg:"rgba(90,200,250,.12)"  },
+    tecnologia:     { icon:"💻", cor:"var(--sky)",    bg:"rgba(100,210,255,.12)" },
+    evento:         { icon:"🎪", cor:"var(--orange)", bg:"rgba(249,115,22,.12)"  },
+    acao_social:    { icon:"🤝", cor:"var(--gr)",     bg:"rgba(48,209,88,.12)"   },
   };
 
   const ETAPA_TEMPLATES = {
@@ -47,6 +57,7 @@
     acao_social: ["Diagnóstico da necessidade", "Captação de recursos e doações", "Seleção de beneficiários", "Preparação dos materiais", "Execução da ação", "Acompanhamento e registro", "Avaliação e relatório"],
   };
 
+  function _iniciais(nome) { return String(nome||"—").split(" ").slice(0,2).map(w=>w[0]||"").join("").toUpperCase()||"—"; }
   function _eh(v) {
     if (typeof escapeHtml === "function") return escapeHtml(v);
     return String(v ?? "").replace(/[&<>"']/g, s => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[s]));
@@ -164,11 +175,12 @@
     const pct = total ? Math.round((done / total) * 100) : 0;
     return { total, done, pct };
   }
-  function _progressoBar(etapas) {
+  function _progressoBar(etapas, cor) {
     const pr = _progresso(etapas);
+    const barCor = cor || "var(--gr)";
     return `<div style="margin-top:8px">
-      <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--tx3);margin-bottom:5px"><span>Progresso</span><span>${pr.done}/${pr.total} etapas · ${pr.pct}%</span></div>
-      <div style="height:6px;background:var(--bg-input);border:1px solid var(--bd1);border-radius:999px;overflow:hidden"><div style="height:100%;width:${pr.pct}%;background:var(--gr);transition:width .2s"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--tx3);margin-bottom:5px"><span>${pr.done}/${pr.total} etapas</span><span>${pr.pct}%</span></div>
+      <div class="bars"><div class="bf" style="width:${pr.pct}%;background:${barCor}"></div></div>
     </div>`;
   }
   function _select(val, map, onchange) {
@@ -184,33 +196,64 @@
     const el = _view("proj-lista-content");
     if (!el) return;
     const hoje = _hojeIso();
-    const cards = _lista.map(r => {
+
+    const ativos = _lista.filter(r => ["planejamento","em_andamento"].includes(r.status)).length;
+    const concluidos = _lista.filter(r => r.status === "concluido").length;
+    const atrasados = _lista.filter(r => r.data_prevista && r.data_prevista < hoje && r.status !== "concluido").length;
+    const etapasConcluidas = _lista.reduce((acc,r) => acc + (r.projeto_etapas||[]).filter(e => e.status==="concluido").length, 0);
+
+    const busca = (_filtroBusca||"").toLowerCase();
+    const filtered = _lista.filter(r => {
+      if (_filtroStatus && r.status !== _filtroStatus) return false;
+      if (_filtroPrio && r.prioridade !== _filtroPrio) return false;
+      if (busca && !r.nome.toLowerCase().includes(busca) && !(r.descricao||"").toLowerCase().includes(busca)) return false;
+      return true;
+    });
+
+    const cards = filtered.map(r => {
+      const tc = TIPO_CFG[r.tipo] || { icon:"📁", cor:"var(--tx3)", bg:"var(--bg-hover)" };
+      const tl = TIPO_LABEL[r.tipo] || r.tipo || "—";
       const atrasado = r.data_prevista && r.data_prevista < hoje && r.status !== "concluido";
-      const tipo = TIPO_LABEL[r.tipo] || r.tipo || "—";
-      return `<div class="card" style="border-left:3px solid ${PRIO_CFG[r.prioridade]?.cor || "var(--bd2)"}">
-        <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
-          <div style="min-width:0">
-            <div class="ctit" style="margin-bottom:5px">${_eh(r.nome)}</div>
-            <div style="font-size:11px;color:var(--tx3);line-height:1.45">${_eh((r.descricao || "").slice(0, 160)) || "Sem descrição."}</div>
+      const prioCor = PRIO_CFG[r.prioridade]?.cor || "var(--tx3)";
+      const resp = _membroNome(r.responsavel_id);
+      const ini = resp !== "—" ? _iniciais(resp) : "";
+      return `<div class="card" style="padding:16px;display:flex;flex-direction:column;gap:0">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="width:40px;height:40px;border-radius:10px;background:${tc.bg};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${tc.icon}</div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <div style="font-size:13px;font-weight:700;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_eh(r.nome)}</div>
+              ${_badgePrio(r.prioridade)}
+            </div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">
+              <span class="pill pn" style="font-size:10px">${_eh(tl)}</span>${_badgeStatus(r.status)}${atrasado?'<span class="pill pl">Atrasado</span>':""}
+            </div>
           </div>
-          <button class="tbt" onclick="projAbrirDetalhe('${_ea(r.id)}')" style="flex-shrink:0">Ver detalhes</button>
         </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
-          <span class="pill pn">${_eh(tipo)}</span>${_badgePrio(r.prioridade)}${_badgeStatus(r.status)}${atrasado ? '<span class="pill pl">Atrasado</span>' : ''}
+        <div style="display:flex;align-items:center;gap:8px;margin-top:12px">
+          ${ini?`<div style="width:26px;height:26px;border-radius:50%;background:var(--bg-hover);border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;color:var(--tx2);flex-shrink:0">${_eh(ini)}</div>`:""}
+          <span style="font-size:11.5px;color:var(--tx2)">${_eh(resp)}</span>
+          ${r.data_prevista?`<span style="font-size:10.5px;color:var(--tx3);margin-left:auto">📅 ${_fmtData(r.data_prevista)}</span>`:""}
         </div>
-        <div class="sr" style="margin-top:10px"><span class="sl">Responsável</span><span class="sv">${_eh(_membroNome(r.responsavel_id))}</span></div>
-        <div class="sr"><span class="sl">Previsão</span><span class="sv mono">${_fmtData(r.data_prevista)}</span></div>
-        ${_progressoBar(r.projeto_etapas)}
+        ${_progressoBar(r.projeto_etapas, prioCor)}
+        <button class="tbt" onclick="projAbrirDetalhe('${_ea(r.id)}')" style="width:100%;margin-top:12px;text-align:center">Ver detalhes →</button>
       </div>`;
     }).join("");
 
     el.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
-        <select id="proj-f-status" onchange="projFiltrar('status',this.value)" class="fi2" style="max-width:180px"><option value="">Todos os status</option>${Object.entries(STATUS_CFG).map(([k,c]) => `<option value="${_ea(k)}" ${_filtroStatus===k?"selected":""}>${_eh(c.label)}</option>`).join("")}</select>
-        <select id="proj-f-prio" onchange="projFiltrar('prioridade',this.value)" class="fi2" style="max-width:180px"><option value="">Todas as prioridades</option>${Object.entries(PRIO_CFG).map(([k,c]) => `<option value="${_ea(k)}" ${_filtroPrio===k?"selected":""}>${_eh(c.label)}</option>`).join("")}</select>
-        <button class="tbt" onclick="projInit()">↻ Atualizar</button>
+      <div class="kpis c4" style="margin-bottom:20px">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(10,132,255,.12);color:var(--blue)">◎</div><div class="kpi-body"><div class="kpi-lbl">Ativos</div><div class="kpi-val">${ativos}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(48,209,88,.12);color:var(--gr)">✓</div><div class="kpi-body"><div class="kpi-lbl">Concluídos</div><div class="kpi-val">${concluidos}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(255,69,58,.12);color:var(--rose)">!</div><div class="kpi-body"><div class="kpi-lbl">Atrasados</div><div class="kpi-val">${atrasados}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(90,200,250,.12);color:var(--teal)">▣</div><div class="kpi-body"><div class="kpi-lbl">Etapas concluídas</div><div class="kpi-val">${etapasConcluidas}</div></div></div>
       </div>
-      ${cards ? `<div class="g3">${cards}</div>` : `<div class="card" style="text-align:center;color:var(--tx3);padding:36px">Nenhum projeto encontrado.</div>`}
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+        <input class="fi2" placeholder="Buscar projeto..." value="${_ea(_filtroBusca||"")}" oninput="projBuscar(this.value)" style="flex:1;min-width:160px">
+        <select onchange="projFiltrar('status',this.value)" class="fi2" style="max-width:180px"><option value="">Todos os status</option>${Object.entries(STATUS_CFG).map(([k,c]) => `<option value="${_ea(k)}" ${_filtroStatus===k?"selected":""}>${_eh(c.label)}</option>`).join("")}</select>
+        <select onchange="projFiltrar('prioridade',this.value)" class="fi2" style="max-width:180px"><option value="">Todas as prioridades</option>${Object.entries(PRIO_CFG).map(([k,c]) => `<option value="${_ea(k)}" ${_filtroPrio===k?"selected":""}>${_eh(c.label)}</option>`).join("")}</select>
+        <button class="tbt" onclick="projInit()" title="Atualizar">↻</button>
+      </div>
+      ${filtered.length ? `<div class="g3">${cards}</div>` : `<div class="card" style="text-align:center;color:var(--tx3);padding:36px">Nenhum projeto encontrado.</div>`}
     `;
   }
 
@@ -218,89 +261,135 @@
     const el = _view("proj-detalhe-content");
     if (!el) return;
     if (!_atual) { el.innerHTML = `<div class="card" style="color:var(--tx3);padding:28px">Projeto não encontrado.</div>`; return; }
+
     const etapas = _atual.projeto_etapas || [];
     const canEdit = _podeEditar();
-    const statusControl = canEdit ? _select(_atual.status, STATUS_CFG, `onchange="projSalvarCampo('${_ea(_atual.id)}','status',this.value)"`) : _badgeStatus(_atual.status);
-    const etapaHtml = etapas.map(e => `<div class="card" style="margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
-        <div style="min-width:220px;flex:1">
-          <div style="font-size:13px;font-weight:700;color:var(--tx1)">${_eh(e.nome)}</div>
-          <div style="font-size:11px;color:var(--tx3);margin-top:4px">${_eh(e.descricao || "Sem descrição.")}</div>
+    const tc = TIPO_CFG[_atual.tipo] || { icon:"📁", cor:"var(--tx3)", bg:"var(--bg-hover)" };
+    const pr = _progresso(etapas);
+    const hoje = _hojeIso();
+    const statusControl = canEdit
+      ? _select(_atual.status, STATUS_CFG, `onchange="projSalvarCampo('${_ea(_atual.id)}','status',this.value)"`)
+      : _badgeStatus(_atual.status);
+
+    // Dias restantes
+    let diasHtml = "";
+    if (_atual.data_prevista && _atual.status !== "concluido") {
+      const diff = Math.ceil((new Date(_atual.data_prevista) - new Date(hoje)) / 86400000);
+      const cor = diff < 0 ? "var(--rose)" : "var(--tx1)";
+      const txt = diff < 0 ? `${Math.abs(diff)} dias atrasado` : `${diff} dias restantes`;
+      diasHtml = `<div><div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:2px">Prazo</div><div style="font-size:13px;font-weight:600;color:${cor}">${txt}</div></div>`;
+    }
+
+    const participantes = _atual.projeto_participantes || [];
+    const partAceitos = participantes.filter(p => p.aceito === true).length;
+
+    // Timeline de etapas
+    const etapaHtml = etapas.length ? etapas.map((e, i) => {
+      const isConc = e.status === "concluido";
+      const isAtivo = e.status === "em_andamento";
+      const dotBg = isConc ? "var(--gr)" : isAtivo ? "var(--blue)" : "var(--bd2)";
+      const dotTxt = isConc || isAtivo ? "#fff" : "var(--tx3)";
+      const isLast = i === etapas.length - 1;
+      return `<div style="display:flex;gap:12px">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:24px;height:24px;border-radius:50%;background:${dotBg};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${dotTxt};flex-shrink:0">${isConc?"✓":String(i+1)}</div>
+          ${!isLast?`<div style="width:2px;flex:1;min-height:16px;background:var(--bd2);margin-top:4px"></div>`:""}
         </div>
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          ${canEdit ? _select(e.status, ETAPA_STATUS, `onchange="projSalvarEtapa('${_ea(e.id)}','status',this.value)"`) : _badgeStatus(e.status)}
-          ${canEdit && e.status !== "concluido" ? `<button class="tbt" onclick="projSalvarEtapa('${_ea(e.id)}','status','concluido')">Concluir</button>` : ""}
-          ${canEdit ? `<button class="tbt" onclick="projExcluirEtapa('${_ea(e.id)}')">Excluir</button>` : ""}
+        <div style="flex:1;min-width:0;padding-bottom:${!isLast?"18px":"0"}">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="min-width:0;flex:1">
+              <div style="font-size:12.5px;font-weight:700;color:${isConc?"var(--tx3)":"var(--tx1)"};${isConc?"text-decoration:line-through;opacity:.65":""}">${_eh(e.nome)}</div>
+              ${e.descricao?`<div style="font-size:11px;color:var(--tx3);margin-top:3px;line-height:1.45">${_eh((e.descricao||"").slice(0,140))}${(e.descricao||"").length>140?"...":""}</div>`:""}
+              ${e.data_limite?`<div style="font-size:10.5px;color:var(--tx3);margin-top:5px">📅 Limite: ${_fmtData(e.data_limite)}</div>`:""}
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+              ${_badgeStatus(e.status)}
+              ${canEdit&&e.status!=="concluido"?`<button class="tbt" style="font-size:11px" onclick="projSalvarEtapa('${_ea(e.id)}','status','concluido')">Concluir</button>`:""}
+              ${canEdit?`<button class="tbt" style="font-size:11px;color:var(--rose);padding:4px 8px" onclick="projExcluirEtapa('${_ea(e.id)}')">✕</button>`:""}
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="sr" style="margin-top:9px"><span class="sl">Responsável</span><span class="sv">${_eh(_membroNome(e.responsavel_id))}</span></div>
-      <div class="sr"><span class="sl">Limite</span><span class="sv mono">${_fmtData(e.data_limite)}</span></div>
-    </div>`).join("");
+      </div>`;
+    }).join("") : `<div style="color:var(--tx3);font-size:12px;padding:18px;text-align:center">Nenhuma etapa cadastrada.</div>`;
+
+    // Participantes
+    const criador = _ehCriador();
+    const jaParticipantes = new Set(participantes.map(p => p.pessoa_id));
+    const membrosDisponiveis = _membros.filter(m => !jaParticipantes.has(m.pessoa_id||m.id));
+    const partHtml = participantes.map(p => {
+      const nome = _membroNome(p.pessoa_id);
+      const ini = _iniciais(nome);
+      const borderCor = p.aceito===true ? "var(--gr)" : p.aceito===false ? "var(--rose)" : "var(--amber)";
+      const estadoLbl = p.aceito===true ? "Aceito" : p.aceito===false ? "Recusado" : "Pendente";
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd1)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--bg-hover);border:2px solid ${borderCor};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--tx2);flex-shrink:0">${_eh(ini)}</div>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--tx1)">${_eh(nome)}</div>
+            <div style="font-size:10.5px;color:var(--tx3)">${p.nivel==="editor"?"Editor":"Visualizador"} · <span style="color:${borderCor}">${estadoLbl}</span></div>
+          </div>
+        </div>
+        ${criador?`<button class="tbt" style="font-size:11px;color:var(--rose)" onclick="projRemoverParticipante('${_ea(p.id)}','${_ea(_atual.id)}')">Remover</button>`:""}
+      </div>`;
+    }).join("");
+    const addHtml = criador ? `
+      <div style="display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <select id="proj-part-membro" class="fi2" style="flex:1;min-width:160px;margin:0">
+          <option value="">Selecionar membro...</option>
+          ${membrosDisponiveis.map(m=>`<option value="${_ea(m.pessoa_id||m.id)}">${_eh(m.nome)}</option>`).join("")}
+        </select>
+        <select id="proj-part-nivel" class="fi2" style="margin:0;width:130px">
+          <option value="visualizador">Visualizador</option>
+          <option value="editor">Editor</option>
+        </select>
+        <button class="tbt pri" onclick="projAdicionarParticipante('${_ea(_atual.id)}')">Convidar</button>
+      </div>` : "";
 
     el.innerHTML = `
       <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:12px">
         <button class="tbt" onclick="go('proj-lista')">← Voltar</button>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          ${canEdit ? `<button class="tbt" onclick="projAbrirForm('${_ea(_atual.id)}')">Editar projeto</button>` : ""}
-          ${_podeExcluir() ? `<button class="tbt" onclick="projExcluir('${_ea(_atual.id)}')" style="color:var(--rose);border-color:rgba(208,104,104,.35)">Excluir</button>` : ""}
+          ${canEdit?`<button class="tbt" onclick="projAbrirForm('${_ea(_atual.id)}')">Editar</button>`:""}
+          ${_podeExcluir()?`<button class="tbt" onclick="projExcluir('${_ea(_atual.id)}')" style="color:var(--rose);border-color:rgba(208,104,104,.35)">Excluir</button>`:""}
         </div>
       </div>
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap">
-          <div><div class="ctit">${_eh(_atual.nome)}</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><span class="pill pn">${_eh(TIPO_LABEL[_atual.tipo] || _atual.tipo)}</span>${_badgePrio(_atual.prioridade)}${statusControl}</div></div>
-          <div style="min-width:180px">${_progressoBar(etapas)}</div>
+
+      <div class="card" style="margin-bottom:14px">
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <div style="width:48px;height:48px;border-radius:12px;background:${tc.bg};display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${tc.icon}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:17px;font-weight:700;color:var(--tx1);line-height:1.25">${_eh(_atual.nome)}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+              <span class="pill pn">${_eh(TIPO_LABEL[_atual.tipo]||_atual.tipo)}</span>${_badgePrio(_atual.prioridade)}${statusControl}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px solid var(--bd1)">
+          <div><div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:2px">Etapas</div><div style="font-size:15px;font-weight:700;color:var(--tx1)">${pr.done}/${pr.total} <span style="font-size:11px;font-weight:400;color:var(--tx3)">(${pr.pct}%)</span></div></div>
+          <div><div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:2px">Responsável</div><div style="font-size:13px;font-weight:600;color:var(--tx1)">${_eh(_membroNome(_atual.responsavel_id))}</div></div>
+          ${diasHtml}
+          <div><div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:2px">Participantes</div><div style="font-size:13px;font-weight:600;color:var(--tx1)">${partAceitos}</div></div>
         </div>
         <div class="g2" style="margin-top:14px">
-          <div><div class="sr"><span class="sl">Responsável</span><span class="sv">${_eh(_membroNome(_atual.responsavel_id))}</span></div><div class="sr"><span class="sl">Início</span><span class="sv mono">${_fmtData(_atual.data_inicio)}</span></div></div>
-          <div><div class="sr"><span class="sl">Previsão</span><span class="sv mono">${_fmtData(_atual.data_prevista)}</span></div><div class="sr"><span class="sl">Conclusão</span><span class="sv mono">${_fmtData(_atual.data_conclusao)}</span></div></div>
+          <div><div class="sr"><span class="sl">Início</span><span class="sv mono">${_fmtData(_atual.data_inicio)}</span></div><div class="sr"><span class="sl">Previsão</span><span class="sv mono">${_fmtData(_atual.data_prevista)}</span></div></div>
+          <div><div class="sr"><span class="sl">Conclusão</span><span class="sv mono">${_fmtData(_atual.data_conclusao)}</span></div></div>
         </div>
-        <div style="font-size:12px;color:var(--tx2);line-height:1.55;margin-top:14px;white-space:pre-wrap">${_eh(_atual.descricao || "Sem descrição.")}</div>
+        ${_atual.descricao?`<div style="font-size:12px;color:var(--tx2);line-height:1.55;margin-top:14px;padding-top:12px;border-top:1px solid var(--bd1);white-space:pre-wrap">${_eh(_atual.descricao)}</div>`:""}
       </div>
-      <div class="card" style="margin-top:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px"><div class="ctit">Etapas</div>${canEdit ? `<button class="tbt pri" onclick="projNovaEtapa()">+ Adicionar etapa</button>` : ""}</div>
-        ${etapaHtml || `<div style="color:var(--tx3);font-size:12px;padding:18px;text-align:center">Nenhuma etapa cadastrada.</div>`}
+
+      <div class="card" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px">
+          <div class="ctit">Etapas</div>
+          ${canEdit?`<button class="tbt pri" onclick="projNovaEtapa()">+ Adicionar</button>`:""}
+        </div>
+        ${etapaHtml}
       </div>
-      ${(function() {
-        const participantes = _atual.projeto_participantes || [];
-        const criador = _ehCriador();
-        const uid = _user()?.id;
-        const jaParticipantes = new Set(participantes.map(p => p.pessoa_id));
-        const membrosDisponiveis = _membros.filter(m => !jaParticipantes.has(m.pessoa_id || m.id));
-        const partHtml = participantes.map(p => {
-          const nome = _membroNome(p.pessoa_id);
-          const ini = nome.split(" ").slice(0,2).map(w=>w[0]||"").join("").toUpperCase();
-          const isEditor = p.nivel === "editor";
-          const estadoCor = p.aceito === true ? "var(--gr)" : p.aceito === false ? "var(--rose)" : "var(--amber)";
-          const estadoLbl = p.aceito === true ? "Aceito" : p.aceito === false ? "Recusado" : "Pendente";
-          return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd1)">
-            <div style="display:flex;align-items:center;gap:10px">
-              <div style="width:32px;height:32px;border-radius:50%;background:var(--bg-hover);border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--tx2);flex-shrink:0">${_eh(ini)}</div>
-              <div>
-                <div style="font-size:12px;font-weight:600;color:var(--tx1)">${_eh(nome)}</div>
-                <div style="font-size:10.5px;color:var(--tx3)">${isEditor?"Editor":"Visualizador"} · <span style="color:${estadoCor}">${estadoLbl}</span></div>
-              </div>
-            </div>
-            ${criador ? `<button class="tbt" style="font-size:11px;color:var(--rose)" onclick="projRemoverParticipante('${_ea(p.id)}','${_ea(_atual.id)}')">Remover</button>` : ""}
-          </div>`;
-        }).join("");
-        const addHtml = criador ? `
-          <div style="display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap">
-            <select id="proj-part-membro" class="fi2" style="flex:1;min-width:160px;margin:0">
-              <option value="">Selecionar membro...</option>
-              ${membrosDisponiveis.map(m=>`<option value="${_ea(m.pessoa_id||m.id)}">${_eh(m.nome)}</option>`).join("")}
-            </select>
-            <select id="proj-part-nivel" class="fi2" style="margin:0;width:130px">
-              <option value="visualizador">Visualizador</option>
-              <option value="editor">Editor</option>
-            </select>
-            <button class="tbt pri" onclick="projAdicionarParticipante('${_ea(_atual.id)}')">Convidar</button>
-          </div>` : "";
-        return `<div class="card" style="margin-top:14px">
-          <div class="ctit" style="margin-bottom:${participantes.length?"10px":"0"}">Participantes</div>
-          ${partHtml || `<div style="color:var(--tx3);font-size:12px;padding:10px 0">Nenhum participante adicionado.</div>`}
-          ${addHtml}
-        </div>`;
-      })()}
+
+      <div class="card">
+        <div class="ctit" style="margin-bottom:${participantes.length?"10px":"0"}">Participantes</div>
+        ${partHtml||`<div style="color:var(--tx3);font-size:12px;padding:10px 0">Nenhum participante adicionado.</div>`}
+        ${addHtml}
+      </div>
     `;
   }
 
@@ -308,18 +397,38 @@
     const el = _view("proj-form-content");
     if (!el) return;
     const d = dados || { tipo:"administrativo", prioridade:"media", status:"planejamento" };
+    const voltarFn = _formId ? `projAbrirDetalhe('${_ea(_formId)}')` : "go('proj-lista')";
     el.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px"><button class="tbt" onclick="${_formId ? `projAbrirDetalhe('${_ea(_formId)}')` : "go('proj-lista')"}">← Voltar</button></div>
-      <div class="card">
-        <div class="ctit" style="margin-bottom:14px">${_formId ? "Editar projeto" : "Novo projeto"}</div>
-        <div class="frow"><div class="fg"><label class="flb">Nome *</label><input id="proj-nome" class="fi2" value="${_ea(d.nome || "")}" maxlength="160"></div><div class="fg"><label class="flb">Responsável</label><select id="proj-resp" class="fi2">${_membrosOptions(d.responsavel_id)}</select></div></div>
-        <div class="frow"><div class="fg"><label class="flb">Tipo</label><select id="proj-tipo" class="fi2" ${!_formId ? 'onchange="projAtualizarTemplateEtapas()"' : ''}>${Object.entries(TIPO_LABEL).map(([k,v]) => `<option value="${_ea(k)}" ${d.tipo===k?"selected":""}>${_eh(v)}</option>`).join("")}</select></div><div class="fg"><label class="flb">Prioridade</label><select id="proj-prio" class="fi2">${Object.entries(PRIO_CFG).map(([k,c]) => `<option value="${_ea(k)}" ${d.prioridade===k?"selected":""}>${_eh(c.label)}</option>`).join("")}</select></div></div>
-        <div class="frow"><div class="fg"><label class="flb">Status</label><select id="proj-status" class="fi2">${Object.entries(STATUS_CFG).map(([k,c]) => `<option value="${_ea(k)}" ${d.status===k?"selected":""}>${_eh(c.label)}</option>`).join("")}</select></div><div class="fg"><label class="flb">Data de início</label><input id="proj-inicio" type="date" class="fi2" value="${_ea(d.data_inicio || "")}"></div></div>
-        <div class="frow"><div class="fg"><label class="flb">Data prevista</label><input id="proj-prevista" type="date" class="fi2" value="${_ea(d.data_prevista || "")}"></div><div class="fg"><label class="flb">Data de conclusão</label><input id="proj-conclusao" type="date" class="fi2" value="${_ea(d.data_conclusao || "")}"></div></div>
-        <div class="fg"><label class="flb">Descrição</label><textarea id="proj-desc" class="fi2" rows="5">${_eh(d.descricao || "")}</textarea></div>
-        <div class="ma"><button class="btn" onclick="${_formId ? `projAbrirDetalhe('${_ea(_formId)}')` : "go('proj-lista')"}">Cancelar</button><button class="btn btn-p" id="proj-save-btn" onclick="projSalvar()">Salvar</button></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="tbt" onclick="${voltarFn}">← Voltar</button>
       </div>
-      ${!_formId ? `
+      <div class="card">
+        <div class="ctit" style="margin-bottom:18px">${_formId?"Editar projeto":"Novo projeto"}</div>
+
+        <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:10px">Identificação</div>
+        <div class="frow">
+          <div class="fg"><label class="flb">Nome *</label><input id="proj-nome" class="fi2" value="${_ea(d.nome||"")}" maxlength="160"></div>
+          <div class="fg"><label class="flb">Responsável</label><select id="proj-resp" class="fi2">${_membrosOptions(d.responsavel_id)}</select></div>
+        </div>
+        <div class="frow">
+          <div class="fg"><label class="flb">Tipo</label><select id="proj-tipo" class="fi2" ${!_formId?'onchange="projAtualizarTemplateEtapas()"':""}>${Object.entries(TIPO_LABEL).map(([k,v])=>`<option value="${_ea(k)}" ${d.tipo===k?"selected":""}>${_eh(v)}</option>`).join("")}</select></div>
+          <div class="fg"><label class="flb">Prioridade</label><select id="proj-prio" class="fi2">${Object.entries(PRIO_CFG).map(([k,c])=>`<option value="${_ea(k)}" ${d.prioridade===k?"selected":""}>${_eh(c.label)}</option>`).join("")}</select></div>
+          <div class="fg"><label class="flb">Status</label><select id="proj-status" class="fi2">${Object.entries(STATUS_CFG).map(([k,c])=>`<option value="${_ea(k)}" ${d.status===k?"selected":""}>${_eh(c.label)}</option>`).join("")}</select></div>
+        </div>
+
+        <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-top:20px;margin-bottom:10px">Cronograma</div>
+        <div class="frow">
+          <div class="fg"><label class="flb">Data de início</label><input id="proj-inicio" type="date" class="fi2" value="${_ea(d.data_inicio||"")}"></div>
+          <div class="fg"><label class="flb">Data prevista</label><input id="proj-prevista" type="date" class="fi2" value="${_ea(d.data_prevista||"")}"></div>
+          <div class="fg"><label class="flb">Data de conclusão</label><input id="proj-conclusao" type="date" class="fi2" value="${_ea(d.data_conclusao||"")}"></div>
+        </div>
+
+        <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-top:20px;margin-bottom:10px">Descrição</div>
+        <div class="fg"><textarea id="proj-desc" class="fi2" rows="5">${_eh(d.descricao||"")}</textarea></div>
+
+        <div class="ma"><button class="btn" onclick="${voltarFn}">Cancelar</button><button class="btn btn-p" id="proj-save-btn" onclick="projSalvar()">Salvar</button></div>
+      </div>
+      ${!_formId?`
       <div class="card" style="margin-top:10px" id="proj-etapas-template-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
           <div class="ctit">Etapas sugeridas</div>
@@ -327,7 +436,7 @@
         </div>
         <div style="font-size:11.5px;color:var(--tx3);margin-bottom:12px">Selecione as etapas que deseja incluir. Os nomes podem ser editados depois.</div>
         <div id="proj-etapas-list"></div>
-      </div>` : ""}
+      </div>`:""}
     `;
   }
 
@@ -568,6 +677,10 @@
     if (campo === "prioridade") _filtroPrio = valor;
     window.projInit();
   };
+  window.projBuscar = function(valor) {
+    _filtroBusca = valor || "";
+    _renderLista();
+  };
 
   async function _renderDash() {
     const el = _view("proj-dash-content");
@@ -583,8 +696,7 @@
 
     function _kpi(valor, label, cor) {
       return `<div class="kpi" style="cursor:default">
-        <div class="kval" style="color:${cor}">${valor}</div>
-        <div class="klbl">${label}</div>
+        <div class="kpi-body"><div class="kpi-val" style="color:${cor}">${valor}</div><div class="kpi-lbl">${label}</div></div>
       </div>`;
     }
 
@@ -630,7 +742,7 @@
     }
 
     el.innerHTML = `
-      <div class="kpis" style="margin-bottom:20px">
+      <div class="kpis c4" style="margin-bottom:20px">
         ${_kpi(total, "Total", "var(--tx1)")}
         ${_kpi(andamento, "Em andamento", "var(--amber)")}
         ${_kpi(atrasados.length, "Atrasados", atrasados.length ? "var(--rose)" : "var(--tx3)")}
