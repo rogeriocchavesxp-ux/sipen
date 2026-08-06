@@ -1175,7 +1175,7 @@ function fmtD(d) {
 
     const btnNota   = `<button onclick="demAnexarDoc('${demId}','nota_fiscal')" style="padding:4px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);font-size:11px;cursor:pointer;font-family:var(--ff)">+ Nota Fiscal</button>`;
     const btnBoleto = sub === "Solicitação de pagamento" ? `<button onclick="demAnexarDoc('${demId}','boleto')" style="padding:4px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);font-size:11px;cursor:pointer;font-family:var(--ff)">+ Boleto</button>` : "";
-    const btnComp   = sub === "Reembolso" ? `<button onclick="demAnexarDoc('${demId}','comprovante')" style="padding:4px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);font-size:11px;cursor:pointer;font-family:var(--ff)">+ Comprovante</button>` : "";
+    const btnComp   = sub === "Reembolso" ? `<button onclick="demAnexarDoc('${demId}','outro')" style="padding:4px 12px;border-radius:6px;border:1px solid var(--bd2);background:none;color:var(--teal);font-size:11px;cursor:pointer;font-family:var(--ff)">+ Comprovante</button>` : "";
 
     return `
       <div class="card" style="margin-top:0;border:1px solid rgba(61,160,85,.3);background:rgba(61,160,85,.03)">
@@ -2783,15 +2783,20 @@ function fmtD(d) {
     if (!storagePath) return;
     const sb = _sbClient();
     if (!sb) { if (typeof T === "function") T("Erro", "Serviço temporariamente indisponível."); return; }
-    // Abrir janela antes do await para não ser bloqueada pelo popup blocker
-    const w = window.open("", "_blank", "noopener,noreferrer");
+    // Abrir janela ANTES do await — sem noopener para manter a referência
+    // (window.open com noopener retorna null no Chrome, tornando impossível navegar a janela)
+    const w = window.open("", "_blank");
     try {
       const { data, error } = await sb.storage
         .from("financial-documents")
         .createSignedUrl(storagePath, 3600);
       if (error) throw error;
-      if (w) w.location.href = data.signedUrl;
-      else window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+      if (w) {
+        w.location.href = data.signedUrl;
+      } else {
+        // Fallback improvável, mas seguro
+        window.open(data.signedUrl, "_blank");
+      }
     } catch(e) {
       if (w) w.close();
       if (typeof T === "function") T("Erro ao abrir arquivo", e.message);

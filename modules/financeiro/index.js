@@ -942,7 +942,7 @@
             const ref = tab === "dizimos"
               ? _fmtMes(fd.mes_referencia)
               : _fmtData(fd.data_oferta || r.criado_em);
-            const temComp = !!(fd.comprovante?.path || fd.nota_fiscal?.path);
+            const temComp = !!(fd.comprovante?.storage_path || fd.nota_fiscal?.storage_path);
             return `<tr style="border-bottom:1px solid var(--bd1);cursor:pointer"
               onclick="window.demAbrirDetalhe&&demAbrirDetalhe('${r.id||r._row}','fin-dizimos-ofertas')"
               onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
