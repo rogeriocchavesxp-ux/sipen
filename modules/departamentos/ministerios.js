@@ -3643,23 +3643,30 @@
     if (!el || !_socAtual) return;
     const soc = _socAtual;
 
-    const findByRole = (...pats) => _socRows.find(r =>
-      r.tipo_nomeacao === 'lider' &&
-      pats.some(p => (r.cargo || r.funcao_lider || '').toLowerCase().includes(p))
-    );
-    const presidente  = findByRole('presidente');
-    const conselheiro = findByRole('conselh');
-    const secretario  = findByRole('secretar', 'tesour');
+    // Top 3 cargos distintos ordenados por prioridade hierárquica
+    const _LABEL = { supervisor:'Supervisor', conselheiro:'Conselheiro', coordenador:'Coordenador',
+      presidente:'Presidente', tesoureiro:'Tesoureiro', lider_area:'Líder de Área',
+      lider:'Líder', líder:'Líder', secretario:'Secretário', secretário:'Secretário' };
+    const _CORES = ['201,168,76','74,156,245','58,170,92'];
+    const sorted = _socRows.filter(r => r.tipo_nomeacao === 'lider')
+      .slice().sort((a, b) => _socCargoPrio(a.cargo) - _socCargoPrio(b.cargo));
+    const seen = new Set(), top3 = [];
+    for (const r of sorted) {
+      const g = (r.cargo || r.funcao_lider || 'líder').toLowerCase().trim();
+      if (!seen.has(g)) { seen.add(g); top3.push({ label: _LABEL[g] || r.cargo || 'Líder', nome: r.nome }); }
+      if (top3.length === 3) break;
+    }
+    while (top3.length < 3) top3.push({ label: ['Presidente','Conselheiro','Secretário'][top3.length], nome: null });
 
-    const _card = (label, pessoa, cor) => {
-      const nome = pessoa ? _hEsc(pessoa.nome) : null;
+    const _card = (label, nome, cor) => {
+      const n = nome ? _hEsc(nome.toUpperCase()) : null;
       return `<div style="display:flex;align-items:center;gap:9px;padding:10px 14px;background:var(--bg2);border-radius:8px;min-width:140px;flex:1">
         <div style="width:32px;height:32px;border-radius:50%;background:rgba(${cor},.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgb(${cor})" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
         <div style="min-width:0">
           <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:2px">${label}</div>
-          <div style="font-size:12.5px;font-weight:600;color:${nome ? 'var(--tx1)' : 'var(--tx3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nome || 'Não informado'}</div>
+          <div style="font-size:12.5px;font-weight:600;color:${n ? 'var(--tx1)' : 'var(--tx3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${n || 'Não informado'}</div>
         </div>
       </div>`;
     };
@@ -3679,9 +3686,7 @@
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch">
-          ${_card('Presidente',  presidente,  '201,168,76')}
-          ${_card('Conselheiro', conselheiro, '74,156,245')}
-          ${_card('Secretário',  secretario,  '58,170,92')}
+          ${top3.map((t, i) => _card(t.label, t.nome, _CORES[i])).join('')}
         </div>
       </div>`;
   }
@@ -3991,9 +3996,11 @@
     if (!confirm(`Remover "${row?.nome || '?'}"?`)) return;
     try {
       const r = await fetch(`${SUPABASE_URL}/rest/v1/nomeados?id=eq.${id}`, {
-        method: 'DELETE', headers: _hdr(),
+        method: 'PATCH',
+        headers: Object.assign({}, _hdr(), { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+        body: JSON.stringify({ deleted_at: new Date().toISOString(), status: 'inativo' }),
       });
-      if (!r.ok) throw new Error(`Erro ${r.status}`);
+      if (!r.ok) throw new Error(`Erro ${r.status}: ${await r.text().catch(()=>'')}`);
       _socRows = _socRows.filter(row => row.id !== id);
       if (tipo === 'lider') { _socRenderLideranca(); _socRenderHeader(); }
       else                    _socRenderMembros();
