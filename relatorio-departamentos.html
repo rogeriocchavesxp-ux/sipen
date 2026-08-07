@@ -317,8 +317,24 @@ function badgeClass(tipo, categoria) {
   return "badge-outro";
 }
 
-function render(ministerios, nomeados) {
+function render(ministerios, nomeados, totalOrgs, totalPessoas) {
   const root = document.getElementById("root");
+
+  let html = `
+    <div class="summary">
+      <div class="summary-card">
+        <div class="val">${totalOrgs}</div>
+        <div class="lbl">Departamentos e Ministérios</div>
+      </div>
+      <div class="summary-card">
+        <div class="val">${totalPessoas}</div>
+        <div class="lbl">Total de Pessoas Cadastradas</div>
+      </div>
+      <div class="summary-card">
+        <div class="val">${new Date().toLocaleDateString("pt-BR")}</div>
+        <div class="lbl">Data de geração</div>
+      </div>
+    </div>`;
 
   // Agrupar nomeados por ministerio_id
   const byMin = {};
@@ -338,26 +354,6 @@ function render(ministerios, nomeados) {
   const tiposOrdenados = Object.keys(byTipo).sort(
     (a, b) => (TIPO_ORDER[a] ?? 99) - (TIPO_ORDER[b] ?? 99)
   );
-
-  const totalPessoas = nomeados.length;
-  const totalAtivos  = ministerios.filter(m => m.ativo !== false).length;
-
-  // Sumário
-  let html = `
-    <div class="summary">
-      <div class="summary-card">
-        <div class="val">${ministerios.length}</div>
-        <div class="lbl">Departamentos e Ministérios</div>
-      </div>
-      <div class="summary-card">
-        <div class="val">${totalPessoas}</div>
-        <div class="lbl">Total de Pessoas Cadastradas</div>
-      </div>
-      <div class="summary-card">
-        <div class="val">${new Date().toLocaleDateString("pt-BR")}</div>
-        <div class="lbl">Data de geração</div>
-      </div>
-    </div>`;
 
   // Grupos por tipo
   tiposOrdenados.forEach(tipo => {
@@ -442,11 +438,96 @@ function render(ministerios, nomeados) {
     html += `</div>`;
   });
 
-  html += `<div class="report-footer">
-    Relatório gerado em ${new Date().toLocaleString("pt-BR")} · SIPEN — Sistema Integrado da IPPenha
-  </div>`;
-
   root.innerHTML = html;
+}
+
+function renderSociedades(sociedades, socNomeados) {
+  const root = document.getElementById("root");
+
+  // Agrupar nomeados por orgao
+  const byOrgao = {};
+  socNomeados.forEach(n => {
+    const key = n.orgao || "";
+    if (!byOrgao[key]) byOrgao[key] = [];
+    byOrgao[key].push(n);
+  });
+
+  let html = `<div class="section-group"><div class="section-group-title">Sociedades Internas</div>`;
+
+  sociedades.forEach(soc => {
+    const pessoas = (byOrgao[soc.orgao] || []).sort(
+      (a, b) => (a.tipo_nomeacao === "lider" ? 0 : 1) - (b.tipo_nomeacao === "lider" ? 0 : 1) ||
+                (a.nome || "").localeCompare(b.nome || "", "pt-BR")
+    );
+    const lideres = pessoas.filter(p => p.tipo_nomeacao === "lider");
+    const membros = pessoas.filter(p => p.tipo_nomeacao !== "lider");
+    const total   = pessoas.length;
+
+    let lidHtml = "";
+    if (lideres.length) {
+      lidHtml = `<div class="leadership">` +
+        lideres.map(l => {
+          const p = l.pessoas || {};
+          const nome = nomeProprio(p.nome || l.nome || "—");
+          const role = l.funcao_lider || l.cargo || "Líder";
+          return `<div class="leader-item">
+            <span class="leader-role">${esc(role)}</span>
+            <span class="leader-name">${esc(nome)}</span>
+          </div>`;
+        }).join("") +
+        `</div>`;
+    }
+
+    let membHtml = "";
+    if (membros.length) {
+      membHtml = `<table class="members-table">
+        <thead><tr>
+          <th class="td-num">#</th>
+          <th>Nome</th>
+          <th>Telefone</th>
+          <th>E-mail</th>
+          <th>Cargo / Função</th>
+        </tr></thead>
+        <tbody>
+          ${membros.map((mb, i) => {
+            const p = mb.pessoas || {};
+            const nome  = nomeProprio(p.nome  || mb.nome  || "—");
+            const tel   = fmtTel(p.celular || p.telefone || "");
+            const email = p.email || "";
+            const cargo = mb.cargo || "";
+            return `<tr>
+              <td class="td-num">${i + 1}</td>
+              <td>${esc(nome)}</td>
+              <td class="td-tel">${esc(tel) || "—"}</td>
+              <td class="td-email">${esc(email) || "—"}</td>
+              <td class="td-cargo">${esc(cargo) || "—"}</td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>`;
+    } else {
+      membHtml = `<div class="empty-members">Nenhum membro cadastrado.</div>`;
+    }
+
+    html += `
+      <div class="dept-card">
+        <div class="dept-header">
+          <div class="dept-name">${esc(soc.sigla)} — ${esc(soc.nome)}</div>
+          <span class="badge badge-soc">Sociedade Interna</span>
+          <span class="dept-count">👥 ${total} pessoa${total !== 1 ? "s" : ""}</span>
+        </div>
+        ${lidHtml}
+        ${membHtml}
+      </div>`;
+  });
+
+  html += `</div>
+    <div class="report-footer">
+      Relatório gerado em ${new Date().toLocaleString("pt-BR")} · SIPEN — Sistema Integrado da IPPenha
+    </div>`;
+
+  root.innerHTML += html;
+}
 
   // Atualizar subtítulo com a contagem
   document.getElementById("report-subtitle").textContent =
@@ -472,20 +553,30 @@ async function main() {
   }
 
   try {
-    const [ministerios, nomeados] = await Promise.all([
+    const [ministerios, nomeados, sociedades, socNomeados] = await Promise.all([
+      api("ministerios?select=id,nome,tipo,categoria,ativo&ativo=eq.true&order=nome.asc", token),
       api(
-        "ministerios?select=id,nome,tipo,categoria,ativo&ativo=eq.true&order=nome.asc",
-        token
-      ),
-      api(
-        "nomeados?status=eq.ativo&deleted_at=is.null" +
+        "nomeados?status=eq.ativo&deleted_at=is.null&ministerio_id=not.is.null" +
         "&select=ministerio_id,nivel,nome,cargo,pessoas!nomeados_pessoa_id_fkey(id,nome,telefone,celular,email)" +
         "&order=ministerio_id.asc,nivel.asc,nome.asc",
         token
       ),
+      api("sociedades?ativo=eq.true&select=id,sigla,nome,orgao,ic&order=sigla.asc", token),
+      api(
+        "nomeados?orgao_tipo=eq.sociedade&deleted_at=is.null" +
+        "&select=orgao,nome,cargo,tipo_nomeacao,funcao_lider,pessoas!nomeados_pessoa_id_fkey(id,nome,telefone,celular,email)" +
+        "&order=orgao.asc,tipo_nomeacao.asc,nome.asc",
+        token
+      ),
     ]);
 
-    render(ministerios, nomeados);
+    const totalPessoas = nomeados.length + socNomeados.length;
+    const totalOrgs = ministerios.length + sociedades.length;
+    document.getElementById("report-subtitle").textContent =
+      `IPPenha · ${totalOrgs} departamentos/ministérios · ${totalPessoas} pessoas · gerado em ${new Date().toLocaleDateString("pt-BR")}`;
+
+    render(ministerios, nomeados, totalOrgs, totalPessoas);
+    renderSociedades(sociedades, socNomeados);
   } catch (e) {
     showError("Erro ao carregar dados", e.message);
   }
