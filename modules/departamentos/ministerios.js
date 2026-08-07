@@ -3793,23 +3793,28 @@
     el.innerHTML = `
       ${!lideres.length
           ? '<div style="color:var(--tx3);text-align:center;padding:20px">Nenhuma liderança nomeada.</div>'
-          : Object.entries(grupos).map(([g, pessoas]) => `
-            <div style="margin-bottom:18px">
-              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:8px">${FUNC_LABEL[g] || g}</div>
-              ${pessoas.map(r => `
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg2);border-radius:8px;margin-bottom:5px">
-                  <div style="display:flex;align-items:center;gap:10px">
-                    <div style="width:30px;height:30px;border-radius:50%;background:rgba(${_rgb(g)},.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgb(${_rgb(g)})" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">
+              ${lideres.slice().sort((a,b) => _socCargoPrio(a.cargo) - _socCargoPrio(b.cargo)).map(r => {
+                const g = r.cargo || r.funcao_lider || 'Outros';
+                const label = FUNC_LABEL[g] || g;
+                const rgb = _rgb(g);
+                const ini = r.nome ? r.nome.trim().split(/\s+/) : [];
+                const initials = ini.length >= 2 ? ini[0][0]+ini[ini.length-1][0] : (ini[0]?.[0] || '?');
+                const data = r.data_inicio ? new Date(r.data_inicio+'T12:00:00').toLocaleDateString('pt-BR') : null;
+                return `
+                  <div style="background:var(--bg2);border-radius:10px;padding:14px 14px 10px;display:flex;flex-direction:column;gap:10px;position:relative">
+                    <button onclick="window._socMenuNomeado(event,this,'${r.id}','lider')" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;padding:2px 6px;color:var(--tx3);font-size:15px;border-radius:4px;line-height:1">⋯</button>
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <div style="width:36px;height:36px;border-radius:50%;background:rgba(${rgb},.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:rgb(${rgb})">${initials.toUpperCase()}</div>
+                      <div>
+                        <div style="font-size:12.5px;font-weight:600;color:var(--tx1);line-height:1.3">${_hEsc(r.nome)}</div>
+                        ${data ? `<div style="font-size:10.5px;color:var(--tx3);margin-top:2px">desde ${data}</div>` : ''}
+                      </div>
                     </div>
-                    <div style="display:flex;flex-direction:column;gap:2px">
-                      <div style="font-size:13px;font-weight:600;color:var(--tx1)">${_hEsc(r.nome)}</div>
-                      ${r.data_inicio ? `<div style="font-size:11px;color:var(--tx3)">desde ${new Date(r.data_inicio+'T12:00:00').toLocaleDateString('pt-BR')}</div>` : ''}
-                    </div>
-                  </div>
-                  <button onclick="window._socMenuNomeado(event,this,'${r.id}','lider')" style="background:none;border:none;cursor:pointer;padding:3px 8px;color:var(--tx3);font-size:15px;border-radius:4px;line-height:1;flex-shrink:0">⋯</button>
-                </div>`).join('')}
-            </div>`).join('')}
+                    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgb(${rgb});background:rgba(${rgb},.1);border-radius:4px;padding:2px 7px;align-self:flex-start">${label}</div>
+                  </div>`;
+              }).join('')}
+            </div>`}
       `;
   }
 
