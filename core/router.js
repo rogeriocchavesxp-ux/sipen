@@ -12,7 +12,7 @@ const CRUMB={
   "compras-lista":   ["Compras","Todos os Pedidos","/ lista completa"],
   "compras-detalhe": ["Compras","Detalhe do Pedido","/ itens e histórico de status"],
   "proculto-dash":["Pró-Culto","Central Operacional dos Cultos","/ liturgia, avisos e preparação"],
-  geral:["","Dashboard Geral","/ IPPenha · visão executiva consolidada"],
+  geral:["","Painel","/ IPPenha · visão executiva consolidada"],
   "cultos-dash":["Cultos","Dashboard","/ visão geral dos cultos"],
   "hub-igreja": ["","Vida da Igreja","/ cultos, pastoral e pequenos grupos"],
   "hub-gov":    ["","Governança","/ conselho, liderança e secretaria"],
