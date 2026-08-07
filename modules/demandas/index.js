@@ -72,7 +72,6 @@
   /* ── Status e prioridade ────────────────────────────── */
 
   const STATUS_CFG = {
-    "Aberta":       { bg:"rgba(74,156,245,.12)",  cl:"var(--blue)"  },
     "Em Análise":   { bg:"rgba(212,168,67,.12)",  cl:"var(--gold)"  },
     "Em Andamento": { bg:"rgba(139,111,212,.12)", cl:"var(--violet)"},
     "Aguardando Pagamento": { bg:"rgba(234,179,8,.12)",  cl:"var(--amber)" },
@@ -141,7 +140,7 @@
   /* ── Normalização de status (DB ↔ label) ─────────────── */
 
   const _STATUS_DB = {
-    "Aberta":       "ABERTA",
+    "Aberta":       "PENDENTE",
     "Em Análise":   "EM_ANALISE",
     "Em Andamento": "EM_ANDAMENTO",
     "Aguardando Pagamento": "AGUARDANDO_PAGAMENTO",
@@ -153,7 +152,7 @@
   };
 
   const _STATUS_LABEL = {
-    "ABERTA":       "Aberta",
+    "ABERTA":       "Pendente",
     "EM_ANALISE":   "Em Análise",
     "EM_ANDAMENTO": "Em Andamento",
     "AGUARDANDO_PAGAMENTO": "Aguardando Pagamento",
@@ -166,8 +165,8 @@
 
   const _STATUS_FECHADO = ["CONCLUIDA", "PAGO", "CANCELADA"];
 
-  function _toDb(st)    { return window.SIPEN?.status?.toDb    ? SIPEN.status.toDb(st)    : (_STATUS_DB[st]    || st || "ABERTA"); }
-  function _toLabel(st) { return window.SIPEN?.status?.toLabel ? SIPEN.status.toLabel(st) : (_STATUS_LABEL[st] || st || "Aberta"); }
+  function _toDb(st)    { return window.SIPEN?.status?.toDb    ? SIPEN.status.toDb(st)    : (_STATUS_DB[st]    || st || "PENDENTE"); }
+  function _toLabel(st) { return window.SIPEN?.status?.toLabel ? SIPEN.status.toLabel(st) : (_STATUS_LABEL[st] || st || "Pendente"); }
 
   function pillStatus(st) {
     if (window.SIPEN?.status?.pill) return SIPEN.status.pill(st);
@@ -383,8 +382,8 @@ function fmtD(d) {
     await _load();
     _atualizarBadge();
 
-    const ATIVAS = ["Aberta","Em Análise","Em Andamento","Pendente"];
-    const novas    = _cache.filter(r => r.status === "Aberta");
+    const ATIVAS = ["Pendente","Em Análise","Em Andamento"];
+    const novas    = _cache.filter(r => r.status === "Pendente");
     const analise  = _cache.filter(r => r.status === "Em Análise");
     const andando  = _cache.filter(r => r.status === "Em Andamento");
     const pendente = _cache.filter(r => r.status === "Pendente");
@@ -407,7 +406,7 @@ function fmtD(d) {
     /* Visão do pipeline por status */
     const totalGeral = _cache.length || 1;
     const pipeline = [
-      { label:"Aberta",       val:novas.length,   cor:"var(--blue)",   view:"dem-todas" },
+      { label:"Pendente",      val:novas.length,   cor:"var(--amber)",  view:"dem-todas" },
       { label:"Em Análise",   val:analise.length, cor:"var(--gold)",   view:"dem-analise" },
       { label:"Em Andamento", val:andando.length, cor:"var(--violet)", view:"dem-and" },
       { label:"Pendente",     val:pendente.length,cor:"var(--amber)",  view:"dem-todas" },
@@ -556,7 +555,7 @@ function fmtD(d) {
     el.innerHTML = `
       <select onchange="demDashFiltroStatus(this.value)" style="${selStyle}">
         <option value="">Status</option>
-        <option value="Aberta"       ${_dashF.status==="Aberta"?"selected":""}>Aberta</option>
+        <option value="Pendente"      ${_dashF.status==="Pendente"?"selected":""}>Pendente</option>
         <option value="Em Análise"   ${_dashF.status==="Em Análise"?"selected":""}>Em Análise</option>
         <option value="Em Andamento" ${_dashF.status==="Em Andamento"?"selected":""}>Em Andamento</option>
         <option value="Pendente"     ${_dashF.status==="Pendente"?"selected":""}>Pendente</option>
@@ -1555,8 +1554,8 @@ function fmtD(d) {
             </div>` : `
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="dem-status-btns-${id}">
               ${(dem.area === "Financeiro"
-                  ? [["Aberta","Aberta"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],["Aguardando Pagamento","Aguardando Pagamento"],["Pagamento Agendado","Pagamento Agendado"],["Pago","Pago"],["Cancelada","Cancelada"]]
-                  : [["Aberta","Aberta"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],["Concluída","Concluída"],["Cancelada","Cancelada"]]
+                  ? [["Pendente","Pendente"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],["Aguardando Pagamento","Aguardando Pagamento"],["Pagamento Agendado","Pagamento Agendado"],["Pago","Pago"],["Cancelada","Cancelada"]]
+                  : [["Pendente","Pendente"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],["Concluída","Concluída"],["Cancelada","Cancelada"]]
                 ).map(([st, label]) => {
                   const isAtivo = dem.status === st;
                   const isAgendamento = st === "Pagamento Agendado";
@@ -3177,7 +3176,7 @@ function fmtD(d) {
       `*Departamento:* ${dem.area || "—"}`,
       dem.subcategoria                     ? `*Subcategoria:* ${dem.subcategoria}`                 : null,
       `*Solicitante:* ${dem.solicitante || "—"}`,
-      `*Status:* Aberta`,
+      `*Status:* Pendente`,
       fd && fmtValor(fd.valor)             ? `*Valor:* ${fmtValor(fd.valor)}`                     : null,
       fd && fmtData(fd.data_vencimento)    ? `*Vencimento:* ${fmtData(fd.data_vencimento)}`       : null,
       dem.descricao ? `\n*Descrição:*\n${dem.descricao.slice(0, 300)}${dem.descricao.length > 300 ? "…" : ""}` : null,

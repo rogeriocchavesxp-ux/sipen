@@ -76,7 +76,7 @@
         d30.setDate(d30.getDate() - 30);
         const iso = d30.toISOString();
         const [ab, co] = await Promise.all([
-          _get('demandas?status=in.(Aberta,Em%20Andamento,Em%20An%C3%A1lise)&select=id&limit=1').catch(() => null),
+          _get('demandas?status=in.(Aberta,Pendente,Em%20Andamento,Em%20An%C3%A1lise)&select=id&limit=1').catch(() => null),
           _get('demandas?status=eq.Concluida&updated_at=gte.' + encodeURIComponent(iso) + '&select=id&limit=1').catch(() => null),
         ]);
         // Supabase retorna header Content-Range para contagem — usamos tamanho do array como fallback

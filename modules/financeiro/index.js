@@ -156,12 +156,11 @@
   /* ── DEMANDAS FINANCEIRAS — helpers e carga ─────────────── */
 
   const _DEM_STATUS_LABEL = {
-    "ABERTA": "Aberta", "EM_ANALISE": "Em Análise", "EM_ANDAMENTO": "Em Andamento",
+    "ABERTA": "Pendente", "EM_ANALISE": "Em Análise", "EM_ANDAMENTO": "Em Andamento",
     "AGUARDANDO_PAGAMENTO": "Aguardando Pagamento", "PENDENTE": "Pendente",
     "CONCLUIDA": "Concluída", "CANCELADA": "Cancelada", "PAGO": "Pago",
   };
   const _DEM_STATUS_CFG = {
-    "Aberta":                { bg:"rgba(74,156,245,.12)",  cl:"var(--blue)"   },
     "Em Análise":            { bg:"rgba(212,168,67,.12)",  cl:"var(--gold)"   },
     "Em Andamento":          { bg:"rgba(139,111,212,.12)", cl:"var(--violet)" },
     "Aguardando Pagamento":  { bg:"rgba(234,179,8,.12)",   cl:"var(--amber)"  },
@@ -171,7 +170,7 @@
     "Pago":                  { bg:"rgba(58,170,92,.12)",   cl:"var(--gr)"     },
   };
 
-  function _demLabel(st)  { return _DEM_STATUS_LABEL[st] || st || "Aberta"; }
+  function _demLabel(st)  { return _DEM_STATUS_LABEL[st] || st || "Pendente"; }
   function _pillDem(st) {
     if (window.SIPEN?.status?.pill) return SIPEN.status.pill(st);
     const label = _demLabel(st);
@@ -208,7 +207,7 @@
     const demFin = await _loadDemandasFin();
 
     const ATIVAS  = ["Aberta","Em Análise","Em Andamento","Pendente","Aguardando Pagamento"];
-    const abertas  = demFin.filter(r => r.status === "Aberta");
+    const abertas  = demFin.filter(r => r.status === "Pendente");
     const analise  = demFin.filter(r => r.status === "Em Análise");
     const andando  = demFin.filter(r => r.status === "Em Andamento");
     const pendente = demFin.filter(r => r.status === "Pendente" || r.status === "Aguardando Pagamento");
@@ -229,7 +228,7 @@
 
     const totalGeral = demFin.length || 1;
     const pipeline = [
-      { label:"Aberta",       val:abertas.length,  cor:"var(--blue)"   },
+      { label:"Pendente",      val:abertas.length,  cor:"var(--amber)"  },
       { label:"Em Análise",   val:analise.length,  cor:"var(--gold)"   },
       { label:"Em Andamento", val:andando.length,  cor:"var(--violet)" },
       { label:"Pendente",     val:pendente.length, cor:"var(--amber)"  },
@@ -240,7 +239,7 @@
       <div class="kpis" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;background:var(--bg-card);border:1px solid var(--bd1);border-radius:var(--rl);overflow:hidden;margin-bottom:18px">
         <div class="kpi" style="border-radius:0;border:none;border-right:1px solid var(--bd1)">
           <div class="kpi-ico" style="background:rgba(74,156,245,.12);color:var(--blue)">◻</div>
-          <div class="kpi-body"><div class="kpi-lbl">Abertas</div><div class="kpi-val">${abertas.length}</div><div class="kpi-d nu">aguardando</div></div>
+          <div class="kpi-body"><div class="kpi-lbl">Pendentes</div><div class="kpi-val">${abertas.length}</div><div class="kpi-d nu">aguardando</div></div>
         </div>
         <div class="kpi" style="border-radius:0;border:none;border-right:1px solid var(--bd1)">
           <div class="kpi-ico" style="background:rgba(212,168,67,.12);color:var(--gold)">🔍</div>
@@ -479,7 +478,7 @@
     const totalAb   = emAberto.reduce((s, r) => s + Number(r.valor || 0), 0);
 
     // Normalize financeiro_solicitacoes → same shape as v_demandas rows
-    const _cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : "Aberta";
+    const _cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : "Pendente";
     const solRows = (_SOLICITACOES || []).map(r => ({
       _isSol: true,
       id: r.id,
@@ -523,7 +522,7 @@
           <select id="fin-pagar-fstatus" onchange="finFiltrarPagar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:6px 10px;outline:none">
             <option value="__aberto" ${fstatus==="__aberto"?"selected":""}>Em aberto</option>
             <option value="" ${fstatus===""?"selected":""}>Todos os status</option>
-            <option value="Aberta" ${fstatus==="Aberta"?"selected":""}>Aberta</option>
+            <option value="Pendente" ${fstatus==="Pendente"?"selected":""}>Pendente</option>
             <option value="Em Análise" ${fstatus==="Em Análise"?"selected":""}>Em Análise</option>
             <option value="Em Andamento" ${fstatus==="Em Andamento"?"selected":""}>Em Andamento</option>
             <option value="Aguardando Pagamento" ${fstatus==="Aguardando Pagamento"?"selected":""}>Aguardando Pagamento</option>
@@ -760,7 +759,7 @@
       modal.onclick = ev => { if (ev.target === modal) modal.remove(); };
       document.body.appendChild(modal);
     }
-    const capStatus = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : "Aberta";
+    const capStatus = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : "Pendente";
     const isPago = ["pago","cancelado"].includes((r.status||"").toLowerCase());
     modal.innerHTML = `
       <div style="width:min(520px,96vw);background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:20px">

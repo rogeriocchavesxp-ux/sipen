@@ -612,7 +612,7 @@
 
   /* ── solicitações pendentes (demandas do chamado) ── */
 
-  const _SOL_ATIVAS = ["Aberta","Em Análise","Em Andamento","Pendente","Aguardando Pagamento"];
+  const _SOL_ATIVAS = ["Pendente","Em Análise","Em Andamento","Aguardando Pagamento"];
 
   async function afCarregarSolicitacoes() {
     const el = document.getElementById('af-sol-list');
@@ -643,7 +643,7 @@
           </tr></thead>
           <tbody>${pendentes.map(r => {
             const stCfg = {
-              'Aberta':{'bg':'rgba(74,156,245,.12)','cl':'var(--blue)'},
+              'Pendente':{'bg':'rgba(224,138,42,.12)','cl':'var(--amber)'},
               'Em Análise':{'bg':'rgba(212,168,67,.12)','cl':'var(--gold)'},
               'Em Andamento':{'bg':'rgba(139,111,212,.12)','cl':'var(--violet)'},
               'Pendente':{'bg':'rgba(224,138,42,.12)','cl':'var(--amber)'},
