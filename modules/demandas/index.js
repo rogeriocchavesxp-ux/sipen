@@ -2380,15 +2380,36 @@ function fmtD(d) {
     _demPopularOrgaoSel(sel);
   }
 
+  const _GRUPO_LABEL = {
+    "Departamento": "Departamento",
+    "OUTRO": "Outro",
+    "MUSICA": "Música",
+    "DIACONIA": "Diaconia",
+    "EVANGELISMO": "Evangelismo",
+    "COMUNICACAO": "Comunicação",
+    "INTERCESSAO": "Intercessão",
+    "JOVENS": "Jovens",
+    "INFANTIL": "Infantil",
+    "ACOLHIMENTO": "Acolhimento",
+    "SOCIEDADE": "Sociedades Internas",
+    "Ministério": "Outros Ministérios",
+  };
+  const _GRUPO_ORDER = ["Departamento","MUSICA","DIACONIA","EVANGELISMO","COMUNICACAO","INTERCESSAO","JOVENS","INFANTIL","ACOLHIMENTO","SOCIEDADE","OUTRO","Ministério"];
+
   function _demPopularOrgaoSel(sel) {
     const current = sel.value;
     const grupos = {};
     (_orgaosCache || []).forEach(d => {
       (grupos[d.grupo] = grupos[d.grupo] || []).push(d);
     });
+    const ordemFn = (a, b) => {
+      const ia = _GRUPO_ORDER.indexOf(a);
+      const ib = _GRUPO_ORDER.indexOf(b);
+      return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+    };
     sel.innerHTML = `<option value="">— Selecione o ministério ou departamento —</option>` +
-      Object.entries(grupos).map(([g, items]) =>
-        `<optgroup label="${g}">${items.map(d => `<option value="${d.nome}"${d.nome === current ? " selected" : ""}>${d.nome}</option>`).join("")}</optgroup>`
+      Object.keys(grupos).sort(ordemFn).map(g =>
+        `<optgroup label="${_GRUPO_LABEL[g] || g}">${grupos[g].map(d => `<option value="${d.nome}"${d.nome === current ? " selected" : ""}>${d.nome}</option>`).join("")}</optgroup>`
       ).join("");
     if (current) sel.value = current;
   }
