@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório de Departamentos — IPPenha</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root {
+    --green: #3aaa5c;
+    --green-light: rgba(58,170,92,.1);
+    --text: #1a1d21;
+    --text2: #4a5568;
+    --text3: #718096;
+    --border: #e2e8f0;
+    --bg: #f7f8fa;
+    --card: #ffffff;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--card);
+    border-bottom: 2px solid var(--green);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  }
+  .header-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-logo img { height: 40px; opacity: .85; }
+  .header-title { flex: 1; }
+  .header-title h1 { font-size: 18px; font-weight: 700; color: var(--text); }
+  .header-title p  { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .btn-print {
+    padding: 8px 18px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font);
+  }
+  .btn-print:hover { opacity: .9; }
+
+  /* ── Body ── */
+  .body { max-width: 960px; margin: 0 auto; padding: 32px 24px 64px; }
+
+  /* ── States ── */
+  .state {
+    text-align: center;
+    padding: 80px 24px;
+    color: var(--text3);
+  }
+  .state h2 { font-size: 18px; margin-bottom: 8px; color: var(--text2); }
+  .state p  { font-size: 13px; }
+  .spinner {
+    display: inline-block;
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+    margin-bottom: 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Sumário ── */
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .summary-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+  }
+  .summary-card .val { font-size: 26px; font-weight: 700; color: var(--green); }
+  .summary-card .lbl { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+
+  /* ── Seção por tipo ── */
+  .section-group { margin-bottom: 36px; }
+  .section-group-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--text3);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+    margin-bottom: 14px;
+  }
+
+  /* ── Card de departamento ── */
+  .dept-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .dept-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: var(--green-light);
+    border-bottom: 1px solid rgba(58,170,92,.15);
+  }
+  .dept-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    flex: 1;
+  }
+  .badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .badge-essencial { background: rgba(58,170,92,.12); color: #2d8a4a; border-color: rgba(58,170,92,.3); }
+  .badge-min       { background: rgba(74,156,245,.1);  color: #2b6cb0; border-color: rgba(74,156,245,.3); }
+  .badge-soc       { background: rgba(139,111,212,.1); color: #6b46c1; border-color: rgba(139,111,212,.3); }
+  .badge-outro     { background: rgba(90,96,104,.1);   color: #4a5568; border-color: rgba(90,96,104,.3); }
+  .dept-count {
+    font-size: 12px;
+    color: var(--text3);
+    font-weight: 500;
+  }
+
+  /* ── Liderança ── */
+  .leadership {
+    display: flex;
+    gap: 24px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    background: #fafafa;
+  }
+  .leader-item { display: flex; flex-direction: column; gap: 2px; }
+  .leader-role { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); font-weight: 600; }
+  .leader-name { font-size: 13px; color: var(--text); font-weight: 500; }
+
+  /* ── Tabela de membros ── */
+  .members-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+  .members-table thead tr {
+    background: #f8f9fa;
+  }
+  .members-table th {
+    padding: 8px 12px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text3);
+    border-bottom: 1px solid var(--border);
+  }
+  .members-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: middle;
+  }
+  .members-table tr:last-child td { border-bottom: none; }
+  .members-table tr:hover td { background: #f8f9fa; }
+  .td-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    width: 36px;
+    text-align: center;
+  }
+  .td-tel  { color: var(--text2); }
+  .td-email { color: var(--text2); font-size: 12px; }
+  .td-cargo { color: var(--text3); font-size: 11.5px; font-style: italic; }
+  .empty-members {
+    padding: 16px 20px;
+    color: var(--text3);
+    font-size: 12px;
+    font-style: italic;
+  }
+
+  /* ── Footer ── */
+  .report-footer {
+    text-align: center;
+    padding: 24px;
+    color: var(--text3);
+    font-size: 11px;
+  }
+
+  /* ── Print ── */
+  @media print {
+    .header { position: static; box-shadow: none; }
+    .btn-print { display: none; }
+    .body { padding: 16px 0; }
+    .dept-card { break-inside: avoid; }
+    body { background: white; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">
+    <img src="icons/logo-ippenha.svg" alt="IPPenha">
+    <div class="header-title">
+      <h1>Relatório de Departamentos e Ministérios</h1>
+      <p id="report-subtitle">IPPenha — Igreja Presbiteriana de Penha</p>
+    </div>
+  </div>
+  <button class="btn-print" onclick="window.print()">Imprimir / PDF</button>
+</div>
+
+<div class="body">
+  <div id="root">
+    <div class="state">
+      <div class="spinner"></div>
+      <h2>Carregando relatório...</h2>
+      <p>Buscando dados no servidor.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPA_URL = "https://erhwryfzpycahgsohhbh.supabase.co";
+const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyaHdyeWZ6cHljYWhnc29oaGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg2MTUsImV4cCI6MjA5MTg0NDYxNX0.T0hp90Bmufj6a3oUPq1vYcLiGx9YjyMaZiE38S0e3_8";
+
+const NIVEL_ORDER = { supervisor: 0, conselheiro: 1, coordenador: 2, lider_area: 3, membro: 4 };
+const NIVEL_LABEL = {
+  supervisor: "Supervisor", conselheiro: "Conselheiro",
+  coordenador: "Coordenador", lider_area: "Líder de Área", membro: "Membro"
+};
+const TIPO_ORDER  = { Departamento: 0, MUSICA: 1, DIACONIA: 2, EVANGELISMO: 3,
+  COMUNICACAO: 4, INTERCESSAO: 5, JOVENS: 6, INFANTIL: 7, ACOLHIMENTO: 8,
+  SOCIEDADE: 9, OUTRO: 10 };
+const TIPO_LABEL  = {
+  Departamento: "Departamento", MUSICA: "Música", DIACONIA: "Diaconia",
+  EVANGELISMO: "Evangelismo", COMUNICACAO: "Comunicação", INTERCESSAO: "Intercessão",
+  JOVENS: "Jovens", INFANTIL: "Infantil", ACOLHIMENTO: "Acolhimento",
+  SOCIEDADE: "Sociedades Internas", OUTRO: "Outros"
+};
+
+function esc(s) {
+  if (!s) return "";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function fmtTel(t) {
+  if (!t) return "";
+  const d = String(t).replace(/\D/g,"");
+  if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+  if (d.length === 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  return t;
+}
+function nomeProprio(s) {
+  if (!s) return "";
+  return s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function getToken() {
+  // Supabase JS v2 armazena sessão sob essa chave
+  const key = Object.keys(localStorage).find(k => k.startsWith("sb-") && k.endsWith("-auth-token"));
+  if (!key) return null;
+  try {
+    const data = JSON.parse(localStorage.getItem(key));
+    return data?.access_token || null;
+  } catch { return null; }
+}
+
+function hdrs(token) {
+  return {
+    apikey: ANON_KEY,
+    Authorization: "Bearer " + (token || ANON_KEY),
+    "Content-Type": "application/json",
+  };
+}
+
+async function api(path, token) {
+  const r = await fetch(`${SUPA_URL}/rest/v1/${path}`, { headers: hdrs(token) });
+  if (!r.ok) throw new Error(`HTTP ${r.status}: ${await r.text()}`);
+  return r.json();
+}
+
+function badgeClass(tipo, categoria) {
+  if (categoria === "essencial" || tipo === "Departamento") return "badge-essencial";
+  if (tipo === "SOCIEDADE") return "badge-soc";
+  if (tipo && tipo !== "OUTRO") return "badge-min";
+  return "badge-outro";
+}
+
+function render(ministerios, nomeados) {
+  const root = document.getElementById("root");
+
+  // Agrupar nomeados por ministerio_id
+  const byMin = {};
+  nomeados.forEach(n => {
+    if (!byMin[n.ministerio_id]) byMin[n.ministerio_id] = [];
+    byMin[n.ministerio_id].push(n);
+  });
+
+  // Agrupar ministérios por tipo
+  const byTipo = {};
+  ministerios.forEach(m => {
+    const t = m.tipo || "OUTRO";
+    if (!byTipo[t]) byTipo[t] = [];
+    byTipo[t].push(m);
+  });
+
+  const tiposOrdenados = Object.keys(byTipo).sort(
+    (a, b) => (TIPO_ORDER[a] ?? 99) - (TIPO_ORDER[b] ?? 99)
+  );
+
+  const totalPessoas = nomeados.length;
+  const totalAtivos  = ministerios.filter(m => m.ativo !== false).length;
+
+  // Sumário
+  let html = `
+    <div class="summary">
+      <div class="summary-card">
+        <div class="val">${ministerios.length}</div>
+        <div class="lbl">Departamentos e Ministérios</div>
+      </div>
+      <div class="summary-card">
+        <div class="val">${totalPessoas}</div>
+        <div class="lbl">Total de Pessoas Cadastradas</div>
+      </div>
+      <div class="summary-card">
+        <div class="val">${new Date().toLocaleDateString("pt-BR")}</div>
+        <div class="lbl">Data de geração</div>
+      </div>
+    </div>`;
+
+  // Grupos por tipo
+  tiposOrdenados.forEach(tipo => {
+    const grupo = byTipo[tipo].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+    const tipoLbl = TIPO_LABEL[tipo] || tipo;
+
+    html += `<div class="section-group"><div class="section-group-title">${esc(tipoLbl)}</div>`;
+
+    grupo.forEach(m => {
+      const pessoas = (byMin[m.id] || []).sort(
+        (a, b) => (NIVEL_ORDER[a.nivel] ?? 9) - (NIVEL_ORDER[b.nivel] ?? 9) ||
+                  (a.nome || "").localeCompare(b.nome || "", "pt-BR")
+      );
+
+      const lideres  = pessoas.filter(p => p.nivel !== "membro");
+      const membros  = pessoas.filter(p => p.nivel === "membro");
+      const total    = pessoas.length;
+
+      const badgeTipo = m.categoria === "essencial"
+        ? `<span class="badge badge-essencial">Departamento Essencial</span>`
+        : `<span class="badge ${badgeClass(m.tipo, m.categoria)}">${esc(TIPO_LABEL[m.tipo] || m.tipo || "Ministério")}</span>`;
+
+      // Liderança
+      let lidHtml = "";
+      if (lideres.length) {
+        lidHtml = `<div class="leadership">` +
+          lideres.map(l => {
+            const p = l.pessoas || {};
+            const nome = nomeProprio(p.nome || l.nome || "—");
+            return `<div class="leader-item">
+              <span class="leader-role">${esc(NIVEL_LABEL[l.nivel] || l.nivel)}</span>
+              <span class="leader-name">${esc(nome)}</span>
+            </div>`;
+          }).join("") +
+          `</div>`;
+      }
+
+      // Membros
+      let membHtml = "";
+      if (membros.length) {
+        membHtml = `<table class="members-table">
+          <thead><tr>
+            <th class="td-num">#</th>
+            <th>Nome</th>
+            <th>Telefone</th>
+            <th>E-mail</th>
+            <th>Cargo / Função</th>
+          </tr></thead>
+          <tbody>
+            ${membros.map((mb, i) => {
+              const p = mb.pessoas || {};
+              const nome  = nomeProprio(p.nome  || mb.nome  || "—");
+              const tel   = fmtTel(p.celular || p.telefone || "");
+              const email = p.email || "";
+              const cargo = mb.cargo || "";
+              return `<tr>
+                <td class="td-num">${i + 1}</td>
+                <td>${esc(nome)}</td>
+                <td class="td-tel">${esc(tel) || "—"}</td>
+                <td class="td-email">${esc(email) || "—"}</td>
+                <td class="td-cargo">${esc(cargo) || "—"}</td>
+              </tr>`;
+            }).join("")}
+          </tbody>
+        </table>`;
+      } else {
+        membHtml = `<div class="empty-members">Nenhum membro cadastrado.</div>`;
+      }
+
+      html += `
+        <div class="dept-card">
+          <div class="dept-header">
+            <div class="dept-name">${esc(m.nome)}</div>
+            ${badgeTipo}
+            <span class="dept-count">👥 ${total} pessoa${total !== 1 ? "s" : ""}</span>
+          </div>
+          ${lidHtml}
+          ${membHtml}
+        </div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  html += `<div class="report-footer">
+    Relatório gerado em ${new Date().toLocaleString("pt-BR")} · SIPEN — Sistema Integrado da IPPenha
+  </div>`;
+
+  root.innerHTML = html;
+
+  // Atualizar subtítulo com a contagem
+  document.getElementById("report-subtitle").textContent =
+    `IPPenha · ${ministerios.length} departamentos/ministérios · ${totalPessoas} pessoas · gerado em ${new Date().toLocaleDateString("pt-BR")}`;
+}
+
+function showError(msg, detail) {
+  document.getElementById("root").innerHTML = `
+    <div class="state">
+      <h2>${esc(msg)}</h2>
+      <p>${esc(detail || "")}</p>
+    </div>`;
+}
+
+async function main() {
+  const token = getToken();
+  if (!token) {
+    showError(
+      "Acesso não autenticado",
+      "Abra o SIPEN (www.sipen.com.br) e faça login antes de acessar este relatório."
+    );
+    return;
+  }
+
+  try {
+    const [ministerios, nomeados] = await Promise.all([
+      api(
+        "ministerios?select=id,nome,tipo,categoria,ativo&ativo=eq.true&order=nome.asc",
+        token
+      ),
+      api(
+        "nomeados?status=eq.ativo&deleted_at=is.null" +
+        "&select=ministerio_id,nivel,nome,cargo,pessoas(id,nome,telefone,celular,email)" +
+        "&order=ministerio_id.asc,nivel.asc,nome.asc",
+        token
+      ),
+    ]);
+
+    render(ministerios, nomeados);
+  } catch (e) {
+    showError("Erro ao carregar dados", e.message);
+  }
+}
+
+main();
+</script>
+</body>
+</html>
