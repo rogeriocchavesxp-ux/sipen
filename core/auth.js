@@ -622,6 +622,16 @@ window.areaTogglePreview = function() {
   _areaApplyPreview(currentRoute);
 };
 
+/* ── MOBILE: VOLTAR ─────────────────────────── */
+window.mobileGoBack = function() {
+  const cur = sessionStorage.getItem("sipen_route") || "area-dash";
+  const parent = cur.startsWith("area-")  ? "area-dash"         :
+                 cur.startsWith("agenda-") ? "agenda-calendario" :
+                 cur.startsWith("dem-")    ? "dem-dash"          :
+                 cur.startsWith("fin-")    ? "fin-dash"          : "area-dash";
+  go(parent);
+};
+
 /* ── LOGOUT ──────────────────────────────────── */
 async function doLogout() {
   if (!confirm("Deseja encerrar a sessão?")) return;
@@ -2072,14 +2082,34 @@ document.addEventListener("sipen:navigate", ({ detail: { id } }) => {
   // Tabbar da Área do Membro / Mobile Shell
   const bar = document.getElementById("area-tabbar");
   if (bar) {
-    const isArea = id.startsWith("area-");
-    const _MOBILE_TABS = ["agenda-calendario", "dem-dash", "fin-dash"];
-    const isMobileShell = document.body.classList.contains("modo-mobile") && _MOBILE_TABS.includes(id);
-    bar.classList.toggle("area-tabbar--hidden", !isArea && !isMobileShell);
-    bar.querySelectorAll(".area-tab").forEach(t => {
-      t.classList.toggle("on", t.dataset.route === id);
-    });
-    _areaApplyPreview(isArea || isMobileShell);
+    const isArea    = id.startsWith("area-");
+    const isMobile  = document.body.classList.contains("modo-mobile");
+
+    if (isMobile) {
+      // No mobile shell o tabbar é sempre visível
+      bar.classList.remove("area-tabbar--hidden");
+      // Destaca a tab correspondente ao contexto da rota atual
+      const parentTab = id.startsWith("area-")  ? "area-dash"         :
+                        id.startsWith("agenda-") ? "agenda-calendario" :
+                        id.startsWith("dem-")    ? "dem-dash"          :
+                        id.startsWith("fin-")    ? "fin-dash"          : "area-dash";
+      bar.querySelectorAll(".area-tab").forEach(t => {
+        t.classList.toggle("on", t.dataset.route === parentTab);
+      });
+      // Botão voltar: aparece apenas nas sub-telas (não nas 4 tabs principais)
+      const _MAIN_TABS = ["area-dash", "agenda-calendario", "dem-dash", "fin-dash"];
+      const backBtn = document.getElementById("m-back-btn");
+      if (backBtn) backBtn.style.display = _MAIN_TABS.includes(id) ? "none" : "";
+      _areaApplyPreview(false);
+    } else {
+      const _MOBILE_TABS = ["agenda-calendario", "dem-dash", "fin-dash"];
+      const isMobileShell = false;
+      bar.classList.toggle("area-tabbar--hidden", !isArea && !isMobileShell);
+      bar.querySelectorAll(".area-tab").forEach(t => {
+        t.classList.toggle("on", t.dataset.route === id);
+      });
+      _areaApplyPreview(isArea);
+    }
   }
 });
 

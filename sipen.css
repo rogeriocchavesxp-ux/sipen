@@ -1301,9 +1301,10 @@ body.modo-membro .sb-ham      { display: none }
 #m-header { display: none }
 
 body.modo-mobile #m-header {
-  display: flex;
+  /* Grid 3-col: [←] [SIPEN] [avatar] — logo sempre centrado */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   padding: max(env(safe-area-inset-top, 0px), 10px) 16px 10px;
   background: var(--bg-card, #1e2228);
   border-bottom: 1px solid var(--bd2);
@@ -1320,11 +1321,32 @@ body.modo-mobile .area-gr-actions { display: none }
 body.modo-mobile .hero-lbl { display: none }
 
 /* Mobile header components */
+.m-header-left {
+  display: flex;
+  align-items: center;
+}
+.m-header-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.m-back-btn {
+  background: none;
+  border: none;
+  color: var(--tx1);
+  font-size: 22px;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 10px 4px 0;
+  -webkit-tap-highlight-color: transparent;
+}
 .m-header-logo {
   font-size: 20px;
   font-weight: 800;
   letter-spacing: -.02em;
   color: var(--tx1);
+  text-align: center;
 }
 .m-logo-acc { color: var(--gr) }
 .m-header-avatar {
