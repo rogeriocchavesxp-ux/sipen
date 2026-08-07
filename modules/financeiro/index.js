@@ -470,13 +470,6 @@
     const H  = hoje();
     const S7 = em7dias();
 
-    // KPIs: from financeiro_solicitacoes (vencimento-aware)
-    const allSol    = _SOLICITACOES || [];
-    const emAberto  = allSol.filter(r => !["pago","cancelado"].includes(r.status));
-    const atrasadas = emAberto.filter(r => r.vencimento && r.vencimento < H);
-    const vencBrv   = emAberto.filter(r => r.vencimento && r.vencimento >= H && r.vencimento <= S7);
-    const totalAb   = emAberto.reduce((s, r) => s + Number(r.valor || 0), 0);
-
     // Normalize financeiro_solicitacoes → same shape as v_demandas rows
     const _cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : "Pendente";
     const solRows = (_SOLICITACOES || []).map(r => ({
@@ -487,17 +480,23 @@
       titulo: r.finalidade || r.descricao || "Solicitação financeira",
       solicitante: r.solicitante || null,
       responsavel: r.responsavel || null,
-      financial_data: { valor: r.valor, forma_pagamento: r.forma_pagamento || null },
+      financial_data: { valor: r.valor, forma_pagamento: r.forma_pagamento || null, data_vencimento: r.vencimento || null },
       status: _cap(r.status),
       data_abertura: r.created_at,
       criado_em: r.created_at,
       data_conclusao: r.pago_em || null,
     }));
 
-    // List: merged from v_demandas + financeiro_solicitacoes
-
+    // KPIs: from merged dataset (v_demandas + financeiro_solicitacoes)
     const _FECHADAS = ["Pago", "Concluída", "Cancelada", "Cancelado"];
-    let rows = [...(_DEM_FIN_CACHE || []), ...solRows];
+    const allRows   = [...(_DEM_FIN_CACHE || []), ...solRows];
+    const emAberto  = allRows.filter(r => !_FECHADAS.includes(r.status));
+    const atrasadas = emAberto.filter(r => { const v = r.financial_data?.data_vencimento; return v && v < H; });
+    const vencBrv   = emAberto.filter(r => { const v = r.financial_data?.data_vencimento; return v && v >= H && v <= S7; });
+    const totalAb   = emAberto.reduce((s, r) => s + Number(r.financial_data?.valor || 0), 0);
+
+    // List: merged from v_demandas + financeiro_solicitacoes
+    let rows = [...allRows];
     if (fstatus === "__aberto") rows = rows.filter(r => !_FECHADAS.includes(r.status));
     else if (fstatus) rows = rows.filter(r => r.status === fstatus);
     if (fprio)   rows = rows.filter(r => r.prioridade === fprio);
@@ -513,8 +512,8 @@
     el.innerHTML = `
       <div class="kpis c3" style="margin-bottom:14px">
         <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">!</div><div class="kpi-body"><div class="kpi-lbl">Total em aberto</div><div class="kpi-val">${brl(totalAb)}</div><div class="kpi-d dn">${emAberto.length} solicitações</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">✕</div><div class="kpi-body"><div class="kpi-lbl">Atrasadas</div><div class="kpi-val">${atrasadas.length}</div><div class="kpi-d dn">${brl(atrasadas.reduce((s,r)=>s+Number(r.valor||0),0))}</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:var(--goldbg);color:var(--gold)">⏰</div><div class="kpi-body"><div class="kpi-lbl">Vencendo em 7 dias</div><div class="kpi-val">${vencBrv.length}</div><div class="kpi-d wa">${brl(vencBrv.reduce((s,r)=>s+Number(r.valor||0),0))}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">✕</div><div class="kpi-body"><div class="kpi-lbl">Atrasadas</div><div class="kpi-val">${atrasadas.length}</div><div class="kpi-d dn">${brl(atrasadas.reduce((s,r)=>s+Number(r.financial_data?.valor||0),0))}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:var(--goldbg);color:var(--gold)">⏰</div><div class="kpi-body"><div class="kpi-lbl">Vencendo em 7 dias</div><div class="kpi-val">${vencBrv.length}</div><div class="kpi-d wa">${brl(vencBrv.reduce((s,r)=>s+Number(r.financial_data?.valor||0),0))}</div></div></div>
       </div>
 
       <div class="card">
