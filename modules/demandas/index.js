@@ -1534,11 +1534,11 @@ function fmtD(d) {
 <div class="dem-db" style="display:grid;grid-template-columns:1fr 236px;gap:12px;align-items:start">
 
   <!-- ── ESQUERDA ── -->
-  <div style="display:flex;flex-direction:column;gap:10px">
+  <div class="dem-db-l" style="display:flex;flex-direction:column;gap:10px">
 
     <!-- Propriedades + descrição + alertas -->
     <div class="card" style="padding:14px 16px">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px">
+      <div class="dem-props" style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px">
         ${_prop("Solicitante",
           `${nomePropio(dem.solicitante||dem.solicitante_txt||dem.nome_solicitante_externo)||"—"}${pillOrigem(dem.origem)}${dem.telefone_solicitante?`<br><span style="color:var(--tx3);font-size:11px">📞 ${escapeHtml(dem.telefone_solicitante)}</span>`:""}`)}
         ${_prop("Responsável",

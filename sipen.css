@@ -1438,57 +1438,153 @@ body.modo-mobile .area-greeting { padding: 10px 0 6px; gap: 10px }
 /* Rodapé oculto no mobile */
 body.modo-mobile .sipen-footer { display: none }
 
-/* ── Mobile: Tela de Detalhe de Demanda ─────────────────────────────────
-   Classes adicionadas em _renderDetalhe() via dem-dh / dem-dh-acts /
-   dem-db / dem-db-r / dem-aw. Lógica JS intacta; só layout muda.
-
-   Problemas corrigidos:
-   - Título squished: dividia espaço horizontal com 4 botões de ação
-   - Body 1fr 236px: coluna esquerda ficava ~100px em tela de 375px
-   - Andamentos + WhatsApp lado a lado cortados
-   - Botão ← Voltar redundante (m-header já tem o ←)
-   - Aprovar sem destaque visual como ação primária
+/* ── Mobile: Tela de Detalhe de Demanda — Design Premium ────────────────
+   Inspirado em Linear, GitHub Mobile e Nubank.
+   Classes: dem-dh, dem-dh-meta, dem-dh-acts, dem-aprovar, dem-sec,
+            dem-voltar, dem-db, dem-db-l, dem-db-r, dem-props, dem-aw
 ──────────────────────────────────────────────────────────────────────── */
 
-/* Header: empilha verticalmente — título ocupa largura total */
-body.modo-mobile .dem-dh { flex-direction: column !important; gap: 8px !important }
-body.modo-mobile .dem-dh-meta { width: 100% !important }
+/* View container: padding horizontal uniforme */
+body.modo-mobile #v-dem-detalhe { padding: 0 12px 32px }
 
-/* Ocultar ← Voltar redundante no header de conteúdo */
-body.modo-mobile .dem-voltar { display: none }
+/* ── HERO — card full-bleed, borda inferior como separador ─────────── */
+body.modo-mobile .dem-dh {
+  flex-direction: column !important;
+  gap: 0 !important;
+  margin: 0 -12px 14px !important;
+  padding: 16px 14px 0 !important;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--bd1);
+}
 
-/* Barra de ações: exibe na linha de baixo do título, em linha */
+/* Meta: ícone + título + status em linha */
+body.modo-mobile .dem-dh-meta {
+  width: 100% !important;
+  align-items: flex-start !important;
+  gap: 10px !important;
+  padding-bottom: 12px !important;
+}
+
+/* Título: maior, negrito forte, sem squish */
+body.modo-mobile .dem-dh-meta > div > div:first-child {
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1.25 !important;
+  margin-bottom: 7px !important;
+}
+
+/* Ícone da categoria: um pouco maior no hero */
+body.modo-mobile .dem-dh-meta > div:first-child {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 11px !important;
+  font-size: 20px !important;
+  flex-shrink: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* ── AÇÕES — separadas do hero por borda, empilhadas ──────────────── */
 body.modo-mobile .dem-dh-acts {
   width: 100% !important;
-  flex-shrink: 1 !important;
   flex-wrap: wrap !important;
   gap: 6px !important;
+  padding: 10px 0 12px !important;
+  border-top: 1px solid var(--bd1) !important;
 }
-/* Aprovar: ação primária — largura total, destaque verde */
+
+/* ← Voltar: oculto — m-header tem o botão */
+body.modo-mobile .dem-voltar { display: none }
+
+/* Aprovar: CTA primário — linha inteira, verde, pill */
 body.modo-mobile .dem-aprovar {
   flex: 1 1 100% !important;
   justify-content: center !important;
-  padding: 10px 16px !important;
-  font-size: 13px !important;
+  padding: 11px 18px !important;
+  font-size: 14px !important;
   font-weight: 700 !important;
-  border-radius: 8px !important;
-  background: rgba(58,170,92,.1) !important;
+  border-radius: 10px !important;
+  letter-spacing: -0.01em !important;
+  background: rgba(58,170,92,.13) !important;
+  color: var(--gr) !important;
+  border-color: rgba(58,170,92,.35) !important;
 }
-/* Ações secundárias: menores, discretas */
+
+/* Secundárias: dividem a linha, sem borda pesada, discretas */
 body.modo-mobile .dem-sec {
-  font-size: 11px !important;
-  padding: 5px 10px !important;
-  color: var(--tx3) !important;
+  flex: 1 !important;
+  justify-content: center !important;
+  font-size: 12px !important;
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+  color: var(--tx2) !important;
   border-color: var(--bd1) !important;
 }
+/* Excluir mantém cor rose */
+body.modo-mobile .dem-sec[style*="rose"] {
+  color: var(--rose) !important;
+  border-color: rgba(224,85,85,.25) !important;
+}
 
-/* Body: 2-col (1fr 236px) → 1-col empilhado */
+/* ── BODY: 1-col empilhado ─────────────────────────────────────────── */
 body.modo-mobile .dem-db { grid-template-columns: 1fr !important }
-/* Status panel: aparece abaixo do card de info (ordem natural do grid) */
-body.modo-mobile .dem-db-r { order: 1 }
 
-/* Andamentos + WhatsApp: 2-col → 1-col */
-body.modo-mobile .dem-aw { grid-template-columns: 1fr !important }
+/* Gap reduzido entre cards do body */
+body.modo-mobile .dem-db-l { gap: 8px !important }
+
+/* Status panel: abaixo do card de info */
+body.modo-mobile .dem-db-r { order: 2 }
+
+/* ── PROPRIEDADES: lista vertical com divisores ─────────────────────── */
+body.modo-mobile .dem-props {
+  grid-template-columns: 1fr !important;
+  gap: 0 !important;
+}
+body.modo-mobile .dem-props > div {
+  padding: 9px 0 !important;
+  border-bottom: 1px solid var(--bd1) !important;
+  grid-column: span 1 !important;
+}
+body.modo-mobile .dem-props > div:last-child {
+  border-bottom: none !important;
+  padding-bottom: 4px !important;
+}
+
+/* ── STATUS: botões com altura mínima de toque ─────────────────────── */
+body.modo-mobile .dem-db-r [id^="dem-status-btns"] button {
+  padding: 10px 14px !important;
+  font-size: 12.5px !important;
+  min-height: 42px !important;
+  border-radius: 8px !important;
+}
+
+/* ── ANDAMENTOS + WHATSAPP: 2-col → 1-col ─────────────────────────── */
+body.modo-mobile .dem-aw { grid-template-columns: 1fr !important; margin-top: 8px !important }
+
+/* Textarea de andamento: mais confortável no mobile */
+body.modo-mobile #v-dem-detalhe textarea[id^="dem-and-txt"] {
+  font-size: 13px !important;
+  padding: 10px 12px !important;
+  border-radius: 9px !important;
+  min-height: 64px !important;
+  line-height: 1.5 !important;
+}
+
+/* Botão Registrar andamento */
+body.modo-mobile #v-dem-detalhe [data-and-btn] {
+  padding: 10px 16px !important;
+  border-radius: 9px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+/* Notificar WhatsApp */
+body.modo-mobile #v-dem-detalhe [onclick*="demNotificar"] {
+  padding: 6px 14px !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
 
 /* Botão Trocar Área — oculto para membros comuns, visível para gestores */
 #btn-trocar-area              { display: none }
