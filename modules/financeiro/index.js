@@ -158,7 +158,7 @@
   const _DEM_STATUS_LABEL = {
     "ABERTA": "Pendente", "EM_ANALISE": "Em Análise", "EM_ANDAMENTO": "Em Andamento",
     "AGUARDANDO_PAGAMENTO": "Aguardando Pagamento", "PENDENTE": "Pendente",
-    "CONCLUIDA": "Concluída", "CANCELADA": "Cancelada", "PAGO": "Pago",
+    "CONCLUIDA": "Pago", "CANCELADA": "Cancelada", "PAGO": "Pago",
   };
   const _DEM_STATUS_CFG = {
     "Em Análise":            { bg:"rgba(212,168,67,.12)",  cl:"var(--gold)"   },
@@ -211,7 +211,7 @@
     const analise  = demFin.filter(r => r.status === "Em Análise");
     const andando  = demFin.filter(r => r.status === "Em Andamento");
     const pendente = demFin.filter(r => r.status === "Pendente" || r.status === "Aguardando Pagamento");
-    const concl    = demFin.filter(r => r.status === "Concluída");
+    const concl    = demFin.filter(r => r.status === "Pago");
     const ativas   = demFin.filter(r => ATIVAS.includes(r.status));
 
     const limite7d  = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
@@ -232,7 +232,7 @@
       { label:"Em Análise",   val:analise.length,  cor:"var(--gold)"   },
       { label:"Em Andamento", val:andando.length,  cor:"var(--violet)" },
       { label:"Pendente",     val:pendente.length, cor:"var(--amber)"  },
-      { label:"Concluída",    val:concl.length,    cor:"var(--gr)"     },
+      { label:"Pagas",         val:concl.length,    cor:"var(--gr)"     },
     ];
 
     el.innerHTML = `
@@ -255,7 +255,7 @@
         </div>
         <div class="kpi" style="border-radius:0;border:none">
           <div class="kpi-ico" style="background:rgba(58,170,92,.12);color:var(--gr)">✓</div>
-          <div class="kpi-body"><div class="kpi-lbl">Concluídas</div><div class="kpi-val">${concl.length}</div><div class="kpi-d up">total</div></div>
+          <div class="kpi-body"><div class="kpi-lbl">Pagas</div><div class="kpi-val">${concl.length}</div><div class="kpi-d up">total</div></div>
         </div>
       </div>
 
@@ -528,7 +528,6 @@
             <option value="Aguardando Pagamento" ${fstatus==="Aguardando Pagamento"?"selected":""}>Aguardando Pagamento</option>
             <option value="Pendente" ${fstatus==="Pendente"?"selected":""}>Pendente</option>
             <option value="Pago" ${fstatus==="Pago"?"selected":""}>Pago</option>
-            <option value="Concluída" ${fstatus==="Concluída"?"selected":""}>Concluída</option>
             <option value="Cancelada" ${fstatus==="Cancelada"?"selected":""}>Cancelada</option>
           </select>
           <select id="fin-pagar-fprio" onchange="finFiltrarPagar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:6px 10px;outline:none">

@@ -1652,26 +1652,6 @@ function fmtD(d) {
             </select>
           </div>
           <div style="grid-column:span 3"></div>` : ""}
-          <div style="grid-column:span 12;display:flex;align-items:center;gap:6px" id="dem-encaminhamento-bloco">
-            <span class="dem-fl" style="margin:0;white-space:nowrap">Para</span>
-            <button id="dem-enc-btn-dept" onclick="window._demEncTipo('departamento')"
-              style="padding:3px 10px;border-radius:5px;border:1px solid var(--gr);background:var(--gr);color:#fff;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">Departamento</button>
-            <button id="dem-enc-btn-forn" onclick="window._demEncTipo('fornecedor')"
-              style="padding:3px 10px;border-radius:5px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">Fornecedor</button>
-            <input type="hidden" id="dem-enc-tipo" value="${escapeHtmlAttr(dem.responsavel_tipo||"departamento")}">
-            <input type="hidden" id="dem-enc-forn-id" value="${escapeHtmlAttr(String(dem.fornecedor_id||""))}">
-            <div id="dem-enc-dept-row" style="flex:1;min-width:0">
-              <select id="dem-enc-dept-nome" class="dem-fi" style="margin:0"
-                data-current="${escapeHtmlAttr(dem.responsavel_tipo!=="fornecedor"?(dem.responsavel||dem.responsavel_txt||""):"")}">
-                <option value="">Carregando departamentos…</option>
-              </select>
-            </div>
-            <div id="dem-enc-forn-row" style="flex:1;min-width:0;display:none">
-              <select id="dem-enc-forn-sel" class="dem-fi" style="margin:0">
-                <option value="">Carregando fornecedores…</option>
-              </select>
-            </div>
-          </div>
           <div style="grid-column:span 12">
             <label class="dem-fl">Descrição</label>
             <textarea id="dem-edit-desc" rows="3"
@@ -1789,8 +1769,6 @@ function fmtD(d) {
     _carregarAnexosDemanda(id);
     _carregarWADemanda(id, dem);
     _popularSelectEspacos("dem-edit-local");
-    const tipoAtual = dem.responsavel_tipo || "departamento";
-    window._demEncTipo(tipoAtual);
   }
 
   /* ── Atualizar status ───────────────────────────────── */
@@ -1896,10 +1874,11 @@ function fmtD(d) {
     const venc            = document.getElementById("dem-edit-venc")?.value || null;
     const _isFinEdicao    = _ativo?.area === "Financeiro";
 
-    // Encaminhamento
-    const encTipo   = document.getElementById("dem-enc-tipo")?.value || "departamento";
+    // Encaminhamento (bloco removido do form — não sobrescreve responsavel)
+    const encTipoEl  = document.getElementById("dem-enc-tipo");
+    const encTipo    = encTipoEl?.value || "departamento";
     const encFornSel = document.getElementById("dem-enc-forn-sel");
-    const encFornId = encTipo === "fornecedor" ? (encFornSel?.value || null) : null;
+    const encFornId  = encTipo === "fornecedor" ? (encFornSel?.value || null) : null;
     const encFornNome = encTipo === "fornecedor"
       ? encFornSel?.selectedOptions[0]?.text || ""
       : (document.getElementById("dem-enc-dept-nome")?.value?.trim() || "");
@@ -1923,13 +1902,15 @@ function fmtD(d) {
 
       const payload = {
         titulo,
-        descricao:        desc || "",
+        descricao:    desc || "",
         local,
         local_id,
-        responsavel:      encFornNome || "",
-        responsavel_txt:  encFornNome || "",
-        responsavel_tipo: encTipo,
-        data_conclusao:   venc,
+        data_conclusao: venc,
+        ...(encTipoEl ? {
+          responsavel:      encFornNome || "",
+          responsavel_txt:  encFornNome || "",
+          responsavel_tipo: encTipo,
+        } : {}),
       };
       if (prioEl && _podeEditarPrioridade()) payload.prioridade = prioEl.value;
       const solNome = document.getElementById("dem-edit-sol-nome")?.value?.trim();
@@ -2387,9 +2368,14 @@ function fmtD(d) {
       const url = (typeof SUPABASE_URL !== "undefined" ? SUPABASE_URL : "").replace(/\/$/, "");
       const key = typeof SUPABASE_ANON_KEY !== "undefined" ? SUPABASE_ANON_KEY : "";
       const tok = typeof sipenToken === "function" ? sipenToken() : key;
-      const r = await fetch(`${url}/rest/v1/ministerios?select=id,nome,tipo&order=tipo.asc,nome.asc&limit=300`,
-        { headers: { apikey: key, Authorization: `Bearer ${tok}` } });
-      _orgaosCache = r.ok ? await r.json() : [];
+      const hdrs = { apikey: key, Authorization: `Bearer ${tok}` };
+      const [rMin, rDept] = await Promise.all([
+        fetch(`${url}/rest/v1/ministerios?select=nome,tipo&order=nome.asc&limit=300`, { headers: hdrs }),
+        fetch(`${url}/rest/v1/dept_administrativos?select=nome&order=nome.asc&limit=100`, { headers: hdrs }),
+      ]);
+      const mins  = rMin.ok  ? (await rMin.json()).map(d => ({ nome: d.nome, grupo: d.tipo || "Ministério" })) : [];
+      const depts = rDept.ok ? (await rDept.json()).map(d => ({ nome: d.nome, grupo: "Departamento" })) : [];
+      _orgaosCache = [...depts, ...mins];
     } catch { _orgaosCache = []; }
     _demPopularOrgaoSel(sel);
   }
@@ -2398,8 +2384,7 @@ function fmtD(d) {
     const current = sel.value;
     const grupos = {};
     (_orgaosCache || []).forEach(d => {
-      const g = d.tipo || "Ministério";
-      (grupos[g] = grupos[g] || []).push(d);
+      (grupos[d.grupo] = grupos[d.grupo] || []).push(d);
     });
     sel.innerHTML = `<option value="">— Selecione o ministério ou departamento —</option>` +
       Object.entries(grupos).map(([g, items]) =>
@@ -2778,9 +2763,6 @@ function fmtD(d) {
       _toggleFormaPagamento();
       _demCarregarOrgaos();
     }
-    const orgaoRow = document.getElementById("dem-f-orgao-row");
-    const isGasto  = isFinanceiro && ["Solicitação de pagamento","Reembolso","Adiantamento","Orçamento de despesas","Solicitação de verba","Prestação de contas"].includes(sub);
-    if (orgaoRow) orgaoRow.style.display = isGasto ? "" : "none";
     const localRow = document.getElementById("dem-f-local-row");
     const respRow  = document.getElementById("dem-f-resp-row");
     if (localRow) localRow.style.display = (isPauta || isFinanceiro) ? "none" : "";
