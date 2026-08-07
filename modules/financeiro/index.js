@@ -542,8 +542,8 @@
               <table style="width:100%;border-collapse:collapse;font-size:12px">
                 <thead>
                   <tr style="border-bottom:1px solid var(--bd2)">
-                    ${["Nº Chamado","Subcategoria","Título","Solicitante","Responsável","Valor","Forma Pgto.","Status","Abertura","Conclusão"].map((h,i) =>
-                      `<th style="text-align:${i===5?"right":"left"};padding:8px 6px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`
+                    ${["Nº Chamado","Título","Solicitante","Ministério","Valor","Forma Pgto.","Vencimento","Status"].map((h,i) =>
+                      `<th style="text-align:${i===4?"right":"left"};padding:8px 6px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`
                     ).join("")}
                   </tr>
                 </thead>
@@ -554,15 +554,13 @@
                       onmouseout="this.style.background=''"
                       onclick="${r._isSol ? `finVerSolicitacao('${escapeHtmlAttr(String(r.id))}')` : `demAbrirDetalhe('${escapeHtmlAttr(String(r.id||r._row||""))}','fin-pagar')`}">
                     <td style="padding:8px 6px;font-size:10.5px;font-weight:700;font-family:var(--mono);color:${r._isSol?"var(--tx3)":"var(--blue)"};white-space:nowrap">${r._isSol ? "FS" : escapeHtml(r.numero_chamado||"—")}</td>
-                    <td style="padding:8px 6px;color:var(--tx2);font-size:11px">${escapeHtml(r.subcategoria||"—")}</td>
-                    <td style="padding:8px 6px;color:var(--tx1);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.titulo||"—")}</td>
+                    <td style="padding:8px 6px;color:var(--tx1);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.titulo||"—")}</td>
                     <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${nomePropio(r.solicitante||r.solicitante_txt)||"—"}</td>
-                    <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${nomePropio(r.responsavel||r.responsavel_txt)||"—"}</td>
+                    <td style="padding:8px 6px;color:var(--tx2);font-size:11px;white-space:nowrap">${escapeHtml(r.financial_data?.centro_custo||"—")}</td>
                     <td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--tx1);white-space:nowrap">${r.financial_data?.valor!=null?`R$ ${parseFloat(r.financial_data.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}`:"—"}</td>
                     <td style="padding:8px 6px;color:var(--tx2);font-size:11px;white-space:nowrap">${escapeHtml(r.financial_data?.forma_pagamento||"—")}</td>
+                    <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;font-variant-numeric:tabular-nums">${fmtD(r.financial_data?.data_vencimento)||"—"}</td>
                     <td style="padding:8px 6px">${_pillDem(r.status)}</td>
-                    <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${fmtD(r.data_abertura||r.criado_em)}</td>
-                    <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${fmtD(r.data_conclusao)}</td>
                   </tr>`).join("")}
                 </tbody>
               </table>
