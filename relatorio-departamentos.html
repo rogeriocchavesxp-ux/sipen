@@ -479,7 +479,7 @@ async function main() {
       ),
       api(
         "nomeados?status=eq.ativo&deleted_at=is.null" +
-        "&select=ministerio_id,nivel,nome,cargo,pessoas(id,nome,telefone,celular,email)" +
+        "&select=ministerio_id,nivel,nome,cargo,pessoas!nomeados_pessoa_id_fkey(id,nome,telefone,celular,email)" +
         "&order=ministerio_id.asc,nivel.asc,nome.asc",
         token
       ),
