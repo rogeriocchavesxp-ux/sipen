@@ -1299,6 +1299,10 @@ body.modo-membro .sb-ham      { display: none }
   .sb     { display: none !important }
   .sb-ham { display: none !important }
   .sb-backdrop { display: none !important }
+  /* Ocultar "Área do Membro" do breadcrumb e labels do tabbar */
+  body.modo-membro .c-mod,
+  body.modo-membro .c-sep { display: none }
+  .area-tab-lbl { display: none }
 }
 
 /* Botão Trocar Área — oculto para membros comuns, visível para gestores */
