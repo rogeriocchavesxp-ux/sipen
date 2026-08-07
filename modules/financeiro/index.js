@@ -458,6 +458,11 @@
     const el = document.getElementById("fin-pagar-content");
     if (!el) return;
 
+    // Ler filtros ANTES de destruir o DOM
+    const fstatus = document.getElementById("fin-pagar-fstatus")?.value ?? "__aberto";
+    const fprio   = document.getElementById("fin-pagar-fprio")?.value   || "";
+    const fbusca  = (document.getElementById("fin-pagar-fbusca")?.value || "").toLowerCase();
+
     el.innerHTML = '<div class="empty-state">Carregando...</div>';
     _DEM_FIN_CACHE = null;
     _SOLICITACOES  = null;
@@ -491,9 +496,6 @@
     }));
 
     // List: merged from v_demandas + financeiro_solicitacoes
-    const fstatus = document.getElementById("fin-pagar-fstatus")?.value || "__aberto";
-    const fprio   = document.getElementById("fin-pagar-fprio")?.value   || "";
-    const fbusca  = (document.getElementById("fin-pagar-fbusca")?.value || "").toLowerCase();
 
     const _FECHADAS = ["Pago", "Concluída", "Cancelada", "Cancelado"];
     let rows = [...(_DEM_FIN_CACHE || []), ...solRows];
