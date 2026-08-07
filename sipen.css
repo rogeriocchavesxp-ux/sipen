@@ -1294,6 +1294,53 @@ body.modo-membro .sb          { display: none }
 body.modo-membro .sb-backdrop { display: none }
 body.modo-membro .sb-ham      { display: none }
 
+/* ── Mobile Shell ────────────────────────────────────────────────────────
+   body.modo-mobile: header dedicado, sem topbar desktop, sem sidebar.
+   Não afeta nada em telas ≥ 769px pois _isMobile() só retorna true em ≤ 768px.
+──────────────────────────────────────────────────────────────────────── */
+#m-header { display: none }
+
+body.modo-mobile #m-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(env(safe-area-inset-top, 0px), 10px) 16px 10px;
+  background: var(--bg-card, #1e2228);
+  border-bottom: 1px solid var(--bd2);
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  flex-shrink: 0;
+}
+body.modo-mobile .topbar  { display: none !important }
+body.modo-mobile .band    { display: none }
+body.modo-mobile .page    { padding-bottom: 74px; margin-left: 0 !important }
+body.modo-mobile .bnav    { display: none }
+body.modo-mobile .area-gr-actions { display: none }
+body.modo-mobile .hero-lbl { display: none }
+
+/* Mobile header components */
+.m-header-logo {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  color: var(--tx1);
+}
+.m-logo-acc { color: var(--gr) }
+.m-header-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--grd, var(--gr));
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+}
+
 /* Mobile: sidebar e hamburger nunca aparecem — somente o Painel é acessível */
 @media (max-width: 768px) {
   .sb     { display: none !important }

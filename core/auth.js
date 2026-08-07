@@ -312,6 +312,18 @@ function _isMobile() {
   try { return window.matchMedia("(max-width: 768px)").matches; } catch(_) { return false; }
 }
 
+function _aplicarModoMobile() {
+  document.body.classList.remove("modo-gestor", "modo-congregacao");
+  document.body.classList.add("modo-mobile", "modo-membro");
+  if (USUARIO_ATUAL) {
+    const initials = USUARIO_ATUAL.nome.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
+    const mav = document.getElementById("m-header-avatar");
+    if (mav) mav.textContent = initials;
+  }
+  document.querySelector(".sb")?.classList.remove("sb-open");
+  document.getElementById("sb-backdrop")?.classList.remove("sb-open");
+}
+
 function _isMembroComum() {
   const p = USUARIO_ATUAL?.perfil;
   return p === "MEMBRO_IGREJA" || p === "MEMBRO_MINISTERIO";
@@ -503,6 +515,15 @@ async function entrarNoSistema() {
   if (typeof window.sbMinSocBuild === "function") window.sbMinSocBuild();
   if (typeof window.sbDeptAdmBuild === "function") window.sbDeptAdmBuild();
 
+  // Mobile: todos os usuários vão direto para o shell mobile dedicado
+  if (_isMobile()) {
+    _aplicarModoMobile();
+    _expandirSidebar("area");
+    await go("area-dash");
+    T(`Bem-vindo, ${USUARIO_ATUAL.nome.split(" ")[0]}! 👋`, "IPPenha");
+    return;
+  }
+
   // Usuário de congregação: ambiente totalmente isolado — nunca passa pelo rotaSalva nem pelo dashboard geral
   if (_isCongregacaoUser()) {
     _aplicarModoCongregacao();
@@ -630,6 +651,8 @@ function atualizarSidebarUsuario() {
   if (ur) ur.textContent = `${perfil.icon} ${perfil.nome}`;
   const tbav = document.getElementById("tb-avatar");
   if (tbav) { tbav.textContent = initials; }
+  const mav = document.getElementById("m-header-avatar");
+  if (mav) mav.textContent = initials;
   const ddInfo = document.getElementById("usr-dd-info");
   if (ddInfo) {
     ddInfo.innerHTML = `<div style="font-weight:600;color:var(--tx1);margin-bottom:2px">${USUARIO_ATUAL.nome || "Usuário"}</div><div style="font-size:10.5px">${USUARIO_ATUAL.email || ""}</div>`;
@@ -2046,15 +2069,17 @@ document.addEventListener("sipen:navigate", ({ detail: { id } }) => {
   if (id === "pastoral-historico")    pd_renderHistorico();
   if (id === "pastoral-relatorios")   pd_renderRelatorios();
 
-  // Tabbar da Área do Membro
+  // Tabbar da Área do Membro / Mobile Shell
   const bar = document.getElementById("area-tabbar");
   if (bar) {
     const isArea = id.startsWith("area-");
-    bar.classList.toggle("area-tabbar--hidden", !isArea);
+    const _MOBILE_TABS = ["agenda-calendario", "dem-dash", "fin-dash"];
+    const isMobileShell = document.body.classList.contains("modo-mobile") && _MOBILE_TABS.includes(id);
+    bar.classList.toggle("area-tabbar--hidden", !isArea && !isMobileShell);
     bar.querySelectorAll(".area-tab").forEach(t => {
       t.classList.toggle("on", t.dataset.route === id);
     });
-    _areaApplyPreview(isArea);
+    _areaApplyPreview(isArea || isMobileShell);
   }
 });
 

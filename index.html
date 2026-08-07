@@ -43,11 +43,18 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="sipen.css?v=6.49.23">
+<link rel="stylesheet" href="sipen.css?v=6.49.24">
 </head>
 <body>
 
 <main class="main">
+  <!-- Mobile header — visível apenas em modo-mobile -->
+  <div id="m-header" class="m-header">
+    <div class="m-header-logo">SIP<span class="m-logo-acc">EN</span></div>
+    <div class="m-header-right">
+      <span id="m-header-avatar" class="m-header-avatar" onclick="usrMenuToggle()">?</span>
+    </div>
+  </div>
   <div class="topbar">
     <button class="sb-ham" id="sb-ham" onclick="sbToggle()">&#9776;</button>
     <div class="crumb" id="crumb">
@@ -109,7 +116,7 @@
 <script src="modules/admin/acesso-facial.js?v=6.45.13"></script>
 <script src="modules/admin/espacos.js?v=6.45.13"></script>
 <script src="core/registry.js?v=1.0.1"></script>
-<script src="core/auth.js?v=6.49.23"></script>
+<script src="core/auth.js?v=6.49.24"></script>
 <script src="modules/pastoral/index.js?v=6.47.3"></script>
 <script src="core/init.js?v=6.80.4"></script>
 
