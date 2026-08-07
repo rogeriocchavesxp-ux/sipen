@@ -460,6 +460,7 @@
 
     el.innerHTML = '<div class="empty-state">Carregando...</div>';
     _DEM_FIN_CACHE = null;
+    _SOLICITACOES  = null;
     await Promise.all([_loadSolicitacoes(), _loadDemandasFin()]);
 
     const H  = hoje();
@@ -518,16 +519,16 @@
       <div class="card">
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
           <select id="fin-pagar-fstatus" onchange="finFiltrarPagar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:6px 10px;outline:none">
-            <option value="__aberto">Em aberto</option>
-            <option value="">Todos os status</option>
-            <option value="Aberta">Aberta</option>
-            <option value="Em Análise">Em Análise</option>
-            <option value="Em Andamento">Em Andamento</option>
-            <option value="Aguardando Pagamento">Aguardando Pagamento</option>
-            <option value="Pendente">Pendente</option>
-            <option value="Pago">Pago</option>
-            <option value="Concluída">Concluída</option>
-            <option value="Cancelada">Cancelada</option>
+            <option value="__aberto" ${fstatus==="__aberto"?"selected":""}>Em aberto</option>
+            <option value="" ${fstatus===""?"selected":""}>Todos os status</option>
+            <option value="Aberta" ${fstatus==="Aberta"?"selected":""}>Aberta</option>
+            <option value="Em Análise" ${fstatus==="Em Análise"?"selected":""}>Em Análise</option>
+            <option value="Em Andamento" ${fstatus==="Em Andamento"?"selected":""}>Em Andamento</option>
+            <option value="Aguardando Pagamento" ${fstatus==="Aguardando Pagamento"?"selected":""}>Aguardando Pagamento</option>
+            <option value="Pendente" ${fstatus==="Pendente"?"selected":""}>Pendente</option>
+            <option value="Pago" ${fstatus==="Pago"?"selected":""}>Pago</option>
+            <option value="Concluída" ${fstatus==="Concluída"?"selected":""}>Concluída</option>
+            <option value="Cancelada" ${fstatus==="Cancelada"?"selected":""}>Cancelada</option>
           </select>
           <select id="fin-pagar-fprio" onchange="finFiltrarPagar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:6px 10px;outline:none">
             <option value="">Todas as prioridades</option>
