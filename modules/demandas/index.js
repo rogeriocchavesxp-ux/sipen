@@ -1526,7 +1526,7 @@ function fmtD(d) {
     ${_podeAprovarPagamento() && _toLabel(dem.status) === "Aguardando Pagamento" ? `<button class="tbt" data-dem-reenviar="${escapeHtmlAttr(id)}" style="color:var(--blue);border-color:rgba(37,99,235,.3)" onclick="demReenviarEmail('${escapeHtmlAttr(id)}')">✉ Reenviar</button>` : ""}
     ${dem.area === "Conselho" ? `<button class="tbt" style="color:var(--sky);border-color:rgba(74,156,245,.3)" onclick="pautasIncluirNaPauta('${escapeHtmlAttr(id)}','${escapeHtmlAttr(dem.titulo||"")}')">⚖️ Pauta</button>` : ""}
     <button class="tbt dem-sec" onclick="demDuplicar('${id}')">⧉ Duplicar</button>
-    <button class="tbt dem-sec" style="color:var(--rose);border-color:rgba(224,85,85,.3)" onclick="demExcluirDemanda('${id}')">🗑 Excluir</button>
+    <button class="tbt dem-sec dem-excluir" style="color:var(--rose);border-color:rgba(224,85,85,.3)" onclick="demExcluirDemanda('${id}')">🗑 Excluir</button>
   </div>
 </div>
 

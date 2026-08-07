@@ -1315,7 +1315,7 @@ body.modo-mobile #m-header {
 }
 body.modo-mobile .topbar  { display: none !important }
 body.modo-mobile .band    { display: none }
-body.modo-mobile .page    { padding-bottom: 74px; margin-left: 0 !important }
+body.modo-mobile .page    { padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px)); margin-left: 0 !important }
 body.modo-mobile .bnav    { display: none }
 body.modo-mobile .area-gr-actions { display: none }
 body.modo-mobile .hero-lbl { display: none }
@@ -1338,7 +1338,12 @@ body.modo-mobile .hero-lbl { display: none }
   font-weight: 300;
   line-height: 1;
   cursor: pointer;
-  padding: 4px 10px 4px 0;
+  /* Mínimo iOS HIG: 44×44pt */
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px 0 0;
   -webkit-tap-highlight-color: transparent;
 }
 .m-header-logo {
@@ -1361,6 +1366,13 @@ body.modo-mobile .hero-lbl { display: none }
   justify-content: center;
   cursor: pointer;
   user-select: none;
+  /* Expandir área de toque para 44px sem alterar visual */
+  position: relative;
+}
+.m-header-avatar::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
 }
 
 /* Mobile: sidebar e hamburger nunca aparecem — somente o Painel é acessível */
@@ -1424,7 +1436,7 @@ body.modo-mobile .g2    { grid-template-columns: 1fr !important }
 body.modo-mobile .g2 > * { position: static !important }
 
 /* Hero: compacto — sem descrição, ação e ícone (título + module label bastam) */
-body.modo-mobile .hero     { padding: 10px 0 8px; flex-wrap: wrap; gap: 6px; min-height: unset }
+body.modo-mobile .hero     { padding: 10px 14px 8px; flex-wrap: wrap; gap: 6px; min-height: unset }
 body.modo-mobile .hero-dsc { display: none }
 body.modo-mobile .hero-act { display: none }
 body.modo-mobile .hero-ic  { display: none }
@@ -1433,7 +1445,7 @@ body.modo-mobile .hero-ic  { display: none }
 body.modo-mobile .tbl { font-size: 11.5px }
 
 /* Area greeting: menos espaço vertical */
-body.modo-mobile .area-greeting { padding: 10px 0 6px; gap: 10px }
+body.modo-mobile .area-greeting { padding: 10px 14px 6px; gap: 10px }
 
 /* Rodapé oculto no mobile */
 body.modo-mobile .sipen-footer { display: none }
@@ -1521,7 +1533,7 @@ body.modo-mobile .dem-sec {
   border-color: var(--bd1) !important;
 }
 /* Excluir mantém cor rose */
-body.modo-mobile .dem-sec[style*="rose"] {
+body.modo-mobile .dem-excluir {
   color: var(--rose) !important;
   border-color: rgba(224,85,85,.25) !important;
 }
@@ -1554,7 +1566,7 @@ body.modo-mobile .dem-props > div:last-child {
 body.modo-mobile .dem-db-r [id^="dem-status-btns"] button {
   padding: 10px 14px !important;
   font-size: 12.5px !important;
-  min-height: 42px !important;
+  min-height: 44px !important;
   border-radius: 8px !important;
 }
 
