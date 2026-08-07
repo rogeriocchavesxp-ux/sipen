@@ -1105,7 +1105,7 @@
             <div style="font-size:22px;margin-bottom:6px">✅</div>Nenhuma pendência administrativa.</div>`;
         } else {
           const stCor = { ABERTA:"var(--sky)", EM_ANALISE:"var(--gold)", EM_ANDAMENTO:"var(--violet)", PENDENTE:"var(--amber)" };
-          const stLbl = { ABERTA:"Aberta", EM_ANALISE:"Em Análise", EM_ANDAMENTO:"Em Andamento", PENDENTE:"Pendente" };
+          const stLbl = { ABERTA:"Pendente", EM_ANALISE:"Em Análise", EM_ANDAMENTO:"Em Andamento", PENDENTE:"Pendente" };
           pendEl.innerHTML = dems.map(r => {
             const cor  = stCor[r.status] || "var(--tx3)";
             const lbl  = stLbl[r.status] || r.status || "—";
@@ -1216,7 +1216,7 @@
         } else {
           sv("jur-kpi-dem", dems.length < 5 ? dems.length : dems.length + "+");
           const stCor = { ABERTA:"var(--sky)", EM_ANALISE:"var(--gold)", EM_ANDAMENTO:"var(--violet)", PENDENTE:"var(--amber)" };
-          const stLbl = { ABERTA:"Aberta", EM_ANALISE:"Em Análise", EM_ANDAMENTO:"Em Andamento", PENDENTE:"Pendente" };
+          const stLbl = { ABERTA:"Pendente", EM_ANALISE:"Em Análise", EM_ANDAMENTO:"Em Andamento", PENDENTE:"Pendente" };
           filaEl.innerHTML = dems.map(r => {
             const cor  = stCor[r.status] || "var(--tx3)";
             const lbl  = stLbl[r.status] || r.status || "—";

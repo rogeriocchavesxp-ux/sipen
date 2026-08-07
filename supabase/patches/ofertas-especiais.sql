@@ -172,6 +172,17 @@ ALTER TABLE public.oe_contribuicoes   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.oe_historico       ENABLE ROW LEVEL SECURITY;
 
 -- Autenticados lêem tudo
+DROP POLICY IF EXISTS oe_select         ON public.ofertas_especiais;
+DROP POLICY IF EXISTS oe_insert         ON public.ofertas_especiais;
+DROP POLICY IF EXISTS oe_update         ON public.ofertas_especiais;
+DROP POLICY IF EXISTS oe_contrib_select ON public.oe_contribuicoes;
+DROP POLICY IF EXISTS oe_contrib_insert ON public.oe_contribuicoes;
+DROP POLICY IF EXISTS oe_contrib_update ON public.oe_contribuicoes;
+DROP POLICY IF EXISTS oe_hist_select    ON public.oe_historico;
+DROP POLICY IF EXISTS oe_hist_insert    ON public.oe_historico;
+DROP POLICY IF EXISTS oe_anon_select          ON public.ofertas_especiais;
+DROP POLICY IF EXISTS oe_contrib_anon_insert  ON public.oe_contribuicoes;
+
 CREATE POLICY oe_select          ON public.ofertas_especiais  FOR SELECT TO authenticated USING (true);
 CREATE POLICY oe_insert          ON public.ofertas_especiais  FOR INSERT TO authenticated WITH CHECK (public.is_admin());
 CREATE POLICY oe_update          ON public.ofertas_especiais  FOR UPDATE TO authenticated USING (public.is_admin());

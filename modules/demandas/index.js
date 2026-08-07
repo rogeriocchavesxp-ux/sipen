@@ -3409,13 +3409,13 @@ function fmtD(d) {
       "fin-demandas":          () => _finRender(),
       "conselho-demandas": () => {
         const inp = document.getElementById("conselho-demandas-content-fstatus");
-        if (inp) inp.value = "Aberta";
+        if (inp) inp.value = "Pendente";
         document.querySelectorAll("#cd-st1 .dem-stab").forEach((t, i) => t.classList.toggle("on", i === 0));
         renderLista("conselho-demandas-content");
       },
       "conselho-demandas-cons": () => {
         const inp = document.getElementById("conselho-demandas-cons-content-fstatus");
-        if (inp) inp.value = "Aberta";
+        if (inp) inp.value = "Pendente";
         document.querySelectorAll("#cd-st2 .dem-stab").forEach((t, i) => t.classList.toggle("on", i === 0));
         renderLista("conselho-demandas-cons-content", { area:"Conselho" });
       },
@@ -3826,7 +3826,7 @@ function fmtD(d) {
     const abaLabel = {"Financeiro":"Financeiras","Administrativo":"Secretaria","Infraestrutura e Conservação":"Infraestrutura","":"Todas"}[_finFiltro] ?? (_finFiltro||"Todas");
     const fmtVal   = v => v?.valor!=null ? `R$ ${parseFloat(v.valor).toLocaleString("pt-BR",{minimumFractionDigits:2})}` : "—";
 
-    const ST_COR  = {"Aberta":"#1565c0","Em Análise":"#f57f17","Em Andamento":"#6a1b9a","Concluída":"#2e7d32","Pago":"#2e7d32","Cancelada":"#555","Pendente":"#e65100","Aguardando Pagamento":"#f57f17"};
+    const ST_COR  = {"Em Análise":"#f57f17","Em Andamento":"#6a1b9a","Concluída":"#2e7d32","Pago":"#2e7d32","Cancelada":"#555","Pendente":"#e65100","Aguardando Pagamento":"#f57f17"};
     const PR_COR  = {"Urgente":"#c62828","Alta":"#c62828","Média":"#f57f17","Baixa":"#2e7d32"};
 
     const linhas = rows.map((r, i) => {
@@ -3904,7 +3904,7 @@ ${linhas}
     const mesAtual = hoje.toISOString().slice(0, 7);
     const todayStr = hoje.toISOString().split("T")[0];
 
-    const nAbertas = rows.filter(r => _toLabel(r.status) === "Aberta").length;
+    const nAbertas = rows.filter(r => _toLabel(r.status) === "Pendente").length;
     const nAnd     = rows.filter(r => _toLabel(r.status) === "Em Andamento").length;
     const nPend    = rows.filter(r => ["Pendente","Em Análise"].includes(_toLabel(r.status))).length;
     const nConc    = rows.filter(r => _toLabel(r.status) === "Concluída" && (r.data_conclusao||"").startsWith(mesAtual)).length;
@@ -4003,7 +4003,7 @@ ${linhas}
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap;cursor:pointer" onclick="demAbrirDetalhe('${rid}','infra-man')">${nomePropio(r.responsavel||r.responsavel_txt)||"—"}</td>
                 <td style="padding:4px 6px" onclick="event.stopPropagation()">
                   <select onchange="window.manStatusChange('${rid}',this.value)" style="font-size:11px;padding:3px 6px;border-radius:5px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);cursor:pointer">
-                    ${["Aberta","Em Análise","Em Andamento","Pendente","Concluída","Cancelada"].map(s =>
+                    ${["Pendente","Em Análise","Em Andamento","Concluída","Cancelada"].map(s =>
                       `<option${stLabel===s?" selected":""}>${s}</option>`
                     ).join("")}
                     ${stLabel==="Pago" ? `<option selected>Pago</option>` : ""}

@@ -2,7 +2,7 @@
   'use strict';
 
   const _STATUS_LABEL = {
-    "ABERTA":                "Aberta",
+    "ABERTA":                "Pendente",
     "EM_ANALISE":            "Em Análise",
     "EM_ANDAMENTO":          "Em Andamento",
     "PENDENTE":              "Pendente",
@@ -14,7 +14,7 @@
   };
 
   const _STATUS_DB = {
-    "Aberta":                "ABERTA",
+    "Aberta":                "PENDENTE",
     "Em Análise":            "EM_ANALISE",
     "Em Andamento":          "EM_ANDAMENTO",
     "Pendente":              "PENDENTE",
@@ -28,7 +28,7 @@
   const _STATUS_FECHADO = ["CONCLUIDA", "PAGO", "CANCELADA"];
 
   const _STATUS_CFG = {
-    "Aberta":               { bg:"rgba(74,156,245,.12)",  cl:"var(--sky)" },
+    "Aberta":               { bg:"rgba(212,168,67,.12)",  cl:"var(--amber)" },
     "Em Análise":           { bg:"rgba(212,168,67,.12)",  cl:"var(--amber)" },
     "Em Andamento":         { bg:"rgba(144,112,236,.12)", cl:"var(--purple)" },
     "Pendente":             { bg:"rgba(212,168,67,.12)",  cl:"var(--amber)" },
@@ -42,8 +42,8 @@
   window.SIPEN = window.SIPEN || {};
 
   window.SIPEN.status = {
-    toDb:    function(st) { return _STATUS_DB[st]    || st || "ABERTA"; },
-    toLabel: function(st) { return _STATUS_LABEL[st] || st || "Aberta"; },
+    toDb:    function(st) { return _STATUS_DB[st]    || st || "PENDENTE"; },
+    toLabel: function(st) { return _STATUS_LABEL[st] || st || "Pendente"; },
 
     // aceita tanto valor DB ("CONCLUIDA") quanto label ("Concluída")
     fechado: function(st) {

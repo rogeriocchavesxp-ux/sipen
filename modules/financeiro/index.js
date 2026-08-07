@@ -206,7 +206,7 @@
 
     const demFin = await _loadDemandasFin();
 
-    const ATIVAS  = ["Aberta","Em Análise","Em Andamento","Pendente","Aguardando Pagamento"];
+    const ATIVAS  = ["Pendente","Em Análise","Em Andamento","Aguardando Pagamento"];
     const abertas  = demFin.filter(r => r.status === "Pendente");
     const analise  = demFin.filter(r => r.status === "Em Análise");
     const andando  = demFin.filter(r => r.status === "Em Andamento");

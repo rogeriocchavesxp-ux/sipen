@@ -483,8 +483,8 @@ async function salvarRegistro(tab, recordId = null) {
     }
   }
   if (tab === "DEMANDAS") {
-    const _sn = { "Aberta":"ABERTA","Em Análise":"EM_ANALISE","Em Andamento":"EM_ANDAMENTO","Pendente":"PENDENTE","Concluída":"CONCLUIDA","Cancelada":"CANCELADA" };
-    data.status = data.status ? (_sn[data.status] || data.status) : (!recordId ? "ABERTA" : undefined);
+    const _sn = { "Aberta":"PENDENTE","Em Análise":"EM_ANALISE","Em Andamento":"EM_ANDAMENTO","Pendente":"PENDENTE","Concluída":"CONCLUIDA","Cancelada":"CANCELADA" };
+    data.status = data.status ? (_sn[data.status] || data.status) : (!recordId ? "PENDENTE" : undefined);
     if (data.status === undefined) delete data.status;
     const _pv = ["Baixa","Média","Alta","Urgente"];
     data.prioridade = _pv.includes(data.prioridade) ? data.prioridade : "Média";

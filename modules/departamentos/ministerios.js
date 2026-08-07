@@ -3989,51 +3989,42 @@
     const rect = btn.getBoundingClientRect();
     const menu = document.createElement('div');
     menu.id = '_soc-ctx';
-    menu.style.cssText = 'position:fixed;z-index:9999;background:var(--bg-card,#1e2126);border:1px solid var(--bd2,#3a3f47);border-radius:8px;padding:4px;box-shadow:0 4px 16px rgba(0,0,0,.3);min-width:150px';
+    menu.style.cssText = 'position:fixed;z-index:9999;background:var(--bg-card,#1e2126);border:1px solid var(--bd2,#3a3f47);border-radius:8px;padding:4px;box-shadow:0 4px 16px rgba(0,0,0,.3);min-width:140px';
     const row = _socRows.find(r => r.id === id);
-    menu.innerHTML = `
-      <div style="padding:6px 10px 4px;font-size:11px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">${_hEsc(row?.nome || '')}</div>
-      <div style="height:1px;background:var(--bd2);margin:2px 0"></div>
-      <button id="_soc-ctx-rem" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;cursor:pointer;font-size:12.5px;color:var(--rose);border-radius:5px">Remover</button>`;
+    menu.innerHTML = `<button style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;cursor:pointer;font-size:12.5px;color:var(--rose);border-radius:5px" id="_soc-ctx-rem">Remover ${_hEsc(row?.nome || '')}</button>`;
     document.body.appendChild(menu);
-    menu.style.top  = Math.min(rect.bottom + 4, window.innerHeight - 56) + 'px';
-    menu.style.left = Math.max(rect.right - 154, 8) + 'px';
-    document.getElementById('_soc-ctx-rem').onclick = e => {
+    menu.style.top  = Math.min(rect.bottom + 4, window.innerHeight - 48) + 'px';
+    menu.style.left = Math.max(rect.right - 144, 8) + 'px';
+    document.getElementById('_soc-ctx-rem').addEventListener('click', function(e) {
       e.stopPropagation();
-      menu.innerHTML = `
-        <div style="padding:8px 10px;font-size:12px;color:var(--tx2)">Remover <strong>${_hEsc(row?.nome || '?')}</strong>?</div>
-        <div style="display:flex;gap:4px;padding:0 6px 6px">
-          <button onclick="document.getElementById('_soc-ctx')?.remove()" style="flex:1;padding:6px;border-radius:5px;border:1px solid var(--bd2);background:none;color:var(--tx2);font-size:12px;cursor:pointer">Cancelar</button>
-          <button id="_soc-ctx-conf" style="flex:1;padding:6px;border-radius:5px;border:none;background:var(--rose);color:#fff;font-size:12px;font-weight:600;cursor:pointer">Remover</button>
-        </div>`;
-      document.getElementById('_soc-ctx-conf').onclick = e => { e.stopPropagation(); window._socRemoverNomeado(id, tipo); };
-    };
+      menu.remove();
+      window._socRemoverNomeado(id, tipo);
+    });
     const close = e => { if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('click', close); } };
-    setTimeout(() => document.addEventListener('click', close), 10);
+    setTimeout(() => document.addEventListener('click', close), 50);
   }
   window._socMenuNomeado = _socMenuNomeado;
 
   async function _socRemoverNomeado(id, tipo) {
-    document.getElementById('_soc-ctx')?.remove();
     try {
-      const resp = await fetch(`${SUPABASE_URL}/rest/v1/nomeados?id=eq.${id}&deleted_at=is.null`, {
+      const resp = await fetch(`${SUPABASE_URL}/rest/v1/nomeados?id=eq.${id}`, {
         method: 'PATCH',
         headers: Object.assign({}, _hdr(), {
           'Content-Type': 'application/json',
-          'Prefer': 'return=representation,count=exact',
+          'Prefer': 'return=representation',
         }),
         body: JSON.stringify({ deleted_at: new Date().toISOString(), status: 'inativo' }),
       });
       const body = await resp.text().catch(() => '');
       if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${body}`);
       const updated = JSON.parse(body || '[]');
-      if (!updated.length) throw new Error('Nenhuma linha atualizada — verifique a policy de UPDATE no Supabase (nomeados_upd WITH CHECK true).');
-      _socRows = _socRows.filter(row => row.id !== id);
+      if (!updated.length) throw new Error(`RLS bloqueou o UPDATE. Execute no Supabase:\nDROP POLICY IF EXISTS "nomeados_upd" ON public.nomeados;\nCREATE POLICY "nomeados_upd" ON public.nomeados FOR UPDATE TO authenticated USING (deleted_at IS NULL) WITH CHECK (true);`);
+      _socRows = _socRows.filter(r => r.id !== id);
       if (tipo === 'lider') { _socRenderLideranca(); _socRenderHeader(); }
-      else                    _socRenderMembros();
+      else _socRenderMembros();
       _socRenderVisaoGeral();
     } catch (e) {
-      alert('Erro ao remover: ' + e.message);
+      alert(e.message);
     }
   }
   window._socRemoverNomeado = _socRemoverNomeado;
