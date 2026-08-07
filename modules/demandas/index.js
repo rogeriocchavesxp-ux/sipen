@@ -859,17 +859,23 @@ function fmtD(d) {
           const d = new Date(a.created_at);
           return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" });
         })() : "—";
-        return `<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd1)">
-          <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;background:${a.automatico?"rgba(90,96,104,.2)":"rgba(74,156,245,.15)"};display:flex;align-items:center;justify-content:center;font-size:14px;margin-top:2px">
-            ${a.automatico ? "🔄" : "💬"}
-          </div>
+        if (a.automatico) {
+          return `<div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--bd1)">
+            <div style="flex-shrink:0;width:18px;height:18px;border-radius:50%;background:rgba(90,96,104,.15);display:flex;align-items:center;justify-content:center;font-size:9px">🔄</div>
+            <span style="flex:1;font-size:11px;color:var(--tx3);font-style:italic">${escapeHtml(a.texto)}</span>
+            <span style="font-size:10.5px;color:var(--tx3);white-space:nowrap;flex-shrink:0">${dt}</span>
+          </div>`;
+        }
+        const initials = (a.usuario_nome||"?").split(" ").slice(0,2).map(w=>w[0]||"").join("").toUpperCase();
+        return `<div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd1)">
+          <div style="flex-shrink:0;width:28px;height:28px;border-radius:50%;background:rgba(74,156,245,.15);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--acc,#4a9cf5);margin-top:1px">${initials||"?"}</div>
           <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
-              <span style="font-size:12px;font-weight:600;color:var(--tx1)">${nomePropio(a.usuario_nome) || "Sistema"}</span>
+            <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:2px;flex-wrap:wrap">
+              <span style="font-size:12px;font-weight:600;color:var(--tx1)">${nomePropio(a.usuario_nome)||"Sistema"}</span>
               <span style="font-size:10.5px;color:var(--tx3)">${dt}</span>
               ${a.status_demanda ? pillStatus(a.status_demanda) : ""}
             </div>
-            <div style="font-size:12.5px;color:${a.automatico?"var(--tx3)":"var(--tx1)"};line-height:1.5;font-style:${a.automatico?"italic":"normal"}">${escapeHtml(a.texto)}</div>
+            <div style="font-size:12px;color:var(--tx1);line-height:1.5">${escapeHtml(a.texto)}</div>
           </div>
         </div>`;
       }).join("");
@@ -1460,345 +1466,329 @@ function fmtD(d) {
   function _renderDetalhe(dem) {
     const el = document.getElementById("v-dem-detalhe");
     if (!el) return;
-    const id = dem.id || dem._row;
+    const id    = dem.id || dem._row;
     const origem = _origemView;
     const mostrarAprovarPagamento = _podeMostrarAprovarPagamento(dem);
-    const detailRows = [
-      ["Categoria",     `<span style="color:${catCor(dem.area)};font-weight:600">${catIcon(dem.area)} ${escapeHtml(dem.area)||"—"}</span>`],
-      ["Subcategoria",  escapeHtml(dem.subcategoria)||"—"],
-      dem.local ? ["Localização", escapeHtml(dem.local)] : null,
-      ["Solicitante",   `${nomePropio(dem.solicitante || dem.solicitante_txt || dem.nome_solicitante_externo) || "—"}${pillOrigem(dem.origem)}${dem.telefone_solicitante ? `<br><span style="color:var(--tx3);font-size:11px">📞 ${escapeHtml(dem.telefone_solicitante)}</span>` : ""}`],
-      ["Responsável",   (() => {
-        const nome = nomePropio(dem.responsavel || dem.responsavel_txt) || "—";
-        if (dem.responsavel_tipo === "fornecedor") {
-          return `${escapeHtml(nome)} <span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:8px;background:rgba(42,181,192,.12);color:var(--teal);vertical-align:middle;margin-left:4px">Fornecedor</span>`;
-        }
-        return escapeHtml(nome);
-      })()],
-      ["Abertura",      fmtDT(dem.criado_em) || fmtD(dem.data_abertura)],
-    ].filter(Boolean);
-    if (dem.numero_chamado) {
-      detailRows.unshift(["N° do chamado", `<span style="font-weight:700;color:var(--acc,#4a9cf5);letter-spacing:.04em">${escapeHtml(dem.numero_chamado)}</span>`]);
-    }
-    if (dem.financial_data?.origem_area) {
-      const encEm = dem.financial_data.encaminhado_em ? ` · ${fmtDT(dem.financial_data.encaminhado_em)}` : "";
-      detailRows.push(["Encaminhado de", `<span style="font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:8px;background:rgba(224,138,42,.15);color:var(--amber)">${escapeHtml(dem.financial_data.origem_area)}</span><span style="color:var(--tx3);font-size:11px;margin-left:6px">${encEm}</span>`]);
-    }
-    if (_temFinancialData(dem) && _toLabel(dem.status) === "Aguardando Pagamento") {
-      detailRows.push([
-        "Solicitação Financeira",
-        `<span style="color:var(--amber);font-weight:600">Aguardando pagamento via CNAB / Contas a Pagar</span>
-         <button class="tbt" style="margin-left:8px;padding:3px 8px;font-size:10.5px" onclick="go('fin-pagar')">Abrir Contas a Pagar</button>`
-      ]);
-    }
-    if (_toLabel(dem.status) === "Pagamento Agendado" && dem.financial_data?.agendado_para) {
-      const [ay, am, ad] = dem.financial_data.agendado_para.split("-");
-      detailRows.push(["Agendado para", `<span style="font-weight:600;color:var(--blue)">${ad}/${am}/${ay}</span>`]);
-    }
-
     const _demFd       = (dem.financial_data && typeof dem.financial_data === "object") ? dem.financial_data : {};
     const _isFinSolPag = dem.area === "Financeiro" && dem.subcategoria === "Solicitação de pagamento";
     const _isFinReemb  = dem.area === "Financeiro" && dem.subcategoria === "Reembolso";
+    const finHtml      = _renderFinancialData(dem);
+
+    const _prop = (lbl, val, wide) => `
+      <div style="grid-column:span ${wide ? 2 : 1}">
+        <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">${lbl}</div>
+        <div style="font-size:12.5px;color:var(--tx1);line-height:1.4">${val}</div>
+      </div>`;
+
+    const stList = dem.area === "Financeiro"
+      ? [["Pendente","Pendente"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],
+         ["Aguardando Pagamento","Aguardando Pagamento"],["Pagamento Agendado","Pagamento Agendado"],
+         ["Pago","Pago"],["Cancelada","Cancelada"]]
+      : [["Pendente","Pendente"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],
+         ["Concluída","Concluída"],["Cancelada","Cancelada"]];
+
+    const _stBtn = ([st, label]) => {
+      const isAtivo = dem.status === st;
+      const isAg    = st === "Pagamento Agendado";
+      const oc      = isAg ? `demMostrarPanelAgendamento('${id}')` : `demAtualizarStatus(this.dataset.demid,this.dataset.status)`;
+      return `<button data-demid="${id}" data-status="${st}" onclick="${oc}"
+        style="text-align:left;padding:5px 10px;border-radius:6px;border:1px solid ${isAtivo?"var(--gr)":"var(--bd2)"};background:${isAtivo?"rgba(58,170,92,.1)":"var(--bg-card)"};color:${isAtivo?"var(--gr)":"var(--tx1)"};font-size:11.5px;font-weight:${isAtivo?700:400};cursor:pointer;transition:background .12s;width:100%"
+        onmouseover="this.style.background='${isAtivo?"rgba(58,170,92,.1)":"var(--bg-hover)"}'"
+        onmouseout="this.style.background='${isAtivo?"rgba(58,170,92,.1)":"var(--bg-card)"}'">
+        ${isAtivo?"✓ ":"○ "}${label}
+      </button>`;
+    };
+
     el.innerHTML = `
-      <div class="hero">
-        <div class="hero-ic" style="background:${catCor(dem.area)}18;border-color:${catCor(dem.area)}44;font-size:22px">${catIcon(dem.area)}</div>
-        <div>
-          <div class="hero-lbl">Demanda · ${fmtDT(dem.criado_em) || fmtD(dem.data_abertura)}</div>
-          <div class="hero-ttl">${escapeHtml(dem.titulo) || "Sem título"}</div>
-          <div class="hero-dsc" style="display:flex;gap:8px;align-items:center;margin-top:4px">
-            ${pillStatus(dem.status)}
-            <span style="color:var(--tx3);font-size:11px">${catIcon(dem.area)} ${dem.area||"—"} → ${dem.subcategoria||"—"}</span>
-          </div>
+<style>
+  .dem-fl{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:2px}
+  .dem-fi{width:100%;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box;font-family:var(--ff)}
+  .dem-fi:focus{outline:none;border-color:var(--gr)}
+</style>
+
+<!-- ── HEADER ─────────────────────────────────────────────────── -->
+<div style="display:flex;align-items:flex-start;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--bd1);margin-bottom:14px">
+  <div style="flex-shrink:0;width:36px;height:36px;border-radius:9px;background:${catCor(dem.area)}18;border:1px solid ${catCor(dem.area)}40;display:flex;align-items:center;justify-content:center;font-size:18px;margin-top:2px">${catIcon(dem.area)}</div>
+  <div style="flex:1;min-width:0">
+    <div style="font-size:17px;font-weight:700;color:var(--tx1);line-height:1.3;margin-bottom:5px">${escapeHtml(dem.titulo)||"Sem título"}</div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      ${pillStatus(dem.status)}
+      ${dem.numero_chamado ? `<span style="font-size:11px;font-weight:700;color:var(--acc,#4a9cf5);letter-spacing:.04em">${escapeHtml(dem.numero_chamado)}</span><span style="color:var(--bd2);font-size:11px">·</span>` : ""}
+      <span style="font-size:11px;color:var(--tx3)">${catIcon(dem.area)} ${dem.area||"—"} → ${dem.subcategoria||"—"}</span>
+      ${_demFd.origem_area ? `<span style="font-size:10.5px;font-weight:600;padding:1px 8px;border-radius:8px;background:rgba(224,138,42,.15);color:var(--amber)">⇢ de ${escapeHtml(_demFd.origem_area)}</span>` : ""}
+    </div>
+  </div>
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex-shrink:0">
+    <button class="tbt" onclick="window.go('${origem}')">← Voltar</button>
+    ${mostrarAprovarPagamento ? `<button class="tbt" data-dem-aprovar-pag="${escapeHtmlAttr(id)}" style="color:var(--gr);border-color:rgba(58,170,92,.3)" onclick="demAprovarParaPagamento('${escapeHtmlAttr(id)}')">💰 Aprovar</button>` : ""}
+    ${_podeAprovarPagamento() && _toLabel(dem.status) === "Aguardando Pagamento" ? `<button class="tbt" data-dem-reenviar="${escapeHtmlAttr(id)}" style="color:var(--blue);border-color:rgba(37,99,235,.3)" onclick="demReenviarEmail('${escapeHtmlAttr(id)}')">✉ Reenviar</button>` : ""}
+    ${dem.area === "Conselho" ? `<button class="tbt" style="color:var(--sky);border-color:rgba(74,156,245,.3)" onclick="pautasIncluirNaPauta('${escapeHtmlAttr(id)}','${escapeHtmlAttr(dem.titulo||"")}')">⚖️ Pauta</button>` : ""}
+    <button class="tbt" onclick="demDuplicar('${id}')">⧉ Duplicar</button>
+    <button class="tbt" style="color:var(--rose);border-color:rgba(224,85,85,.3)" onclick="demExcluirDemanda('${id}')">🗑 Excluir</button>
+  </div>
+</div>
+
+<!-- ── BODY: info (esquerda) + status (direita) ──────────────── -->
+<div style="display:grid;grid-template-columns:1fr 236px;gap:12px;align-items:start">
+
+  <!-- ── ESQUERDA ── -->
+  <div style="display:flex;flex-direction:column;gap:10px">
+
+    <!-- Propriedades + descrição + alertas -->
+    <div class="card" style="padding:14px 16px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px">
+        ${_prop("Solicitante",
+          `${nomePropio(dem.solicitante||dem.solicitante_txt||dem.nome_solicitante_externo)||"—"}${pillOrigem(dem.origem)}${dem.telefone_solicitante?`<br><span style="color:var(--tx3);font-size:11px">📞 ${escapeHtml(dem.telefone_solicitante)}</span>`:""}`)}
+        ${_prop("Responsável",
+          (() => {
+            const n = nomePropio(dem.responsavel||dem.responsavel_txt)||"—";
+            return dem.responsavel_tipo==="fornecedor"
+              ? `${escapeHtml(n)} <span style="font-size:10px;font-weight:600;padding:1px 6px;border-radius:8px;background:rgba(42,181,192,.12);color:var(--teal)">Fornecedor</span>`
+              : escapeHtml(n);
+          })())}
+        ${_prop("Abertura", `<span style="color:var(--tx2)">${fmtDT(dem.criado_em)||fmtD(dem.data_abertura)||"—"}</span>`)}
+        ${dem.local ? _prop("Localização", `<span style="color:var(--tx2)">${escapeHtml(dem.local)}</span>`) : ""}
+        ${_demFd.origem_area ? _prop("Encaminhado de",
+          `<span style="font-weight:600;color:var(--amber)">${escapeHtml(_demFd.origem_area)}</span>${_demFd.encaminhado_em?` <span style="color:var(--tx3);font-size:11px">· ${fmtDT(_demFd.encaminhado_em)}</span>`:""}`,
+          true) : ""}
+      </div>
+      ${dem.descricao ? `
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bd1)">
+        <div id="dem-desc-display" style="font-size:12px;color:var(--tx2);line-height:1.65;max-height:60px;overflow:hidden;position:relative">
+          ${escapeHtml(dem.descricao)}
+          <div style="position:absolute;bottom:0;left:0;right:0;height:22px;background:linear-gradient(transparent,var(--bg-card))"></div>
         </div>
-        <div class="hero-act" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <button class="tbt" onclick="window.go('${origem}')">← Voltar</button>
-          ${mostrarAprovarPagamento ? `
-          <button class="tbt" data-dem-aprovar-pag="${escapeHtmlAttr(id)}" style="color:var(--gr);border-color:rgba(58,170,92,.3)" onclick="demAprovarParaPagamento('${escapeHtmlAttr(id)}')">
-            💰 Aprovar para Pagamento
-          </button>` : ""}
-          ${_podeAprovarPagamento() && _toLabel(dem.status) === "Aguardando Pagamento" ? `
-          <button class="tbt" data-dem-reenviar="${escapeHtmlAttr(id)}" style="color:var(--blue,#2563eb);border-color:rgba(37,99,235,.3)" onclick="demReenviarEmail('${escapeHtmlAttr(id)}')">
-            ✉ Reenviar notificação
-          </button>` : ""}
-          ${dem.area === "Conselho" ? `
-          <button class="tbt" style="color:var(--sky);border-color:rgba(74,156,245,.3)"
-            onclick="pautasIncluirNaPauta('${escapeHtmlAttr(id)}','${escapeHtmlAttr(dem.titulo||"")}')">
-            ⚖️ Adicionar à Pauta
-          </button>` : ""}
-          <button class="tbt" onclick="demDuplicar('${id}')">⧉ Duplicar</button>
-          <button class="tbt" style="color:var(--rose);border-color:rgba(224,85,85,.3)" onclick="demExcluirDemanda('${id}')">🗑 Excluir</button>
+        <button onclick="window._demDescExpand(this)" style="font-size:11px;color:var(--blue,#4a9cf5);background:none;border:none;padding:3px 0 0;cursor:pointer;font-family:var(--ff)">Ver mais ▾</button>
+      </div>` : ""}
+      ${_temFinancialData(dem) && _toLabel(dem.status) === "Aguardando Pagamento" ? `
+      <div style="margin-top:10px;padding:8px 12px;border-radius:7px;border:1px solid rgba(224,138,42,.25);background:rgba(224,138,42,.05);display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <span style="font-size:11.5px;color:var(--amber);font-weight:600">Aguardando pagamento — Contas a Pagar</span>
+        <button class="tbt" style="padding:3px 10px;font-size:10.5px;flex-shrink:0" onclick="go('fin-pagar')">Abrir ↗</button>
+      </div>` : ""}
+      ${_toLabel(dem.status) === "Pagamento Agendado" && _demFd.agendado_para ? (() => {
+        const [ay,am,ad] = _demFd.agendado_para.split("-");
+        return `<div style="margin-top:10px;padding:7px 12px;border-radius:7px;background:rgba(74,156,245,.07);border:1px solid rgba(74,156,245,.2);font-size:11.5px;color:var(--blue)">Pagamento agendado para <strong>${ad}/${am}/${ay}</strong></div>`;
+      })() : ""}
+    </div>
+
+    ${finHtml}
+
+    <!-- Edição colapsável -->
+    ${dem.area === "Financeiro" ? `<input type="hidden" id="dem-edit-local" value=""><input type="hidden" id="dem-edit-venc" value="">` : ""}
+    ${!_isFinSolPag && dem.area === "Financeiro" ? `<input type="hidden" id="dem-edit-data-venc" value="">` : ""}
+    <div class="card" style="padding:0;overflow:hidden">
+      <button onclick="window._demToggleEdit(this,'${escapeHtmlAttr(String(id))}')"
+        style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:none;border:none;cursor:pointer;font-family:var(--ff);color:var(--tx2);font-size:12px;font-weight:600;gap:8px">
+        <span>✏ Editar demanda</span>
+        <span id="dem-edit-chev-${id}" style="font-size:10px;color:var(--tx3)">▶</span>
+      </button>
+      <div id="dem-edit-panel-${id}" style="display:none;padding:14px 16px;border-top:1px solid var(--bd1)">
+        <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px 8px">
+          <div style="grid-column:span 8">
+            <label class="dem-fl">Título *</label>
+            <input id="dem-edit-titulo" type="text" value="${escapeHtmlAttr(dem.titulo||"")}" class="dem-fi">
+          </div>
+          <div style="grid-column:span 4;position:relative">
+            <label class="dem-fl">Solicitante</label>
+            <input id="dem-edit-sol-nome" type="text" value="${escapeHtmlAttr(dem.solicitante||dem.solicitante_txt||"")}"
+              placeholder="Buscar por nome..." autocomplete="off" class="dem-fi"
+              oninput="document.getElementById('dem-edit-sol-id').value='';window._demSolBuscar(this.value)"
+              onblur="setTimeout(()=>window._demSolFecharDd(),200)">
+            <input id="dem-edit-sol-id" type="hidden" value="${escapeHtmlAttr(String(dem.solicitante_id||""))}">
+            <div id="dem-edit-sol-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-card);border:1px solid var(--bd2);border-radius:0 0 6px 6px;z-index:100;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
+          </div>
+          ${dem.area !== "Financeiro" ? `
+          <div style="grid-column:span 12">
+            <label class="dem-fl">Localização / Sala</label>
+            <select id="dem-edit-local" data-valor-atual="${dem.local_id||dem.local||""}" class="dem-fi">
+              <option value="">Carregando espaços…</option>
+            </select>
+          </div>
+          <input type="hidden" id="dem-edit-venc" value="">` : ""}
+          ${_isFinSolPag ? `
+          <div style="grid-column:span 2">
+            <label class="dem-fl">Tipo</label>
+            <select id="dem-edit-tipo" class="dem-fi">
+              ${["Pagamento","Reembolso","Adiantamento"].map(t=>`<option${t===(_demFd.tipo||"Pagamento")?" selected":""}>${t}</option>`).join("")}
+            </select>
+          </div>
+          <div style="grid-column:span 2">
+            <label class="dem-fl">Valor (R$)</label>
+            <input id="dem-edit-valor" type="text" inputmode="numeric" class="dem-fi"
+              value="${_demFd.valor?parseFloat(_demFd.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}):""}"
+              placeholder="0,00" oninput="window._demMascaraValor(this)">
+          </div>
+          <div style="grid-column:span 2">
+            <label class="dem-fl">Vencimento</label>
+            <input id="dem-edit-data-venc" type="date" value="${_demFd.data_vencimento||""}" class="dem-fi">
+          </div>
+          <div style="grid-column:span 3">
+            <label class="dem-fl">Forma de Pagamento</label>
+            <select id="dem-edit-forma-pgto" class="dem-fi">
+              <option value="">Selecione</option>
+              ${["PIX","Boleto","Cartão de Crédito","Cartão de Débito","Dinheiro","Transferência Bancária","Débito em Conta","Cheque","Reembolso","Outro"].map(f=>`<option${f===(_demFd.forma_pagamento||"")?" selected":""}>${f}</option>`).join("")}
+            </select>
+          </div>
+          <div style="grid-column:span 3">
+            <label class="dem-fl">Beneficiário</label>
+            <input id="dem-edit-beneficiario" type="text" value="${escapeHtmlAttr(_demFd.beneficiario||"")}" placeholder="Nome completo" class="dem-fi">
+          </div>` : ""}
+          ${!_isFinSolPag && dem.area === "Financeiro" ? `
+          <div style="grid-column:span 4">
+            <label class="dem-fl">Reembolsado</label>
+            <input id="dem-edit-reimb-nome" type="text" value="${escapeHtmlAttr(_demFd.reimb_nome||"")}" placeholder="Nome de quem será reembolsado" class="dem-fi">
+          </div>
+          <div style="grid-column:span 2">
+            <label class="dem-fl">Valor (R$)</label>
+            <input id="dem-edit-valor" type="text" inputmode="numeric" class="dem-fi"
+              value="${_demFd.valor?parseFloat(_demFd.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}):""}"
+              placeholder="0,00" oninput="window._demMascaraValor(this)">
+          </div>
+          <div style="grid-column:span 3">
+            <label class="dem-fl">Forma de Pagamento</label>
+            <select id="dem-edit-forma-pgto" class="dem-fi">
+              <option value="">Selecione</option>
+              ${["PIX","Boleto","Cartão de Crédito","Cartão de Débito","Dinheiro","Transferência Bancária","Débito em Conta","Cheque","Reembolso","Outro"].map(f=>`<option${f===(_demFd.forma_pagamento||"")?" selected":""}>${f}</option>`).join("")}
+            </select>
+          </div>
+          <div style="grid-column:span 3"></div>` : ""}
+          <div style="grid-column:span 12;display:flex;align-items:center;gap:6px" id="dem-encaminhamento-bloco">
+            <span class="dem-fl" style="margin:0;white-space:nowrap">Para</span>
+            <button id="dem-enc-btn-dept" onclick="window._demEncTipo('departamento')"
+              style="padding:3px 10px;border-radius:5px;border:1px solid var(--gr);background:var(--gr);color:#fff;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">Departamento</button>
+            <button id="dem-enc-btn-forn" onclick="window._demEncTipo('fornecedor')"
+              style="padding:3px 10px;border-radius:5px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">Fornecedor</button>
+            <input type="hidden" id="dem-enc-tipo" value="${escapeHtmlAttr(dem.responsavel_tipo||"departamento")}">
+            <input type="hidden" id="dem-enc-forn-id" value="${escapeHtmlAttr(String(dem.fornecedor_id||""))}">
+            <div id="dem-enc-dept-row" style="flex:1;min-width:0">
+              <select id="dem-enc-dept-nome" class="dem-fi" style="margin:0"
+                data-current="${escapeHtmlAttr(dem.responsavel_tipo!=="fornecedor"?(dem.responsavel||dem.responsavel_txt||""):"")}">
+                <option value="">Carregando departamentos…</option>
+              </select>
+            </div>
+            <div id="dem-enc-forn-row" style="flex:1;min-width:0;display:none">
+              <select id="dem-enc-forn-sel" class="dem-fi" style="margin:0">
+                <option value="">Carregando fornecedores…</option>
+              </select>
+            </div>
+          </div>
+          <div style="grid-column:span 12">
+            <label class="dem-fl">Descrição</label>
+            <textarea id="dem-edit-desc" rows="3"
+              style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;resize:vertical;max-height:80px;box-sizing:border-box;font-family:var(--ff);overflow-y:auto;line-height:1.5">${escapeHtml(dem.descricao||"")}</textarea>
+          </div>
+          ${dem.area === "Financeiro" ? `
+          <div style="grid-column:span 12;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--tx2);white-space:nowrap;flex-shrink:0">
+              <input type="checkbox" id="dem-edit-rec" onchange="window._demRecToggle(this.checked)"
+                ${_demFd.recorrencia?.ativa?"checked":""} style="width:13px;height:13px;cursor:pointer;accent-color:var(--gr)">
+              Recorrente
+            </label>
+            <div id="dem-edit-rec-opts" style="display:${_demFd.recorrencia?.ativa?"flex":"none"};gap:6px;align-items:flex-end;flex-wrap:wrap">
+              <div style="width:120px">
+                <label class="dem-fl">Freq.</label>
+                <select id="dem-edit-rec-freq" class="dem-fi">
+                  ${["Semanal","Quinzenal","Mensal","Bimestral","Trimestral"].map(f=>`<option${f===(_demFd.recorrencia?.freq||"Mensal")?" selected":""}>${f}</option>`).join("")}
+                </select>
+              </div>
+              <div style="width:140px">
+                <label class="dem-fl">Válido até</label>
+                <input id="dem-edit-rec-limite" type="date" value="${_demFd.recorrencia?.limite||""}" class="dem-fi">
+              </div>
+              ${_demFd.recorrencia?.geradas?`<span style="font-size:11px;color:var(--tx3);align-self:center">${_demFd.recorrencia.geradas} ocorrências geradas</span>`:""}
+            </div>
+          </div>` : ""}
+        </div>
+        <div style="margin-top:12px;display:flex;justify-content:flex-end">
+          <button onclick="demSalvarEdicao('${id}')" style="padding:6px 18px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer">Salvar alterações</button>
         </div>
       </div>
-      <div class="ct">
-        <div class="g2" style="align-items:start">
-          <div class="card">
-            <div class="ctit">Detalhes</div>
-            <table style="width:100%;font-size:11.5px;border-collapse:collapse">
-              ${detailRows.map(([lbl, val], i) => `
-                <tr style="${i>0?"border-top:1px solid var(--bd1)":""}">
-                  <td style="color:var(--tx3);padding:7px 0;width:40%">${lbl}</td>
-                  <td style="color:var(--tx1)">${val}</td>
-                </tr>`).join("")}
-            </table>
-            ${dem.descricao ? `
-              <div class="ctit" style="margin-top:14px">Descrição</div>
-              <div id="dem-desc-display" style="font-size:12px;color:var(--tx1);line-height:1.7;margin-top:6px;max-height:96px;overflow:hidden;position:relative">
-                ${escapeHtml(dem.descricao)}
-                <div style="position:absolute;bottom:0;left:0;right:0;height:28px;background:linear-gradient(transparent,var(--bg-card))"></div>
-              </div>
-              <button onclick="window._demDescExpand(this)" style="font-size:11px;color:var(--blue,#4a9cf5);background:none;border:none;padding:4px 0 0;cursor:pointer;font-family:var(--ff)">Ver mais ▾</button>` : ""}
-          </div>
-          <div class="card">
-            <div class="ctit">Alterar Status</div>
-            <div style="font-size:11px;color:var(--tx3);margin-bottom:10px">Status atual: ${pillStatus(dem.status)}</div>
-            ${dem.agenda_ref_id ? `
-            <div style="padding:12px 14px;border-radius:8px;border:1px solid rgba(74,156,245,.25);background:rgba(74,156,245,.06);font-size:11.5px;color:var(--tx2);line-height:1.6">
-              Este é um agendamento vinculado à Agenda.<br>
-              <strong style="color:var(--tx1)">O status é gerenciado exclusivamente por Gestão de Agenda → Aprovações Pendentes.</strong>
-            </div>` : `
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="dem-status-btns-${id}">
-              ${(dem.area === "Financeiro"
-                  ? [["Pendente","Pendente"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],["Aguardando Pagamento","Aguardando Pagamento"],["Pagamento Agendado","Pagamento Agendado"],["Pago","Pago"],["Cancelada","Cancelada"]]
-                  : [["Pendente","Pendente"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],["Concluída","Concluída"],["Cancelada","Cancelada"]]
-                ).map(([st, label]) => {
-                  const isAtivo = dem.status === st;
-                  const isAgendamento = st === "Pagamento Agendado";
-                  const onclick = isAgendamento
-                    ? `demMostrarPanelAgendamento('${id}')`
-                    : `demAtualizarStatus(this.dataset.demid, this.dataset.status)`;
-                  return `<button
-                    data-demid="${id}"
-                    data-status="${st}"
-                    onclick="${onclick}"
-                    style="text-align:left;padding:7px 12px;border-radius:6px;border:1px solid ${isAtivo?"var(--gr)":"var(--bd2)"};background:${isAtivo?"rgba(58,170,92,.1)":"var(--bg-card)"};color:${isAtivo?"var(--gr)":"var(--tx1)"};font-size:11.5px;font-weight:${isAtivo?"700":"400"};cursor:pointer;transition:all .15s"
-                    onmouseover="this.style.background='${isAtivo?"rgba(58,170,92,.1)":"var(--bg-hover)"}'"
-                    onmouseout="this.style.background='${isAtivo?"rgba(58,170,92,.1)":"var(--bg-card)"}'">
-                    ${isAtivo?"✓ ":"○ "} ${label}
-                  </button>`;
-                }).join("")}
-              ${dem.area !== "Financeiro" ? `
-              <button onclick="demEncaminharFinanceiro('${escapeHtmlAttr(id)}')"
-                style="text-align:left;padding:7px 12px;border-radius:6px;border:1px solid rgba(224,138,42,.4);background:rgba(224,138,42,.07);color:var(--amber);font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s"
-                onmouseover="this.style.background='rgba(224,138,42,.14)'"
-                onmouseout="this.style.background='rgba(224,138,42,.07)'">
-                ⇢ Financeiro
-              </button>` : ""}
-              <div id="dem-agendamento-panel-${id}" style="display:none;grid-column:span 2;padding:10px 12px;border-radius:8px;border:1px solid rgba(74,156,245,.25);background:rgba(74,156,245,.06);margin-top:2px">
-                <div style="font-size:10.5px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Agendado para</div>
-                <div style="display:flex;align-items:center;gap:8px">
-                  <input type="date" id="dem-agendamento-data-${id}" class="dem-fi" style="flex:1;margin:0">
-                  <button onclick="demConfirmarAgendamento('${id}')" style="padding:7px 14px;border-radius:6px;border:none;background:var(--blue,#4a9cf5);color:#fff;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">Confirmar</button>
-                </div>
-              </div>
-              <button onclick="demEncAbrir('${id}')" id="dem-enc-abrir-${id}"
-                style="grid-column:span 2;text-align:left;padding:7px 12px;border-radius:6px;
-                       border:1px solid var(--violet);background:rgba(139,111,212,.07);color:var(--violet);
-                       font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s">
-                → Encaminhar para Departamento / Fornecedor
-              </button>
-            </div>
-            <div id="dem-enc-s-panel-${id}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd1)">
-              <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Encaminhar para</div>
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
-                <button id="dem-enc-s-btn-dept-${id}" onclick="window._demEncSTipo('departamento','${id}')"
-                  style="padding:3px 10px;border-radius:5px;border:1px solid var(--gr);background:var(--gr);color:#fff;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">Departamento</button>
-                <button id="dem-enc-s-btn-forn-${id}" onclick="window._demEncSTipo('fornecedor','${id}')"
-                  style="padding:3px 10px;border-radius:5px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">Fornecedor</button>
-                <input type="hidden" id="dem-enc-s-tipo-${id}" value="departamento">
-                <input type="hidden" id="dem-enc-s-forn-id-${id}" value="${escapeHtmlAttr(String(dem.fornecedor_id || ''))}">
-              </div>
-              <div style="display:flex;align-items:center;gap:8px">
-                <div id="dem-enc-s-dept-row-${id}" style="flex:1;min-width:0">
-                  <select id="dem-enc-s-dept-${id}" class="dem-fi" style="margin:0;width:100%">
-                    <option value="">Carregando...</option>
-                  </select>
-                </div>
-                <div id="dem-enc-s-forn-row-${id}" style="flex:1;min-width:0;display:none">
-                  <select id="dem-enc-s-forn-${id}" class="dem-fi" style="margin:0;width:100%">
-                    <option value="">Carregando...</option>
-                  </select>
-                </div>
-                <button onclick="demSalvarEncaminhamento('${id}')"
-                  style="padding:7px 16px;border-radius:6px;border:none;background:var(--violet);color:#fff;
-                         font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">
-                  Confirmar
-                </button>
-              </div>
-            </div>`}
-          </div>
+    </div>
+
+  </div><!-- /esquerda -->
+
+  <!-- ── DIREITA: status ── -->
+  <div class="card" style="padding:14px 16px">
+    <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px">Status atual: ${pillStatus(dem.status)}</div>
+    ${dem.agenda_ref_id ? `
+    <div style="padding:10px 12px;border-radius:7px;border:1px solid rgba(74,156,245,.25);background:rgba(74,156,245,.06);font-size:11px;color:var(--tx2);line-height:1.6">
+      Status gerenciado pela Agenda.<br><strong style="color:var(--tx1)">Ver Aprovações Pendentes.</strong>
+    </div>` : `
+    <div style="display:flex;flex-direction:column;gap:4px" id="dem-status-btns-${id}">
+      ${stList.map(_stBtn).join("")}
+      ${dem.area !== "Financeiro" ? `
+      <button onclick="demEncaminharFinanceiro('${escapeHtmlAttr(id)}')"
+        style="text-align:left;padding:5px 10px;border-radius:6px;border:1px solid rgba(224,138,42,.4);background:rgba(224,138,42,.07);color:var(--amber);font-size:11.5px;font-weight:600;cursor:pointer;width:100%;margin-top:2px"
+        onmouseover="this.style.background='rgba(224,138,42,.14)'"
+        onmouseout="this.style.background='rgba(224,138,42,.07)'">⇢ Financeiro</button>` : ""}
+      <div id="dem-agendamento-panel-${id}" style="display:none;padding:9px 10px;border-radius:7px;border:1px solid rgba(74,156,245,.25);background:rgba(74,156,245,.06);margin-top:4px">
+        <div style="font-size:10px;color:var(--tx3);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Data do pagamento</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="date" id="dem-agendamento-data-${id}" class="dem-fi" style="flex:1;margin:0;padding:4px 8px">
+          <button onclick="demConfirmarAgendamento('${id}')" style="padding:4px 10px;border-radius:6px;border:none;background:var(--blue,#4a9cf5);color:#fff;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">OK</button>
         </div>
-        ${_renderFinancialData(dem)}
-        <div class="card" style="margin-top:0">
-          <style>
-            .dem-fl{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:2px}
-            .dem-fi{width:100%;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;box-sizing:border-box;font-family:var(--ff)}
-            .dem-fi:focus{outline:none;border-color:var(--gr)}
-          </style>
-          ${dem.area === "Financeiro" ? `<input type="hidden" id="dem-edit-local" value=""><input type="hidden" id="dem-edit-venc" value="">` : ""}
-          ${(!_isFinSolPag && dem.area === "Financeiro") ? `<input type="hidden" id="dem-edit-data-venc" value="">` : ""}
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <span style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em">Editar</span>
-            <button onclick="demSalvarEdicao('${id}')" style="padding:4px 14px;border-radius:6px;border:none;background:var(--gr);color:#fff;font-size:12px;font-weight:600;cursor:pointer">Salvar alterações</button>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px 8px">
-
-            <div style="grid-column:span 8">
-              <label class="dem-fl">Título *</label>
-              <input id="dem-edit-titulo" type="text" value="${escapeHtmlAttr(dem.titulo || '')}" class="dem-fi">
-            </div>
-            <div style="grid-column:span 4;position:relative">
-              <label class="dem-fl">Solicitante</label>
-              <input id="dem-edit-sol-nome" type="text" value="${escapeHtmlAttr(dem.solicitante||dem.solicitante_txt||"")}"
-                placeholder="Buscar por nome..." autocomplete="off" class="dem-fi"
-                oninput="document.getElementById('dem-edit-sol-id').value='';window._demSolBuscar(this.value)"
-                onblur="setTimeout(()=>window._demSolFecharDd(),200)">
-              <input id="dem-edit-sol-id" type="hidden" value="${escapeHtmlAttr(String(dem.solicitante_id||""))}">
-              <div id="dem-edit-sol-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-card);border:1px solid var(--bd2);border-radius:0 0 6px 6px;z-index:100;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
-            </div>
-
-            ${dem.area !== "Financeiro" ? `
-            <div style="grid-column:span 12">
-              <label class="dem-fl">Localização / Sala</label>
-              <select id="dem-edit-local" data-valor-atual="${dem.local_id || dem.local || ''}" class="dem-fi">
-                <option value="">Carregando espaços…</option>
-              </select>
-            </div>
-            <input type="hidden" id="dem-edit-venc" value="">` : ""}
-
-            ${_isFinSolPag ? `
-            <div style="grid-column:span 2">
-              <label class="dem-fl">Tipo</label>
-              <select id="dem-edit-tipo" class="dem-fi">
-                ${["Pagamento","Reembolso","Adiantamento"].map(t => `<option${t===(_demFd.tipo||"Pagamento")?" selected":""}>${t}</option>`).join("")}
-              </select>
-            </div>
-            <div style="grid-column:span 2">
-              <label class="dem-fl">Valor (R$)</label>
-              <input id="dem-edit-valor" type="text" inputmode="numeric" class="dem-fi"
-                value="${_demFd.valor ? parseFloat(_demFd.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}) : ""}"
-                placeholder="0,00" oninput="window._demMascaraValor(this)">
-            </div>
-            <div style="grid-column:span 2">
-              <label class="dem-fl">Vencimento</label>
-              <input id="dem-edit-data-venc" type="date" value="${_demFd.data_vencimento||""}" class="dem-fi">
-            </div>
-            <div style="grid-column:span 3">
-              <label class="dem-fl">Forma de Pagamento</label>
-              <select id="dem-edit-forma-pgto" class="dem-fi">
-                <option value="">Selecione</option>
-                ${["PIX","Boleto","Cartão de Crédito","Cartão de Débito","Dinheiro","Transferência Bancária","Débito em Conta","Cheque","Reembolso","Outro"].map(f => `<option${f===(_demFd.forma_pagamento||"")?" selected":""}>${f}</option>`).join("")}
-              </select>
-            </div>
-            <div style="grid-column:span 3">
-              <label class="dem-fl">Beneficiário</label>
-              <input id="dem-edit-beneficiario" type="text" value="${escapeHtmlAttr(_demFd.beneficiario||"")}" placeholder="Nome completo" class="dem-fi">
-            </div>` : ""}
-
-            ${(!_isFinSolPag && dem.area === "Financeiro") ? `
-            <div style="grid-column:span 4">
-              <label class="dem-fl">Reembolsado</label>
-              <input id="dem-edit-reimb-nome" type="text" value="${escapeHtmlAttr(_demFd.reimb_nome||"")}" placeholder="Nome de quem será reembolsado" class="dem-fi">
-            </div>
-            <div style="grid-column:span 2">
-              <label class="dem-fl">Valor (R$)</label>
-              <input id="dem-edit-valor" type="text" inputmode="numeric" class="dem-fi"
-                value="${_demFd.valor ? parseFloat(_demFd.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}) : ""}"
-                placeholder="0,00" oninput="window._demMascaraValor(this)">
-            </div>
-            <div style="grid-column:span 3">
-              <label class="dem-fl">Forma de Pagamento</label>
-              <select id="dem-edit-forma-pgto" class="dem-fi">
-                <option value="">Selecione</option>
-                ${["PIX","Boleto","Cartão de Crédito","Cartão de Débito","Dinheiro","Transferência Bancária","Débito em Conta","Cheque","Reembolso","Outro"].map(f => `<option${f===(_demFd.forma_pagamento||"")?" selected":""}>${f}</option>`).join("")}
-              </select>
-            </div>
-            <div style="grid-column:span 3"></div>` : ""}
-
-            <div style="grid-column:span 12;display:flex;align-items:center;gap:6px" id="dem-encaminhamento-bloco">
-              <span class="dem-fl" style="margin:0;white-space:nowrap">Para</span>
-              <button id="dem-enc-btn-dept" onclick="window._demEncTipo('departamento')"
-                style="padding:3px 10px;border-radius:5px;border:1px solid var(--gr);background:var(--gr);color:#fff;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">Departamento</button>
-              <button id="dem-enc-btn-forn" onclick="window._demEncTipo('fornecedor')"
-                style="padding:3px 10px;border-radius:5px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">Fornecedor</button>
-              <input type="hidden" id="dem-enc-tipo" value="${escapeHtmlAttr(dem.responsavel_tipo || 'departamento')}">
-              <input type="hidden" id="dem-enc-forn-id" value="${escapeHtmlAttr(String(dem.fornecedor_id || ''))}">
-              <div id="dem-enc-dept-row" style="flex:1;min-width:0">
-                <select id="dem-enc-dept-nome" class="dem-fi" style="margin:0"
-                  data-current="${escapeHtmlAttr(dem.responsavel_tipo !== 'fornecedor' ? (dem.responsavel || dem.responsavel_txt || '') : '')}">
-                  <option value="">Carregando departamentos…</option>
-                </select>
-              </div>
-              <div id="dem-enc-forn-row" style="flex:1;min-width:0;display:none">
-                <select id="dem-enc-forn-sel" class="dem-fi" style="margin:0">
-                  <option value="">Carregando fornecedores…</option>
-                </select>
-              </div>
-            </div>
-
-            <div style="grid-column:span 12">
-              <label class="dem-fl">Descrição</label>
-              <textarea id="dem-edit-desc" rows="3"
-                style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;resize:vertical;max-height:80px;box-sizing:border-box;font-family:var(--ff);overflow-y:auto;line-height:1.5">${escapeHtml(dem.descricao || '')}</textarea>
-            </div>
-
-            ${(dem.area === "Financeiro") ? `
-            <div style="grid-column:span 12;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--tx2);white-space:nowrap;flex-shrink:0">
-                <input type="checkbox" id="dem-edit-rec" onchange="window._demRecToggle(this.checked)"
-                  ${(_demFd.recorrencia?.ativa) ? "checked" : ""}
-                  style="width:13px;height:13px;cursor:pointer;accent-color:var(--gr)">
-                Recorrente
-              </label>
-              <div id="dem-edit-rec-opts" style="display:${(_demFd.recorrencia?.ativa) ? "flex" : "none"};gap:6px;align-items:flex-end;flex-wrap:wrap">
-                <div style="width:120px">
-                  <label class="dem-fl">Freq.</label>
-                  <select id="dem-edit-rec-freq" class="dem-fi">
-                    ${["Semanal","Quinzenal","Mensal","Bimestral","Trimestral"].map(f => `<option${f===(_demFd.recorrencia?.freq||"Mensal")?" selected":""}>${f}</option>`).join("")}
-                  </select>
-                </div>
-                <div style="width:140px">
-                  <label class="dem-fl">Válido até</label>
-                  <input id="dem-edit-rec-limite" type="date" value="${_demFd.recorrencia?.limite||""}" class="dem-fi">
-                </div>
-                ${_demFd.recorrencia?.geradas ? `<span style="font-size:11px;color:var(--tx3);align-self:center">${_demFd.recorrencia.geradas} ocorrências geradas</span>` : ""}
-              </div>
-            </div>` : ""}
-
-          </div>
+      </div>
+      <button onclick="demEncAbrir('${id}')" id="dem-enc-abrir-${id}"
+        style="text-align:left;padding:5px 10px;border-radius:6px;border:1px solid var(--violet);background:rgba(139,111,212,.07);color:var(--violet);font-size:11.5px;font-weight:600;cursor:pointer;width:100%;margin-top:4px">
+        → Dep / Fornecedor
+      </button>
+    </div>
+    <div id="dem-enc-s-panel-${id}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd1)">
+      <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px">Encaminhar para</div>
+      <div style="display:flex;gap:5px;margin-bottom:8px">
+        <button id="dem-enc-s-btn-dept-${id}" onclick="window._demEncSTipo('departamento','${id}')"
+          style="padding:3px 10px;border-radius:5px;border:1px solid var(--gr);background:var(--gr);color:#fff;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0">Departamento</button>
+        <button id="dem-enc-s-btn-forn-${id}" onclick="window._demEncSTipo('fornecedor','${id}')"
+          style="padding:3px 10px;border-radius:5px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer;flex-shrink:0">Fornecedor</button>
+        <input type="hidden" id="dem-enc-s-tipo-${id}" value="departamento">
+        <input type="hidden" id="dem-enc-s-forn-id-${id}" value="${escapeHtmlAttr(String(dem.fornecedor_id||""))}">
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <div id="dem-enc-s-dept-row-${id}" style="flex:1;min-width:0">
+          <select id="dem-enc-s-dept-${id}" class="dem-fi" style="margin:0;width:100%"><option value="">Carregando...</option></select>
         </div>
-        <div class="card" style="margin-top:0">
-          <div class="ctit">Andamentos</div>
-          ${_podeRegistrarAndamento(dem) ? `
-          <div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-end">
-            <textarea id="dem-and-txt-${id}" rows="2" placeholder="Escreva um andamento…"
-              style="flex:1;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12.5px;resize:vertical;max-height:80px;font-family:var(--ff);box-sizing:border-box"></textarea>
-            <button data-and-btn="${id}" onclick="demRegistrarAndamento('${id}')"
-              style="padding:8px 16px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">
-              Registrar
-            </button>
-          </div>` : ""}
-          <div id="dem-and-list-${id}">
-            <div style="color:var(--tx3);font-size:12px;padding:4px 0">Carregando…</div>
-          </div>
+        <div id="dem-enc-s-forn-row-${id}" style="flex:1;min-width:0;display:none">
+          <select id="dem-enc-s-forn-${id}" class="dem-fi" style="margin:0;width:100%"><option value="">Carregando...</option></select>
         </div>
-        <div class="card" style="margin-top:0">
-          <div class="ctit" style="display:flex;align-items:center;justify-content:space-between">
-            <span>WhatsApp</span>
-            <button onclick="demNotificarResponsaveis('${id}')"
-              style="font-size:11px;padding:4px 12px;border-radius:6px;border:1px solid rgba(58,170,92,.35);background:rgba(58,170,92,.08);color:var(--gr);cursor:pointer;font-weight:600">
-              Notificar Responsáveis
-            </button>
-          </div>
-          <div id="dem-wa-list-${id}">
-            <div style="color:var(--tx3);font-size:12px;padding:4px 0">Carregando…</div>
-          </div>
-        </div>
-      </div>`;
+        <button onclick="demSalvarEncaminhamento('${id}')"
+          style="padding:5px 12px;border-radius:6px;border:none;background:var(--violet);color:#fff;font-size:11.5px;font-weight:600;cursor:pointer;flex-shrink:0">OK</button>
+      </div>
+    </div>`}
+  </div><!-- /direita -->
+
+</div><!-- /body grid -->
+
+<!-- ── ANDAMENTOS + WHATSAPP ──────────────────────────────────── -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+
+  <div class="card" style="padding:14px 16px">
+    <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Andamentos</div>
+    ${_podeRegistrarAndamento(dem) ? `
+    <div style="display:flex;gap:8px;margin-bottom:10px;align-items:flex-end">
+      <textarea id="dem-and-txt-${id}" rows="2" placeholder="Escreva um andamento…"
+        style="flex:1;padding:7px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px;resize:none;font-family:var(--ff);box-sizing:border-box;line-height:1.4"></textarea>
+      <button data-and-btn="${id}" onclick="demRegistrarAndamento('${id}')"
+        style="padding:7px 14px;border-radius:7px;border:none;background:var(--gr);color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">Registrar</button>
+    </div>` : ""}
+    <div id="dem-and-list-${id}"><div style="color:var(--tx3);font-size:12px">Carregando…</div></div>
+  </div>
+
+  <div class="card" style="padding:14px 16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em">WhatsApp</div>
+      <button onclick="demNotificarResponsaveis('${id}')"
+        style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid rgba(58,170,92,.35);background:rgba(58,170,92,.08);color:var(--gr);cursor:pointer;font-weight:600">
+        Notificar
+      </button>
+    </div>
+    <div id="dem-wa-list-${id}"><div style="color:var(--tx3);font-size:12px">Carregando…</div></div>
+  </div>
+
+</div>`;
     _carregarAndamentos(id, dem);
     _carregarAnexosDemanda(id);
     _carregarWADemanda(id, dem);
     _popularSelectEspacos("dem-edit-local");
-    // inicializar encaminhamento com tipo atual
     const tipoAtual = dem.responsavel_tipo || "departamento";
     window._demEncTipo(tipoAtual);
   }
@@ -2313,10 +2303,19 @@ function fmtD(d) {
     const el = document.getElementById("dem-desc-display");
     if (!el) return;
     const expanded = el.style.maxHeight === "none";
-    el.style.maxHeight = expanded ? "96px" : "none";
+    el.style.maxHeight = expanded ? "60px" : "none";
     el.style.overflow  = expanded ? "hidden" : "visible";
     el.querySelector("div")?.remove();
     btn.textContent = expanded ? "Ver mais ▾" : "Ver menos ▴";
+  };
+
+  window._demToggleEdit = function(btn, id) {
+    const panel = document.getElementById("dem-edit-panel-" + id);
+    const chev  = document.getElementById("dem-edit-chev-" + id);
+    if (!panel) return;
+    const open = panel.style.display === "none";
+    panel.style.display = open ? "" : "none";
+    if (chev) chev.textContent = open ? "▼" : "▶";
   };
 
   window._demMascaraValor = function(input) {
