@@ -1507,29 +1507,31 @@ function fmtD(d) {
 </style>
 
 <!-- ── HEADER ─────────────────────────────────────────────────── -->
-<div style="display:flex;align-items:flex-start;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--bd1);margin-bottom:14px">
-  <div style="flex-shrink:0;width:36px;height:36px;border-radius:9px;background:${catCor(dem.area)}18;border:1px solid ${catCor(dem.area)}40;display:flex;align-items:center;justify-content:center;font-size:18px;margin-top:2px">${catIcon(dem.area)}</div>
-  <div style="flex:1;min-width:0">
-    <div style="font-size:17px;font-weight:700;color:var(--tx1);line-height:1.3;margin-bottom:5px">${escapeHtml(dem.titulo)||"Sem título"}</div>
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      ${pillStatus(dem.status)}
-      ${dem.numero_chamado ? `<span style="font-size:11px;font-weight:700;color:var(--acc,#4a9cf5);letter-spacing:.04em">${escapeHtml(dem.numero_chamado)}</span><span style="color:var(--bd2);font-size:11px">·</span>` : ""}
-      <span style="font-size:11px;color:var(--tx3)">${catIcon(dem.area)} ${dem.area||"—"} → ${dem.subcategoria||"—"}</span>
-      ${_demFd.origem_area ? `<span style="font-size:10.5px;font-weight:600;padding:1px 8px;border-radius:8px;background:rgba(224,138,42,.15);color:var(--amber)">⇢ de ${escapeHtml(_demFd.origem_area)}</span>` : ""}
+<div class="dem-dh" style="display:flex;align-items:flex-start;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--bd1);margin-bottom:14px">
+  <div class="dem-dh-meta" style="display:flex;align-items:flex-start;gap:12px;flex:1;min-width:0">
+    <div style="flex-shrink:0;width:36px;height:36px;border-radius:9px;background:${catCor(dem.area)}18;border:1px solid ${catCor(dem.area)}40;display:flex;align-items:center;justify-content:center;font-size:18px;margin-top:2px">${catIcon(dem.area)}</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:17px;font-weight:700;color:var(--tx1);line-height:1.3;margin-bottom:5px">${escapeHtml(dem.titulo)||"Sem título"}</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        ${pillStatus(dem.status)}
+        ${dem.numero_chamado ? `<span style="font-size:11px;font-weight:700;color:var(--acc,#4a9cf5);letter-spacing:.04em">${escapeHtml(dem.numero_chamado)}</span><span style="color:var(--bd2);font-size:11px">·</span>` : ""}
+        <span style="font-size:11px;color:var(--tx3)">${catIcon(dem.area)} ${dem.area||"—"} → ${dem.subcategoria||"—"}</span>
+        ${_demFd.origem_area ? `<span style="font-size:10.5px;font-weight:600;padding:1px 8px;border-radius:8px;background:rgba(224,138,42,.15);color:var(--amber)">⇢ de ${escapeHtml(_demFd.origem_area)}</span>` : ""}
+      </div>
     </div>
   </div>
-  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex-shrink:0">
-    <button class="tbt" onclick="window.go('${origem}')">← Voltar</button>
-    ${mostrarAprovarPagamento ? `<button class="tbt" data-dem-aprovar-pag="${escapeHtmlAttr(id)}" style="color:var(--gr);border-color:rgba(58,170,92,.3)" onclick="demAprovarParaPagamento('${escapeHtmlAttr(id)}')">💰 Aprovar</button>` : ""}
+  <div class="dem-dh-acts" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex-shrink:0">
+    <button class="tbt dem-voltar" onclick="window.go('${origem}')">← Voltar</button>
+    ${mostrarAprovarPagamento ? `<button class="tbt dem-aprovar" data-dem-aprovar-pag="${escapeHtmlAttr(id)}" style="color:var(--gr);border-color:rgba(58,170,92,.3)" onclick="demAprovarParaPagamento('${escapeHtmlAttr(id)}')">💰 Aprovar</button>` : ""}
     ${_podeAprovarPagamento() && _toLabel(dem.status) === "Aguardando Pagamento" ? `<button class="tbt" data-dem-reenviar="${escapeHtmlAttr(id)}" style="color:var(--blue);border-color:rgba(37,99,235,.3)" onclick="demReenviarEmail('${escapeHtmlAttr(id)}')">✉ Reenviar</button>` : ""}
     ${dem.area === "Conselho" ? `<button class="tbt" style="color:var(--sky);border-color:rgba(74,156,245,.3)" onclick="pautasIncluirNaPauta('${escapeHtmlAttr(id)}','${escapeHtmlAttr(dem.titulo||"")}')">⚖️ Pauta</button>` : ""}
-    <button class="tbt" onclick="demDuplicar('${id}')">⧉ Duplicar</button>
-    <button class="tbt" style="color:var(--rose);border-color:rgba(224,85,85,.3)" onclick="demExcluirDemanda('${id}')">🗑 Excluir</button>
+    <button class="tbt dem-sec" onclick="demDuplicar('${id}')">⧉ Duplicar</button>
+    <button class="tbt dem-sec" style="color:var(--rose);border-color:rgba(224,85,85,.3)" onclick="demExcluirDemanda('${id}')">🗑 Excluir</button>
   </div>
 </div>
 
 <!-- ── BODY: info (esquerda) + status (direita) ──────────────── -->
-<div style="display:grid;grid-template-columns:1fr 236px;gap:12px;align-items:start">
+<div class="dem-db" style="display:grid;grid-template-columns:1fr 236px;gap:12px;align-items:start">
 
   <!-- ── ESQUERDA ── -->
   <div style="display:flex;flex-direction:column;gap:10px">
@@ -1688,7 +1690,7 @@ function fmtD(d) {
   </div><!-- /esquerda -->
 
   <!-- ── DIREITA: status ── -->
-  <div class="card" style="padding:14px 16px">
+  <div class="card dem-db-r" style="padding:14px 16px">
     <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px">Status atual: ${pillStatus(dem.status)}</div>
     ${dem.agenda_ref_id ? `
     <div style="padding:10px 12px;border-radius:7px;border:1px solid rgba(74,156,245,.25);background:rgba(74,156,245,.06);font-size:11px;color:var(--tx2);line-height:1.6">
@@ -1739,7 +1741,7 @@ function fmtD(d) {
 </div><!-- /body grid -->
 
 <!-- ── ANDAMENTOS + WHATSAPP ──────────────────────────────────── -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+<div class="dem-aw" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
 
   <div class="card" style="padding:14px 16px">
     <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Andamentos</div>

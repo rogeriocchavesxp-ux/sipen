@@ -1438,6 +1438,58 @@ body.modo-mobile .area-greeting { padding: 10px 0 6px; gap: 10px }
 /* Rodapé oculto no mobile */
 body.modo-mobile .sipen-footer { display: none }
 
+/* ── Mobile: Tela de Detalhe de Demanda ─────────────────────────────────
+   Classes adicionadas em _renderDetalhe() via dem-dh / dem-dh-acts /
+   dem-db / dem-db-r / dem-aw. Lógica JS intacta; só layout muda.
+
+   Problemas corrigidos:
+   - Título squished: dividia espaço horizontal com 4 botões de ação
+   - Body 1fr 236px: coluna esquerda ficava ~100px em tela de 375px
+   - Andamentos + WhatsApp lado a lado cortados
+   - Botão ← Voltar redundante (m-header já tem o ←)
+   - Aprovar sem destaque visual como ação primária
+──────────────────────────────────────────────────────────────────────── */
+
+/* Header: empilha verticalmente — título ocupa largura total */
+body.modo-mobile .dem-dh { flex-direction: column !important; gap: 8px !important }
+body.modo-mobile .dem-dh-meta { width: 100% !important }
+
+/* Ocultar ← Voltar redundante no header de conteúdo */
+body.modo-mobile .dem-voltar { display: none }
+
+/* Barra de ações: exibe na linha de baixo do título, em linha */
+body.modo-mobile .dem-dh-acts {
+  width: 100% !important;
+  flex-shrink: 1 !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+}
+/* Aprovar: ação primária — largura total, destaque verde */
+body.modo-mobile .dem-aprovar {
+  flex: 1 1 100% !important;
+  justify-content: center !important;
+  padding: 10px 16px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  background: rgba(58,170,92,.1) !important;
+}
+/* Ações secundárias: menores, discretas */
+body.modo-mobile .dem-sec {
+  font-size: 11px !important;
+  padding: 5px 10px !important;
+  color: var(--tx3) !important;
+  border-color: var(--bd1) !important;
+}
+
+/* Body: 2-col (1fr 236px) → 1-col empilhado */
+body.modo-mobile .dem-db { grid-template-columns: 1fr !important }
+/* Status panel: aparece abaixo do card de info (ordem natural do grid) */
+body.modo-mobile .dem-db-r { order: 1 }
+
+/* Andamentos + WhatsApp: 2-col → 1-col */
+body.modo-mobile .dem-aw { grid-template-columns: 1fr !important }
+
 /* Botão Trocar Área — oculto para membros comuns, visível para gestores */
 #btn-trocar-area              { display: none }
 body.modo-membro #btn-trocar-area { display: flex }
