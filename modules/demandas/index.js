@@ -2481,14 +2481,12 @@ function fmtD(d) {
       const hdrs = { apikey: key, Authorization: `Bearer ${tok}` };
       const [rVerba, rGasto] = await Promise.all([
         fetch(`${url}/rest/v1/verbas_aprovadas?orgao=eq.${encodeURIComponent(orgao)}&ano=eq.${ano}&select=valor`, { headers: hdrs }),
-        fetch(`${url}/rest/v1/demandas?centro_custo=eq.${encodeURIComponent(orgao)}&area=eq.Financeiro&status=eq.Pago&select=dados_financeiros`, { headers: hdrs }),
+        fetch(`${url}/rest/v1/demandas?financial_data->>centro_custo=eq.${encodeURIComponent(orgao)}&area=eq.Financeiro&status=in.(Pago,PAGO)&select=financial_data`, { headers: hdrs }),
       ]);
       const verbas = rVerba.ok ? await rVerba.json() : [];
       const pagas  = rGasto.ok ? await rGasto.json() : [];
       const verba  = verbas[0]?.valor || 0;
-      const gasto  = pagas.reduce((s, d) => {
-        try { return s + (parseFloat(JSON.parse(d.dados_financeiros || "{}").valor) || 0); } catch { return s; }
-      }, 0);
+      const gasto  = pagas.reduce((s, d) => s + (parseFloat(d.financial_data?.valor) || 0), 0);
       const saldo = verba - gasto;
       const fmt = v => v.toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
       if (verba === 0) {
@@ -2693,6 +2691,53 @@ function fmtD(d) {
     if (dd) dd.style.display = "none";
   };
 
+  /* ── Autocomplete solicitante (nova demanda) ─────────── */
+  let _demNovoSolTimer = null;
+
+  window._demNovoSolBuscar = function(q) {
+    clearTimeout(_demNovoSolTimer);
+    const dd = document.getElementById("dem-f-sol-dd");
+    if (!dd) return;
+    if (!q || q.trim().length < 2) { dd.style.display = "none"; return; }
+    _demNovoSolTimer = setTimeout(async () => {
+      try {
+        const base = typeof apiBaseUrl === "function" ? apiBaseUrl() : "";
+        const hdrs = typeof apiHeaders  === "function" ? apiHeaders()  : {};
+        if (!base) return;
+        const res = await fetch(
+          `${base}/rest/v1/pessoas?nome=ilike.*${encodeURIComponent(q.trim())}*&deleted_at=is.null&select=id,nome&order=nome.asc&limit=8`,
+          { headers: hdrs }
+        );
+        if (!res.ok) { dd.style.display = "none"; return; }
+        const rows = await res.json();
+        if (!rows.length) {
+          dd.innerHTML = `<div style="padding:8px 12px;color:var(--tx3);font-size:11.5px">Nenhuma pessoa encontrada</div>`;
+          dd.style.display = "block";
+          return;
+        }
+        dd.innerHTML = rows.map(p =>
+          `<div onclick="window._demNovoSolSelecionar('${escapeHtmlAttr(String(p.id))}','${escapeHtmlAttr(p.nome)}')"
+            style="padding:8px 12px;cursor:pointer;font-size:12px;color:var(--tx1);border-bottom:1px solid var(--bd1)"
+            onmouseover="this.style.background='var(--bg-hover)'"
+            onmouseout="this.style.background=''">${nomePropio(p.nome)}</div>`
+        ).join("");
+        dd.style.display = "block";
+      } catch (_) {
+        const dd2 = document.getElementById("dem-f-sol-dd");
+        if (dd2) dd2.style.display = "none";
+      }
+    }, 280);
+  };
+
+  window._demNovoSolSelecionar = function(id, nome) {
+    const inp = document.getElementById("dem-f-sol");
+    const hid = document.getElementById("dem-f-sol-id");
+    const dd  = document.getElementById("dem-f-sol-dd");
+    if (inp) inp.value = nome;
+    if (hid) hid.value = id;
+    if (dd)  dd.style.display = "none";
+  };
+
   /* ── Modal: Nova Demanda ────────────────────────────── */
 
   window.abrirModalNovaDemanda = function(categoriaFixa) {
@@ -2786,9 +2831,11 @@ function fmtD(d) {
   window.demOnCatChange = function() {
     const catNome = document.getElementById("dem-f-cat")?.value;
     const subEl   = document.getElementById("dem-f-sub");
+    const subRow  = document.getElementById("dem-f-sub-row");
     const respEl  = document.getElementById("dem-f-resp");
     const cat     = CATS.find(c => c.nome === catNome);
     if (!subEl) return;
+    if (subRow) subRow.style.display = catNome === "Financeiro" ? "none" : "";
     if (cat) {
       const primeiro = cat.subcats[0];
       let subcats = cat.subcats;
@@ -2818,6 +2865,7 @@ function fmtD(d) {
   function _toggleFinanceiroSection() {
     const cat      = document.getElementById("dem-f-cat")?.value;
     const sub      = document.getElementById("dem-f-sub")?.value;
+    const tipo     = document.getElementById("dem-f-tipo-sol")?.value || "Pagamento";
     const sec       = document.getElementById("dem-f-financeiro-section");
     const agSec     = document.getElementById("dem-f-agend-section");
     const pagSec    = document.getElementById("dem-f-pag-section");
@@ -2829,11 +2877,11 @@ function fmtD(d) {
     const isPauta      = sub === "Pauta de Reunião";
     sec.style.display              = isFinanceiro ? "" : "none";
     if (agSec)     agSec.style.display     = isAgendProg ? "" : "none";
-    if (pagSec)    pagSec.style.display    = (isFinanceiro && sub === "Solicitação de pagamento") ? "flex" : "none";
-    if (reimbSec)  reimbSec.style.display  = (isFinanceiro && sub === "Reembolso")               ? "flex" : "none";
-    if (dizimoSec) dizimoSec.style.display = (isFinanceiro && sub === "Dízimos")  ? "flex" : "none";
+    if (pagSec)    pagSec.style.display    = (isFinanceiro && (tipo === "Pagamento" || tipo === "Adiantamento")) ? "flex" : "none";
+    if (reimbSec)  reimbSec.style.display  = (isFinanceiro && tipo === "Reembolso")  ? "flex" : "none";
+    if (dizimoSec) dizimoSec.style.display = (isFinanceiro && tipo === "Dízimos")    ? "flex" : "none";
     const ofertaSec = document.getElementById("dem-f-oferta-section");
-    if (ofertaSec) ofertaSec.style.display = (isFinanceiro && sub === "Ofertas") ? "flex" : "none";
+    if (ofertaSec) ofertaSec.style.display = (isFinanceiro && tipo === "Ofertas")    ? "flex" : "none";
     if (isFinanceiro) {
       _toggleFormaPagamento();
       _demCarregarOrgaos();
@@ -2841,8 +2889,9 @@ function fmtD(d) {
     const localRow = document.getElementById("dem-f-local-row");
     const respRow  = document.getElementById("dem-f-resp-row");
     if (localRow) localRow.style.display = (isPauta || isFinanceiro) ? "none" : "";
-    if (respRow)  respRow.style.display  = isPauta ? "none" : "";
+    if (respRow)  respRow.style.display  = (isPauta || isFinanceiro) ? "none" : "";
   }
+  window._toggleFinanceiroSection = _toggleFinanceiroSection;
 
   function _toggleFormaPagamento() {
     const forma    = document.getElementById("dem-f-forma-pag")?.value;
@@ -3186,16 +3235,18 @@ function fmtD(d) {
     try {
     const cat    = document.getElementById("dem-f-cat")?.value;
     const sub    = document.getElementById("dem-f-sub")?.value;
+    const tipo   = cat === "Financeiro" ? (document.getElementById("dem-f-tipo-sol")?.value || "Pagamento") : null;
     const titulo = document.getElementById("dem-f-titulo")?.value?.trim();
     const desc   = document.getElementById("dem-f-desc")?.value?.trim();
     const localCriarEl = document.getElementById("dem-f-local");
     const local_id = localCriarEl?.value?.trim() || null;
     const local    = localCriarEl?.selectedOptions[0]?.dataset?.nome || null;
     const sol    = document.getElementById("dem-f-sol")?.value?.trim();
+    const solId  = document.getElementById("dem-f-sol-id")?.value || null;
     const resp   = document.getElementById("dem-f-resp")?.value?.trim();
     const venc   = document.getElementById("dem-f-venc")?.value || null;
 
-    if (!cat || !sub || !titulo) {
+    if (!cat || (cat !== "Financeiro" && !sub) || !titulo) {
       if (typeof T === "function") T("Campo obrigatório", "Preencha categoria, subcategoria e título");
       return;
     }
@@ -3203,7 +3254,7 @@ function fmtD(d) {
     /* ── Coleta e valida dados financeiros ─────────────── */
     let financial_data = null;
 
-    if (cat === "Financeiro" && sub === "Solicitação de pagamento") {
+    if (cat === "Financeiro" && (tipo === "Pagamento" || tipo === "Adiantamento")) {
       const valor     = parseFloat(document.getElementById("dem-f-valor")?.value || "0");
       const benefic   = document.getElementById("dem-f-beneficiario")?.value?.trim();
       const forma     = document.getElementById("dem-f-forma-pag")?.value;
@@ -3283,7 +3334,7 @@ function fmtD(d) {
       };
     }
 
-    if (cat === "Financeiro" && sub === "Reembolso") {
+    if (cat === "Financeiro" && tipo === "Reembolso") {
       const nome  = document.getElementById("dem-f-reimb-nome")?.value?.trim();
       const valor = parseFloat(document.getElementById("dem-f-reimb-valor")?.value || "0");
       const nfFile = document.getElementById("dem-f-upload-reimb-nf")?.files?.[0];
@@ -3313,7 +3364,7 @@ function fmtD(d) {
       };
     }
 
-    if (cat === "Financeiro" && sub === "Ofertas") {
+    if (cat === "Financeiro" && tipo === "Ofertas") {
       const valor = parseFloat(document.getElementById("dem-f-oferta-valor")?.value || "0");
       if (!valor || isNaN(valor) || valor <= 0) {
         if (typeof T === "function") T("Campo obrigatório", "Informe o valor da oferta");
@@ -3328,7 +3379,7 @@ function fmtD(d) {
       };
     }
 
-    if (cat === "Financeiro" && sub === "Dízimos") {
+    if (cat === "Financeiro" && tipo === "Dízimos") {
       const valor = parseFloat(document.getElementById("dem-f-dizimo-valor")?.value || "0");
       const mes   = document.getElementById("dem-f-dizimo-mes")?.value || null;
       if (!valor || isNaN(valor) || valor <= 0) {
@@ -3373,19 +3424,28 @@ function fmtD(d) {
     const u = typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL : null;
     const pessoaId = u?.id || u?.pessoa_id || null;
 
+    const _TIPO_TO_SUB = {
+      "Pagamento": "Solicitação de pagamento", "Adiantamento": "Solicitação de pagamento",
+      "Reembolso": "Reembolso", "Dízimos": "Dízimos", "Ofertas": "Ofertas",
+      "Prestação de contas": "Prestação de contas",
+      "Solicitação de verba": "Solicitação de verba",
+      "Orçamento de despesas": "Orçamento de despesas",
+    };
+    const subcategoriaFinal = cat === "Financeiro" ? (_TIPO_TO_SUB[tipo] || tipo) : sub;
+
     const payload = {
       area:           cat,
-      subcategoria:   sub,
+      subcategoria:   subcategoriaFinal,
       titulo,
       descricao:      (desc || "") + agend_extra,
       local,
       local_id,
-      prioridade:     "Média",    // definida por triagem — nunca pelo solicitante
+      prioridade:     "Média",
       status:         "ABERTA",
       solicitante:    sol || "",
-      solicitante_id: pessoaId,
-      created_by:     pessoaId,
-      responsavel:    resp || catResp(cat),
+      solicitante_id: solId || pessoaId,
+      created_by:     solId || pessoaId,
+      responsavel:    cat === "Financeiro" ? catResp(cat) : (resp || catResp(cat)),
       data_abertura:  new Date().toISOString().split("T")[0],
       data_conclusao: venc,
     };

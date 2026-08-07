@@ -4059,23 +4059,23 @@
   async function _socRenderFinanceiro() {
     const el = document.getElementById('soc-fin-content');
     if (!el || !_socAtual) return;
-    const orgao = _socAtual.orgao;
+    const orgao = _socAtual.nome;
     const ano   = new Date().getFullYear();
     const fmt   = v => Number(v || 0).toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
     el.innerHTML = `<div style="color:var(--tx3);text-align:center;padding:32px">Carregando...</div>`;
     try {
       const [rVerba, rDem] = await Promise.all([
         fetch(`${SUPABASE_URL}/rest/v1/verbas_aprovadas?orgao=eq.${encodeURIComponent(orgao)}&ano=eq.${ano}&select=*`, { headers: _hdr() }),
-        fetch(`${SUPABASE_URL}/rest/v1/demandas?centro_custo=eq.${encodeURIComponent(orgao)}&area=eq.Financeiro&select=id,titulo,status,dados_financeiros,created_at,subcategoria&order=created_at.desc&limit=100`, { headers: _hdr() }),
+        fetch(`${SUPABASE_URL}/rest/v1/demandas?financial_data->>centro_custo=eq.${encodeURIComponent(orgao)}&area=eq.Financeiro&select=id,titulo,status,financial_data,created_at,subcategoria&order=created_at.desc&limit=100`, { headers: _hdr() }),
       ]);
       const verbas   = rVerba.ok ? await rVerba.json() : [];
       const demandas = rDem.ok   ? await rDem.json()   : [];
       const verba    = verbas[0] || null;
       const valorVerba = parseFloat(verba?.valor || 0);
 
-      const pagas    = demandas.filter(d => d.status === 'Pago');
-      const pendentes = demandas.filter(d => d.status !== 'Pago' && d.status !== 'Cancelada');
-      const getValor = d => { try { return parseFloat(JSON.parse(d.dados_financeiros || '{}').valor || 0); } catch { return 0; } };
+      const pagas    = demandas.filter(d => d.status === 'Pago' || d.status === 'PAGO');
+      const pendentes = demandas.filter(d => !['Pago','PAGO','Cancelada','CANCELADA'].includes(d.status));
+      const getValor = d => parseFloat(d.financial_data?.valor || 0);
       const totalGasto     = pagas.reduce((s, d) => s + getValor(d), 0);
       const totalPendente  = pendentes.reduce((s, d) => s + getValor(d), 0);
       const saldo          = valorVerba - totalGasto;
