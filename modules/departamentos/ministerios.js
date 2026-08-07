@@ -4007,26 +4007,48 @@
   }
   window._socMenuNomeado = _socMenuNomeado;
 
+  function _socToast(msg, ok) {
+    let t = document.getElementById('_soc-toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = '_soc-toast';
+      t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:99999;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.3);transition:opacity .3s;pointer-events:none';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.background = ok ? 'var(--gr,#34c759)' : 'var(--rose,#ff3b30)';
+    t.style.color = '#fff';
+    t.style.opacity = '1';
+    clearTimeout(t._hide);
+    t._hide = setTimeout(() => { t.style.opacity = '0'; }, 3000);
+  }
+
   async function _socRemoverNomeado(id, tipo) {
+    console.log('[SIPEN] remover nomeado id=', id, 'tipo=', tipo);
     try {
-      const resp = await fetch(`${SUPABASE_URL}/rest/v1/nomeados?id=eq.${id}`, {
-        method: 'PATCH',
-        headers: Object.assign({}, _hdr(), {
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation',
-        }),
-        body: JSON.stringify({ deleted_at: new Date().toISOString(), status: 'inativo' }),
+      const resp = await fetch(`${SUPABASE_URL}/rest/v1/nomeados?id=eq.${id}&deleted_at=is.null`, {
+        method: 'DELETE',
+        headers: Object.assign({}, _hdr(), { 'Prefer': 'return=representation' }),
       });
       const body = await resp.text().catch(() => '');
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${body}`);
-      const updated = JSON.parse(body || '[]');
-      if (!updated.length) throw new Error(`RLS bloqueou o UPDATE. Execute no Supabase:\nDROP POLICY IF EXISTS "nomeados_upd" ON public.nomeados;\nCREATE POLICY "nomeados_upd" ON public.nomeados FOR UPDATE TO authenticated USING (deleted_at IS NULL) WITH CHECK (true);`);
+      console.log('[SIPEN] DELETE status=', resp.status, 'body=', body);
+      if (!resp.ok) {
+        _socToast(`Erro ${resp.status}: ${body}`, false);
+        return;
+      }
+      const deleted = JSON.parse(body || '[]');
+      if (!deleted.length) {
+        _socToast('Sem permissão. Verifique a policy nomeados_del no Supabase.', false);
+        return;
+      }
       _socRows = _socRows.filter(r => r.id !== id);
       if (tipo === 'lider') { _socRenderLideranca(); _socRenderHeader(); }
       else _socRenderMembros();
       _socRenderVisaoGeral();
+      _socToast('Removido com sucesso.', true);
     } catch (e) {
-      alert(e.message);
+      console.error('[SIPEN] erro ao remover nomeado:', e);
+      _socToast(e.message, false);
     }
   }
   window._socRemoverNomeado = _socRemoverNomeado;
