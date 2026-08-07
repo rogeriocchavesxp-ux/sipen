@@ -1481,10 +1481,10 @@ function fmtD(d) {
       </div>`;
 
     const stList = dem.area === "Financeiro"
-      ? [["Pendente","Pendente"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],
+      ? [["Pendente","Pendente"],["Em Análise","Em Análise"],
          ["Aguardando Pagamento","Aguardando Pagamento"],["Pagamento Agendado","Pagamento Agendado"],
          ["Pago","Pago"],["Cancelada","Cancelada"]]
-      : [["Pendente","Pendente"],["Em Análise","Em Análise"],["Em Andamento","Aguardando Aprovação"],
+      : [["Pendente","Pendente"],["Em Análise","Em Análise"],
          ["Concluída","Concluída"],["Cancelada","Cancelada"]];
 
     const _stBtn = ([st, label]) => {
@@ -2377,6 +2377,79 @@ function fmtD(d) {
 
   let _fornecedoresCache = null;
   let _departamentosCache = null;
+  let _orgaosCache = null;
+
+  async function _demCarregarOrgaos() {
+    const sel = document.getElementById("dem-f-centro");
+    if (!sel) return;
+    if (_orgaosCache) { _demPopularOrgaoSel(sel); return; }
+    try {
+      const url = (typeof SUPABASE_URL !== "undefined" ? SUPABASE_URL : "").replace(/\/$/, "");
+      const key = typeof SUPABASE_ANON_KEY !== "undefined" ? SUPABASE_ANON_KEY : "";
+      const tok = typeof sipenToken === "function" ? sipenToken() : key;
+      const r = await fetch(`${url}/rest/v1/ministerios?select=id,nome,tipo&order=tipo.asc,nome.asc&limit=300`,
+        { headers: { apikey: key, Authorization: `Bearer ${tok}` } });
+      _orgaosCache = r.ok ? await r.json() : [];
+    } catch { _orgaosCache = []; }
+    _demPopularOrgaoSel(sel);
+  }
+
+  function _demPopularOrgaoSel(sel) {
+    const current = sel.value;
+    const grupos = {};
+    (_orgaosCache || []).forEach(d => {
+      const g = d.tipo || "Ministério";
+      (grupos[g] = grupos[g] || []).push(d);
+    });
+    sel.innerHTML = `<option value="">— Selecione o ministério ou departamento —</option>` +
+      Object.entries(grupos).map(([g, items]) =>
+        `<optgroup label="${g}">${items.map(d => `<option value="${d.nome}"${d.nome === current ? " selected" : ""}>${d.nome}</option>`).join("")}</optgroup>`
+      ).join("");
+    if (current) sel.value = current;
+  }
+
+  window.demOnOrgaoChange = async function() {
+    const orgao = document.getElementById("dem-f-centro")?.value;
+    const infoEl = document.getElementById("dem-f-saldo-info");
+    if (!infoEl) return;
+    if (!orgao) { infoEl.style.display = "none"; return; }
+    infoEl.style.display = "";
+    infoEl.style.background = "rgba(139,107,193,.1)";
+    infoEl.style.color = "var(--tx2)";
+    infoEl.textContent = "Consultando saldo...";
+    try {
+      const url = (typeof SUPABASE_URL !== "undefined" ? SUPABASE_URL : "").replace(/\/$/, "");
+      const key = typeof SUPABASE_ANON_KEY !== "undefined" ? SUPABASE_ANON_KEY : "";
+      const tok = typeof sipenToken === "function" ? sipenToken() : key;
+      const ano = new Date().getFullYear();
+      const hdrs = { apikey: key, Authorization: `Bearer ${tok}` };
+      const [rVerba, rGasto] = await Promise.all([
+        fetch(`${url}/rest/v1/verbas_aprovadas?orgao=eq.${encodeURIComponent(orgao)}&ano=eq.${ano}&select=valor`, { headers: hdrs }),
+        fetch(`${url}/rest/v1/demandas?centro_custo=eq.${encodeURIComponent(orgao)}&area=eq.Financeiro&status=eq.Pago&select=dados_financeiros`, { headers: hdrs }),
+      ]);
+      const verbas = rVerba.ok ? await rVerba.json() : [];
+      const pagas  = rGasto.ok ? await rGasto.json() : [];
+      const verba  = verbas[0]?.valor || 0;
+      const gasto  = pagas.reduce((s, d) => {
+        try { return s + (parseFloat(JSON.parse(d.dados_financeiros || "{}").valor) || 0); } catch { return s; }
+      }, 0);
+      const saldo = verba - gasto;
+      const fmt = v => v.toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+      if (verba === 0) {
+        infoEl.style.background = "rgba(255,149,0,.1)";
+        infoEl.style.color = "var(--amber,#ff9500)";
+        infoEl.textContent = `⚠ Nenhuma verba aprovada para ${orgao} em ${ano}.`;
+      } else if (saldo <= 0) {
+        infoEl.style.background = "rgba(255,59,48,.1)";
+        infoEl.style.color = "var(--rose,#ff3b30)";
+        infoEl.textContent = `⛔ Verba esgotada — ${fmt(verba)} aprovada, ${fmt(gasto)} gasto.`;
+      } else {
+        infoEl.style.background = "rgba(52,199,89,.1)";
+        infoEl.style.color = "var(--gr,#34c759)";
+        infoEl.textContent = `✓ Saldo disponível: ${fmt(saldo)} de ${fmt(verba)} (gasto: ${fmt(gasto)})`;
+      }
+    } catch { infoEl.textContent = "Erro ao consultar saldo."; }
+  };
 
   async function _loadDeptOptions(sel, currentVal) {
     if (!_departamentosCache) {
@@ -2605,8 +2678,10 @@ function fmtD(d) {
       if (el) el.value = "";
     });
     m.querySelectorAll("#dem-f-ag-spaces input[type=checkbox]").forEach(c => { c.checked = false; });
+    const saldoInfo = m.querySelector("#dem-f-saldo-info");
+    if (saldoInfo) saldoInfo.style.display = "none";
     ["dem-f-tipo-sol","dem-f-valor","dem-f-data-venc","dem-f-beneficiario","dem-f-cpf-cnpj",
-     "dem-f-centro","dem-f-forma-pag","dem-f-chave-pix","dem-f-banco","dem-f-agencia",
+     "dem-f-forma-pag","dem-f-chave-pix","dem-f-banco","dem-f-agencia",
      "dem-f-conta","dem-f-obs-fin","dem-f-reimb-nome","dem-f-reimb-valor",
      "dem-f-reimb-motivo","dem-f-reimb-forma-pag","dem-f-reimb-pix","dem-f-reimb-min",
      "dem-f-reimb-pastor","dem-f-reimb-obs",
@@ -2699,7 +2774,13 @@ function fmtD(d) {
     if (dizimoSec) dizimoSec.style.display = (isFinanceiro && sub === "Dízimos")  ? "flex" : "none";
     const ofertaSec = document.getElementById("dem-f-oferta-section");
     if (ofertaSec) ofertaSec.style.display = (isFinanceiro && sub === "Ofertas") ? "flex" : "none";
-    if (isFinanceiro) _toggleFormaPagamento();
+    if (isFinanceiro) {
+      _toggleFormaPagamento();
+      _demCarregarOrgaos();
+    }
+    const orgaoRow = document.getElementById("dem-f-orgao-row");
+    const isGasto  = isFinanceiro && ["Solicitação de pagamento","Reembolso","Adiantamento","Orçamento de despesas","Solicitação de verba","Prestação de contas"].includes(sub);
+    if (orgaoRow) orgaoRow.style.display = isGasto ? "" : "none";
     const localRow = document.getElementById("dem-f-local-row");
     const respRow  = document.getElementById("dem-f-resp-row");
     if (localRow) localRow.style.display = (isPauta || isFinanceiro) ? "none" : "";

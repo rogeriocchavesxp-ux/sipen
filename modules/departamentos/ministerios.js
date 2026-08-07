@@ -3608,6 +3608,7 @@
       <div style="display:flex;border-bottom:2px solid var(--bd1);margin-bottom:20px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;gap:2px">
         <button class="min-tab active" data-tab="visao-geral" onclick="minSocTab('visao-geral')">${_socIcHome}Visão Geral</button>
         <button class="min-tab" data-tab="membros"            onclick="minSocTab('membros')">${_socIcUsers}Membros</button>
+        <button class="min-tab" data-tab="financeiro"         onclick="minSocTab('financeiro')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Financeiro</button>
         <button class="min-tab" data-tab="reunioes"           onclick="minSocTab('reunioes')">${_socIcReun}Reuniões</button>
         <button class="min-tab" data-tab="relatorios"         onclick="minSocTab('relatorios')">${_socIcBar}Relatórios</button>
         <button class="min-tab" data-tab="adm"                onclick="minSocTab('adm')">${_socIcAdm}Configurações</button>
@@ -3625,6 +3626,7 @@
           <div id="soc-membros-list"><div style="color:var(--tx3);padding:16px">Carregando...</div></div>
         </div>
       </div>
+      <div id="soc-tab-financeiro"   class="min-tab-panel" style="display:none"><div id="soc-fin-content"><div style="color:var(--tx3);text-align:center;padding:32px">Carregando...</div></div></div>
       <div id="soc-tab-reunioes"     class="min-tab-panel" style="display:none"><div id="soc-reu-content"></div></div>
       <div id="soc-tab-relatorios"   class="min-tab-panel" style="display:none"><div id="soc-rel-content"></div></div>
       <div id="soc-tab-adm"          class="min-tab-panel" style="display:none"><div id="soc-adm-content"></div></div>`;
@@ -4053,6 +4055,149 @@
   }
   window._socRemoverNomeado = _socRemoverNomeado;
 
+  /* ── Aba: Financeiro ────────────────────────────────────── */
+  async function _socRenderFinanceiro() {
+    const el = document.getElementById('soc-fin-content');
+    if (!el || !_socAtual) return;
+    const orgao = _socAtual.orgao;
+    const ano   = new Date().getFullYear();
+    const fmt   = v => Number(v || 0).toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+    el.innerHTML = `<div style="color:var(--tx3);text-align:center;padding:32px">Carregando...</div>`;
+    try {
+      const [rVerba, rDem] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/verbas_aprovadas?orgao=eq.${encodeURIComponent(orgao)}&ano=eq.${ano}&select=*`, { headers: _hdr() }),
+        fetch(`${SUPABASE_URL}/rest/v1/demandas?centro_custo=eq.${encodeURIComponent(orgao)}&area=eq.Financeiro&select=id,titulo,status,dados_financeiros,created_at,subcategoria&order=created_at.desc&limit=100`, { headers: _hdr() }),
+      ]);
+      const verbas   = rVerba.ok ? await rVerba.json() : [];
+      const demandas = rDem.ok   ? await rDem.json()   : [];
+      const verba    = verbas[0] || null;
+      const valorVerba = parseFloat(verba?.valor || 0);
+
+      const pagas    = demandas.filter(d => d.status === 'Pago');
+      const pendentes = demandas.filter(d => d.status !== 'Pago' && d.status !== 'Cancelada');
+      const getValor = d => { try { return parseFloat(JSON.parse(d.dados_financeiros || '{}').valor || 0); } catch { return 0; } };
+      const totalGasto     = pagas.reduce((s, d) => s + getValor(d), 0);
+      const totalPendente  = pendentes.reduce((s, d) => s + getValor(d), 0);
+      const saldo          = valorVerba - totalGasto;
+      const pct            = valorVerba > 0 ? Math.min(100, Math.round(totalGasto / valorVerba * 100)) : 0;
+
+      const statusBadge = s => {
+        const cfg = { Pago:['var(--gr)','rgba(52,199,89,.12)'], Pendente:['var(--amber,#ff9500)','rgba(255,149,0,.12)'], 'Em Andamento':['var(--blue)','rgba(10,132,255,.12)'], Cancelada:['var(--tx3)','var(--bg2)'] };
+        const [cl, bg] = cfg[s] || cfg['Pendente'];
+        return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${bg};color:${cl}">${s}</span>`;
+      };
+
+      el.innerHTML = `
+        <div class="card" style="margin-bottom:16px">
+          <div class="ctit" style="display:flex;justify-content:space-between;align-items:center">
+            <span>Verba ${ano}</span>
+            <button class="tbt sec" style="font-size:11.5px" onclick="window._socEditarVerba()">✎ Editar verba</button>
+          </div>
+          ${!verba
+            ? `<div style="color:var(--tx3);font-size:13px;padding:8px 0">Nenhuma verba aprovada para ${ano}. Clique em "Editar verba" para definir.</div>`
+            : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:16px">
+                <div style="background:var(--bg2);border-radius:10px;padding:14px">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);margin-bottom:6px">Verba Aprovada</div>
+                  <div style="font-size:18px;font-weight:700;color:var(--tx1)">${fmt(valorVerba)}</div>
+                  ${verba.aprovado_em ? `<div style="font-size:10.5px;color:var(--tx3);margin-top:3px">aprovado em ${new Date(verba.aprovado_em+'T12:00:00').toLocaleDateString('pt-BR')}</div>` : ''}
+                </div>
+                <div style="background:var(--bg2);border-radius:10px;padding:14px">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);margin-bottom:6px">Gasto (Pago)</div>
+                  <div style="font-size:18px;font-weight:700;color:var(--rose)">${fmt(totalGasto)}</div>
+                  <div style="font-size:10.5px;color:var(--tx3);margin-top:3px">${pagas.length} nota${pagas.length !== 1 ? 's' : ''}</div>
+                </div>
+                <div style="background:var(--bg2);border-radius:10px;padding:14px">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);margin-bottom:6px">Pendente</div>
+                  <div style="font-size:18px;font-weight:700;color:var(--amber,#ff9500)">${fmt(totalPendente)}</div>
+                  <div style="font-size:10.5px;color:var(--tx3);margin-top:3px">${pendentes.length} em aberto</div>
+                </div>
+                <div style="background:${saldo < 0 ? 'rgba(255,59,48,.08)' : 'rgba(52,199,89,.08)'};border-radius:10px;padding:14px;border:1px solid ${saldo < 0 ? 'rgba(255,59,48,.2)' : 'rgba(52,199,89,.2)'}">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);margin-bottom:6px">Saldo Disponível</div>
+                  <div style="font-size:18px;font-weight:700;color:${saldo < 0 ? 'var(--rose)' : 'var(--gr)'}">${fmt(saldo)}</div>
+                  <div style="font-size:10.5px;color:var(--tx3);margin-top:3px">${pct}% utilizado</div>
+                </div>
+              </div>
+              <div style="height:6px;border-radius:3px;background:var(--bg2);overflow:hidden">
+                <div style="height:100%;width:${pct}%;background:${pct >= 90 ? 'var(--rose)' : pct >= 70 ? 'var(--amber,#ff9500)' : 'var(--gr)'};border-radius:3px;transition:width .4s"></div>
+              </div>`}
+        </div>
+
+        <div class="card">
+          <div class="ctit">Extrato de Demandas Financeiras</div>
+          ${!demandas.length
+            ? `<div style="color:var(--tx3);text-align:center;padding:20px;font-size:13px">Nenhuma demanda financeira registrada para este órgão.</div>`
+            : `<table class="tbl">
+                <thead><tr>
+                  <th>Data</th><th>Descrição</th><th>Subcategoria</th><th style="text-align:right">Valor</th><th>Status</th>
+                </tr></thead>
+                <tbody>
+                  ${demandas.map(d => {
+                    const val = getValor(d);
+                    const dt  = new Date(d.created_at).toLocaleDateString('pt-BR');
+                    return `<tr>
+                      <td style="font-size:11.5px;color:var(--tx3);white-space:nowrap">${dt}</td>
+                      <td style="font-size:12.5px;color:var(--tx1)">${_hEsc(d.titulo || '—')}</td>
+                      <td style="font-size:11.5px;color:var(--tx3)">${_hEsc(d.subcategoria || '—')}</td>
+                      <td style="font-size:12.5px;font-weight:600;color:${d.status === 'Pago' ? 'var(--rose)' : 'var(--tx2)'};text-align:right;white-space:nowrap">${val > 0 ? fmt(val) : '—'}</td>
+                      <td>${statusBadge(d.status)}</td>
+                    </tr>`;
+                  }).join('')}
+                </tbody>
+              </table>`}
+        </div>`;
+
+      // Form de edição de verba
+      window._socEditarVerba = function() {
+        const atual = verba?.valor || '';
+        const aprovEm = verba?.aprovado_em || '';
+        const formEl = document.createElement('div');
+        formEl.id = '_soc-verba-form';
+        formEl.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+        formEl.innerHTML = `
+          <div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:400px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+            <div style="font-size:15px;font-weight:700;color:var(--tx1);margin-bottom:16px">Verba Aprovada — ${orgao} (${ano})</div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Valor aprovado (R$) *</label>
+                <input id="_sv-valor" type="number" step="0.01" min="0" value="${atual}" placeholder="0,00" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg2);color:var(--tx1);font-size:13px;box-sizing:border-box">
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Data de aprovação</label>
+                <input id="_sv-data" type="date" value="${aprovEm}" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg2);color:var(--tx1);font-size:13px;box-sizing:border-box">
+              </div>
+              <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px">
+                <button onclick="document.getElementById('_soc-verba-form').remove()" style="padding:8px 18px;border-radius:8px;border:1px solid var(--bd2);background:none;color:var(--tx2);font-size:13px;cursor:pointer">Cancelar</button>
+                <button onclick="window._socSalvarVerba()" style="padding:8px 18px;border-radius:8px;border:none;background:var(--violet);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Salvar</button>
+              </div>
+            </div>
+          </div>`;
+        document.body.appendChild(formEl);
+      };
+
+      window._socSalvarVerba = async function() {
+        const valor = parseFloat(document.getElementById('_sv-valor')?.value || 0);
+        const data  = document.getElementById('_sv-data')?.value || null;
+        if (!valor || valor <= 0) { alert('Informe um valor válido.'); return; }
+        try {
+          const payload = { orgao_tipo: _socAtual?.tipo || 'sociedade', orgao, ano, valor, aprovado_em: data || null };
+          const resp = await fetch(`${SUPABASE_URL}/rest/v1/verbas_aprovadas?orgao=eq.${encodeURIComponent(orgao)}&ano=eq.${ano}`,
+            { method: 'PATCH', headers: Object.assign({}, _hdr(), { 'Content-Type':'application/json', 'Prefer':'return=representation' }), body: JSON.stringify(payload) });
+          const body = await resp.text();
+          const updated = JSON.parse(body || '[]');
+          if (!updated.length) {
+            await fetch(`${SUPABASE_URL}/rest/v1/verbas_aprovadas`,
+              { method: 'POST', headers: Object.assign({}, _hdr(), { 'Content-Type':'application/json', 'Prefer':'return=representation' }), body: JSON.stringify(payload) });
+          }
+          document.getElementById('_soc-verba-form')?.remove();
+          _socRenderFinanceiro();
+        } catch(e) { alert('Erro ao salvar: ' + e.message); }
+      };
+
+    } catch(e) {
+      el.innerHTML = `<div style="color:var(--rose);padding:16px">Erro ao carregar financeiro: ${e.message}</div>`;
+    }
+  }
+
   /* ── Aba: Relatórios ────────────────────────────────────── */
   function _socRenderRelatorios() {
     const el = document.getElementById('soc-rel-content');
@@ -4263,6 +4408,7 @@
     if (panel) panel.style.display = '';
     _socTabAtual = tab;
     if (tab === 'membros')    { _socRenderLideranca(); _socRenderMembros(); }
+    if (tab === 'financeiro') _socRenderFinanceiro();
     if (tab === 'reunioes')   _socRenderReunioes();
     if (tab === 'relatorios') _socRenderRelatorios();
     if (tab === 'adm')        _socRenderAdm();
