@@ -1480,6 +1480,10 @@ function fmtD(d) {
     if (dem.numero_chamado) {
       detailRows.unshift(["N° do chamado", `<span style="font-weight:700;color:var(--acc,#4a9cf5);letter-spacing:.04em">${escapeHtml(dem.numero_chamado)}</span>`]);
     }
+    if (dem.financial_data?.origem_area) {
+      const encEm = dem.financial_data.encaminhado_em ? ` · ${fmtDT(dem.financial_data.encaminhado_em)}` : "";
+      detailRows.push(["Encaminhado de", `<span style="font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:8px;background:rgba(224,138,42,.15);color:var(--amber)">${escapeHtml(dem.financial_data.origem_area)}</span><span style="color:var(--tx3);font-size:11px;margin-left:6px">${encEm}</span>`]);
+    }
     if (_temFinancialData(dem) && _toLabel(dem.status) === "Aguardando Pagamento") {
       detailRows.push([
         "Solicitação Financeira",
@@ -1521,6 +1525,7 @@ function fmtD(d) {
             onclick="pautasIncluirNaPauta('${escapeHtmlAttr(id)}','${escapeHtmlAttr(dem.titulo||"")}')">
             ⚖️ Adicionar à Pauta
           </button>` : ""}
+          ${dem.area !== "Financeiro" ? `<button class="tbt" style="color:var(--amber);border-color:rgba(224,138,42,.3)" onclick="demEncaminharFinanceiro('${escapeHtmlAttr(id)}')">⇢ Encaminhar para Financeiro</button>` : ""}
           <button class="tbt" onclick="demDuplicar('${id}')">⧉ Duplicar</button>
           <button class="tbt" style="color:var(--rose);border-color:rgba(224,85,85,.3)" onclick="demExcluirDemanda('${id}')">🗑 Excluir</button>
         </div>
@@ -2122,6 +2127,172 @@ function fmtD(d) {
       }
     } catch(e) {
       alert("Erro ao duplicar: " + e.message);
+    }
+  };
+
+  /* ── Encaminhar para Financeiro ─────────────────────────── */
+
+  window.demEncaminharFinanceiro = function(id) {
+    const dem = _cache.find(x => String(x.id || x._row) === String(id));
+    if (!dem) return;
+    const prev = document.getElementById("modal-encaminhar-fin");
+    if (prev) prev.remove();
+    const INP = "width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg1));color:var(--tx1);font-size:12.5px;font-family:inherit;box-sizing:border-box";
+    const LB  = "font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:4px;display:block";
+    const m = document.createElement("div");
+    m.id = "modal-encaminhar-fin";
+    m.style.cssText = "display:flex;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:16px";
+    m.innerHTML = `
+      <div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+        <div style="padding:20px 24px 16px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg-card);z-index:1">
+          <div>
+            <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Encaminhar para Financeiro</div>
+            <div style="font-size:16px;font-weight:700;color:var(--tx1)">${escapeHtml(dem.titulo || "Demanda")}</div>
+            <div style="font-size:11px;color:var(--amber);margin-top:3px">Origem: ${escapeHtml(dem.area || "")} · ${escapeHtml(dem.subcategoria || "")}</div>
+          </div>
+          <button onclick="document.getElementById('modal-encaminhar-fin').remove()" style="background:none;border:none;font-size:22px;color:var(--tx3);cursor:pointer;padding:4px 8px;border-radius:6px">×</button>
+        </div>
+        <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label style="${LB}">Tipo <span style="color:var(--rose)">*</span></label>
+              <select id="enc-fin-tipo" style="${INP}">
+                <option value="">— selecione —</option>
+                <option value="Pagamento">Pagamento</option>
+                <option value="Reembolso">Reembolso</option>
+                <option value="Adiantamento">Adiantamento</option>
+              </select>
+            </div>
+            <div>
+              <label style="${LB}">Valor R$ <span style="color:var(--rose)">*</span></label>
+              <input type="text" id="enc-fin-valor" style="${INP}" placeholder="0,00" oninput="window._demMascaraValor(this)">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label style="${LB}">Data de vencimento</label>
+              <input type="date" id="enc-fin-venc" style="${INP}">
+            </div>
+            <div>
+              <label style="${LB}">Centro de custo</label>
+              <input type="text" id="enc-fin-centro" style="${INP}" placeholder="Ex: Geral, Missões...">
+            </div>
+          </div>
+          <div>
+            <label style="${LB}">Beneficiário / Favorecido <span style="color:var(--rose)">*</span></label>
+            <input type="text" id="enc-fin-benefic" style="${INP}" placeholder="Nome do beneficiário">
+          </div>
+          <div>
+            <label style="${LB}">CPF / CNPJ</label>
+            <input type="text" id="enc-fin-cpf" style="${INP}" placeholder="000.000.000-00">
+          </div>
+          <div>
+            <label style="${LB}">Forma de pagamento <span style="color:var(--rose)">*</span></label>
+            <select id="enc-fin-forma" style="${INP}" onchange="window._encFinFormaChange(this.value)">
+              <option value="">— selecione —</option>
+              <option value="PIX">PIX</option>
+              <option value="Boleto">Boleto</option>
+              <option value="Cartão Crédito">Cartão Crédito</option>
+              <option value="Cartão Débito">Cartão Débito</option>
+              <option value="Dinheiro">Dinheiro</option>
+              <option value="Transferência Bancária">Transferência Bancária</option>
+              <option value="Débito em Conta">Débito em Conta</option>
+              <option value="Cheque">Cheque</option>
+              <option value="Reembolso">Reembolso</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+          <div id="enc-fin-pix-row" style="display:none">
+            <label style="${LB}">Chave PIX</label>
+            <input type="text" id="enc-fin-pix" style="${INP}" placeholder="CPF, e-mail, celular ou chave aleatória">
+          </div>
+          <div id="enc-fin-bank-row" style="display:none;flex-direction:column;gap:12px">
+            <div>
+              <label style="${LB}">Banco</label>
+              <input type="text" id="enc-fin-banco" style="${INP}" placeholder="Nome do banco">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div>
+                <label style="${LB}">Agência</label>
+                <input type="text" id="enc-fin-ag" style="${INP}" placeholder="0000">
+              </div>
+              <div>
+                <label style="${LB}">Conta</label>
+                <input type="text" id="enc-fin-conta" style="${INP}" placeholder="00000-0">
+              </div>
+            </div>
+          </div>
+          <div>
+            <label style="${LB}">Observações financeiras</label>
+            <textarea id="enc-fin-obs" rows="3" style="${INP};resize:vertical;height:auto;font-family:inherit" placeholder="Informações adicionais sobre o pagamento..."></textarea>
+          </div>
+          <div id="enc-fin-err" style="color:var(--rose);font-size:12px;display:none"></div>
+        </div>
+        <div style="padding:16px 24px 20px;border-top:1px solid var(--bd1);display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:var(--bg-card)">
+          <button onclick="document.getElementById('modal-encaminhar-fin').remove()" style="padding:9px 20px;border-radius:8px;border:1px solid var(--bd2);background:none;color:var(--tx2);font-size:13px;cursor:pointer">Cancelar</button>
+          <button id="enc-fin-btn" onclick="window._encFinConfirmar('${escapeHtmlAttr(String(id))}')" style="padding:9px 24px;border-radius:8px;border:none;background:var(--amber,#e08a2a);color:#fff;font-size:13px;font-weight:600;cursor:pointer">⇢ Encaminhar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(m);
+  };
+
+  window._encFinFormaChange = function(val) {
+    const pixRow  = document.getElementById("enc-fin-pix-row");
+    const bankRow = document.getElementById("enc-fin-bank-row");
+    if (pixRow)  pixRow.style.display  = val === "PIX"                   ? "" : "none";
+    if (bankRow) bankRow.style.display = val === "Transferência Bancária" ? "flex" : "none";
+  };
+
+  window._encFinConfirmar = async function(id) {
+    const tipo     = document.getElementById("enc-fin-tipo")?.value     || "";
+    const valorRaw = (document.getElementById("enc-fin-valor")?.value   || "").replace(/\./g,"").replace(",",".");
+    const valor    = parseFloat(valorRaw) || 0;
+    const venc     = document.getElementById("enc-fin-venc")?.value     || null;
+    const centro   = document.getElementById("enc-fin-centro")?.value.trim()  || null;
+    const benefic  = document.getElementById("enc-fin-benefic")?.value.trim() || "";
+    const cpf      = document.getElementById("enc-fin-cpf")?.value.trim()     || null;
+    const forma    = document.getElementById("enc-fin-forma")?.value    || "";
+    const pix      = document.getElementById("enc-fin-pix")?.value.trim()     || null;
+    const banco    = document.getElementById("enc-fin-banco")?.value.trim()   || null;
+    const ag       = document.getElementById("enc-fin-ag")?.value.trim()      || null;
+    const conta    = document.getElementById("enc-fin-conta")?.value.trim()   || null;
+    const obs      = document.getElementById("enc-fin-obs")?.value.trim()     || null;
+    const errEl    = document.getElementById("enc-fin-err");
+    const btn      = document.getElementById("enc-fin-btn");
+    function _err(msg) { if (errEl) { errEl.textContent = msg; errEl.style.display = ""; } }
+    if (!tipo)    return _err("Selecione o tipo de solicitação.");
+    if (!valor)   return _err("Informe o valor.");
+    if (!benefic) return _err("Informe o beneficiário.");
+    if (!forma)   return _err("Selecione a forma de pagamento.");
+    if (errEl) errEl.style.display = "none";
+    if (btn) { btn.disabled = true; btn.textContent = "Encaminhando..."; }
+    const dem = _cache.find(x => String(x.id || x._row) === String(id));
+    const fd = {
+      tipo,
+      valor,
+      data_vencimento: venc,
+      centro_custo:    centro,
+      beneficiario:    benefic,
+      cpf_cnpj:        cpf,
+      forma_pagamento: forma,
+      chave_pix:       forma === "PIX"                   ? pix   : null,
+      banco:           forma === "Transferência Bancária" ? banco : null,
+      agencia:         forma === "Transferência Bancária" ? ag    : null,
+      conta:           forma === "Transferência Bancária" ? conta : null,
+      obs,
+      origem_area:     dem?.area || "Desconhecido",
+      encaminhado_em:  new Date().toISOString(),
+    };
+    try {
+      await apiWrite("update", "DEMANDAS", { _row: id, area: "Financeiro", status: "PENDENTE", financial_data: fd });
+      document.getElementById("modal-encaminhar-fin")?.remove();
+      _invalidate();
+      _atualizarBadge();
+      if (typeof T === "function") T("Encaminhado", "Chamado movido para Financeiro · Pendente");
+      window.demAbrirDetalhe(id, _origemView || "dem-todas");
+    } catch(e) {
+      if (btn) { btn.disabled = false; btn.textContent = "⇢ Encaminhar"; }
+      _err("Erro ao encaminhar: " + (e.message || e));
     }
   };
 
