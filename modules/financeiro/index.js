@@ -560,7 +560,7 @@
                     <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${nomePropio(r.responsavel||r.responsavel_txt)||"—"}</td>
                     <td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--tx1);white-space:nowrap">${r.financial_data?.valor!=null?`R$ ${parseFloat(r.financial_data.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}`:"—"}</td>
                     <td style="padding:8px 6px;color:var(--tx2);font-size:11px;white-space:nowrap">${escapeHtml(r.financial_data?.forma_pagamento||"—")}</td>
-                    <td style="padding:8px 6px">${_pillDem(["Pago","Cancelada","Cancelado"].includes(r.status) ? r.status : "Em aberto")}</td>
+                    <td style="padding:8px 6px">${_pillDem(r.status)}</td>
                     <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${fmtD(r.data_abertura||r.criado_em)}</td>
                     <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${fmtD(r.data_conclusao)}</td>
                   </tr>`).join("")}
