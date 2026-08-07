@@ -3607,17 +3607,20 @@
       </div>
       <div style="display:flex;border-bottom:2px solid var(--bd1);margin-bottom:20px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;gap:2px">
         <button class="min-tab active" data-tab="visao-geral" onclick="minSocTab('visao-geral')">${_socIcHome}Visão Geral</button>
-        <button class="min-tab" data-tab="lideranca"          onclick="minSocTab('lideranca')">${_socIcLider}Liderança</button>
-        <button class="min-tab" data-tab="membros"            onclick="minSocTab('membros')">${_socIcUsers}Membros <span id="soc-membro-count" style="font-size:11px;font-weight:400"></span></button>
+        <button class="min-tab" data-tab="membros"            onclick="minSocTab('membros')">${_socIcUsers}Membros</button>
         <button class="min-tab" data-tab="reunioes"           onclick="minSocTab('reunioes')">${_socIcReun}Reuniões</button>
         <button class="min-tab" data-tab="relatorios"         onclick="minSocTab('relatorios')">${_socIcBar}Relatórios</button>
         <button class="min-tab" data-tab="adm"                onclick="minSocTab('adm')">${_socIcAdm}Configurações</button>
       </div>
       <div id="soc-tab-visao-geral"  class="min-tab-panel"><div id="soc-vg-content"><div style="color:var(--tx3);text-align:center;padding:32px">Carregando...</div></div></div>
-      <div id="soc-tab-lideranca"    class="min-tab-panel" style="display:none"><div id="soc-lid-content"></div></div>
       <div id="soc-tab-membros"      class="min-tab-panel" style="display:none">
+        <div class="card" style="margin-bottom:16px">
+          <div class="ctit" style="display:flex;justify-content:space-between;align-items:center"><span>Liderança</span><button class="tbt sec" style="font-size:11.5px" onclick="window._socMostrarFormLider()">+ Adicionar</button></div>
+          <div id="soc-lid-form" style="display:none"></div>
+          <div id="soc-lid-content"></div>
+        </div>
         <div class="card">
-          <div class="ctit" style="display:flex;justify-content:space-between;align-items:center"><span>Membros</span><button class="tbt sec" style="font-size:11.5px" onclick="window._socMostrarFormMembro()">+ Adicionar</button></div>
+          <div class="ctit" style="display:flex;justify-content:space-between;align-items:center"><span>Membros <span id="soc-membro-count" style="font-size:11px;font-weight:400;color:var(--tx3)"></span></span><button class="tbt sec" style="font-size:11.5px" onclick="window._socMostrarFormMembro()">+ Adicionar</button></div>
           <div id="soc-mem-form" style="display:none"></div>
           <div id="soc-membros-list"><div style="color:var(--tx3);padding:16px">Carregando...</div></div>
         </div>
@@ -3788,13 +3791,7 @@
     };
 
     el.innerHTML = `
-      <div class="card">
-        <div class="ctit" style="display:flex;justify-content:space-between;align-items:center">
-          <span>Liderança — ${_hEsc(_socAtual?.sigla || '')}</span>
-          <button class="tbt sec" style="font-size:11.5px" onclick="window._socMostrarFormLider()">+ Adicionar</button>
-        </div>
-        <div id="soc-lid-form" style="display:none"></div>
-        ${!lideres.length
+      ${!lideres.length
           ? '<div style="color:var(--tx3);text-align:center;padding:20px">Nenhuma liderança nomeada.</div>'
           : Object.entries(grupos).map(([g, pessoas]) => `
             <div style="margin-bottom:18px">
@@ -3813,7 +3810,7 @@
                   <button onclick="window._socMenuNomeado(event,this,'${r.id}','lider')" style="background:none;border:none;cursor:pointer;padding:3px 8px;color:var(--tx3);font-size:15px;border-radius:4px;line-height:1;flex-shrink:0">⋯</button>
                 </div>`).join('')}
             </div>`).join('')}
-      </div>`;
+      `;
   }
 
   /* ── Aba: Membros ───────────────────────────────────────── */
@@ -4118,11 +4115,11 @@
             </div>`).join('')}
         </div>
         <div style="display:flex;justify-content:flex-end;margin-top:10px">
-          <button class="tbt sec" style="font-size:12px" onclick="minSocTab('lideranca')">Gerenciar liderança →</button>
+          <button class="tbt sec" style="font-size:12px" onclick="minSocTab('membros')">Gerenciar liderança →</button>
         </div>`
       : `<div style="display:flex;align-items:center;gap:12px;padding:4px 0">
           <span style="font-size:12.5px;color:var(--tx3)">Nenhuma liderança nomeada.</span>
-          <button class="tbt sec" style="font-size:12px" onclick="minSocTab('lideranca')">Adicionar →</button>
+          <button class="tbt sec" style="font-size:12px" onclick="minSocTab('membros')">Adicionar →</button>
         </div>`;
 
     el.innerHTML = `
@@ -4238,8 +4235,7 @@
     const panel = document.getElementById('soc-tab-' + tab);
     if (panel) panel.style.display = '';
     _socTabAtual = tab;
-    if (tab === 'lideranca')  _socRenderLideranca();
-    if (tab === 'membros')    _socRenderMembros();
+    if (tab === 'membros')    { _socRenderLideranca(); _socRenderMembros(); }
     if (tab === 'reunioes')   _socRenderReunioes();
     if (tab === 'relatorios') _socRenderRelatorios();
     if (tab === 'adm')        _socRenderAdm();
