@@ -133,9 +133,19 @@
           </div>
           <div>
             <label style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Centro de custo / Ministério</label>
-            <select id="dem-f-centro" onchange="window.demOnOrgaoChange&&demOnOrgaoChange()" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px">
-              <option value="">— Selecione o ministério ou departamento —</option>
-            </select>
+            <div id="dem-f-centro-wrap" style="position:relative">
+              <div id="dem-f-centro-btn" onclick="window._demOrgaoToggle&&_demOrgaoToggle()" style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;cursor:pointer;user-select:none;min-height:38px">
+                <span id="dem-f-centro-lbl" style="color:var(--tx3)">— Selecione o ministério ou departamento —</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:.5"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+              <div id="dem-f-centro-dd" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:9999;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.25);overflow:hidden">
+                <div style="padding:8px">
+                  <input id="dem-f-centro-q" type="text" placeholder="Buscar..." autocomplete="off" oninput="window._demOrgaoFiltrar&&_demOrgaoFiltrar(this.value)" style="width:100%;padding:7px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg2);color:var(--tx1);font-size:12.5px;box-sizing:border-box;outline:none">
+                </div>
+                <div id="dem-f-centro-list" style="max-height:240px;overflow-y:auto;padding:0 4px 6px"></div>
+              </div>
+              <input type="hidden" id="dem-f-centro" value="">
+            </div>
             <div id="dem-f-saldo-info" style="display:none;margin-top:6px;padding:7px 10px;border-radius:6px;font-size:12px;font-weight:500"></div>
           </div>
           <div>

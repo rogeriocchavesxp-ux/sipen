@@ -2398,10 +2398,18 @@ function fmtD(d) {
   };
   const _GRUPO_ORDER = ["Departamento","MUSICA","DIACONIA","EVANGELISMO","COMUNICACAO","INTERCESSAO","JOVENS","INFANTIL","ACOLHIMENTO","SOCIEDADE","OUTRO","Ministério"];
 
-  function _demPopularOrgaoSel(sel) {
-    const current = sel.value;
+  function _demPopularOrgaoSel() {
+    _demOrgaoRenderLista("");
+  }
+
+  function _demOrgaoRenderLista(filtro) {
+    const list = document.getElementById("dem-f-centro-list");
+    if (!list) return;
+    const current = document.getElementById("dem-f-centro")?.value || "";
+    const q = (filtro || "").toLowerCase().trim();
     const grupos = {};
     (_orgaosCache || []).forEach(d => {
+      if (q && !d.nome.toLowerCase().includes(q)) return;
       (grupos[d.grupo] = grupos[d.grupo] || []).push(d);
     });
     const ordemFn = (a, b) => {
@@ -2409,12 +2417,52 @@ function fmtD(d) {
       const ib = _GRUPO_ORDER.indexOf(b);
       return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
     };
-    sel.innerHTML = `<option value="">— Selecione o ministério ou departamento —</option>` +
-      Object.keys(grupos).sort(ordemFn).map(g =>
-        `<optgroup label="${_GRUPO_LABEL[g] || g}">${grupos[g].map(d => `<option value="${d.nome}"${d.nome === current ? " selected" : ""}>${d.nome}</option>`).join("")}</optgroup>`
-      ).join("");
-    if (current) sel.value = current;
+    if (!Object.keys(grupos).length) {
+      list.innerHTML = `<div style="padding:12px;text-align:center;font-size:12px;color:var(--tx3)">Nenhum resultado</div>`;
+      return;
+    }
+    list.innerHTML = Object.keys(grupos).sort(ordemFn).map(g => `
+      <div style="padding:5px 8px 2px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--violet,#8b6fd4)">${_GRUPO_LABEL[g] || g}</div>
+      ${grupos[g].map(d => `
+        <div onclick="window._demOrgaoSelect('${d.nome.replace(/'/g,"&#39;")}')"
+          style="padding:7px 12px;border-radius:6px;font-size:13px;cursor:pointer;color:${d.nome===current?'var(--violet)':'var(--tx1)'};background:${d.nome===current?'rgba(139,107,193,.12)':'transparent'};font-weight:${d.nome===current?'600':'400'}"
+          onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='${d.nome===current?'rgba(139,107,193,.12)':'transparent'}'">
+          ${d.nome}
+        </div>`).join("")}
+    `).join("");
   }
+
+  window._demOrgaoToggle = function() {
+    const dd = document.getElementById("dem-f-centro-dd");
+    if (!dd) return;
+    const open = dd.style.display !== "none";
+    if (open) { dd.style.display = "none"; return; }
+    dd.style.display = "";
+    const q = document.getElementById("dem-f-centro-q");
+    if (q) { q.value = ""; q.focus(); }
+    _demOrgaoRenderLista("");
+    setTimeout(() => {
+      const close = e => {
+        if (!document.getElementById("dem-f-centro-wrap")?.contains(e.target)) {
+          dd.style.display = "none";
+          document.removeEventListener("click", close);
+        }
+      };
+      document.addEventListener("click", close);
+    }, 50);
+  };
+
+  window._demOrgaoFiltrar = function(v) { _demOrgaoRenderLista(v); };
+
+  window._demOrgaoSelect = function(nome) {
+    const inp = document.getElementById("dem-f-centro");
+    const lbl = document.getElementById("dem-f-centro-lbl");
+    const dd  = document.getElementById("dem-f-centro-dd");
+    if (inp) inp.value = nome;
+    if (lbl) { lbl.textContent = nome; lbl.style.color = "var(--tx1)"; }
+    if (dd)  dd.style.display = "none";
+    if (window.demOnOrgaoChange) demOnOrgaoChange();
+  };
 
   window.demOnOrgaoChange = async function() {
     const orgao = document.getElementById("dem-f-centro")?.value;
@@ -2688,6 +2736,10 @@ function fmtD(d) {
     m.querySelectorAll("#dem-f-ag-spaces input[type=checkbox]").forEach(c => { c.checked = false; });
     const saldoInfo = m.querySelector("#dem-f-saldo-info");
     if (saldoInfo) saldoInfo.style.display = "none";
+    const centroInp = m.querySelector("#dem-f-centro");
+    const centroLbl = m.querySelector("#dem-f-centro-lbl");
+    if (centroInp) centroInp.value = "";
+    if (centroLbl) { centroLbl.textContent = "— Selecione o ministério ou departamento —"; centroLbl.style.color = "var(--tx3)"; }
     ["dem-f-tipo-sol","dem-f-valor","dem-f-data-venc","dem-f-beneficiario","dem-f-cpf-cnpj",
      "dem-f-forma-pag","dem-f-chave-pix","dem-f-banco","dem-f-agencia",
      "dem-f-conta","dem-f-obs-fin","dem-f-reimb-nome","dem-f-reimb-valor",
