@@ -161,12 +161,14 @@
     "CONCLUIDA": "Pago", "CANCELADA": "Cancelada", "PAGO": "Pago",
   };
   const _DEM_STATUS_CFG = {
+    "Em aberto":             { bg:"rgba(74,156,245,.12)",  cl:"var(--blue)"   },
     "Em Análise":            { bg:"rgba(212,168,67,.12)",  cl:"var(--gold)"   },
     "Em Andamento":          { bg:"rgba(139,111,212,.12)", cl:"var(--violet)" },
     "Aguardando Pagamento":  { bg:"rgba(234,179,8,.12)",   cl:"var(--amber)"  },
     "Pendente":              { bg:"rgba(224,138,42,.12)",  cl:"var(--amber)"  },
     "Concluída":             { bg:"rgba(58,170,92,.12)",   cl:"var(--gr)"     },
     "Cancelada":             { bg:"rgba(90,96,104,.15)",   cl:"var(--tx3)"    },
+    "Cancelado":             { bg:"rgba(90,96,104,.15)",   cl:"var(--tx3)"    },
     "Pago":                  { bg:"rgba(58,170,92,.12)",   cl:"var(--gr)"     },
   };
 
@@ -520,14 +522,8 @@
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
           <select id="fin-pagar-fstatus" onchange="finFiltrarPagar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:6px 10px;outline:none">
             <option value="__aberto" ${fstatus==="__aberto"?"selected":""}>Em aberto</option>
-            <option value="" ${fstatus===""?"selected":""}>Todos os status</option>
-            <option value="Pendente" ${fstatus==="Pendente"?"selected":""}>Pendente</option>
-            <option value="Em Análise" ${fstatus==="Em Análise"?"selected":""}>Em Análise</option>
-            <option value="Em Andamento" ${fstatus==="Em Andamento"?"selected":""}>Em Andamento</option>
-            <option value="Aguardando Pagamento" ${fstatus==="Aguardando Pagamento"?"selected":""}>Aguardando Pagamento</option>
-            <option value="Pendente" ${fstatus==="Pendente"?"selected":""}>Pendente</option>
             <option value="Pago" ${fstatus==="Pago"?"selected":""}>Pago</option>
-            <option value="Cancelada" ${fstatus==="Cancelada"?"selected":""}>Cancelada</option>
+            <option value="" ${fstatus===""?"selected":""}>Todos</option>
           </select>
           <select id="fin-pagar-fprio" onchange="finFiltrarPagar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:6px 10px;outline:none">
             <option value="">Todas as prioridades</option>
@@ -564,7 +560,7 @@
                     <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${nomePropio(r.responsavel||r.responsavel_txt)||"—"}</td>
                     <td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--tx1);white-space:nowrap">${r.financial_data?.valor!=null?`R$ ${parseFloat(r.financial_data.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}`:"—"}</td>
                     <td style="padding:8px 6px;color:var(--tx2);font-size:11px;white-space:nowrap">${escapeHtml(r.financial_data?.forma_pagamento||"—")}</td>
-                    <td style="padding:8px 6px">${_pillDem(r.status)}</td>
+                    <td style="padding:8px 6px">${_pillDem(["Pago","Cancelada","Cancelado"].includes(r.status) ? r.status : "Em aberto")}</td>
                     <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${fmtD(r.data_abertura||r.criado_em)}</td>
                     <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${fmtD(r.data_conclusao)}</td>
                   </tr>`).join("")}
