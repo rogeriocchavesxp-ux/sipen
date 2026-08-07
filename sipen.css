@@ -1294,6 +1294,13 @@ body.modo-membro .sb          { display: none }
 body.modo-membro .sb-backdrop { display: none }
 body.modo-membro .sb-ham      { display: none }
 
+/* Mobile: sidebar e hamburger nunca aparecem — somente o Painel é acessível */
+@media (max-width: 768px) {
+  .sb     { display: none !important }
+  .sb-ham { display: none !important }
+  .sb-backdrop { display: none !important }
+}
+
 /* Botão Trocar Área — oculto para membros comuns, visível para gestores */
 #btn-trocar-area              { display: none }
 body.modo-membro #btn-trocar-area { display: flex }
