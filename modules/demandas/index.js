@@ -2369,13 +2369,15 @@ function fmtD(d) {
       const key = typeof SUPABASE_ANON_KEY !== "undefined" ? SUPABASE_ANON_KEY : "";
       const tok = typeof sipenToken === "function" ? sipenToken() : key;
       const hdrs = { apikey: key, Authorization: `Bearer ${tok}` };
-      const [rMin, rDept] = await Promise.all([
+      const [rMin, rDept, rSoc] = await Promise.all([
         fetch(`${url}/rest/v1/ministerios?select=nome,tipo&order=nome.asc&limit=300`, { headers: hdrs }),
         fetch(`${url}/rest/v1/dept_administrativos?select=nome&order=nome.asc&limit=100`, { headers: hdrs }),
+        fetch(`${url}/rest/v1/sociedades?ativo=eq.true&select=nome,sigla&order=sigla.asc&limit=50`, { headers: hdrs }),
       ]);
       const mins  = rMin.ok  ? (await rMin.json()).map(d => ({ nome: d.nome, grupo: d.tipo || "Ministério" })) : [];
       const depts = rDept.ok ? (await rDept.json()).map(d => ({ nome: d.nome, grupo: "Departamento" })) : [];
-      _orgaosCache = [...depts, ...mins];
+      const socs  = rSoc.ok  ? (await rSoc.json()).map(d => ({ nome: d.nome || d.sigla, grupo: "SOCIEDADE" })) : [];
+      _orgaosCache = [...depts, ...socs, ...mins];
     } catch { _orgaosCache = []; }
     _demPopularOrgaoSel(sel);
   }
