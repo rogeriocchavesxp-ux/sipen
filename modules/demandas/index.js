@@ -1525,7 +1525,6 @@ function fmtD(d) {
             onclick="pautasIncluirNaPauta('${escapeHtmlAttr(id)}','${escapeHtmlAttr(dem.titulo||"")}')">
             ⚖️ Adicionar à Pauta
           </button>` : ""}
-          ${dem.area !== "Financeiro" ? `<button class="tbt" style="color:var(--amber);border-color:rgba(224,138,42,.3)" onclick="demEncaminharFinanceiro('${escapeHtmlAttr(id)}')">⇢ Encaminhar para Financeiro</button>` : ""}
           <button class="tbt" onclick="demDuplicar('${id}')">⧉ Duplicar</button>
           <button class="tbt" style="color:var(--rose);border-color:rgba(224,85,85,.3)" onclick="demExcluirDemanda('${id}')">🗑 Excluir</button>
         </div>
@@ -1577,6 +1576,13 @@ function fmtD(d) {
                     ${isAtivo?"✓ ":"○ "} ${label}
                   </button>`;
                 }).join("")}
+              ${dem.area !== "Financeiro" ? `
+              <button onclick="demEncaminharFinanceiro('${escapeHtmlAttr(id)}')"
+                style="text-align:left;padding:7px 12px;border-radius:6px;border:1px solid rgba(224,138,42,.4);background:rgba(224,138,42,.07);color:var(--amber);font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s"
+                onmouseover="this.style.background='rgba(224,138,42,.14)'"
+                onmouseout="this.style.background='rgba(224,138,42,.07)'">
+                ⇢ Financeiro
+              </button>` : ""}
               <div id="dem-agendamento-panel-${id}" style="display:none;grid-column:span 2;padding:10px 12px;border-radius:8px;border:1px solid rgba(74,156,245,.25);background:rgba(74,156,245,.06);margin-top:2px">
                 <div style="font-size:10.5px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Agendado para</div>
                 <div style="display:flex;align-items:center;gap:8px">
