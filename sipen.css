@@ -1353,31 +1353,64 @@ body.modo-mobile .hero-lbl { display: none }
 }
 
 /* ── Mobile: Adaptadores de Layout de Conteúdo ───────────────────────────
-   Overrides das 4 telas mobile (Painel, Calendário, Demandas, Financeiro).
+   Overrides das 4 telas (Painel, Calendário, Demandas, Financeiro).
    Todas as regras em body.modo-mobile — impacto zero no desktop.
+
+   PROBLEMAS CORRIGIDOS:
+   1. KPI gap:8px vazava fundo do container (visual quebrado)
+   2. 5.º KPI ocupava só metade da última linha
+   3. position:sticky no painel lateral de demandas travava no topo ao rolar
+   4. .kpi-val 21px grande demais para 2 colunas
+   5. .kpi-d (sub-label) adicionava ruído vertical desnecessário
+   6. .card padding 16px excessivo para tela pequena
 ──────────────────────────────────────────────────────────────────────── */
 
-/* Padding lateral mais compacto */
+/* Padding lateral compacto */
 body.modo-mobile .ct { padding-left: 12px; padding-right: 12px }
 
-/* KPIs: 5 colunas (inline style) → 2 colunas */
-body.modo-mobile .kpis { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important }
-body.modo-mobile .kpi  { border-right: none !important }
+/* Cards: padding menor + scroll horizontal para tabelas */
+body.modo-mobile .card { padding: 12px 14px; overflow-x: auto }
 
-/* Grids 2-col → 1-col */
-body.modo-mobile .g2 { grid-template-columns: 1fr !important }
+/* ── KPI Grid: 5-col → 2-col mantendo design de barra unificada ──────
+   gap:0 preserva o visual connected-card; border-right/bottom criam
+   os separadores internos. !important é necessário para vencer inline styles. */
+body.modo-mobile .kpis {
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 0 !important;
+}
+body.modo-mobile .kpi {
+  padding: 12px 12px !important;
+  border-right: 1px solid var(--bd1) !important;
+  border-bottom: 1px solid var(--bd1) !important;
+}
+/* Coluna direita: sem border-right (borda do container cobre a margem) */
+body.modo-mobile .kpi:nth-child(even) { border-right: none !important }
+/* Última linha: sem border-bottom */
+body.modo-mobile .kpi:last-child { border-bottom: none !important }
+/* 5.º KPI solitário: ocupa a largura total */
+body.modo-mobile .kpi:nth-child(odd):last-child {
+  grid-column: 1 / -1 !important;
+  border-right: none !important;
+}
+/* Valores e ícones compactos para 2-col */
+body.modo-mobile .kpi-val { font-size: 18px }
+body.modo-mobile .kpi-ico { width: 34px; height: 34px; font-size: 14px }
+body.modo-mobile .kpi-d   { display: none }
 
-/* Hero: compacto, sem descrição nem ações secundárias */
+/* g2: 2-col → 1-col; position:sticky do painel lateral → static */
+body.modo-mobile .g2    { grid-template-columns: 1fr !important }
+body.modo-mobile .g2 > * { position: static !important }
+
+/* Hero: compacto — sem descrição, ação e ícone (título + module label bastam) */
 body.modo-mobile .hero     { padding: 10px 0 8px; flex-wrap: wrap; gap: 6px; min-height: unset }
 body.modo-mobile .hero-dsc { display: none }
 body.modo-mobile .hero-act { display: none }
 body.modo-mobile .hero-ic  { display: none }
 
-/* Tabelas: scroll horizontal, fonte menor */
-body.modo-mobile .card { overflow-x: auto }
-body.modo-mobile .tbl  { font-size: 11.5px }
+/* Tabela: fonte menor (cards com overflow-x:auto já cobrem scroll horizontal) */
+body.modo-mobile .tbl { font-size: 11.5px }
 
-/* Area greeting: menos espaço */
+/* Area greeting: menos espaço vertical */
 body.modo-mobile .area-greeting { padding: 10px 0 6px; gap: 10px }
 
 /* Rodapé oculto no mobile */
