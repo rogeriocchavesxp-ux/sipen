@@ -1352,6 +1352,37 @@ body.modo-mobile .hero-lbl { display: none }
   .area-tab-lbl { display: none }
 }
 
+/* ── Mobile: Adaptadores de Layout de Conteúdo ───────────────────────────
+   Overrides das 4 telas mobile (Painel, Calendário, Demandas, Financeiro).
+   Todas as regras em body.modo-mobile — impacto zero no desktop.
+──────────────────────────────────────────────────────────────────────── */
+
+/* Padding lateral mais compacto */
+body.modo-mobile .ct { padding-left: 12px; padding-right: 12px }
+
+/* KPIs: 5 colunas (inline style) → 2 colunas */
+body.modo-mobile .kpis { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important }
+body.modo-mobile .kpi  { border-right: none !important }
+
+/* Grids 2-col → 1-col */
+body.modo-mobile .g2 { grid-template-columns: 1fr !important }
+
+/* Hero: compacto, sem descrição nem ações secundárias */
+body.modo-mobile .hero     { padding: 10px 0 8px; flex-wrap: wrap; gap: 6px; min-height: unset }
+body.modo-mobile .hero-dsc { display: none }
+body.modo-mobile .hero-act { display: none }
+body.modo-mobile .hero-ic  { display: none }
+
+/* Tabelas: scroll horizontal, fonte menor */
+body.modo-mobile .card { overflow-x: auto }
+body.modo-mobile .tbl  { font-size: 11.5px }
+
+/* Area greeting: menos espaço */
+body.modo-mobile .area-greeting { padding: 10px 0 6px; gap: 10px }
+
+/* Rodapé oculto no mobile */
+body.modo-mobile .sipen-footer { display: none }
+
 /* Botão Trocar Área — oculto para membros comuns, visível para gestores */
 #btn-trocar-area              { display: none }
 body.modo-membro #btn-trocar-area { display: flex }
