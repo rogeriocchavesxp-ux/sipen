@@ -423,6 +423,7 @@ let _agCalMesFiltro = new Date().getMonth(); // mês atual por padrão
 async function agCalCarregar() {
   const tl = document.getElementById("agcal-timeline");
   if (tl) tl.innerHTML = `<div style="color:var(--tx3);font-size:12px;text-align:center;padding:32px 0">${spinner()} Carregando eventos…</div>`;
+  _agCalAnivBadge();
   try {
     _agendaCache = null;
     const rows = await getAgenda();
@@ -433,6 +434,27 @@ async function agCalCarregar() {
   }
 }
 window.agCalCarregar = agCalCarregar;
+
+async function _agCalAnivBadge() {
+  const el = document.getElementById("agcal-aniv-sub");
+  if (!el) return;
+  try {
+    const hoje = new Date();
+    const mesStr = String(hoje.getMonth() + 1).padStart(2, "0");
+    const res = await fetch(
+      `${apiBaseUrl()}/rest/v1/membros?data_nascimento=not.is.null&select=data_nascimento&status=eq.ativo`,
+      { headers: apiHeaders() }
+    );
+    if (!res.ok) return;
+    const data = await res.json();
+    const mesAniv = data.filter(r => (r.data_nascimento || "").slice(5, 7) === mesStr);
+    const hojeAniv = mesAniv.filter(r => parseInt((r.data_nascimento || "").slice(8), 10) === hoje.getDate());
+    const parts = [];
+    if (hojeAniv.length) parts.push(`🎉 ${hojeAniv.length} hoje`);
+    parts.push(`${mesAniv.length} neste mês`);
+    el.textContent = parts.join(" · ");
+  } catch { /* silent — badge é opcional */ }
+}
 
 function agCalFiltrarMes(mesIdx) {
   _agCalMesFiltro = mesIdx;

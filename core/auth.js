@@ -628,7 +628,8 @@ window.mobileGoBack = function() {
   const parent = cur.startsWith("area-")  ? "area-dash"         :
                  cur.startsWith("agenda-") ? "agenda-calendario" :
                  cur.startsWith("dem-")    ? "dem-dash"          :
-                 cur.startsWith("fin-")    ? "fin-dash"          : "area-dash";
+                 cur.startsWith("fin-")    ? "fin-dash"          :
+                 cur === "memb-aniv"       ? "agenda-calendario" : "area-dash";
   go(parent);
 };
 
@@ -2092,7 +2093,8 @@ document.addEventListener("sipen:navigate", ({ detail: { id } }) => {
       const parentTab = id.startsWith("area-")  ? "area-dash"         :
                         id.startsWith("agenda-") ? "agenda-calendario" :
                         id.startsWith("dem-")    ? "dem-dash"          :
-                        id.startsWith("fin-")    ? "fin-dash"          : "area-dash";
+                        id.startsWith("fin-")    ? "fin-dash"          :
+                        id === "memb-aniv"        ? "agenda-calendario" : "area-dash";
       bar.querySelectorAll(".area-tab").forEach(t => {
         t.classList.toggle("on", t.dataset.route === parentTab);
       });
