@@ -1347,13 +1347,19 @@ body.modo-mobile .hero-lbl { display: none }
   -webkit-tap-highlight-color: transparent;
 }
 .m-header-logo {
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -.02em;
-  color: var(--tx1);
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.m-logo-acc { color: var(--gr) }
+.m-header-logo-img {
+  height: 28px;
+  width: auto;
+  display: block;
+  filter: brightness(0) invert(1);
+}
+:root[data-theme="light"] .m-header-logo-img { filter: none }
+@media (prefers-color-scheme: light) { .m-header-logo-img { filter: none } }
+:root[data-theme="dark"]  .m-header-logo-img { filter: brightness(0) invert(1) }
 .m-header-avatar {
   width: 32px; height: 32px;
   border-radius: 50%;
@@ -1980,6 +1986,17 @@ html[data-theme="light"] .login-box { box-shadow: 0 4px 24px rgba(0,0,0,0.08) }
   .sfb-inner { justify-content: center; }
 }
 
+/* SIPEN version bar */
+.sipen-ver {
+  text-align: center;
+  font-size: 10px;
+  color: var(--tx3);
+  letter-spacing: .06em;
+  opacity: .5;
+  padding: 6px 0 8px;
+}
+body.modo-mobile .sipen-ver { padding: 10px 0 12px; }
+
 /* ── Redes Sociais ──────────────────────────────────── */
 .social-links-row { display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px; }
 .social-link { display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;text-decoration:none;flex:1;min-width:130px;transition:border-color .15s; }
@@ -2276,7 +2293,7 @@ html[data-theme="light"] .sb.sb-collapsed .mhdr:hover{background:rgba(0,0,0,0.05
   border-radius: 0 0 3px 3px;
 }
 .area-tab:active { opacity: .7 }
-.area-tab-ico { font-size: 20px; line-height: 1 }
+.area-tab-ico { font-size: 30px; line-height: 1 }
 .area-tab-lbl {
   font-size: 9px;
   font-weight: 700;
