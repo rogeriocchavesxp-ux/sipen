@@ -1881,6 +1881,8 @@ function _areaDashLoad() {
   if (el) el.textContent = `${saud}, ${nome}!`;
   const av = document.getElementById("area-gr-avatar");
   if (av) av.textContent = (USUARIO_ATUAL?.nome || "M")[0].toUpperCase();
+  const dateEl = document.getElementById("area-mob-date");
+  if (dateEl) dateEl.textContent = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
 
   _areaCarregarSemana();
   _areaCarregarEscalas();

@@ -230,7 +230,7 @@ const _VIEW_MAP = {
   "forn":        "modules/fornecedores/view.html",
   "com":         "modules/comunicacao/view.html?v=6.45.17",
   "eve":         "modules/eventos/view.html?v=6.45.13",
-  "area":        "modules/area-membro/view.html?v=6.45.13",
+  "area":        "modules/area-membro/view.html?v=6.45.14",
   "config":      "modules/config/view.html",
   "wa":          "modules/whatsapp/view.html",
   "tutorial":    "modules/tutorial/view.html",

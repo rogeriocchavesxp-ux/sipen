@@ -4,11 +4,33 @@
       <div class="area-gr-text">
         <div class="area-gr-name" id="area-saudacao">Bem-vindo!</div>
         <div class="area-gr-sub">Igreja Presbiteriana de Penha</div>
+        <div class="area-mob-date" id="area-mob-date"></div>
       </div>
       <div class="area-gr-actions">
         <button class="tbt" onclick="trocarArea()" title="Alternar para Área do Gestor" style="font-size:11px;padding:6px 11px">⇄ Gestor</button>
       </div>
     </div>
+
+    <!-- Ações rápidas — mobile only -->
+    <div class="area-mob-actions">
+      <button class="area-mob-act" onclick="go('area-agenda')">
+        <span class="area-mob-act-ico">🗓</span>
+        <span class="area-mob-act-lbl">Agenda</span>
+      </button>
+      <button class="area-mob-act" onclick="go('area-dem')">
+        <span class="area-mob-act-ico">📋</span>
+        <span class="area-mob-act-lbl">Solicitações</span>
+      </button>
+      <button class="area-mob-act" onclick="go('area-min')">
+        <span class="area-mob-act-ico">◉</span>
+        <span class="area-mob-act-lbl">Ministérios</span>
+      </button>
+      <button class="area-mob-act" onclick="go('area-pgs')">
+        <span class="area-mob-act-ico">⌂</span>
+        <span class="area-mob-act-lbl">Meu PG</span>
+      </button>
+    </div>
+
     <div class="bnav" style="--mc:var(--gr)">
       <div class="bni" onclick="go('area-dash')">Início</div>
       <div class="bni" onclick="go('area-agenda')">Agenda</div>
@@ -20,21 +42,21 @@
     <div class="ct">
 
       <!-- 1. PRÓXIMOS EVENTOS -->
-      <div class="card" style="margin-bottom:14px">
+      <div class="card area-dash-card" style="margin-bottom:14px">
         <div class="ctit">Próximos Eventos <span class="cact" onclick="_areaCarregarSemana()">↻</span></div>
         <div id="area-dash-semana"><div style="color:var(--tx3);font-size:11.5px;padding:14px 0">Carregando...</div></div>
       </div>
 
       <!-- 2. MINHAS ESCALAS -->
       <div id="area-escalas-secao">
-        <div class="card" style="margin-bottom:14px">
+        <div class="card area-dash-card" style="margin-bottom:14px">
           <div class="ctit">Escalas de Serviço <span class="cact" onclick="_areaCarregarEscalas()">↻</span></div>
           <div id="area-dash-escalas"><div style="color:var(--tx3);font-size:11.5px;padding:14px 0">Carregando...</div></div>
         </div>
       </div>
 
       <!-- 3. MEUS MINISTÉRIOS — aberto por padrão -->
-      <div class="card area-col-card open" id="area-col-ministerios" style="margin-bottom:14px">
+      <div class="card area-col-card area-dash-card open" id="area-col-ministerios" style="margin-bottom:14px">
         <div class="area-col-hdr" onclick="areaToggle('ministerios')">
           <div>
             <div class="ctit" style="margin:0;border:none;padding-bottom:0">Meus Ministérios</div>
@@ -48,7 +70,7 @@
       </div>
 
       <!-- 4. MINHAS SOLICITAÇÕES — aberto por padrão -->
-      <div class="card area-col-card open" id="area-col-solicitacoes" style="margin-bottom:14px">
+      <div class="card area-col-card area-dash-card open" id="area-col-solicitacoes" style="margin-bottom:14px">
         <div class="area-col-hdr" onclick="areaToggle('solicitacoes')">
           <div>
             <div class="ctit" style="margin:0;border:none;padding-bottom:0">Solicitações Recentes</div>
@@ -62,7 +84,7 @@
       </div>
 
       <!-- 5. AVISOS E COMUNICADOS -->
-      <div class="card" style="margin-bottom:14px">
+      <div class="card area-dash-card" style="margin-bottom:14px">
         <div class="ctit">Comunicados <span class="cact" onclick="_areaCarregarAvisos()">↻</span></div>
         <div id="area-dash-avisos"><div style="color:var(--tx3);font-size:11.5px;padding:14px 0">Carregando...</div></div>
       </div>
