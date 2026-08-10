@@ -653,14 +653,14 @@ function renderHubDem(){
       </div>
     </div>`;
 
-  // KPIs via contagem direta na tabela
-  _cnt('demandas','&status=in.(pendente,em_analise,em_andamento,aguardando_pagamento,pagamento_agendado)')
+  // KPIs via v_demandas (status normalizados)
+  _cnt('v_demandas','&status=not.in.(Conclu%C3%ADda,Pago,Cancelada)')
     .then(n=>_set('k-dem-abertas',n));
-  _cnt('demandas','&prioridade=in.(Alta,Urgente)&status=in.(pendente,em_analise,em_andamento)')
+  _cnt('v_demandas','&prioridade=in.(Alta,Urgente)&status=not.in.(Conclu%C3%ADda,Pago,Cancelada)')
     .then(n=>_set('k-dem-urgentes',n));
-  _cnt('demandas',`&criado_em=gte.${mes}-01`)
+  _cnt('v_demandas',`&criado_em=gte.${mes}-01`)
     .then(n=>_set('k-dem-mes',n));
-  _cnt('demandas',`&status=in.(pago,concluida)&updated_at=gte.${mes}-01`)
+  _cnt('v_demandas',`&status=in.(Conclu%C3%ADda,Pago)&data_conclusao=gte.${mes}-01`)
     .then(n=>_set('k-dem-conc',n));
 
   // Lista urgentes — via v_demandas (dados normalizados)
@@ -719,7 +719,7 @@ function renderHubDem(){
         else grupos.Outros++;
       });
       const total=rows.length||1;
-      const cores={Financeiro:rose,'Administração':amber,'Infraestrutura e Conservação':sky,Outros:'var(--tx3)'};
+      const cores={Financeiro:gr,'Administração':'var(--gold)','Infraestrutura e Conservação':amber,Outros:'var(--tx3)'};
       const keys=Object.keys(grupos).filter(k=>grupos[k]>0);
       if(!keys.length){el.innerHTML=_vazio('Nenhuma demanda aberta');return;}
       el.innerHTML=keys.map(k=>{

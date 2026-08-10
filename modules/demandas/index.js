@@ -531,6 +531,15 @@ function fmtD(d) {
     return all;
   }
 
+  const _AREA_COR = {
+    null:   { c: 'var(--blue)',  bg: 'rgba(74,156,245,.12)'  },
+    adm:    { c: 'var(--gold)',  bg: 'rgba(201,168,76,.12)'  },
+    cons:   { c: 'var(--sky)',   bg: 'rgba(88,152,212,.12)'  },
+    fin:    { c: 'var(--gr)',    bg: 'rgba(58,170,92,.12)'   },
+    infra:  { c: 'var(--amber)', bg: 'rgba(208,144,64,.12)'  },
+    agenda: { c: 'var(--teal)', bg: 'rgba(42,181,192,.12)'  },
+  };
+
   function _renderDashChips() {
     const el = document.getElementById("dem-dash-chips");
     if (!el) return;
@@ -538,12 +547,13 @@ function fmtD(d) {
     el.innerHTML = _DASH_AREAS.map(a => {
       const count = a.match ? visible.filter(a.match).length : visible.length;
       const ativo = _dashF.area === a.id;
-      const arg = a.id === null ? 'null' : `'${a.id}'`;
+      const cor   = _AREA_COR[a.id] || _AREA_COR[null];
+      const arg   = a.id === null ? 'null' : `'${a.id}'`;
       return `<span onclick="demDashFiltrarArea(${arg})"
         style="cursor:pointer;flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:11.5px;font-weight:600;
-               border:1px solid ${ativo ? 'var(--blue)' : 'var(--bd2)'};
-               background:${ativo ? 'rgba(74,156,245,.12)' : 'transparent'};
-               color:${ativo ? 'var(--blue)' : 'var(--tx3)'};transition:all .12s;white-space:nowrap">
+               border:1px solid ${ativo ? cor.c : 'var(--bd2)'};
+               background:${ativo ? cor.bg : 'transparent'};
+               color:${ativo ? cor.c : 'var(--tx3)'};transition:all .12s;white-space:nowrap">
         ${a.label} <span style="font-size:10px;opacity:.7">${count}</span>
       </span>`;
     }).join("");
@@ -3684,6 +3694,13 @@ function fmtD(d) {
   /* ── Expor filtrar para views ────────────────────────── */
   window.demFiltrar = function(elId, filtros) { renderLista(elId, filtros); };
 
+  const _PILL_COR = {
+    todas: { c: 'var(--blue)',  bg: 'rgba(74,156,245,.12)' },
+    fin:   { c: 'var(--gr)',    bg: 'rgba(58,170,92,.12)'  },
+    adm:   { c: 'var(--gold)',  bg: 'rgba(201,168,76,.12)' },
+    infra: { c: 'var(--amber)', bg: 'rgba(208,144,64,.12)' },
+  };
+
   window.demFiltrarAreaGrupo = function(elId, areaId) {
     _todasAreaFiltro = areaId || "";
     const fcat = document.getElementById(elId + "-fcat");
@@ -3692,9 +3709,10 @@ function fmtD(d) {
       const pill = document.getElementById("dem-area-pill-" + key);
       if (!pill) return;
       const ativo = (key === "todas" && !areaId) || key === areaId;
-      pill.style.border     = ativo ? "1px solid var(--blue)" : "1px solid var(--bd2)";
-      pill.style.background = ativo ? "rgba(74,156,245,.12)" : "transparent";
-      pill.style.color      = ativo ? "var(--blue)" : "var(--tx3)";
+      const cor   = _PILL_COR[key] || _PILL_COR.todas;
+      pill.style.border     = ativo ? `1px solid ${cor.c}` : "1px solid var(--bd2)";
+      pill.style.background = ativo ? cor.bg : "transparent";
+      pill.style.color      = ativo ? cor.c : "var(--tx3)";
     });
     renderLista(elId);
   };
