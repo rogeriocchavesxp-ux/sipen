@@ -53,9 +53,22 @@
 
   async function _loadUser(session) {
     const u = session.user;
-    const nome = u.user_metadata?.full_name
-              || u.user_metadata?.name
-              || u.email.split('@')[0];
+
+    let nome = u.user_metadata?.full_name || u.user_metadata?.name || null;
+
+    if (!nome) {
+      try {
+        const res = await fetch(
+          `${apiBaseUrl()}/rest/v1/pessoas?auth_user_id=eq.${encodeURIComponent(u.id)}&select=nome&limit=1`,
+          { headers: apiHeaders() }
+        );
+        const [p] = await res.json();
+        if (p?.nome) nome = p.nome;
+      } catch (_) {}
+    }
+
+    if (!nome) nome = u.email.split('@')[0];
+
     _user = {
       id:       u.id,
       email:    u.email,
