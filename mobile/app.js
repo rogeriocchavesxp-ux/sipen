@@ -36,12 +36,18 @@
   });
 
   async function _boot() {
-    const sb = getSupabase();
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session) { _showLogin(); return; }
-    await _loadUser(session);
-    _showApp();
-    mobGo('home');
+    try {
+      const sb = getSupabase();
+      if (!sb) throw new Error('Supabase client não inicializado');
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { _showLogin(); return; }
+      await _loadUser(session);
+      _showApp();
+      mobGo('home');
+    } catch (e) {
+      console.error('[mob] boot error:', e);
+      _showLogin();
+    }
   }
 
   async function _loadUser(session) {
@@ -86,15 +92,23 @@
 
     try {
       const sb = getSupabase();
+      if (!sb) throw new Error('Supabase indisponível');
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) throw new Error(error.message);
+      if (error) {
+        console.error('[mob] login error:', error);
+        err.textContent = error.message.includes('Invalid') ? 'E-mail ou senha incorretos.' : error.message;
+        btn.disabled    = false;
+        btn.textContent = 'Entrar';
+        return;
+      }
       await _loadUser(data.session);
       _showApp();
       mobGo('home');
-    } catch (_) {
-      err.textContent     = 'E-mail ou senha incorretos.';
-      btn.disabled        = false;
-      btn.textContent     = 'Entrar';
+    } catch (e) {
+      console.error('[mob] login exception:', e);
+      err.textContent = e.message || 'Erro ao conectar. Tente novamente.';
+      btn.disabled    = false;
+      btn.textContent = 'Entrar';
     }
   }
 
