@@ -550,7 +550,7 @@
             <option value="Alta">Alta</option>
             <option value="Urgente">Urgente</option>
           </select>
-          <select id="fin-pagar-fmes" onchange="finFiltrarPagar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:6px 10px;outline:none">
+          <select id="fin-pagar-fmes" onchange="window._finPagarMesChange(this.value)" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:6px 10px;outline:none">
             <option value="">Todos os meses</option>
             ${mesesDisp.map(ym => `<option value="${ym}" ${fmes===ym?"selected":""}>${_fmtMes(ym)}</option>`).join("")}
           </select>
@@ -1279,6 +1279,14 @@
   window.finRecarregarDash = async function() { _DEM_FIN_CACHE = null; await renderDash(); };
   window.finFiltrarLanc    = renderLancamentos;
   window.finFiltrarPagar   = () => renderPagar();
+
+  window._finPagarMesChange = function(val) {
+    if (val) {
+      const el = document.getElementById("fin-pagar-fstatus");
+      if (el) el.value = "";
+    }
+    renderPagar();
+  };
 
   let _pagarDebTimer = null;
   window.finDebouncePagar = function() {
