@@ -11,6 +11,7 @@
 
 <link rel="manifest" href="manifest-mobile.json">
 <meta name="theme-color" content="#111111">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SIPEN">
@@ -38,7 +39,7 @@
       </div>
       <div class="mob-field">
         <label class="mob-label">E-mail</label>
-        <input id="mob-login-email" class="mob-input" type="email" inputmode="email"
+        <input id="mob-login-email" class="mob-input" type="text" inputmode="email"
                autocomplete="email" placeholder="seu@email.com"
                onkeydown="if(event.key==='Enter')document.getElementById('mob-login-senha').focus()">
       </div>
