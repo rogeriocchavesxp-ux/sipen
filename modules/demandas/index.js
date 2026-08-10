@@ -204,9 +204,10 @@ function fmtD(d) {
 
   let _cache = [];
   let _ativo = null;
-  let _origemView = "dem-todas"; // rastreia de onde o detalhe foi aberto
-  let _saving = false;           // guard: impede submit duplo em salvarNovaDemanda
+  let _origemView = "dem-todas";
+  let _saving = false;
   let _dashF = { area: null, status: null, prioridade: null, periodo: null };
+  let _todasAreaFiltro = ""; // filtro de grupo de área para dem-todas
 
   /* ── Estado: tela Admin Demandas ────────────────────── */
   const _ADM_KEY = "sipen_adm_dem_filtro";
@@ -728,13 +729,12 @@ function fmtD(d) {
     /* Filtros da UI */
     const fStatus = document.getElementById(elId+"-fstatus")?.value || "";
     const fCat    = document.getElementById(elId+"-fcat")?.value    || "";
-    const fArea   = document.getElementById(elId+"-farea")?.value   || "";
     const fPrio   = document.getElementById(elId+"-fprio")?.value   || "";
     const fBusca  = (document.getElementById(elId+"-fbusca")?.value || "").toLowerCase();
 
     if (fStatus) rows = rows.filter(r => _toDb(r.status) === _toDb(fStatus));
-    if (fArea) {
-      const areaDef = _DASH_AREAS.find(a => a.id === fArea);
+    if (elId === "dem-todas-content" && _todasAreaFiltro) {
+      const areaDef = _DASH_AREAS.find(a => a.id === _todasAreaFiltro);
       if (areaDef?.match) rows = rows.filter(areaDef.match);
     }
     if (fCat)    rows = rows.filter(r => r.area === fCat);
@@ -3684,19 +3684,16 @@ function fmtD(d) {
   window.demFiltrar = function(elId, filtros) { renderLista(elId, filtros); };
 
   window.demFiltrarAreaGrupo = function(elId, areaId) {
-    const inp = document.getElementById(elId + "-farea");
-    if (inp) inp.value = areaId || "";
-    // Limpar fcat ao mudar grupo para não conflitar
+    _todasAreaFiltro = areaId || "";
     const fcat = document.getElementById(elId + "-fcat");
     if (fcat) fcat.value = "";
-    // Atualizar visuais dos pills
     ["todas","fin","adm","infra"].forEach(key => {
       const pill = document.getElementById("dem-area-pill-" + key);
       if (!pill) return;
       const ativo = (key === "todas" && !areaId) || key === areaId;
-      pill.style.border   = ativo ? "1px solid var(--blue)" : "1px solid var(--bd2)";
+      pill.style.border     = ativo ? "1px solid var(--blue)" : "1px solid var(--bd2)";
       pill.style.background = ativo ? "rgba(74,156,245,.12)" : "transparent";
-      pill.style.color    = ativo ? "var(--blue)" : "var(--tx3)";
+      pill.style.color      = ativo ? "var(--blue)" : "var(--tx3)";
     });
     renderLista(elId);
   };
