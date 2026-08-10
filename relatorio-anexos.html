@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório de Anexos — SIPEN</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #12151a;
+    --bg-card: #1c2028;
+    --bd:      #2a2f3a;
+    --tx1:     #e8eaf0;
+    --tx2:     #9aa3b2;
+    --tx3:     #5c6478;
+    --gr:      #3aaa5c;
+    --amber:   #e09022;
+    --blue:    #4a9cf5;
+    --teal:    #2ab3c0;
+    --red:     #e05050;
+    --violet:  #8b6fd4;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--tx1);
+    min-height: 100vh;
+    padding: 32px 20px 60px;
+  }
+
+  .page { max-width: 900px; margin: 0 auto; }
+
+  /* ── Cabeçalho ── */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--tx1);
+    margin-bottom: 4px;
+  }
+  .header-left p { font-size: 13px; color: var(--tx2); }
+  .badge-total {
+    background: rgba(58,170,92,.12);
+    border: 1px solid rgba(58,170,92,.25);
+    border-radius: 20px;
+    color: var(--gr);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    white-space: nowrap;
+    align-self: flex-start;
+  }
+
+  /* ── Filtro de mês ── */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .filter-bar label { font-size: 12px; color: var(--tx3); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; }
+  .filter-bar select {
+    background: var(--bg-card);
+    border: 1px solid var(--bd);
+    border-radius: 6px;
+    color: var(--tx1);
+    font-size: 13px;
+    padding: 7px 12px;
+    outline: none;
+    cursor: pointer;
+  }
+  .btn-load {
+    background: var(--gr);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 18px;
+  }
+  .btn-load:disabled { opacity: .5; cursor: default; }
+
+  /* ── Estado ── */
+  .state { text-align: center; padding: 60px 20px; color: var(--tx3); font-size: 14px; }
+  .state.error { color: var(--red); }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid var(--bd);
+    border-top-color: var(--gr);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    margin: 0 auto 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--bd);
+    border-radius: 10px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--bd);
+    flex-wrap: wrap;
+  }
+  .chamado {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    color: var(--tx3);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .titulo { font-size: 14px; font-weight: 600; color: var(--tx1); flex: 1; min-width: 140px; }
+  .pill {
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 20px;
+    padding: 3px 9px;
+    white-space: nowrap;
+  }
+
+  .card-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0;
+    border-bottom: 1px solid var(--bd);
+  }
+  .meta-item {
+    padding: 10px 18px;
+    border-right: 1px solid var(--bd);
+  }
+  .meta-item:last-child { border-right: none; }
+  .meta-lbl { font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px; font-weight: 600; }
+  .meta-val { font-size: 13px; color: var(--tx1); font-weight: 500; }
+  .meta-val.money { font-variant-numeric: tabular-nums; }
+
+  /* ── Anexos ── */
+  .anexos-section { padding: 14px 18px; }
+  .anexos-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--tx3);
+    margin-bottom: 12px;
+  }
+  .anexos-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .anexo-item {
+    background: rgba(255,255,255,.03);
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    overflow: hidden;
+    width: 180px;
+    flex-shrink: 0;
+  }
+  .anexo-preview {
+    width: 100%;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,.02);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .anexo-preview img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+  }
+  .anexo-preview .file-icon { font-size: 36px; }
+  .anexo-info {
+    padding: 8px 10px;
+    border-top: 1px solid var(--bd);
+  }
+  .anexo-tipo { font-size: 10px; color: var(--teal); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+  .anexo-nome { font-size: 11px; color: var(--tx2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .anexo-link {
+    display: block;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--blue);
+    padding: 5px 10px;
+    border-top: 1px solid var(--bd);
+    text-decoration: none;
+    background: rgba(74,156,245,.05);
+  }
+  .anexo-link:hover { background: rgba(74,156,245,.12); }
+  .anexo-erro { font-size: 11px; color: var(--red); padding: 5px 10px; text-align: center; border-top: 1px solid var(--bd); }
+
+  .loading-anexo {
+    font-size: 10px;
+    color: var(--tx3);
+    padding: 4px 10px;
+    text-align: center;
+    border-top: 1px solid var(--bd);
+  }
+
+  /* ── Footer ── */
+  .report-footer {
+    text-align: center;
+    margin-top: 36px;
+    font-size: 11px;
+    color: var(--tx3);
+  }
+
+  @media print {
+    body { background: #fff; color: #111; }
+    .filter-bar, .btn-load { display: none; }
+    .card { border-color: #ddd; break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="header-left">
+      <h1>Relatório de Demandas com Anexos</h1>
+      <p id="sub-titulo">SIPEN — IPPenha</p>
+    </div>
+    <span class="badge-total" id="badge-total" style="display:none"></span>
+  </div>
+
+  <div class="filter-bar">
+    <label for="sel-mes">Mês</label>
+    <select id="sel-mes"></select>
+    <button class="btn-load" id="btn-load" onclick="carregar()">Gerar</button>
+  </div>
+
+  <div id="resultado">
+    <div class="state">Selecione o mês e clique em Gerar.</div>
+  </div>
+
+  <div class="report-footer">SIPEN — Sistema Integrado da IPPenha &nbsp;·&nbsp; Gerado em <span id="gen-dt"></span></div>
+</div>
+
+<script>
+const SUPABASE_URL  = "https://erhwryfzpycahgsohhbh.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyaHdyeWZ6cHljYWhnc29oaGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg2MTUsImV4cCI6MjA5MTg0NDYxNX0.T0hp90Bmufj6a3oUPq1vYcLiGx9YjyMaZiE38S0e3_8";
+const BUCKET       = "financial-documents";
+
+const MESES_PT = ["","Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+
+function fmtMes(ym) {
+  const [y, m] = ym.split("-");
+  return `${MESES_PT[+m]} ${y}`;
+}
+
+function buildMeses() {
+  const sel = document.getElementById("sel-mes");
+  const hoje = new Date();
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+    const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+    const opt = document.createElement("option");
+    opt.value = ym;
+    opt.textContent = fmtMes(ym);
+    sel.appendChild(opt);
+  }
+  // Selecionar julho 2026 por padrão se disponível
+  const jul = "2026-07";
+  if ([...sel.options].some(o => o.value === jul)) sel.value = jul;
+}
+
+function getToken() {
+  try {
+    const raw = localStorage.getItem("sipen_auth_session");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.access_token || parsed?.session?.access_token || null;
+  } catch { return null; }
+}
+
+function getSb() {
+  const storage = {
+    getItem: k => localStorage.getItem(k),
+    setItem: (k,v) => localStorage.setItem(k,v),
+    removeItem: k => localStorage.removeItem(k),
+  };
+  return supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+    auth: { persistSession: true, storageKey: "sipen_auth_session", storage }
+  });
+}
+
+function temAnexo(fd) {
+  if (!fd) return false;
+  if (Array.isArray(fd.notas_fiscais) && fd.notas_fiscais.length) return true;
+  if (fd.nota_fiscal?.storage_path) return true;
+  if (fd.comprovante?.storage_path) return true;
+  if (fd.boleto?.storage_path) return true;
+  return false;
+}
+
+function coletarAnexos(fd) {
+  const lista = [];
+  if (!fd) return lista;
+  if (Array.isArray(fd.notas_fiscais)) {
+    fd.notas_fiscais.forEach((nf, i) => {
+      if (nf?.storage_path) lista.push({ tipo: `Nota Fiscal ${fd.notas_fiscais.length > 1 ? i+1 : ""}`.trim(), path: nf.storage_path, nome: nf.nome_arquivo || nf.name || "" });
+    });
+  }
+  if (fd.nota_fiscal?.storage_path) lista.push({ tipo: "Nota Fiscal", path: fd.nota_fiscal.storage_path, nome: fd.nota_fiscal.nome_arquivo || "" });
+  if (fd.comprovante?.storage_path) lista.push({ tipo: "Comprovante", path: fd.comprovante.storage_path, nome: fd.comprovante.nome_arquivo || "" });
+  if (fd.boleto?.storage_path)      lista.push({ tipo: "Boleto",      path: fd.boleto.storage_path,      nome: fd.boleto.nome_arquivo || "" });
+  return lista;
+}
+
+function isImage(path) {
+  return /\.(jpe?g|png|gif|webp|svg|heic)$/i.test(path || "");
+}
+
+function fmtVal(v) {
+  if (v == null || v === "") return "—";
+  const n = parseFloat(v);
+  if (isNaN(n)) return "—";
+  return n.toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+}
+
+function fmtDt(d) {
+  if (!d) return "—";
+  const s = d.slice(0, 10);
+  const [y, m, dd] = s.split("-");
+  return `${dd}/${m}/${y}`;
+}
+
+function pillStatus(st) {
+  const map = {
+    "Pago":                { bg:"rgba(58,170,92,.15)",   cl:"#3aaa5c" },
+    "Concluída":           { bg:"rgba(58,170,92,.15)",   cl:"#3aaa5c" },
+    "Em Análise":          { bg:"rgba(212,168,67,.15)",  cl:"#d4a843" },
+    "Em Andamento":        { bg:"rgba(139,111,212,.15)", cl:"#8b6fd4" },
+    "Aguardando Pagamento":{ bg:"rgba(234,179,8,.15)",   cl:"#eab308" },
+    "Pendente":            { bg:"rgba(224,138,42,.15)",  cl:"#e08a2a" },
+    "Cancelada":           { bg:"rgba(90,96,104,.2)",    cl:"#7a8494" },
+    "Cancelado":           { bg:"rgba(90,96,104,.2)",    cl:"#7a8494" },
+  };
+  const cfg = map[st] || { bg:"rgba(90,96,104,.15)", cl:"#9aa3b2" };
+  return `<span class="pill" style="background:${cfg.bg};color:${cfg.cl}">${st || "—"}</span>`;
+}
+
+function normalizeStatus(st) {
+  if (!st) return "Pendente";
+  const map = {
+    "ABERTA":"Pendente","EM_ANALISE":"Em Análise","EM_ANDAMENTO":"Em Andamento",
+    "AGUARDANDO_PAGAMENTO":"Aguardando Pagamento","PENDENTE":"Pendente",
+    "CONCLUIDA":"Pago","CANCELADA":"Cancelada","PAGO":"Pago",
+    "pago":"Pago","cancelado":"Cancelado","concluido":"Pago","concluída":"Pago",
+  };
+  if (map[st]) return map[st];
+  const norm = st.toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+  if (norm.startsWith("CONCLU")) return "Pago";
+  if (norm.startsWith("CANCEL")) return "Cancelada";
+  return map[norm] || st;
+}
+
+async function gerarSignedUrl(sb, path) {
+  const { data, error } = await sb.storage.from(BUCKET).createSignedUrl(path, 86400);
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+function renderCard(r) {
+  const fd  = r.financial_data || {};
+  const val = fd.valor ?? r.valor ?? null;
+  const vcto = fd.data_vencimento || r.vencimento || null;
+  const st  = normalizeStatus(r.status);
+  const chamado = r.numero_chamado ? `#${r.numero_chamado}` : (r._isSol ? "Sol." : "—");
+  const titulo  = r.titulo || r.finalidade || r.descricao || "Sem título";
+  const sol     = r.solicitante || "—";
+  const cc      = fd.centro_custo || r.centro_custo || r.subcategoria || "—";
+  const forma   = fd.forma_pagamento || r.forma_pagamento || "—";
+
+  const anexos = coletarAnexos(fd);
+  const anexosHtml = anexos.map((a, idx) => {
+    const img = isImage(a.path);
+    return `<div class="anexo-item" id="anexo-${r._uid}-${idx}">
+      <div class="anexo-preview" onclick="abrirAnexo('${r._uid}',${idx})">
+        ${img
+          ? `<img id="img-${r._uid}-${idx}" src="" alt="${a.tipo}" onerror="this.style.display='none'">`
+          : `<span class="file-icon">${a.tipo.includes("Boleto") ? "📄" : a.tipo.includes("Nota") ? "🧾" : "📎"}</span>`
+        }
+      </div>
+      <div class="anexo-info">
+        <div class="anexo-tipo">${a.tipo}</div>
+        <div class="anexo-nome" title="${a.nome}">${a.nome || a.path.split("/").pop()}</div>
+      </div>
+      <div class="loading-anexo" id="lnk-${r._uid}-${idx}">Carregando link...</div>
+    </div>`;
+  }).join("");
+
+  return `<div class="card">
+    <div class="card-header">
+      <span class="chamado">${chamado}</span>
+      <span class="titulo">${titulo}</span>
+      ${pillStatus(st)}
+    </div>
+    <div class="card-meta">
+      <div class="meta-item"><div class="meta-lbl">Solicitante</div><div class="meta-val">${sol}</div></div>
+      <div class="meta-item"><div class="meta-lbl">Ministério / Centro de Custo</div><div class="meta-val">${cc}</div></div>
+      <div class="meta-item"><div class="meta-lbl">Valor</div><div class="meta-val money">${fmtVal(val)}</div></div>
+      <div class="meta-item"><div class="meta-lbl">Vencimento</div><div class="meta-val">${fmtDt(vcto)}</div></div>
+      <div class="meta-item"><div class="meta-lbl">Forma Pgto.</div><div class="meta-val">${forma}</div></div>
+    </div>
+    <div class="anexos-section">
+      <div class="anexos-title">📎 Anexos (${anexos.length})</div>
+      <div class="anexos-grid">${anexosHtml}</div>
+    </div>
+  </div>`;
+}
+
+const _anexoUrls = {};
+const _anexoPaths = {};
+
+async function resolverAnexos(sb, rows) {
+  const tarefas = [];
+  rows.forEach(r => {
+    const fd = r.financial_data || {};
+    coletarAnexos(fd).forEach((a, idx) => {
+      const key = `${r._uid}-${idx}`;
+      _anexoPaths[key] = a;
+      tarefas.push({ uid: r._uid, idx, path: a.path, key });
+    });
+  });
+
+  await Promise.allSettled(tarefas.map(async t => {
+    try {
+      const url = await gerarSignedUrl(sb, t.path);
+      _anexoUrls[t.key] = url;
+      const lnkEl = document.getElementById(`lnk-${t.uid}-${t.idx}`);
+      if (lnkEl) {
+        lnkEl.outerHTML = `<a class="anexo-link" href="${url}" target="_blank" rel="noopener">Abrir / Baixar</a>`;
+      }
+      // Imagem inline
+      const imgEl = document.getElementById(`img-${t.uid}-${t.idx}`);
+      if (imgEl) imgEl.src = url;
+    } catch(e) {
+      const lnkEl = document.getElementById(`lnk-${t.uid}-${t.idx}`);
+      if (lnkEl) lnkEl.outerHTML = `<div class="anexo-erro" title="${e.message}">Erro ao gerar link</div>`;
+    }
+  }));
+}
+
+window.abrirAnexo = function(uid, idx) {
+  const url = _anexoUrls[`${uid}-${idx}`];
+  if (url) window.open(url, "_blank", "noopener,noreferrer");
+};
+
+async function carregar() {
+  const mes = document.getElementById("sel-mes").value;
+  if (!mes) return;
+
+  const sb = getSb();
+  const token = getToken();
+  if (!token) {
+    document.getElementById("resultado").innerHTML = `<div class="state error">Sessão não encontrada. Faça login no SIPEN primeiro.</div>`;
+    return;
+  }
+
+  document.getElementById("resultado").innerHTML = `<div class="state"><div class="spinner"></div>Carregando demandas de ${fmtMes(mes)}...</div>`;
+  document.getElementById("badge-total").style.display = "none";
+  document.getElementById("btn-load").disabled = true;
+
+  const mesInicio = `${mes}-01`;
+  const [y, m] = mes.split("-");
+  const proximo = m === "12" ? `${+y+1}-01-01` : `${y}-${String(+m+1).padStart(2,"0")}-01`;
+
+  try {
+    // Buscar v_demandas
+    const { data: demData, error: demErr } = await sb
+      .from("v_demandas")
+      .select("*")
+      .eq("area", "Financeiro")
+      .gte("criado_em", mesInicio)
+      .lt("criado_em", proximo);
+    if (demErr) throw demErr;
+
+    // Buscar financeiro_solicitacoes
+    const { data: solData, error: solErr } = await sb
+      .from("financeiro_solicitacoes")
+      .select("*")
+      .gte("created_at", mesInicio)
+      .lt("created_at", proximo);
+    if (solErr) throw solErr;
+
+    // Normalizar solicitacoes
+    const solRows = (solData || []).map(r => ({
+      _isSol: true,
+      _uid: `sol-${r.id}`,
+      id: r.id,
+      numero_chamado: null,
+      titulo: r.finalidade || r.descricao || "Solicitação financeira",
+      solicitante: r.solicitante || null,
+      status: r.status,
+      financial_data: {
+        valor: r.valor,
+        forma_pagamento: r.forma_pagamento || null,
+        data_vencimento: r.vencimento || null,
+        nota_fiscal: r.nota_fiscal || null,
+        comprovante: r.comprovante || null,
+        boleto: r.boleto || null,
+        notas_fiscais: r.notas_fiscais || [],
+      },
+    }));
+
+    const demRows = (demData || []).map(r => ({ ...r, _uid: `dem-${r.id}`, _isSol: false }));
+    const allRows = [...demRows, ...solRows];
+
+    const comAnexo = allRows.filter(r => temAnexo(r.financial_data));
+
+    if (comAnexo.length === 0) {
+      document.getElementById("resultado").innerHTML = `<div class="state">Nenhuma demanda com anexo encontrada em ${fmtMes(mes)}.</div>`;
+      document.getElementById("btn-load").disabled = false;
+      return;
+    }
+
+    // Renderizar cards
+    document.getElementById("resultado").innerHTML = comAnexo.map(renderCard).join("");
+    document.getElementById("badge-total").textContent = `${comAnexo.length} com anexo`;
+    document.getElementById("badge-total").style.display = "";
+    document.getElementById("sub-titulo").textContent = `SIPEN — IPPenha · ${fmtMes(mes)}`;
+    document.getElementById("gen-dt").textContent = new Date().toLocaleString("pt-BR");
+
+    // Resolver URLs dos anexos em paralelo
+    await resolverAnexos(sb, comAnexo);
+
+  } catch(e) {
+    document.getElementById("resultado").innerHTML = `<div class="state error">Erro ao carregar dados — ${e.message}</div>`;
+  }
+
+  document.getElementById("btn-load").disabled = false;
+}
+
+// Init
+buildMeses();
+document.getElementById("gen-dt").textContent = new Date().toLocaleString("pt-BR");
+// Auto-carregar julho se estiver disponível
+const defaultMes = "2026-07";
+const selMes = document.getElementById("sel-mes");
+if ([...selMes.options].some(o => o.value === defaultMes)) {
+  selMes.value = defaultMes;
+  carregar();
+}
+</script>
+</body>
+</html>
