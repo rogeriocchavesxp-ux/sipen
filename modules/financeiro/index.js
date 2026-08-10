@@ -173,6 +173,16 @@
   };
 
   function _demLabel(st)  { return _DEM_STATUS_LABEL[st] || st || "Pendente"; }
+  function _temAnexo(r) {
+    const fd = r.financial_data;
+    if (!fd) return false;
+    if (Array.isArray(fd.notas_fiscais) && fd.notas_fiscais.length > 0) return true;
+    if (fd.nota_fiscal?.storage_path) return true;
+    if (fd.comprovante?.storage_path) return true;
+    if (fd.boleto?.storage_path) return true;
+    return false;
+  }
+  const _clipIcon = `<span title="Tem anexo" style="font-size:11px;color:var(--teal);margin-left:4px;flex-shrink:0">📎</span>`;
   function _pillDem(st) {
     if (window.SIPEN?.status?.pill) return SIPEN.status.pill(st);
     const label = _demLabel(st);
@@ -281,7 +291,7 @@
                   <div style="display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;padding:0 2px 5px">
                     <span style="font-size:10.5px;font-weight:700;color:var(--blue);font-family:var(--mono);letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.numero_chamado ? escapeHtml(r.numero_chamado) : "—"}</span>
                     <span style="font-size:12.5px;font-weight:600;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">💰 ${escapeHtml(r.titulo) || "Sem título"}</span>
-                    ${_pillDem(r.status)}
+                    <span style="display:flex;align-items:center;gap:6px;flex-shrink:0">${_temAnexo(r) ? _clipIcon : ""}${_pillDem(r.status)}</span>
                   </div>
                   <div style="font-size:11px;color:var(--tx3);padding:0 2px;line-height:1.4">${meta}</div>
                 </div>`;
@@ -307,7 +317,7 @@
                       <div class="ttitle">${escapeHtml(r.titulo || "Sem título")}</div>
                       <div class="tmeta">${escapeHtml(r.subcategoria || "Financeiro")} · ${diasAberta}d aberta · ${nomePropio(r.solicitante || r.solicitante_txt) || "—"}</div>
                     </div>
-                    <div class="tright">${_pillDem(r.status)}</div>
+                    <div class="tright" style="display:flex;align-items:center;gap:6px">${_temAnexo(r) ? _clipIcon : ""}${_pillDem(r.status)}</div>
                   </div>`;
                 }).join("")}
           </div>
@@ -554,7 +564,7 @@
                       onmouseout="this.style.background=''"
                       onclick="${r._isSol ? `finVerSolicitacao('${escapeHtmlAttr(String(r.id))}')` : `demAbrirDetalhe('${escapeHtmlAttr(String(r.id||r._row||""))}','fin-pagar')`}">
                     <td style="padding:8px 6px;font-size:10.5px;font-weight:700;font-family:var(--mono);color:${r._isSol?"var(--tx3)":"var(--blue)"};white-space:nowrap">${r._isSol ? "FS" : escapeHtml(r.numero_chamado||"—")}</td>
-                    <td style="padding:8px 6px;color:var(--tx1);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.titulo||"—")}</td>
+                    <td style="padding:8px 6px;color:var(--tx1);max-width:220px;white-space:nowrap"><span style="display:flex;align-items:center;gap:4px"><span style="overflow:hidden;text-overflow:ellipsis">${escapeHtml(r.titulo||"—")}</span>${_temAnexo(r) ? _clipIcon : ""}</span></td>
                     <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${nomePropio(r.solicitante||r.solicitante_txt)||"—"}</td>
                     <td style="padding:8px 6px;color:var(--tx2);font-size:11px;white-space:nowrap">${escapeHtml(r.financial_data?.centro_custo||"—")}</td>
                     <td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--tx1);white-space:nowrap">${r.financial_data?.valor!=null?`R$ ${parseFloat(r.financial_data.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}`:"—"}</td>
