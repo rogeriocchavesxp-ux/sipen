@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    SIPEN — Section Hubs
-   hub.js · v1.2.7
+   hub.js · v1.2.9
 ═══════════════════════════════════════════════════════ */
 (function(){
 
@@ -598,6 +598,144 @@ function renderLiderancaDash(){
   }).catch(()=>{});
 }
 
+// ══════════════════════════════════════════════════════
+// HUB: Central de Demandas
+// ══════════════════════════════════════════════════════
+function renderHubDem(){
+  const el=document.getElementById('v-hub-dem');
+  if(!el) return;
+
+  const rose='var(--rose)',bgRose='rgba(208,104,104,';
+  const amber='var(--amber)',bgAmber='rgba(208,144,64,';
+  const gr='var(--gr)',bgGr='rgba(58,170,92,';
+  const sky='var(--sky)',bgSky='rgba(74,156,245,';
+  const mes=new Date().toISOString().slice(0,7);
+  const inboxSvg='<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>';
+
+  el.innerHTML=`
+    <div class="hero">
+      <div class="hero-ic" style="background:${bgRose}0.12);border-color:${bgRose}0.28)">${_sv24(inboxSvg)}</div>
+      <div>
+        <div class="hero-lbl">Seção</div>
+        <div class="hero-ttl">Central de Demandas</div>
+        <div class="hero-dsc">Solicitações, análise e acompanhamento</div>
+      </div>
+    </div>
+    <div class="ct">
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px">
+        ${_kpi(IC.inbox, bgRose+'0.12)',rose,  '<span id="k-dem-abertas">—</span>','Abertas agora',    'Pendentes e em andamento')}
+        ${_kpi(IC.bell,  bgAmber+'0.12)',amber,'<span id="k-dem-urgentes">—</span>','Urgentes / Alta', 'Prioridade alta ou urgente')}
+        ${_kpi(IC.cal,   bgSky+'0.12)', sky,  '<span id="k-dem-mes">—</span>',    'Abertas este mês', 'Novas solicitações')}
+        ${_kpi(IC.vote,  bgGr+'0.12)',  gr,   '<span id="k-dem-conc">—</span>',   'Resolvidas',       'Concluídas / pagas no mês')}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div class="card">
+          <div class="ctit">Urgentes e Prioritárias <span class="cact" onclick="go('dem-todas')">Ver todas</span></div>
+          <div id="dem-hub-urg">${_vazio('Carregando…')}</div>
+        </div>
+        <div class="card">
+          <div class="ctit">Abertas Recentemente <span class="cact" onclick="go('dem-todas')">Ver todas</span></div>
+          <div id="dem-hub-rec">${_vazio('Carregando…')}</div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="ctit">Distribuição por Área <span class="cact" onclick="go('dem-todas')">Ver todas</span></div>
+        <div id="dem-hub-areas">${_vazio('Carregando…')}</div>
+      </div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:10px">Módulos</div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+        ${_mod(IC.grid,  bgRose+'0.12)', rose,  'Todas as Solicitações','Visão completa de todas as demandas',     'dem-todas')}
+        ${_mod(IC.book,  bgAmber+'0.12)',amber,  'Em Análise',           'Demandas em revisão e avaliação',         'dem-analise')}
+        ${_mod(IC.gear,  bgSky+'0.12)',  sky,   'Em Andamento',         'Execução e acompanhamento ativo',         'dem-and')}
+        ${_mod(IC.vote,  bgGr+'0.12)',   gr,    'Concluídas',           'Demandas finalizadas e pagas',            'dem-conc')}
+        ${_mod(IC.cal,   bgRose+'0.12)', rose,  'Histórico',            'Registro completo de todas as demandas',  'dem-hist')}
+        ${_mod(IC.mega,  bgAmber+'0.12)',amber,  'WhatsApp',             'Notificações e mensagens de demandas',    'wa-demandas')}
+      </div>
+    </div>`;
+
+  // KPIs via contagem direta na tabela
+  _cnt('demandas','&status=in.(pendente,em_analise,em_andamento,aguardando_pagamento,pagamento_agendado)')
+    .then(n=>_set('k-dem-abertas',n));
+  _cnt('demandas','&prioridade=in.(Alta,Urgente)&status=in.(pendente,em_analise,em_andamento)')
+    .then(n=>_set('k-dem-urgentes',n));
+  _cnt('demandas',`&criado_em=gte.${mes}-01`)
+    .then(n=>_set('k-dem-mes',n));
+  _cnt('demandas',`&status=in.(pago,concluida)&updated_at=gte.${mes}-01`)
+    .then(n=>_set('k-dem-conc',n));
+
+  // Lista urgentes — via v_demandas (dados normalizados)
+  fetch(`${apiBaseUrl()}/rest/v1/v_demandas?select=id,titulo,area,prioridade,status&prioridade=in.(Alta,Urgente)&status=not.in.(Conclu%C3%ADda,Pago,Cancelada)&order=criado_em.desc&limit=6`,
+    {headers:apiHeaders()})
+    .then(r=>r.ok?r.json():[])
+    .then(rows=>{
+      const el=document.getElementById('dem-hub-urg');
+      if(!el) return;
+      if(!rows.length){el.innerHTML=_vazio('Nenhuma demanda urgente');return;}
+      el.innerHTML=rows.map(r=>{
+        const corPri=r.prioridade==='Urgente'?rose:amber;
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd1)">
+          <div style="width:3px;height:36px;border-radius:2px;background:${corPri};flex-shrink:0"></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${_esc(r.titulo||'Demanda')}</div>
+            <div style="font-size:11px;color:var(--tx3)">${_esc(r.area||'')}${r.area?' · ':''}${_esc(r.status||'')}</div>
+          </div>
+          <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${corPri}22;color:${corPri};flex-shrink:0">${_esc(r.prioridade||'')}</span>
+        </div>`;
+      }).join('');
+    }).catch(()=>{const el=document.getElementById('dem-hub-urg');if(el)el.innerHTML=_vazio('Dados não disponíveis');});
+
+  // Lista recentes
+  fetch(`${apiBaseUrl()}/rest/v1/v_demandas?select=id,titulo,area,criado_em,status&status=not.in.(Conclu%C3%ADda,Pago,Cancelada)&order=criado_em.desc&limit=6`,
+    {headers:apiHeaders()})
+    .then(r=>r.ok?r.json():[])
+    .then(rows=>{
+      const el=document.getElementById('dem-hub-rec');
+      if(!el) return;
+      if(!rows.length){el.innerHTML=_vazio('Nenhuma demanda aberta');return;}
+      el.innerHTML=rows.map(r=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd1)">
+          <div style="width:3px;height:36px;border-radius:2px;background:${bgRose}0.6);flex-shrink:0"></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${_esc(r.titulo||'Demanda')}</div>
+            <div style="font-size:11px;color:var(--tx3)">${_esc(r.area||'')}${r.area?' · ':''}${_esc(r.status||'')}</div>
+          </div>
+          <div style="font-size:11px;color:var(--tx3);flex-shrink:0;white-space:nowrap">${_fmt(r.criado_em?.slice(0,10))}</div>
+        </div>`).join('');
+    }).catch(()=>{const el=document.getElementById('dem-hub-rec');if(el)el.innerHTML=_vazio('Dados não disponíveis');});
+
+  // Distribuição por área (das demandas abertas)
+  fetch(`${apiBaseUrl()}/rest/v1/v_demandas?select=area&status=not.in.(Conclu%C3%ADda,Pago,Cancelada)&limit=2000`,
+    {headers:apiHeaders()})
+    .then(r=>r.ok?r.json():[])
+    .then(rows=>{
+      const el=document.getElementById('dem-hub-areas');
+      if(!el) return;
+      const grupos={Financeiro:0,'Administração':0,'Infraestrutura e Conservação':0,Outros:0};
+      rows.forEach(r=>{
+        const a=String(r.area||'').toLowerCase();
+        if(a.includes('financeiro'))grupos.Financeiro++;
+        else if(a.includes('administra'))grupos['Administração']++;
+        else if(a.includes('infra')||a.includes('conserva'))grupos['Infraestrutura e Conservação']++;
+        else grupos.Outros++;
+      });
+      const total=rows.length||1;
+      const cores={Financeiro:rose,'Administração':amber,'Infraestrutura e Conservação':sky,Outros:'var(--tx3)'};
+      const keys=Object.keys(grupos).filter(k=>grupos[k]>0);
+      if(!keys.length){el.innerHTML=_vazio('Nenhuma demanda aberta');return;}
+      el.innerHTML=keys.map(k=>{
+        const pct=Math.round(grupos[k]/total*100);
+        const cor=cores[k]||'var(--tx3)';
+        return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd1)">
+          <div style="font-size:12px;color:var(--tx2);min-width:180px;flex-shrink:0">${_esc(k)}</div>
+          <div style="flex:1;height:6px;border-radius:3px;background:var(--bg3);overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${cor};border-radius:3px"></div>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:${cor};min-width:36px;text-align:right;flex-shrink:0">${grupos[k]}</div>
+        </div>`;
+      }).join('');
+    }).catch(()=>{const el=document.getElementById('dem-hub-areas');if(el)el.innerHTML=_vazio('Dados não disponíveis');});
+}
+
 // ── Registro no autoload ───────────────────────────────
 if(typeof VIEW_AUTOLOAD!=='undefined'){
   VIEW_AUTOLOAD['hub-igreja']     ={fn:renderHubIgreja};
@@ -605,6 +743,7 @@ if(typeof VIEW_AUTOLOAD!=='undefined'){
   VIEW_AUTOLOAD['hub-dep']        ={fn:renderHubDep};
   VIEW_AUTOLOAD['hub-op']         ={fn:renderHubOp};
   VIEW_AUTOLOAD['hub-adm']        ={fn:renderHubAdm};
+  VIEW_AUTOLOAD['hub-dem']        ={fn:renderHubDem};
   VIEW_AUTOLOAD['hub-portal']     ={fn:renderHubPortal};
   VIEW_AUTOLOAD['escalas-dash']   ={fn:renderEscalasDash};
   VIEW_AUTOLOAD['lideranca-dash'] ={fn:renderLiderancaDash};
