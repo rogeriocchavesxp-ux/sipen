@@ -75,7 +75,7 @@
       <button class="tbt" id="btn-trocar-area" onclick="trocarArea()" title="Alternar entre Área do Membro e Área do Gestor">⇄ <span id="btn-trocar-area-label">Trocar Área</span></button>
       <button class="tbt" onclick="T('WhatsApp','Serviço de notificações ativo — IPPenha')" title="WhatsApp">◎</button>
       <button class="tbt pri" onclick="openModal()">+ Nova Tarefa</button>
-      <button class="tbt" onclick="T('3 alertas','Contratos a vencer e OS atrasadas')" title="Notificações">🔔 <span class="ndot"></span></button>
+      <button class="tbt" id="btn-notif-bell" title="Notificações">🔔 <span class="ndot"></span><sup id="dem-nc"></sup></button>
       <div class="usr-menu-wrap" id="usr-menu-wrap">
         <button class="tbt tb-av-btn" onclick="usrMenuToggle()" title="Menu do usuário"><span id="tb-avatar">?</span></button>
         <div class="usr-dd" id="usr-dd" style="display:none">
@@ -213,6 +213,7 @@
 <script src="modules/dep-adm/index.js?v=1.0.0"></script>
 <script src="modules/recursos/index.js?v=2.0.0"></script>
 <script src="modules/compras/index.js?v=1.0.0"></script>
+<script src="modules/shared/notif-dem.js?v=1.0.0"></script>
 <script src="core/pwa.js?v=6.45.12"></script>
 <script src="core/theme.js?v=6.45.12"></script>
 
