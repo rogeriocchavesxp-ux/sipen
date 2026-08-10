@@ -2678,7 +2678,7 @@ function fmtD(d) {
     try {
       await apiWrite("update", "DEMANDAS", {
         _row: pid, responsavel, responsavel_txt: responsavel,
-        responsavel_tipo: tipo, fornecedor_id: fornecedor_id || null,
+        responsavel_tipo: tipo,
         status: _toDb("Em Andamento"),
       });
       const idx = _cache.findIndex(r => String(r.id || r._row) === String(pid));
