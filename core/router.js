@@ -221,7 +221,7 @@ const _VIEW_MAP = {
   "agenda":      "modules/agenda/view.html?v=6.66.8",
   "pgs":         "modules/pgs/view.html?v=6.50.7",
   "infra":       "modules/infraestrutura/view.html?v=6.45.13",
-  "dem":         "modules/demandas/view.html?v=6.45.13",
+  "dem":         "modules/demandas/view.html?v=6.76.0",
   "rel":         "modules/relatorios/view.html?v=6.45.13",
   "memb":        "modules/membresia/view.html?v=6.49.90",
   "proj":        "modules/projetos/view.html",

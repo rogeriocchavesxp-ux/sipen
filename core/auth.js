@@ -486,16 +486,93 @@ async function trocarArea() {
     // Gestor: mostra a tela de escolha de área novamente
     _mostrarTelaEscolha();
   } else {
-    // Não-gestor: toggle simples membro ↔ gestor
+    // Não-gestor: toggle membro ↔ gestor
     if (document.body.classList.contains("modo-membro")) {
       _aplicarModoGestor();
       await abrirPrimeiroModuloPermitido();
+    } else if (!_isMobile()) {
+      // Desktop: abrir drawer sem mudar de tela
+      openMemberDrawer();
     } else {
       _aplicarModoMembro();
       _expandirSidebar("area");
       await go("area-dash");
     }
   }
+}
+
+/* ── Drawer Área do Membro ─────────────────────────────────── */
+window.openMemberDrawer = function() {
+  const drawer = document.getElementById("area-member-drawer");
+  if (!drawer) return;
+  drawer.classList.remove("area-member-drawer--hidden");
+
+  const nome = USUARIO_ATUAL?.nome?.split(" ")[0] || "Membro";
+  const hora = new Date().getHours();
+  const saud = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
+
+  const avEl = document.getElementById("area-dr-avatar");
+  if (avEl) avEl.textContent = (USUARIO_ATUAL?.nome || "M")[0].toUpperCase();
+  const sEl = document.getElementById("area-dr-saudacao");
+  if (sEl) sEl.textContent = `${saud}, ${nome}!`;
+  const dEl = document.getElementById("area-dr-date");
+  if (dEl) dEl.textContent = new Date().toLocaleDateString("pt-BR", { weekday:"long", day:"numeric", month:"long" });
+
+  _drawerCarregarSemana();
+  _drawerCarregarAvisos();
+};
+
+window.closeMemberDrawer = function() {
+  const drawer = document.getElementById("area-member-drawer");
+  if (drawer) drawer.classList.add("area-member-drawer--hidden");
+};
+
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Escape") window.closeMemberDrawer?.();
+});
+
+async function _drawerCarregarSemana() {
+  const el = document.getElementById("area-dr-semana");
+  if (!el) return;
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const res = await fetch(
+      `${apiBaseUrl()}/rest/v1/agenda?or=(data.gte.${today},data_inicio.gte.${today})&status=eq.confirmado&visibilidade=eq.publica&order=data.asc&limit=5&select=titulo,data,data_inicio,local,tipo`,
+      { headers: apiHeaders() }
+    );
+    if (!res.ok) throw new Error();
+    const rows = await res.json();
+    if (!Array.isArray(rows) || !rows.length) {
+      el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:8px 0">Nenhum evento confirmado nos próximos dias.</div>`;
+      return;
+    }
+    el.innerHTML = rows.map(r => {
+      const rawDate = r.data || r.data_inicio;
+      const d = rawDate ? new Date(rawDate).toLocaleDateString("pt-BR", { weekday:"short", day:"2-digit", month:"2-digit" }) : "—";
+      const tipo = r.tipo ? `<span style="font-size:9px;background:rgba(42,181,192,.12);color:var(--teal);border-radius:3px;padding:1px 5px;margin-left:5px">${escapeHtml(r.tipo)}</span>` : "";
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd1)">
+        <div style="font-size:12px;font-weight:600;color:var(--tx1)">${escapeHtml(r.titulo || "—")}${tipo}</div>
+        <span style="font-size:10.5px;color:var(--teal);white-space:nowrap;margin-left:10px">${d}</span>
+      </div>`;
+    }).join("");
+  } catch (_) {
+    const el2 = document.getElementById("area-dr-semana");
+    if (el2) el2.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:8px 0">Nenhum evento confirmado nos próximos dias.</div>`;
+  }
+}
+
+function _drawerCarregarAvisos() {
+  const el = document.getElementById("area-dr-avisos");
+  if (!el) return;
+  el.innerHTML = `
+    <div style="padding:8px 0;border-bottom:1px solid var(--bd1)">
+      <div style="font-size:12px;font-weight:600;color:var(--tx1)">Bem-vindo à IPPenha!</div>
+      <div style="font-size:11px;color:var(--tx2);margin-top:2px">Acompanhe os avisos e comunicados da sua igreja aqui.</div>
+    </div>
+    <div style="padding:8px 0">
+      <div style="font-size:12px;font-weight:600;color:var(--tx1)">Cultos regulares</div>
+      <div style="font-size:11px;color:var(--tx2);margin-top:2px">Domingos às 9h e 18h · Quarta-feira às 19h30</div>
+    </div>`;
 }
 
 /* ── INICIALIZAÇÃO PÓS-LOGIN ─────────────────── */
