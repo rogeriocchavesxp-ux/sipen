@@ -223,6 +223,15 @@ body {
   border-top: 1px solid var(--bd1);
   display: flex;
   flex-shrink: 0;
+  position: relative;
+}
+.mob-tabs::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 100%;
+  height: 60px;
+  background: var(--bg-surface);
+  pointer-events: none;
 }
 .mob-tab {
   flex: 1;
