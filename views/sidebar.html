@@ -24,6 +24,32 @@
 
 
 
+    <!-- ── CENTRAL DE DEMANDAS ───────────────────────── -->
+    <div class="sb-section" id="sbs-dem">
+      <div class="sb-section-hdr" onclick="hubSec('dem')">
+        <span class="sb-section-chv">▼</span>
+        Central de Demandas
+        <span class="mbadge" id="dem-sb-badge" style="margin-left:auto;background:rgba(208,104,104,0.12);color:var(--rose);border:1px solid rgba(208,104,104,0.2)"></span>
+      </div>
+      <div class="sb-section-body">
+        <div class="mwrap" id="mw-dem" data-modulo="DEMANDAS">
+          <div class="mhdr" onclick="tog('dem','dem-dash')">
+            <div class="micon" style="background:rgba(208,104,104,0.14);border-color:rgba(208,104,104,0.25);color:var(--rose)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>
+            <span class="mname">Demandas</span>
+            <span class="marr">▶</span>
+          </div>
+          <div class="msub" id="ms-dem">
+            <div class="si" onclick="go('dem-dash')">Dashboard</div>
+            <div class="si" onclick="go('dem-todas')">Todas as Solicitações</div>
+            <div class="si" onclick="go('dem-analise')">Em Análise</div>
+            <div class="si" onclick="go('dem-and')">Em Andamento</div>
+            <div class="si" onclick="go('dem-conc')">Concluídas</div>
+            <div class="si" onclick="go('dem-hist')">Histórico</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── VIDA DA IGREJA ────────────────────────────── -->
     <div class="sb-section" id="sbs-igreja">
       <div class="sb-section-hdr" onclick="hubSec('igreja')">
@@ -194,15 +220,6 @@
         Administração
       </div>
       <div class="sb-section-body">
-
-        <!-- Central de Demandas -->
-        <div class="mwrap" id="mw-dem" data-modulo="DEMANDAS">
-          <div class="mhdr mhdr-noexpand" onclick="go('dem-dash')">
-            <div class="micon" style="background:rgba(208,104,104,0.14);border-color:rgba(208,104,104,0.25);color:var(--rose)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>
-            <span class="mname">Central de Demandas</span>
-            <span class="mbadge" id="dem-sb-badge" style="background:rgba(208,104,104,0.12);color:var(--rose);border:1px solid rgba(208,104,104,0.2)">47</span>
-          </div>
-        </div>
 
         <!-- Agenda -->
         <div class="mwrap" id="mw-agenda" data-modulo="AGENDA">
