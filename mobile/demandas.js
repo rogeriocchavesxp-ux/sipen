@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Demandas
-   mobile/demandas.js · v1.0.0
+   mobile/demandas.js · v1.2.0
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -220,13 +220,13 @@
           ${d.descricao ? `
           <div class="mob-detail-card">
             <div class="mob-detail-card-title">Descrição</div>
-            <div style="padding:14px 16px;font-size:14px;color:var(--tx2);line-height:1.6">${_esc(d.descricao)}</div>
+            <div style="padding:14px 16px;font-size:14px;color:var(--tx2);line-height:1.7;word-break:break-word">${_fmtTexto(d.descricao)}</div>
           </div>` : ''}
 
           ${d.observacoes ? `
           <div class="mob-detail-card">
             <div class="mob-detail-card-title">Observações</div>
-            <div style="padding:14px 16px;font-size:14px;color:var(--tx2);line-height:1.6">${_esc(d.observacoes)}</div>
+            <div style="padding:14px 16px;font-size:14px;color:var(--tx2);line-height:1.7;word-break:break-word">${_fmtTexto(d.observacoes)}</div>
           </div>` : ''}
 
           <!-- Alterar status -->
@@ -393,7 +393,7 @@
                 <span style="font-size:11px;color:var(--tx3)">${dt}</span>
                 ${stCfg ? `<span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:${stCfg.bg||'var(--bg-hover)'};color:${stCfg.cl||'var(--tx3)'}">${_esc(_toLabel(a.status_demanda))}</span>` : ''}
               </div>
-              <div style="font-size:14px;color:var(--tx1);line-height:1.5">${_esc(a.texto)}</div>
+              <div style="font-size:14px;color:var(--tx1);line-height:1.6;word-break:break-word">${_fmtTexto(a.texto)}</div>
             </div>
           </div>`;
       }).join('');
@@ -479,6 +479,27 @@
     return String(s || '').replace(/[&<>"']/g, c =>
       ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]
     );
+  }
+
+  function _fmtTexto(raw) {
+    if (!raw) return '';
+    return _esc(raw)
+      // Newlines → <br>
+      .replace(/\n/g, '<br>')
+      // "——— Título ———" → section header com linha
+      .replace(/—{2,}([^—<]{0,80})—{2,}/g, (_, titulo) => {
+        const t = titulo.trim();
+        if (t) {
+          return `<div style="display:flex;align-items:center;gap:8px;margin:10px 0">` +
+            `<div style="flex:1;height:1px;background:var(--bd2)"></div>` +
+            `<span style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">${t}</span>` +
+            `<div style="flex:1;height:1px;background:var(--bd2)"></div>` +
+          `</div>`;
+        }
+        return `<div style="height:1px;background:var(--bd2);margin:10px 0"></div>`;
+      })
+      // Divisores restantes (——— sem título)
+      .replace(/—{2,}/g, `<div style="height:1px;background:var(--bd2);margin:10px 0"></div>`);
   }
 
 })();
