@@ -538,7 +538,8 @@ function fmtD(d) {
     el.innerHTML = _DASH_AREAS.map(a => {
       const count = a.match ? visible.filter(a.match).length : visible.length;
       const ativo = _dashF.area === a.id;
-      return `<span onclick="demDashFiltrarArea(${JSON.stringify(a.id)})"
+      const arg = a.id === null ? 'null' : `'${a.id}'`;
+      return `<span onclick="demDashFiltrarArea(${arg})"
         style="cursor:pointer;flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:11.5px;font-weight:600;
                border:1px solid ${ativo ? 'var(--blue)' : 'var(--bd2)'};
                background:${ativo ? 'rgba(74,156,245,.12)' : 'transparent'};
