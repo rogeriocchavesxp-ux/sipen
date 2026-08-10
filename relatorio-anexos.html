@@ -248,6 +248,49 @@
     color: var(--tx3);
   }
 
+  /* ── Seleção e impressão em massa ── */
+  .btn-sel-todos {
+    background: var(--bg-card);
+    border: 1px solid var(--bd);
+    border-radius: 6px;
+    color: var(--tx1);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 7px 14px;
+  }
+  .btn-sel-todos:hover { border-color: var(--tx3); }
+  .btn-imprimir {
+    background: var(--blue);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 16px;
+    display: none;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-imprimir:hover { opacity: .88; }
+  .cnt-badge {
+    background: rgba(255,255,255,.25);
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+    min-width: 20px;
+    text-align: center;
+  }
+  .anexo-tipo-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2px;
+  }
+  .cb-label { display: flex; align-items: center; cursor: pointer; padding: 2px; }
+  .cb-anexo { width: 14px; height: 14px; cursor: pointer; accent-color: var(--blue); }
+
   @media print {
     body { background: #fff; color: #111; }
     .filter-bar, .btn-load { display: none; }
@@ -270,6 +313,8 @@
     <label for="sel-mes">Mês</label>
     <select id="sel-mes"></select>
     <button class="btn-load" id="btn-load" onclick="carregar()">Gerar</button>
+    <button class="btn-sel-todos" id="btn-sel-todos" onclick="selecionarTodos()" style="display:none">☑ Selecionar Todos</button>
+    <button class="btn-imprimir" id="btn-imprimir" onclick="imprimirSelecionados()">🖨 Imprimir&nbsp;<span class="cnt-badge" id="cnt-sel">0</span></button>
   </div>
 
   <div id="resultado">
@@ -426,7 +471,12 @@ function renderCard(r) {
         }
       </div>
       <div class="anexo-info">
-        <div class="anexo-tipo">${a.tipo}</div>
+        <div class="anexo-tipo-row">
+          <div class="anexo-tipo">${a.tipo}</div>
+          <label class="cb-label" title="Selecionar para impressão">
+            <input type="checkbox" class="cb-anexo" data-key="${r._uid}-${idx}" onchange="atualizarContador()">
+          </label>
+        </div>
         <div class="anexo-nome" title="${a.nome}">${a.nome || a.path.split("/").pop()}</div>
       </div>
       <div class="loading-anexo" id="lnk-${r._uid}-${idx}">Carregando link...</div>
@@ -532,6 +582,8 @@ async function carregar() {
   document.getElementById("resultado").innerHTML = `<div class="state"><div class="spinner"></div>Carregando demandas de ${fmtMes(mes)}...</div>`;
   document.getElementById("badge-total").style.display = "none";
   document.getElementById("btn-load").disabled = true;
+  document.getElementById("btn-sel-todos").style.display = "none";
+  document.getElementById("btn-imprimir").style.display = "none";
 
   const mesInicio = `${mes}-01`;
   const [y, m] = mes.split("-");
@@ -592,6 +644,7 @@ async function carregar() {
     document.getElementById("badge-total").style.display = "";
     document.getElementById("sub-titulo").textContent = `SIPEN — IPPenha · ${fmtMes(mes)}`;
     document.getElementById("gen-dt").textContent = new Date().toLocaleString("pt-BR");
+    document.getElementById("btn-sel-todos").style.display = "";
 
     // Resolver URLs dos anexos em paralelo
     await resolverAnexos(sb, comAnexo);
@@ -602,6 +655,92 @@ async function carregar() {
 
   document.getElementById("btn-load").disabled = false;
 }
+
+/* ── Seleção e impressão em massa ────────────────────────────── */
+window.atualizarContador = function() {
+  const n = document.querySelectorAll('.cb-anexo:checked').length;
+  const cntEl = document.getElementById("cnt-sel");
+  if (cntEl) cntEl.textContent = n;
+  const btnImp = document.getElementById("btn-imprimir");
+  if (btnImp) btnImp.style.display = n > 0 ? "inline-flex" : "none";
+  // Atualizar texto do botão de seleção
+  const all = document.querySelectorAll('.cb-anexo').length;
+  const btnSel = document.getElementById("btn-sel-todos");
+  if (btnSel) btnSel.textContent = n === all && all > 0 ? "☐ Limpar Seleção" : "☑ Selecionar Todos";
+};
+
+window.selecionarTodos = function() {
+  const cbs = document.querySelectorAll('.cb-anexo');
+  const allChecked = [...cbs].every(cb => cb.checked);
+  cbs.forEach(cb => { cb.checked = !allChecked; });
+  atualizarContador();
+};
+
+window.imprimirSelecionados = function() {
+  const selecionados = [...document.querySelectorAll('.cb-anexo:checked')].map(cb => cb.dataset.key);
+  if (!selecionados.length) return;
+
+  const items = selecionados.map(key => ({
+    url:  _anexoUrls[key],
+    path: _anexoPaths[key]?.path || "",
+    tipo: _anexoPaths[key]?.tipo || "Anexo",
+  })).filter(i => i.url);
+
+  if (!items.length) {
+    alert("Aguarde os links serem gerados e tente novamente.");
+    return;
+  }
+
+  const win = window.open("", "_blank");
+  if (!win) { alert("Permita pop-ups nesta página para imprimir."); return; }
+
+  const total = items.length;
+  const pgs = items.map((item, i) => {
+    const last = i === total - 1;
+    const cls  = "pg" + (last ? " last" : "");
+    if (isImage(item.path)) {
+      return `<div class="${cls}"><div class="lbl">${item.tipo}</div><img src="${item.url}" onload="checkDone()" onerror="checkDone()"></div>`;
+    } else {
+      return `<div class="${cls}"><div class="lbl">${item.tipo}</div><embed src="${item.url}#toolbar=0" type="application/pdf" onload="checkDone()"></div>`;
+    }
+  }).join("\n");
+
+  win.document.write(`<!DOCTYPE html>
+<html><head><title>Impressão — ${total} Anexo${total > 1 ? "s" : ""}</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  @page { size: A4 portrait; margin: 10mm; }
+  body { font-family: sans-serif; background: #fff; }
+  .pg { page-break-after: always; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 95vh; padding: 8mm; }
+  .pg.last { page-break-after: avoid; }
+  img { max-width: 100%; max-height: 85vh; object-fit: contain; }
+  embed { width: 100%; height: 85vh; border: none; }
+  .lbl { font-size: 9px; color: #999; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; align-self: flex-start; }
+  .overlay { position: fixed; inset: 0; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; font-size: 14px; color: #555; z-index: 9; }
+  .sp { width: 30px; height: 30px; border: 3px solid #ddd; border-top-color: #4a9cf5; border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media print { .lbl { display: none; } .overlay { display: none !important; } }
+</style></head>
+<body>
+<div class="overlay" id="ov"><div class="sp"></div>Preparando ${total} anexo${total > 1 ? "s" : ""}…</div>
+${pgs}
+<script>
+  var _loaded = 0, _total = ${total};
+  function checkDone() {
+    if (++_loaded >= _total) {
+      document.getElementById("ov").style.display = "none";
+      setTimeout(function(){ window.print(); }, 400);
+    }
+  }
+  // Fallback — dispara impressão após 6 s mesmo se algum onload não disparar
+  setTimeout(function(){
+    document.getElementById("ov").style.display = "none";
+    if (_loaded < _total) window.print();
+  }, 6000);
+<\/script>
+</body></html>`);
+  win.document.close();
+};
 
 // Init
 buildMeses();
