@@ -913,10 +913,11 @@ function fmtD(d) {
           return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" });
         })() : "—";
         if (a.automatico) {
+          const uNome = a.usuario_nome ? nomePropio(a.usuario_nome) : "";
           return `<div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--bd1)">
             <div style="flex-shrink:0;width:18px;height:18px;border-radius:50%;background:rgba(90,96,104,.15);display:flex;align-items:center;justify-content:center;font-size:9px">🔄</div>
             <span style="flex:1;font-size:11px;color:var(--tx3);font-style:italic">${escapeHtml(a.texto)}</span>
-            <span style="font-size:10.5px;color:var(--tx3);white-space:nowrap;flex-shrink:0">${dt}</span>
+            <span style="font-size:10.5px;color:var(--tx3);white-space:nowrap;flex-shrink:0">${uNome ? escapeHtml(uNome) + " · " : ""}${dt}</span>
           </div>`;
         }
         const initials = (a.usuario_nome||"?").split(" ").slice(0,2).map(w=>w[0]||"").join("").toUpperCase();
