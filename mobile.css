@@ -218,11 +218,15 @@ body {
 
 /* ── Bottom Tab Bar ──────────────────────────────────────── */
 .mob-tabs {
-  height: calc(var(--tab-h) + var(--safe-bottom));
-  padding-bottom: var(--safe-bottom);
+  height: var(--tab-h);
   background: var(--bg-surface);
   border-top: 1px solid var(--bd1);
   display: flex;
+  flex-shrink: 0;
+}
+.mob-safe-footer {
+  height: var(--safe-bottom);
+  background: var(--bg-surface);
   flex-shrink: 0;
 }
 .mob-tab {
