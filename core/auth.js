@@ -534,30 +534,44 @@ document.addEventListener("keydown", function(e) {
 async function _drawerCarregarSemana() {
   const el = document.getElementById("area-dr-semana");
   if (!el) return;
+  const DIAS = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
   try {
     const today = new Date().toISOString().slice(0, 10);
+    const ate   = new Date(Date.now() + 21 * 864e5).toISOString().slice(0, 10);
     const res = await fetch(
-      `${apiBaseUrl()}/rest/v1/agenda?or=(data.gte.${today},data_inicio.gte.${today})&status=eq.confirmado&visibilidade=eq.publica&order=data.asc&limit=5&select=titulo,data,data_inicio,local,tipo`,
+      `${apiBaseUrl()}/rest/v1/agenda?data=gte.${today}&data=lte.${ate}&status=eq.confirmado&visibilidade=eq.publica&order=data.asc,hora_inicio.asc&limit=8&select=titulo,data,hora_inicio,espaco,tipo`,
       { headers: apiHeaders() }
     );
     if (!res.ok) throw new Error();
     const rows = await res.json();
     if (!Array.isArray(rows) || !rows.length) {
-      el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:8px 0">Nenhum evento confirmado nos próximos dias.</div>`;
+      el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0;text-align:center">Nenhum evento confirmado nos próximos dias.</div>`;
       return;
     }
-    el.innerHTML = rows.map(r => {
-      const rawDate = r.data || r.data_inicio;
-      const d = rawDate ? new Date(rawDate).toLocaleDateString("pt-BR", { weekday:"short", day:"2-digit", month:"2-digit" }) : "—";
-      const tipo = r.tipo ? `<span style="font-size:9px;background:rgba(42,181,192,.12);color:var(--teal);border-radius:3px;padding:1px 5px;margin-left:5px">${escapeHtml(r.tipo)}</span>` : "";
-      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd1)">
-        <div style="font-size:12px;font-weight:600;color:var(--tx1)">${escapeHtml(r.titulo || "—")}${tipo}</div>
-        <span style="font-size:10.5px;color:var(--teal);white-space:nowrap;margin-left:10px">${d}</span>
+    // Agrupar por data
+    const byDate = {};
+    rows.forEach(e => { const k = e.data || "sem-data"; (byDate[k] = byDate[k] || []).push(e); });
+    el.innerHTML = Object.entries(byDate).sort(([a],[b]) => a.localeCompare(b)).map(([data, evs]) => {
+      const [,,dd] = data.split("-");
+      const nomeDia = data !== "sem-data" ? DIAS[new Date(data + "T12:00:00").getDay()] : "";
+      return `<div style="margin-bottom:14px">
+        <div style="font-size:9px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;display:flex;align-items:center;gap:8px">
+          <span style="background:var(--teal);color:#fff;border-radius:4px;padding:1px 7px">${dd || data}</span>${nomeDia}
+        </div>
+        ${evs.map(e => `
+          <div style="display:flex;gap:10px;padding:8px 10px;background:var(--bg-surface);border-radius:8px;margin-bottom:4px;align-items:flex-start">
+            <div style="font-size:10px;color:var(--tx3);min-width:38px;font-family:var(--mono);padding-top:2px;flex-shrink:0">${e.hora_inicio ? e.hora_inicio.slice(0,5) : "—"}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:600;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(e.titulo || "—")}</div>
+              ${e.espaco ? `<div style="font-size:10px;color:var(--tx3);margin-top:1px">${escapeHtml(e.espaco)}</div>` : ""}
+            </div>
+            ${e.tipo ? `<span style="font-size:9px;background:rgba(42,181,192,.1);color:var(--teal);border-radius:3px;padding:1px 6px;flex-shrink:0;white-space:nowrap;align-self:center">${escapeHtml(e.tipo)}</span>` : ""}
+          </div>`).join("")}
       </div>`;
     }).join("");
   } catch (_) {
     const el2 = document.getElementById("area-dr-semana");
-    if (el2) el2.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:8px 0">Nenhum evento confirmado nos próximos dias.</div>`;
+    if (el2) el2.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:12px 0;text-align:center">Nenhum evento confirmado nos próximos dias.</div>`;
   }
 }
 
