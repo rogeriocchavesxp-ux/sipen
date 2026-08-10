@@ -472,6 +472,7 @@
     // Ler filtros ANTES de destruir o DOM
     const fstatus = document.getElementById("fin-pagar-fstatus")?.value ?? "__aberto";
     const fprio   = document.getElementById("fin-pagar-fprio")?.value   || "";
+    const fmes    = document.getElementById("fin-pagar-fmes")?.value    || "";
     const fbusca  = (document.getElementById("fin-pagar-fbusca")?.value || "").toLowerCase();
 
     el.innerHTML = '<div class="empty-state">Carregando...</div>';
@@ -507,10 +508,17 @@
     const vencBrv   = emAberto.filter(r => { const v = r.financial_data?.data_vencimento; return v && v >= H && v <= S7; });
     const totalAb   = emAberto.reduce((s, r) => s + Number(r.financial_data?.valor || 0), 0);
 
+    // Construir lista de meses disponíveis a partir dos dados
+    const _rowMes = r => (r.data_abertura || r.criado_em || "").slice(0, 7); // "YYYY-MM"
+    const mesesDisp = [...new Set(allRows.map(_rowMes).filter(Boolean))].sort().reverse();
+    const _MESES_PT = ["","Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+    const _fmtMes = ym => { const [y,m] = ym.split("-"); return `${_MESES_PT[+m]} ${y}`; };
+
     // List: merged from v_demandas + financeiro_solicitacoes
     let rows = [...allRows];
     if (fstatus === "__aberto") rows = rows.filter(r => !_FECHADAS.includes(r.status));
     else if (fstatus) rows = rows.filter(r => r.status === fstatus);
+    if (fmes)    rows = rows.filter(r => _rowMes(r) === fmes);
     if (fprio)   rows = rows.filter(r => r.prioridade === fprio);
     if (fbusca)  rows = rows.filter(r =>
       (r.titulo       || "").toLowerCase().includes(fbusca) ||
@@ -541,6 +549,10 @@
             <option value="Normal">Normal</option>
             <option value="Alta">Alta</option>
             <option value="Urgente">Urgente</option>
+          </select>
+          <select id="fin-pagar-fmes" onchange="finFiltrarPagar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:6px 10px;outline:none">
+            <option value="">Todos os meses</option>
+            ${mesesDisp.map(ym => `<option value="${ym}" ${fmes===ym?"selected":""}>${_fmtMes(ym)}</option>`).join("")}
           </select>
           <input id="fin-pagar-fbusca" type="text" placeholder="Buscar título, solicitante..." oninput="finDebouncePagar()" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:6px 10px;outline:none;min-width:200px">
           <span style="font-size:11px;color:var(--tx3);margin-left:auto">${rows.length} demanda${rows.length !== 1 ? "s" : ""}</span>
