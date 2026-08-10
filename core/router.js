@@ -373,7 +373,7 @@ function sbsToggle(id){
 }
 
 function sbsInit(){
-  ["igreja","gov","dep","op","adm","portal"].forEach(id=>{
+  ["dem","igreja","gov","dep","op","adm","portal"].forEach(id=>{
     const sec=document.getElementById("sbs-"+id);
     if(!sec)return;
     try{if(sessionStorage.getItem("sbs-"+id)!=="0")sec.classList.add("collapsed");}catch(_){}

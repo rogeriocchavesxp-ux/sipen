@@ -6,11 +6,10 @@
 
 function hubSec(sectionId){
   const sec=document.getElementById('sbs-'+sectionId);
-  // Expand if collapsed; never collapse on header click (always navigate)
-  if(sec&&sec.classList.contains('collapsed')&&typeof sbsToggle==='function'){
-    sbsToggle(sectionId);
-  }
-  go('hub-'+sectionId);
+  if(!sec) return;
+  const wasCollapsed=sec.classList.contains('collapsed');
+  if(typeof sbsToggle==='function') sbsToggle(sectionId);
+  if(wasCollapsed) go('hub-'+sectionId);
 }
 window.hubSec=hubSec;
 
