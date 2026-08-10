@@ -34,7 +34,7 @@
     if (!el) return;
     try {
       const res  = await fetch(
-        `${apiBaseUrl()}/rest/v1/v_membros?deleted_at=is.null&select=id,nome,celular,email,funcao,congregacao,data_nascimento&order=nome.asc&limit=200`,
+        `${apiBaseUrl()}/rest/v1/v_membros?select=id,nome,celular,email,funcao,congregacao,data_nascimento&order=nome.asc&limit=500`,
         { headers: apiHeaders() }
       );
       const data = await res.json();

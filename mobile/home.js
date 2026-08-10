@@ -87,7 +87,7 @@
     try {
       const [rDem, rMemb] = await Promise.all([
         fetch(`${apiBaseUrl()}/rest/v1/demandas?status=neq.Conclu%C3%ADda&status=neq.Cancelada&status=neq.Pago&select=id`, { headers }),
-        fetch(`${apiBaseUrl()}/rest/v1/v_membros?deleted_at=is.null&select=id`, { headers }),
+        fetch(`${apiBaseUrl()}/rest/v1/v_membros?select=id`, { headers }),
       ]);
 
       const cntDem  = _parseCount(rDem.headers.get('content-range'));
