@@ -797,19 +797,18 @@ function fmtD(d) {
         <table style="width:100%;border-collapse:collapse;font-size:12px">
           <thead>
             <tr style="border-bottom:1px solid var(--bd2)">
-              ${["Categoria","Subcategoria","Título","Solicitante","Departamento","Responsável","Valor","Status","Abertura"].map((h,i) =>
-                `<th style="text-align:${i===6?"right":"left"};padding:8px 6px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`
+              ${["Categoria","Subcategoria","Título","Solicitante","Responsável","Valor","Status","Abertura"].map((h,i) =>
+                `<th style="text-align:${i===5?"right":"left"};padding:8px 6px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`
               ).join("")}
             </tr>
           </thead>
           <tbody>
             ${rows.map(r => {
-              const deptNome   = r.responsavel || r.responsavel_txt || "";
+              const deptNome = r.responsavel || r.responsavel_txt || "";
               const supervisor = _deptSupervisor[deptNome];
-              const deptCell   = deptNome ? escapeHtml(deptNome) : "—";
-              const respCell   = supervisor
-                ? escapeHtml(nomePropio(supervisor) || supervisor)
-                : "—";
+              const solNome  = nomePropio(r.solicitante || r.solicitante_txt || r.nome_solicitante_externo) || "—";
+              const solArea  = r.area || "";
+              const respNome = supervisor ? (nomePropio(supervisor) || supervisor) : "—";
               return `
               <tr style="border-bottom:1px solid var(--bd1);cursor:pointer"
                   onclick="demAbrirDetalhe('${r.id||r._row}','${viewOrigem}')"
@@ -820,9 +819,14 @@ function fmtD(d) {
                 </td>
                 <td style="padding:8px 6px;color:var(--tx2);font-size:11px">${r.subcategoria||"—"}</td>
                 <td style="padding:8px 6px;color:var(--tx1);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.titulo) || "—"}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${nomePropio(r.solicitante || r.solicitante_txt || r.nome_solicitante_externo) || "—"}${pillOrigem(r.origem)}</td>
-                <td style="padding:8px 6px;color:var(--tx2);font-size:11px;white-space:nowrap">${deptCell}</td>
-                <td style="padding:8px 6px;color:var(--tx1);font-weight:500;white-space:nowrap">${respCell}</td>
+                <td style="padding:8px 6px;white-space:nowrap">
+                  ${solArea ? `<div style="font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px">${escapeHtml(solArea)}</div>` : ""}
+                  <div style="color:var(--tx2)">${escapeHtml(solNome)}${pillOrigem(r.origem)}</div>
+                </td>
+                <td style="padding:8px 6px;white-space:nowrap">
+                  ${deptNome ? `<div style="font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px">${escapeHtml(deptNome)}</div>` : ""}
+                  <div style="color:var(--tx1);font-weight:500">${escapeHtml(respNome)}</div>
+                </td>
                 <td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--tx1);white-space:nowrap">${r.financial_data?.valor != null ? `R$ ${parseFloat(r.financial_data.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}</td>
                 <td style="padding:8px 6px">${pillStatus(r.status)}</td>
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${fmtDT(r.criado_em) || fmtD(r.data_abertura)}</td>
