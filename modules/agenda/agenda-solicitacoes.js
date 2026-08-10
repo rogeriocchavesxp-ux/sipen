@@ -36,22 +36,23 @@ function _agRenderSolTabela() {
   const el = document.getElementById("agenda-sol-list");
   if (!el) return;
   const fmtD = d => { if (!d) return "—"; const [y,m,dia] = String(d).slice(0,10).split("-"); return `${dia}/${m}/${y}`; };
-  const rows = _agSolFiltro
+  const pendente = s => ["pendente","aguardando_aprovacao","em_analise","ajuste_solicitado"].includes(s);
+  const rows = _agSolFiltro === "__todas"
+    ? _agSolRows
+    : _agSolFiltro
     ? _agSolRows.filter(r => {
         if (_agSolFiltro === "aguardando") return ["pendente","aguardando_aprovacao"].includes(r.status);
         return r.status === _agSolFiltro;
       })
-    : _agSolRows;
+    : _agSolRows.filter(r => pendente(r.status));
 
   if (!rows.length) {
     el.innerHTML = `<div style="text-align:center;padding:28px;color:var(--tx3)">
       <div style="font-size:28px;margin-bottom:8px">📭</div>
-      <div style="font-size:12px">Nenhuma solicitação ${_agSolFiltro ? "com esse status " : ""}encontrada.</div>
+      <div style="font-size:12px">Nenhuma solicitação ${_agSolFiltro ? "com esse status " : ""}pendente encontrada.</div>
     </div>`;
     return;
   }
-
-  const pendente = s => ["pendente","aguardando_aprovacao","em_analise","ajuste_solicitado"].includes(s);
   const thStyle = `text-align:left;padding:7px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)`;
 
   el.innerHTML = `<div style="overflow-x:auto">
