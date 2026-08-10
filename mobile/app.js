@@ -19,7 +19,8 @@
   const _renderers = {};
 
   /* ── Public API ──────────────────────────────────────── */
-  window.mobGo             = mobGo;
+  window.mobGo              = mobGo;
+  window.mobEsqueceuSenha   = mobEsqueceuSenha;
   window.mobBack           = mobBack;
   window.mobToast          = mobToast;
   window.mobSetTitle       = mobSetTitle;
@@ -109,6 +110,28 @@
       err.textContent = e.message || 'Erro ao conectar. Tente novamente.';
       btn.disabled    = false;
       btn.textContent = 'Entrar';
+    }
+  }
+
+  async function mobEsqueceuSenha() {
+    const email = document.getElementById('mob-login-email').value.trim();
+    if (!email) {
+      document.getElementById('mob-login-err').textContent = 'Digite seu e-mail primeiro.';
+      return;
+    }
+    const btn = document.getElementById('mob-login-btn');
+    btn.disabled = true;
+    try {
+      const sb = getSupabase();
+      await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/mobile.html',
+      });
+      document.getElementById('mob-login-err').style.color = 'var(--gr)';
+      document.getElementById('mob-login-err').textContent = 'E-mail de redefinição enviado. Verifique sua caixa de entrada.';
+    } catch (e) {
+      document.getElementById('mob-login-err').textContent = 'Erro ao enviar e-mail.';
+    } finally {
+      btn.disabled = false;
     }
   }
 
