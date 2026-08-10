@@ -1,0 +1,43 @@
+{
+  "id": "/mobile.html",
+  "name": "SIPEN Mobile — IPPenha",
+  "short_name": "SIPEN",
+  "description": "Sistema Integrado da Igreja Presbiteriana de Penha — versão mobile",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "/mobile.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    { "src": "icons/icon-48.png",       "sizes": "48x48",   "type": "image/png" },
+    { "src": "icons/icon-72.png",       "sizes": "72x72",   "type": "image/png" },
+    { "src": "icons/icon-96.png",       "sizes": "96x96",   "type": "image/png" },
+    { "src": "icons/icon-128.png",      "sizes": "128x128", "type": "image/png" },
+    { "src": "icons/icon-192.png",      "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png",      "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-192.png",  "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/maskable-512.png",  "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Demandas",
+      "url": "/mobile.html#demandas",
+      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Agenda",
+      "url": "/mobile.html#agenda",
+      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Membros",
+      "url": "/mobile.html#membros",
+      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
+    }
+  ]
+}

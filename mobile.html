@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<!-- SIPEN Mobile — v1.0.0 -->
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<script>
+(function(){var t=localStorage.getItem('sipen-theme')||'dark';document.documentElement.dataset.theme=t;}());
+</script>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>SIPEN — IPPenha</title>
+
+<link rel="manifest" href="manifest-mobile.json">
+<meta name="theme-color" content="#111111">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SIPEN">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="stylesheet" href="mobile.css?v=1.0.0">
+</head>
+<body>
+
+<!-- ── Login ─────────────────────────────────────────────── -->
+<div id="mob-login" class="mob-screen mob-login-screen" style="display:none">
+  <div class="mob-login-inner">
+    <div class="mob-login-logo-wrap">
+      <img src="icons/logo-ippenha.svg" alt="IPPenha" class="mob-login-logo">
+    </div>
+    <div class="mob-login-card">
+      <div class="mob-login-brand">
+        <div class="mob-login-brand-name">SIPEN</div>
+        <div class="mob-login-brand-sub">Sistema Integrado da IPPenha</div>
+      </div>
+      <div class="mob-field">
+        <label class="mob-label">E-mail</label>
+        <input id="mob-login-email" class="mob-input" type="email" inputmode="email"
+               autocomplete="email" placeholder="seu@email.com"
+               onkeydown="if(event.key==='Enter')document.getElementById('mob-login-senha').focus()">
+      </div>
+      <div class="mob-field">
+        <label class="mob-label">Senha</label>
+        <input id="mob-login-senha" class="mob-input" type="password"
+               autocomplete="current-password" placeholder="••••••••"
+               onkeydown="if(event.key==='Enter')mobDoLogin()">
+      </div>
+      <button id="mob-login-btn" class="mob-btn-primary" onclick="mobDoLogin()">Entrar</button>
+      <div id="mob-login-err" class="mob-login-err"></div>
+    </div>
+    <div class="mob-login-ver">SIPEN Mobile v1.0.0</div>
+  </div>
+</div>
+
+<!-- ── App Shell ──────────────────────────────────────────── -->
+<div id="mob-app" class="mob-app" style="display:none">
+
+  <header class="mob-header">
+    <button id="mob-back-btn" class="mob-icon-btn" onclick="mobBack()"
+            style="visibility:hidden" aria-label="Voltar">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </button>
+    <h1 id="mob-page-title" class="mob-header-title">SIPEN</h1>
+    <button class="mob-icon-btn" onclick="mobOpenUserSheet()" aria-label="Usuário">
+      <div id="mob-user-av" class="mob-user-av">?</div>
+    </button>
+  </header>
+
+  <main id="mob-content" class="mob-content"></main>
+
+  <nav class="mob-tabs" aria-label="Navegação principal">
+    <button class="mob-tab active" data-tab="home" onclick="mobGo('home')" aria-label="Início">
+      <svg class="mob-tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <span class="mob-tab-lbl">Início</span>
+    </button>
+    <button class="mob-tab" data-tab="demandas" onclick="mobGo('demandas')" aria-label="Demandas">
+      <svg class="mob-tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>
+        <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+      </svg>
+      <span class="mob-tab-lbl">Demandas</span>
+    </button>
+    <button class="mob-tab" data-tab="agenda" onclick="mobGo('agenda')" aria-label="Agenda">
+      <svg class="mob-tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <span class="mob-tab-lbl">Agenda</span>
+    </button>
+    <button class="mob-tab" data-tab="membros" onclick="mobGo('membros')" aria-label="Membros">
+      <svg class="mob-tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      <span class="mob-tab-lbl">Membros</span>
+    </button>
+    <button class="mob-tab" data-tab="mais" onclick="mobGo('mais')" aria-label="Mais">
+      <svg class="mob-tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="5" cy="12" r="1.5"/>
+        <circle cx="12" cy="12" r="1.5"/>
+        <circle cx="19" cy="12" r="1.5"/>
+      </svg>
+      <span class="mob-tab-lbl">Mais</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ── User Bottom Sheet ──────────────────────────────────── -->
+<div id="mob-user-sheet" class="mob-bottom-sheet" style="display:none" role="dialog" aria-modal="true">
+  <div class="mob-sheet-overlay" onclick="mobCloseUserSheet()"></div>
+  <div class="mob-sheet-panel">
+    <div class="mob-sheet-drag-handle"></div>
+    <div id="mob-user-sheet-info" class="mob-user-sheet-info"></div>
+    <div class="mob-sheet-sep"></div>
+    <button class="mob-sheet-btn" onclick="mobCloseUserSheet()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+      Meu Perfil
+    </button>
+    <div class="mob-sheet-sep"></div>
+    <button class="mob-sheet-btn mob-sheet-btn--danger" onclick="mobDoLogout()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      Sair
+    </button>
+    <div class="mob-safe-bottom"></div>
+  </div>
+</div>
+
+<!-- ── Toast ─────────────────────────────────────────────── -->
+<div id="mob-toast" class="mob-toast" role="status" aria-live="polite"></div>
+
+<!-- Scripts -->
+<script src="core/api.js?v=6.66.5"></script>
+<script src="mobile/app.js?v=1.0.0"></script>
+<script src="mobile/home.js?v=1.0.0"></script>
+<script src="mobile/demandas.js?v=1.0.0"></script>
+<script src="mobile/agenda.js?v=1.0.0"></script>
+<script src="mobile/membros.js?v=1.0.0"></script>
+<script src="mobile/mais.js?v=1.0.0"></script>
+
+</body>
+</html>
