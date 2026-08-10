@@ -172,7 +172,14 @@
     "Pago":                  { bg:"rgba(58,170,92,.12)",   cl:"var(--gr)"     },
   };
 
-  function _demLabel(st)  { return _DEM_STATUS_LABEL[st] || st || "Pendente"; }
+  function _demLabel(st) {
+    if (!st) return "Pendente";
+    if (_DEM_STATUS_LABEL[st]) return _DEM_STATUS_LABEL[st];
+    const norm = st.toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    if (norm.startsWith("CONCLU")) return "Pago";
+    if (norm.startsWith("CANCEL")) return "Cancelada";
+    return _DEM_STATUS_LABEL[norm] || st;
+  }
   function _temAnexo(r) {
     const fd = r.financial_data;
     if (!fd) return false;
@@ -494,7 +501,7 @@
       solicitante: r.solicitante || null,
       responsavel: r.responsavel || null,
       financial_data: { valor: r.valor, forma_pagamento: r.forma_pagamento || null, data_vencimento: r.vencimento || null },
-      status: _cap(r.status),
+      status: _demLabel(r.status),
       data_abertura: r.created_at,
       criado_em: r.created_at,
       data_conclusao: r.pago_em || null,
