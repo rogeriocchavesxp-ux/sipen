@@ -208,6 +208,8 @@ function fmtD(d) {
   let _saving = false;
   let _dashF = { area: null, status: null, prioridade: null, periodo: null };
   let _todasAreaFiltro = ""; // filtro de grupo de área para dem-todas
+  let _deptSupervisor = {}; // { ministerio_nome → supervisor_nome }
+  let _deptSupLoaded  = false;
 
   /* ── Estado: tela Admin Demandas ────────────────────── */
   const _ADM_KEY = "sipen_adm_dem_filtro";
@@ -293,7 +295,29 @@ function fmtD(d) {
     _finRenderLista(fixos);
   }
 
+  async function _loadDeptSupervisor() {
+    if (_deptSupLoaded) return;
+    _deptSupLoaded = true;
+    try {
+      const url  = apiBaseUrl();
+      const hdrs = apiHeaders();
+      const [r1, r2] = await Promise.all([
+        fetch(`${url}/rest/v1/ministerios?select=id,nome&limit=500`, { headers: hdrs }),
+        fetch(`${url}/rest/v1/nomeados?nivel=eq.supervisor&status=eq.ativo&deleted_at=is.null&select=ministerio_id,nome&limit=500`, { headers: hdrs }),
+      ]);
+      if (!r1.ok || !r2.ok) return;
+      const [mins, sups] = await Promise.all([r1.json(), r2.json()]);
+      const minMap = {};
+      mins.forEach(m => { if (m.id && m.nome) minMap[m.id] = m.nome; });
+      sups.forEach(s => {
+        const nm = minMap[s.ministerio_id];
+        if (nm && s.nome) _deptSupervisor[nm] = s.nome;
+      });
+    } catch(e) {}
+  }
+
   async function _load() {
+    _loadDeptSupervisor(); // fire-and-forget; popula mapa em paralelo
     try {
       let rows;
       if (_podeVerTodas()) {
@@ -773,13 +797,20 @@ function fmtD(d) {
         <table style="width:100%;border-collapse:collapse;font-size:12px">
           <thead>
             <tr style="border-bottom:1px solid var(--bd2)">
-              ${["Categoria","Subcategoria","Título","Solicitante","Responsável","Valor","Status","Abertura"].map((h,i) =>
-                `<th style="text-align:${i===5?"right":"left"};padding:8px 6px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`
+              ${["Categoria","Subcategoria","Título","Solicitante","Departamento","Responsável","Valor","Status","Abertura"].map((h,i) =>
+                `<th style="text-align:${i===6?"right":"left"};padding:8px 6px;color:var(--tx3);font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap">${h}</th>`
               ).join("")}
             </tr>
           </thead>
           <tbody>
-            ${rows.map(r => `
+            ${rows.map(r => {
+              const deptNome   = r.responsavel || r.responsavel_txt || "";
+              const supervisor = _deptSupervisor[deptNome];
+              const deptCell   = deptNome ? escapeHtml(deptNome) : "—";
+              const respCell   = supervisor
+                ? escapeHtml(nomePropio(supervisor) || supervisor)
+                : "—";
+              return `
               <tr style="border-bottom:1px solid var(--bd1);cursor:pointer"
                   onclick="demAbrirDetalhe('${r.id||r._row}','${viewOrigem}')"
                   onmouseover="this.style.background='var(--bg-hover)'"
@@ -790,11 +821,13 @@ function fmtD(d) {
                 <td style="padding:8px 6px;color:var(--tx2);font-size:11px">${r.subcategoria||"—"}</td>
                 <td style="padding:8px 6px;color:var(--tx1);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.titulo) || "—"}</td>
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${nomePropio(r.solicitante || r.solicitante_txt || r.nome_solicitante_externo) || "—"}${pillOrigem(r.origem)}</td>
-                <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${nomePropio(r.responsavel || r.responsavel_txt) || "—"}</td>
+                <td style="padding:8px 6px;color:var(--tx2);font-size:11px;white-space:nowrap">${deptCell}</td>
+                <td style="padding:8px 6px;color:var(--tx1);font-weight:500;white-space:nowrap">${respCell}</td>
                 <td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--tx1);white-space:nowrap">${r.financial_data?.valor != null ? `R$ ${parseFloat(r.financial_data.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}</td>
                 <td style="padding:8px 6px">${pillStatus(r.status)}</td>
                 <td style="padding:8px 6px;color:var(--tx2);white-space:nowrap">${fmtDT(r.criado_em) || fmtD(r.data_abertura)}</td>
-              </tr>`).join("")}
+              </tr>`;
+            }).join("")}
           </tbody>
         </table>
       </div>`;
