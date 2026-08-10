@@ -2078,6 +2078,84 @@ html[data-theme="light"] .login-box { box-shadow: 0 4px 24px rgba(0,0,0,0.08) }
   .sfb-inner { justify-content: center; }
 }
 
+/* ── Drawer Área do Membro (desktop) ─────────────────────────── */
+.area-member-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+}
+.area-member-drawer--hidden { display: none }
+.area-md-overlay {
+  flex: 1;
+  background: rgba(0,0,0,.42);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+.area-md-panel {
+  width: min(400px, 92vw);
+  background: var(--bg-main);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: -10px 0 48px rgba(0,0,0,.3);
+  animation: _mdSlideIn .22s cubic-bezier(.22,.68,0,1.2);
+}
+@keyframes _mdSlideIn {
+  from { transform: translateX(100%) }
+  to   { transform: translateX(0) }
+}
+.area-md-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1.5px solid var(--bd1);
+  background: var(--bg-card);
+  flex-shrink: 0;
+}
+.area-md-header-l {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+.area-md-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--tx1);
+  line-height: 1.2;
+}
+.area-md-date {
+  font-size: 10.5px;
+  color: var(--tx3);
+  margin-top: 1px;
+  text-transform: capitalize;
+}
+.area-md-close {
+  width: 30px; height: 30px;
+  border: 1px solid var(--bd2);
+  background: var(--bg-surface);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--tx2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background .15s;
+}
+.area-md-close:hover { background: var(--bg-hover) }
+.area-md-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+/* Não mostrar o drawer no mobile — experiência mobile usa tab bar */
+body.modo-mobile .area-member-drawer { display: none !important }
+
 /* SIPEN version bar */
 .sipen-ver {
   text-align: center;
