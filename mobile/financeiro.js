@@ -91,8 +91,8 @@
     try {
       const [rDem, rPagar, rAtras] = await Promise.all([
         fetch(`${apiBaseUrl()}/rest/v1/v_demandas?area=eq.Financeiro&status=not.in.(Pago,Conclu%C3%ADda,Cancelada,Cancelado)&select=id`, { headers: h }),
-        fetch(`${apiBaseUrl()}/rest/v1/financeiro_solicitacoes?status=not.in.(pago,cancelado)&deleted_at=is.null&select=id`, { headers: h }),
-        fetch(`${apiBaseUrl()}/rest/v1/financeiro_solicitacoes?status=not.in.(pago,cancelado)&vencimento=lt.${hoje}&deleted_at=is.null&select=id`, { headers: h }),
+        fetch(`${apiBaseUrl()}/rest/v1/financeiro_solicitacoes?status=not.in.(pago,cancelado)&select=id`, { headers: h }),
+        fetch(`${apiBaseUrl()}/rest/v1/financeiro_solicitacoes?status=not.in.(pago,cancelado)&vencimento=lt.${hoje}&select=id`, { headers: h }),
       ]);
       const cDem   = _parseCnt(rDem.headers.get('content-range'));
       const cPagar = _parseCnt(rPagar.headers.get('content-range'));
@@ -144,7 +144,7 @@
     if (!el) return;
     try {
       const res = await fetch(
-        `${apiBaseUrl()}/rest/v1/financeiro_solicitacoes?status=not.in.(pago,cancelado)&deleted_at=is.null&select=id,finalidade,descricao,valor,vencimento,status&order=vencimento.asc.nullslast&limit=5`,
+        `${apiBaseUrl()}/rest/v1/financeiro_solicitacoes?status=not.in.(pago,cancelado)&select=id,finalidade,descricao,valor,vencimento,status&order=vencimento.asc.nullslast&limit=5`,
         { headers: apiHeaders() }
       );
       const data = await res.json();
@@ -341,7 +341,7 @@
     if (!el) return;
     try {
       const res = await fetch(
-        `${apiBaseUrl()}/rest/v1/financeiro_solicitacoes?deleted_at=is.null&select=*&order=vencimento.asc.nullslast&limit=300`,
+        `${apiBaseUrl()}/rest/v1/financeiro_solicitacoes?select=*&order=vencimento.asc.nullslast&limit=300`,
         { headers: apiHeaders() }
       );
       const data = await res.json();
@@ -415,7 +415,7 @@
       let s = (_pagarCache || []).find(x => String(x.id) === String(params?.id));
       if (!s) {
         const res = await fetch(
-          `${apiBaseUrl()}/rest/v1/financeiro_solicitacoes?id=eq.${encodeURIComponent(params.id)}&deleted_at=is.null&select=*&limit=1`,
+          `${apiBaseUrl()}/rest/v1/financeiro_solicitacoes?id=eq.${encodeURIComponent(params.id)}&select=*&limit=1`,
           { headers: apiHeaders() }
         );
         [s] = await res.json();
