@@ -201,18 +201,35 @@
   }
   .anexo-tipo { font-size: 10px; color: var(--teal); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
   .anexo-nome { font-size: 11px; color: var(--tx2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .anexo-actions {
+    display: flex;
+    border-top: 1px solid var(--bd);
+  }
   .anexo-link {
-    display: block;
+    flex: 1;
     text-align: center;
     font-size: 11px;
     font-weight: 600;
     color: var(--blue);
-    padding: 5px 10px;
-    border-top: 1px solid var(--bd);
+    padding: 5px 8px;
     text-decoration: none;
     background: rgba(74,156,245,.05);
   }
   .anexo-link:hover { background: rgba(74,156,245,.12); }
+  .anexo-print {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    flex-shrink: 0;
+    border-left: 1px solid var(--bd);
+    background: rgba(255,255,255,.03);
+    cursor: pointer;
+    color: var(--tx3);
+    font-size: 14px;
+    transition: background .12s, color .12s;
+  }
+  .anexo-print:hover { background: rgba(255,255,255,.08); color: var(--tx1); }
   .anexo-erro { font-size: 11px; color: var(--red); padding: 5px 10px; text-align: center; border-top: 1px solid var(--bd); }
 
   .loading-anexo {
@@ -456,7 +473,10 @@ async function resolverAnexos(sb, rows) {
       _anexoUrls[t.key] = url;
       const lnkEl = document.getElementById(`lnk-${t.uid}-${t.idx}`);
       if (lnkEl) {
-        lnkEl.outerHTML = `<a class="anexo-link" href="${url}" target="_blank" rel="noopener">Abrir / Baixar</a>`;
+        lnkEl.outerHTML = `<div class="anexo-actions">
+          <a class="anexo-link" href="${url}" target="_blank" rel="noopener">Abrir / Baixar</a>
+          <span class="anexo-print" title="Imprimir" onclick="imprimirAnexo('${t.uid}',${t.idx})">🖨</span>
+        </div>`;
       }
       // Imagem inline
       const imgEl = document.getElementById(`img-${t.uid}-${t.idx}`);
@@ -471,6 +491,31 @@ async function resolverAnexos(sb, rows) {
 window.abrirAnexo = function(uid, idx) {
   const url = _anexoUrls[`${uid}-${idx}`];
   if (url) window.open(url, "_blank", "noopener,noreferrer");
+};
+
+window.imprimirAnexo = function(uid, idx) {
+  const url = _anexoUrls[`${uid}-${idx}`];
+  if (!url) return;
+  const path = _anexoPaths[`${uid}-${idx}`]?.path || "";
+  if (isImage(path)) {
+    const win = window.open("", "_blank");
+    win.document.write(`<!DOCTYPE html><html><head><title>Imprimir</title>
+      <style>body{margin:0;display:flex;justify-content:center;align-items:flex-start}img{max-width:100%;height:auto}
+      @media print{body{display:block}}</style></head>
+      <body><img src="${url}" onload="window.print()"></body></html>`);
+    win.document.close();
+  } else {
+    // PDF e outros: embed em iframe oculto e imprime
+    let fr = document.getElementById("_print-frame");
+    if (!fr) {
+      fr = document.createElement("iframe");
+      fr.id = "_print-frame";
+      fr.style.cssText = "position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none";
+      document.body.appendChild(fr);
+    }
+    fr.onload = () => { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch(e) { window.open(url,"_blank"); } };
+    fr.src = url;
+  }
 };
 
 async function carregar() {
