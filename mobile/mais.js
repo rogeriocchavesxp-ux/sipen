@@ -70,8 +70,22 @@
     `;
   }
 
-  window._maisGo = function (page) {
-    mobToast('Em desenvolvimento', 'info');
+  const _ROTAS = {
+    'financeiro-mob': 'financeiro',
   };
+
+  window._maisGo = function (page) {
+    const rota = _ROTAS[page];
+    if (rota) {
+      mobGo(rota, { title: _rotaTitulo(page) });
+    } else {
+      mobToast('Em desenvolvimento', 'info');
+    }
+  };
+
+  function _rotaTitulo(page) {
+    const item = SECOES.flatMap(s => s.itens).find(i => i.page === page);
+    return item?.label || page;
+  }
 
 })();
