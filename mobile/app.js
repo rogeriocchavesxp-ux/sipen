@@ -202,8 +202,11 @@
 
   /* ── Header ──────────────────────────────────────────── */
   function mobSetTitle(title) {
-    const el = document.getElementById('mob-page-title');
-    if (el) el.textContent = title;
+    const logo  = document.getElementById('mob-header-logo');
+    const titleEl = document.getElementById('mob-page-title');
+    const isHome = (title === 'SIPEN');
+    if (logo)    logo.style.display    = isHome ? 'block' : 'none';
+    if (titleEl) { titleEl.style.display = isHome ? 'none' : 'block'; titleEl.textContent = title; }
   }
 
   /* ── User Menu ───────────────────────────────────────── */

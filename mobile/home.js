@@ -124,7 +124,7 @@
       const hoje = _isoDate(0);
       const fim  = _isoDate(7);
       const res  = await fetch(
-        `${apiBaseUrl()}/rest/v1/agenda?data_inicio=gte.${hoje}&data_inicio=lte.${fim}&status=eq.confirmado&select=id,titulo,data_inicio,horario_inicio,local&order=data_inicio.asc,horario_inicio.asc&limit=5`,
+        `${apiBaseUrl()}/rest/v1/agenda?deleted_at=is.null&data=gte.${hoje}&data=lte.${fim}&status=not.in.(cancelado,recusado,arquivado)&select=id,titulo,data,hora_inicio,espaco&order=data.asc,hora_inicio.asc&limit=5`,
         { headers: { ...apiHeaders(), 'Prefer': 'count=exact' } }
       );
       const data = await res.json();
@@ -142,7 +142,7 @@
           <div class="mob-list-ico" style="background:var(--tealbg);color:var(--teal)">🗓</div>
           <div class="mob-list-body">
             <div class="mob-list-title">${_esc(ev.titulo)}</div>
-            <div class="mob-list-sub">${_fmtDia(ev.data_inicio)}${ev.horario_inicio ? ' · ' + ev.horario_inicio.slice(0,5) : ''}${ev.local ? ' · ' + _esc(ev.local) : ''}</div>
+            <div class="mob-list-sub">${_fmtDia(ev.data)}${ev.hora_inicio ? ' · ' + ev.hora_inicio.slice(0,5) : ''}${ev.espaco ? ' · ' + _esc(ev.espaco) : ''}</div>
           </div>
           <div class="mob-list-chev">›</div>
         </div>

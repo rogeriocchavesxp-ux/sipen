@@ -10,7 +10,7 @@
 <title>SIPEN — IPPenha</title>
 
 <link rel="manifest" href="manifest-mobile.json">
-<meta name="theme-color" content="#111111">
+<meta name="theme-color" content="#ffffff">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -68,7 +68,10 @@
         <path d="M15 18l-6-6 6-6"/>
       </svg>
     </button>
-    <h1 id="mob-page-title" class="mob-header-title">SIPEN</h1>
+    <div id="mob-header-center" class="mob-header-center">
+      <img src="icons/logo-ippenha.svg" id="mob-header-logo" class="mob-header-logo" alt="IPPenha">
+      <h1 id="mob-page-title" class="mob-header-title" style="display:none"></h1>
+    </div>
     <button class="mob-icon-btn" onclick="mobOpenUserSheet()" aria-label="Usuário">
       <div id="mob-user-av" class="mob-user-av">?</div>
     </button>

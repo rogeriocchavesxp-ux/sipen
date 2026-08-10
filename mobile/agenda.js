@@ -52,7 +52,7 @@
 
     try {
       const res  = await fetch(
-        `${apiBaseUrl()}/rest/v1/agenda?data_inicio=gte.${hoje}&data_inicio=lte.${fim}&status=neq.cancelado&select=id,titulo,tipo,data_inicio,data_fim,horario_inicio,horario_fim,local,status&order=data_inicio.asc,horario_inicio.asc&limit=80`,
+        `${apiBaseUrl()}/rest/v1/agenda?deleted_at=is.null&data=gte.${hoje}&data=lte.${fim}&status=not.in.(cancelado,recusado,arquivado)&select=id,titulo,tipo,data,hora_inicio,hora_fim,espaco,organizador,status&order=data.asc,hora_inicio.asc&limit=80`,
         { headers: apiHeaders() }
       );
       const data = await res.json();
@@ -65,7 +65,7 @@
       // Agrupar por data
       const grupos = {};
       data.forEach(ev => {
-        const dt = ev.data_inicio || 'sem-data';
+        const dt = ev.data || 'sem-data';
         if (!grupos[dt]) grupos[dt] = [];
         grupos[dt].push(ev);
       });
@@ -86,13 +86,13 @@
 
   function _eventoRow(ev) {
     const cfg  = TIPO_COR[ev.tipo] || { ico:'📅', cor:'var(--teal)' };
-    const hora = ev.horario_inicio ? ev.horario_inicio.slice(0,5) : '';
+    const hora = ev.hora_inicio ? ev.hora_inicio.slice(0,5) : '';
     return `
       <div class="mob-list-item" onclick="mobGo('agenda-evento',{id:'${ev.id}',title:'${_esc(ev.titulo)}'})">
         <div class="mob-list-ico" style="background:var(--tealbg);color:${cfg.cor}">${cfg.ico}</div>
         <div class="mob-list-body">
           <div class="mob-list-title">${_esc(ev.titulo)}</div>
-          <div class="mob-list-sub">${hora ? hora + ' · ' : ''}${ev.local ? _esc(ev.local) : ev.tipo || ''}</div>
+          <div class="mob-list-sub">${hora ? hora + ' · ' : ''}${ev.espaco ? _esc(ev.espaco) : ev.tipo || ''}</div>
         </div>
         <div class="mob-list-chev">›</div>
       </div>
@@ -118,9 +118,9 @@
       const [ev] = await res.json();
       if (!ev) throw new Error('não encontrado');
 
-      const cfg  = TIPO_COR[ev.tipo] || { ico:'📅', cor:'var(--teal)' };
-      const hora = ev.horario_inicio ? ev.horario_inicio.slice(0,5) : null;
-      const horaF = ev.horario_fim   ? ev.horario_fim.slice(0,5)   : null;
+      const cfg   = TIPO_COR[ev.tipo] || { ico:'📅', cor:'var(--teal)' };
+      const hora  = ev.hora_inicio ? ev.hora_inicio.slice(0,5) : null;
+      const horaF = ev.hora_fim    ? ev.hora_fim.slice(0,5)    : null;
 
       el.innerHTML = `
         <div class="mob-detail">
@@ -139,7 +139,7 @@
             <div class="mob-detail-card-title">Quando e onde</div>
             ${_row('Data', _fmtDia(ev.data_inicio))}
             ${hora ? _row('Horário', hora + (horaF ? ' – ' + horaF : '')) : ''}
-            ${_row('Local', ev.local || ev.espaco)}
+            ${_row('Local', ev.espaco)}
           </div>
 
           <div class="mob-detail-card">
