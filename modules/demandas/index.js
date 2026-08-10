@@ -728,10 +728,15 @@ function fmtD(d) {
     /* Filtros da UI */
     const fStatus = document.getElementById(elId+"-fstatus")?.value || "";
     const fCat    = document.getElementById(elId+"-fcat")?.value    || "";
+    const fArea   = document.getElementById(elId+"-farea")?.value   || "";
     const fPrio   = document.getElementById(elId+"-fprio")?.value   || "";
     const fBusca  = (document.getElementById(elId+"-fbusca")?.value || "").toLowerCase();
 
     if (fStatus) rows = rows.filter(r => _toDb(r.status) === _toDb(fStatus));
+    if (fArea) {
+      const areaDef = _DASH_AREAS.find(a => a.id === fArea);
+      if (areaDef?.match) rows = rows.filter(areaDef.match);
+    }
     if (fCat)    rows = rows.filter(r => r.area === fCat);
     if (fPrio)   rows = rows.filter(r => r.prioridade === fPrio);
     if (fBusca)  rows = rows.filter(r =>
@@ -3677,6 +3682,24 @@ function fmtD(d) {
 
   /* ── Expor filtrar para views ────────────────────────── */
   window.demFiltrar = function(elId, filtros) { renderLista(elId, filtros); };
+
+  window.demFiltrarAreaGrupo = function(elId, areaId) {
+    const inp = document.getElementById(elId + "-farea");
+    if (inp) inp.value = areaId || "";
+    // Limpar fcat ao mudar grupo para não conflitar
+    const fcat = document.getElementById(elId + "-fcat");
+    if (fcat) fcat.value = "";
+    // Atualizar visuais dos pills
+    ["todas","fin","adm","infra"].forEach(key => {
+      const pill = document.getElementById("dem-area-pill-" + key);
+      if (!pill) return;
+      const ativo = (key === "todas" && !areaId) || key === areaId;
+      pill.style.border   = ativo ? "1px solid var(--blue)" : "1px solid var(--bd2)";
+      pill.style.background = ativo ? "rgba(74,156,245,.12)" : "transparent";
+      pill.style.color    = ativo ? "var(--blue)" : "var(--tx3)";
+    });
+    renderLista(elId);
+  };
 
   /* Helper específico para views de Infraestrutura — mantém o escopo correto */
   window.infraDemFiltrar = function(elId, extra) {
