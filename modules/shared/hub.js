@@ -624,9 +624,9 @@ function renderHubDem(){
     <div class="ct">
       <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px">
         ${_kpi(IC.inbox, bgRose+'0.12)',rose,  '<span id="k-dem-abertas">—</span>','Abertas agora',    'Pendentes e em andamento')}
-        ${_kpi(IC.bell,  bgAmber+'0.12)',amber,'<span id="k-dem-urgentes">—</span>','Urgentes / Alta', 'Prioridade alta ou urgente')}
+        ${_kpi(IC.bell,  bgAmber+'0.12)',amber,'<span id="k-dem-pend">—</span>',   'Pendentes',        'Aguardando primeira ação')}
         ${_kpi(IC.cal,   bgSky+'0.12)', sky,  '<span id="k-dem-mes">—</span>',    'Abertas este mês', 'Novas solicitações')}
-        ${_kpi(IC.vote,  bgGr+'0.12)',  gr,   '<span id="k-dem-conc">—</span>',   'Resolvidas',       'Concluídas / pagas no mês')}
+        ${_kpi(IC.vote,  bgGr+'0.12)',  gr,   '<span id="k-dem-conc">—</span>',   'Resolvidas',       'Total concluídas e pagas')}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
         <div class="card">
@@ -656,11 +656,11 @@ function renderHubDem(){
   // KPIs via v_demandas (status normalizados)
   _cnt('v_demandas','&status=not.in.(Conclu%C3%ADda,Pago,Cancelada)')
     .then(n=>_set('k-dem-abertas',n));
-  _cnt('v_demandas','&prioridade=in.(Alta,Urgente)&status=not.in.(Conclu%C3%ADda,Pago,Cancelada)')
-    .then(n=>_set('k-dem-urgentes',n));
+  _cnt('v_demandas','&status=eq.Pendente')
+    .then(n=>_set('k-dem-pend',n));
   _cnt('v_demandas',`&criado_em=gte.${mes}-01`)
     .then(n=>_set('k-dem-mes',n));
-  _cnt('v_demandas',`&status=in.(Conclu%C3%ADda,Pago)&data_conclusao=gte.${mes}-01`)
+  _cnt('v_demandas','&status=in.(Conclu%C3%ADda,Pago)')
     .then(n=>_set('k-dem-conc',n));
 
   // Lista urgentes — via v_demandas (dados normalizados)
