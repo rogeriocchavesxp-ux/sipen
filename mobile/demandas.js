@@ -20,11 +20,14 @@
     'Pendente':     { bg:'rgba(255,159,10,.12)',  cl:'var(--amber)'  },
   };
 
+  const _FECHADAS_SET = new Set(['concluída','concluida','cancelada','cancelado','pago','paga']);
+  const _isFechada = st => _FECHADAS_SET.has((st||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''));
+
   const FILTROS = [
-    { key:'abertas',     label:'Abertas',     query:'status=neq.Conclu%C3%ADda&status=neq.Cancelada&status=neq.Pago' },
+    { key:'abertas',     label:'Abertas',     query:'', clientFilter: d => !_isFechada(d.status) },
     { key:'analise',     label:'Em Análise',  query:'status=eq.Em%20An%C3%A1lise' },
     { key:'andamento',   label:'Andamento',   query:'status=eq.Em%20Andamento' },
-    { key:'concluidas',  label:'Concluídas',  query:'status=eq.Conclu%C3%ADda' },
+    { key:'concluidas',  label:'Concluídas',  query:'', clientFilter: d => _isFechada(d.status) },
     { key:'todas',       label:'Todas',       query:'' },
   ];
 
@@ -79,6 +82,9 @@
         { headers: apiHeaders() }
       );
       let data = await res.json();
+      if (!Array.isArray(data)) data = [];
+
+      if (f.clientFilter) data = data.filter(f.clientFilter);
 
       if (_busca) {
         const q = _busca.toLowerCase();

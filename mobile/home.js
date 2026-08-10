@@ -86,7 +86,7 @@
 
     try {
       const [rDem, rMemb] = await Promise.all([
-        fetch(`${apiBaseUrl()}/rest/v1/demandas?status=neq.Conclu%C3%ADda&status=neq.Cancelada&status=neq.Pago&select=id`, { headers }),
+        fetch(`${apiBaseUrl()}/rest/v1/demandas?status=not.in.(Conclu%C3%ADda,Cancelada,Pago,CONCLUIDA,CANCELADA,PAGO,Concluido,Cancelado)&select=id`, { headers }),
         fetch(`${apiBaseUrl()}/rest/v1/v_membros?select=id`, { headers }),
       ]);
 
@@ -158,11 +158,14 @@
     if (!el) return;
     try {
       const res  = await fetch(
-        `${apiBaseUrl()}/rest/v1/demandas?status=neq.Conclu%C3%ADda&status=neq.Cancelada&status=neq.Pago&select=id,titulo,status,area&order=criado_em.desc&limit=6`,
+        `${apiBaseUrl()}/rest/v1/demandas?select=id,titulo,status,area&order=criado_em.desc&limit=50`,
         { headers: apiHeaders() }
       );
-      const data = await res.json();
-      if (!Array.isArray(data) || !data.length) {
+      const all  = await res.json();
+      const data = Array.isArray(all)
+        ? all.filter(d => !_isFechada(d.status)).slice(0, 6)
+        : [];
+      if (!data.length) {
         el.innerHTML = `<div class="mob-empty-small">Nenhuma demanda em aberto.</div>`;
         return;
       }
@@ -182,6 +185,11 @@
   }
 
   /* ── Helpers ───────────────────────────────────────── */
+  const _FECHADAS = new Set(['concluída','concluida','cancelada','cancelado','pago','paga']);
+  function _isFechada(st) {
+    return _FECHADAS.has((st || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''));
+  }
+
   function _parseCount(cr) {
     if (!cr) return '—';
     const m = cr.match(/\/(\d+)$/);
