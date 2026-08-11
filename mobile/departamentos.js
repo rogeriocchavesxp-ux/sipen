@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Departamentos
-   mobile/departamentos.js · v1.3.0
+   mobile/departamentos.js · v1.3.1
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -15,7 +15,7 @@
     PASTORAL:     { label:'Pastoral',       ic:'⛪', cor:'var(--gr)',     bg:'rgba(48,209,88,.12)'   },
     ADMINISTRACAO:{ label:'Administração',  ic:'🏛', cor:'var(--blue)',   bg:'var(--bluebg)'         },
     CONSELHO:     { label:'Conselho',       ic:'⚖️', cor:'var(--gold)',   bg:'var(--goldbg)'         },
-    DIACONIA:     { label:'Diaconia',       ic:'🤝', cor:'var(--teal)',   bg:'var(--tealbg)'         },
+    DIACONIA:     { label:'Junta Diaconal',  ic:'🤝', cor:'var(--teal)',   bg:'var(--tealbg)'         },
     COMUNICACAO:  { label:'Comunicação',    ic:'📢', cor:'var(--violet)', bg:'var(--violetbg)'       },
     ENSINO:       { label:'Ensino',         ic:'🎓', cor:'var(--amber)',  bg:'var(--amberbg)'        },
     EVANGELISMO:  { label:'Evangelismo',    ic:'✝️', cor:'var(--rose)',   bg:'var(--rosebg)'         },
@@ -28,7 +28,7 @@
     OUTRO:        { label:'Outros',         ic:'⭐', cor:'var(--tx3)',    bg:'var(--bg-hover)'       },
   };
   // Ordem de exibição das seções de tipo
-  const _ORDEM_TIPO = ['PASTORAL','ADMINISTRACAO','CONSELHO','DIACONIA','COMUNICACAO','ENSINO','EVANGELISMO','JOVENS','INFANTIL','MUSICA','INTERCESSAO','ACOLHIMENTO','SOCIAL','OUTRO'];
+  const _ORDEM_TIPO = ['CONSELHO','ADMINISTRACAO','DIACONIA','PASTORAL','COMUNICACAO','ENSINO','EVANGELISMO','JOVENS','INFANTIL','MUSICA','INTERCESSAO','ACOLHIMENTO','SOCIAL','OUTRO'];
 
   let _cache = null;
 
