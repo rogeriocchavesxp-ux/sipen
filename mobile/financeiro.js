@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Financeiro
-   mobile/financeiro.js · v1.0.0
+   mobile/financeiro.js · v1.0.2
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -144,7 +144,7 @@
     if (!el) return;
     try {
       const res = await fetch(
-        `${apiBaseUrl()}/rest/v1/financeiro_solicitacoes?status=not.in.(pago,cancelado)&select=id,finalidade,descricao,valor,vencimento,status&order=vencimento.asc.nullslast&limit=5`,
+        `${apiBaseUrl()}/rest/v1/financeiro_solicitacoes?status=not.in.(pago,cancelado)&select=id,finalidade,valor,vencimento,status&order=vencimento.asc.nullslast&limit=5`,
         { headers: apiHeaders() }
       );
       const data = await res.json();
@@ -388,7 +388,7 @@
     const bg     = isPago ? 'rgba(48,209,88,.12)' : isCan ? 'rgba(90,96,104,.15)' : 'rgba(234,179,8,.12)';
     const venc   = s.vencimento;
     const atraso = !isPago && !isCan && venc && venc < (hoje || _isoHoje());
-    const titulo = s.finalidade || s.descricao || 'Solicitação financeira';
+    const titulo = s.finalidade || 'Solicitação financeira';
     const sub    = [
       s.valor != null ? _brl(s.valor) : null,
       venc ? (atraso ? 'Vencido ' + _fmtDat(venc) : 'Vence ' + _fmtDat(venc)) : null,
@@ -428,7 +428,7 @@
       const label  = isPago ? 'Pago' : isCan ? 'Cancelado' : 'Pendente';
       const cor    = isPago ? 'var(--gr)' : isCan ? 'var(--tx3)' : 'var(--amber)';
       const bg     = isPago ? 'rgba(48,209,88,.12)' : isCan ? 'rgba(90,96,104,.15)' : 'rgba(234,179,8,.12)';
-      const titulo = s.finalidade || s.descricao || 'Solicitação financeira';
+      const titulo = s.finalidade || 'Solicitação financeira';
       const atraso = !isPago && !isCan && s.vencimento && s.vencimento < _isoHoje();
       const forma  = _labelForma(s.forma_pagamento);
 
@@ -460,7 +460,7 @@
             ${_det('Responsável', s.responsavel)}
             ${_det('Fornecedor', s.fornecedor)}
             ${_det('Criado em', _fmtDat(s.created_at))}
-            ${s.descricao && s.descricao !== s.finalidade ? _det('Descrição', s.descricao) : ''}
+            ${_det('Observações', s.observacoes)}
           </div>
 
           ${!isPago && !isCan ? `
