@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Mais / Menu Completo
-   mobile/mais.js · v1.0.0
+   mobile/mais.js · v1.0.1
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -71,7 +71,8 @@
   }
 
   const _ROTAS = {
-    'financeiro-mob': 'financeiro',
+    'financeiro-mob':   'financeiro',
+    'ministerios-mob':  'departamentos',
   };
 
   window._maisGo = function (page) {
