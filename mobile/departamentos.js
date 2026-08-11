@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Departamentos
-   mobile/departamentos.js · v1.3.1
+   mobile/departamentos.js · v1.4.0
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -30,13 +30,62 @@
   // Ordem de exibição das seções de tipo
   const _ORDEM_TIPO = ['CONSELHO','ADMINISTRACAO','DIACONIA','PASTORAL','COMUNICACAO','ENSINO','EVANGELISMO','JOVENS','INFANTIL','MUSICA','INTERCESSAO','ACOLHIMENTO','SOCIAL','OUTRO'];
 
+  const _NIVEL_LABEL = {
+    supervisor:'Supervisor', conselheiro:'Conselheiro',
+    coordenador:'Coordenador', lider_area:'Líder de Área', membro:'Membro',
+  };
+
   let _cache = null;
+
+  // Permissão do usuário mobile atual
+  let _mobPessoaId      = null;
+  let _mobIsAdmin       = false;
+  let _mobPermCarregada = false;
+  // Estado para adicionar membro no dep atual
+  let _depNiveisAtual = [];
+  let _depAdicionar   = null; // { id, nome, tipo ('min'|'soc'), orgao, _src }
+
+  /* ══════════════════════════════════════════════════
+     PERMISSÃO DO USUÁRIO MOBILE
+  ══════════════════════════════════════════════════ */
+  async function _carregarPermissaoMob() {
+    if (_mobPermCarregada) return;
+    _mobPermCarregada = true;
+    const uid = window.MOB_USER?.id;
+    if (!uid) return;
+    const h = apiHeaders();
+    try {
+      const pRows = await fetch(
+        `${apiBaseUrl()}/rest/v1/pessoas?auth_user_id=eq.${encodeURIComponent(uid)}&select=id&limit=1`,
+        { headers: h }
+      ).then(r => r.ok ? r.json() : []);
+      if (!pRows?.[0]?.id) return;
+      _mobPessoaId = pRows[0].id;
+
+      const mRows = await fetch(
+        `${apiBaseUrl()}/rest/v1/membros?pessoa_id=eq.${encodeURIComponent(_mobPessoaId)}&status=eq.ativo&deleted_at=is.null&select=funcao&limit=1`,
+        { headers: h }
+      ).then(r => r.ok ? r.json() : []);
+      if (mRows?.[0]) {
+        _mobIsAdmin = (mRows[0].funcao || '').toUpperCase() === 'ADMINISTRADOR_GERAL';
+      }
+    } catch (_) {}
+  }
+
+  function _niveisPermitidos(nivelUser) {
+    if (_mobIsAdmin) return ['supervisor','conselheiro','coordenador','lider_area','membro'];
+    if (nivelUser === 'supervisor' || nivelUser === 'conselheiro') return ['coordenador','lider_area','membro'];
+    if (nivelUser === 'coordenador') return ['lider_area','membro'];
+    if (nivelUser === 'lider_area') return ['membro'];
+    return [];
+  }
 
   /* ══════════════════════════════════════════════════
      LISTA
   ══════════════════════════════════════════════════ */
   async function renderLista(el) {
     _cache = null;
+    _carregarPermissaoMob(); // pre-load em background
     el.innerHTML = `
       <div class="mob-search-wrap">
         <input class="mob-search" type="search" placeholder="Buscar departamentos…"
@@ -219,6 +268,8 @@
 
   /* ── Detalhe de Ministério ──────────────────────── */
   async function _renderDetalheMin(el, params) {
+    await _carregarPermissaoMob();
+
     let m = (_cache?.ministerios || []).find(x => String(x.id) === String(params?.id));
     if (!m) {
       const [d] = await fetch(
@@ -233,14 +284,22 @@
     const cfg = _TIPO[tipoKey] || _TIPO['OUTRO'];
     const ic  = cfg.ic;
 
-    const [rLid, rMem] = await Promise.all([
+    const [rLid, rMem, rUserNivel] = await Promise.all([
       fetch(`${apiBaseUrl()}/rest/v1/nomeados?ministerio_id=eq.${encodeURIComponent(m.id)}&nivel=in.(supervisor,coordenador,conselheiro)&status=eq.ativo&deleted_at=is.null&select=nivel,nome,cargo&order=nivel.asc`, { headers: apiHeaders() }),
       fetch(`${apiBaseUrl()}/rest/v1/nomeados?ministerio_id=eq.${encodeURIComponent(m.id)}&nivel=eq.membro&status=eq.ativo&deleted_at=is.null&select=nome&order=nome.asc&limit=60`, { headers: { ...apiHeaders(), 'Prefer':'count=exact' } }),
+      (_mobPessoaId && !_mobIsAdmin)
+        ? fetch(`${apiBaseUrl()}/rest/v1/nomeados?ministerio_id=eq.${encodeURIComponent(m.id)}&pessoa_id=eq.${encodeURIComponent(_mobPessoaId)}&status=eq.ativo&deleted_at=is.null&select=nivel&limit=1`, { headers: apiHeaders() })
+        : Promise.resolve(null),
     ]);
 
     const lideres = rLid.ok ? await rLid.json() : [];
     const membros = rMem.ok ? await rMem.json() : [];
     const cntMem  = _parseCount(rMem.headers?.get('content-range')) || membros.length;
+
+    const uRows = rUserNivel?.ok ? await rUserNivel.json() : [];
+    const userNivel = uRows?.[0]?.nivel || null;
+    _depNiveisAtual = _niveisPermitidos(userNivel);
+    _depAdicionar   = { id: m.id, nome: m.nome, tipo: 'min', _src: 'min', orgao: null };
 
     el.innerHTML = _htmlDetalhe({
       ic, nome: m.nome, descricao: m.descricao,
@@ -248,11 +307,14 @@
       badge2: null,
       lideres, membros, cntMem,
       nivelLabel: { supervisor:'Supervisor', coordenador:'Coordenador', conselheiro:'Conselheiro' },
+      podeAdicionar: _depNiveisAtual.length > 0,
     });
   }
 
   /* ── Detalhe de Sociedade ───────────────────────── */
   async function _renderDetalheSoc(el, params) {
+    await _carregarPermissaoMob();
+
     let s = (_cache?.sociedades || []).find(x => String(x.id) === String(params?.id));
     if (!s) {
       const [d] = await fetch(
@@ -264,11 +326,17 @@
     if (!s) throw new Error('não encontrado');
 
     const orgao = params._orgao || s.orgao;
-    const rLid  = await fetch(
-      `${apiBaseUrl()}/rest/v1/nomeados?orgao_tipo=eq.sociedade&orgao=eq.${encodeURIComponent(orgao)}&status=eq.ativo&deleted_at=is.null&select=nome,cargo,tipo_nomeacao&order=tipo_nomeacao.asc,nome.asc`,
-      { headers: apiHeaders() }
-    );
-    const lideres = rLid.ok ? await rLid.json() : [];
+    const [rLid, rUserNivel] = await Promise.all([
+      fetch(`${apiBaseUrl()}/rest/v1/nomeados?orgao_tipo=eq.sociedade&orgao=eq.${encodeURIComponent(orgao)}&status=eq.ativo&deleted_at=is.null&select=nome,cargo,tipo_nomeacao&order=tipo_nomeacao.asc,nome.asc`, { headers: apiHeaders() }),
+      (_mobPessoaId && !_mobIsAdmin)
+        ? fetch(`${apiBaseUrl()}/rest/v1/nomeados?orgao_tipo=eq.sociedade&orgao=eq.${encodeURIComponent(orgao)}&pessoa_id=eq.${encodeURIComponent(_mobPessoaId)}&status=eq.ativo&deleted_at=is.null&select=nivel&limit=1`, { headers: apiHeaders() })
+        : Promise.resolve(null),
+    ]);
+    const lideres   = rLid.ok ? await rLid.json() : [];
+    const uRows     = rUserNivel?.ok ? await rUserNivel.json() : [];
+    const userNivel = uRows?.[0]?.nivel || null;
+    _depNiveisAtual = _niveisPermitidos(userNivel);
+    _depAdicionar   = { id: s.id, nome: s.nome, tipo: 'soc', _src: 'soc', orgao };
 
     el.innerHTML = _htmlDetalhe({
       ic: s.ic || '🏛',
@@ -279,11 +347,13 @@
       lideres: lideres.map(l => ({ nivel: l.tipo_nomeacao, nome: l.nome, cargo: l.cargo })),
       membros: [], cntMem: 0,
       nivelLabel: { lider:'Líder', diretoria:'Diretoria' },
+      podeAdicionar: _depNiveisAtual.length > 0,
     });
   }
 
   /* ── Template de detalhe compartilhado ─────────── */
-  function _htmlDetalhe({ ic, nome, descricao, badge1, badge2, lideres, membros, cntMem, nivelLabel }) {
+  function _htmlDetalhe({ ic, nome, descricao, badge1, badge2, lideres, membros, cntMem, nivelLabel,
+                          podeAdicionar = false }) {
     return `
       <div class="mob-detail">
         <div class="mob-detail-hero">
@@ -338,9 +408,205 @@
             </div>` : ''}
           </div>` : ''}
         </div>` : ''}
+
+        ${podeAdicionar ? `
+        <div style="padding:0 16px 24px">
+          <button onclick="_depAbrirAddMembro()" class="mob-btn-primary">
+            + Adicionar Membro
+          </button>
+        </div>` : ''}
       </div>
     `;
   }
+
+  /* ══════════════════════════════════════════════════
+     ADICIONAR MEMBRO — Bottom Sheet
+  ══════════════════════════════════════════════════ */
+  window._depAbrirAddMembro = function () {
+    document.getElementById('dep-add-sheet')?.remove();
+    if (!_depAdicionar || !_depNiveisAtual.length) return;
+
+    const opcoes = _depNiveisAtual
+      .map(n => `<option value="${n}">${_NIVEL_LABEL[n] || n}</option>`)
+      .join('');
+
+    const sheet = document.createElement('div');
+    sheet.id = 'dep-add-sheet';
+    sheet.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end';
+    sheet.innerHTML = `
+      <div onclick="_depFecharAddSheet()" style="flex:1;background:rgba(0,0,0,.4)"></div>
+      <div style="background:var(--bg-surface);border-radius:16px 16px 0 0;overflow:hidden;padding-bottom:var(--safe-bottom)">
+        <div style="padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--bd1)">
+          <div style="flex:1;font-size:16px;font-weight:600;color:var(--tx1)">Adicionar Membro</div>
+          <button onclick="_depFecharAddSheet()"
+                  style="background:var(--bg-hover);border:none;width:28px;height:28px;border-radius:50%;
+                         display:flex;align-items:center;justify-content:center;font-size:18px;
+                         color:var(--tx2);cursor:pointer;line-height:1">×</button>
+        </div>
+        <div style="padding:16px;max-height:72vh;overflow-y:auto">
+          <div style="font-size:12px;color:var(--tx3);margin-bottom:16px">${_esc(_depAdicionar.nome)}</div>
+
+          <div class="mob-field">
+            <label class="mob-label">PESSOA</label>
+            <input id="dep-add-busca" class="mob-input" type="search"
+                   placeholder="Buscar por nome…"
+                   oninput="_depBuscarPessoas(this.value)"
+                   autocomplete="off">
+            <div id="dep-add-res"
+                 style="display:none;margin-top:4px;border:1px solid var(--bd2);border-radius:10px;overflow:hidden"></div>
+            <input type="hidden" id="dep-add-pid">
+            <div id="dep-add-psel" style="margin-top:6px;font-size:13px;font-weight:500;color:var(--tx1)"></div>
+          </div>
+
+          <div class="mob-field">
+            <label class="mob-label">NÍVEL</label>
+            <select id="dep-add-nivel" class="mob-input" style="-webkit-appearance:auto;appearance:auto">
+              <option value="">Selecione…</option>
+              ${opcoes}
+            </select>
+          </div>
+
+          <div class="mob-field">
+            <label class="mob-label">
+              CARGO / FUNÇÃO
+              <span style="font-weight:400;color:var(--tx3);text-transform:none"> (opcional)</span>
+            </label>
+            <input id="dep-add-cargo" class="mob-input" type="text"
+                   placeholder="Ex.: Tesoureiro, Secretário…">
+          </div>
+
+          <div id="dep-add-err"
+               style="font-size:13px;color:var(--rose);margin-bottom:12px;min-height:16px"></div>
+
+          <button id="dep-add-btn" class="mob-btn-primary" onclick="_depSalvarMembro()">
+            Adicionar
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(sheet);
+  };
+
+  window._depFecharAddSheet = function () {
+    document.getElementById('dep-add-sheet')?.remove();
+  };
+
+  let _depBuscaTimer = null;
+  window._depBuscarPessoas = function (q) {
+    clearTimeout(_depBuscaTimer);
+    const res = document.getElementById('dep-add-res');
+    const pid = document.getElementById('dep-add-pid');
+    const psel = document.getElementById('dep-add-psel');
+    if (!res) return;
+
+    // Limpar seleção anterior ao digitar de novo
+    if (pid) pid.value = '';
+    if (psel) { psel.textContent = ''; delete psel.dataset.nome; }
+
+    if (!q.trim()) {
+      res.style.display = 'none';
+      return;
+    }
+    _depBuscaTimer = setTimeout(async () => {
+      res.style.display = 'block';
+      res.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:var(--tx3)">Buscando…</div>';
+      try {
+        const rows = await fetch(
+          `${apiBaseUrl()}/rest/v1/pessoas?nome=ilike.*${encodeURIComponent(q.trim())}*&deleted_at=is.null&select=id,nome&order=nome.asc&limit=15`,
+          { headers: apiHeaders() }
+        ).then(r => r.ok ? r.json() : []);
+
+        if (!rows.length) {
+          res.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:var(--tx3)">Nenhuma pessoa encontrada.</div>';
+          return;
+        }
+        res.innerHTML = rows.map(p => `
+          <div onclick="_depSelecionarPessoa(this)"
+               data-id="${_esc(String(p.id))}"
+               data-nome="${_esc(p.nome)}"
+               style="padding:11px 14px;font-size:14px;color:var(--tx1);
+                      border-bottom:1px solid var(--bd1);cursor:pointer;
+                      background:var(--bg-surface)">
+            ${_esc(p.nome)}
+          </div>
+        `).join('');
+      } catch (_) {
+        res.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:var(--rose)">Erro na busca.</div>';
+      }
+    }, 300);
+  };
+
+  window._depSelecionarPessoa = function (el) {
+    const pid   = document.getElementById('dep-add-pid');
+    const psel  = document.getElementById('dep-add-psel');
+    const busca = document.getElementById('dep-add-busca');
+    const res   = document.getElementById('dep-add-res');
+    if (!pid || !psel) return;
+    pid.value = el.dataset.id || '';
+    psel.textContent = el.dataset.nome || '';
+    psel.dataset.nome = el.dataset.nome || '';
+    if (busca) busca.value = el.dataset.nome || '';
+    if (res) res.style.display = 'none';
+  };
+
+  window._depSalvarMembro = async function () {
+    const pid   = document.getElementById('dep-add-pid')?.value || '';
+    const pnome = document.getElementById('dep-add-psel')?.dataset.nome || '';
+    const nivel = document.getElementById('dep-add-nivel')?.value || '';
+    const cargo = document.getElementById('dep-add-cargo')?.value?.trim() || '';
+    const errEl = document.getElementById('dep-add-err');
+    const btn   = document.getElementById('dep-add-btn');
+
+    if (errEl) errEl.textContent = '';
+    if (!pid)   { if (errEl) errEl.textContent = 'Selecione uma pessoa.'; return; }
+    if (!nivel) { if (errEl) errEl.textContent = 'Selecione um nível.'; return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Salvando…';
+
+    try {
+      const dep = _depAdicionar;
+      const payload = {
+        pessoa_id: pid,
+        nome:      pnome,
+        nivel,
+        cargo:     cargo || (_NIVEL_LABEL[nivel] || nivel),
+        status:    'ativo',
+        origem:    'nomeacao',
+      };
+
+      if (dep.tipo === 'min') {
+        payload.ministerio_id = dep.id;
+        payload.orgao_tipo    = 'ministerio';
+        payload.orgao         = dep.nome;
+      } else {
+        payload.orgao_tipo = 'sociedade';
+        payload.orgao      = dep.orgao || dep.nome;
+      }
+
+      const r = await fetch(`${apiBaseUrl()}/rest/v1/nomeados`, {
+        method: 'POST',
+        headers: { ...apiHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!r.ok) {
+        if (r.status === 409) throw new Error('Esta pessoa já está vinculada a este departamento.');
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err?.message || `Erro ${r.status}`);
+      }
+
+      _depFecharAddSheet();
+      mobToast('Membro adicionado');
+
+      // Recarregar o detalhe atual
+      mobGo('dep-detalhe', { id: dep.id, title: dep.nome, _src: dep._src, _orgao: dep.orgao });
+    } catch (e) {
+      if (errEl) errEl.textContent = e.message;
+      btn.disabled = false;
+      btn.textContent = 'Adicionar';
+    }
+  };
 
   /* ── Helpers ──────────────────────────────────────── */
   function _parseCount(cr) {
