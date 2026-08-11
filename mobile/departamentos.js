@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Departamentos
-   mobile/departamentos.js · v1.1.0
+   mobile/departamentos.js · v1.3.0
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -10,16 +10,25 @@
   mobRegisterPage('dep-detalhe',   renderDetalhe);
 
   /* ── Constantes ───────────────────────────────────── */
-  const _ICONES = {
-    MUSICA:'🎵', JOVENS:'🔥', INFANTIL:'👶', INTERCESSAO:'🙏',
-    EVANGELISMO:'✝️', DIACONIA:'🤝', COMUNICACAO:'📢', ACOLHIMENTO:'🤗',
-    ENSINO:'🎓', PASTORAL:'⛪', ADMINISTRACAO:'🏛', SOCIAL:'🤲',
+  // Mapa tipo → { label, ic, cor, bg }
+  const _TIPO = {
+    PASTORAL:     { label:'Pastoral',       ic:'⛪', cor:'var(--gr)',     bg:'rgba(48,209,88,.12)'   },
+    ADMINISTRACAO:{ label:'Administração',  ic:'🏛', cor:'var(--blue)',   bg:'var(--bluebg)'         },
+    CONSELHO:     { label:'Conselho',       ic:'⚖️', cor:'var(--gold)',   bg:'var(--goldbg)'         },
+    DIACONIA:     { label:'Diaconia',       ic:'🤝', cor:'var(--teal)',   bg:'var(--tealbg)'         },
+    COMUNICACAO:  { label:'Comunicação',    ic:'📢', cor:'var(--violet)', bg:'var(--violetbg)'       },
+    ENSINO:       { label:'Ensino',         ic:'🎓', cor:'var(--amber)',  bg:'var(--amberbg)'        },
+    EVANGELISMO:  { label:'Evangelismo',    ic:'✝️', cor:'var(--rose)',   bg:'var(--rosebg)'         },
+    JOVENS:       { label:'Jovens',         ic:'🔥', cor:'var(--orange)', bg:'rgba(255,120,40,.12)'  },
+    INFANTIL:     { label:'Infantil',       ic:'👶', cor:'var(--sky)',    bg:'var(--skybg)'          },
+    MUSICA:       { label:'Música',         ic:'🎵', cor:'var(--violet)', bg:'var(--violetbg)'       },
+    INTERCESSAO:  { label:'Intercessão',    ic:'🙏', cor:'var(--gold)',   bg:'var(--goldbg)'         },
+    ACOLHIMENTO:  { label:'Acolhimento',    ic:'🤗', cor:'var(--teal)',   bg:'var(--tealbg)'         },
+    SOCIAL:       { label:'Ação Social',    ic:'🤲', cor:'var(--gr)',     bg:'rgba(48,209,88,.12)'   },
+    OUTRO:        { label:'Outros',         ic:'⭐', cor:'var(--tx3)',    bg:'var(--bg-hover)'       },
   };
-  const _CAT_CFG = {
-    'essencial':  { label:'Essencial',  cor:'var(--gr)',     bg:'rgba(48,209,88,.12)' },
-    'importante': { label:'Importante', cor:'var(--blue)',   bg:'var(--bluebg)'       },
-    'generico':   { label:'Ministério', cor:'var(--violet)', bg:'var(--violetbg)'     },
-  };
+  // Ordem de exibição das seções de tipo
+  const _ORDEM_TIPO = ['PASTORAL','ADMINISTRACAO','CONSELHO','DIACONIA','COMUNICACAO','ENSINO','EVANGELISMO','JOVENS','INFANTIL','MUSICA','INTERCESSAO','ACOLHIMENTO','SOCIAL','OUTRO'];
 
   let _cache = null;
 
@@ -100,45 +109,46 @@
   function _renderTudo(el, dados, busca) {
     const q = (busca || '').toLowerCase();
 
-    const filtrarMin = dados.ministerios.filter(m =>
-      !q || m.nome.toLowerCase().includes(q) || (m.descricao || '').toLowerCase().includes(q)
-    );
-    const filtrarSoc = dados.sociedades.filter(s =>
-      !q || s.nome.toLowerCase().includes(q) || (s.sigla || '').toLowerCase().includes(q) || (s.descricao || '').toLowerCase().includes(q)
-    );
+    const filtrarMin = dados.ministerios
+      .filter(m => !q || m.nome.toLowerCase().includes(q) || (m.descricao || '').toLowerCase().includes(q));
+
+    const filtrarSoc = dados.sociedades
+      .filter(s => !q || s.nome.toLowerCase().includes(q) || (s.sigla || '').toLowerCase().includes(q) || (s.descricao || '').toLowerCase().includes(q))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
     if (!filtrarMin.length && !filtrarSoc.length) {
       el.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">🔍</div><div class="mob-empty-text">Nenhum resultado.</div></div>`;
       return;
     }
 
-    // Agrupa ministérios por categoria
-    const ordemCat = { essencial: 0, importante: 1, generico: 2 };
+    // Agrupar ministérios por tipo
     const grupos = {};
-    [...filtrarMin].sort((a, b) =>
-      (ordemCat[a.categoria] ?? 2) - (ordemCat[b.categoria] ?? 2) || a.nome.localeCompare(b.nome, 'pt-BR')
-    ).forEach(m => {
-      const g = m.categoria || 'generico';
-      if (!grupos[g]) grupos[g] = [];
-      grupos[g].push(m);
+    filtrarMin.forEach(m => {
+      const t = (m.tipo || 'OUTRO').toUpperCase();
+      if (!grupos[t]) grupos[t] = [];
+      grupos[t].push(m);
     });
+    // Ordenar itens dentro de cada grupo
+    Object.values(grupos).forEach(g => g.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')));
 
-    let html = '';
+    // Ordem das seções: primeiro os tipos conhecidos (na ordem definida), depois tipos desconhecidos
+    const tiposOrdenados = [
+      ..._ORDEM_TIPO.filter(t => grupos[t]),
+      ...Object.keys(grupos).filter(t => !_ORDEM_TIPO.includes(t)).sort(),
+    ];
 
-    // Seções de ministérios
-    html += Object.entries(grupos).map(([cat, itens]) => {
-      const cfg = _CAT_CFG[cat] || _CAT_CFG['generico'];
+    let html = tiposOrdenados.map(tipo => {
+      const cfg = _TIPO[tipo] || { label: tipo.charAt(0) + tipo.slice(1).toLowerCase(), ic:'⭐', cor:'var(--tx3)', bg:'var(--bg-hover)' };
       return `
         <div class="mob-section">
-          <div class="mob-section-title">${cfg.label}s</div>
+          <div class="mob-section-title">${cfg.label}</div>
           <div class="mob-card-list">
-            ${itens.map(m => _rowMin(m)).join('')}
+            ${grupos[tipo].map(m => _rowMin(m, cfg)).join('')}
           </div>
         </div>
       `;
     }).join('');
 
-    // Seção de Sociedades Internas
     if (filtrarSoc.length) {
       html += `
         <div class="mob-section">
@@ -153,9 +163,7 @@
     el.innerHTML = html;
   }
 
-  function _rowMin(m) {
-    const ic  = _ICONES[(m.tipo || '').toUpperCase()] || '⭐';
-    const cfg = _CAT_CFG[m.categoria] || _CAT_CFG['generico'];
+  function _rowMin(m, cfg) {
     const sub = [
       m._lider ? m._lider.nome.split(' ').slice(0, 2).join(' ') : null,
       m._cnt   ? `${m._cnt} membro${m._cnt !== 1 ? 's' : ''}` : null,
@@ -163,7 +171,7 @@
 
     return `
       <div class="mob-list-item" onclick="mobGo('dep-detalhe',{id:'${_esc(String(m.id))}',title:'${_esc(m.nome)}',_src:'min'})">
-        <div class="mob-list-ico" style="background:${cfg.bg};color:${cfg.cor};font-size:20px">${ic}</div>
+        <div class="mob-list-ico" style="background:${cfg.bg};color:${cfg.cor};font-size:20px">${cfg.ic}</div>
         <div class="mob-list-body">
           <div class="mob-list-title">${_esc(m.nome)}</div>
           ${sub ? `<div class="mob-list-sub">${_esc(sub)}</div>` : ''}
@@ -221,8 +229,9 @@
     }
     if (!m) throw new Error('não encontrado');
 
-    const ic  = _ICONES[(m.tipo || '').toUpperCase()] || '⭐';
-    const cfg = _CAT_CFG[m.categoria] || _CAT_CFG['generico'];
+    const tipoKey = (m.tipo || 'OUTRO').toUpperCase();
+    const cfg = _TIPO[tipoKey] || _TIPO['OUTRO'];
+    const ic  = cfg.ic;
 
     const [rLid, rMem] = await Promise.all([
       fetch(`${apiBaseUrl()}/rest/v1/nomeados?ministerio_id=eq.${encodeURIComponent(m.id)}&nivel=in.(supervisor,coordenador,conselheiro)&status=eq.ativo&deleted_at=is.null&select=nivel,nome,cargo&order=nivel.asc`, { headers: apiHeaders() }),
@@ -236,7 +245,7 @@
     el.innerHTML = _htmlDetalhe({
       ic, nome: m.nome, descricao: m.descricao,
       badge1: { label: cfg.label, cor: cfg.cor, bg: cfg.bg },
-      badge2: m.tipo ? { label: m.tipo.charAt(0) + m.tipo.slice(1).toLowerCase(), cor:'var(--tx2)', bg:'var(--bg-hover)' } : null,
+      badge2: null,
       lideres, membros, cntMem,
       nivelLabel: { supervisor:'Supervisor', coordenador:'Coordenador', conselheiro:'Conselheiro' },
     });
