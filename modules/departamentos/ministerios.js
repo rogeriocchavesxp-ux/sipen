@@ -155,7 +155,7 @@
     grid.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:32px 0;text-align:center;grid-column:1/-1">Carregando...</div>';
 
     try {
-      let url = `${SUPABASE_URL}/rest/v1/ministerios?select=id,nome,descricao,tipo,ativo,categoria,modulo_rota&order=nome.asc`;
+      let url = `${SUPABASE_URL}/rest/v1/ministerios?select=id,nome,descricao,tipo,ativo,categoria,modulo_rota&ativo=eq.true&nome=not.is.null&order=nome.asc`;
 
       if (!_isGestor()) {
         const ids = USUARIO_ATUAL?.ministerios;
@@ -965,6 +965,7 @@
       if (!r.ok) throw new Error(await r.text());
       if (typeof T === 'function') T('Departamento excluído', nome);
       minMinVoltarLista();
+      minMinLoad();
     } catch (e) {
       alert('Erro ao excluir: ' + e.message);
     }
