@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Demandas
-   mobile/demandas.js · v1.2.0
+   mobile/demandas.js · v1.2.1
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -421,6 +421,8 @@
       if (btn) { btn.disabled = false; btn.textContent = 'Registrar andamento'; }
     }
   };
+
+  window._demCarregarAndamentos = _demCarregarAndamentos;
 
   async function _demInserirAndamento(demId, texto, statusDemanda, automatico) {
     const sb    = getSupabase();

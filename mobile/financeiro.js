@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Financeiro
-   mobile/financeiro.js · v1.0.2
+   mobile/financeiro.js · v1.0.3
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -304,12 +304,46 @@
           </div>
 
           ${d.descricao ? `
-          <div class="mob-detail-card" style="padding-bottom:24px">
+          <div class="mob-detail-card">
             <div class="mob-detail-card-title">Descrição</div>
-            <div style="font-size:13px;color:var(--tx2);line-height:1.6;padding-top:4px">${_esc(d.descricao)}</div>
+            <div style="padding:14px 16px;font-size:14px;color:var(--tx2);line-height:1.7;word-break:break-word">${_fmtTxt(d.descricao)}</div>
           </div>` : ''}
+
+          <!-- Alterar status -->
+          <div class="mob-detail-card">
+            <div class="mob-detail-card-title">Status</div>
+            <div style="padding:12px 16px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <span id="dem-status-badge-${d.id}" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;background:${cfg.bg};color:${cfg.cor}">${_esc(st)}</span>
+              <button class="mob-btn-secondary" style="flex-shrink:0"
+                      onclick="_demAbrirStatusSheet('${d.id}','${_esc(st)}')">
+                Alterar
+              </button>
+            </div>
+          </div>
+
+          <!-- Andamentos -->
+          <div class="mob-detail-card" style="padding-bottom:24px">
+            <div class="mob-detail-card-title">Andamento</div>
+            <div id="dem-and-list-${d.id}" style="padding:0 16px">
+              <div class="mob-loading-state" style="font-size:13px;padding:12px 0">Carregando…</div>
+            </div>
+            <div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:8px">
+              <textarea id="dem-and-txt-${d.id}"
+                style="width:100%;min-height:72px;border:1px solid var(--bd2);border-radius:10px;
+                       background:var(--bg-input);color:var(--tx1);font-size:14px;
+                       padding:10px 12px;resize:none;font-family:var(--sans);outline:none;
+                       box-sizing:border-box"
+                placeholder="Registre um andamento…"></textarea>
+              <button class="mob-btn-primary" id="dem-and-btn-${d.id}"
+                      onclick="_demRegistrarAndamento('${d.id}')">
+                Registrar andamento
+              </button>
+            </div>
+          </div>
         </div>
       `;
+
+      window._demCarregarAndamentos(d.id);
     } catch (_) {
       el.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">⚠️</div><div class="mob-empty-text">Demanda não encontrada.</div></div>`;
     }
@@ -531,6 +565,24 @@
     return String(s || '').replace(/[&<>"']/g, c =>
       ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]
     );
+  }
+
+  function _fmtTxt(raw) {
+    if (!raw) return '';
+    return _esc(raw)
+      .replace(/\n/g, '<br>')
+      .replace(/—{2,}([^—<]{0,80})—{2,}/g, (_, titulo) => {
+        const t = titulo.trim();
+        if (t) {
+          return `<div style="display:flex;align-items:center;gap:8px;margin:10px 0">` +
+            `<div style="flex:1;height:1px;background:var(--bd2)"></div>` +
+            `<span style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">${t}</span>` +
+            `<div style="flex:1;height:1px;background:var(--bd2)"></div>` +
+          `</div>`;
+        }
+        return `<div style="height:1px;background:var(--bd2);margin:10px 0"></div>`;
+      })
+      .replace(/—{2,}/g, `<div style="height:1px;background:var(--bd2);margin:10px 0"></div>`);
   }
 
 })();
