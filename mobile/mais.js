@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Mais / Menu Completo
-   mobile/mais.js · v1.0.1
+   mobile/mais.js · v1.0.2
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -32,7 +32,7 @@
       itens: [
         { ico:'📢', cor:'var(--violet)', bg:'var(--violetbg)',  label:'Comunicação',   page:'comunicacao-mob'  },
         { ico:'🤲', cor:'var(--teal)',   bg:'var(--tealbg)',    label:'Ação Social',   page:'social-mob'        },
-        { ico:'🎶', cor:'var(--amber)',  bg:'var(--amberbg)',   label:'Ministérios',   page:'ministerios-mob'   },
+        { ico:'🏛', cor:'var(--violet)', bg:'var(--violetbg)',  label:'Departamentos', page:'ministerios-mob'   },
         { ico:'🛠', cor:'var(--orange)', bg:'var(--orangebg)',  label:'Infraestrutura',page:'infra-mob'         },
       ],
     },
