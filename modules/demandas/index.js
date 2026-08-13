@@ -408,10 +408,9 @@ function fmtD(d) {
     _atualizarBadge();
 
     const ATIVAS = ["Pendente","Em Análise","Em Andamento"];
-    const novas    = _cache.filter(r => r.status === "Pendente");
+    const pendente = _cache.filter(r => r.status === "Pendente");
     const analise  = _cache.filter(r => r.status === "Em Análise");
     const andando  = _cache.filter(r => r.status === "Em Andamento");
-    const pendente = _cache.filter(r => r.status === "Pendente");
     const concl    = _cache.filter(r => ["Concluída","Pago"].includes(r.status));
     const cancel   = _cache.filter(r => r.status === "Cancelada");
     const urgentes = _cache.filter(r => ["Alta","Urgente"].includes(r.prioridade) && ATIVAS.includes(r.status));
@@ -431,12 +430,12 @@ function fmtD(d) {
     /* Visão do pipeline por status */
     const totalGeral = _cache.length || 1;
     const pipeline = [
-      { label:"Pendente",      val:novas.length,   cor:"var(--amber)",  view:"dem-todas" },
-      { label:"Em Análise",   val:analise.length, cor:"var(--gold)",   view:"dem-analise" },
-      { label:"Em Andamento", val:andando.length, cor:"var(--violet)", view:"dem-and" },
-      { label:"Pendente",     val:pendente.length,cor:"var(--amber)",  view:"dem-todas" },
-      { label:"Concluída",    val:concl.length,   cor:"var(--gr)",     view:"dem-conc" },
-      { label:"Cancelada",    val:cancel.length,  cor:"var(--tx4)",    view:"dem-hist" },
+      { label:"Pendente",     val:pendente.length, cor:"var(--amber)",  view:"dem-todas"   },
+      { label:"Em Análise",   val:analise.length,  cor:"var(--gold)",   view:"dem-analise" },
+      { label:"Em Andamento", val:andando.length,  cor:"var(--violet)", view:"dem-and"     },
+      { label:"Urgentes",     val:urgentes.length, cor:"var(--rose)",   view:"dem-todas"   },
+      { label:"Concluída",    val:concl.length,    cor:"var(--gr)",     view:"dem-conc"    },
+      { label:"Cancelada",    val:cancel.length,   cor:"var(--tx4)",    view:"dem-hist"    },
     ];
 
     const alertaUrgente = "";
@@ -445,8 +444,8 @@ function fmtD(d) {
       ${alertaUrgente}
       <div class="kpis" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;background:var(--bg-card);border:1px solid var(--bd1);border-radius:var(--rl);overflow:hidden;margin-bottom:18px">
         <div class="kpi" style="cursor:pointer;border-radius:0;border:none;border-right:1px solid var(--bd1)" onclick="window.go('dem-todas')">
-          <div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">◻</div>
-          <div class="kpi-body"><div class="kpi-lbl">Novas</div><div class="kpi-val">${novas.length}</div><div class="kpi-d nu">aguardando</div></div>
+          <div class="kpi-ico" style="background:rgba(212,168,67,.12);color:var(--amber)">⏳</div>
+          <div class="kpi-body"><div class="kpi-lbl">Pendentes</div><div class="kpi-val">${pendente.length}</div><div class="kpi-d nu">aguardando</div></div>
         </div>
         <div class="kpi" style="cursor:pointer;border-radius:0;border:none;border-right:1px solid var(--bd1)" onclick="window.go('dem-analise')">
           <div class="kpi-ico" style="background:rgba(212,168,67,.12);color:var(--gold)">🔍</div>
@@ -457,8 +456,8 @@ function fmtD(d) {
           <div class="kpi-body"><div class="kpi-lbl">Em Andamento</div><div class="kpi-val">${andando.length}</div><div class="kpi-d nu">em execução</div></div>
         </div>
         <div class="kpi" style="cursor:pointer;border-radius:0;border:none;border-right:1px solid var(--bd1)" onclick="window.go('dem-todas')">
-          <div class="kpi-ico" style="background:rgba(212,168,67,.12);color:var(--amber)">⏳</div>
-          <div class="kpi-body"><div class="kpi-lbl">Pendentes</div><div class="kpi-val">${pendente.length}</div><div class="kpi-d nu">aguardando</div></div>
+          <div class="kpi-ico" style="background:var(--rosebg);color:var(--rose)">⚠</div>
+          <div class="kpi-body"><div class="kpi-lbl">Urgentes</div><div class="kpi-val">${urgentes.length}</div><div class="kpi-d nu">alta prioridade</div></div>
         </div>
         <div class="kpi" style="cursor:pointer;border-radius:0;border:none" onclick="window.go('dem-conc')">
           <div class="kpi-ico" style="background:rgba(58,170,92,.12);color:var(--gr)">✓</div>
