@@ -512,16 +512,16 @@ function fmtD(d) {
   /* ── Áreas para chips do Dashboard ─────────────────── */
 
   const _DASH_AREAS = [
-    { id: null,    label: "Todas" },
-    { id: "adm",   label: "Administração",
+    { id: null,    label: "Todas",                          icon: "☰" },
+    { id: "adm",   label: "Administração",                  icon: "🗂",
       match: r => ["Secretaria","Cadastro","Administrativo Geral","Logística","Comunicação e Divulgação","Apoio ao Culto","Ação Social / Hebron","Ensino (EBT)","Oração e Aconselhamento","Visitação","Administrativo"].includes(r.area) },
-    { id: "cons",  label: "Conselho",
+    { id: "cons",  label: "Conselho",                       icon: "⚖️",
       match: r => r.area === "Conselho" },
-    { id: "fin",   label: "Financeiro",
+    { id: "fin",   label: "Financeiro",                     icon: "💰",
       match: r => r.area === "Financeiro" },
-    { id: "infra", label: "Infraestrutura e Conservação",
+    { id: "infra", label: "Infraestrutura e Conservação",   icon: "🔧",
       match: r => _INFRA_AREAS.includes(r.area) },
-    { id: "agenda",label: "Agenda",
+    { id: "agenda",label: "Agenda",                         icon: "📅",
       match: r => ["Agendamentos","Eventos"].includes(r.area) },
   ];
 
@@ -574,11 +574,12 @@ function fmtD(d) {
       const cor   = _AREA_COR[a.id] || _AREA_COR[null];
       const arg   = a.id === null ? 'null' : `'${a.id}'`;
       return `<span onclick="demDashFiltrarArea(${arg})"
-        style="cursor:pointer;flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:11.5px;font-weight:600;
-               border:1px solid ${ativo ? cor.c : 'var(--bd2)'};
-               background:${ativo ? cor.bg : 'transparent'};
-               color:${ativo ? cor.c : 'var(--tx3)'};transition:all .12s;white-space:nowrap">
-        ${a.label} <span style="font-size:10px;opacity:.7">${count}</span>
+        style="cursor:pointer;flex-shrink:0;display:inline-flex;align-items:center;gap:5px;
+               padding:5px 13px;border-radius:20px;font-size:11.5px;font-weight:600;
+               border:1px solid ${ativo ? cor.c : cor.c + '55'};
+               background:${ativo ? cor.bg : cor.c + '0d'};
+               color:${ativo ? cor.c : cor.c + 'bb'};transition:all .12s;white-space:nowrap">
+        <span style="font-size:12px;line-height:1">${a.icon||''}</span>${a.label}<span style="font-size:10px;opacity:.65;font-weight:500">${count}</span>
       </span>`;
     }).join("");
   }
