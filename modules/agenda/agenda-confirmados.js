@@ -154,11 +154,11 @@ function _agRenderConfirmados() {
             ${[["titulo","Título"],["data","Data"],["hora_inicio","Horário"],["espaco","Espaço"],["solicitante_txt","Responsável"]].map(([col,lbl]) => {
               const ativo = _agConfSortCol === col;
               const seta  = ativo ? (_agConfSortDir === "asc" ? " ↑" : " ↓") : "";
-              return `<th onclick="_agConfSetSort('${col}')" style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:${ativo?"var(--teal)":"var(--tx1)"};font-weight:700;cursor:pointer;user-select:none;white-space:nowrap">${lbl}${seta}</th>`;
+              return `<th onclick="_agConfSetSort('${col}')" style="position:sticky;top:0;z-index:2;background:var(--bg-surface);text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:${ativo?"var(--teal)":"var(--tx1)"};font-weight:700;cursor:pointer;user-select:none;white-space:nowrap;box-shadow:0 1px 0 var(--teal)">${lbl}${seta}</th>`;
             }).join("")}
-            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Visibilidade</th>
-            <th style="text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700">Termo</th>
-            <th style="padding:9px 10px;width:40px"></th>
+            <th style="position:sticky;top:0;z-index:2;background:var(--bg-surface);text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700;box-shadow:0 1px 0 var(--teal)">Visibilidade</th>
+            <th style="position:sticky;top:0;z-index:2;background:var(--bg-surface);text-align:left;padding:9px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx1);font-weight:700;box-shadow:0 1px 0 var(--teal)">Termo</th>
+            <th style="position:sticky;top:0;z-index:2;background:var(--bg-surface);padding:9px 10px;width:40px;box-shadow:0 1px 0 var(--teal)"></th>
           </tr>
         </thead>
         <tbody>
