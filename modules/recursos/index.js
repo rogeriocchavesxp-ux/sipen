@@ -27,9 +27,14 @@
   }
 
   function _podeGerenciar() {
-    const u = window._sipenUser || {};
-    return ['admin_geral','supervisor'].includes(u.role);
+    if (typeof USUARIO_ATUAL === 'undefined' || !USUARIO_ATUAL) return false;
+    if (USUARIO_ATUAL.perfil === 'ADMINISTRADOR_GERAL') return true;
+    const chave = (USUARIO_ATUAL.perfil || '').toLowerCase();
+    const p = typeof PERFIS !== 'undefined' ? (PERFIS[chave] || PERFIS[USUARIO_ATUAL.perfil] || null) : null;
+    return p?.['Estoque'] === 'full';
   }
+
+  function _u() { return (typeof USUARIO_ATUAL !== 'undefined' ? USUARIO_ATUAL : null) || {}; }
 
   function _statusEstoque(atual, min) {
     if (min <= 0) return 'ok';
@@ -112,7 +117,7 @@
     const valorEstoque= itens.reduce((a,i) => a + Number(i.estoque_atual||0) * Number(i.custo_unitario||0), 0);
     const aRepor      = itens.filter(i => _statusEstoque(i.estoque_atual, i.estoque_minimo) === 'repor');
 
-    const u      = window._sipenUser || {};
+    const u      = _u();
     const podeG  = _podeGerenciar();
     let reqPend  = [];
     let movRec   = [];
@@ -332,7 +337,7 @@
     const el = document.getElementById('v-recursos-req');
     if (!el) return;
 
-    const u     = window._sipenUser || {};
+    const u     = _u();
     const podeG = _podeGerenciar();
     let rows = [];
 
@@ -528,7 +533,7 @@
   // ── Requisição ────────────────────────────────────────
   window.recAbrirNovaReq = async function(preId) {
     const itens = await _loadItens();
-    const u = window._sipenUser || {};
+    const u = _u();
     _modal('Nova Requisição',
       `<label style="${_LBL}">Item *</label>
        <select id="rec-req-item" style="${_SI}">
@@ -556,7 +561,7 @@
     const sol    = document.getElementById('rec-req-sol')?.value?.trim();
     const motivo = document.getElementById('rec-req-motivo')?.value?.trim();
     if (!itemId || !qtd || qtd <= 0 || !sol) { alert('Preencha item, quantidade e seu nome.'); return; }
-    const u = window._sipenUser || {};
+    const u = _u();
     try {
       const r = await fetch(`${_url()}/recursos_requisicoes`, {
         method:'POST', headers:_hdrJ(),
@@ -574,7 +579,7 @@
   // ── Aprovar requisição ────────────────────────────────
   window.recAprovarReq = async function(reqId, itemId, quantidade) {
     if (!confirm(`Confirmar aprovação de ${quantidade} unidade(s)?`)) return;
-    const u = window._sipenUser || {};
+    const u = _u();
     try {
       await fetch(`${_url()}/recursos_requisicoes?id=eq.${reqId}`, {
         method:'PATCH', headers:_hdrJ(),
@@ -594,7 +599,7 @@
   window.recRejeitarReq = async function(reqId) {
     const obs = prompt('Motivo da rejeição (opcional):');
     if (obs === null) return;
-    const u = window._sipenUser || {};
+    const u = _u();
     try {
       await fetch(`${_url()}/recursos_requisicoes?id=eq.${reqId}`, {
         method:'PATCH', headers:_hdrJ(),
@@ -674,7 +679,7 @@
     const doc    = document.getElementById('rec-ent-doc')?.value?.trim() || null;
     const obs    = document.getElementById('rec-ent-obs')?.value?.trim() || null;
     if (!itemId || !qtd || qtd <= 0) { alert('Selecione o item e informe a quantidade.'); return; }
-    const u = window._sipenUser || {};
+    const u = _u();
     const vt = (cu && qtd) ? cu * qtd : null;
     try {
       const r = await fetch(`${_url()}/recursos_movimentos`, {
@@ -721,7 +726,7 @@
     const qtd    = parseFloat(document.getElementById('rec-adj-qtd')?.value);
     const obs    = document.getElementById('rec-adj-obs')?.value?.trim();
     if (!itemId || isNaN(qtd) || qtd < 0) { alert('Selecione o item e informe a quantidade.'); return; }
-    const u = window._sipenUser || {};
+    const u = _u();
     try {
       const r = await fetch(`${_url()}/recursos_movimentos`, {
         method:'POST', headers:_hdrJ(),
@@ -1023,7 +1028,7 @@
     const und     = document.getElementById('rec-ed-und')?.value || '';
     if (!itemId || isNaN(novoVal) || novoVal < 0) { alert('Informe um valor válido.'); return; }
     if (!obs) { alert('Informe o motivo da alteração.'); return; }
-    const u = window._sipenUser || {};
+    const u = _u();
     try {
       const r = await fetch(`${_url()}/recursos_movimentos`, {
         method: 'POST', headers: _hdrJ(),
