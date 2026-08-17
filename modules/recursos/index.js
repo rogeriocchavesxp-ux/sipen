@@ -282,6 +282,7 @@
         </div>
         <div class="hero-act">
           <button class="tbt" onclick="go('recursos-dash')">← Voltar</button>
+          <button class="tbt" onclick="recImprimirInventario()" style="color:var(--blue);border-color:rgba(74,156,245,.3)">Imprimir Lista</button>
           ${_podeGerenciar() ? `<button class="tbt" onclick="recAbrirNovoItem()" style="color:var(--amber);border-color:rgba(208,144,64,.3)">+ Novo Item</button>` : ''}
         </div>
       </div>
@@ -312,7 +313,9 @@
                   <td style="padding:9px 6px;text-align:right;white-space:nowrap">
                     <button onclick="recVerHistorico('${i.id}')" style="font-size:10.5px;padding:3px 9px;border-radius:5px;border:1px solid var(--bd2);background:none;color:var(--tx2);cursor:pointer;margin-right:3px">Histórico</button>
                     <button onclick="recAbrirNovaReq('${i.id}')" style="font-size:10.5px;padding:3px 9px;border-radius:5px;border:1px solid var(--bd2);background:none;color:var(--tx2);cursor:pointer;margin-right:3px">Solicitar</button>
-                    ${_podeGerenciar() ? `<button onclick="recAbrirEntrada('${i.id}')" style="font-size:10.5px;padding:3px 9px;border-radius:5px;border:1px solid rgba(58,170,92,.4);background:rgba(58,170,92,.08);color:var(--gr);cursor:pointer">+ Entrada</button>` : ''}
+                    ${_podeGerenciar() ? `
+                    <button onclick="recAbrirEntrada('${i.id}')" style="font-size:10.5px;padding:3px 9px;border-radius:5px;border:1px solid rgba(58,170,92,.4);background:rgba(58,170,92,.08);color:var(--gr);cursor:pointer;margin-right:3px">+ Entrada</button>
+                    <button onclick="recEditarEstoque('${i.id}','${_esc(i.nome)}',${i.estoque_atual},'${_esc(i.unidade)}')" style="font-size:10.5px;padding:3px 9px;border-radius:5px;border:1px solid rgba(208,144,64,.4);background:rgba(208,144,64,.08);color:var(--amber);cursor:pointer">Editar Estoque</button>` : ''}
                   </td>
                 </tr>`).join('')}
               </tbody>
@@ -942,6 +945,101 @@
         </div>
       </div>`;
   }
+
+  // ── Imprimir lista para inventário ───────────────────
+  window.recImprimirInventario = async function() {
+    const itens = await _loadItens();
+    const data  = new Date().toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
+    const linhas = itens.map((i, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td style="font-family:monospace;font-size:10px">${i.codigo || '—'}</td>
+        <td style="font-weight:600">${i.nome}</td>
+        <td style="text-align:center">${i.unidade}</td>
+        <td style="text-align:center">${i.categoria?.nome || '—'}</td>
+        <td style="text-align:center">${i.estoque_minimo}</td>
+        <td style="text-align:center;font-weight:700">${i.estoque_atual}</td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>`).join('');
+
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+      <title>Inventário — ${data}</title>
+      <style>
+        body { font-family: Arial, sans-serif; font-size: 11px; color: #111; margin: 24px; }
+        h2 { margin: 0 0 2px; font-size: 15px; }
+        .sub { font-size: 10px; color: #555; margin-bottom: 16px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f0f0f0; padding: 6px 5px; text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: .05em; border: 1px solid #ccc; }
+        td { padding: 6px 5px; border: 1px solid #ddd; vertical-align: middle; }
+        tr:nth-child(even) td { background: #fafafa; }
+        .footer { margin-top: 28px; display: flex; justify-content: space-between; font-size: 10px; color: #555; }
+        .assin { border-top: 1px solid #555; padding-top: 4px; min-width: 200px; text-align: center; }
+        @media print { body { margin: 12px; } }
+      </style></head><body>
+      <h2>Igreja Presbiteriana da Penha — SIPEN</h2>
+      <div class="sub">Folha de Inventário · Gestão de Recursos · Data: ${data}</div>
+      <table>
+        <thead><tr>
+          <th>#</th><th>Código</th><th>Produto</th><th>Un</th><th>Categoria</th>
+          <th>Est.Mín</th><th>Saldo Sistema</th><th>Contagem Física</th><th>Diferença</th><th>Obs</th>
+        </tr></thead>
+        <tbody>${linhas}</tbody>
+      </table>
+      <div class="footer">
+        <div>Total de itens: <strong>${itens.length}</strong></div>
+        <div class="assin">Responsável pela conferência</div>
+        <div class="assin">Aprovação</div>
+      </div>
+      <script>window.onload = () => window.print();<\/script>
+      </body></html>`;
+
+    const w = window.open('', '_blank', 'width=900,height=700');
+    if (w) { w.document.write(html); w.document.close(); }
+  };
+
+  // ── Editar estoque manualmente (admin) ────────────────
+  window.recEditarEstoque = function(itemId, nomeItem, estoqueAtual, unidade) {
+    _modal(`Editar Estoque — ${nomeItem}`,
+      `<div style="font-size:11.5px;color:var(--tx3);margin-bottom:12px">
+         Saldo atual no sistema: <strong style="color:var(--tx1)">${estoqueAtual} ${unidade}</strong>
+       </div>
+       <label style="${_LBL}">Novo valor de estoque *</label>
+       <input id="rec-ed-val" type="number" min="0" step="any" value="${estoqueAtual}" style="${_SI};font-size:15px;font-weight:700">
+       <label style="${_LBL}">Motivo da alteração *</label>
+       <input id="rec-ed-obs" type="text" placeholder="Ex: contagem física, correção de lançamento" style="${_SI}">
+       <input type="hidden" id="rec-ed-id" value="${itemId}">
+       <input type="hidden" id="rec-ed-und" value="${unidade}">`,
+      `<button onclick="recSalvarEdicaoEstoque()" style="padding:8px 20px;border-radius:7px;border:none;background:var(--amber);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer">Confirmar Alteração</button>`
+    );
+    setTimeout(() => document.getElementById('rec-ed-val')?.select(), 50);
+  };
+
+  window.recSalvarEdicaoEstoque = async function() {
+    const itemId = document.getElementById('rec-ed-id')?.value;
+    const novoVal = parseFloat(document.getElementById('rec-ed-val')?.value);
+    const obs     = document.getElementById('rec-ed-obs')?.value?.trim();
+    const und     = document.getElementById('rec-ed-und')?.value || '';
+    if (!itemId || isNaN(novoVal) || novoVal < 0) { alert('Informe um valor válido.'); return; }
+    if (!obs) { alert('Informe o motivo da alteração.'); return; }
+    const u = window._sipenUser || {};
+    try {
+      const r = await fetch(`${_url()}/recursos_movimentos`, {
+        method: 'POST', headers: _hdrJ(),
+        body: JSON.stringify({
+          item_id: itemId, tipo: 'ajuste', quantidade: novoVal,
+          observacao: obs, responsavel: u.nome || u.email || 'Admin'
+        })
+      });
+      if (!r.ok) throw new Error(await r.text());
+      document.getElementById('rec-modal')?.remove();
+      if (typeof T === 'function') T('Estoque atualizado', `Novo valor: ${novoVal} ${und}`);
+      _itens = null;
+      if (document.getElementById('v-recursos-lista')) renderLista();
+      if (document.getElementById('v-recursos-dash'))  renderDash();
+    } catch(e) { alert('Erro: ' + e.message); }
+  };
 
   // ── Filtros ───────────────────────────────────────────
   window.recFiltrarLista = function(catId) { _filtroLista = catId; renderLista(); };
