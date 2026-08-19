@@ -383,6 +383,14 @@ function onTipoChange() {
 let _submitting = false;
 let _eventoAtual = null;
 
+function _uuid() {
+  return crypto.randomUUID?.() ||
+    'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = Math.random() * 16 | 0;
+      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+}
+
 function bindForm(evt) {
   _eventoAtual = evt;
 }
@@ -418,7 +426,9 @@ async function submitForm() {
       // Approximate check — exact enforcement is done DB-side
     }
 
+    const inscricaoId = _uuid();
     const payload = {
+      id:                   inscricaoId,
       evento_id:            evt.id,
       nome:                 nome,
       email:                g("f-email"),
@@ -436,15 +446,15 @@ async function submitForm() {
       atualizado_em:        new Date().toISOString(),
     };
 
-    const [inscricao] = await sbPost("evento_inscricoes", payload);
+    await sbPost("evento_inscricoes", payload);
     let paymentUrl = null;
-    if (!evt.gratuito && evt.infinitypay_enabled && inscricao?.id) {
+    if (!evt.gratuito && evt.infinitypay_enabled) {
       try {
         const fnUrl = `${SB_URL}/functions/v1/infinitypay-charge`;
         const fnRes = await fetch(fnUrl, {
           method: "POST",
           headers: { ...HDRS },
-          body: JSON.stringify({ inscricao_id: inscricao.id }),
+          body: JSON.stringify({ inscricao_id: inscricaoId }),
         });
         const fnData = await fnRes.json().catch(() => null);
         if (fnData?.payment_url) paymentUrl = fnData.payment_url;
