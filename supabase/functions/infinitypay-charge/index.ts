@@ -6,7 +6,7 @@
 //   POST https://api.checkout.infinitepay.io/links
 //   Docs: infinitepay.io/desenvolvedores
 //
-// Chamada pelo frontend (autenticado):
+// Chamada pelo frontend (público ou autenticado):
 //   POST /functions/v1/infinitypay-charge
 //   Body: { inscricao_id: string }
 //
@@ -36,7 +36,7 @@ function json(data: unknown, status = 200) {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
 
-  // ── Auth ─────────────────────────────────────────────────────
+  // ── Auth (anon key ou JWT de usuário — ambos aceitos) ─────────
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return json({ error: "Não autorizado" }, 401);
 
@@ -44,11 +44,6 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
-
-  const { data: { user }, error: authErr } = await supabase.auth.getUser(
-    authHeader.replace("Bearer ", ""),
-  );
-  if (authErr || !user) return json({ error: "Não autorizado" }, 401);
 
   // ── Payload ───────────────────────────────────────────────────
   let body: { inscricao_id?: string };

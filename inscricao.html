@@ -436,8 +436,21 @@ async function submitForm() {
       atualizado_em:        new Date().toISOString(),
     };
 
-    await sbPost("evento_inscricoes", payload);
-    renderSucesso(nome, evt);
+    const [inscricao] = await sbPost("evento_inscricoes", payload);
+    let paymentUrl = null;
+    if (!evt.gratuito && evt.infinitypay_enabled && inscricao?.id) {
+      try {
+        const fnUrl = `${SB_URL}/functions/v1/infinitypay-charge`;
+        const fnRes = await fetch(fnUrl, {
+          method: "POST",
+          headers: { ...HDRS },
+          body: JSON.stringify({ inscricao_id: inscricao.id }),
+        });
+        const fnData = await fnRes.json().catch(() => null);
+        if (fnData?.payment_url) paymentUrl = fnData.payment_url;
+      } catch (_) { /* falha silenciosa — admin pode gerar depois */ }
+    }
+    renderSucesso(nome, evt, paymentUrl);
   } catch (e) {
     let msg = e.message || "Erro ao enviar. Tente novamente.";
     try { const j = JSON.parse(msg); msg = j.message || j.details || msg; } catch (_) {}
@@ -459,7 +472,7 @@ function hideErr() {
   if (el) el.style.display = "none";
 }
 
-function renderSucesso(nome, evt) {
+function renderSucesso(nome, evt, paymentUrl = null) {
   app.innerHTML = `
     <div class="event-card" style="margin-bottom:16px">
       <div class="event-title">${eh(evt.titulo)}</div>
@@ -474,10 +487,19 @@ function renderSucesso(nome, evt) {
       <h2>Inscrição realizada!</h2>
       <p style="margin-top:6px">
         <span class="success-name">${eh(nome)}</span>, sua inscrição foi confirmada com sucesso.
-        ${!evt.gratuito ? "<br><br>As instruções de pagamento serão enviadas em breve." : ""}
+        ${!evt.gratuito && !paymentUrl ? "<br><br>As instruções de pagamento serão enviadas em breve." : ""}
         <br><br>
         Em caso de dúvidas, entre em contato com a igreja.
       </p>
+      ${paymentUrl ? `
+      <div style="margin-top:20px;padding:16px;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.25);border-radius:10px;text-align:center">
+        <div style="font-size:13px;color:var(--tx2);margin-bottom:10px">Para concluir sua inscrição, efetue o pagamento:</div>
+        <a href="${paymentUrl}" target="_blank" rel="noopener"
+          style="display:inline-block;padding:11px 28px;border-radius:8px;background:#6366f1;color:#fff;font-size:14px;font-weight:700;text-decoration:none">
+          Pagar agora — ${fmtMoeda(evt.valor)}
+        </a>
+        <div style="font-size:11px;color:var(--tx3);margin-top:8px">Você será redirecionado para o checkout seguro InfinitePay.</div>
+      </div>` : ""}
       ${_gerarBotaoWhatsApp(evt, nome)}
     </div>`;
 }
