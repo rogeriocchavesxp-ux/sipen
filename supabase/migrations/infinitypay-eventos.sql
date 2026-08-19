@@ -44,10 +44,10 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- ── 4. Seed inicial das chaves InfinityPay ────────────────────
+-- ── 4. Seed inicial das chaves InfinitePay ────────────────────
 INSERT INTO sipen_configuracoes (chave, descricao)
 VALUES
-  ('infinitypay_api_token',   'Token de acesso à API InfinityPay')
+  ('infinitypay_handle', 'InfiniteTag da conta InfinitePay (sem o $ inicial)')
 ON CONFLICT (chave) DO NOTHING;
 
 -- ── 5. Verificação ────────────────────────────────────────────

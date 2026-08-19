@@ -1,16 +1,19 @@
 // ═══════════════════════════════════════════════════════════════
 // SIPEN — Edge Function: infinitypay-charge
-// Cria uma cobrança na InfinityPay para uma inscrição de evento.
+// Gera link de checkout InfinitePay para uma inscrição de evento.
 //
-// Chamada pelo frontend (autenticado) com:
+// API InfinitePay — Checkout Integrado
+//   POST https://api.checkout.infinitepay.io/links
+//   Docs: infinitepay.io/desenvolvedores
+//
+// Chamada pelo frontend (autenticado):
 //   POST /functions/v1/infinitypay-charge
 //   Body: { inscricao_id: string }
 //
-// Secrets obrigatórios (Supabase Dashboard > Settings > Edge Functions > Secrets):
-//   SUPABASE_URL              → URL do projeto Supabase
-//   SUPABASE_SERVICE_ROLE_KEY → Chave service_role
-//   INFINITYPAY_API_TOKEN     → Token de API InfinityPay
-//                               (dashboard.infinitepay.io > Configurações > Integrações > API)
+// Secrets necessários no Supabase (Settings > Edge Functions > Secrets):
+//   SUPABASE_URL              → URL do projeto (automático)
+//   SUPABASE_SERVICE_ROLE_KEY → Chave service_role (automático)
+//   INFINITYPAY_HANDLE        → Sua InfiniteTag sem o $ (ex: conferencia_bas)
 // ═══════════════════════════════════════════════════════════════
 
 import { serve }        from "https://deno.land/std@0.177.0/http/server.ts";
@@ -21,7 +24,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const IP_BASE = "https://api.infinitepay.io";
+const IP_BASE = "https://api.checkout.infinitepay.io";
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -42,7 +45,6 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  // Verificar usuário autenticado
   const { data: { user }, error: authErr } = await supabase.auth.getUser(
     authHeader.replace("Bearer ", ""),
   );
@@ -58,7 +60,7 @@ serve(async (req) => {
   // ── Buscar inscrição + evento ─────────────────────────────────
   const { data: inscricao, error: iErr } = await supabase
     .from("evento_inscricoes")
-    .select("*, evento:eventos(id, titulo, infinitypay_enabled, infinitypay_account_id, valor, gratuito)")
+    .select("*, evento:eventos(id, titulo, infinitypay_enabled, valor, gratuito)")
     .eq("id", inscricao_id)
     .single();
 
@@ -66,78 +68,94 @@ serve(async (req) => {
 
   const evento = inscricao.evento;
 
-  if (evento.gratuito) return json({ error: "Evento gratuito — cobrança não aplicável" }, 400);
-  if (!evento.infinitypay_enabled) return json({ error: "InfinityPay não habilitado para este evento" }, 400);
-  if (inscricao.pago) return json({ error: "Inscrição já foi paga" }, 400);
-  if (inscricao.infinitypay_charge_id) return json({ error: "Cobrança já existe", charge_id: inscricao.infinitypay_charge_id, payment_url: inscricao.infinitypay_payment_url }, 409);
+  if (evento.gratuito)                return json({ error: "Evento gratuito — cobrança não aplicável" }, 400);
+  if (!evento.infinitypay_enabled)    return json({ error: "InfinitePay não habilitado para este evento" }, 400);
+  if (inscricao.pago)                 return json({ error: "Inscrição já foi paga" }, 400);
+  if (inscricao.infinitypay_payment_url) {
+    return json({ ok: true, payment_url: inscricao.infinitypay_payment_url, existing: true });
+  }
 
-  // ── Buscar API token ──────────────────────────────────────────
-  const { data: cfgToken } = await supabase
-    .from("sipen_configuracoes")
-    .select("valor")
-    .eq("chave", "infinitypay_api_token")
-    .single();
+  // ── Buscar handle ─────────────────────────────────────────────
+  // Handle = InfiniteTag sem o $ (ex: "conferencia_bas")
+  // Pode vir do secret INFINITYPAY_HANDLE ou da tabela sipen_configuracoes
+  let handle = Deno.env.get("INFINITYPAY_HANDLE");
+  if (!handle) {
+    const { data: cfg } = await supabase
+      .from("sipen_configuracoes")
+      .select("valor")
+      .eq("chave", "infinitypay_handle")
+      .single();
+    handle = cfg?.valor || null;
+  }
+  if (!handle) return json({ error: "Handle InfinitePay não configurado. Configure em Eventos > Config." }, 500);
 
-  const apiToken = Deno.env.get("INFINITYPAY_API_TOKEN") || cfgToken?.valor;
-  if (!apiToken) return json({ error: "API token InfinityPay não configurado" }, 500);
-
-  const valorCobrado = inscricao.valor_cobrado ?? evento.valor ?? 0;
+  const valorCobrado  = inscricao.valor_cobrado ?? evento.valor ?? 0;
   const valorCentavos = Math.round(Number(valorCobrado) * 100);
-
   if (valorCentavos <= 0) return json({ error: "Valor inválido para cobrança" }, 400);
 
-  // ── Criar cobrança na InfinityPay ─────────────────────────────
-  // Referência: https://developers.infinitepay.io/
-  const chargePayload = {
-    amount:       valorCentavos,
-    currency:     "BRL",
-    description:  `${evento.titulo} — inscrição de ${inscricao.nome}`,
-    reference_id: inscricao.id,
-    customer: {
-      name:  inscricao.nome,
-      email: inscricao.email || undefined,
-      phone: inscricao.telefone || undefined,
-    },
-    payment_methods: ["pix", "credit"],
+  // ── Montar URL do webhook (esta mesma função de retorno) ──────
+  const supabaseUrl   = Deno.env.get("SUPABASE_URL") || "";
+  const projectRef    = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] || "";
+  const webhookUrl    = projectRef
+    ? `https://${projectRef}.supabase.co/functions/v1/infinitypay-webhook`
+    : undefined;
+
+  // ── Chamar API InfinitePay ────────────────────────────────────
+  const payload: Record<string, unknown> = {
+    handle,
+    itens: [
+      {
+        quantity:    1,
+        price:       valorCentavos,
+        description: `${evento.titulo} — ${inscricao.nome}`,
+      },
+    ],
+    order_nsu: inscricao_id,  // usado para rastrear no webhook
+  };
+
+  if (webhookUrl)             payload.webhook_url  = webhookUrl;
+  if (inscricao.nome)         payload.customer     = {
+    name:         inscricao.nome,
+    email:        inscricao.email        || undefined,
+    phone_number: inscricao.telefone
+      ? `+55${inscricao.telefone.replace(/\D/g, "")}`
+      : undefined,
   };
 
   let ipRes: Response;
   try {
-    ipRes = await fetch(`${IP_BASE}/v2/charges`, {
+    ipRes = await fetch(`${IP_BASE}/links`, {
       method:  "POST",
-      headers: {
-        "Authorization": `Bearer ${apiToken}`,
-        "Content-Type":  "application/json",
-      },
-      body: JSON.stringify(chargePayload),
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(payload),
     });
   } catch (e) {
-    return json({ error: "Falha ao conectar com InfinityPay", detail: String(e) }, 502);
+    return json({ error: "Falha ao conectar com InfinitePay", detail: String(e) }, 502);
   }
 
   const ipData = await ipRes.json().catch(() => null);
-
   if (!ipRes.ok) {
-    return json({ error: "Erro InfinityPay", detail: ipData }, ipRes.status);
+    return json({ error: "Erro InfinitePay", status: ipRes.status, detail: ipData }, ipRes.status);
   }
 
-  const chargeId   = ipData?.id;
-  const paymentUrl = ipData?.payment_url || ipData?.checkout_url || ipData?.link;
+  // A resposta inclui o link de checkout
+  const paymentUrl = ipData?.link || ipData?.checkout_url || ipData?.url || ipData?.payment_url;
+  const chargeId   = ipData?.slug || ipData?.id || ipData?.invoice_slug || inscricao_id;
 
-  if (!chargeId) return json({ error: "InfinityPay não retornou charge_id", raw: ipData }, 502);
+  if (!paymentUrl) {
+    return json({ error: "InfinitePay não retornou link de pagamento", raw: ipData }, 502);
+  }
 
   // ── Salvar no banco ───────────────────────────────────────────
-  const { error: updErr } = await supabase
+  await supabase
     .from("evento_inscricoes")
     .update({
       infinitypay_charge_id:   chargeId,
-      infinitypay_payment_url: paymentUrl || null,
+      infinitypay_payment_url: paymentUrl,
       infinitypay_status:      "pending",
       atualizado_em:           new Date().toISOString(),
     })
     .eq("id", inscricao_id);
 
-  if (updErr) return json({ error: "Erro ao salvar cobrança", detail: updErr.message }, 500);
-
-  return json({ ok: true, charge_id: chargeId, payment_url: paymentUrl, amount: valorCentavos });
+  return json({ ok: true, payment_url: paymentUrl, charge_id: chargeId, amount: valorCentavos });
 });

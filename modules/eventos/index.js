@@ -1944,19 +1944,17 @@ tr:nth-child(even) td{background:#f9fafb}
         </div>
         <div style="padding:16px 18px;display:flex;flex-direction:column;gap:12px">
           <div style="font-size:11px;color:var(--tx3);background:var(--bg-surface);border:1px solid var(--bd1);border-radius:8px;padding:10px 12px;line-height:1.6">
-            <strong>Como obter o API Token:</strong><br>
-            Acesse <strong>dashboard.infinitepay.io</strong> → Configurações → Integrações → API → copie o token.
+            <strong>Como obter o Handle:</strong><br>
+            É a sua <strong>InfiniteTag</strong> no app InfinitePay — aparece como <code>$conferencia_bas</code>.<br>
+            Informe sem o símbolo <code>$</code>. Ex: <code>conferencia_bas</code>
           </div>
           <div>
-            <label style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:4px">API Token InfinityPay</label>
-            <div style="display:flex;gap:8px">
-              <input id="eve-cfg-ip-token" type="password" placeholder="Insira o token aqui..." autocomplete="new-password"
-                style="flex:1;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-input);color:var(--tx1);font-size:12.5px;outline:none;font-family:monospace">
-              <button onclick="eveCfgMostrarToken()" style="padding:8px 12px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:12px;cursor:pointer">👁</button>
-            </div>
+            <label style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:4px">Handle (InfiniteTag)</label>
+            <input id="eve-cfg-ip-token" type="text" placeholder="ex: conferencia_bas" autocomplete="off"
+              style="width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-input);color:var(--tx1);font-size:12.5px;outline:none;font-family:monospace;box-sizing:border-box">
           </div>
           <div style="display:flex;justify-content:flex-end;gap:8px">
-            <button onclick="eveSalvarCfgInfinityPay()" style="padding:8px 20px;border-radius:8px;border:none;background:var(--sky);color:#fff;font-size:13px;font-weight:700;cursor:pointer">Salvar Token</button>
+            <button onclick="eveSalvarCfgInfinityPay()" style="padding:8px 20px;border-radius:8px;border:none;background:var(--sky);color:#fff;font-size:13px;font-weight:700;cursor:pointer">Salvar</button>
           </div>
           <div id="eve-cfg-ip-status" style="font-size:11.5px;color:var(--tx3)"></div>
           <div style="border-top:1px solid var(--bd1);padding-top:12px">
@@ -1978,7 +1976,7 @@ tr:nth-child(even) td{background:#f9fafb}
       const tokenInput = document.getElementById("eve-cfg-ip-token");
       if (tokenInput && cfg?.valor) tokenInput.value = cfg.valor;
       const stEl = document.getElementById("eve-cfg-ip-status");
-      if (stEl) stEl.textContent = cfg?.valor ? "✓ Token configurado." : "Nenhum token salvo ainda.";
+      if (stEl) stEl.textContent = cfg?.valor ? `✓ Handle configurado: ${cfg.valor}` : "Nenhum handle salvo ainda.";
     } catch (_) {}
 
     // Montar URL do webhook
@@ -1991,24 +1989,18 @@ tr:nth-child(even) td{background:#f9fafb}
     }
   }
 
-  window.eveCfgMostrarToken = function () {
-    const inp = document.getElementById("eve-cfg-ip-token");
-    if (!inp) return;
-    inp.type = inp.type === "password" ? "text" : "password";
-  };
-
   window.eveSalvarCfgInfinityPay = async function () {
-    const token = document.getElementById("eve-cfg-ip-token")?.value?.trim();
-    if (!token) { _T("Informe o token antes de salvar."); return; }
+    const token = document.getElementById("eve-cfg-ip-token")?.value?.trim().replace(/^\$/, "");
+    if (!token) { _T("Informe o handle antes de salvar."); return; }
     try {
       await _fetch(`${_api()}/rest/v1/sipen_configuracoes`, {
         method: "POST",
         headers: _hdrs({ "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates,return=minimal" }),
-        body: JSON.stringify({ chave: "infinitypay_api_token", valor: token, atualizado_em: new Date().toISOString(), atualizado_por: _userName() }),
+        body: JSON.stringify({ chave: "infinitypay_handle", valor: token, atualizado_em: new Date().toISOString(), atualizado_por: _userName() }),
       });
       const stEl = document.getElementById("eve-cfg-ip-status");
-      if (stEl) stEl.textContent = "✓ Token salvo com sucesso.";
-      _T("Token InfinityPay salvo!");
+      if (stEl) stEl.textContent = `✓ Handle salvo: ${token}`;
+      _T("Handle InfinitePay salvo!");
     } catch (e) { _T("Erro ao salvar", e.message); }
   };
 

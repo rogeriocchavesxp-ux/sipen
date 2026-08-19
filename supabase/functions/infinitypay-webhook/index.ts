@@ -1,17 +1,22 @@
 // ═══════════════════════════════════════════════════════════════
 // SIPEN — Edge Function: infinitypay-webhook
-// Recebe notificações de pagamento da InfinityPay e atualiza
-// o status da inscrição no banco de dados.
+// Recebe notificação de pagamento aprovado da InfinitePay
+// e atualiza o status da inscrição automaticamente.
 //
-// URL para configurar no painel InfinityPay:
-//   https://<seu-projeto>.supabase.co/functions/v1/infinitypay-webhook
-//   (Painel InfinityPay > Configurações > Integrações > Webhooks)
+// A InfinitePay envia o webhook quando o pagamento é aprovado.
+// Retornar 200 = ok. Retornar 400 = InfinitePay tenta novamente.
 //
-// Secrets obrigatórios:
-//   SUPABASE_URL              → URL do projeto Supabase
-//   SUPABASE_SERVICE_ROLE_KEY → Chave service_role
-//   INFINITYPAY_WEBHOOK_SECRET → Secret para validar assinatura
-//                                (gerado no painel InfinityPay ao criar o webhook)
+// Payload recebido da InfinitePay:
+// {
+//   invoice_slug, amount, paid_amount, installments,
+//   capture_method, transaction_nsu,
+//   order_nsu,   ← este é o inscricao_id que enviamos ao criar
+//   receipt_url, items
+// }
+//
+// Secrets:
+//   SUPABASE_URL              (automático)
+//   SUPABASE_SERVICE_ROLE_KEY (automático)
 // ═══════════════════════════════════════════════════════════════
 
 import { serve }        from "https://deno.land/std@0.177.0/http/server.ts";
@@ -19,7 +24,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const CORS = {
   "Access-Control-Allow-Origin":  "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-infinitepay-signature",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 function json(data: unknown, status = 200) {
@@ -29,53 +34,25 @@ function json(data: unknown, status = 200) {
   });
 }
 
-// Validação de assinatura HMAC-SHA256 (padrão InfinityPay)
-async function validarAssinatura(secret: string, body: string, signature: string): Promise<boolean> {
-  try {
-    const key = await crypto.subtle.importKey(
-      "raw",
-      new TextEncoder().encode(secret),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"],
-    );
-    const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(body));
-    const computed = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
-    return computed === signature.replace("sha256=", "");
-  } catch {
-    return false;
-  }
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "Método não permitido" }, 405);
 
-  const rawBody = await req.text();
-
-  // ── Validar assinatura ────────────────────────────────────────
-  const webhookSecret = Deno.env.get("INFINITYPAY_WEBHOOK_SECRET");
-  if (webhookSecret) {
-    const signature = req.headers.get("x-infinitepay-signature") || req.headers.get("x-webhook-signature") || "";
-    if (signature) {
-      const valid = await validarAssinatura(webhookSecret, rawBody, signature);
-      if (!valid) return json({ error: "Assinatura inválida" }, 401);
-    }
-  }
-
-  // ── Parsear payload ───────────────────────────────────────────
   let payload: Record<string, unknown>;
-  try { payload = JSON.parse(rawBody); } catch { return json({ error: "Payload inválido" }, 400); }
+  try { payload = await req.json(); } catch { return json({ error: "Payload inválido" }, 400); }
 
-  const evento  = String(payload.event || payload.type || "");
-  const charge  = (payload.charge || payload.data || payload) as Record<string, unknown>;
-  const chargeId = String(charge.id || "");
+  // order_nsu é o inscricao_id que enviamos ao criar a cobrança
+  const inscricaoId   = String(payload.order_nsu || "");
+  const invoiceSlug   = String(payload.invoice_slug || "");
+  const paidAmount    = Number(payload.paid_amount  || 0);
+  const captureMethod = String(payload.capture_method || "");
+  const transactionNsu = String(payload.transaction_nsu || "");
+  const receiptUrl    = String(payload.receipt_url || "");
 
-  if (!chargeId) return json({ error: "charge.id ausente" }, 400);
-
-  // ── Mapear status InfinityPay → SIPEN ────────────────────────
-  const statusPago = ["paid", "approved", "captured", "settled"].some(s => evento.includes(s) || String(charge.status).includes(s));
-  const statusFalhou = ["failed", "refused", "expired", "cancelled"].some(s => evento.includes(s) || String(charge.status).includes(s));
+  if (!inscricaoId) {
+    console.error("Webhook InfinitePay: order_nsu ausente", payload);
+    return json({ error: "order_nsu ausente" }, 400);
+  }
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -85,47 +62,50 @@ serve(async (req) => {
   // ── Buscar inscrição ──────────────────────────────────────────
   const { data: inscricao, error: iErr } = await supabase
     .from("evento_inscricoes")
-    .select("id, pago, infinitypay_status, valor_cobrado")
-    .eq("infinitypay_charge_id", chargeId)
+    .select("id, pago, valor_cobrado")
+    .eq("id", inscricaoId)
     .single();
 
   if (iErr || !inscricao) {
-    console.error("Inscrição não encontrada para charge_id:", chargeId);
-    return json({ ok: true, notice: "charge não mapeada neste sistema" });
+    console.error("Webhook InfinitePay: inscrição não encontrada", inscricaoId);
+    // Retornar 200 para evitar retentativas infinitas de registros não mapeados
+    return json({ ok: true, notice: "inscricao nao encontrada" });
   }
 
-  if (inscricao.pago && statusPago) {
-    return json({ ok: true, notice: "já estava pago" });
+  if (inscricao.pago) {
+    return json({ ok: true, notice: "ja estava paga" });
   }
 
-  // ── Atualizar inscrição ───────────────────────────────────────
-  const update: Record<string, unknown> = {
-    infinitypay_status: String(charge.status || evento),
-    atualizado_em: new Date().toISOString(),
+  // ── Atualizar inscrição como paga ─────────────────────────────
+  const valorPago = paidAmount > 0 ? paidAmount / 100 : inscricao.valor_cobrado;
+
+  const formaMap: Record<string, string> = {
+    credit_card: "Cartão de Crédito",
+    pix:         "PIX",
+    debit_card:  "Cartão de Débito",
   };
-
-  if (statusPago) {
-    const valorPago = charge.amount ? Number(charge.amount) / 100 : inscricao.valor_cobrado;
-    update.pago            = true;
-    update.data_pagamento  = new Date().toISOString();
-    update.valor_pago      = valorPago;
-    update.forma_pagamento = String(charge.payment_method || charge.method || "InfinityPay");
-    update.referencia_pagamento = chargeId;
-    update.status = "confirmada";
-  } else if (statusFalhou) {
-    update.infinitypay_status = "failed";
-  }
+  const formaPgto = formaMap[captureMethod] || captureMethod || "InfinitePay";
 
   const { error: updErr } = await supabase
     .from("evento_inscricoes")
-    .update(update)
-    .eq("id", inscricao.id);
+    .update({
+      pago:                    true,
+      valor_pago:              valorPago,
+      forma_pagamento:         formaPgto,
+      data_pagamento:          new Date().toISOString(),
+      referencia_pagamento:    transactionNsu || invoiceSlug,
+      status:                  "confirmada",
+      infinitypay_charge_id:   invoiceSlug || undefined,
+      infinitypay_status:      "paid",
+      atualizado_em:           new Date().toISOString(),
+    })
+    .eq("id", inscricaoId);
 
   if (updErr) {
-    console.error("Erro ao atualizar inscrição:", updErr.message);
-    return json({ error: "Erro ao atualizar" }, 500);
+    console.error("Webhook InfinitePay: erro ao atualizar", updErr.message);
+    return json({ error: "Erro ao atualizar inscrição" }, 400); // 400 = InfinitePay tenta novamente
   }
 
-  console.log(`Webhook InfinityPay: charge=${chargeId} evento=${evento} inscricao=${inscricao.id} pago=${statusPago}`);
+  console.log(`Webhook InfinitePay: inscrição ${inscricaoId} paga via ${formaPgto} — R$ ${valorPago}`);
   return json({ ok: true });
 });
