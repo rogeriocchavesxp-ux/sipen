@@ -916,8 +916,11 @@ tr:nth-child(even) td{background:#f9fafb}
       const projectRef = match?.[1] || "";
       const fnUrl = `https://${projectRef}.supabase.co/functions/v1/infinitypay-charge`;
 
-      const { data: { session } } = await (typeof supabaseClient !== "undefined" ? supabaseClient : { data: { session: null } }).auth.getSession();
-      const token = session?.access_token || "";
+      let token = "";
+      if (typeof supabaseClient !== "undefined") {
+        const { data: sd } = await supabaseClient.auth.getSession();
+        token = sd?.session?.access_token || "";
+      }
 
       const res = await fetch(fnUrl, {
         method: "POST",
