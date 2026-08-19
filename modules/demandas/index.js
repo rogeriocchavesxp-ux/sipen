@@ -1066,7 +1066,17 @@ function fmtD(d) {
       return;
     }
 
-    const msg = _montarMsgWA(dem);
+    let andamentos = [];
+    try {
+      const andRes = await fetch(
+        `${base}/rest/v1/demanda_andamentos?demanda_id=eq.${dem.id}&automatico=eq.false` +
+        `&select=texto,usuario_nome,created_at&order=created_at.asc`,
+        { headers: hdrs }
+      );
+      if (andRes.ok) andamentos = await andRes.json();
+    } catch(_) {}
+
+    const msg = _montarMsgWA(dem, andamentos);
     let enviados = 0, erros = 0;
     for (const row of aptos) {
       const p = row.pessoas;
@@ -3588,7 +3598,7 @@ function fmtD(d) {
 
   /* ── Notificação WhatsApp ao criar demanda ───────────── */
 
-  function _montarMsgWA(dem) {
+  function _montarMsgWA(dem, andamentos = []) {
     const link = "https://www.sipen.com.br";
     const fd   = (dem.financial_data && typeof dem.financial_data === "object") ? dem.financial_data : null;
     const fmtValor = v => v != null && !isNaN(v)
@@ -3599,6 +3609,17 @@ function fmtD(d) {
       const [y, m, dia] = String(d).slice(0, 10).split("-");
       return `${dia}/${m}/${y}`;
     };
+    const linhasAndamentos = andamentos.length
+      ? [
+          ``,
+          `📝 *Andamentos:*`,
+          ...andamentos.map(a => {
+            const data = fmtData(a.created_at ? a.created_at.slice(0, 10) : null) || "—";
+            const autor = a.usuario_nome ? `${a.usuario_nome}: ` : "";
+            return `• [${data}] ${autor}${a.texto}`;
+          }),
+        ]
+      : [];
     return [
       `📋 *Nova demanda registrada*`,
       ``,
@@ -3610,6 +3631,7 @@ function fmtD(d) {
       fd && fmtValor(fd.valor)             ? `*Valor:* ${fmtValor(fd.valor)}`                     : null,
       fd && fmtData(fd.data_vencimento)    ? `*Vencimento:* ${fmtData(fd.data_vencimento)}`       : null,
       dem.descricao ? `\n*Descrição:*\n${dem.descricao.slice(0, 300)}${dem.descricao.length > 300 ? "…" : ""}` : null,
+      ...linhasAndamentos,
       ``,
       `🔗 Acesse no SIPEN:\n${link}`,
     ].filter(l => l !== null).join("\n");
