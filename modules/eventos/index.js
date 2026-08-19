@@ -522,8 +522,15 @@
       </td>
       ${!evt.gratuito ? `<td style="padding:10px 8px">
         ${i.pago
-          ? `<span style="font-size:11px;font-weight:700;color:var(--gr)">✓ ${_fmtMoeda(i.valor_pago)}</span>`
-          : `<span style="font-size:11px;color:var(--amber)">Pendente${isAdmin ? ` <span onclick="eveConfirmarPagamento('${_ea(i.id)}')" style="cursor:pointer;color:var(--sky);font-weight:600;margin-left:4px">Confirmar</span>` : ""}</span>`
+          ? `<span style="font-size:11px;font-weight:700;color:var(--gr)">✓ ${_fmtMoeda(i.valor_pago)}${i.infinitypay_charge_id ? `<span style="font-size:9px;margin-left:4px;color:var(--tx3)">∞</span>` : ""}</span>`
+          : `<div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:11px;color:var(--amber)">Pendente${isAdmin && !evt.infinitypay_enabled ? ` <span onclick="eveConfirmarPagamento('${_ea(i.id)}')" style="cursor:pointer;color:var(--sky);font-weight:600;margin-left:4px">Confirmar</span>` : ""}</span>
+              ${evt.infinitypay_enabled && isAdmin ? (
+                i.infinitypay_payment_url
+                  ? `<a href="${_ea(i.infinitypay_payment_url)}" target="_blank" style="font-size:10px;color:var(--violet);text-decoration:none;font-weight:600">∞ Ver Link</a>`
+                  : `<button data-ip-btn="${_ea(i.id)}" onclick="eveGerarCobrancaInfinityPay('${_ea(i.id)}','${_ea(evt.id)}')" style="font-size:10px;padding:2px 7px;border-radius:4px;border:1px solid rgba(99,102,241,.3);background:rgba(99,102,241,.08);color:#6366f1;cursor:pointer;font-weight:600">∞ Gerar Cobrança</button>`
+              ) : ""}
+            </div>`
         }
       </td>` : ""}
       ${isAdmin ? `<td style="padding:10px 8px;text-align:right">
@@ -871,16 +878,77 @@ tr:nth-child(even) td{background:#f9fafb}
 
   window.eveMenuInscricao = function (inscId, eventoId, ev) {
     ev.stopPropagation();
+    const evt   = _eventoAtivo || _eventos.find(e => e.id === eventoId);
+    const inscr = _todasInscricoes.find(i => i.id === inscId) || _inscricoesDetalhe.find(i => i.id === inscId);
     const m = _ctxMenu();
     m.appendChild(_ctxItem("Editar",             () => eveAbrirFormInscricao(eventoId, inscId)));
     m.appendChild(_ctxItem("Confirmar presença", () => eveConfirmarPresenca(inscId, eventoId)));
     m.appendChild(_ctxItem("Cancelar inscrição", () => eveCancelarInscricao(inscId, eventoId)));
+    if (evt?.infinitypay_enabled && !evt?.gratuito) {
+      m.appendChild(_ctxSep());
+      if (!inscr?.pago) {
+        if (inscr?.infinitypay_payment_url) {
+          m.appendChild(_ctxItem("Copiar Link de Pagamento", () => {
+            navigator.clipboard.writeText(inscr.infinitypay_payment_url).then(() => _T("Link copiado!")).catch(() => _T("Copie manualmente."));
+          }));
+          m.appendChild(_ctxItem("Abrir Link de Pagamento", () => window.open(inscr.infinitypay_payment_url, "_blank")));
+        } else {
+          m.appendChild(_ctxItem("Gerar Cobrança InfinityPay", () => eveGerarCobrancaInfinityPay(inscId, eventoId)));
+        }
+      } else {
+        m.appendChild(_ctxItem("✓ Pago via InfinityPay", () => {}, false));
+      }
+    }
     m.appendChild(_ctxSep());
     m.appendChild(_ctxItem("Excluir inscrição",  () => eveExcluirInscricaoModal(inscId, eventoId), true));
 
-    const { top, left } = _menuPos(ev, 200, 200);
+    const { top, left } = _menuPos(ev, 220, 250);
     m.style.top  = top  + "px";
     m.style.left = left + "px";
+  };
+
+  window.eveGerarCobrancaInfinityPay = async function (inscId, eventoId) {
+    const btn = document.querySelector(`[data-ip-btn="${inscId}"]`);
+    if (btn) { btn.disabled = true; btn.textContent = "Gerando..."; }
+    try {
+      const apiBase = _api();
+      const match = apiBase.match(/https:\/\/([^.]+)\.supabase\.co/);
+      const projectRef = match?.[1] || "";
+      const fnUrl = `https://${projectRef}.supabase.co/functions/v1/infinitypay-charge`;
+
+      const { data: { session } } = await (typeof supabaseClient !== "undefined" ? supabaseClient : { data: { session: null } }).auth.getSession();
+      const token = session?.access_token || "";
+
+      const res = await fetch(fnUrl, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ inscricao_id: inscId }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        _T("Erro InfinityPay", data?.error || `HTTP ${res.status}`);
+        return;
+      }
+
+      _T("Cobrança gerada!", "Link de pagamento criado.");
+
+      const idx = _todasInscricoes.findIndex(i => i.id === inscId);
+      if (idx >= 0) _todasInscricoes[idx] = { ..._todasInscricoes[idx], infinitypay_charge_id: data.charge_id, infinitypay_payment_url: data.payment_url, infinitypay_status: "pending" };
+      const idx2 = _inscricoesDetalhe.findIndex(i => i.id === inscId);
+      if (idx2 >= 0) _inscricoesDetalhe[idx2] = { ..._inscricoesDetalhe[idx2], infinitypay_charge_id: data.charge_id, infinitypay_payment_url: data.payment_url, infinitypay_status: "pending" };
+
+      if (data.payment_url) {
+        if (confirm(`Cobrança criada!\n\nLink: ${data.payment_url}\n\nAbrir link agora?`)) {
+          window.open(data.payment_url, "_blank");
+        }
+      }
+      if (_eventoAtivo?.id === eventoId) eveAbrirDetalhe(eventoId);
+    } catch (e) {
+      _T("Erro ao gerar cobrança", e.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = "Gerar Cobrança"; }
+    }
   };
 
   window.eveConfirmarPresenca = async function (inscId, eventoId) {
@@ -1090,6 +1158,13 @@ tr:nth-child(even) td{background:#f9fafb}
             <div id="eve-f-valor-sec" style="display:${pagHidden};grid-template-columns:1fr 1fr;gap:12px">
               ${inp("eve-f-valor", "Valor (R$)", 'type="number" min="0" step="0.01" placeholder="0,00"', evt?.valor)}
             </div>
+            <div id="eve-f-ip-sec" style="display:${pagHidden};margin-top:12px;padding:12px;background:rgba(99,102,241,.05);border:1px solid rgba(99,102,241,.2);border-radius:8px">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                <input type="checkbox" id="eve-f-ip-enabled" ${evt?.infinitypay_enabled ? "checked" : ""} style="accent-color:#6366f1;width:14px;height:14px">
+                <span style="font-size:12.5px;font-weight:600;color:#6366f1">Habilitar cobranças via InfinityPay</span>
+              </label>
+              <div style="font-size:11px;color:var(--tx3);margin-top:5px;margin-left:22px">Quando habilitado, o botão "Gerar Cobrança" ficará disponível em cada inscrição.</div>
+            </div>
           </div>
           <div>
             ${sec("Observações")}
@@ -1179,8 +1254,10 @@ tr:nth-child(even) td{background:#f9fafb}
   };
 
   window.eveToogleGratuito = function (val) {
-    const s = document.getElementById("eve-f-valor-sec");
-    if (s) s.style.display = val === "pago" ? "grid" : "none";
+    const s  = document.getElementById("eve-f-valor-sec");
+    const ip = document.getElementById("eve-f-ip-sec");
+    if (s)  s.style.display  = val === "pago" ? "grid"  : "none";
+    if (ip) ip.style.display = val === "pago" ? "block" : "none";
   };
 
   window.eveSalvarEvento = async function (editId) {
@@ -1208,6 +1285,7 @@ tr:nth-child(even) td{background:#f9fafb}
       ministerio_organizador: g("eve-f-ministerio"),
       gratuito,
       valor:                  (!gratuito && valorRaw) ? parseFloat(valorRaw) : null,
+      infinitypay_enabled:    !gratuito && cbk("eve-f-ip-enabled"),
       vagas:                  g("eve-f-vagas") ? parseInt(g("eve-f-vagas"), 10) : null,
       prazo_inscricao:        g("eve-f-prazo") || null,
       publico_alvo:           chk("eve-f-publico"),
@@ -1849,9 +1927,95 @@ tr:nth-child(even) td{background:#f9fafb}
 
   /* ── Config ─────────────────────────────────────────── */
 
-  function _carregarConfigTab() {
+  async function _carregarConfigTab() {
     _injectNav("eve-config");
+    const el = document.getElementById("eve-config-content");
+    if (!el) return;
+
+    el.innerHTML = `<div style="max-width:640px;margin:0 auto;padding:8px 0">
+      <div style="font-size:14px;font-weight:700;color:var(--tx1);margin-bottom:16px">Configurações do Módulo Eventos</div>
+      <div id="eve-cfg-ip-wrap" style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;overflow:hidden">
+        <div style="padding:13px 18px;border-bottom:1px solid var(--bd2);display:flex;align-items:center;gap:10px">
+          <div style="width:30px;height:30px;border-radius:8px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#6366f1">∞</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--tx1)">InfinityPay</div>
+            <div style="font-size:11px;color:var(--tx3)">Gateway de pagamento para cobranças de inscrições</div>
+          </div>
+        </div>
+        <div style="padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+          <div style="font-size:11px;color:var(--tx3);background:var(--bg-surface);border:1px solid var(--bd1);border-radius:8px;padding:10px 12px;line-height:1.6">
+            <strong>Como obter o API Token:</strong><br>
+            Acesse <strong>dashboard.infinitepay.io</strong> → Configurações → Integrações → API → copie o token.
+          </div>
+          <div>
+            <label style="font-size:9.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:4px">API Token InfinityPay</label>
+            <div style="display:flex;gap:8px">
+              <input id="eve-cfg-ip-token" type="password" placeholder="Insira o token aqui..." autocomplete="new-password"
+                style="flex:1;padding:8px 10px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-input);color:var(--tx1);font-size:12.5px;outline:none;font-family:monospace">
+              <button onclick="eveCfgMostrarToken()" style="padding:8px 12px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:12px;cursor:pointer">👁</button>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:8px">
+            <button onclick="eveSalvarCfgInfinityPay()" style="padding:8px 20px;border-radius:8px;border:none;background:var(--sky);color:#fff;font-size:13px;font-weight:700;cursor:pointer">Salvar Token</button>
+          </div>
+          <div id="eve-cfg-ip-status" style="font-size:11.5px;color:var(--tx3)"></div>
+          <div style="border-top:1px solid var(--bd1);padding-top:12px">
+            <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">URL do Webhook</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <code id="eve-cfg-webhook-url" style="flex:1;font-size:11px;color:var(--violet);background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;padding:7px 10px;word-break:break-all">Carregando...</code>
+              <button onclick="eveCopiarWebhookUrl()" style="padding:7px 12px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:12px;cursor:pointer;white-space:nowrap">Copiar</button>
+            </div>
+            <div style="font-size:10.5px;color:var(--tx3);margin-top:6px">Configure esta URL em dashboard.infinitepay.io → Configurações → Integrações → Webhooks</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+    // Carregar token salvo
+    try {
+      const res = await _fetch(`${_api()}/rest/v1/sipen_configuracoes?chave=eq.infinitypay_api_token&select=valor`);
+      const cfg = Array.isArray(res) ? res[0] : null;
+      const tokenInput = document.getElementById("eve-cfg-ip-token");
+      if (tokenInput && cfg?.valor) tokenInput.value = cfg.valor;
+      const stEl = document.getElementById("eve-cfg-ip-status");
+      if (stEl) stEl.textContent = cfg?.valor ? "✓ Token configurado." : "Nenhum token salvo ainda.";
+    } catch (_) {}
+
+    // Montar URL do webhook
+    const webhookUrlEl = document.getElementById("eve-cfg-webhook-url");
+    if (webhookUrlEl) {
+      const apiBase = _api();
+      const match = apiBase.match(/https:\/\/([^.]+)\.supabase\.co/);
+      const projectRef = match?.[1] || "<seu-projeto>";
+      webhookUrlEl.textContent = `https://${projectRef}.supabase.co/functions/v1/infinitypay-webhook`;
+    }
   }
+
+  window.eveCfgMostrarToken = function () {
+    const inp = document.getElementById("eve-cfg-ip-token");
+    if (!inp) return;
+    inp.type = inp.type === "password" ? "text" : "password";
+  };
+
+  window.eveSalvarCfgInfinityPay = async function () {
+    const token = document.getElementById("eve-cfg-ip-token")?.value?.trim();
+    if (!token) { _T("Informe o token antes de salvar."); return; }
+    try {
+      await _fetch(`${_api()}/rest/v1/sipen_configuracoes`, {
+        method: "POST",
+        headers: _hdrs({ "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates,return=minimal" }),
+        body: JSON.stringify({ chave: "infinitypay_api_token", valor: token, atualizado_em: new Date().toISOString(), atualizado_por: _userName() }),
+      });
+      const stEl = document.getElementById("eve-cfg-ip-status");
+      if (stEl) stEl.textContent = "✓ Token salvo com sucesso.";
+      _T("Token InfinityPay salvo!");
+    } catch (e) { _T("Erro ao salvar", e.message); }
+  };
+
+  window.eveCopiarWebhookUrl = function () {
+    const url = document.getElementById("eve-cfg-webhook-url")?.textContent || "";
+    navigator.clipboard.writeText(url).then(() => _T("URL copiada!")).catch(() => _T("Copie manualmente da tela."));
+  };
 
   /* ── Demandas ───────────────────────────────────────── */
 
