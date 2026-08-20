@@ -11,9 +11,10 @@ const _shellReady = _isPublicRoute ? Promise.resolve() : Promise.all([
   if (login) login.insertAdjacentHTML("afterend", sidebarHtml);
   else document.body.insertAdjacentHTML("afterbegin", sidebarHtml);
   document.body.insertAdjacentHTML("beforeend", modalsHtml);
-  // Versão sempre reflete o init.js carregado — imune ao cache do sidebar.html
-  const vEl = document.querySelector('.sb-sipen .sb-ver');
-  if (vEl) vEl.textContent = 'v6.81.8';
+  // Versão lida do rodapé (sipen-ver em index.html) — fonte única de verdade
+  const vEl   = document.querySelector('.sb-sipen .sb-ver');
+  const verEl = document.querySelector('.sipen-ver');
+  if (vEl && verEl) vEl.textContent = verEl.textContent.replace('SIPEN ', '').trim();
 });
 
 /* ── Sidebar mobile toggle ───────────────── */
