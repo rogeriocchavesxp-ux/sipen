@@ -458,7 +458,7 @@ async function submitForm() {
         });
         const fnData = await fnRes.json().catch(() => null);
         if (fnData?.payment_url) paymentUrl = fnData.payment_url;
-        else if (!fnRes.ok) paymentUrl = `ERRO ${fnRes.status}: ${fnData?.error || JSON.stringify(fnData)}`;
+        else if (!fnRes.ok) paymentUrl = `ERRO ${fnRes.status}: ${fnData?.error || ""} | detail: ${JSON.stringify(fnData?.detail || fnData)}`;
       } catch (ipErr) { paymentUrl = `ERRO: ${ipErr.message}`; }
     }
     renderSucesso(nome, evt, paymentUrl);
