@@ -98,25 +98,39 @@ serve(async (req) => {
     : undefined;
 
   // ── Chamar API InfinitePay ────────────────────────────────────
+  // Remove hyphens from UUID — some providers reject them in order_nsu
+  const orderNsu = inscricao_id.replace(/-/g, "");
+
+  // Strip em dash (—) and other non-ASCII to avoid API rejections
+  const descricao = `${evento.titulo} - ${inscricao.nome}`.replace(/[—–]/g, "-");
+
+  // Fix phone: if stored number already includes country code (55...), strip it before prepending +55
+  let phoneNumber: string | undefined;
+  if (inscricao.telefone) {
+    const raw = inscricao.telefone.replace(/\D/g, "");
+    // Brazilian mobile with country code is 13 digits (55 + DDD 2 + number 9)
+    // Strip leading 55 only if the result would be 11 digits (DDD + mobile)
+    const stripped = raw.startsWith("55") && raw.length === 13 ? raw.slice(2) : raw;
+    phoneNumber = `+55${stripped}`;
+  }
+
   const payload: Record<string, unknown> = {
     handle,
     items: [
       {
         quantity:    1,
         price:       valorCentavos,
-        description: `${evento.titulo} — ${inscricao.nome}`,
+        description: descricao,
       },
     ],
-    order_nsu: inscricao_id,  // usado para rastrear no webhook
+    order_nsu: orderNsu,
   };
 
   if (webhookUrl)             payload.webhook_url  = webhookUrl;
   if (inscricao.nome)         payload.customer     = {
     name:         inscricao.nome,
-    email:        inscricao.email        || undefined,
-    phone_number: inscricao.telefone
-      ? `+55${inscricao.telefone.replace(/\D/g, "")}`
-      : undefined,
+    email:        inscricao.email   || undefined,
+    phone_number: phoneNumber,
   };
 
   let ipRes: Response;

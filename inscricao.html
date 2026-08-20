@@ -448,6 +448,7 @@ async function submitForm() {
 
     await sbPost("evento_inscricoes", payload);
     let paymentUrl = null;
+    let paymentError = null;
     if (!evt.gratuito && evt.infinitypay_enabled) {
       try {
         const fnUrl = `${SB_URL}/functions/v1/infinitypay-charge`;
@@ -458,10 +459,10 @@ async function submitForm() {
         });
         const fnData = await fnRes.json().catch(() => null);
         if (fnData?.payment_url) paymentUrl = fnData.payment_url;
-        else if (!fnRes.ok) paymentUrl = `ERRO ${fnRes.status}: ${fnData?.error || ""} | detail: ${JSON.stringify(fnData?.detail || fnData)}`;
-      } catch (ipErr) { paymentUrl = `ERRO: ${ipErr.message}`; }
+        else if (!fnRes.ok) paymentError = `ERRO ${fnRes.status}: ${fnData?.error || ""} | detail: ${JSON.stringify(fnData?.detail || fnData)}`;
+      } catch (ipErr) { paymentError = `ERRO: ${ipErr.message}`; }
     }
-    renderSucesso(nome, evt, paymentUrl);
+    renderSucesso(nome, evt, paymentUrl, paymentError);
   } catch (e) {
     let msg = e.message || "Erro ao enviar. Tente novamente.";
     try { const j = JSON.parse(msg); msg = j.message || j.details || msg; } catch (_) {}
@@ -483,7 +484,7 @@ function hideErr() {
   if (el) el.style.display = "none";
 }
 
-function renderSucesso(nome, evt, paymentUrl = null) {
+function renderSucesso(nome, evt, paymentUrl = null, paymentError = null) {
   app.innerHTML = `
     <div class="event-card" style="margin-bottom:16px">
       <div class="event-title">${eh(evt.titulo)}</div>
@@ -510,7 +511,11 @@ function renderSucesso(nome, evt, paymentUrl = null) {
           Pagar agora — ${fmtMoeda(evt.valor)}
         </a>
         <div style="font-size:11px;color:var(--tx3);margin-top:8px">Você será redirecionado para o checkout seguro InfinitePay.</div>
-        <div style="font-size:10px;color:#888;margin-top:6px;word-break:break-all">debug: ${paymentUrl}</div>
+      </div>` : ""}
+      ${paymentError ? `
+      <div style="margin-top:16px;padding:12px 16px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.25);border-radius:8px;font-size:11px;color:#ef4444;word-break:break-all;text-align:left">
+        Erro ao gerar link de pagamento. Entre em contato com a secretaria da igreja.<br>
+        <span style="opacity:.6">${paymentError}</span>
       </div>` : ""}
       ${_gerarBotaoWhatsApp(evt, nome)}
     </div>`;
