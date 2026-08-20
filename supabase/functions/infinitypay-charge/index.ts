@@ -89,11 +89,12 @@ serve(async (req) => {
   const valorCentavos = Math.round(Number(valorCobrado) * 100);
   if (valorCentavos <= 0) return json({ error: "Valor inválido para cobrança" }, 400);
 
-  // ── Montar URL do webhook (esta mesma função de retorno) ──────
-  const supabaseUrl   = Deno.env.get("SUPABASE_URL") || "";
-  const projectRef    = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] || "";
-  const webhookUrl    = projectRef
-    ? `https://${projectRef}.supabase.co/functions/v1/infinitypay-webhook`
+  // ── Montar URL do webhook com token de validação ─────────────
+  const supabaseUrl     = Deno.env.get("SUPABASE_URL") || "";
+  const projectRef      = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] || "";
+  const webhookSecret   = Deno.env.get("INFINITYPAY_WEBHOOK_SECRET");
+  const webhookUrl      = projectRef
+    ? `https://${projectRef}.supabase.co/functions/v1/infinitypay-webhook${webhookSecret ? `?token=${webhookSecret}` : ""}`
     : undefined;
 
   // ── Chamar API InfinitePay ────────────────────────────────────

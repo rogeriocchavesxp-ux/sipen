@@ -14,9 +14,10 @@
 //   receipt_url, items
 // }
 //
-// Secrets:
-//   SUPABASE_URL              (automático)
-//   SUPABASE_SERVICE_ROLE_KEY (automático)
+// Secrets obrigatórios (Supabase > Settings > Edge Functions > Secrets):
+//   SUPABASE_URL                (automático)
+//   SUPABASE_SERVICE_ROLE_KEY   (automático)
+//   INFINITYPAY_WEBHOOK_SECRET  → token gerado para validar origem
 // ═══════════════════════════════════════════════════════════════
 
 import { serve }        from "https://deno.land/std@0.177.0/http/server.ts";
@@ -38,16 +39,34 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "Método não permitido" }, 405);
 
+  // ── Validar token de origem ───────────────────────────────────
+  // O webhook_url enviado à InfinitePay inclui ?token=SECRET
+  // Isso impede que qualquer POST externo marque inscrições como pagas.
+  const secret = Deno.env.get("INFINITYPAY_WEBHOOK_SECRET");
+  if (secret) {
+    const url   = new URL(req.url);
+    const token = url.searchParams.get("token");
+    if (!token || token !== secret) {
+      console.warn("Webhook InfinitePay: token inválido ou ausente");
+      return json({ error: "Não autorizado" }, 401);
+    }
+  } else {
+    console.warn("Webhook InfinitePay: INFINITYPAY_WEBHOOK_SECRET não configurado — validação desabilitada");
+  }
+
+  // ── Payload ───────────────────────────────────────────────────
   let payload: Record<string, unknown>;
   try { payload = await req.json(); } catch { return json({ error: "Payload inválido" }, 400); }
 
+  console.log("Webhook InfinitePay recebido:", JSON.stringify(payload));
+
   // order_nsu é o inscricao_id que enviamos ao criar a cobrança
-  const inscricaoId   = String(payload.order_nsu || "");
-  const invoiceSlug   = String(payload.invoice_slug || "");
-  const paidAmount    = Number(payload.paid_amount  || 0);
-  const captureMethod = String(payload.capture_method || "");
+  const inscricaoId    = String(payload.order_nsu      || "");
+  const invoiceSlug    = String(payload.invoice_slug   || "");
+  const paidAmount     = Number(payload.paid_amount    || 0);
+  const captureMethod  = String(payload.capture_method || "");
   const transactionNsu = String(payload.transaction_nsu || "");
-  const receiptUrl    = String(payload.receipt_url || "");
+  const receiptUrl     = String(payload.receipt_url    || "");
 
   if (!inscricaoId) {
     console.error("Webhook InfinitePay: order_nsu ausente", payload);
@@ -57,9 +76,10 @@ serve(async (req) => {
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } },
   );
 
-  // ── Buscar inscrição ──────────────────────────────────────────
+  // ── Buscar inscrição (verificar existência) ───────────────────
   const { data: inscricao, error: iErr } = await supabase
     .from("evento_inscricoes")
     .select("id, pago, valor_cobrado")
@@ -68,15 +88,19 @@ serve(async (req) => {
 
   if (iErr || !inscricao) {
     console.error("Webhook InfinitePay: inscrição não encontrada", inscricaoId);
-    // Retornar 200 para evitar retentativas infinitas de registros não mapeados
+    // 200 para evitar retentativas infinitas de IDs não mapeados
     return json({ ok: true, notice: "inscricao nao encontrada" });
   }
 
   if (inscricao.pago) {
+    // Idempotência: webhook duplicado — não processa novamente
+    console.log(`Webhook InfinitePay: inscrição ${inscricaoId} já estava paga — ignorado`);
     return json({ ok: true, notice: "ja estava paga" });
   }
 
-  // ── Atualizar inscrição como paga ─────────────────────────────
+  // ── Atualizar atomicamente (WHERE pago = false) ───────────────
+  // O filtro .eq("pago", false) garante que mesmo com webhook simultâneo
+  // ou duplicado, apenas uma atualização será aplicada pelo banco.
   const valorPago = paidAmount > 0 ? paidAmount / 100 : inscricao.valor_cobrado;
 
   const formaMap: Record<string, string> = {
@@ -86,7 +110,7 @@ serve(async (req) => {
   };
   const formaPgto = formaMap[captureMethod] || captureMethod || "InfinitePay";
 
-  const { error: updErr } = await supabase
+  const { error: updErr, count } = await supabase
     .from("evento_inscricoes")
     .update({
       pago:                    true,
@@ -95,15 +119,23 @@ serve(async (req) => {
       data_pagamento:          new Date().toISOString(),
       referencia_pagamento:    transactionNsu || invoiceSlug,
       status:                  "confirmada",
-      infinitypay_charge_id:   invoiceSlug || undefined,
+      infinitypay_charge_id:   invoiceSlug   || undefined,
       infinitypay_status:      "paid",
       atualizado_em:           new Date().toISOString(),
     })
-    .eq("id", inscricaoId);
+    .eq("id", inscricaoId)
+    .eq("pago", false)   // atômico: só atualiza se ainda não estava paga
+    .select("id", { count: "exact", head: true });
 
   if (updErr) {
-    console.error("Webhook InfinitePay: erro ao atualizar", updErr.message);
+    console.error("Webhook InfinitePay: erro ao atualizar inscrição", updErr.message);
     return json({ error: "Erro ao atualizar inscrição" }, 400); // 400 = InfinitePay tenta novamente
+  }
+
+  if (count === 0) {
+    // Outra requisição simultânea já atualizou — sem erro
+    console.log(`Webhook InfinitePay: concorrência detectada para ${inscricaoId} — sem ação`);
+    return json({ ok: true, notice: "concorrencia resolvida" });
   }
 
   console.log(`Webhook InfinitePay: inscrição ${inscricaoId} paga via ${formaPgto} — R$ ${valorPago}`);
