@@ -459,7 +459,7 @@ async function submitForm() {
         });
         const fnData = await fnRes.json().catch(() => null);
         if (fnData?.payment_url) paymentUrl = fnData.payment_url;
-        else if (!fnRes.ok) paymentError = `ERRO ${fnRes.status}: ${fnData?.error || ""} | detail: ${JSON.stringify(fnData?.detail || fnData)}`;
+        else if (!fnRes.ok) paymentError = `ERRO ${fnRes.status}: ${JSON.stringify(fnData)}`;
       } catch (ipErr) { paymentError = `ERRO: ${ipErr.message}`; }
     }
     renderSucesso(nome, evt, paymentUrl, paymentError);

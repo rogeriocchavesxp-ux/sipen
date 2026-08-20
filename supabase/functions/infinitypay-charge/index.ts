@@ -98,55 +98,63 @@ serve(async (req) => {
     : undefined;
 
   // ── Chamar API InfinitePay ────────────────────────────────────
-  // Remove hyphens from UUID — some providers reject them in order_nsu
-  const orderNsu = inscricao_id.replace(/-/g, "");
+  // Strip accents — InfinitePay rejects UTF-8 diacritics in some fields
+  const stripAccents = (s: string) =>
+    s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[—–]/g, "-");
 
-  // Strip em dash (—) and other non-ASCII to avoid API rejections
-  const descricao = `${evento.titulo} - ${inscricao.nome}`.replace(/[—–]/g, "-");
+  // Unique order_nsu: no hyphens + timestamp suffix to avoid conflicts on retries
+  const orderNsu  = inscricao_id.replace(/-/g, "").slice(0, 20) + Date.now().toString().slice(-8);
+  const descricao = stripAccents(`${evento.titulo} - ${inscricao.nome}`);
 
-  // Fix phone: if stored number already includes country code (55...), strip it before prepending +55
   let phoneNumber: string | undefined;
   if (inscricao.telefone) {
-    const raw = inscricao.telefone.replace(/\D/g, "");
-    // Brazilian mobile with country code is 13 digits (55 + DDD 2 + number 9)
-    // Strip leading 55 only if the result would be 11 digits (DDD + mobile)
+    const raw      = inscricao.telefone.replace(/\D/g, "");
     const stripped = raw.startsWith("55") && raw.length === 13 ? raw.slice(2) : raw;
-    phoneNumber = `+55${stripped}`;
+    phoneNumber    = `+55${stripped}`;
   }
 
-  const payload: Record<string, unknown> = {
+  // Tenta payload mínimo primeiro — se falhar, o problema é no handle/conta, não nos campos opcionais
+  const payloadMinimo: Record<string, unknown> = {
     handle,
-    items: [
-      {
-        quantity:    1,
-        price:       valorCentavos,
-        description: descricao,
-      },
-    ],
-    order_nsu: orderNsu,
+    items: [{ quantity: 1, price: valorCentavos, description: "Inscricao" }],
   };
 
-  if (webhookUrl)             payload.webhook_url  = webhookUrl;
-  if (inscricao.nome)         payload.customer     = {
-    name:         inscricao.nome,
-    email:        inscricao.email   || undefined,
+  const payloadCompleto: Record<string, unknown> = {
+    handle,
+    items: [{ quantity: 1, price: valorCentavos, description: descricao }],
+    order_nsu: orderNsu,
+  };
+  if (webhookUrl)     payloadCompleto.webhook_url = webhookUrl;
+  if (inscricao.nome) payloadCompleto.customer    = {
+    name:         stripAccents(inscricao.nome),
+    email:        inscricao.email || undefined,
     phone_number: phoneNumber,
   };
 
   let ipRes: Response;
+  let payload = payloadCompleto;
   try {
     ipRes = await fetch(`${IP_BASE}/links`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify(payload),
+      body:    JSON.stringify(payloadCompleto),
     });
+    // Se falhou com 422, tenta mínimo para diagnóstico
+    if (ipRes.status === 422) {
+      payload = payloadMinimo;
+      ipRes = await fetch(`${IP_BASE}/links`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(payloadMinimo),
+      });
+    }
   } catch (e) {
     return json({ error: "Falha ao conectar com InfinitePay", detail: String(e) }, 502);
   }
 
   const ipData = await ipRes.json().catch(() => null);
   if (!ipRes.ok) {
-    return json({ error: "Erro InfinitePay", status: ipRes.status, detail: ipData }, ipRes.status);
+    return json({ error: "Erro InfinitePay", status: ipRes.status, detail: ipData, sent: payload }, ipRes.status);
   }
 
   // A resposta inclui o link de checkout
