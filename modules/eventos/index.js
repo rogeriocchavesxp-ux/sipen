@@ -1974,7 +1974,7 @@ tr:nth-child(even) td{background:#f9fafb}
 
     // Carregar token salvo
     try {
-      const res = await _fetch(`${_api()}/rest/v1/sipen_configuracoes?chave=eq.infinitypay_api_token&select=valor`);
+      const res = await _fetch(`${_api()}/rest/v1/sipen_configuracoes?chave=eq.infinitypay_handle&select=valor`);
       const cfg = Array.isArray(res) ? res[0] : null;
       const tokenInput = document.getElementById("eve-cfg-ip-token");
       if (tokenInput && cfg?.valor) tokenInput.value = cfg.valor;
