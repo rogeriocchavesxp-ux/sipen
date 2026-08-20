@@ -916,15 +916,11 @@ tr:nth-child(even) td{background:#f9fafb}
       const projectRef = match?.[1] || "";
       const fnUrl = `https://${projectRef}.supabase.co/functions/v1/infinitypay-charge`;
 
-      let token = "";
-      if (typeof supabaseClient !== "undefined") {
-        const { data: sd } = await supabaseClient.auth.getSession();
-        token = sd?.session?.access_token || "";
-      }
+      let token = (typeof sipenToken === "function") ? sipenToken() : (typeof SUPABASE_ANON_KEY !== "undefined" ? SUPABASE_ANON_KEY : "");
 
       const res = await fetch(fnUrl, {
         method: "POST",
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json", "apikey": typeof SUPABASE_ANON_KEY !== "undefined" ? SUPABASE_ANON_KEY : "" },
         body: JSON.stringify({ inscricao_id: inscId }),
       });
       const data = await res.json().catch(() => ({}));
