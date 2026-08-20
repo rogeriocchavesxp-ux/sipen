@@ -99,7 +99,7 @@ serve(async (req) => {
   // ── Chamar API InfinitePay ────────────────────────────────────
   const payload: Record<string, unknown> = {
     handle,
-    itens: [
+    items: [
       {
         quantity:    1,
         price:       valorCentavos,
