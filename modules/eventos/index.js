@@ -527,7 +527,10 @@
               <span style="font-size:11px;color:var(--amber)">Pendente${isAdmin && !evt.infinitypay_enabled ? ` <span onclick="eveConfirmarPagamento('${_ea(i.id)}')" style="cursor:pointer;color:var(--sky);font-weight:600;margin-left:4px">Confirmar</span>` : ""}</span>
               ${evt.infinitypay_enabled && isAdmin ? (
                 i.infinitypay_payment_url
-                  ? `<a href="${_ea(i.infinitypay_payment_url)}" target="_blank" style="font-size:10px;color:var(--violet);text-decoration:none;font-weight:600">∞ Ver Link</a>`
+                  ? `<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+                      <a href="${_ea(i.infinitypay_payment_url)}" target="_blank" style="font-size:10px;color:var(--violet);text-decoration:none;font-weight:600">∞ Ver Link</a>
+                      <button data-ip-chk="${_ea(i.id)}" onclick="eveVerificarPagamentoIP('${_ea(i.id)}','${_ea(evt.id)}')" style="font-size:10px;padding:2px 7px;border-radius:4px;border:1px solid rgba(99,102,241,.3);background:rgba(99,102,241,.08);color:#6366f1;cursor:pointer;font-weight:600">∞ Verificar</button>
+                    </div>`
                   : `<button data-ip-btn="${_ea(i.id)}" onclick="eveGerarCobrancaInfinityPay('${_ea(i.id)}','${_ea(evt.id)}')" style="font-size:10px;padding:2px 7px;border-radius:4px;border:1px solid rgba(99,102,241,.3);background:rgba(99,102,241,.08);color:#6366f1;cursor:pointer;font-weight:600">∞ Gerar Cobrança</button>`
               ) : ""}
             </div>`
@@ -947,6 +950,43 @@ tr:nth-child(even) td{background:#f9fafb}
       _T("Erro ao gerar cobrança", e.message);
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = "Gerar Cobrança"; }
+    }
+  };
+
+  window.eveVerificarPagamentoIP = async function (inscId, eventoId) {
+    const btn = document.querySelector(`[data-ip-chk="${inscId}"]`);
+    if (btn) { btn.disabled = true; btn.textContent = "Verificando..."; }
+    try {
+      const apiBase = _api();
+      const match = apiBase.match(/https:\/\/([^.]+)\.supabase\.co/);
+      const projectRef = match?.[1] || "";
+      const fnUrl = `https://${projectRef}.supabase.co/functions/v1/infinitypay-check`;
+      const token = (typeof sipenToken === "function") ? sipenToken() : (typeof SUPABASE_ANON_KEY !== "undefined" ? SUPABASE_ANON_KEY : "");
+
+      const res = await fetch(fnUrl, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json", "apikey": typeof SUPABASE_ANON_KEY !== "undefined" ? SUPABASE_ANON_KEY : "" },
+        body: JSON.stringify({ inscricao_id: inscId }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) { _T("Erro ao verificar", data?.error || `HTTP ${res.status}`); return; }
+
+      if (data.pago) {
+        _T("Pagamento confirmado!", `${data.forma_pagamento || "InfinitePay"} — ${_fmtMoeda(data.valor_pago)}`);
+        const upd = { pago: true, status: "confirmada", infinitypay_status: "paid", forma_pagamento: data.forma_pagamento, valor_pago: data.valor_pago };
+        const idx  = _todasInscricoes.findIndex(i => i.id === inscId);
+        if (idx  >= 0) _todasInscricoes[idx]    = { ..._todasInscricoes[idx],    ...upd };
+        const idx2 = _inscricoesDetalhe.findIndex(i => i.id === inscId);
+        if (idx2 >= 0) _inscricoesDetalhe[idx2] = { ..._inscricoesDetalhe[idx2], ...upd };
+        if (_eventoAtivo?.id === eventoId) eveAbrirDetalhe(eventoId);
+      } else {
+        _T("Pagamento não encontrado", "InfinitePay não registra pagamento para esta inscrição ainda.");
+      }
+    } catch (e) {
+      _T("Erro ao verificar pagamento", e.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = "∞ Verificar"; }
     }
   };
 
