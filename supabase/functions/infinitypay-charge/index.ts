@@ -70,11 +70,10 @@ serve(async (req) => {
   const valorCentavos = Math.round(Number(valorCobrado) * 100);
   if (valorCentavos <= 0) return json({ error: "Valor inválido para cobrança" }, 400);
 
-  const supabaseUrl   = Deno.env.get("SUPABASE_URL") || "";
-  const projectRef    = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] || "";
+  const supabaseUrl   = (Deno.env.get("SUPABASE_URL") || "").replace(/\/$/, "");
   const webhookSecret = Deno.env.get("INFINITYPAY_WEBHOOK_SECRET");
-  const webhookUrl    = projectRef
-    ? `https://${projectRef}.supabase.co/functions/v1/infinitypay-webhook${webhookSecret ? `?token=${webhookSecret}` : ""}`
+  const webhookUrl    = supabaseUrl
+    ? `${supabaseUrl}/functions/v1/infinitypay-webhook${webhookSecret ? `?token=${webhookSecret}` : ""}`
     : undefined;
 
   const stripAccents = (s: string) =>
@@ -136,5 +135,5 @@ serve(async (req) => {
     })
     .eq("id", inscricao_id);
 
-  return json({ ok: true, payment_url: paymentUrl, charge_id: chargeId, amount: valorCentavos });
+  return json({ ok: true, payment_url: paymentUrl, charge_id: chargeId, amount: valorCentavos, webhook_used: webhookUrl || null });
 });
