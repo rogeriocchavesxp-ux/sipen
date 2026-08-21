@@ -59,25 +59,57 @@ serve(async (req) => {
   };
 
   // ── Modalidade 1: redirect do checkout InfinitePay ──────────────
-  // Quando InfinitePay redireciona de volta, enviamos slug + transaction_nsu
-  // Confiamos nos params — o pagamento já foi concluído no checkout deles
   if (slug && transaction_nsu) {
     console.log("infinitypay-check: redirect mode — gravando pago diretamente", { inscricao_id, slug, transaction_nsu, capture_method });
 
-    const formaPgto = formaMap[capture_method || ""] || capture_method || "InfinitePay";
+    const formaBase = formaMap[capture_method || ""] || capture_method || "InfinitePay";
+
+    // Consulta payment_check para obter parcelas (best-effort)
+    let installments = 1;
+    let valorPagoFinal = inscricao.valor_cobrado;
+    try {
+      let handle = Deno.env.get("INFINITYPAY_HANDLE");
+      if (!handle) {
+        const { data: cfg } = await supabase
+          .from("sipen_configuracoes")
+          .select("valor")
+          .eq("chave", "infinitypay_handle")
+          .single();
+        handle = cfg?.valor || null;
+      }
+      if (handle) {
+        const pc = await fetch(`${IP_BASE}/payment_check`, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ handle, order_nsu: inscricao_id, transaction_nsu, slug }),
+        });
+        const pcData = await pc.json().catch(() => null);
+        console.log("infinitypay-check: payment_check (parcelas) =", JSON.stringify(pcData));
+        if (pcData?.installments) installments = Number(pcData.installments);
+        if (pcData?.paid_amount)  valorPagoFinal = Number(pcData.paid_amount) / 100;
+      }
+    } catch (e) {
+      console.warn("infinitypay-check: falha ao buscar parcelas =", String(e));
+    }
+
+    const formaPgto = capture_method === "pix"
+      ? "PIX"
+      : installments > 1
+        ? `${formaBase} ${installments}x`
+        : `${formaBase} (à vista)`;
 
     const { error: updErr } = await supabase
       .from("evento_inscricoes")
       .update({
-        pago:                 true,
-        valor_pago:           inscricao.valor_cobrado,
-        forma_pagamento:      formaPgto,
-        data_pagamento:       new Date().toISOString(),
-        referencia_pagamento: transaction_nsu,
-        status:               "confirmada",
-        infinitypay_status:   "paid",
+        pago:                  true,
+        valor_pago:            valorPagoFinal,
+        forma_pagamento:       formaPgto,
+        data_pagamento:        new Date().toISOString(),
+        referencia_pagamento:  transaction_nsu,
+        status:                "confirmada",
+        infinitypay_status:    "paid",
         infinitypay_charge_id: slug,
-        atualizado_em:        new Date().toISOString(),
+        atualizado_em:         new Date().toISOString(),
       })
       .eq("id", inscricao_id)
       .eq("pago", false);
@@ -87,7 +119,7 @@ serve(async (req) => {
       return json({ error: "Erro ao atualizar inscrição", detail: updErr.message }, 500);
     }
 
-    return json({ ok: true, pago: true, forma_pagamento: formaPgto, valor_pago: inscricao.valor_cobrado });
+    return json({ ok: true, pago: true, forma_pagamento: formaPgto, valor_pago: valorPagoFinal });
   }
 
   // ── Modalidade 2: verificação manual ───────────────────────────
@@ -131,8 +163,14 @@ serve(async (req) => {
   }
 
   const captureMethod2 = String(ipData?.capture_method || "");
-  const formaPgto2     = formaMap[captureMethod2] || captureMethod2 || "InfinitePay";
+  const formaBase2     = formaMap[captureMethod2] || captureMethod2 || "InfinitePay";
+  const installments2  = Number(ipData?.installments || 1);
   const valorPago2     = ipData?.paid_amount ? Number(ipData.paid_amount) / 100 : inscricao.valor_cobrado;
+  const formaPgto2     = captureMethod2 === "pix"
+    ? "PIX"
+    : installments2 > 1
+      ? `${formaBase2} ${installments2}x`
+      : `${formaBase2} (à vista)`;
 
   const { error: updErr2 } = await supabase
     .from("evento_inscricoes")
