@@ -101,9 +101,14 @@
 <body>
 <div class="wrap">
 
-  <div class="page-header">
+  <div class="page-header" id="page-header-logo">
     <img src="/icons/logo-ippenha.svg" class="page-logo" alt="Igreja Presbiteriana da Penha" onerror="this.style.display='none'">
   </div>
+  <script>
+    if (new URLSearchParams(location.search).get("logo") === "0") {
+      document.getElementById("page-header-logo").style.display = "none";
+    }
+  </script>
 
   <div id="app">
     <div class="loader">

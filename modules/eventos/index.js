@@ -92,9 +92,10 @@
     return "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
   }
 
-  function _gerarLinkPublico(eventoId) {
+  function _gerarLinkPublico(eventoId, evt) {
     const base = "https://www.sipen.com.br/inscricao.html";
-    return `${base}?id=${eventoId}`;
+    const extra = evt?.ocultar_logo ? "&logo=0" : "";
+    return `${base}?id=${eventoId}${extra}`;
   }
 
   /* ── Permissões ─────────────────────────────────────── */
@@ -427,7 +428,7 @@
 
         <!-- Link público de inscrição -->
         ${(() => {
-          const link = _gerarLinkPublico(evt.id);
+          const link = _gerarLinkPublico(evt.id, evt);
           const disponivel = ["publicado","inscricoes_abertas"].includes(evt.status);
           const erascunho = evt.status === "rascunho";
           return `
@@ -1211,6 +1212,12 @@ tr:nth-child(even) td{background:#f9fafb}
           <div>
             ${sec("Observações")}
             ${txta("eve-f-obs", "Observações internas", evt?.observacoes, false, 2)}
+            <div style="margin-top:12px">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12.5px">
+                <input type="checkbox" id="eve-f-ocultar-logo" ${evt?.ocultar_logo ? "checked" : ""} style="accent-color:var(--sky);width:14px;height:14px">
+                <span>Ocultar logo da igreja no formulário público de inscrição</span>
+              </label>
+            </div>
           </div>
         </div>
         <div style="padding:16px 24px;border-top:1px solid var(--bd2);display:flex;gap:10px;justify-content:flex-end;background:var(--bg-surface)">
@@ -1342,6 +1349,7 @@ tr:nth-child(even) td{background:#f9fafb}
         observacoes: cbk("eve-f-campo-observacoes"),
       },
       observacoes:            g("eve-f-obs"),
+      ocultar_logo:           cbk("eve-f-ocultar-logo"),
       status:                 g("eve-f-status") || "rascunho",
       atualizado_em:          new Date().toISOString(),
     };
