@@ -522,7 +522,10 @@
       </td>
       ${!evt.gratuito ? `<td style="padding:10px 8px">
         ${i.pago
-          ? `<span style="font-size:11px;font-weight:700;color:var(--gr)">✓ ${_fmtMoeda(i.valor_pago)}${i.infinitypay_charge_id ? `<span style="font-size:9px;margin-left:4px;color:var(--tx3)">∞</span>` : ""}</span>`
+          ? `<div>
+              <span style="font-size:11px;font-weight:700;color:var(--gr)">✓ ${_fmtMoeda(i.valor_pago)}${i.infinitypay_charge_id ? `<span style="font-size:9px;margin-left:4px;color:var(--tx3)">∞</span>` : ""}</span>
+              ${i.forma_pagamento ? `<div style="font-size:10px;color:var(--tx3);margin-top:1px">${_eh(i.forma_pagamento)}</div>` : ""}
+             </div>`
           : `<div style="display:flex;flex-direction:column;gap:4px">
               <span style="font-size:11px;color:var(--amber)">Pendente${isAdmin && !evt.infinitypay_enabled ? ` <span onclick="eveConfirmarPagamento('${_ea(i.id)}')" style="cursor:pointer;color:var(--sky);font-weight:600;margin-left:4px">Confirmar</span>` : ""}</span>
               ${evt.infinitypay_enabled && isAdmin ? (
