@@ -89,12 +89,16 @@ serve(async (req) => {
     phoneNumber    = `+55${stripped}`;
   }
 
+  const redirectUrl = `https://sipen.com.br/inscricao.html?id=${evento.id}&iid=${inscricao_id}`;
+
   const payload: Record<string, unknown> = {
     handle,
     items: [{ quantity: 1, price: valorCentavos, description: descricao }],
-    order_nsu: inscricao_id,  // UUID original — usado pelo webhook para localizar a inscrição
+    order_nsu:    inscricao_id,
+    redirect_url: redirectUrl,
   };
 
+  console.log("infinitypay-charge: redirect_url =", redirectUrl);
   console.log("infinitypay-charge: webhook_url =", webhookUrl ?? "NÃO DEFINIDA");
   console.log("infinitypay-charge: payload =", JSON.stringify(payload));
 

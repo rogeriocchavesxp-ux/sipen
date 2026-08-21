@@ -157,10 +157,55 @@ const app = document.getElementById("app");
 const params = new URLSearchParams(location.search);
 const eventoId = params.get("id") || params.get("evento");
 
-if (!eventoId) {
+// Retorno do checkout InfinitePay — URL tem iid + slug + transaction_nsu
+const _iid  = params.get("iid");
+const _slug = params.get("slug");
+const _tnsu = params.get("transaction_nsu");
+const _cap  = params.get("capture_method") || "";
+
+if (_iid && _slug && _tnsu) {
+  _confirmarRedirectIP(_iid, _slug, _tnsu, _cap, eventoId);
+} else if (!eventoId) {
   renderErro("Link inválido", "Este link não contém o identificador do evento. Solicite um novo link ao organizador.");
 } else {
   init(eventoId);
+}
+
+async function _confirmarRedirectIP(inscricaoId, slug, transactionNsu, captureMethod, evId) {
+  app.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--tx3);font-size:14px">Confirmando pagamento...</div>`;
+  try {
+    const fnUrl = `${SB_URL}/functions/v1/infinitypay-check`;
+    const res   = await fetch(fnUrl, {
+      method:  "POST",
+      headers: HDRS,
+      body:    JSON.stringify({ inscricao_id: inscricaoId, slug, transaction_nsu: transactionNsu, capture_method: captureMethod }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (data.pago || data.ok) {
+      const evRes = evId ? await sbGet(`eventos?id=eq.${evId}&select=titulo,data_inicio,hora_inicio,local_nome&limit=1`).catch(() => []) : [];
+      const evt   = evRes?.[0];
+      const formaMap = { credit_card: "Cartão de Crédito", pix: "PIX", debit_card: "Cartão de Débito" };
+      const forma = formaMap[captureMethod] || captureMethod || "InfinitePay";
+      app.innerHTML = `
+        ${evt ? `<div class="event-card" style="margin-bottom:16px">
+          <div class="event-title">${eh(evt.titulo)}</div>
+          <div class="event-meta">
+            ${evt.data_inicio ? `<span>📅 ${fmtD(evt.data_inicio)}${evt.hora_inicio ? " · " + fmtH(evt.hora_inicio) : ""}</span>` : ""}
+            ${evt.local_nome  ? `<span>📍 ${eh(evt.local_nome)}</span>` : ""}
+          </div>
+        </div>` : ""}
+        <div class="success-card">
+          <div class="icon">✅</div>
+          <h2 style="color:var(--gr)">Pagamento confirmado!</h2>
+          <p style="margin-top:8px">Sua inscrição foi paga com sucesso via <strong>${eh(forma)}</strong>${data.valor_pago ? ` — ${fmtMoeda(data.valor_pago)}` : ""}.</p>
+          <p style="margin-top:6px;font-size:12px;color:var(--tx3)">Em caso de dúvidas, entre em contato com a igreja.</p>
+        </div>`;
+    } else {
+      renderErro("Pagamento não confirmado", "O pagamento não foi encontrado. Se você acabou de pagar, aguarde alguns instantes e recarregue a página.");
+    }
+  } catch(e) {
+    renderErro("Erro ao confirmar pagamento", e.message);
+  }
 }
 
 async function init(id) {
