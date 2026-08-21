@@ -68,7 +68,7 @@ serve(async (req) => {
 
   const valorCobrado  = inscricao.valor_cobrado ?? evento.valor ?? 0;
   const valorCentavos = Math.round(Number(valorCobrado) * 100);
-  if (valorCentavos <= 0) return json({ error: "Valor inválido para cobrança" }, 400);
+  if (valorCentavos <= 1) return json({ error: "Valor inválido para cobrança — configure o preço do evento antes de gerar a cobrança." }, 400);
 
   const supabaseUrl   = (Deno.env.get("SUPABASE_URL") || "").replace(/\/$/, "");
   const webhookSecret = Deno.env.get("INFINITYPAY_WEBHOOK_SECRET");
