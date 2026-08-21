@@ -95,6 +95,9 @@ serve(async (req) => {
     order_nsu: inscricao_id,  // UUID original — usado pelo webhook para localizar a inscrição
   };
 
+  console.log("infinitypay-charge: webhook_url =", webhookUrl ?? "NÃO DEFINIDA");
+  console.log("infinitypay-charge: payload =", JSON.stringify(payload));
+
   if (webhookUrl)     payload.webhook_url = webhookUrl;
   if (inscricao.nome) payload.customer    = {
     name:         stripAccents(inscricao.nome),
