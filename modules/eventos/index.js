@@ -1212,10 +1212,14 @@ tr:nth-child(even) td{background:#f9fafb}
           <div>
             ${sec("Observações")}
             ${txta("eve-f-obs", "Observações internas", evt?.observacoes, false, 2)}
-            <div style="margin-top:12px">
+            <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
               <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12.5px">
                 <input type="checkbox" id="eve-f-ocultar-logo" ${evt?.ocultar_logo ? "checked" : ""} style="accent-color:var(--sky);width:14px;height:14px">
                 <span>Ocultar logo da igreja no formulário público de inscrição</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12.5px">
+                <input type="checkbox" id="eve-f-ocultar-ministerio" ${evt?.ocultar_ministerio ? "checked" : ""} style="accent-color:var(--sky);width:14px;height:14px">
+                <span>Ocultar ministério organizador no formulário público</span>
               </label>
             </div>
           </div>
@@ -1350,6 +1354,7 @@ tr:nth-child(even) td{background:#f9fafb}
       },
       observacoes:            g("eve-f-obs"),
       ocultar_logo:           cbk("eve-f-ocultar-logo"),
+      ocultar_ministerio:     cbk("eve-f-ocultar-ministerio"),
       status:                 g("eve-f-status") || "rascunho",
       atualizado_em:          new Date().toISOString(),
     };

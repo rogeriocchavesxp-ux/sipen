@@ -118,7 +118,7 @@
   </div>
 
   <div class="footer">
-    SIPEN — Sistema Integrado da IPPenha
+    Organização: Igreja Presbiteriana da Penha
   </div>
 
 </div>
@@ -239,7 +239,7 @@ function renderEvento(evt, totalInscritos) {
     evt.data_inicio ? `<span>📅 ${fmtD(evt.data_inicio)}${evt.hora_inicio ? " · " + fmtH(evt.hora_inicio) : ""}</span>` : "",
     evt.data_fim    ? `<span>🔚 Até ${fmtD(evt.data_fim)}</span>` : "",
     evt.local_nome  ? `<span>📍 ${eh(evt.local_nome)}</span>` : "",
-    evt.ministerio_organizador ? `<span>🏛 ${eh(evt.ministerio_organizador)}</span>` : "",
+    evt.ministerio_organizador && !evt.ocultar_ministerio ? `<span>🏛 ${eh(evt.ministerio_organizador)}</span>` : "",
     evt.prazo_inscricao ? `<span>⏰ Inscrições até ${fmtD(evt.prazo_inscricao)}</span>` : "",
   ].filter(Boolean).join("");
 
