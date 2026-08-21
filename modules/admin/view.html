@@ -597,7 +597,14 @@
       <div class="bni" onclick="go('admin-espacos')">Espaços</div>
     </div>
 
-    <div class="ct">
+    <!-- Sub-tabs: Cadastro | Agenda -->
+    <div style="display:flex;gap:2px;padding:0 0 0 0;border-bottom:1px solid var(--bd1);margin-bottom:0">
+      <button id="adm-esp-tab-lista"  onclick="ADM_ESP.tabIr('lista')"  style="padding:10px 20px;font-size:12.5px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--teal);border-bottom:2px solid var(--teal);margin-bottom:-1px">Cadastro</button>
+      <button id="adm-esp-tab-agenda" onclick="ADM_ESP.tabIr('agenda')" style="padding:10px 20px;font-size:12.5px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--tx3);border-bottom:2px solid transparent;margin-bottom:-1px">Agenda dos Espaços</button>
+    </div>
+
+    <!-- Seção: Cadastro (lista) -->
+    <div id="adm-esp-sec-lista" class="ct">
       <!-- Filtros -->
       <div class="card" style="padding:14px 18px">
         <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
@@ -645,6 +652,38 @@
         </div>
       </div>
     </div>
+
+    <!-- Seção: Agenda panorâmica -->
+    <div id="adm-esp-sec-agenda" class="ct" style="display:none">
+      <!-- Navegação de semana -->
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:4px;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:4px">
+          <button onclick="ADM_ESP.agendaNav(-1)" style="background:none;border:none;cursor:pointer;padding:6px 12px;border-radius:7px;color:var(--tx1);font-size:13px;font-weight:600" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='none'">‹</button>
+          <span id="adm-esp-ag-range" style="font-size:13px;font-weight:600;color:var(--tx1);padding:0 8px;min-width:200px;text-align:center">—</span>
+          <button onclick="ADM_ESP.agendaNav(1)"  style="background:none;border:none;cursor:pointer;padding:6px 12px;border-radius:7px;color:var(--tx1);font-size:13px;font-weight:600" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='none'">›</button>
+        </div>
+        <button onclick="ADM_ESP.agendaHoje()" style="padding:7px 14px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx2);font-size:12px;cursor:pointer;font-weight:600">Hoje</button>
+        <div style="margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--tx3);display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--teal);opacity:.8"></span>Confirmado</span>
+          <span style="font-size:11px;color:var(--tx3);display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--amber)"></span>Pendente</span>
+          <span style="font-size:11px;color:var(--tx3);display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--sky)"></span>Em análise</span>
+          <span style="font-size:11px;color:var(--tx3);display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--tx4,#aaa)"></span>Outro</span>
+        </div>
+      </div>
+
+      <!-- Grade panorâmica -->
+      <div class="card" style="padding:0;overflow:hidden;margin-top:0">
+        <div style="overflow-x:auto">
+          <div id="adm-esp-ag-grid" style="min-width:700px">
+            <div style="padding:28px;text-align:center;color:var(--tx3);font-size:12px">Carregando agenda…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Painel de detalhe do evento (popup inline) -->
+      <div id="adm-esp-ag-detalhe" style="display:none;position:fixed;z-index:500;background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.2);padding:18px 20px;min-width:260px;max-width:340px"></div>
+    </div>
+
   </div>
 
   <!-- ════ CONFIG WHATSAPP ════════════════════════════════ -->

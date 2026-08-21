@@ -12,6 +12,11 @@ const ADM_ESP = (() => {
   let _editId  = null; // UUID em edição, null = novo
   let _filtro  = { busca: "", bloco: "", tipo: "", status: "ativos", portal: "" };
 
+  // estado da agenda panorâmica
+  let _agSemana   = null;  // Date: segunda-feira da semana exibida
+  let _agEventos  = [];    // eventos retornados pela RPC
+  let _agTabAtiva = "lista"; // "lista" | "agenda"
+
   /* ── fetch ─────────────────────────────────────────────────── */
   async function _fetchBlocos() {
     const r = await fetch(`${apiBaseUrl()}/rest/v1/espacos_blocos?order=ordem.asc`, { headers: apiHeaders() });
@@ -414,6 +419,321 @@ const ADM_ESP = (() => {
     _render();
   }
 
+  /* ══════════════════════════════════════════════════════════════
+     AGENDA PANORÂMICA
+  ══════════════════════════════════════════════════════════════ */
+
+  /* ── helpers de data ──────────────────────────────────────── */
+  function _fmtDate(d) {
+    return d.toISOString().slice(0, 10);
+  }
+
+  function _mondayOf(d) {
+    const day = new Date(d);
+    const dow = day.getDay(); // 0=Dom
+    day.setDate(day.getDate() - (dow === 0 ? 6 : dow - 1));
+    day.setHours(0, 0, 0, 0);
+    return day;
+  }
+
+  function _addDays(d, n) {
+    const r = new Date(d);
+    r.setDate(r.getDate() + n);
+    return r;
+  }
+
+  function _nomeDiaSemana(d) {
+    return ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"][d.getDay()];
+  }
+
+  function _nomeMes(m) {
+    return ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"][m];
+  }
+
+  function _fmtRangeLabel(ini, fim) {
+    if (ini.getMonth() === fim.getMonth() && ini.getFullYear() === fim.getFullYear()) {
+      return `${ini.getDate()} – ${fim.getDate()} de ${_nomeMes(ini.getMonth())} de ${ini.getFullYear()}`;
+    }
+    if (ini.getFullYear() === fim.getFullYear()) {
+      return `${ini.getDate()} ${_nomeMes(ini.getMonth())} – ${fim.getDate()} ${_nomeMes(fim.getMonth())} de ${ini.getFullYear()}`;
+    }
+    return `${ini.getDate()}/${ini.getMonth()+1}/${ini.getFullYear()} – ${fim.getDate()}/${fim.getMonth()+1}/${fim.getFullYear()}`;
+  }
+
+  function _fmtHora(h) {
+    if (!h) return "";
+    return h.slice(0, 5); // "HH:MM"
+  }
+
+  function _dateFromStr(s) {
+    // "YYYY-MM-DD" → Date local (sem deslocamento de fuso)
+    const [y, m, d] = s.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  /* ── cores por status ─────────────────────────────────────── */
+  function _corStatus(status) {
+    switch ((status || "").toLowerCase()) {
+      case "confirmado":   return { bg: "rgba(42,181,192,.15)",  border: "var(--teal)",  txt: "var(--teal)" };
+      case "pendente":     return { bg: "rgba(212,168,67,.15)",  border: "var(--amber)", txt: "var(--amber)" };
+      case "em análise":
+      case "em analise":   return { bg: "rgba(74,156,245,.15)",  border: "var(--sky)",   txt: "var(--sky)" };
+      default:             return { bg: "rgba(160,160,160,.12)", border: "var(--tx4,#aaa)", txt: "var(--tx3)" };
+    }
+  }
+
+  /* ── sub-tabs ─────────────────────────────────────────────── */
+  function tabIr(tab) {
+    _agTabAtiva = tab;
+    const secLista  = document.getElementById("adm-esp-sec-lista");
+    const secAgenda = document.getElementById("adm-esp-sec-agenda");
+    const tabLista  = document.getElementById("adm-esp-tab-lista");
+    const tabAgenda = document.getElementById("adm-esp-tab-agenda");
+    if (!secLista || !secAgenda) return;
+
+    const ativo   = "padding:10px 20px;font-size:12.5px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--teal);border-bottom:2px solid var(--teal);margin-bottom:-1px";
+    const inativo = "padding:10px 20px;font-size:12.5px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--tx3);border-bottom:2px solid transparent;margin-bottom:-1px";
+
+    if (tab === "lista") {
+      secLista.style.display  = "";
+      secAgenda.style.display = "none";
+      tabLista.style.cssText  = ativo;
+      tabAgenda.style.cssText = inativo;
+    } else {
+      secLista.style.display  = "none";
+      secAgenda.style.display = "";
+      tabLista.style.cssText  = inativo;
+      tabAgenda.style.cssText = ativo;
+      agendaLoad();
+    }
+  }
+
+  /* ── carrega dados da semana ─────────────────────────────── */
+  async function agendaLoad() {
+    if (!_agSemana) _agSemana = _mondayOf(new Date());
+
+    const ini = _agSemana;
+    const fim = _addDays(ini, 6);
+
+    const rangeEl = document.getElementById("adm-esp-ag-range");
+    if (rangeEl) rangeEl.textContent = _fmtRangeLabel(ini, fim);
+
+    const grid = document.getElementById("adm-esp-ag-grid");
+    if (grid) grid.innerHTML = `<div style="padding:28px;text-align:center;color:var(--tx3);font-size:12px">Carregando…</div>`;
+
+    try {
+      // garante que a lista de espaços está carregada
+      if (!_lista.length) await _fetchEspacos();
+
+      const r = await fetch(`${apiBaseUrl()}/rest/v1/rpc/espacos_agenda_admin`, {
+        method:  "POST",
+        headers: apiHeaders(),
+        body:    JSON.stringify({ p_inicio: _fmtDate(ini), p_fim: _fmtDate(fim) })
+      });
+      _agEventos = r.ok ? await r.json() : [];
+      _agendaRender(ini, fim);
+    } catch (e) {
+      if (grid) grid.innerHTML = `<div style="padding:28px;text-align:center;color:var(--rose);font-size:12px">Erro ao carregar: ${e.message}</div>`;
+    }
+  }
+
+  /* ── navegar semanas ──────────────────────────────────────── */
+  function agendaNav(delta) {
+    if (!_agSemana) _agSemana = _mondayOf(new Date());
+    _agSemana = _addDays(_agSemana, delta * 7);
+    agendaLoad();
+  }
+
+  function agendaHoje() {
+    _agSemana = _mondayOf(new Date());
+    agendaLoad();
+  }
+
+  /* ── renderiza a grade panorâmica ────────────────────────── */
+  function _agendaRender(ini, fim) {
+    const grid = document.getElementById("adm-esp-ag-grid");
+    if (!grid) return;
+
+    // 7 dias da semana (Seg → Dom)
+    const dias = Array.from({ length: 7 }, (_, i) => _addDays(ini, i));
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+
+    // espaços ativos, ordenados por bloco + ordem
+    const espacos = _lista.filter(e => e.ativo);
+
+    if (!espacos.length) {
+      grid.innerHTML = `<div style="padding:28px;text-align:center;color:var(--tx3);font-size:12px">Nenhum espaço ativo cadastrado.</div>`;
+      return;
+    }
+
+    // índice de eventos por (espaco_id|espaco_nome) por dia ISO
+    const idx = {};
+    _agEventos.forEach(ev => {
+      const evIni = _dateFromStr(ev.data);
+      const evFim = ev.data_enc ? _dateFromStr(ev.data_enc) : evIni;
+      dias.forEach(dia => {
+        if (evIni <= dia && evFim >= dia) {
+          const key = ev.espaco_id || ev.espaco_nome;
+          if (!key) return;
+          const dKey = _fmtDate(dia);
+          if (!idx[key]) idx[key] = {};
+          if (!idx[key][dKey]) idx[key][dKey] = [];
+          idx[key][dKey].push(ev);
+        }
+      });
+    });
+
+    // coluna de espaços: largura fixa; colunas de dias: flex
+    const thStyle = "padding:10px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);white-space:nowrap;border-bottom:2px solid var(--bd1)";
+    const tdEspStyle = "padding:0;vertical-align:top;border-right:1px solid var(--bd1);border-bottom:1px solid var(--bd1)";
+    const tdDayStyle = "padding:6px 5px;vertical-align:top;border-right:1px solid var(--bd1);border-bottom:1px solid var(--bd1);min-height:56px";
+
+    const cabecalho = `
+      <tr style="background:var(--bg)">
+        <th style="${thStyle};text-align:left;width:160px;min-width:140px;border-right:1px solid var(--bd1)">Espaço</th>
+        ${dias.map(d => {
+          const isHoje = d.getTime() === hoje.getTime();
+          return `<th style="${thStyle};${isHoje ? "color:var(--teal)" : ""}">
+            <div>${_nomeDiaSemana(d)}</div>
+            <div style="font-size:13px;font-weight:700;margin-top:1px;${isHoje ? "color:var(--teal)" : "color:var(--tx1)"}">${d.getDate()}/${d.getMonth()+1}</div>
+          </th>`;
+        }).join("")}
+      </tr>`;
+
+    let blocoAtual = null;
+    const linhas = espacos.map(esp => {
+      const espKey = esp.id || esp.nome;
+      let sepBloco = "";
+      if (esp.bloco_nome !== blocoAtual) {
+        blocoAtual = esp.bloco_nome;
+        sepBloco = `<tr><td colspan="8" style="padding:6px 12px 3px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);background:var(--bg);border-bottom:1px solid var(--bd1)">${blocoAtual || "Sem bloco"}</td></tr>`;
+      }
+
+      const colunaEspaco = `
+        <td style="${tdEspStyle};background:var(--bg)">
+          <div style="padding:8px 10px">
+            <div style="font-size:12px;font-weight:700;color:var(--tx1);line-height:1.3">${escapeHtml(esp.nome)}</div>
+            ${esp.tipo ? `<div style="font-size:10px;color:var(--tx3);margin-top:1px">${escapeHtml(esp.tipo)}</div>` : ""}
+          </div>
+        </td>`;
+
+      const colunasDias = dias.map(dia => {
+        const dKey = _fmtDate(dia);
+        const isHoje = dia.getTime() === hoje.getTime();
+        const evsDia = (idx[espKey] || {})[dKey] || [];
+
+        const badgesHtml = evsDia.map(ev => {
+          const c = _corStatus(ev.status);
+          const hora = ev.hora_inicio ? `${_fmtHora(ev.hora_inicio)}${ev.hora_fim ? "–" + _fmtHora(ev.hora_fim) : ""}` : "";
+          const titulo = escapeHtml((ev.titulo || "").substring(0, 26) + ((ev.titulo || "").length > 26 ? "…" : ""));
+          const dataJson = escapeHtml(JSON.stringify({
+            id: ev.evento_id, titulo: ev.titulo, status: ev.status,
+            tipo: ev.tipo, data: ev.data, data_enc: ev.data_enc,
+            hora_inicio: ev.hora_inicio, hora_fim: ev.hora_fim,
+            solicitante: ev.solicitante, espaco_nome: ev.espaco_nome
+          }));
+          return `<div
+            onclick="ADM_ESP.agDetalhe(this, '${dataJson}')"
+            style="margin:2px 0;padding:3px 6px;border-radius:5px;border-left:3px solid ${c.border};background:${c.bg};cursor:pointer;font-size:10.5px;color:${c.txt};line-height:1.4;transition:opacity .15s"
+            onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'"
+          >${hora ? `<div style="font-size:9.5px;font-weight:600;opacity:.85">${hora}</div>` : ""}
+          <div style="font-weight:600;color:var(--tx1)">${titulo}</div></div>`;
+        }).join("");
+
+        return `<td style="${tdDayStyle}${isHoje ? ";background:rgba(42,181,192,.04)" : ""}">
+          <div style="min-height:48px">${badgesHtml}</div>
+        </td>`;
+      }).join("");
+
+      return `${sepBloco}<tr style="border-bottom:1px solid var(--bd1)">${colunaEspaco}${colunasDias}</tr>`;
+    }).join("");
+
+    const nTotal = _agEventos.length;
+    grid.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--bd1);background:var(--bg)">
+        <span style="font-size:11.5px;color:var(--tx2);font-weight:600">${espacos.length} espaço${espacos.length !== 1 ? "s" : ""}</span>
+        <span style="font-size:11.5px;color:var(--tx3)">${nTotal} evento${nTotal !== 1 ? "s" : ""} na semana</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse;table-layout:fixed">
+        <colgroup>
+          <col style="width:160px">
+          ${dias.map(() => '<col>').join("")}
+        </colgroup>
+        <thead>${cabecalho}</thead>
+        <tbody>${linhas}</tbody>
+      </table>`;
+  }
+
+  /* ── popup de detalhe do evento ──────────────────────────── */
+  function agDetalhe(el, dataJson) {
+    document.querySelectorAll(".adm-esp-ag-detalhe-ativo").forEach(x => x.classList.remove("adm-esp-ag-detalhe-ativo"));
+
+    const panel = document.getElementById("adm-esp-ag-detalhe");
+    if (!panel) return;
+
+    let ev;
+    try { ev = JSON.parse(dataJson); } catch { return; }
+
+    const c = _corStatus(ev.status);
+    const fmtD = s => {
+      if (!s) return "—";
+      const [y, m, d] = s.split("-");
+      return `${d}/${m}/${y}`;
+    };
+
+    panel.innerHTML = `
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px">
+        <div style="font-size:14px;font-weight:700;color:var(--tx1);line-height:1.3;flex:1">${escapeHtml(ev.titulo || "—")}</div>
+        <button onclick="document.getElementById('adm-esp-ag-detalhe').style.display='none'" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">✕</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:11px;color:var(--tx3)">Status</span>
+          <span style="font-size:11.5px;font-weight:700;color:${c.txt}">${ev.status || "—"}</span>
+        </div>
+        ${ev.tipo ? `<div style="display:flex;justify-content:space-between">
+          <span style="font-size:11px;color:var(--tx3)">Tipo</span>
+          <span style="font-size:11.5px;color:var(--tx2)">${escapeHtml(ev.tipo)}</span>
+        </div>` : ""}
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-size:11px;color:var(--tx3)">Espaço</span>
+          <span style="font-size:11.5px;color:var(--tx2)">${escapeHtml(ev.espaco_nome || "—")}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-size:11px;color:var(--tx3)">Solicitante</span>
+          <span style="font-size:11.5px;color:var(--tx2)">${escapeHtml(ev.solicitante || "—")}</span>
+        </div>
+        <div style="border-top:1px solid var(--bd1);padding-top:7px;display:flex;justify-content:space-between">
+          <span style="font-size:11px;color:var(--tx3)">Data</span>
+          <span style="font-size:11.5px;color:var(--tx2)">${fmtD(ev.data)}${ev.data_enc && ev.data_enc !== ev.data ? " → " + fmtD(ev.data_enc) : ""}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-size:11px;color:var(--tx3)">Horário</span>
+          <span style="font-size:11.5px;color:var(--tx2)">${ev.hora_inicio ? ev.hora_inicio.slice(0,5) : "—"}${ev.hora_fim ? " – " + ev.hora_fim.slice(0,5) : ""}</span>
+        </div>
+      </div>`;
+
+    // posiciona o painel próximo ao badge clicado
+    const rect = el.getBoundingClientRect();
+    panel.style.display = "block";
+    const panelW = 320;
+    let left = rect.right + 8;
+    if (left + panelW > window.innerWidth - 16) left = rect.left - panelW - 8;
+    if (left < 8) left = 8;
+    let top = rect.top;
+    if (top + 280 > window.innerHeight) top = window.innerHeight - 288;
+    if (top < 8) top = 8;
+    panel.style.left = left + "px";
+    panel.style.top  = top + "px";
+
+    // fecha ao clicar fora
+    setTimeout(() => {
+      document.addEventListener("click", e => {
+        if (!panel.contains(e.target)) panel.style.display = "none";
+      }, { once: true });
+    }, 10);
+  }
+
   /* ── API pública de espacos para outros módulos ──────────────── */
   async function listarAtivos() {
     if (!_lista.length) await _fetchEspacos();
@@ -434,6 +754,7 @@ const ADM_ESP = (() => {
     load, novo, editar, duplicar, historico, excluir,
     toggleAtivo, menuAbrir, salvar, filtrar,
     listarAtivos, listarReservaveis, listarPublicos,
+    tabIr, agendaLoad, agendaNav, agendaHoje, agDetalhe,
   };
 })();
 
