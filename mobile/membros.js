@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Membros
-   mobile/membros.js · v1.0.0
+   mobile/membros.js · v1.1.0
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -9,12 +9,21 @@
   mobRegisterPage('membros',     renderMembros);
   mobRegisterPage('memb-perfil', renderPerfil);
 
-  let _cache = null;
-  let _busca = '';
+  const PAGE_SIZE = 50;
+
+  let _busca     = '';
+  let _offset    = 0;
+  let _hasMore   = false;
+  let _loading   = false;
+  let _observer  = null;
 
   /* ── Lista ─────────────────────────────────────────── */
   async function renderMembros(el) {
-    _cache = null;
+    _offset  = 0;
+    _hasMore = false;
+    _loading = false;
+    if (_observer) { _observer.disconnect(); _observer = null; }
+
     el.innerHTML = `
       <div class="mob-search-wrap">
         <input class="mob-search" type="search" placeholder="Buscar membros…"
@@ -22,49 +31,94 @@
                oninput="_membBusca(this.value)"
                onsearch="_membBusca(this.value)">
       </div>
-      <div id="memb-lista" class="mob-section">
-        <div class="mob-card-list mob-loading-state">Carregando…</div>
-      </div>
+      <div id="memb-lista" class="mob-section"></div>
+      <div id="memb-sentinel" style="height:1px"></div>
     `;
-    await _carregar();
+    await _carregarPagina(true);
   }
 
-  async function _carregar() {
-    const el = document.getElementById('memb-lista');
-    if (!el) return;
+  async function _carregarPagina(reset) {
+    if (_loading) return;
+    _loading = true;
+
+    const lista = document.getElementById('memb-lista');
+    if (!lista) { _loading = false; return; }
+
+    if (reset) {
+      lista.innerHTML = `<div class="mob-card-list mob-loading-state">Carregando…</div>`;
+    }
+
+    const q = _busca.trim().toLowerCase();
+    let url = `${apiBaseUrl()}/rest/v1/v_membros?select=id,nome,celular,email,funcao,congregacao,data_nascimento&order=nome.asc&limit=${PAGE_SIZE}&offset=${_offset}`;
+    if (q) {
+      url += `&or=(nome.ilike.*${encodeURIComponent(q)}*,funcao.ilike.*${encodeURIComponent(q)}*,congregacao.ilike.*${encodeURIComponent(q)}*,email.ilike.*${encodeURIComponent(q)}*)`;
+    }
+
     try {
-      const res  = await fetch(
-        `${apiBaseUrl()}/rest/v1/v_membros?select=id,nome,celular,email,funcao,congregacao,data_nascimento&order=nome.asc&limit=500`,
-        { headers: apiHeaders() }
-      );
-      const data = await res.json();
-      _cache = Array.isArray(data) ? data : [];
-      _renderRows(el, _cache);
+      const res  = await fetch(url, {
+        headers: { ...apiHeaders(), 'Prefer': 'count=exact' }
+      });
+      const data = Array.isArray(await res.clone().json()) ? await res.json() : [];
+
+      if (reset) lista.innerHTML = '';
+
+      if (!data.length && reset) {
+        lista.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">👥</div><div class="mob-empty-text">Nenhum membro encontrado.</div></div>`;
+        _hasMore = false;
+        _loading = false;
+        return;
+      }
+
+      _appendRows(lista, data, reset);
+      _hasMore = data.length === PAGE_SIZE;
+      _offset += data.length;
+
     } catch (_) {
-      el.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">⚠️</div><div class="mob-empty-text">Erro ao carregar membros.</div></div>`;
+      if (reset) lista.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">⚠️</div><div class="mob-empty-text">Erro ao carregar membros.</div></div>`;
+      _hasMore = false;
     }
+
+    _loading = false;
+    _setupObserver();
   }
 
-  function _renderRows(el, data) {
-    if (!data.length) {
-      el.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">👥</div><div class="mob-empty-text">Nenhum membro encontrado.</div></div>`;
-      return;
-    }
+  function _appendRows(lista, data, reset) {
+    // Descobrir última letra já renderizada (para continuar grupos)
+    let lastLetra = reset ? null : (lista.dataset.lastLetra || null);
 
-    // Agrupar por letra inicial
-    const grupos = {};
     data.forEach(m => {
       const l = (m.nome || '?')[0].toUpperCase();
-      if (!grupos[l]) grupos[l] = [];
-      grupos[l].push(m);
+      if (l !== lastLetra) {
+        const title = document.createElement('div');
+        title.className = 'mob-section-title';
+        title.style.paddingTop = '16px';
+        title.textContent = l;
+        lista.appendChild(title);
+
+        const card = document.createElement('div');
+        card.className = 'mob-card-list';
+        card.dataset.letra = l;
+        lista.appendChild(card);
+        lastLetra = l;
+      }
+      const group = lista.querySelector(`.mob-card-list[data-letra="${l}"]`);
+      if (group) group.insertAdjacentHTML('beforeend', _membRow(m));
     });
 
-    el.innerHTML = Object.entries(grupos).map(([letra, lista]) => `
-      <div class="mob-section-title" style="padding-top:16px">${letra}</div>
-      <div class="mob-card-list">
-        ${lista.map(m => _membRow(m)).join('')}
-      </div>
-    `).join('') + `<div style="padding:12px 0;text-align:center;font-size:11px;color:var(--tx4)">${data.length} membros</div>`;
+    lista.dataset.lastLetra = lastLetra || '';
+  }
+
+  function _setupObserver() {
+    if (!_hasMore) return;
+    const sentinel = document.getElementById('memb-sentinel');
+    if (!sentinel) return;
+    if (_observer) _observer.disconnect();
+    _observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && _hasMore && !_loading) {
+        _carregarPagina(false);
+      }
+    }, { rootMargin: '200px' });
+    _observer.observe(sentinel);
   }
 
   function _membRow(m) {
@@ -72,7 +126,7 @@
     const aniv     = _isAnivHoje(m.data_nascimento);
     return `
       <div class="mob-list-item" onclick="mobGo('memb-perfil',{id:'${m.id}',title:'${_esc(m.nome)}'})">
-        <div class="mob-list-ico" style="background:var(--bg-hover);color:var(--tx1);font-size:13px;font-weight:700;border-radius:50%">
+        <div class="mob-list-ico" style="background:var(--bg-hover);color:var(--tx1);font-size:13px;font-weight:700;border-radius:50%;position:relative">
           ${initials}${aniv ? '<span style="position:absolute;bottom:-2px;right:-2px;font-size:10px">🎂</span>' : ''}
         </div>
         <div class="mob-list-body">
@@ -84,19 +138,16 @@
     `;
   }
 
+  let _buscaTimer = null;
   window._membBusca = function (val) {
     _busca = val;
-    const el = document.getElementById('memb-lista');
-    if (!el) return;
-    if (!_cache) { _carregar(); return; }
-    const q = val.toLowerCase();
-    const r = q ? _cache.filter(m =>
-      (m.nome      || '').toLowerCase().includes(q) ||
-      (m.funcao    || '').toLowerCase().includes(q) ||
-      (m.congregacao || '').toLowerCase().includes(q) ||
-      (m.email     || '').toLowerCase().includes(q)
-    ) : _cache;
-    _renderRows(el, r);
+    clearTimeout(_buscaTimer);
+    _buscaTimer = setTimeout(() => {
+      _offset = 0;
+      _hasMore = false;
+      if (_observer) { _observer.disconnect(); _observer = null; }
+      _carregarPagina(true);
+    }, 280);
   };
 
   /* ── Perfil ────────────────────────────────────────── */

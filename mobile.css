@@ -48,6 +48,37 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* ── Tema Escuro ─────────────────────────────────────── */
+html[data-theme="dark"] {
+  --bg-body:    #000000;
+  --bg-surface: #1c1c1e;
+  --bg-card:    #2c2c2e;
+  --bg-hover:   #3a3a3c;
+  --bg-input:   #2c2c2e;
+
+  --bd1: rgba(255,255,255,0.08);
+  --bd2: rgba(255,255,255,0.14);
+  --bd3: rgba(255,255,255,0.22);
+
+  --tx1: #f5f5f7;
+  --tx2: rgba(235,235,245,0.60);
+  --tx3: rgba(235,235,245,0.30);
+  --tx4: rgba(235,235,245,0.12);
+
+  --gr:     #30d158;
+  --grl:    #46e070;
+  --grd:    #248a3d;
+
+  --blue:   #0a84ff;  --bluebg:   rgba(10,132,255,0.18);
+  --teal:   #5ac8fa;  --tealbg:   rgba(90,200,250,0.18);
+  --violet: #bf5af2;  --violetbg: rgba(191,90,242,0.18);
+  --orange: #f97316;  --orangebg: rgba(249,115,22,0.18);
+  --gold:   #ffd60a;  --goldbg:   rgba(255,214,10,0.18);
+  --amber:  #ff9f0a;  --amberbg:  rgba(255,159,10,0.18);
+  --rose:   #ff453a;  --rosebg:   rgba(255,69,58,0.18);
+  --sky:    #64d2ff;  --skybg:    rgba(100,210,255,0.18);
+}
+
 html { height: 100%; }
 
 body {
@@ -181,8 +212,8 @@ body {
 }
 
 .mob-icon-btn {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: none;
   background: none;
   color: var(--tx1);
@@ -579,7 +610,7 @@ body {
   padding: 10px 14px 10px 38px;
   outline: none;
   -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(235,235,245,0.32)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: 12px center;
 }
@@ -605,7 +636,10 @@ body {
   font-size: 12px;
   font-weight: 500;
   font-family: var(--sans);
-  padding: 6px 14px;
+  padding: 8px 14px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s;
