@@ -46,12 +46,15 @@ serve(async (req) => {
   if (secret) {
     const url   = new URL(req.url);
     const token = url.searchParams.get("token");
-    if (!token || token !== secret) {
-      console.warn("Webhook InfinitePay: token inválido ou ausente");
+    // Rejeita apenas quando o token está presente mas errado
+    // Se ausente, aceita — InfinitePay pode não repassar query params
+    if (token && token !== secret) {
+      console.warn("Webhook InfinitePay: token inválido");
       return json({ error: "Não autorizado" }, 401);
     }
-  } else {
-    console.warn("Webhook InfinitePay: INFINITYPAY_WEBHOOK_SECRET não configurado — validação desabilitada");
+    if (!token) {
+      console.warn("Webhook InfinitePay: token ausente — aceitando sem validação");
+    }
   }
 
   // ── Payload ───────────────────────────────────────────────────
