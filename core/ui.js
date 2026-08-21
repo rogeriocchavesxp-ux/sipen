@@ -616,34 +616,183 @@ const _SRCH_PAGINAS = [
   { ic:"📖", nm:"Tutorial",                sub:"Guia de uso do SIPEN",                      rota:"tutorial",        cor:"rgba(20,184,166,.15)" },
 ];
 
+/* ── Spotlight ─────────────────────────────────────────── */
+let _spotTimer = null;
+let _spotIdx   = -1;
+
+function spotAbrir() {
+  const el = document.getElementById("spotlight");
+  if (!el) return;
+  el.style.display = "flex";
+  _spotIdx = -1;
+  const inp = document.getElementById("spot-input");
+  if (inp) { inp.value = ""; inp.focus(); }
+  document.getElementById("spot-results").innerHTML = _spotHints();
+}
+
+function spotFechar() {
+  const el = document.getElementById("spotlight");
+  if (el) el.style.display = "none";
+  _spotIdx = -1;
+}
+
+function spotFecharOv(e) {
+  if (e.target.id === "spotlight") spotFechar();
+}
+
+function spotInput(q) {
+  clearTimeout(_spotTimer);
+  const res = document.getElementById("spot-results");
+  if (!q || q.trim().length < 2) { if (res) res.innerHTML = _spotHints(); return; }
+  _spotTimer = setTimeout(() => _spotExecutar(q.trim()), 220);
+}
+
+function spotKey(e) {
+  const res = document.getElementById("spot-results");
+  const items = res ? [...res.querySelectorAll(".srch-item")] : [];
+  if (e.key === "Escape") { spotFechar(); return; }
+  if (e.key === "ArrowDown") { e.preventDefault(); _spotIdx = Math.min(_spotIdx + 1, items.length - 1); _spotFocar(items); return; }
+  if (e.key === "ArrowUp")   { e.preventDefault(); _spotIdx = Math.max(_spotIdx - 1, 0);                _spotFocar(items); return; }
+  if (e.key === "Enter" && _spotIdx >= 0 && items[_spotIdx]) { items[_spotIdx].click(); return; }
+}
+
+function _spotFocar(items) {
+  items.forEach((el, i) => el.classList.toggle("on", i === _spotIdx));
+  items[_spotIdx]?.scrollIntoView({ block:"nearest" });
+}
+
+function _spotClose() { spotFechar(); document.getElementById("spot-input").value = ""; }
+
+function _spotHints() {
+  const atalhos = [
+    { ic:"👥", label:"Membros",    rota:"memb-dash" },
+    { ic:"📋", label:"Demandas",   rota:"dem-todas" },
+    { ic:"📅", label:"Eventos",    rota:"eve-dash"  },
+    { ic:"💬", label:"WhatsApp",   rota:"wa-dash"   },
+    { ic:"📊", label:"Dashboard",  rota:"dash"      },
+  ];
+  return `<div class="srch-hint">${atalhos.map(a =>
+    `<div class="srch-hint-item" onclick="_spotClose();go('${a.rota}')">${a.ic} ${a.label}</div>`
+  ).join("")}</div>`;
+}
+
+async function _spotExecutar(q) {
+  const res = document.getElementById("spot-results");
+  if (!res) return;
+  _spotIdx = -1;
+
+  const ql = q.toLowerCase();
+  const pags = _SRCH_PAGINAS.filter(p =>
+    p.nm.toLowerCase().includes(ql) || p.sub.toLowerCase().includes(ql)
+  ).slice(0, 4);
+
+  res.innerHTML = _spotRender(pags, [], [], [], q, true);
+
+  const [membros, demandas, eventos] = await Promise.all([
+    _srchMembros(q),
+    _srchDemandas(q),
+    _srchEventos(q),
+  ]);
+
+  res.innerHTML = _spotRender(pags, membros, demandas, eventos, q, false);
+}
+
+async function _srchEventos(q) {
+  try {
+    const sb = typeof getSupabase === "function" ? getSupabase() : null;
+    if (!sb) return [];
+    const { data } = await sb.from("eventos").select("id,titulo,data_inicio,local_nome,status")
+      .ilike("titulo", `%${q}%`).order("data_inicio", { ascending: false }).limit(4);
+    return data || [];
+  } catch(_) { return []; }
+}
+
+function _spotRender(pags, membros, demandas, eventos, q, carregando) {
+  const STATUS_COR = { Ativo:"var(--gr)", Inativo:"var(--tx3)", Transferido:"var(--blue)" };
+  let html = "";
+  const sep = () => { html += `<div class="srch-sep"></div>`; };
+
+  if (pags.length) {
+    html += `<div class="srch-grp-lbl">Módulos e Páginas</div>`;
+    html += pags.map(p => `
+      <div class="srch-item" onclick="_spotClose();go('${p.rota}')">
+        <div class="srch-item-ic" style="background:${p.cor}">${p.ic}</div>
+        <div class="srch-item-body">
+          <div class="srch-item-nm">${_srchHL(p.nm, q)}</div>
+          <div class="srch-item-sub">${p.sub}</div>
+        </div>
+      </div>`).join("");
+  }
+
+  if (membros.length) {
+    if (html) sep();
+    html += `<div class="srch-grp-lbl">Membros</div>`;
+    html += membros.map(m => `
+      <div class="srch-item" onclick="_spotClose();go('memb-dash')">
+        <div class="srch-item-ic" style="background:rgba(107,174,214,.15)">👤</div>
+        <div class="srch-item-body">
+          <div class="srch-item-nm">${_srchHL(m.nome||"—", q)}</div>
+          <div class="srch-item-sub">${m.congregacao||""}</div>
+        </div>
+        <span class="srch-item-tag" style="background:rgba(90,96,104,.1);color:${STATUS_COR[m.status]||"var(--tx3)"}">${m.status||""}</span>
+      </div>`).join("");
+  }
+
+  if (eventos.length) {
+    if (html) sep();
+    html += `<div class="srch-grp-lbl">Eventos</div>`;
+    html += eventos.map(ev => `
+      <div class="srch-item" onclick="_spotClose();go('eve-dash')">
+        <div class="srch-item-ic" style="background:rgba(20,184,166,.12)">📅</div>
+        <div class="srch-item-body">
+          <div class="srch-item-nm">${_srchHL(ev.titulo||"—", q)}</div>
+          <div class="srch-item-sub">${ev.data_inicio ? ev.data_inicio.slice(0,10).split("-").reverse().join("/") : ""}${ev.local_nome ? " · " + ev.local_nome : ""}</div>
+        </div>
+        <span class="srch-item-tag" style="background:rgba(90,96,104,.1);color:var(--tx3)">${ev.status||""}</span>
+      </div>`).join("");
+  }
+
+  if (demandas.length) {
+    if (html) sep();
+    html += `<div class="srch-grp-lbl">Demandas</div>`;
+    html += demandas.map(d => `
+      <div class="srch-item" onclick="_spotClose();window.demAbrirDetalhe&&demAbrirDetalhe('${d.id}','srch')">
+        <div class="srch-item-ic" style="background:rgba(224,85,85,.12)">📋</div>
+        <div class="srch-item-body">
+          <div class="srch-item-nm">${_srchHL(d.titulo||"—", q)}</div>
+          <div class="srch-item-sub">${d.numero_chamado||""} · ${d.area||""}</div>
+        </div>
+        <span class="srch-item-tag" style="background:rgba(90,96,104,.1);color:var(--tx3)">${d.status||""}</span>
+      </div>`).join("");
+  }
+
+  if (carregando && !pags.length) return `<div class="srch-empty">Buscando…</div>`;
+  if (!carregando && !pags.length && !membros.length && !demandas.length && !eventos.length) {
+    return `<div class="srch-empty">Nenhum resultado para "<strong>${q}</strong>"</div>`;
+  }
+  return html;
+}
+
+// Atalho de teclado ⌘K (e ⌘Espaço como fallback)
+document.addEventListener("keydown", e => {
+  if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
+    e.preventDefault();
+    const spot = document.getElementById("spotlight");
+    if (spot && spot.style.display !== "none") spotFechar();
+    else spotAbrir();
+  }
+  if (e.key === "Escape") {
+    const spot = document.getElementById("spotlight");
+    if (spot && spot.style.display !== "none") spotFechar();
+  }
+});
+
+/* ── Legacy (manter compatibilidade) ──────────────────── */
 let _srchTimer = null;
 let _srchIdx   = -1;
-
-function buscaGlobalInput(q) {
-  clearTimeout(_srchTimer);
-  if (!q || q.trim().length < 2) { _srchFechar(); return; }
-  _srchTimer = setTimeout(() => _srchExecutar(q.trim()), 280);
-}
-
-function buscaGlobalKey(e) {
-  const dd = document.getElementById("srch-dd");
-  const items = dd ? [...dd.querySelectorAll(".srch-item")] : [];
-  if (e.key === "Escape") { _srchFechar(); document.getElementById("tb-search-input")?.blur(); return; }
-  if (e.key === "ArrowDown") { e.preventDefault(); _srchIdx = Math.min(_srchIdx + 1, items.length - 1); _srchFocar(items); return; }
-  if (e.key === "ArrowUp")   { e.preventDefault(); _srchIdx = Math.max(_srchIdx - 1, 0);                _srchFocar(items); return; }
-  if (e.key === "Enter" && _srchIdx >= 0 && items[_srchIdx]) { items[_srchIdx].click(); return; }
-}
-
-function _srchFocar(items) {
-  items.forEach((el, i) => el.classList.toggle("on", i === _srchIdx));
-  items[_srchIdx]?.scrollIntoView({ block:"nearest" });
-}
-
-function _srchFechar() {
-  const dd = document.getElementById("srch-dd");
-  if (dd) dd.style.display = "none";
-  _srchIdx = -1;
-}
+function buscaGlobalInput() {}
+function buscaGlobalKey() {}
+function _srchFechar() {}
 
 async function _srchExecutar(q) {
   const dd = document.getElementById("srch-dd");

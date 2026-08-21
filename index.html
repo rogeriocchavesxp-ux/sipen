@@ -47,6 +47,24 @@
 </head>
 <body>
 
+<!-- ══ Spotlight Global ══════════════════════════════════════ -->
+<div id="spotlight" class="spot-ov" style="display:none" onmousedown="spotFecharOv(event)">
+  <div class="spot-box">
+    <div class="spot-iw">
+      <svg class="spot-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="spot-input" class="spot-inp" type="search" placeholder="Buscar módulos, membros, eventos, demandas…" autocomplete="off"
+        oninput="spotInput(this.value)" onkeydown="spotKey(event)">
+      <button class="spot-esc-btn" onclick="spotFechar()">Esc</button>
+    </div>
+    <div id="spot-results" class="spot-results"></div>
+    <div class="spot-footer">
+      <span><kbd>↑↓</kbd> navegar</span>
+      <span><kbd>↵</kbd> abrir</span>
+      <span><kbd>Esc</kbd> fechar</span>
+    </div>
+  </div>
+</div>
+
 <main class="main">
   <!-- Mobile header — visível apenas em modo-mobile -->
   <div id="m-header" class="m-header">
@@ -63,13 +81,11 @@
     <div class="crumb" id="crumb">
       <span class="c-pg">Painel</span>
     </div>
-    <div class="tb-search-wrap" id="tb-search-wrap">
-      <input class="tb-search" id="tb-search-input" type="search" placeholder="Buscar..." autocomplete="off"
-        oninput="buscaGlobalInput(this.value)"
-        onfocus="buscaGlobalInput(this.value)"
-        onkeydown="buscaGlobalKey(event)">
-      <div class="srch-dd" id="srch-dd" style="display:none"></div>
-    </div>
+    <button class="tb-search-btn" id="tb-search-wrap" onclick="spotAbrir()" title="Buscar (⌘K)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span>Buscar…</span>
+      <kbd>⌘K</kbd>
+    </button>
     <div class="trr">
       <button class="tbt" id="btn-area-preview" onclick="areaTogglePreview()" title="Alternar visualização mobile/PC" style="display:none;font-size:11.5px">📱 Celular</button>
       <button class="tbt" id="btn-trocar-area" onclick="trocarArea()" title="Alternar entre Área do Membro e Área do Gestor">⇄ <span id="btn-trocar-area-label">Trocar Área</span></button>
@@ -151,7 +167,7 @@
 </div>
 
 <script src="core/router.js?v=6.66.11"></script>
-<script src="core/ui.js?v=6.65.6"></script>
+<script src="core/ui.js?v=6.66.0"></script>
 <script src="core/api.js?v=6.66.5"></script>
 <script src="modules/admin/estacionamento-controles.js?v=6.45.13"></script>
 <script src="modules/admin/acesso-facial.js?v=6.45.13"></script>
