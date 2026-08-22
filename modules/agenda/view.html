@@ -13,6 +13,7 @@
       <div class="bni" onclick="go('agenda-reagendamentos')">Reagendamentos</div>
       <div class="bni" onclick="go('agenda-conflitos')">Conflitos</div>
       <div class="bni" onclick="go('agenda-whatsapp')">WhatsApp</div>
+      <div class="bni" onclick="go('agenda-ambientes')">Por Espaço</div>
     </div>
     <div class="ct">
       <!-- KPIs linha 1 -->
@@ -105,6 +106,7 @@
       <div class="bni" onclick="go('agenda-reagendamentos')">Reagendamentos</div>
       <div class="bni" onclick="go('agenda-conflitos')">Conflitos</div>
       <div class="bni" onclick="go('agenda-whatsapp')">WhatsApp</div>
+      <div class="bni" onclick="go('agenda-ambientes')">Por Espaço</div>
     </div>
     <div class="ct">
       <div class="agcal-aniv-card" onclick="go('memb-aniv')">
@@ -138,6 +140,7 @@
       <div class="bni" onclick="go('agenda-reagendamentos')">Reagendamentos</div>
       <div class="bni" onclick="go('agenda-conflitos')">Conflitos</div>
       <div class="bni" onclick="go('agenda-whatsapp')">WhatsApp</div>
+      <div class="bni" onclick="go('agenda-ambientes')">Por Espaço</div>
     </div>
     <div class="ct">
       <div class="kpis" style="grid-template-columns:repeat(5,1fr);margin-bottom:16px">
@@ -168,6 +171,7 @@
       <div class="bni" onclick="go('agenda-reagendamentos')">Reagendamentos</div>
       <div class="bni" onclick="go('agenda-conflitos')">Conflitos</div>
       <div class="bni" onclick="go('agenda-whatsapp')">WhatsApp</div>
+      <div class="bni" onclick="go('agenda-ambientes')">Por Espaço</div>
     </div>
       <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Eventos por Mês</div></div>
       <div class="hero-act">
@@ -195,12 +199,12 @@
     </div>
   </div>
 
-  <!-- AGENDA POR ESPAÇO -->
+  <!-- AGENDA POR ESPAÇO — panorâmica semanal -->
 
   <div class="view" id="v-agenda-ambientes">
     <div class="hero">
       <div class="hero-ic" style="background:rgba(42,181,192,0.12)">🏛</div>
-      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Por Espaço / Ambiente</div></div>
+      <div><div class="hero-lbl">Agenda</div><div class="hero-ttl">Agenda por Espaço</div><div class="hero-dsc">Visão panorâmica semanal — quando e por quem cada ambiente será usado</div></div>
       <div class="hero-act"><button class="tbt pri" onclick="openCrudForm('AGENDA')">+ Novo Evento</button></div>
     </div>
     <div class="bnav" style="--mc:var(--teal)">
@@ -212,12 +216,35 @@
       <div class="bni" onclick="go('agenda-reagendamentos')">Reagendamentos</div>
       <div class="bni" onclick="go('agenda-conflitos')">Conflitos</div>
       <div class="bni" onclick="go('agenda-whatsapp')">WhatsApp</div>
+      <div class="bni" onclick="go('agenda-ambientes')">Por Espaço</div>
     </div>
     <div class="ct">
-      <div class="card">
-        <div class="ctit">Uso por Ambiente <span class="cact" onclick="carregarEspacos()">↻ Atualizar</span></div>
-        <div id="agenda-espacos-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div>
+      <!-- Navegação de semana -->
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:4px;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:4px">
+          <button onclick="ADM_ESP.agendaNav(-1)" style="background:none;border:none;cursor:pointer;padding:6px 12px;border-radius:7px;color:var(--tx1);font-size:13px;font-weight:600" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='none'">‹</button>
+          <span id="ag-amb-range" style="font-size:13px;font-weight:600;color:var(--tx1);padding:0 8px;min-width:200px;text-align:center">—</span>
+          <button onclick="ADM_ESP.agendaNav(1)"  style="background:none;border:none;cursor:pointer;padding:6px 12px;border-radius:7px;color:var(--tx1);font-size:13px;font-weight:600" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='none'">›</button>
+        </div>
+        <button onclick="ADM_ESP.agendaHoje()" style="padding:7px 14px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx2);font-size:12px;cursor:pointer;font-weight:600">Hoje</button>
+        <div style="margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--tx3);display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--teal);opacity:.8"></span>Confirmado</span>
+          <span style="font-size:11px;color:var(--tx3);display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--amber)"></span>Pendente</span>
+          <span style="font-size:11px;color:var(--tx3);display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--sky)"></span>Em análise</span>
+        </div>
       </div>
+
+      <!-- Grade panorâmica -->
+      <div class="card" style="padding:0;overflow:hidden;margin-top:0">
+        <div style="overflow-x:auto">
+          <div id="ag-amb-grid" style="min-width:700px">
+            <div style="padding:28px;text-align:center;color:var(--tx3);font-size:12px">Carregando agenda…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Painel de detalhe do evento -->
+      <div id="ag-amb-detalhe" style="display:none;position:fixed;z-index:500;background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.2);padding:18px 20px;min-width:260px;max-width:340px"></div>
     </div>
   </div>
 
@@ -238,6 +265,7 @@
       <div class="bni" onclick="go('agenda-reagendamentos')">Reagendamentos</div>
       <div class="bni" onclick="go('agenda-conflitos')">Conflitos</div>
       <div class="bni" onclick="go('agenda-whatsapp')">WhatsApp</div>
+      <div class="bni" onclick="go('agenda-ambientes')">Por Espaço</div>
     </div>
     <div class="ct">
       <div class="card">
@@ -265,6 +293,7 @@
       <div class="bni" onclick="go('agenda-reagendamentos')">Reagendamentos</div>
       <div class="bni" onclick="go('agenda-conflitos')">Conflitos</div>
       <div class="bni" onclick="go('agenda-whatsapp')">WhatsApp</div>
+      <div class="bni" onclick="go('agenda-ambientes')">Por Espaço</div>
     </div>
     <div class="ct">
       <div class="card">
@@ -291,6 +320,7 @@
       <div class="bni" onclick="go('agenda-reagendamentos')">Reagendamentos</div>
       <div class="bni" onclick="go('agenda-conflitos')">Conflitos</div>
       <div class="bni" onclick="go('agenda-whatsapp')">WhatsApp</div>
+      <div class="bni" onclick="go('agenda-ambientes')">Por Espaço</div>
     </div>
     <div class="ct">
       <div class="card">
@@ -316,6 +346,7 @@
       <div class="bni" onclick="go('agenda-reagendamentos')">Reagendamentos</div>
       <div class="bni" onclick="go('agenda-conflitos')">Conflitos</div>
       <div class="bni" onclick="go('agenda-whatsapp')">WhatsApp</div>
+      <div class="bni" onclick="go('agenda-ambientes')">Por Espaço</div>
     </div>
     <div class="ct">
       <div class="card">
@@ -341,6 +372,7 @@
       <div class="bni" onclick="go('agenda-reagendamentos')">Reagendamentos</div>
       <div class="bni" onclick="go('agenda-conflitos')">Conflitos</div>
       <div class="bni" onclick="go('agenda-whatsapp')">WhatsApp</div>
+      <div class="bni" onclick="go('agenda-ambientes')">Por Espaço</div>
     </div>
     <div class="ct">
       <div class="card">
@@ -413,6 +445,7 @@
       <div class="bni" onclick="go('agenda-reagendamentos')">Reagendamentos</div>
       <div class="bni" onclick="go('agenda-conflitos')">Conflitos</div>
       <div class="bni" onclick="go('agenda-whatsapp')">WhatsApp</div>
+      <div class="bni" onclick="go('agenda-ambientes')">Por Espaço</div>
     </div>
     <div class="ct" id="wa-tab-AGENDA"><div style="color:var(--tx3);text-align:center;padding:40px">Carregando...</div></div>
   </div>

@@ -16,6 +16,8 @@ const ADM_ESP = (() => {
   let _agSemana   = null;  // Date: segunda-feira da semana exibida
   let _agEventos  = [];    // eventos retornados pela RPC
   let _agTabAtiva = "lista"; // "lista" | "agenda"
+  // IDs dos containers ativos — permite reusar o mesmo módulo em contextos diferentes
+  let _agCtx = { grid: "adm-esp-ag-grid", range: "adm-esp-ag-range", detalhe: "adm-esp-ag-detalhe" };
 
   /* ── fetch ─────────────────────────────────────────────────── */
   async function _fetchBlocos() {
@@ -509,20 +511,21 @@ const ADM_ESP = (() => {
   }
 
   /* ── carrega dados da semana ─────────────────────────────── */
-  async function agendaLoad() {
+  // ctx (opcional): { grid, range, detalhe } — IDs dos containers de destino
+  async function agendaLoad(ctx) {
+    if (ctx) _agCtx = ctx;
     if (!_agSemana) _agSemana = _mondayOf(new Date());
 
     const ini = _agSemana;
     const fim = _addDays(ini, 6);
 
-    const rangeEl = document.getElementById("adm-esp-ag-range");
+    const rangeEl = document.getElementById(_agCtx.range);
     if (rangeEl) rangeEl.textContent = _fmtRangeLabel(ini, fim);
 
-    const grid = document.getElementById("adm-esp-ag-grid");
+    const grid = document.getElementById(_agCtx.grid);
     if (grid) grid.innerHTML = `<div style="padding:28px;text-align:center;color:var(--tx3);font-size:12px">Carregando…</div>`;
 
     try {
-      // garante que a lista de espaços está carregada
       if (!_lista.length) await _fetchEspacos();
 
       const r = await fetch(`${apiBaseUrl()}/rest/v1/rpc/espacos_agenda_admin`, {
@@ -551,7 +554,7 @@ const ADM_ESP = (() => {
 
   /* ── renderiza a grade panorâmica ────────────────────────── */
   function _agendaRender(ini, fim) {
-    const grid = document.getElementById("adm-esp-ag-grid");
+    const grid = document.getElementById(_agCtx.grid);
     if (!grid) return;
 
     // 7 dias da semana (Seg → Dom)
@@ -668,7 +671,7 @@ const ADM_ESP = (() => {
   function agDetalhe(el, dataJson) {
     document.querySelectorAll(".adm-esp-ag-detalhe-ativo").forEach(x => x.classList.remove("adm-esp-ag-detalhe-ativo"));
 
-    const panel = document.getElementById("adm-esp-ag-detalhe");
+    const panel = document.getElementById(_agCtx.detalhe);
     if (!panel) return;
 
     let ev;

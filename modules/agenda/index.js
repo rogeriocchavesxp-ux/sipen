@@ -4,7 +4,7 @@ VIEW_AUTOLOAD["agenda-calendario"]    = { fn: () => agCalCarregar() };
 VIEW_AUTOLOAD["agenda-confirmados"]   = { fn: () => agCarregarConfirmados() };
 VIEW_AUTOLOAD["agenda-recusados"]     = { tab:"AGENDA", id:"ag-rec-list",    filtro:{status:"cancelado"} };
 VIEW_AUTOLOAD["agenda-reagendamentos"]= { tab:"AGENDA", id:"ag-reag-list",   filtro:{status:"reagendado"} };
-VIEW_AUTOLOAD["agenda-ambientes"]     = null;
+VIEW_AUTOLOAD["agenda-ambientes"]     = { fn: () => ADM_ESP.agendaLoad({ grid: "ag-amb-grid", range: "ag-amb-range", detalhe: "ag-amb-detalhe" }) };
 VIEW_AUTOLOAD["agenda-solicitacoes"]  = { fn: () => carregarSolicitacoesAgenda() };
 VIEW_AUTOLOAD["agenda-conflitos"]     = null;
 VIEW_AUTOLOAD["agenda-historico"]     = null;
