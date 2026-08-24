@@ -1,13 +1,57 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Demandas
-   mobile/demandas.js · v1.2.1
+   mobile/demandas.js · v1.3.0
 ════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  mobRegisterPage('demandas',    renderLista);
-  mobRegisterPage('dem-detalhe', renderDetalhe);
+  mobRegisterPage('demandas',     renderLista);
+  mobRegisterPage('dem-detalhe',  renderDetalhe);
+  mobRegisterPage('nova-demanda', renderNovaDemanda);
+
+  /* ── Categorias (espelha chamado.html) ─────────────── */
+  const CATS = [
+    { nome:'Administração',        icon:'🏛', resp:'Departamento de Administração', subcats:[
+      { grupo:'Patrimônio e Bens',         itens:['Cadastro de patrimônio','Baixa de bem','Inventário','Cessão de uso','Avaliação de bem'] },
+      { grupo:'Contratos e Fornecedores',  itens:['Novo contrato','Renovação de contrato','Rescisão de contrato','Cadastro de fornecedor','Aditivo contratual'] },
+      { grupo:'Compras e Aquisições',      itens:['Solicitação de compra','Cotação de preço','Aprovação de despesa','Prestação de contas'] },
+      { grupo:'Recursos Humanos',          itens:['Cadastro de colaborador','Desligamento','Férias e afastamento','Benefícios','Voluntariado'] },
+      { grupo:'Controle de Acesso',        itens:['Uso do estacionamento','Controle de Acesso — Estacionamento','Controle de Acesso — Facial'] },
+      { grupo:'Planejamento e Documentos', itens:['Planejamento estratégico','Relatório administrativo','Documentação interna','Outros (Administração)'] },
+    ]},
+    { nome:'Manutenção',           icon:'🛠', resp:'Departamento de Manutenção', subcats:[
+      { grupo:'Infraestrutura Civil',     itens:['Elétrica','Hidráulica','Estrutural','Civil','Pintura','Marcenaria','Manutenção predial','Chaveiro'] },
+      { grupo:'Tecnologia',               itens:['Internet','Telefonia','Rede/Wi-Fi','Informática','Computadores','Impressoras'] },
+      { grupo:'Audiovisual',              itens:['Som','Projeção','Streaming/Transmissão','Equipamentos musicais'] },
+      { grupo:'Climatização e Segurança', itens:['Ar-condicionado','Câmeras','Alarmes','Portão eletrônico'] },
+      { grupo:'Conservação',              itens:['Iluminação','Jardinagem','Limpeza','Dedetização'] },
+      { grupo:'Geral',                    itens:['Equipamentos','Pequenos reparos'] },
+    ]},
+    { nome:'Limpeza e Organização',icon:'🧹', resp:'Equipe de Limpeza / Zeladoria',   subcats:['Limpeza geral','Limpeza pós-evento','Organização de espaços','Solicitação de materiais de limpeza'] },
+    { nome:'Pastoral',             icon:'✦',  resp:'Pastores / Liderança', subcats:[
+      { grupo:'Aconselhamento', itens:['Aconselhamento pastoral','Atendimento pastoral'] },
+      { grupo:'Visitas',        itens:['Visita hospitalar','Visita no Lar','Visita na Empresa','Visita Carcerária'] },
+    ]},
+    { nome:'Agendamentos',         icon:'📅', resp:'Secretaria / Liderança', subcats:[
+      { grupo:'Programação / Espaços', itens:['Culto','Reunião','Evento','Ensaio','Casamento','Aniversário','Congresso','Conferência','Outros'] },
+    ]},
+    { nome:'Secretaria',           icon:'📄', resp:'Secretaria / Conselho',   subcats:['Emissão de documentos','Elaboração de relatórios','Solicitação ao Conselho','Protocolos oficiais','Registro de atas/documentos'] },
+    { nome:'Oração',               icon:'🙏', resp:'Pastores / Liderança',    subcats:['Pedido de oração'] },
+    { nome:'Financeiro',           icon:'💰', resp:'Tesouraria / Financeiro', subcats:['Solicitação de pagamento','Reembolso','Prestação de contas','Solicitação de verba','Orçamento de despesas'] },
+    { nome:'Ação Social / Hebron', icon:'🤝', resp:'Hebron / Ação Social',    subcats:['Solicitação de ajuda','Projetos sociais','Distribuição de recursos','Cadastro em programas sociais'] },
+    { nome:'Comunicação',          icon:'📢', resp:'Ministério de Comunicação', subcats:[
+      { grupo:'Arte Digital', itens:['Banner e Redes Sociais','Arte para WhatsApp','Story / Reels','Apresentação e Slides','Material Impresso'] },
+      { grupo:'Produção AV',  itens:['Transmissão ao Vivo','Sonorização','Projeção','Iluminação Especial'] },
+      { grupo:'Geral',        itens:['Comunicação Geral'] },
+    ]},
+    { nome:'Conselho',             icon:'⚖️', resp:'Conselho Presbiterial', subcats:[
+      { grupo:'Recursos e Apelações',     itens:['Recurso de decisão','Apelação','Revisão de processo'] },
+      { grupo:'Audiências e Atendimento', itens:['Pedido de audiência com o Conselho','Atendimento pastoral especializado'] },
+      { grupo:'Fé e Disciplina',          itens:['Assunto de fé ou doutrina','Questão disciplinar','Restauração'] },
+      { grupo:'Comunicações Oficiais',    itens:['Sugestão ao Conselho','Comunicação oficial','Pedido de deliberação','Outros assuntos ao Conselho'] },
+    ]},
+  ];
 
   const STATUS_COR = {
     'Em Análise':   { bg:'rgba(212,166,67,.12)',  cl:'var(--gold)'   },
@@ -54,6 +98,15 @@
       <div id="dem-lista" class="mob-section">
         <div class="mob-card-list mob-loading-state">Carregando…</div>
       </div>
+      <!-- FAB +Nova -->
+      <button onclick="mobGo('nova-demanda',{title:'Nova Demanda'})"
+        style="position:fixed;bottom:calc(var(--tab-h) + var(--safe-bottom) + 16px);right:18px;
+               z-index:200;width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;
+               background:var(--blue);color:#fff;font-size:22px;font-weight:300;
+               display:flex;align-items:center;justify-content:center;
+               box-shadow:0 4px 16px rgba(10,132,255,.45)">
+        +
+      </button>
     `;
     await _carregarLista();
   }
@@ -436,6 +489,243 @@
     });
     if (error) throw error;
   }
+
+  /* ══════════════════════════════════════════════════
+     NOVA DEMANDA
+  ══════════════════════════════════════════════════ */
+  function renderNovaDemanda(el) {
+    el.innerHTML = `
+      <div style="padding:16px 16px 120px">
+
+        <!-- Área -->
+        <div class="mob-field">
+          <label class="mob-label">ÁREA / DEPARTAMENTO <span style="color:var(--rose)">*</span></label>
+          <select id="nd-area" class="mob-input" style="-webkit-appearance:auto;appearance:auto"
+                  onchange="_ndAreaChange()">
+            <option value="">Selecione a área</option>
+            ${[...CATS].sort((a,b) => a.nome === 'Administração' ? -1 : b.nome === 'Administração' ? 1 : a.nome.localeCompare(b.nome,'pt-BR'))
+              .map(c => `<option value="${_esc(c.nome)}">${_esc(c.icon + ' ' + c.nome)}</option>`).join('')}
+          </select>
+        </div>
+
+        <!-- Tipo de solicitação -->
+        <div class="mob-field" id="nd-wrap-tipo" style="display:none">
+          <label class="mob-label">TIPO DE SOLICITAÇÃO <span style="color:var(--rose)">*</span></label>
+          <select id="nd-tipo" class="mob-input" style="-webkit-appearance:auto;appearance:auto">
+            <option value="">Selecione</option>
+          </select>
+        </div>
+
+        <!-- Título -->
+        <div class="mob-field">
+          <label class="mob-label">TÍTULO <span style="color:var(--rose)">*</span></label>
+          <input id="nd-titulo" class="mob-input" type="text"
+                 placeholder="Descreva brevemente sua solicitação" maxlength="200">
+        </div>
+
+        <!-- Descrição -->
+        <div class="mob-field">
+          <label class="mob-label">DESCRIÇÃO DETALHADA <span style="color:var(--rose)">*</span></label>
+          <textarea id="nd-desc" class="mob-input" rows="4" style="resize:none"
+                    placeholder="Forneça todos os detalhes: quando ocorreu, urgência, contexto…"></textarea>
+        </div>
+
+        <!-- Localização -->
+        <div class="mob-field">
+          <label class="mob-label">LOCALIZAÇÃO <span style="color:var(--tx3);font-weight:400">(opcional)</span></label>
+          <input id="nd-local" class="mob-input" type="text"
+                 placeholder="Ex: Hall da Secretaria, Templo Principal, Sala 3…">
+        </div>
+
+        <!-- Bloco Financeiro (condicional) -->
+        <div id="nd-fin-bloco" style="display:none">
+          <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;
+                      letter-spacing:.06em;padding:16px 0 8px;border-top:1px solid var(--bd1);margin-top:8px">
+            Dados Financeiros
+          </div>
+
+          <div class="mob-field">
+            <label class="mob-label">TIPO</label>
+            <select id="nd-fin-tipo" class="mob-input" style="-webkit-appearance:auto;appearance:auto">
+              <option value="Pagamento">Pagamento</option>
+              <option value="Reembolso">Reembolso</option>
+              <option value="Adiantamento">Adiantamento</option>
+            </select>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="mob-field">
+              <label class="mob-label">VALOR (R$) <span style="color:var(--rose)">*</span></label>
+              <input id="nd-fin-valor" class="mob-input" type="text" inputmode="decimal" placeholder="0,00">
+            </div>
+            <div class="mob-field">
+              <label class="mob-label">VENCIMENTO</label>
+              <input id="nd-fin-venc" class="mob-input" type="date">
+            </div>
+          </div>
+
+          <div class="mob-field">
+            <label class="mob-label">BENEFICIÁRIO / FAVORECIDO <span style="color:var(--rose)">*</span></label>
+            <input id="nd-fin-benefic" class="mob-input" type="text" placeholder="Nome ou razão social">
+          </div>
+
+          <div class="mob-field">
+            <label class="mob-label">FORMA DE PAGAMENTO <span style="color:var(--rose)">*</span></label>
+            <select id="nd-fin-forma" class="mob-input" style="-webkit-appearance:auto;appearance:auto"
+                    onchange="_ndFormaChange()">
+              <option value="">Selecione</option>
+              ${['PIX','Boleto','Cartão de Crédito','Cartão de Débito','Dinheiro','Transferência Bancária','Débito em Conta','Cheque','Outro']
+                .map(f => `<option value="${f}">${f}</option>`).join('')}
+            </select>
+          </div>
+
+          <div class="mob-field" id="nd-wrap-pix" style="display:none">
+            <label class="mob-label">CHAVE PIX <span style="color:var(--rose)">*</span></label>
+            <input id="nd-fin-pix" class="mob-input" type="text"
+                   placeholder="CPF, e-mail, telefone ou chave aleatória">
+          </div>
+
+          <div class="mob-field">
+            <label class="mob-label">OBSERVAÇÕES FINANCEIRAS <span style="color:var(--tx3);font-weight:400">(opcional)</span></label>
+            <textarea id="nd-fin-obs" class="mob-input" rows="2" style="resize:none"
+                      placeholder="Informações adicionais para o pagamento"></textarea>
+          </div>
+        </div>
+
+        <!-- Erro -->
+        <div id="nd-err" style="font-size:13px;color:var(--rose);min-height:16px;margin-bottom:8px"></div>
+
+        <!-- Botão -->
+        <button id="nd-btn" class="mob-btn-primary" onclick="_ndEnviar()">
+          Enviar Demanda
+        </button>
+      </div>
+    `;
+  }
+
+  window._ndAreaChange = function () {
+    const area   = document.getElementById('nd-area')?.value || '';
+    const cat    = CATS.find(c => c.nome === area);
+    const wrapTipo = document.getElementById('nd-wrap-tipo');
+    const selTipo  = document.getElementById('nd-tipo');
+    const finBloco = document.getElementById('nd-fin-bloco');
+
+    // Subcategorias
+    if (cat && selTipo) {
+      const primeiro = cat.subcats[0];
+      if (primeiro && typeof primeiro === 'object' && primeiro.grupo) {
+        selTipo.innerHTML = `<option value="">Selecione</option>` +
+          cat.subcats.map(g =>
+            `<optgroup label="${_esc(g.grupo)}">${g.itens.map(s => `<option value="${_esc(s)}">${_esc(s)}</option>`).join('')}</optgroup>`
+          ).join('');
+      } else {
+        selTipo.innerHTML = `<option value="">Selecione</option>` +
+          cat.subcats.map(s => `<option value="${_esc(s)}">${_esc(s)}</option>`).join('');
+      }
+      if (wrapTipo) wrapTipo.style.display = '';
+    } else {
+      if (wrapTipo) wrapTipo.style.display = 'none';
+    }
+
+    // Bloco financeiro
+    if (finBloco) finBloco.style.display = area === 'Financeiro' ? '' : 'none';
+  };
+
+  window._ndFormaChange = function () {
+    const forma  = document.getElementById('nd-fin-forma')?.value || '';
+    const wrapPix = document.getElementById('nd-wrap-pix');
+    if (wrapPix) wrapPix.style.display = forma === 'PIX' ? '' : 'none';
+  };
+
+  window._ndEnviar = async function () {
+    const area   = document.getElementById('nd-area')?.value   || '';
+    const tipo   = document.getElementById('nd-tipo')?.value   || '';
+    const titulo = document.getElementById('nd-titulo')?.value?.trim() || '';
+    const desc   = document.getElementById('nd-desc')?.value?.trim()   || '';
+    const local  = document.getElementById('nd-local')?.value?.trim()  || null;
+    const errEl  = document.getElementById('nd-err');
+    const btn    = document.getElementById('nd-btn');
+
+    const err = (msg) => { if (errEl) errEl.textContent = msg; };
+    err('');
+
+    if (!area)   { err('Selecione a área de atendimento.');    return; }
+    if (!tipo)   { err('Selecione o tipo de solicitação.');    return; }
+    if (!titulo) { err('Informe o título da solicitação.');    return; }
+    if (!desc)   { err('Informe a descrição detalhada.');      return; }
+
+    // Validação financeira
+    let fd = null;
+    if (area === 'Financeiro') {
+      const valor   = document.getElementById('nd-fin-valor')?.value?.trim()   || '';
+      const benefic = document.getElementById('nd-fin-benefic')?.value?.trim() || '';
+      const forma   = document.getElementById('nd-fin-forma')?.value           || '';
+      const pix     = document.getElementById('nd-fin-pix')?.value?.trim()     || '';
+      const venc    = document.getElementById('nd-fin-venc')?.value            || null;
+      const finTipo = document.getElementById('nd-fin-tipo')?.value            || 'Pagamento';
+      const finObs  = document.getElementById('nd-fin-obs')?.value?.trim()     || '';
+
+      if (!valor)   { err('Informe o valor da solicitação financeira.');    return; }
+      if (!benefic) { err('Informe o beneficiário / favorecido.');          return; }
+      if (!forma)   { err('Selecione a forma de pagamento.');               return; }
+      if (forma === 'PIX' && !pix) { err('Informe a chave PIX.');           return; }
+
+      fd = {
+        tipo_fin:      finTipo,
+        valor:         parseFloat(valor.replace(',','.')),
+        beneficiario:  benefic,
+        forma_pagamento: forma,
+        chave_pix:     pix || null,
+        data_vencimento: venc || null,
+        obs_financeiro: finObs || null,
+      };
+    }
+
+    btn.disabled = true; btn.textContent = 'Enviando…';
+
+    try {
+      const nome  = window.MOB_USER?.nome || window.MOB_USER?.email || 'Usuário';
+      const cat   = CATS.find(c => c.nome === area);
+      const resp  = cat?.resp || 'Administração Geral';
+      const hoje  = new Date().toISOString().split('T')[0];
+      const newId = crypto.randomUUID();
+
+      const SB_URL = apiBaseUrl().replace('/rest/v1', '').replace('/rest', '');
+      const SB_KEY = apiHeaders()['apikey'] || apiHeaders()['Authorization']?.replace('Bearer ','') || '';
+
+      const res = await fetch(`${SB_URL}/functions/v1/chamado-publico`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY },
+        body: JSON.stringify({
+          id:              newId,
+          area,
+          subcategoria:    tipo,
+          titulo,
+          descricao:       desc,
+          local,
+          solicitante:     nome,
+          solicitante_txt: nome,
+          responsavel:     resp,
+          responsavel_txt: resp,
+          financial_data:  fd,
+          data_abertura:   hoje,
+          origem:          'mobile_interno',
+        }),
+      });
+
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        throw new Error(e.error || e.message || `Erro ${res.status}`);
+      }
+
+      mobToast('Demanda enviada com sucesso');
+      _cache = null;
+      mobGo('demandas', { title: 'Demandas' });
+    } catch (e) {
+      err(e.message || 'Erro ao enviar. Tente novamente.');
+      btn.disabled = false; btn.textContent = 'Enviar Demanda';
+    }
+  };
 
   /* ── Helpers ───────────────────────────────────────── */
   function _row(label, val) {
