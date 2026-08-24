@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Demandas
-   mobile/demandas.js · v1.3.0
+   mobile/demandas.js · v1.3.1
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -116,18 +116,10 @@
     if (!el) return;
 
     const f = FILTROS.find(x => x.key === _filtroAtivo) || FILTROS[0];
-    let url  = `${apiBaseUrl()}/rest/v1/demandas?${f.query}&select=id,titulo,status,area,prioridade,solicitante,criado_em&order=criado_em.desc&limit=60`;
-    if (f.query) url += '&';
-    else url += '?';
-    // trim trailing ?/&
-    url = url.replace(/[?&]$/, '');
 
-    // rebuild cleanly
-    const params = [];
-    if (f.query) params.push(f.query);
-    params.push('select=id,titulo,status,area,prioridade,solicitante,criado_em');
-    params.push('order=criado_em.desc');
-    params.push('limit=60');
+    // build cleanly
+    const params = ['select=id,titulo,status,area,prioridade,solicitante,criado_em','order=criado_em.desc','limit=60'];
+    if (f.query) params.unshift(f.query);
 
     try {
       const res  = await fetch(
@@ -749,15 +741,8 @@
   }
 
   function _catEmoji(area) {
-    const map = {
-      'Financeiro':'💰','Manutenção':'🛠','Comunicação e Divulgação':'📢',
-      'Secretaria':'📄','Agendamentos':'📅','Cadastro':'👥',
-      'Oração e Aconselhamento':'🙏','Visitação':'🏠','Apoio ao Culto':'🎶',
-      'Ensino (EBT)':'🎓','Ação Social / Hebron':'🤝','Administrativo Geral':'🧾',
-      'Logística':'🚚','Limpeza e Organização':'🧹','Conselho':'🏛',
-      'Eventos':'🎉',
-    };
-    return map[area] || '📋';
+    const cat = CATS.find(c => c.nome === area);
+    return cat ? cat.icon : '📋';
   }
 
   function _fmtTs(ts) {
