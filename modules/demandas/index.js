@@ -83,10 +83,10 @@
   };
 
   const PRIO_CFG = {
-    "Urgente": "var(--rose)",
-    "Alta":    "var(--rose)",
-    "Média":   "var(--amber)",
-    "Baixa":   "var(--gr)",
+    "Urgente": "#dc2626",
+    "Alta":    "#f97316",
+    "Média":   "#eab308",
+    "Baixa":   "#22c55e",
   };
 
   /* Nível mínimo para editar prioridade: adm_operacional (4) e acima */
@@ -4114,7 +4114,7 @@ function fmtD(d) {
         return;
       }
 
-      const PRIO_COR = {Urgente:'#ef4444',Alta:'#e97316',Média:'#d4a843',Baixa:'#2ab5c0'};
+      const PRIO_COR = {Urgente:'#dc2626',Alta:'#f97316',Média:'#eab308',Baixa:'#22c55e'};
       const ST_LBL   = {ABERTA:'Aberto',EM_ANALISE:'Em Análise',EM_ANDAMENTO:'Em Acompanhamento',PENDENTE:'Pendente',PROGRAMADA:'↩ Retorno',CONCLUIDA:'Resolvido',CANCELADA:'Arquivado'};
       const ST_BG    = {ABERTA:'rgba(239,68,68,.1)',EM_ANALISE:'rgba(212,168,67,.1)',EM_ANDAMENTO:'rgba(74,156,245,.1)',PROGRAMADA:'rgba(139,111,212,.12)',CONCLUIDA:'rgba(58,170,92,.1)',CANCELADA:'rgba(100,100,100,.1)'};
       const ST_CL    = {ABERTA:'#ef4444',EM_ANALISE:'#d4a843',EM_ANDAMENTO:'#4a9cf5',PROGRAMADA:'#8b6fd4',CONCLUIDA:'#3aaa5c',CANCELADA:'#888'};
@@ -4353,7 +4353,7 @@ function fmtD(d) {
     const fmtVal   = v => v?.valor!=null ? `R$ ${parseFloat(v.valor).toLocaleString("pt-BR",{minimumFractionDigits:2})}` : "—";
 
     const ST_COR  = {"Em Análise":"#f57f17","Em Andamento":"#6a1b9a","Concluída":"#2e7d32","Pago":"#2e7d32","Cancelada":"#555","Pendente":"#e65100","Aguardando Pagamento":"#f57f17"};
-    const PR_COR  = {"Urgente":"#c62828","Alta":"#c62828","Média":"#f57f17","Baixa":"#2e7d32"};
+    const PR_COR  = {"Urgente":"#dc2626","Alta":"#f97316","Média":"#eab308","Baixa":"#22c55e"};
 
     const linhas = rows.map((r, i) => {
       const label = _toLabel(r.status||"");

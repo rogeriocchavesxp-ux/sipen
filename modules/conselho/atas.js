@@ -37,10 +37,10 @@
   };
 
   const PRIO_CFG = {
-    "Urgente": "var(--rose)",
-    "Alta":    "var(--amber)",
-    "Média":   "var(--blue)",
-    "Baixa":   "var(--gr)",
+    "Urgente": "#dc2626",
+    "Alta":    "#f97316",
+    "Média":   "#eab308",
+    "Baixa":   "#22c55e",
   };
 
   /* ── Estado ─────────────────────────────────────────── */

@@ -164,7 +164,8 @@
 
   function _rowHtml(d) {
     const sc = STATUS_COR[d.status] || { bg:'var(--bg-hover)', cl:'var(--tx3)' };
-    const pr = d.prioridade === 'Urgente' || d.prioridade === 'Alta' ? `<span style="color:var(--rose);font-size:10px;font-weight:700"> ●</span>` : '';
+    const _PC = {Urgente:'#dc2626',Alta:'#f97316',Média:'#eab308',Baixa:'#22c55e'};
+    const pr = d.prioridade && d.prioridade !== 'Baixa' ? `<span style="color:${_PC[d.prioridade]||'#f97316'};font-size:10px;font-weight:700"> ●</span>` : '';
     return `
       <div class="mob-list-item" onclick="mobGo('dem-detalhe',{id:'${d.id}',title:'${_esc(d.titulo||'Demanda')}'})">
         <div class="mob-list-ico" style="background:${sc.bg};color:${sc.cl}">

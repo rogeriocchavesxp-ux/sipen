@@ -1384,7 +1384,7 @@
   const _CATS_ATE = ['Aconselhamento pastoral','Atendimento pastoral','Visita hospitalar','Visita no Lar','Visita na Empresa','Visita Carcerária'];
   const _ST_ABERTO = ['pendente','em_analise','em_andamento','Pendente','Em Análise','Em Andamento'];
   const _ST_FECHADO = ['concluida','pago','cancelada','Concluída','Pago','Cancelada','CONCLUIDA'];
-  const PRIO_COR = {Urgente:'var(--rose)',Alta:'var(--amber)',Média:'var(--sky)',Baixa:'var(--tx3)'};
+  const PRIO_COR = {Urgente:'#dc2626',Alta:'#f97316',Média:'#eab308',Baixa:'#22c55e'};
 
   function _rowHtml(r, extra){
     const cor = PRIO_COR[r.prioridade] || 'var(--teal)';
@@ -1540,7 +1540,7 @@
         listEl.innerHTML=`<div style="text-align:center;padding:48px 0"><div style="font-size:40px;margin-bottom:12px">📭</div><div style="color:var(--tx3);font-size:13px">Nenhum pedido pendente</div></div>`;
         return;
       }
-      const PRIO={Urgente:'var(--rose)',Alta:'var(--amber)',Média:'var(--sky)',Baixa:'var(--tx3)'};
+      const PRIO={Urgente:'#dc2626',Alta:'#f97316',Média:'#eab308',Baixa:'#22c55e'};
       listEl.innerHTML=rows.map(row=>{
         const dt=row.criado_em?new Date(row.criado_em).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'';
         const cor=PRIO[row.prioridade]||'var(--teal)';
