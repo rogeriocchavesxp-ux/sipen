@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Demandas
-   mobile/demandas.js · v1.3.2
+   mobile/demandas.js · v1.3.3
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -30,8 +30,38 @@
     ]},
     { nome:'Limpeza e Organização',icon:'🧹', resp:'Equipe de Limpeza / Zeladoria',   subcats:['Limpeza geral','Limpeza pós-evento','Organização de espaços','Solicitação de materiais de limpeza'] },
     { nome:'Pastoral',             icon:'✦',  resp:'Pastores / Liderança', subcats:[
-      { grupo:'Aconselhamento', itens:['Aconselhamento pastoral','Atendimento pastoral'] },
-      { grupo:'Visitas',        itens:['Visita hospitalar','Visita no Lar','Visita na Empresa','Visita Carcerária'] },
+      { grupo:'Aconselhamento e Atendimento', itens:[
+          'Aconselhamento pastoral',
+          'Atendimento no gabinete',
+          'Atendimento pastoral (urgência)',
+          'Pré-aconselhamento matrimonial',
+          'Acompanhamento espiritual',
+          'Acompanhamento de crise',
+          'Orientação familiar',
+      ]},
+      { grupo:'Visitas', itens:[
+          'Visita hospitalar',
+          'Visita no Lar',
+          'Visita a enlutados',
+          'Visita pós-nascimento',
+          'Visita na Empresa',
+          'Visita Carcerária',
+          'Visita a membros afastados',
+      ]},
+      { grupo:'Cerimônias', itens:[
+          'Batismo',
+          'Santa Ceia',
+          'Casamento',
+          'Funeral / Sepultamento',
+          'Dedicação de crianças',
+      ]},
+      { grupo:'Ensino e Discipulado', itens:[
+          'Estudo bíblico domiciliar',
+          'Discipulado individual',
+          'Preparação para membresia',
+          'Acompanhamento de novos membros',
+          'Estudo pré-batismal',
+      ]},
     ]},
     { nome:'Agendamentos',         icon:'📅', resp:'Secretaria / Liderança', subcats:[
       { grupo:'Programação / Espaços', itens:['Culto','Reunião','Evento','Ensaio','Casamento','Aniversário','Congresso','Conferência','Outros'] },
@@ -257,8 +287,31 @@
 
           <div class="mob-detail-card">
             <div class="mob-detail-card-title">Informações</div>
-            ${_row('Área', d.area)}
-            ${_row('Subcategoria', d.subcategoria)}
+
+            <!-- Área (editável) -->
+            <div class="mob-detail-row" style="align-items:center">
+              <div class="mob-detail-row-key">Área</div>
+              <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end;flex:1">
+                <div id="dem-area-val-${d.id}" class="mob-detail-row-val">${_esc(d.area || '—')}</div>
+                <button class="mob-btn-secondary" style="padding:4px 10px;font-size:12px;flex-shrink:0"
+                        onclick="_demAbrirAreaSheet('${d.id}','${_esc(d.area||'')}','${_esc(d.subcategoria||'')}')">
+                  Editar
+                </button>
+              </div>
+            </div>
+
+            <!-- Subcategoria (editável) -->
+            <div class="mob-detail-row" style="align-items:center">
+              <div class="mob-detail-row-key">Subcategoria</div>
+              <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end;flex:1">
+                <div id="dem-sub-val-${d.id}" class="mob-detail-row-val">${_esc(d.subcategoria || '—')}</div>
+                <button class="mob-btn-secondary" style="padding:4px 10px;font-size:12px;flex-shrink:0"
+                        onclick="_demAbrirSubSheet('${d.id}','${_esc(d.area||'')}','${_esc(d.subcategoria||'')}')">
+                  Editar
+                </button>
+              </div>
+            </div>
+
             ${_row('Solicitante', d.solicitante)}
             ${_row('Responsável', d.responsavel)}
             ${_row('Abertura', _fmtTs(d.criado_em))}
@@ -719,6 +772,137 @@
     } catch (e) {
       err(e.message || 'Erro ao enviar. Tente novamente.');
       btn.disabled = false; btn.textContent = 'Enviar Demanda';
+    }
+  };
+
+  /* ── Editar Área ────────────────────────────────────── */
+  window._demAbrirAreaSheet = function (demId, areaAtual, subAtual) {
+    const existing = document.getElementById('dem-area-sheet');
+    if (existing) existing.remove();
+
+    const sheet = document.createElement('div');
+    sheet.id = 'dem-area-sheet';
+    sheet.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end';
+
+    const opcoes = CATS.map(cat => {
+      const ativo = cat.nome === areaAtual;
+      return `
+        <button onclick="_demSelecionarArea('${demId}','${_esc(cat.nome)}','${_esc(subAtual)}')"
+          style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;
+                 background:${ativo ? 'var(--bg-hover)' : 'transparent'};
+                 border:none;border-bottom:1px solid var(--bd1);cursor:pointer;text-align:left">
+          <span style="font-size:18px">${cat.icon}</span>
+          <span style="font-size:15px;color:var(--tx1);font-weight:${ativo ? '700' : '400'}">${_esc(cat.nome)}</span>
+          ${ativo ? '<span style="margin-left:auto;color:var(--gr);font-size:14px">✓</span>' : ''}
+        </button>`;
+    }).join('');
+
+    sheet.innerHTML = `
+      <div onclick="document.getElementById('dem-area-sheet')?.remove()" style="flex:1;background:rgba(0,0,0,.35)"></div>
+      <div style="background:var(--bg-surface);border-radius:16px 16px 0 0;overflow-y:auto;max-height:70vh;padding-bottom:var(--safe-bottom)">
+        <div style="padding:16px;text-align:center;font-size:13px;font-weight:600;color:var(--tx2);
+                    border-bottom:1px solid var(--bd1)">Área / Departamento</div>
+        ${opcoes}
+        <button onclick="document.getElementById('dem-area-sheet')?.remove()"
+          style="width:100%;padding:15px;background:transparent;border:none;
+                 font-size:16px;color:var(--blue);font-weight:600;cursor:pointer">Cancelar</button>
+      </div>`;
+    document.body.appendChild(sheet);
+  };
+
+  window._demSelecionarArea = async function (demId, novaArea, subAnterior) {
+    document.getElementById('dem-area-sheet')?.remove();
+    try {
+      const sb = getSupabase();
+      const cat = CATS.find(c => c.nome === novaArea);
+      const payload = {
+        area: novaArea,
+        responsavel: cat?.resp || null,
+        subcategoria: null, // limpa subcategoria ao trocar área
+      };
+      const { error } = await sb.from('demandas').update(payload).eq('id', demId);
+      if (error) throw error;
+
+      const areaEl = document.getElementById(`dem-area-val-${demId}`);
+      const subEl  = document.getElementById(`dem-sub-val-${demId}`);
+      if (areaEl) areaEl.textContent = novaArea;
+      if (subEl)  subEl.textContent = '—';
+
+      mobToast('Área atualizada');
+    } catch (e) {
+      mobToast('Erro: ' + (e.message || 'falha ao atualizar'));
+    }
+  };
+
+  /* ── Editar Subcategoria ─────────────────────────────── */
+  window._demAbrirSubSheet = function (demId, area, subAtual) {
+    const existing = document.getElementById('dem-sub-sheet');
+    if (existing) existing.remove();
+
+    const cat = CATS.find(c => c.nome === area);
+    if (!cat) { mobToast('Selecione a área primeiro'); return; }
+
+    const sheet = document.createElement('div');
+    sheet.id = 'dem-sub-sheet';
+    sheet.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end';
+
+    let opcoes = '';
+    const primeiro = cat.subcats[0];
+    if (primeiro && typeof primeiro === 'object' && primeiro.grupo) {
+      cat.subcats.forEach(g => {
+        opcoes += `<div style="padding:8px 16px 2px;font-size:11px;font-weight:700;color:var(--tx3);
+                               text-transform:uppercase;letter-spacing:.06em">${_esc(g.grupo)}</div>`;
+        g.itens.forEach(s => {
+          const ativo = s === subAtual;
+          opcoes += `
+            <button onclick="_demSelecionarSub('${demId}','${_esc(s)}')"
+              style="display:flex;align-items:center;gap:10px;width:100%;padding:11px 16px;
+                     background:${ativo ? 'var(--bg-hover)' : 'transparent'};
+                     border:none;border-bottom:1px solid var(--bd1);cursor:pointer;text-align:left">
+              <span style="font-size:14px;color:var(--tx1);font-weight:${ativo ? '600' : '400'}">${_esc(s)}</span>
+              ${ativo ? '<span style="margin-left:auto;color:var(--gr);font-size:14px">✓</span>' : ''}
+            </button>`;
+        });
+      });
+    } else {
+      cat.subcats.forEach(s => {
+        const ativo = s === subAtual;
+        opcoes += `
+          <button onclick="_demSelecionarSub('${demId}','${_esc(s)}')"
+            style="display:flex;align-items:center;gap:10px;width:100%;padding:13px 16px;
+                   background:${ativo ? 'var(--bg-hover)' : 'transparent'};
+                   border:none;border-bottom:1px solid var(--bd1);cursor:pointer;text-align:left">
+            <span style="font-size:14px;color:var(--tx1);font-weight:${ativo ? '600' : '400'}">${_esc(s)}</span>
+            ${ativo ? '<span style="margin-left:auto;color:var(--gr);font-size:14px">✓</span>' : ''}
+          </button>`;
+      });
+    }
+
+    sheet.innerHTML = `
+      <div onclick="document.getElementById('dem-sub-sheet')?.remove()" style="flex:1;background:rgba(0,0,0,.35)"></div>
+      <div style="background:var(--bg-surface);border-radius:16px 16px 0 0;overflow-y:auto;max-height:75vh;padding-bottom:var(--safe-bottom)">
+        <div style="padding:16px;text-align:center;font-size:13px;font-weight:600;color:var(--tx2);
+                    border-bottom:1px solid var(--bd1)">Subcategoria — ${_esc(area)}</div>
+        ${opcoes}
+        <button onclick="document.getElementById('dem-sub-sheet')?.remove()"
+          style="width:100%;padding:15px;background:transparent;border:none;
+                 font-size:16px;color:var(--blue);font-weight:600;cursor:pointer">Cancelar</button>
+      </div>`;
+    document.body.appendChild(sheet);
+  };
+
+  window._demSelecionarSub = async function (demId, novaSub) {
+    document.getElementById('dem-sub-sheet')?.remove();
+    try {
+      const sb = getSupabase();
+      const { error } = await sb.from('demandas').update({ subcategoria: novaSub }).eq('id', demId);
+      if (error) throw error;
+
+      const el = document.getElementById(`dem-sub-val-${demId}`);
+      if (el) el.textContent = novaSub;
+      mobToast('Subcategoria atualizada');
+    } catch (e) {
+      mobToast('Erro: ' + (e.message || 'falha ao atualizar'));
     }
   };
 
