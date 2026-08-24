@@ -3960,8 +3960,8 @@ function fmtD(d) {
               <select id="cp-status" style="${_CP_INP}">
                 <option value="ABERTA">Aberto</option>
                 <option value="EM_ANDAMENTO">Em Acompanhamento</option>
+                <option value="PROGRAMADA">Aguardando Retorno</option>
                 <option value="CONCLUIDA">Resolvido</option>
-                <option value="PAGO">Pago</option>
                 <option value="CANCELADA">Arquivado</option>
               </select>
             </div>
@@ -3974,6 +3974,15 @@ function fmtD(d) {
             <div>
               <label style="${_CP_LB}">Data de Abertura</label>
               <input type="date" id="cp-data-abertura" style="${_CP_INP}">
+            </div>
+            <div>
+              <label style="${_CP_LB}">Recorrência</label>
+              <select id="cp-recorrencia" style="${_CP_INP}">
+                <option value="">Sem recorrência</option>
+                <option value="semanal">Semanal — reabre 3 dias antes</option>
+                <option value="quinzenal">Quinzenal — reabre 5 dias antes</option>
+                <option value="mensal">Mensal — reabre 7 dias antes</option>
+              </select>
             </div>
           </div>
           <div id="cp-err" style="color:var(--rose);font-size:12px;display:none"></div>
@@ -4001,6 +4010,8 @@ function fmtD(d) {
     document.getElementById('cp-prioridade').value     = dados?.prioridade     || 'Alta';
     document.getElementById('cp-status').value         = dados?.status         || 'ABERTA';
     document.getElementById('cp-data-abertura').value  = dados?.data_abertura  ? dados.data_abertura.slice(0,10)  : hoje;
+    const rcEl = document.getElementById('cp-recorrencia');
+    if (rcEl) rcEl.value = dados?.recorrencia || '';
     modal.style.display = 'flex';
   };
 
@@ -4017,15 +4028,31 @@ function fmtD(d) {
     btn.disabled = true; btn.textContent = 'Salvando...';
     errEl.style.display = 'none';
 
+    const recorrencia  = document.getElementById('cp-recorrencia')?.value || null;
+    const statusBase   = document.getElementById('cp-status').value || 'ABERTA';
+
+    // Ao resolver um caso com recorrência → programa o próximo retorno automaticamente
+    const _DIAS_REC = { semanal: 7, quinzenal: 14, mensal: 30 };
+    let finalStatus      = statusBase;
+    let proxima_abertura = null;
+    if (statusBase === 'CONCLUIDA' && recorrencia) {
+      const d = new Date();
+      d.setDate(d.getDate() + (_DIAS_REC[recorrencia] || 30));
+      proxima_abertura = d.toISOString().slice(0, 10);
+      finalStatus = 'PROGRAMADA';
+    }
+
     const payload = {
       titulo,
       solicitante,
-      descricao:      (document.getElementById('cp-descricao').value   || '').trim() || null,
-      responsavel:    (document.getElementById('cp-responsavel').value || '').trim() || null,
-      prioridade:     document.getElementById('cp-prioridade').value   || 'Alta',
-      status:         document.getElementById('cp-status').value       || 'ABERTA',
-      area:           'Pastoral',
-      data_abertura:  document.getElementById('cp-data-abertura').value  || null,
+      descricao:        (document.getElementById('cp-descricao').value   || '').trim() || null,
+      responsavel:      (document.getElementById('cp-responsavel').value || '').trim() || null,
+      prioridade:       document.getElementById('cp-prioridade').value   || 'Alta',
+      status:           finalStatus,
+      area:             'Pastoral',
+      data_abertura:    document.getElementById('cp-data-abertura').value || null,
+      recorrencia:      recorrencia || null,
+      proxima_abertura: proxima_abertura,
     };
 
     try {
@@ -4055,26 +4082,44 @@ function fmtD(d) {
     el.innerHTML = '<div style="color:var(--tx3);font-size:11.5px;padding:8px 0">Carregando...</div>';
     try {
       const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/demandas?area=eq.Pastoral&order=criado_em.desc` +
-        `&select=id,titulo,solicitante,descricao,prioridade,status,responsavel,data_abertura,data_conclusao`,
+        `${SUPABASE_URL}/rest/v1/demandas?area=eq.Pastoral` +
+        `&status=in.(ABERTA,EM_ANDAMENTO,EM_ANALISE,PENDENTE,PROGRAMADA)` +
+        `&order=proxima_abertura.asc.nullslast,prioridade.asc,criado_em.desc` +
+        `&select=id,titulo,solicitante,descricao,prioridade,status,responsavel,data_abertura,recorrencia,proxima_abertura`,
         { headers: apiHeaders() }
       );
       if (!r.ok) throw new Error(await r.text());
-      const lista = await r.json();
+      const todos = await r.json();
+
+      // Filtrar PROGRAMADA: mostrar apenas se estiver dentro da janela de antecedência
+      const ANTECEDENCIA = { semanal: 3, quinzenal: 5, mensal: 7 };
+      const hoje = new Date(); hoje.setHours(0,0,0,0);
+      const lista = todos.filter(c => {
+        if (c.status !== 'PROGRAMADA') return true;
+        if (!c.proxima_abertura) return false;
+        const prox = new Date(c.proxima_abertura + 'T00:00:00');
+        const antec = ANTECEDENCIA[c.recorrencia] || 7;
+        const janela = new Date(prox);
+        janela.setDate(prox.getDate() - antec);
+        return hoje >= janela; // aparece quando dentro da janela de antecedência
+      });
 
       if (lista.length === 0) {
         el.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--tx3)">
           <div style="font-size:28px;margin-bottom:8px">🚨</div>
-          <div style="font-size:12px;margin-bottom:12px">Nenhum caso prioritário registrado.</div>
+          <div style="font-size:12px;margin-bottom:12px">Nenhum caso prioritário ativo no momento.</div>
           <button onclick="abrirModalCasoPri()" style="background:var(--rose);border:none;border-radius:6px;padding:8px 16px;color:#fff;font-size:11.5px;font-weight:600;cursor:pointer">+ Novo Caso</button>
         </div>`;
         return;
       }
 
       const PRIO_COR = {Urgente:'#ef4444',Alta:'#e97316',Média:'#d4a843',Baixa:'#2ab5c0'};
-      const ST_LBL   = {ABERTA:'Aberto',EM_ANALISE:'Em Análise',EM_ANDAMENTO:'Em Acompanhamento',PENDENTE:'Pendente',CONCLUIDA:'Resolvido',PAGO:'Pago',CANCELADA:'Arquivado'};
-      const ST_BG    = {ABERTA:'rgba(239,68,68,.1)',EM_ANALISE:'rgba(212,168,67,.1)',EM_ANDAMENTO:'rgba(74,156,245,.1)',CONCLUIDA:'rgba(58,170,92,.1)',PAGO:'rgba(58,170,92,.1)',CANCELADA:'rgba(100,100,100,.1)'};
-      const ST_CL    = {ABERTA:'#ef4444',EM_ANALISE:'#d4a843',EM_ANDAMENTO:'#4a9cf5',CONCLUIDA:'#3aaa5c',PAGO:'#3aaa5c',CANCELADA:'#888'};
+      const ST_LBL   = {ABERTA:'Aberto',EM_ANALISE:'Em Análise',EM_ANDAMENTO:'Em Acompanhamento',PENDENTE:'Pendente',PROGRAMADA:'↩ Retorno',CONCLUIDA:'Resolvido',CANCELADA:'Arquivado'};
+      const ST_BG    = {ABERTA:'rgba(239,68,68,.1)',EM_ANALISE:'rgba(212,168,67,.1)',EM_ANDAMENTO:'rgba(74,156,245,.1)',PROGRAMADA:'rgba(139,111,212,.12)',CONCLUIDA:'rgba(58,170,92,.1)',CANCELADA:'rgba(100,100,100,.1)'};
+      const ST_CL    = {ABERTA:'#ef4444',EM_ANALISE:'#d4a843',EM_ANDAMENTO:'#4a9cf5',PROGRAMADA:'#8b6fd4',CONCLUIDA:'#3aaa5c',CANCELADA:'#888'};
+      const REC_LBL  = {semanal:'Semanal',quinzenal:'Quinzenal',mensal:'Mensal'};
+
+      function _fmtDt(iso){ return iso ? new Date(iso+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) : ''; }
 
       el.innerHTML = `
         <div style="overflow-x:auto">
@@ -4083,22 +4128,27 @@ function fmtD(d) {
               <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-weight:600;font-size:11px">Pessoa</th>
               <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-weight:600;font-size:11px">Motivo</th>
               <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-weight:600;font-size:11px">Status</th>
+              <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-weight:600;font-size:11px">Recorrência</th>
               <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-weight:600;font-size:11px">Responsável</th>
-              <th style="text-align:left;padding:8px 10px;color:var(--tx3);font-weight:600;font-size:11px">Abertura</th>
               <th style="padding:8px 10px"></th>
             </tr></thead>
             <tbody>${lista.map(c => {
-              const pCor  = PRIO_COR[c.prioridade] || '#888';
-              const stLbl = ST_LBL[c.status]        || c.status || '—';
-              const stBg  = ST_BG[c.status]          || 'rgba(100,100,100,.1)';
-              const stCl  = ST_CL[c.status]          || '#888';
-              const dtAb  = c.data_abertura ? c.data_abertura.slice(0,10) : '—';
-              return `<tr style="border-bottom:1px solid var(--bd1)">
-                <td style="padding:8px 10px;color:var(--tx1);font-weight:500">${nomePropio(c.solicitante) || "—"}</td>
-                <td style="padding:8px 10px;color:var(--tx2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(c.titulo || '')}">${escapeHtml(c.titulo || '—')}</td>
-                <td style="padding:8px 10px"><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${stBg};color:${stCl}">${escapeHtml(stLbl)}</span></td>
-                <td style="padding:8px 10px;color:var(--tx2)">${nomePropio(c.responsavel) || "—"}</td>
-                <td style="padding:8px 10px;color:var(--tx3);font-size:11px">${dtAb}</td>
+              const stLbl = ST_LBL[c.status]  || c.status || '—';
+              const stBg  = ST_BG[c.status]   || 'rgba(100,100,100,.1)';
+              const stCl  = ST_CL[c.status]   || '#888';
+              const isProg = c.status === 'PROGRAMADA';
+              const proxFmt = isProg && c.proxima_abertura ? _fmtDt(c.proxima_abertura) : '';
+              const rowBg = isProg ? 'background:rgba(139,111,212,0.04);' : '';
+              const recLbl = c.recorrencia ? REC_LBL[c.recorrencia] || c.recorrencia : '—';
+              return `<tr style="border-bottom:1px solid var(--bd1);${rowBg}">
+                <td style="padding:8px 10px;color:var(--tx1);font-weight:600">${nomePropio(c.solicitante) || '—'}</td>
+                <td style="padding:8px 10px;color:var(--tx2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(c.titulo || '')}">${escapeHtml(c.titulo || '—')}</td>
+                <td style="padding:8px 10px">
+                  <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${stBg};color:${stCl}">${escapeHtml(stLbl)}</span>
+                  ${proxFmt ? `<div style="font-size:10px;color:#8b6fd4;margin-top:2px">→ ${proxFmt}</div>` : ''}
+                </td>
+                <td style="padding:8px 10px;font-size:11px;color:${c.recorrencia?'var(--tx2)':'var(--tx3)'}">${recLbl}</td>
+                <td style="padding:8px 10px;color:var(--tx2)">${nomePropio(c.responsavel) || '—'}</td>
                 <td style="padding:8px 10px;text-align:right;white-space:nowrap">
                   <button onclick='abrirModalCasoPri(${JSON.stringify(c.id)},${safeJsonForHtml(c)})' style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:4px;color:var(--tx2);font-size:10px;padding:3px 8px;cursor:pointer;margin-right:4px">✏️</button>
                   <button onclick='_deletarCasoPri(${JSON.stringify(c.id)})' style="background:rgba(224,85,85,0.08);border:1px solid rgba(224,85,85,0.18);border-radius:4px;color:var(--rose);font-size:10px;padding:3px 8px;cursor:pointer">🗑</button>
