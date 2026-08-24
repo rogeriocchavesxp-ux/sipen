@@ -243,6 +243,20 @@ function openCrudForm(tab, preset = null) {
         </div>
       </div>`;
     }
+    if (tipo === "subcats-from-area") {
+      const area = preset?.area || "";
+      const cats = (typeof window !== "undefined" && window.DEMANDAS_CATS) || [];
+      const cat  = cats.find(c => c.nome === area);
+      if (cat) {
+        const subcats = cat.subcats || [];
+        const hasGrupos = subcats.length && typeof subcats[0] === "object" && subcats[0].grupo;
+        const optsHtml = hasGrupos
+          ? subcats.map(g => `<optgroup label="${escapeHtml(g.grupo)}">${g.itens.map(s=>`<option value="${escapeHtmlAttr(s)}" ${val===s?"selected":""}>${escapeHtml(s)}</option>`).join("")}</optgroup>`).join("")
+          : subcats.map(s => `<option value="${escapeHtmlAttr(s)}" ${val===s?"selected":""}>${escapeHtml(s)}</option>`).join("");
+        return `<div style="${spanStyle}">${label}<select data-field="${escapeHtmlAttr(f)}" style="${inputStyle}"><option value="">—</option>${optsHtml}</select></div>`;
+      }
+      return `<div style="${spanStyle}">${label}<input type="text" data-field="${escapeHtmlAttr(f)}" value="${escapeHtmlAttr(String(val))}" style="${inputStyle}"></div>`;
+    }
     if (tipo.startsWith("select:")) {
       const opts = tipo.replace("select:","").split(",").map(o => {
         const sep = o.indexOf("=");
