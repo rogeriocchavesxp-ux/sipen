@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Cultos / Frequência
-   mobile/cultos.js · v1.1.0
+   mobile/cultos.js · v1.1.1
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -64,7 +64,7 @@
 
     try {
       const res = await fetch(
-        `${apiBaseUrl()}/rest/v1/congregacao_cultos?${filter}&select=id,data,tipo,adultos,criancas,participantes,observacoes,cong_id&order=data.desc&limit=30`,
+        `${apiBaseUrl()}/rest/v1/congregacao_cultos?${filter}&select=id,data,tipo,adultos,criancas,participantes,obs,cong_id&order=data.desc&limit=30`,
         { headers: apiHeaders() }
       );
       const data = await res.json();
@@ -190,7 +190,7 @@
       <div class="mob-field">
         <label class="mob-label">OBSERVAÇÕES <span style="color:var(--tx3);font-weight:400">(opcional)</span></label>
         <textarea id="cult-f-obs" class="mob-input" rows="2" style="resize:none"
-                  placeholder="Destaques, visitantes, eventos…">${_esc(registro?.observacoes || '')}</textarea>
+                  placeholder="Destaques, visitantes, eventos…">${_esc(registro?.obs || '')}</textarea>
       </div>
 
       <div id="cult-f-err" style="font-size:13px;color:var(--rose);min-height:16px"></div>
@@ -227,7 +227,7 @@
         adultos:      adultos || null,
         criancas:     criancas || null,
         participantes: adultos + criancas,
-        observacoes:  obs,
+        obs,
       };
 
       const method = id ? 'PATCH' : 'POST';
