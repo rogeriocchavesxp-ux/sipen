@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Mais / Menu Completo
-   mobile/mais.js · v1.0.4
+   mobile/mais.js · v1.0.5
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -21,10 +21,11 @@
     {
       titulo: 'Pastoral',
       itens: [
-        { ico:'⛪', cor:'var(--violet)', bg:'var(--violetbg)',  label:'Congregações',  page:'congregacoes-mob' },
-        { ico:'🤝', cor:'var(--amber)',  bg:'var(--amberbg)',   label:'Pequenos Grupos',page:'pgs-mob'          },
-        { ico:'❤️', cor:'var(--rose)',   bg:'var(--rosebg)',    label:'Rede de Cuidado',page:'rede-mob'         },
-        { ico:'🎓', cor:'var(--gold)',   bg:'var(--goldbg)',    label:'Ensino',         page:'ensino-mob'        },
+        { ico:'⛪', cor:'var(--violet)', bg:'var(--violetbg)',  label:'Congregações',    page:'congregacoes-mob' },
+        { ico:'🙏', cor:'var(--violet)', bg:'var(--violetbg)',  label:'Frequência Cultos',page:'cultos-mob'      },
+        { ico:'🤝', cor:'var(--amber)',  bg:'var(--amberbg)',   label:'Pequenos Grupos', page:'pgs-mob'          },
+        { ico:'❤️', cor:'var(--rose)',   bg:'var(--rosebg)',    label:'Rede de Cuidado', page:'rede-mob'         },
+        { ico:'🎓', cor:'var(--gold)',   bg:'var(--goldbg)',    label:'Ensino',           page:'ensino-mob'      },
       ],
     },
     {
@@ -74,6 +75,7 @@
     'financeiro-mob':    'financeiro',
     'ministerios-mob':   'departamentos',
     'congregacoes-mob':  'congregacoes-mob',
+    'cultos-mob':        'cultos-mob',
   };
 
   window._maisGo = function (page) {
