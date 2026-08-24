@@ -189,7 +189,7 @@ serve(async (req) => {
           ${b.solicitante}, ${b.telefone},
           ${b.financial_data ? JSON.stringify(b.financial_data) : null}::jsonb,
           ${numero_chamado},
-          'Portal Público', 'Média', 'Aberta', CURRENT_DATE
+          ${b.origem || 'Portal Público'}, 'Média', 'Aberta', CURRENT_DATE
         )
       `
 
