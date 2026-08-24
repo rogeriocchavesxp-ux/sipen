@@ -105,6 +105,8 @@
     try {
       if (typeof USUARIO_ATUAL === "undefined" || !USUARIO_ATUAL) return true; // sem auth = dev mode
       if (USUARIO_ATUAL.perfil === "ADMINISTRADOR_GERAL") return true;
+      // Pastoral vê apenas area=Pastoral + suas próprias demandas — nunca tudo
+      if (USUARIO_ATUAL.perfil === "PASTORAL") return false;
       if (typeof PERFIS === "undefined") return false;
       /* PERFIS usa chaves minúsculas (lider_ministerio) mas USUARIO_ATUAL.perfil é maiúsculo */
       const chave = (USUARIO_ATUAL.perfil || "").toLowerCase();
@@ -363,6 +365,11 @@ function fmtD(d) {
         orParts.push(`solicitante_txt.ilike.*${encodeURIComponent(nomeU)}*`);
         orParts.push(`responsavel_txt.ilike.*${encodeURIComponent(nomeU)}*`);
       }
+      /* Pastores veem todas as demandas da área Pastoral */
+      if ((u.perfil || "").toUpperCase() === "PASTORAL") {
+        orParts.push(`area.eq.Pastoral`);
+      }
+
       /* Áreas vinculadas aos ministérios do usuário */
       mins.forEach(m => {
         orParts.push(`area.ilike.*${encodeURIComponent(m)}*`);
