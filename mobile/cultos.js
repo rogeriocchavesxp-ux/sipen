@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Cultos / Frequência
-   mobile/cultos.js · v1.1.1
+   mobile/cultos.js · v1.1.2
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -219,14 +219,17 @@
 
     btn.disabled = true; btn.textContent = 'Salvando…';
 
+    const ctrl    = new AbortController();
+    const timeout = setTimeout(() => ctrl.abort(), 15000);
+
     try {
       const payload = {
-        cong_id:      congId,
+        cong_id:       congId,
         tipo,
         data,
-        adultos:      adultos || null,
-        criancas:     criancas || null,
-        participantes: adultos + criancas,
+        adultos:       isNaN(adultos)  ? 0 : adultos,
+        criancas:      isNaN(criancas) ? 0 : criancas,
+        participantes: (isNaN(adultos) ? 0 : adultos) + (isNaN(criancas) ? 0 : criancas),
         obs,
       };
 
@@ -237,19 +240,27 @@
 
       const r = await fetch(url, {
         method,
+        signal: ctrl.signal,
         headers: { ...apiHeaders(), 'Content-Type': 'application/json', Prefer: 'return=minimal' },
         body: JSON.stringify(payload),
       });
 
-      if (!r.ok) throw new Error(`Erro ${r.status}`);
+      clearTimeout(timeout);
+
+      if (!r.ok) {
+        const detail = await r.text().catch(() => '');
+        throw new Error(`Erro ${r.status}${detail ? ': ' + detail : ''}`);
+      }
 
       _fecharSheet();
-      mobToast(id ? 'Registro atualizado' : 'Culto registrado');
+      if (typeof mobToast === 'function') mobToast(id ? 'Registro atualizado' : 'Culto registrado');
       _cache = null;
       await _carregarLista();
     } catch (e) {
-      err(e.message || 'Erro ao salvar.');
-      btn.disabled = false; btn.textContent = id ? 'Atualizar' : 'Registrar';
+      clearTimeout(timeout);
+      const msg = e.name === 'AbortError' ? 'Tempo esgotado. Verifique a conexão.' : (e.message || 'Erro ao salvar.');
+      err(msg);
+      if (btn) { btn.disabled = false; btn.textContent = id ? 'Atualizar' : 'Registrar'; }
     }
   };
 
