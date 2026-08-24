@@ -245,6 +245,7 @@ body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  background: var(--bg-body);
 }
 
 /* ── Bottom Tab Bar ──────────────────────────────────────── */

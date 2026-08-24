@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Demandas
-   mobile/demandas.js · v1.3.1
+   mobile/demandas.js · v1.3.2
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -83,20 +83,22 @@
   async function renderLista(el) {
     _cache = null;
     el.innerHTML = `
-      <div class="mob-search-wrap">
-        <input class="mob-search" type="search" placeholder="Buscar demandas…"
-               value="${_esc(_busca)}"
-               oninput="_demBusca(this.value)"
-               onsearch="_demBusca(this.value)">
-      </div>
-      <div class="mob-chips" id="dem-chips">
-        ${FILTROS.map(f => `
-          <button class="mob-chip ${f.key===_filtroAtivo?'active':''}"
-                  onclick="_demFiltro('${f.key}')">${f.label}</button>
-        `).join('')}
-      </div>
-      <div id="dem-lista" class="mob-section">
-        <div class="mob-card-list mob-loading-state">Carregando…</div>
+      <div style="padding-bottom:80px">
+        <div class="mob-search-wrap">
+          <input class="mob-search" type="search" placeholder="Buscar demandas…"
+                 value="${_esc(_busca)}"
+                 oninput="_demBusca(this.value)"
+                 onsearch="_demBusca(this.value)">
+        </div>
+        <div class="mob-chips" id="dem-chips">
+          ${FILTROS.map(f => `
+            <button class="mob-chip ${f.key===_filtroAtivo?'active':''}"
+                    onclick="_demFiltro('${f.key}')">${f.label}</button>
+          `).join('')}
+        </div>
+        <div id="dem-lista" class="mob-section">
+          <div class="mob-card-list mob-loading-state">Carregando…</div>
+        </div>
       </div>
       <!-- FAB +Nova -->
       <button onclick="mobGo('nova-demanda',{title:'Nova Demanda'})"
