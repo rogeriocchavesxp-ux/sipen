@@ -1411,12 +1411,12 @@
     try {
       const cats = _CATS_ATE.map(c=>`"${c}"`).join(',');
       const r = await fetch(
-        `${apiBaseUrl()}/rest/v1/demandas?area=eq.Pastoral&categoria=in.(${_CATS_ATE.map(c=>encodeURIComponent(c)).join(',')})&status=not.in.(concluida,pago,cancelada,Conclu%C3%ADda,Pago,Cancelada)&order=criado_em.desc&limit=60`,
+        `${apiBaseUrl()}/rest/v1/demandas?area=eq.Pastoral&subcategoria=in.(${_CATS_ATE.map(c=>encodeURIComponent(c)).join(',')})&status=not.in.(concluida,pago,cancelada,Conclu%C3%ADda,Pago,Cancelada)&order=criado_em.desc&limit=60`,
         {headers: apiHeaders()}
       );
       const rows = r.ok ? await r.json() : [];
       if(!rows.length){ el.innerHTML = _empty('Nenhum atendimento pendente'); return; }
-      el.innerHTML = rows.map(r=>_rowHtml(r, r.categoria ? ` · ${r.categoria}` : '')).join('');
+      el.innerHTML = rows.map(r=>_rowHtml(r, r.subcategoria ? ` · ${r.subcategoria}` : '')).join('');
     } catch(e){
       el.innerHTML = `<div style="color:var(--rose);font-size:12px">Erro: ${e.message}</div>`;
     }
@@ -1510,7 +1510,7 @@
 
   async function _pmobLoadBadges(){
     try {
-      const r=await fetch(`${apiBaseUrl()}/rest/v1/demandas?select=id&area=eq.Pastoral&categoria=eq.Aconselhamento pastoral&status=not.in.(Concluída,Pago,Cancelada,concluida,pago,cancelada)&limit=99`,{headers:apiHeaders()});
+      const r=await fetch(`${apiBaseUrl()}/rest/v1/demandas?select=id&area=eq.Pastoral&subcategoria=eq.Aconselhamento pastoral&status=not.in.(Concluída,Pago,Cancelada,concluida,pago,cancelada)&limit=99`,{headers:apiHeaders()});
       if(r.ok){const d=await r.json();const b=document.getElementById('pmob-badge-aco');if(b)b.textContent=Array.isArray(d)?d.length:'—';}
     }catch(e){}
     try {
@@ -1533,7 +1533,7 @@
       </div>`;
 
     try {
-      const r=await fetch(`${apiBaseUrl()}/rest/v1/demandas?area=eq.Pastoral&categoria=eq.Aconselhamento pastoral&status=not.in.(Concluída,Pago,Cancelada,concluida,pago,cancelada)&order=criado_em.desc&limit=40`,{headers:apiHeaders()});
+      const r=await fetch(`${apiBaseUrl()}/rest/v1/demandas?area=eq.Pastoral&subcategoria=eq.Aconselhamento pastoral&status=not.in.(Concluída,Pago,Cancelada,concluida,pago,cancelada)&order=criado_em.desc&limit=40`,{headers:apiHeaders()});
       const rows=r.ok?await r.json():[];
       const listEl=document.getElementById('pmob-aco-list'); if(!listEl) return;
       if(!rows.length){
