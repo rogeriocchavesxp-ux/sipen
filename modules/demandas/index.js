@@ -3506,7 +3506,7 @@ function fmtD(d) {
       descricao:      (desc || "") + agend_extra,
       local,
       local_id,
-      prioridade:     "Média",
+      prioridade:     "Baixa",
       status:         "ABERTA",
       solicitante:    sol || "",
       solicitante_id: solId || pessoaId,
@@ -4083,6 +4083,7 @@ function fmtD(d) {
     try {
       const r = await fetch(
         `${SUPABASE_URL}/rest/v1/demandas?area=eq.Pastoral` +
+        `&categoria=is.null` +
         `&status=in.(ABERTA,EM_ANDAMENTO,EM_ANALISE,PENDENTE,PROGRAMADA)` +
         `&order=proxima_abertura.asc.nullslast,prioridade.asc,criado_em.desc` +
         `&select=id,titulo,solicitante,descricao,prioridade,status,responsavel,data_abertura,recorrencia,proxima_abertura`,
