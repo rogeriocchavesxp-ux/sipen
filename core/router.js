@@ -326,6 +326,12 @@ async function go(id){
     const chatHdr=document.querySelector("#mw-com .mhdr");
     if(chatSub&&!chatSub.classList.contains("open")){chatSub.classList.add("open");if(chatHdr)chatHdr.classList.add("open");}
   }
+  // pastoral-* abre ms-pastoral
+  if(mod==="pastoral"){
+    const pasSub=document.getElementById("ms-pastoral");
+    const pasHdr=document.querySelector("#mw-pastoral .mhdr");
+    if(pasSub&&!pasSub.classList.contains("open")){pasSub.classList.add("open");if(pasHdr)pasHdr.classList.add("open");}
+  }
   // config-* e wa-* estão dentro de Sistema — garante que ms-sys está aberto
   if(mod==="config"||mod==="wa"){
     const sysSub=document.getElementById("ms-sys");
