@@ -81,7 +81,7 @@
   <!-- ════ MINISTERIAL ══════════════════════ -->
 
   <div class="view" id="v-pastoral-demandas">
-    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🙏</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Demandas Pastorais</div><div class="hero-dsc">Demandas direcionadas ao módulo Pastoral</div></div><div class="hero-act"></div></div>
+    <div class="hero"><div class="hero-ic" style="background:rgba(212,168,67,0.12)">🙏</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Demandas Pastorais</div><div class="hero-dsc">Todas as solicitações pastorais recebidas — visão geral e histórico completo</div></div><div class="hero-act"></div></div>
     <div class="bnav" style="--mc:var(--teal)">
       <div class="bni" onclick="go('pastoral-ate')">Atendimentos</div>
       <div class="bni" onclick="go('pastoral-ora')">Oração</div>
@@ -152,7 +152,7 @@
   <!-- JURÍDICO: SOLICITAÇÕES E DEMANDAS (com abas) -->
 
   <div class="view" id="v-pastoral-ate">
-    <div class="hero"><div class="hero-ic" style="background:var(--tealbg)">🤝</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Atendimentos</div><div class="hero-dsc">Registro de atendimentos pastorais</div></div><div class="hero-act"></div></div>
+    <div class="hero"><div class="hero-ic" style="background:var(--tealbg)">🤝</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Atendimentos</div><div class="hero-dsc">Pedidos pontuais de aconselhamento e atendimento pastoral — cada caso tem início e fim</div></div><div class="hero-act"></div></div>
     <div class="bnav" style="--mc:var(--teal)">
       <div class="bni" onclick="go('pastoral-ate')">Atendimentos</div>
       <div class="bni" onclick="go('pastoral-ora')">Oração</div>
@@ -161,7 +161,7 @@
       <div class="bni" onclick="go('pastoral-rede')">Rede de Cuidado</div>
       <div class="bni" onclick="go('pastoral-demandas')">Demandas</div>
     </div>
-    <div class="ct"><div class="card"><div class="ctit">Atendimentos <span class="cact" onclick="listarModulo('DEMANDAS','pastoral-ate-list',{area:'Pastoral'})">↻</span></div><div id="pastoral-ate-list"><div style="color:var(--tx3)">Carregando...</div></div></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Pedidos Pendentes <span class="cact" onclick="_pasLoadAtendimentos()">↻ Atualizar</span></div><div id="pastoral-ate-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-pastoral-ora">
@@ -178,7 +178,7 @@
   </div>
 
   <div class="view" id="v-pastoral-aco">
-    <div class="hero"><div class="hero-ic" style="background:var(--tealbg)">👣</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Acompanhamentos</div></div><div class="hero-act"><button class="tbt pri" onclick="openCrudForm('MEMBROS')">+ Novo</button></div></div>
+    <div class="hero"><div class="hero-ic" style="background:var(--tealbg)">👣</div><div><div class="hero-lbl">Pastoral</div><div class="hero-ttl">Acompanhamentos</div><div class="hero-dsc">Casos com frequência de retorno configurada — reaparecem automaticamente na data certa</div></div><div class="hero-act"></div></div>
     <div class="bnav" style="--mc:var(--teal)">
       <div class="bni" onclick="go('pastoral-ate')">Atendimentos</div>
       <div class="bni" onclick="go('pastoral-ora')">Oração</div>
@@ -187,7 +187,7 @@
       <div class="bni" onclick="go('pastoral-rede')">Rede de Cuidado</div>
       <div class="bni" onclick="go('pastoral-demandas')">Demandas</div>
     </div>
-    <div class="ct"><div class="card"><div class="ctit">Membros em Acompanhamento</div><div id="pastoral-aco-list"><div style="text-align:center;padding:48px 0;color:var(--tx3);font-size:13px">Nenhum membro em acompanhamento ativo</div></div></div></div>
+    <div class="ct"><div class="card"><div class="ctit">Casos Recorrentes <span class="cact" onclick="_pasLoadAcompanhamentos()">↻ Atualizar</span></div><div id="pastoral-aco-list"><div style="color:var(--tx3);font-size:11.5px">Carregando...</div></div></div></div>
   </div>
 
   <div class="view" id="v-pastoral-reg">

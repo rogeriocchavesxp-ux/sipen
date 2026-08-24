@@ -1376,6 +1376,85 @@
 })();
 
 /* ═══════════════════════════════════════════════════════════════
+   PASTORAL — Atendimentos e Acompanhamentos v1.0
+   Atendimentos: pedidos pontuais (aconselhamento/atendimento)
+   Acompanhamentos: casos com recorrência configurada
+═══════════════════════════════════════════════════════════════ */
+(function(){
+  const _CATS_ATE = ['Aconselhamento pastoral','Atendimento pastoral','Visita hospitalar','Visita no Lar','Visita na Empresa','Visita Carcerária'];
+  const _ST_ABERTO = ['pendente','em_analise','em_andamento','Pendente','Em Análise','Em Andamento'];
+  const _ST_FECHADO = ['concluida','pago','cancelada','Concluída','Pago','Cancelada','CONCLUIDA'];
+  const PRIO_COR = {Urgente:'var(--rose)',Alta:'var(--amber)',Média:'var(--sky)',Baixa:'var(--tx3)'};
+
+  function _rowHtml(r, extra){
+    const cor = PRIO_COR[r.prioridade] || 'var(--teal)';
+    const dt  = r.criado_em ? new Date(r.criado_em).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) : '';
+    const nome = r.solicitante_nome || r.nome_solicitante || r.nome || '—';
+    return `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd1)">
+      <div style="width:3px;min-height:38px;border-radius:2px;background:${cor};flex-shrink:0;margin-top:2px"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--tx1)">${r.titulo||r.categoria||'Sem título'}</div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:2px">${nome}${dt?' · '+dt:''}${extra||''}</div>
+      </div>
+      ${r.prioridade?`<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;background:${cor}22;color:${cor};flex-shrink:0">${r.prioridade}</span>`:''}
+    </div>`;
+  }
+
+  function _empty(msg){
+    return `<div style="text-align:center;padding:48px 0"><div style="font-size:36px;margin-bottom:10px">📭</div><div style="color:var(--tx3);font-size:13px">${msg}</div></div>`;
+  }
+
+  async function _pasLoadAtendimentos(){
+    const el = document.getElementById('pastoral-ate-list');
+    if(!el) return;
+    el.innerHTML = '<div style="color:var(--tx3);font-size:11.5px">Carregando...</div>';
+    try {
+      const cats = _CATS_ATE.map(c=>`"${c}"`).join(',');
+      const r = await fetch(
+        `${apiBaseUrl()}/rest/v1/demandas?area=eq.Pastoral&categoria=in.(${_CATS_ATE.map(c=>encodeURIComponent(c)).join(',')})&status=not.in.(concluida,pago,cancelada,Conclu%C3%ADda,Pago,Cancelada)&order=criado_em.desc&limit=60`,
+        {headers: apiHeaders()}
+      );
+      const rows = r.ok ? await r.json() : [];
+      if(!rows.length){ el.innerHTML = _empty('Nenhum atendimento pendente'); return; }
+      el.innerHTML = rows.map(r=>_rowHtml(r, r.categoria ? ` · ${r.categoria}` : '')).join('');
+    } catch(e){
+      el.innerHTML = `<div style="color:var(--rose);font-size:12px">Erro: ${e.message}</div>`;
+    }
+  }
+
+  async function _pasLoadAcompanhamentos(){
+    const el = document.getElementById('pastoral-aco-list');
+    if(!el) return;
+    el.innerHTML = '<div style="color:var(--tx3);font-size:11.5px">Carregando...</div>';
+    try {
+      const r = await fetch(
+        `${apiBaseUrl()}/rest/v1/demandas?area=eq.Pastoral&recorrencia=not.is.null&order=proxima_abertura.asc.nullslast&limit=60`,
+        {headers: apiHeaders()}
+      );
+      const rows = r.ok ? await r.json() : [];
+      if(!rows.length){ el.innerHTML = _empty('Nenhum caso com recorrência configurada'); return; }
+      const hoje = new Date().toISOString().slice(0,10);
+      el.innerHTML = rows.map(r=>{
+        const rec = r.recorrencia ? ` · ${r.recorrencia}` : '';
+        const prox = r.proxima_abertura ? ` · Retorno: ${new Date(r.proxima_abertura+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}` : '';
+        const vencido = r.proxima_abertura && r.proxima_abertura <= hoje ? ' ⚠' : '';
+        return _rowHtml(r, rec + prox + vencido);
+      }).join('');
+    } catch(e){
+      el.innerHTML = `<div style="color:var(--rose);font-size:12px">Erro: ${e.message}</div>`;
+    }
+  }
+
+  window._pasLoadAtendimentos    = _pasLoadAtendimentos;
+  window._pasLoadAcompanhamentos = _pasLoadAcompanhamentos;
+
+  if(typeof VIEW_AUTOLOAD !== 'undefined'){
+    VIEW_AUTOLOAD['pastoral-ate'] = {fn: _pasLoadAtendimentos};
+    VIEW_AUTOLOAD['pastoral-aco'] = {fn: _pasLoadAcompanhamentos};
+  }
+})();
+
+/* ═══════════════════════════════════════════════════════════════
    PASTORAL MOBILE v1.0
    Hub móvel: Aconselhamento, Prioritários, Lançar Frequência
 ═══════════════════════════════════════════════════════════════ */
