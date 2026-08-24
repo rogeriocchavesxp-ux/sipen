@@ -126,7 +126,7 @@
       </div>
     </div>
   </footer>
-  <div class="sipen-ver">SIPEN&nbsp;v6.83.1</div></div>
+  <div class="sipen-ver">SIPEN&nbsp;v6.84.0</div></div>
 </main>
 
 <!-- ── Drawer Área do Membro (desktop) ──────────────────────────── -->
@@ -174,7 +174,7 @@
 <script src="modules/admin/espacos.js?v=6.83.0"></script>
 <script src="core/registry.js?v=1.0.1"></script>
 <script src="core/auth.js?v=6.49.31"></script>
-<script src="modules/pastoral/index.js?v=6.47.3"></script>
+<script src="modules/pastoral/index.js?v=6.48.0"></script>
 <script src="core/init.js?v=6.80.10"></script>
 
 <!-- módulos de feature -->
@@ -286,6 +286,41 @@
     <span class="area-tab-ico">💰</span>
   </button>
 </div>
+
+<!-- ════ Mobile Bottom Navigation ════════════════════════════ -->
+<nav id="mob-bottom-nav" class="mob-bnav" aria-label="Navegação mobile">
+  <button class="mob-bnav-btn" id="mobbtn-home" onclick="_mobSetActive('mobbtn-home');go('dash')" aria-label="Início">
+    <span class="mob-bnav-icon">⌂</span>
+    <span>Início</span>
+  </button>
+  <button class="mob-bnav-btn" id="mobbtn-demandas" onclick="_mobSetActive('mobbtn-demandas');go('dem-todas')" aria-label="Demandas">
+    <span class="mob-bnav-icon">📋</span>
+    <span>Demandas</span>
+  </button>
+  <button class="mob-bnav-btn mob-bnav-pastoral" id="mobbtn-pastoral" onclick="_mobSetActive('mobbtn-pastoral');go('pastoral-mob')" aria-label="Pastoral" style="display:none">
+    <span class="mob-bnav-icon">✦</span>
+    <span>Pastoral</span>
+  </button>
+  <button class="mob-bnav-btn" id="mobbtn-eu" onclick="_mobSetActive('mobbtn-eu');go('area-membro')" aria-label="Meu acesso">
+    <span class="mob-bnav-icon">👤</span>
+    <span>Eu</span>
+  </button>
+</nav>
+<script>
+function _mobSetActive(id){
+  document.querySelectorAll('.mob-bnav-btn').forEach(function(b){b.classList.remove('active');});
+  var b=document.getElementById(id); if(b) b.classList.add('active');
+}
+(function _mobInit(){
+  function _show(){
+    if(typeof can==='function'&&can('PASTORAL')){
+      var b=document.getElementById('mobbtn-pastoral'); if(b) b.style.display='';
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){setTimeout(_show,600);});
+  else setTimeout(_show,600);
+})();
+</script>
 
 </body>
 </html>

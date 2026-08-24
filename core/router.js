@@ -99,6 +99,8 @@ const CRUMB={
   "pastoral-aco":["Pastoral","Acompanhamentos",""],
   "pastoral-reg":["Pastoral","Registros Pastorais",""],
   "pastoral-pri":["Pastoral","Casos Prioritários",""],
+  "pastoral-mob":["Pastoral","Acesso Pastoral","/ aconselhamento, prioritários e frequência"],
+  "pastoral-mob-aco":["Pastoral","Aconselhamento","/ pedidos pendentes"],
   "min-dash":["Departamentos","Dashboard","/ visão geral dos departamentos"],
   "min-min":["Departamentos","Ministérios","/ grupos ministeriais"],
   "min-soc":["Departamentos","Sociedades Internas","/ UPH, SAF, UMP, UPA, UCP"],

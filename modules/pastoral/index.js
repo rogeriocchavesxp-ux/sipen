@@ -1374,3 +1374,198 @@
   }
 
 })();
+
+/* ═══════════════════════════════════════════════════════════════
+   PASTORAL MOBILE v1.0
+   Hub móvel: Aconselhamento, Prioritários, Lançar Frequência
+═══════════════════════════════════════════════════════════════ */
+(function(){
+
+  function _iso(d){ return d.toISOString().slice(0,10); }
+
+  /* ── Hub principal ───────────────────────────────────────────── */
+  function _renderHub(){
+    const el=document.getElementById('v-pastoral-mob'); if(!el) return;
+    const hoje=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+    el.innerHTML=`
+      <div style="padding:20px 16px 32px">
+        <div style="font-size:22px;font-weight:800;color:var(--tx1);margin-bottom:3px">Pastoral</div>
+        <div style="font-size:12px;color:var(--tx3);margin-bottom:28px;text-transform:capitalize">${hoje}</div>
+
+        <div id="pmob-card-aco" onclick="go('pastoral-mob-aco')" style="display:flex;align-items:center;gap:14px;padding:17px 15px;background:var(--bg-card);border:1px solid var(--bd1);border-radius:12px;margin-bottom:11px;cursor:pointer">
+          <div style="width:48px;height:48px;border-radius:12px;background:rgba(58,176,184,0.12);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📩</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:15px;font-weight:700;color:var(--tx1)">Aconselhamento</div>
+            <div style="font-size:12px;color:var(--tx3);margin-top:2px">Pedidos aguardando atenção</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div id="pmob-badge-aco" style="font-size:18px;font-weight:800;color:var(--teal);line-height:1">—</div>
+            <div style="font-size:9px;color:var(--tx3);margin-top:2px">pendentes</div>
+          </div>
+        </div>
+
+        <div onclick="go('pastoral-pri')" style="display:flex;align-items:center;gap:14px;padding:17px 15px;background:var(--bg-card);border:1px solid var(--bd1);border-radius:12px;margin-bottom:11px;cursor:pointer">
+          <div style="width:48px;height:48px;border-radius:12px;background:rgba(208,104,104,0.12);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🚨</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:15px;font-weight:700;color:var(--tx1)">Atendimentos Prioritários</div>
+            <div style="font-size:12px;color:var(--tx3);margin-top:2px">Casos urgentes e de alta prioridade</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div id="pmob-badge-pri" style="font-size:18px;font-weight:800;color:var(--rose);line-height:1">—</div>
+            <div style="font-size:9px;color:var(--tx3);margin-top:2px">ativos</div>
+          </div>
+        </div>
+
+        <div onclick="_pmobAbrirFreq()" style="display:flex;align-items:center;gap:14px;padding:17px 15px;background:var(--bg-card);border:1px solid var(--bd1);border-radius:12px;margin-bottom:11px;cursor:pointer">
+          <div style="width:48px;height:48px;border-radius:12px;background:rgba(58,170,92,0.12);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📋</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:15px;font-weight:700;color:var(--tx1)">Lançar Frequência</div>
+            <div style="font-size:12px;color:var(--tx3);margin-top:2px">Registrar presença nos cultos</div>
+          </div>
+          <div style="font-size:22px;color:var(--tx3);line-height:1">›</div>
+        </div>
+      </div>`;
+
+    _pmobLoadBadges();
+  }
+
+  async function _pmobLoadBadges(){
+    try {
+      const r=await fetch(`${apiBaseUrl()}/rest/v1/demandas?select=id&area=eq.Pastoral&categoria=eq.Aconselhamento pastoral&status=not.in.(Concluída,Pago,Cancelada,concluida,pago,cancelada)&limit=99`,{headers:apiHeaders()});
+      if(r.ok){const d=await r.json();const b=document.getElementById('pmob-badge-aco');if(b)b.textContent=Array.isArray(d)?d.length:'—';}
+    }catch(e){}
+    try {
+      const r=await fetch(`${apiBaseUrl()}/rest/v1/demandas?select=id&area=eq.Pastoral&prioridade=in.(Urgente,Alta)&status=not.in.(Concluída,Pago,Cancelada,concluida,pago,cancelada)&limit=99`,{headers:apiHeaders()});
+      if(r.ok){const d=await r.json();const b=document.getElementById('pmob-badge-pri');if(b)b.textContent=Array.isArray(d)?d.length:'—';}
+    }catch(e){}
+  }
+
+  /* ── Aconselhamento — lista mobile ───────────────────────────── */
+  async function _renderMobAco(){
+    const el=document.getElementById('v-pastoral-mob-aco'); if(!el) return;
+    el.innerHTML=`
+      <div style="display:flex;align-items:center;gap:10px;padding:16px 14px 12px;border-bottom:1px solid var(--bd1);position:sticky;top:0;background:var(--bg-body);z-index:10">
+        <button onclick="go('pastoral-mob')" style="background:none;border:none;color:var(--teal);font-size:28px;line-height:1;cursor:pointer;padding:0 4px 0 0">‹</button>
+        <div style="font-size:16px;font-weight:700;color:var(--tx1)">Aconselhamento</div>
+        <button onclick="_renderMobAco()" style="margin-left:auto;background:none;border:1px solid var(--bd2);border-radius:6px;color:var(--tx3);font-size:12px;cursor:pointer;padding:4px 10px">↻</button>
+      </div>
+      <div id="pmob-aco-list" style="padding:16px">
+        <div style="text-align:center;padding:40px 0;color:var(--tx3);font-size:12px">Carregando...</div>
+      </div>`;
+
+    try {
+      const r=await fetch(`${apiBaseUrl()}/rest/v1/demandas?area=eq.Pastoral&categoria=eq.Aconselhamento pastoral&status=not.in.(Concluída,Pago,Cancelada,concluida,pago,cancelada)&order=criado_em.desc&limit=40`,{headers:apiHeaders()});
+      const rows=r.ok?await r.json():[];
+      const listEl=document.getElementById('pmob-aco-list'); if(!listEl) return;
+      if(!rows.length){
+        listEl.innerHTML=`<div style="text-align:center;padding:48px 0"><div style="font-size:40px;margin-bottom:12px">📭</div><div style="color:var(--tx3);font-size:13px">Nenhum pedido pendente</div></div>`;
+        return;
+      }
+      const PRIO={Urgente:'var(--rose)',Alta:'var(--amber)',Média:'var(--sky)',Baixa:'var(--tx3)'};
+      listEl.innerHTML=rows.map(row=>{
+        const dt=row.criado_em?new Date(row.criado_em).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'';
+        const cor=PRIO[row.prioridade]||'var(--teal)';
+        const nome=row.solicitante_nome||row.nome_solicitante||'—';
+        return `<div style="padding:13px 0;border-bottom:1px solid var(--bd1)">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="width:4px;min-height:40px;border-radius:2px;background:${cor};flex-shrink:0;margin-top:2px"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13.5px;font-weight:600;color:var(--tx1)">${row.titulo||'Pedido de Aconselhamento'}</div>
+              <div style="font-size:11px;color:var(--tx3);margin-top:2px">${nome}${dt?' · '+dt:''}</div>
+            </div>
+            <div style="flex-shrink:0;text-align:right">
+              ${row.prioridade?`<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;background:${cor}22;color:${cor}">${row.prioridade}</span>`:''}
+              <div style="font-size:10px;color:var(--tx3);margin-top:3px">${row.status||''}</div>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }catch(e){
+      const listEl=document.getElementById('pmob-aco-list');
+      if(listEl) listEl.innerHTML=`<div style="color:var(--rose);text-align:center;padding:24px">Erro ao carregar dados</div>`;
+    }
+  }
+
+  /* ── Frequência — modal bottom sheet ────────────────────────── */
+  function _pmobAbrirFreq(){
+    let overlay=document.getElementById('pmob-freq-overlay');
+    if(overlay){ overlay.style.display='flex'; return; }
+    overlay=document.createElement('div');
+    overlay.id='pmob-freq-overlay';
+    overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9900;display:flex;align-items:flex-end;justify-content:center';
+    overlay.addEventListener('click',e=>{if(e.target===overlay)_pmobFecharFreq();});
+    overlay.innerHTML=`
+      <div style="background:var(--bg-card);border-radius:16px 16px 0 0;padding:24px 20px 40px;width:100%;max-width:540px;box-sizing:border-box">
+        <div style="display:flex;align-items:center;margin-bottom:20px">
+          <div style="font-size:16px;font-weight:700;color:var(--tx1)">Lançar Frequência</div>
+          <button onclick="_pmobFecharFreq()" style="margin-left:auto;background:none;border:none;color:var(--tx3);font-size:24px;line-height:1;cursor:pointer">×</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Data</label>
+            <input id="pmob-freq-data" type="date" value="${_iso(new Date())}" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:15px;padding:11px 12px;outline:none;font-family:var(--sans);box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Culto</label>
+            <select id="pmob-freq-culto" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:15px;padding:11px 12px;outline:none;font-family:var(--sans);box-sizing:border-box;-webkit-appearance:none;appearance:none">
+              <option value="domingo_manha">☀️ Domingo Manhã</option>
+              <option value="domingo_noite">🌙 Domingo Noite</option>
+              <option value="conexao_com_deus">🙏 Conexão com Deus</option>
+              <option value="tarde_da_esperanca">✝️ Tarde da Esperança</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Quantidade de Membros</label>
+            <input id="pmob-freq-qtd" type="number" min="0" max="9999" placeholder="0" inputmode="numeric" style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:15px;padding:11px 12px;outline:none;font-family:var(--sans);box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Observações (opcional)</label>
+            <input id="pmob-freq-obs" type="text" placeholder="Notas sobre o culto..." style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:8px;color:var(--tx1);font-size:15px;padding:11px 12px;outline:none;font-family:var(--sans);box-sizing:border-box">
+          </div>
+        </div>
+        <button id="pmob-freq-btn" onclick="_pmobSalvarFreq()" style="width:100%;margin-top:20px;padding:15px;background:var(--teal);border:none;border-radius:10px;color:#fff;font-size:16px;font-weight:700;font-family:var(--sans);cursor:pointer;letter-spacing:.01em">Salvar</button>
+      </div>`;
+    document.body.appendChild(overlay);
+  }
+
+  window._pmobFecharFreq=function(){
+    const o=document.getElementById('pmob-freq-overlay'); if(o) o.style.display='none';
+  };
+
+  window._pmobSalvarFreq=async function(){
+    const data=document.getElementById('pmob-freq-data')?.value||'';
+    const culto_tipo=document.getElementById('pmob-freq-culto')?.value||'';
+    const qtd=parseInt(document.getElementById('pmob-freq-qtd')?.value||'',10);
+    const obs=document.getElementById('pmob-freq-obs')?.value||'';
+    if(!data){alert('Informe a data.');return;}
+    if(!culto_tipo){alert('Selecione o culto.');return;}
+    if(isNaN(qtd)||qtd<0){alert('Informe uma quantidade válida.');return;}
+    const btn=document.getElementById('pmob-freq-btn');
+    if(btn){btn.textContent='Salvando…';btn.disabled=true;}
+    try{
+      const r=await fetch(`${apiBaseUrl()}/rest/v1/cultos_frequencia`,{method:'POST',headers:apiHeaders({'Prefer':'return=minimal'}),body:JSON.stringify({data,culto_tipo,quantidade:qtd,observacoes:obs})});
+      if(r.ok||r.status===201){
+        _pmobFecharFreq();
+        const dtFmt=new Date(data+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+        const nomes={domingo_manha:'Domingo Manhã',domingo_noite:'Domingo Noite',conexao_com_deus:'Conexão com Deus',tarde_da_esperanca:'Tarde da Esperança'};
+        if(typeof T==='function') T('Frequência Registrada',`${qtd} presentes · ${nomes[culto_tipo]||culto_tipo} · ${dtFmt}`);
+      }else{
+        const err=await r.text();
+        alert(`Erro ao salvar (${r.status}): ${err}`);
+        if(btn){btn.textContent='Salvar';btn.disabled=false;}
+      }
+    }catch(e){
+      alert('Erro de rede: '+e.message);
+      if(btn){btn.textContent='Salvar';btn.disabled=false;}
+    }
+  };
+
+  window._pmobAbrirFreq=_pmobAbrirFreq;
+  window._renderMobAco=_renderMobAco;
+
+  if(typeof VIEW_AUTOLOAD!=='undefined'){
+    VIEW_AUTOLOAD['pastoral-mob']    ={fn:_renderHub};
+    VIEW_AUTOLOAD['pastoral-mob-aco']={fn:_renderMobAco};
+  }
+
+})();

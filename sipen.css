@@ -2651,3 +2651,46 @@ html[data-theme="light"] .sb.sb-collapsed .mhdr:hover{background:rgba(0,0,0,0.05
 
   body.area-mobile-preview .sipen-footer { display: none }
 }
+
+/* ─── Mobile Bottom Navigation ──────────────────────────────────────────── */
+.mob-bnav { display: none }
+
+body.modo-mobile .mob-bnav {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 500;
+  background: var(--bg-card);
+  border-top: 1px solid var(--bd2);
+  height: calc(58px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mob-bnav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 4px;
+  border: none;
+  background: transparent;
+  color: var(--tx3);
+  font-size: 10px;
+  font-weight: 500;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: color .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mob-bnav-btn.active { color: var(--teal) }
+.mob-bnav-btn:active { opacity: .7 }
+
+.mob-bnav-icon {
+  font-size: 20px;
+  line-height: 1;
+}
