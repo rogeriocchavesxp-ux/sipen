@@ -668,9 +668,18 @@ const ADM_ESP = (() => {
   }
 
   /* ── popup de detalhe do evento ──────────────────────────── */
-  function agDetalhe(el, dataJson) {
-    document.querySelectorAll(".adm-esp-ag-detalhe-ativo").forEach(x => x.classList.remove("adm-esp-ag-detalhe-ativo"));
+  let _agDetalheListener = null;
 
+  function agFecharDetalhe() {
+    const panel = document.getElementById(_agCtx.detalhe);
+    if (panel) panel.style.display = "none";
+    if (_agDetalheListener) {
+      document.removeEventListener("click", _agDetalheListener);
+      _agDetalheListener = null;
+    }
+  }
+
+  function agDetalhe(el, dataJson) {
     const panel = document.getElementById(_agCtx.detalhe);
     if (!panel) return;
 
@@ -687,7 +696,7 @@ const ADM_ESP = (() => {
     panel.innerHTML = `
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px">
         <div style="font-size:14px;font-weight:700;color:var(--tx1);line-height:1.3;flex:1">${escapeHtml(ev.titulo || "—")}</div>
-        <button onclick="document.getElementById('adm-esp-ag-detalhe').style.display='none'" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">✕</button>
+        <button onclick="ADM_ESP.agFecharDetalhe()" style="background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">✕</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:7px">
         <div style="display:flex;justify-content:space-between;align-items:center">
@@ -729,11 +738,13 @@ const ADM_ESP = (() => {
     panel.style.left = left + "px";
     panel.style.top  = top + "px";
 
-    // fecha ao clicar fora
+    // fecha ao clicar fora — listener persistente, removido só ao fechar
+    if (_agDetalheListener) document.removeEventListener("click", _agDetalheListener);
     setTimeout(() => {
-      document.addEventListener("click", e => {
-        if (!panel.contains(e.target)) panel.style.display = "none";
-      }, { once: true });
+      _agDetalheListener = e => {
+        if (!panel.contains(e.target)) agFecharDetalhe();
+      };
+      document.addEventListener("click", _agDetalheListener);
     }, 10);
   }
 
@@ -934,7 +945,7 @@ const ADM_ESP = (() => {
     load, novo, editar, duplicar, historico, excluir,
     toggleAtivo, menuAbrir, salvar, filtrar,
     listarAtivos, listarReservaveis, listarPublicos,
-    tabIr, agendaLoad, agendaNav, agendaHoje, agDetalhe,
+    tabIr, agendaLoad, agendaNav, agendaHoje, agDetalhe, agFecharDetalhe,
     relPeriodo, relCarregar,
   };
 })();
