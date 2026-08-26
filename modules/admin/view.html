@@ -597,10 +597,11 @@
       <div class="bni" onclick="go('admin-espacos')">Espaços</div>
     </div>
 
-    <!-- Sub-tabs: Cadastro | Agenda -->
+    <!-- Sub-tabs: Cadastro | Agenda | Relatório -->
     <div style="display:flex;gap:2px;padding:0 0 0 0;border-bottom:1px solid var(--bd1);margin-bottom:0">
       <button id="adm-esp-tab-lista"  onclick="ADM_ESP.tabIr('lista')"  style="padding:10px 20px;font-size:12.5px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--teal);border-bottom:2px solid var(--teal);margin-bottom:-1px">Cadastro</button>
       <button id="adm-esp-tab-agenda" onclick="ADM_ESP.tabIr('agenda')" style="padding:10px 20px;font-size:12.5px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--tx3);border-bottom:2px solid transparent;margin-bottom:-1px">Agenda dos Espaços</button>
+      <button id="adm-esp-tab-rel"    onclick="ADM_ESP.tabIr('rel')"    style="padding:10px 20px;font-size:12.5px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--tx3);border-bottom:2px solid transparent;margin-bottom:-1px">Relatório por Espaço</button>
     </div>
 
     <!-- Seção: Cadastro (lista) -->
@@ -682,6 +683,86 @@
 
       <!-- Painel de detalhe do evento (popup inline) -->
       <div id="adm-esp-ag-detalhe" style="display:none;position:fixed;z-index:500;background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.2);padding:18px 20px;min-width:260px;max-width:340px"></div>
+    </div>
+
+    <!-- Seção: Relatório por Espaço -->
+    <div id="adm-esp-sec-rel" class="ct" style="display:none">
+      <!-- Filtros -->
+      <div class="card" style="padding:14px 18px">
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)">Espaço</label>
+            <select id="adm-rel-espaco" style="padding:7px 11px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;min-width:200px">
+              <option value="">Selecione um espaço…</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)">Período</label>
+            <select id="adm-rel-periodo" onchange="ADM_ESP.relPeriodo()" style="padding:7px 11px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px">
+              <option value="prox30">Próximos 30 dias</option>
+              <option value="mes">Este mês</option>
+              <option value="prox3m">Próximos 3 meses</option>
+              <option value="ant30">Últimos 30 dias</option>
+              <option value="custom">Personalizado</option>
+            </select>
+          </div>
+          <div id="adm-rel-custom" style="display:none;display:flex;gap:8px;align-items:flex-end">
+            <div style="display:flex;flex-direction:column;gap:5px">
+              <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)">De</label>
+              <input id="adm-rel-ini" type="date" style="padding:7px 11px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px">
+              <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)">Até</label>
+              <input id="adm-rel-fim" type="date" style="padding:7px 11px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px">
+            </div>
+          </div>
+          <button onclick="ADM_ESP.relCarregar()" style="padding:8px 18px;border-radius:8px;border:none;background:var(--teal);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Buscar</button>
+        </div>
+      </div>
+
+      <!-- KPIs inline -->
+      <div id="adm-rel-kpis" style="display:none;padding:0 0 4px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div class="card" style="padding:12px 18px;flex:1;min-width:140px">
+            <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)">Agendamentos</div>
+            <div id="adm-rel-k-total" style="font-size:24px;font-weight:800;color:var(--teal);margin-top:2px">—</div>
+          </div>
+          <div class="card" style="padding:12px 18px;flex:1;min-width:140px">
+            <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)">Confirmados</div>
+            <div id="adm-rel-k-conf" style="font-size:24px;font-weight:800;color:var(--gr);margin-top:2px">—</div>
+          </div>
+          <div class="card" style="padding:12px 18px;flex:1;min-width:140px">
+            <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)">Pendentes</div>
+            <div id="adm-rel-k-pend" style="font-size:24px;font-weight:800;color:var(--amber);margin-top:2px">—</div>
+          </div>
+          <div class="card" style="padding:12px 18px;flex:1;min-width:140px">
+            <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)">Período</div>
+            <div id="adm-rel-k-periodo" style="font-size:13px;font-weight:700;color:var(--tx2);margin-top:4px">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabela de resultados -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr style="border-bottom:2px solid var(--bd1);background:var(--bg)">
+                <th style="padding:10px 14px;text-align:left;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);white-space:nowrap">Data</th>
+                <th style="padding:10px 14px;text-align:left;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);white-space:nowrap">Dia</th>
+                <th style="padding:10px 14px;text-align:left;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);white-space:nowrap">Horário</th>
+                <th style="padding:10px 14px;text-align:left;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)">Evento</th>
+                <th style="padding:10px 14px;text-align:left;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)">Tipo</th>
+                <th style="padding:10px 14px;text-align:left;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)">Status</th>
+                <th style="padding:10px 14px;text-align:left;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)">Solicitante</th>
+              </tr>
+            </thead>
+            <tbody id="adm-rel-corpo">
+              <tr><td colspan="7" style="padding:32px;text-align:center;color:var(--tx3);font-size:12px">Selecione um espaço e clique em Buscar.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
   </div>

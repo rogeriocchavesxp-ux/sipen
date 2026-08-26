@@ -15,7 +15,7 @@ const ADM_ESP = (() => {
   // estado da agenda panorâmica
   let _agSemana   = null;  // Date: segunda-feira da semana exibida
   let _agEventos  = [];    // eventos retornados pela RPC
-  let _agTabAtiva = "lista"; // "lista" | "agenda"
+  let _agTabAtiva = "lista"; // "lista" | "agenda" | "rel"
   // IDs dos containers ativos — permite reusar o mesmo módulo em contextos diferentes
   let _agCtx = { grid: "adm-esp-ag-grid", range: "adm-esp-ag-range", detalhe: "adm-esp-ag-detalhe" };
 
@@ -489,25 +489,25 @@ const ADM_ESP = (() => {
     _agTabAtiva = tab;
     const secLista  = document.getElementById("adm-esp-sec-lista");
     const secAgenda = document.getElementById("adm-esp-sec-agenda");
+    const secRel    = document.getElementById("adm-esp-sec-rel");
     const tabLista  = document.getElementById("adm-esp-tab-lista");
     const tabAgenda = document.getElementById("adm-esp-tab-agenda");
+    const tabRel    = document.getElementById("adm-esp-tab-rel");
     if (!secLista || !secAgenda) return;
 
     const ativo   = "padding:10px 20px;font-size:12.5px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--teal);border-bottom:2px solid var(--teal);margin-bottom:-1px";
     const inativo = "padding:10px 20px;font-size:12.5px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--tx3);border-bottom:2px solid transparent;margin-bottom:-1px";
 
-    if (tab === "lista") {
-      secLista.style.display  = "";
-      secAgenda.style.display = "none";
-      tabLista.style.cssText  = ativo;
-      tabAgenda.style.cssText = inativo;
-    } else {
-      secLista.style.display  = "none";
-      secAgenda.style.display = "";
-      tabLista.style.cssText  = inativo;
-      tabAgenda.style.cssText = ativo;
-      agendaLoad();
-    }
+    secLista.style.display  = tab === "lista"  ? "" : "none";
+    secAgenda.style.display = tab === "agenda" ? "" : "none";
+    if (secRel) secRel.style.display = tab === "rel" ? "" : "none";
+
+    if (tabLista)  tabLista.style.cssText  = tab === "lista"  ? ativo : inativo;
+    if (tabAgenda) tabAgenda.style.cssText = tab === "agenda" ? ativo : inativo;
+    if (tabRel)    tabRel.style.cssText    = tab === "rel"    ? ativo : inativo;
+
+    if (tab === "agenda") agendaLoad();
+    if (tab === "rel")    _relInit();
   }
 
   /* ── carrega dados da semana ─────────────────────────────── */
@@ -737,6 +737,183 @@ const ADM_ESP = (() => {
     }, 10);
   }
 
+  /* ══════════════════════════════════════════════════════════════
+     RELATÓRIO POR ESPAÇO
+  ══════════════════════════════════════════════════════════════ */
+
+  const DIAS_SEMANA = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+
+  function _relInit() {
+    const sel = document.getElementById("adm-rel-espaco");
+    if (!sel || sel.dataset.loaded) return;
+    const ativos = _lista.filter(e => e.ativo).sort((a, b) => {
+      if (a.bloco_nome < b.bloco_nome) return -1;
+      if (a.bloco_nome > b.bloco_nome) return 1;
+      return a.nome.localeCompare(b.nome, "pt");
+    });
+    let blocoAtual = null;
+    ativos.forEach(e => {
+      if (e.bloco_nome !== blocoAtual) {
+        blocoAtual = e.bloco_nome;
+        const og = document.createElement("optgroup");
+        og.label = blocoAtual || "Sem bloco";
+        sel.appendChild(og);
+      }
+      const o = document.createElement("option");
+      o.value = e.id;
+      o.textContent = e.nome;
+      sel.lastElementChild.appendChild(o);
+    });
+    sel.dataset.loaded = "1";
+    relPeriodo();
+  }
+
+  function relPeriodo() {
+    const preset = document.getElementById("adm-rel-periodo")?.value || "prox30";
+    const customEl = document.getElementById("adm-rel-custom");
+    const iniEl    = document.getElementById("adm-rel-ini");
+    const fimEl    = document.getElementById("adm-rel-fim");
+
+    const hoje = new Date();
+    const pad  = n => String(n).padStart(2, "0");
+    const fmt  = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+    if (preset === "custom") {
+      if (customEl) customEl.style.display = "flex";
+      return;
+    }
+    if (customEl) customEl.style.display = "none";
+
+    let ini, fim;
+    if (preset === "prox30") {
+      ini = new Date(hoje); fim = new Date(hoje); fim.setDate(fim.getDate() + 30);
+    } else if (preset === "mes") {
+      ini = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+      fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+    } else if (preset === "prox3m") {
+      ini = new Date(hoje); fim = new Date(hoje); fim.setMonth(fim.getMonth() + 3);
+    } else if (preset === "ant30") {
+      fim = new Date(hoje); ini = new Date(hoje); ini.setDate(ini.getDate() - 30);
+    }
+    if (iniEl) iniEl.value = fmt(ini);
+    if (fimEl) fimEl.value = fmt(fim);
+  }
+
+  async function relCarregar() {
+    const espacoId = document.getElementById("adm-rel-espaco")?.value || "";
+    const ini      = document.getElementById("adm-rel-ini")?.value || "";
+    const fim      = document.getElementById("adm-rel-fim")?.value || "";
+    const corpo    = document.getElementById("adm-rel-corpo");
+
+    if (!espacoId) {
+      if (corpo) corpo.innerHTML = `<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--rose);font-size:12px">Selecione um espaço.</td></tr>`;
+      return;
+    }
+    if (!ini || !fim) {
+      if (corpo) corpo.innerHTML = `<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--rose);font-size:12px">Informe o período.</td></tr>`;
+      return;
+    }
+
+    if (corpo) corpo.innerHTML = `<tr><td colspan="7" style="padding:28px;text-align:center;color:var(--tx3);font-size:12px">Carregando…</td></tr>`;
+
+    const espaco = _lista.find(e => e.id === espacoId);
+    const nome   = espaco?.nome || "";
+
+    try {
+      const url = `${apiBaseUrl()}/rest/v1/agenda?deleted_at=is.null`
+        + `&espaco_id=eq.${encodeURIComponent(espacoId)}`
+        + `&data=gte.${ini}&data=lte.${fim}`
+        + `&status=not.in.(cancelado,recusado,arquivado)`
+        + `&order=data.asc,hora_inicio.asc`
+        + `&select=id,titulo,tipo,status,data,hora_inicio,hora_fim,organizador,espaco`
+        + `&limit=500`;
+
+      const r = await fetch(url, { headers: apiHeaders() });
+      let rows = r.ok ? await r.json() : [];
+
+      // fallback por nome para eventos antes da migração de FK
+      if (!rows.length && nome) {
+        const url2 = `${apiBaseUrl()}/rest/v1/agenda?deleted_at=is.null`
+          + `&espaco=ilike.${encodeURIComponent(nome)}`
+          + `&data=gte.${ini}&data=lte.${fim}`
+          + `&status=not.in.(cancelado,recusado,arquivado)`
+          + `&order=data.asc,hora_inicio.asc`
+          + `&select=id,titulo,tipo,status,data,hora_inicio,hora_fim,organizador,espaco`
+          + `&limit=500`;
+        const r2 = await fetch(url2, { headers: apiHeaders() });
+        if (r2.ok) rows = await r2.json();
+      }
+
+      _relRenderizar(rows, ini, fim, nome);
+    } catch (e) {
+      if (corpo) corpo.innerHTML = `<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--rose);font-size:12px">Erro: ${e.message}</td></tr>`;
+    }
+  }
+
+  function _relRenderizar(rows, ini, fim, nomeEspaco) {
+    const corpo  = document.getElementById("adm-rel-corpo");
+    const kpis   = document.getElementById("adm-rel-kpis");
+
+    const total    = rows.length;
+    const conf     = rows.filter(r => (r.status || "").toLowerCase() === "confirmado").length;
+    const pend     = rows.filter(r => ["pendente","aguardando_aprovacao","em_analise","em análise"].includes((r.status||"").toLowerCase())).length;
+
+    const fmtD = s => {
+      if (!s) return "—";
+      const [y, m, d] = s.split("-");
+      return `${d}/${m}/${y}`;
+    };
+
+    if (kpis) {
+      kpis.style.display = "";
+      document.getElementById("adm-rel-k-total").textContent   = total;
+      document.getElementById("adm-rel-k-conf").textContent    = conf;
+      document.getElementById("adm-rel-k-pend").textContent    = pend;
+      document.getElementById("adm-rel-k-periodo").textContent = `${fmtD(ini)} → ${fmtD(fim)}`;
+    }
+
+    if (!corpo) return;
+
+    if (!total) {
+      corpo.innerHTML = `<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--tx3);font-size:12px">Nenhum agendamento encontrado para <strong>${escapeHtml(nomeEspaco)}</strong> neste período.</td></tr>`;
+      return;
+    }
+
+    const COR = {
+      confirmado: { bg:"rgba(42,181,192,.12)", txt:"var(--teal)" },
+      pendente:   { bg:"rgba(212,168,67,.12)", txt:"var(--amber)" },
+    };
+
+    let mesAtual = "";
+    corpo.innerHTML = rows.map(ev => {
+      const [y, m, d] = (ev.data || "").split("-");
+      const mesMes = y && m ? `${m}/${y}` : "";
+      let sepMes = "";
+      if (mesMes !== mesAtual) {
+        mesAtual = mesMes;
+        const meses = ["","jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+        const label = y && m ? `${meses[+m] || m} de ${y}` : "—";
+        sepMes = `<tr><td colspan="7" style="padding:8px 14px 4px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);background:var(--bg);border-bottom:1px solid var(--bd1)">${label}</td></tr>`;
+      }
+
+      const dataStr = d && m && y ? `${d}/${m}/${y}` : "—";
+      const diaSem  = ev.data ? DIAS_SEMANA[new Date(+y, +m - 1, +d).getDay()] : "—";
+      const hora    = ev.hora_inicio ? ev.hora_inicio.slice(0,5) + (ev.hora_fim ? " – " + ev.hora_fim.slice(0,5) : "") : "—";
+      const statusLc = (ev.status || "").toLowerCase();
+      const corSt   = COR[statusLc] || { bg:"rgba(160,160,160,.1)", txt:"var(--tx3)" };
+
+      return `${sepMes}<tr style="border-bottom:1px solid var(--bd1)" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+        <td style="padding:10px 14px;font-size:12.5px;color:var(--tx2);white-space:nowrap;font-variant-numeric:tabular-nums">${dataStr}</td>
+        <td style="padding:10px 14px;font-size:12px;color:var(--tx3)">${diaSem}</td>
+        <td style="padding:10px 14px;font-size:12.5px;color:var(--tx2);white-space:nowrap;font-variant-numeric:tabular-nums">${hora}</td>
+        <td style="padding:10px 14px;font-size:13px;font-weight:600;color:var(--tx1)">${escapeHtml(ev.titulo || "—")}</td>
+        <td style="padding:10px 14px;font-size:12px;color:var(--tx3)">${escapeHtml(ev.tipo || "—")}</td>
+        <td style="padding:10px 14px"><span style="font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:5px;background:${corSt.bg};color:${corSt.txt}">${escapeHtml(ev.status || "—")}</span></td>
+        <td style="padding:10px 14px;font-size:12px;color:var(--tx3)">${escapeHtml(ev.organizador || "—")}</td>
+      </tr>`;
+    }).join("");
+  }
+
   /* ── API pública de espacos para outros módulos ──────────────── */
   async function listarAtivos() {
     if (!_lista.length) await _fetchEspacos();
@@ -758,6 +935,7 @@ const ADM_ESP = (() => {
     toggleAtivo, menuAbrir, salvar, filtrar,
     listarAtivos, listarReservaveis, listarPublicos,
     tabIr, agendaLoad, agendaNav, agendaHoje, agDetalhe,
+    relPeriodo, relCarregar,
   };
 })();
 

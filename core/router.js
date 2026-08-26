@@ -210,8 +210,8 @@ const MN={hub:"Hub",admin:"Administrativo",fin:"Financeiro",jur:"Jurídico",cons
 const _viewCache = {};
 const _VIEW_MAP = {
   "geral":       "modules/dashboard/view.html",
-  "admin":       "modules/admin/view.html?v=6.45.13",
-  "pext":        "modules/admin/view.html?v=6.45.13",
+  "admin":       "modules/admin/view.html?v=6.45.14",
+  "pext":        "modules/admin/view.html?v=6.45.14",
   "fin":         "modules/financeiro/view.html?v=6.68.1",
   "cnab":        "modules/financeiro/view.html?v=6.68.1",
   "jur":         "modules/juridico/view.html?v=6.45.13",
