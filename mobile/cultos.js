@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Cultos / Frequência
-   mobile/cultos.js · v1.1.3
+   mobile/cultos.js · v1.1.4
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -215,19 +215,31 @@
     if (!data) { err('Informe a data do culto.'); return; }
     if (!adultos && !criancas) { err('Informe pelo menos adultos ou crianças.'); return; }
 
+    if (!congId) { err('Selecione uma congregação.'); return; }
+
     btn.disabled = true; btn.textContent = 'Salvando…';
 
     const ctrl    = new AbortController();
-    const timeout = setTimeout(() => ctrl.abort(), 15000);
+    const timeout = setTimeout(() => ctrl.abort(), 8000);
+
+    const _mostrarErro = (msg) => {
+      clearTimeout(timeout);
+      err(msg);
+      mobToast(msg, 'error');
+      if (btn) { btn.disabled = false; btn.textContent = id ? 'Atualizar' : 'Registrar'; }
+    };
 
     try {
+      const adultosN  = isNaN(adultos)  ? 0 : adultos;
+      const criancasN = isNaN(criancas) ? 0 : criancas;
+
       const payload = {
         cong_id:       congId,
         tipo,
         data,
-        adultos:       isNaN(adultos)  ? 0 : adultos,
-        criancas:      isNaN(criancas) ? 0 : criancas,
-        participantes: (isNaN(adultos) ? 0 : adultos) + (isNaN(criancas) ? 0 : criancas),
+        adultos:       adultosN,
+        criancas:      criancasN,
+        participantes: adultosN + criancasN,
         obs,
       };
 
@@ -246,19 +258,18 @@
       clearTimeout(timeout);
 
       if (!r.ok) {
-        const detail = await r.text().catch(() => '');
-        throw new Error(`Erro ${r.status}${detail ? ': ' + detail : ''}`);
+        let detail = '';
+        try { detail = await r.text(); } catch (_) {}
+        _mostrarErro(`Erro ${r.status}${detail ? ': ' + detail.slice(0, 120) : ''}`);
+        return;
       }
 
       _fecharSheet();
-      if (typeof mobToast === 'function') mobToast(id ? 'Registro atualizado' : 'Culto registrado');
+      mobToast(id ? 'Registro atualizado' : 'Culto registrado');
       _cache = null;
       await _carregarLista();
     } catch (e) {
-      clearTimeout(timeout);
-      const msg = e.name === 'AbortError' ? 'Tempo esgotado. Verifique a conexão.' : (e.message || 'Erro ao salvar.');
-      err(msg);
-      if (btn) { btn.disabled = false; btn.textContent = id ? 'Atualizar' : 'Registrar'; }
+      _mostrarErro(e.name === 'AbortError' ? 'Tempo esgotado. Verifique a conexão.' : (e.message || 'Erro ao salvar.'));
     }
   };
 
