@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Cultos / Frequência
-   mobile/cultos.js · v1.1.5
+   mobile/cultos.js · v1.1.6
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -151,7 +151,7 @@
       `<option value="${_esc(c.id)}"${registro?.cong_id === c.id ? ' selected' : ''}>${_esc(c.nome)}</option>`
     ).join('');
 
-    _abrirSheet(registro ? 'Editar Registro' : 'Registrar Culto', `
+    _cultAbrirSheet(registro ? 'Editar Registro' : 'Registrar Culto', `
       ${_congregacoes.length > 1 ? `
       <div class="mob-field">
         <label class="mob-label">CONGREGAÇÃO</label>
@@ -252,7 +252,7 @@
         return;
       }
 
-      _fecharSheet();
+      _cultFecharSheet();
       mobToast(id ? 'Registro atualizado' : 'Culto registrado');
       _cache = null;
       await _carregarLista();
@@ -262,13 +262,13 @@
   };
 
   /* ── Bottom sheet genérico ────────────────────────── */
-  function _abrirSheet(titulo, html) {
+  function _cultAbrirSheet(titulo, html) {
     document.getElementById('cult-sheet')?.remove();
     const s = document.createElement('div');
     s.id = 'cult-sheet';
     s.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end';
     s.innerHTML = `
-      <div onclick="_fecharSheet()" style="flex:1;background:rgba(0,0,0,.4)"></div>
+      <div onclick="_cultFecharSheet()" style="flex:1;background:rgba(0,0,0,.4)"></div>
       <div style="background:var(--bg-surface);border-radius:18px 18px 0 0;
                   padding:20px 16px;padding-bottom:calc(var(--safe-bottom) + 20px);
                   max-height:90vh;overflow-y:auto">
@@ -279,7 +279,7 @@
     document.body.appendChild(s);
   }
 
-  window._fecharSheet = function () {
+  window._cultFecharSheet = function () {
     document.getElementById('cult-sheet')?.remove();
   };
 
