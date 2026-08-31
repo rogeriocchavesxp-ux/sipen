@@ -1,4 +1,4 @@
-const MC={tutorial:"var(--teal)",geral:"var(--gmd)",admin:"var(--gold)",fin:"var(--gr)",jur:"var(--blue)",conselho:"var(--sky)",proj:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",dep:"var(--violet)",proculto:"var(--teal)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)",cong:"var(--gr)",diac:"var(--copper)",area:"var(--gr)",config:"var(--violet)",com:"var(--violet)",eve:"var(--sky)",acesso:"var(--sky)",chat:"var(--violet)",recursos:"var(--amber)",compras:"var(--blue)",forn:"var(--amber)"};
+const MC={tutorial:"var(--teal)",geral:"var(--gmd)",admin:"var(--gold)",fin:"var(--gr)",jur:"var(--blue)",conselho:"var(--sky)",gov:"var(--sky)",proj:"var(--sky)",pastoral:"var(--teal)",min:"var(--violet)",dep:"var(--violet)",proculto:"var(--teal)",agenda:"var(--teal)",pgs:"var(--gbr)",infra:"var(--amber)",dem:"var(--rose)",rel:"var(--gmd)",memb:"var(--gbr)",cong:"var(--gr)",diac:"var(--copper)",area:"var(--gr)",config:"var(--violet)",com:"var(--violet)",eve:"var(--sky)",acesso:"var(--sky)",chat:"var(--violet)",recursos:"var(--amber)",compras:"var(--blue)",forn:"var(--amber)"};
 const CRUMB={
   "tutorial":["","Tutorial","/ guia de uso do SIPEN"],
   "dep-adm-dash":["Administrativos","Dashboard","/ visão geral dos departamentos administrativos"],
@@ -205,7 +205,7 @@ const CRUMB={
   "evangelismo-config":    ["Evangelização e Missões","Configurações","/ parâmetros do módulo"],
 };
 const SL={dash:"Dashboard",diaconos:"Diáconos",escalas:"Escalas de Serviço",familias:"Famílias Assistidas",social:"Ação Social e Beneficência",visitacao:"Visitação Diaconal",patrimonio:"Patrimônio e Apoio Operacional",solicitacoes:"Solicitações Diaconais",relatorios:"Relatórios Diaconais",historico:"Histórico e Atas",sec:"Secretaria e Cadastro",rh:"RH / Gestão de Pessoas",doc:"Documentos",aud:"Auditoria",fin:"Financeiro",con:"Contratos",est:"Controle de Estoque",demandas:"Processos e Demandas Jurídicas",contratos:"Contratos e Instrumentos",pareceres:"Pareceres",documentos:"Documentos Jurídicos",riscos:"Riscos e Pendências",historico:"Histórico",rel:"Relatórios Estratégicos",ind:"Indicadores",cong:"Congregações",nomeados:"Nomeados",ordenados:"Ordenados",ate:"Atendimentos",ora:"Pedidos de Oração",aco:"Acompanhamentos",reg:"Registros Pastorais",pri:"Casos Prioritários",min:"Ministérios",soc:"Sociedades Internas",adm:"Administração",com:"Comissões",lid:"Liderança Ministerial",esc:"Escalas",prog:"Programações",lit:"Liturgia dos Cultos",vol:"Voluntários",calendario:"Calendário Geral",solicitacoes:"Solicitações de Agendamento",aprovacoes:"Aprovações Pendentes",confirmados:"Eventos Confirmados",recusados:"Eventos Recusados",reagendamentos:"Reagendamentos e Ajustes",ambientes:"Ambientes e Recursos",conflitos:"Conflitos de Agenda",config:"Configurações da Agenda",lista:"Lista de PGs",encontros:"Encontros",participantes:"Participantes",visitantes:"Visitantes",estudos:"Estudos",relatorios:"Relatórios",oracao:"Pedidos de Oração",man:"Manutenção",lim:"Limpeza e Conservação",sol:"Solicitações Operacionais",pat:"Patrimônio",pre:"Prestadores",todas:"Todas as Solicitações",pend:"Pendentes",and:"Em Andamento",conc:"Concluídas",hist:"Histórico",mod:"Por Módulo",exp:"Exportações",uni:"Por Congregação",res:"Por Responsável",cad:"Cadastro de Membros",bat:"Batismos",prof:"Profissões de Fé",trans:"Transferências",vis:"Visitantes"};
-const MN={hub:"Hub",admin:"Administrativo",fin:"Financeiro",jur:"Jurídico",conselho:"Conselho",proj:"Projetos",pastoral:"Pastoral",min:"Departamentos",agenda:"Agenda",pgs:"Pequenos Grupos",infra:"Infraestrutura e Conservação",dem:"Demandas",rel:"Relatórios",memb:"Secretaria",cong:"Congregações",forn:"Fornecedores",diac:"Junta Diaconal",area:"Área do Membro",com:"Comunicação",eve:"Eventos",acesso:"Controle de Acesso",recursos:"Recursos",compras:"Compras"};
+const MN={hub:"Hub",admin:"Administrativo",fin:"Financeiro",jur:"Jurídico",conselho:"Conselho",gov:"Governança",proj:"Projetos",pastoral:"Pastoral",min:"Departamentos",agenda:"Agenda",pgs:"Pequenos Grupos",infra:"Infraestrutura e Conservação",dem:"Demandas",rel:"Relatórios",memb:"Secretaria",cong:"Congregações",forn:"Fornecedores",diac:"Junta Diaconal",area:"Área do Membro",com:"Comunicação",eve:"Eventos",acesso:"Controle de Acesso",recursos:"Recursos",compras:"Compras"};
 
 const _viewCache = {};
 const _VIEW_MAP = {
@@ -215,9 +215,10 @@ const _VIEW_MAP = {
   "fin":         "modules/financeiro/view.html?v=6.68.1",
   "cnab":        "modules/financeiro/view.html?v=6.68.1",
   "jur":         "modules/juridico/view.html?v=6.45.13",
-  "conselho":    "modules/conselho/view.html?v=6.45.16",
-  "atas":        "modules/conselho/view.html?v=6.45.16",
-  "pautas":      "modules/conselho/view.html?v=6.45.16",
+  "conselho":    "modules/conselho/view.html?v=6.85.9",
+  "atas":        "modules/conselho/view.html?v=6.85.9",
+  "pautas":      "modules/conselho/view.html?v=6.85.9",
+  "gov":         "modules/conselho/view.html?v=6.85.9",
   "pastoral":    "modules/pastoral/view.html?v=6.46.2",
   "min":         "modules/departamentos/view.html?v=6.49.99",
   "agenda":      "modules/agenda/view.html?v=6.66.8",
