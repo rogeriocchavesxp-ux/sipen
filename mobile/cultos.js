@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Cultos / Frequência
-   mobile/cultos.js · v1.1.4
+   mobile/cultos.js · v1.1.5
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -219,11 +219,7 @@
 
     btn.disabled = true; btn.textContent = 'Salvando…';
 
-    const ctrl    = new AbortController();
-    const timeout = setTimeout(() => ctrl.abort(), 8000);
-
     const _mostrarErro = (msg) => {
-      clearTimeout(timeout);
       err(msg);
       mobToast(msg, 'error');
       if (btn) { btn.disabled = false; btn.textContent = id ? 'Atualizar' : 'Registrar'; }
@@ -243,24 +239,16 @@
         obs,
       };
 
-      const method = id ? 'PATCH' : 'POST';
-      const url = id
-        ? `${apiBaseUrl()}/rest/v1/congregacao_cultos?id=eq.${encodeURIComponent(id)}`
-        : `${apiBaseUrl()}/rest/v1/congregacao_cultos`;
+      const sb = getSupabase();
+      let sbRes;
+      if (id) {
+        sbRes = await sb.from('congregacao_cultos').update(payload).eq('id', id);
+      } else {
+        sbRes = await sb.from('congregacao_cultos').insert(payload);
+      }
 
-      const r = await fetch(url, {
-        method,
-        signal: ctrl.signal,
-        headers: { ...apiHeaders(), 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-        body: JSON.stringify(payload),
-      });
-
-      clearTimeout(timeout);
-
-      if (!r.ok) {
-        let detail = '';
-        try { detail = await r.text(); } catch (_) {}
-        _mostrarErro(`Erro ${r.status}${detail ? ': ' + detail.slice(0, 120) : ''}`);
+      if (sbRes.error) {
+        _mostrarErro(sbRes.error.message || JSON.stringify(sbRes.error));
         return;
       }
 
@@ -269,7 +257,7 @@
       _cache = null;
       await _carregarLista();
     } catch (e) {
-      _mostrarErro(e.name === 'AbortError' ? 'Tempo esgotado. Verifique a conexão.' : (e.message || 'Erro ao salvar.'));
+      _mostrarErro(e.message || 'Erro ao salvar.');
     }
   };
 
