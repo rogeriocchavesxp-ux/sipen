@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    SIPEN — Frequência de Cultos
-   modules/frequencia/index.js · v1.0.0
+   modules/frequencia/index.js · v1.1.0
 ═══════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -59,7 +59,7 @@
       const [rC, rR] = await Promise.all([
         _sb().from('congregacoes').select('id,nome').is('deleted_at', null).order('nome'),
         _sb().from('congregacao_cultos')
-          .select('id,cong_id,data,tipo,adultos,criancas,participantes,obs')
+          .select('id,cong_id,data,tipo,adultos,criancas,participantes,online,obs')
           .order('data', { ascending: false })
           .limit(500),
       ]);
@@ -88,6 +88,7 @@
     const totalPart    = dados.reduce((s,r) => s + (r.participantes || (r.adultos||0)+(r.criancas||0)), 0);
     const totalAdultos = dados.reduce((s,r) => s + (r.adultos  || 0), 0);
     const totalCriancas= dados.reduce((s,r) => s + (r.criancas || 0), 0);
+    const totalOnline  = dados.reduce((s,r) => s + (r.online   || 0), 0);
     const media        = dados.length ? Math.round(totalPart / dados.length) : 0;
 
     const body = document.getElementById('freq-body');
@@ -95,11 +96,12 @@
 
     body.innerHTML = `
       <!-- KPIs -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px">
         ${_kpi('Cultos', _fmt(dados.length),        'var(--violet)', 'var(--violetbg)')}
         ${_kpi('Total',  _fmt(totalPart),            'var(--teal)',   'var(--tealbg)')}
         ${_kpi('Média',  _fmt(media),                'var(--blue)',   'var(--bluebg)')}
         ${_kpi('Adultos / Crianças', `${_fmt(totalAdultos)} / ${_fmt(totalCriancas)}`, 'var(--gr)', 'rgba(48,209,88,.12)')}
+        ${_kpi('Online', _fmt(totalOnline),          'var(--amber)',  'rgba(255,159,10,.12)')}
       </div>
 
       <!-- Filtros -->
@@ -133,12 +135,13 @@
               <th style="${_th()} text-align:right">Adultos</th>
               <th style="${_th()} text-align:right">Crianças</th>
               <th style="${_th()} text-align:right">Total</th>
+              <th style="${_th()} text-align:right">Online</th>
               <th style="${_th()}">Obs</th>
             </tr>
           </thead>
           <tbody>
             ${dados.length === 0
-              ? `<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--tx3)">Nenhum registro encontrado.</td></tr>`
+              ? `<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--tx3)">Nenhum registro encontrado.</td></tr>`
               : dados.slice(0, 100).map((r, i) => {
                   const tot = r.participantes || ((r.adultos||0)+(r.criancas||0));
                   return `<tr style="border-top:1px solid var(--border);${i%2===1?'background:var(--bg-hover)':''}">
@@ -148,6 +151,7 @@
                     <td style="${_td()} text-align:right">${r.adultos ?? '—'}</td>
                     <td style="${_td()} text-align:right">${r.criancas ?? '—'}</td>
                     <td style="${_td()} text-align:right;font-weight:700;color:var(--tx1)">${tot || '—'}</td>
+                    <td style="${_td()} text-align:right;color:var(--tx2)">${r.online || '—'}</td>
                     <td style="${_td()};color:var(--tx3);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(r.obs || '')}</td>
                   </tr>`;
                 }).join('')

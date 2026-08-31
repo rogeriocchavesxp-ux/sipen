@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Cultos / Frequência
-   mobile/cultos.js · v1.1.7
+   mobile/cultos.js · v1.1.8
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -62,7 +62,7 @@
 
     try {
       const res = await fetch(
-        `${apiBaseUrl()}/rest/v1/congregacao_cultos?${filter}&select=id,data,tipo,adultos,criancas,participantes,obs,cong_id&order=data.desc&limit=30`,
+        `${apiBaseUrl()}/rest/v1/congregacao_cultos?${filter}&select=id,data,tipo,adultos,criancas,participantes,online,obs,cong_id&order=data.desc&limit=30`,
         { headers: apiHeaders() }
       );
       const data = await res.json();
@@ -83,6 +83,7 @@
       <div class="mob-card-list">
         ${data.map(cu => {
           const tot = cu.participantes || ((cu.adultos || 0) + (cu.criancas || 0));
+          const onl = cu.online || 0;
           const dt  = cu.data ? new Date(cu.data + 'T12:00:00').toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'2-digit' }) : '—';
           const congNome = mapCong[cu.cong_id] || '—';
           return `
@@ -90,7 +91,7 @@
               <div class="mob-list-ico" style="background:var(--violetbg);color:var(--violet)">⛪</div>
               <div class="mob-list-body">
                 <div class="mob-list-title">${_esc(cu.tipo || 'Culto')}</div>
-                <div class="mob-list-sub">${dt} · ${_esc(congNome)}</div>
+                <div class="mob-list-sub">${dt} · ${_esc(congNome)}${onl ? ` · ${onl} online` : ''}</div>
               </div>
               <div style="font-size:18px;font-weight:700;color:var(--tx1);flex-shrink:0">${tot || '—'}</div>
             </div>`;
@@ -172,7 +173,7 @@
         <input id="cult-f-data" class="mob-input" type="date" value="${_esc(registro?.data || hoje)}">
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
         <div class="mob-field">
           <label class="mob-label">ADULTOS</label>
           <input id="cult-f-adultos" class="mob-input" type="number" inputmode="numeric"
@@ -182,6 +183,11 @@
           <label class="mob-label">CRIANÇAS</label>
           <input id="cult-f-criancas" class="mob-input" type="number" inputmode="numeric"
                  min="0" value="${registro?.criancas || ''}" placeholder="0">
+        </div>
+        <div class="mob-field">
+          <label class="mob-label">ONLINE</label>
+          <input id="cult-f-online" class="mob-input" type="number" inputmode="numeric"
+                 min="0" value="${registro?.online || ''}" placeholder="0">
         </div>
       </div>
 
@@ -205,6 +211,7 @@
     const data   = document.getElementById('cult-f-data')?.value   || '';
     const adultos  = parseInt(document.getElementById('cult-f-adultos')?.value  || '0', 10);
     const criancas = parseInt(document.getElementById('cult-f-criancas')?.value || '0', 10);
+    const online   = parseInt(document.getElementById('cult-f-online')?.value   || '0', 10);
     const obs    = document.getElementById('cult-f-obs')?.value?.trim() || null;
     const errEl  = document.getElementById('cult-f-err');
     const btn    = document.getElementById('cult-f-btn');
@@ -228,6 +235,7 @@
     try {
       const adultosN  = isNaN(adultos)  ? 0 : adultos;
       const criancasN = isNaN(criancas) ? 0 : criancas;
+      const onlineN   = isNaN(online)   ? 0 : online;
 
       const payload = {
         cong_id:       congId,
@@ -236,6 +244,7 @@
         adultos:       adultosN,
         criancas:      criancasN,
         participantes: adultosN + criancasN,
+        online:        onlineN,
         obs,
       };
 
