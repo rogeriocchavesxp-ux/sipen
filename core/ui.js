@@ -627,6 +627,7 @@ const _SRCH_PAGINAS = [
   { ic:"🤝", nm:"Junta Diaconal",           sub:"Escalas e famílias assistidas",             rota:"diac-dash",       cor:"rgba(180,120,60,.15)" },
   { ic:"⚙",  nm:"Configurações",           sub:"Permissões e parâmetros do sistema",        rota:"config-dash",     cor:"rgba(139,111,212,.15)" },
   { ic:"📅", nm:"Cultos",                   sub:"Programação e escala de cultos",            rota:"cultos-dash",     cor:"rgba(20,184,166,.15)" },
+  { ic:"⛪", nm:"Frequência de Cultos",     sub:"Participação por congregação e período",     rota:"freq-dash",       cor:"rgba(191,90,242,.15)" },
   { ic:"📖", nm:"Tutorial",                sub:"Guia de uso do SIPEN",                      rota:"tutorial",        cor:"rgba(20,184,166,.15)" },
 ];
 

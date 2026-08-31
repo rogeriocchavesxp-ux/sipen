@@ -243,6 +243,7 @@ const _VIEW_MAP = {
   "generic":     "modules/shared/view.html",
   "acesso":      "modules/acesso/view.html?v=6.45.13",
   "cultos":      "modules/cultos/view.html",
+  "freq":        "modules/frequencia/view.html",
   "hub":         "modules/shared/hub.html",
   "escalas":     "modules/shared/hub.html",
   "lideranca":   "modules/shared/hub.html",
