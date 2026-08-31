@@ -1,4 +1,4 @@
-// conselho/relatorios.js · v1.0.2
+// conselho/relatorios.js · v1.0.3
 // Relatórios de Governança: hub + Frequência de Cultos
 
 (function () {
@@ -77,7 +77,7 @@
   async function _carregarDados() {
     const [sedeRows, cultos, congCultos, congs] = await Promise.all([
       _get("culto_pos_culto?select=culto_id,adultos,criancas,visitantes,decisoes&order=culto_id.asc&limit=2000"),
-      _get("cultos?select=id,data_inicio,local_nome&order=data_inicio.asc&limit=2000"),
+      _get("cultos?select=id,data_inicio,local_nome,titulo&order=data_inicio.asc&limit=2000"),
       _get("congregacao_cultos?select=cong_id,adultos,criancas,visitantes,decisoes,data,tipo&order=data.asc&limit=2000"),
       _get("congregacoes?select=id,nome&deleted_at=is.null&order=nome.asc"),
     ]);
@@ -97,6 +97,7 @@
         return {
           data,
           unidade: "Sede",
+          culto:  c.titulo || "",
           local: c.local_nome || "Sede",
           adultos:   _n(r.adultos)   || 0,
           criancas:  _n(r.criancas)  || 0,
@@ -111,6 +112,7 @@
       .map(r => ({
         data:       r.data ? String(r.data).slice(0, 10) : null,
         unidade:    congMap[r.cong_id] || "Congregação",
+        culto:      r.tipo || "",
         local:      r.tipo || "",
         adultos:    _n(r.adultos)    || 0,
         criancas:   _n(r.criancas)   || 0,
@@ -154,6 +156,7 @@
         <tr>
           <td>${_fmtData(r.data)}</td>
           <td>${_esc(r.unidade)}</td>
+          <td style="color:var(--tx3)">${_esc(r.culto || "—")}</td>
           <td style="text-align:right;font-variant-numeric:tabular-nums">${r.adultos || "—"}</td>
           <td style="text-align:right;font-variant-numeric:tabular-nums">${r.criancas || "—"}</td>
           <td style="text-align:right;font-variant-numeric:tabular-nums">${r.visitantes || "—"}</td>
@@ -168,6 +171,7 @@
             <tr>
               <th>Data</th>
               <th>Unidade</th>
+              <th>Culto</th>
               <th style="text-align:right">Adultos</th>
               <th style="text-align:right">Crianças</th>
               <th style="text-align:right">Visitantes</th>
