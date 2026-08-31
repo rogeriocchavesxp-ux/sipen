@@ -1,4 +1,4 @@
-// conselho/relatorios.js · v1.0.1
+// conselho/relatorios.js · v1.0.2
 // Relatórios de Governança: hub + Frequência de Cultos
 
 (function () {
@@ -78,8 +78,8 @@
     const [sedeRows, cultos, congCultos, congs] = await Promise.all([
       _get("culto_pos_culto?select=culto_id,adultos,criancas,visitantes,decisoes&order=culto_id.asc&limit=2000"),
       _get("cultos?select=id,data_inicio,local_nome&order=data_inicio.asc&limit=2000"),
-      _get("congregacao_cultos?select=cong_id,adultos,criancas,visitantes,decisoes,data,tipo&cong_id=neq.f995aa2a-9a99-4460-9c86-b2b39b125501&order=data.asc&limit=2000"),
-      _get("congregacoes?select=id,nome&deleted_at=is.null&nome=neq.Sede%20-%20IPPenha&order=nome.asc"),
+      _get("congregacao_cultos?select=cong_id,adultos,criancas,visitantes,decisoes,data,tipo&order=data.asc&limit=2000"),
+      _get("congregacoes?select=id,nome&deleted_at=is.null&order=nome.asc"),
     ]);
 
     // Mapear cultos por id para join
