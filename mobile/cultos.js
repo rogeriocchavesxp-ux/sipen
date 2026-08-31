@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Cultos / Frequência
-   mobile/cultos.js · v1.1.6
+   mobile/cultos.js · v1.1.7
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -9,7 +9,7 @@
   mobRegisterPage('cultos-mob', renderCultos);
 
   const TIPOS = [
-    'Culto Manhã', 'Culto Noite', 'Conexão Com Deus', 'Tarde da Esperança', 'S.O.S',
+    'Culto Manhã', 'Culto Tarde', 'Culto Noite', 'Conexão Com Deus', 'Tarde da Esperança', 'S.O.S',
   ];
 
   let _congregacoes = [];   // lista de congregações do usuário (pode editar)
