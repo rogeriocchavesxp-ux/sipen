@@ -1529,7 +1529,19 @@ function fmtD(d) {
   window.demAbrirDetalhe = async function(id, origem) {
     _origemView = origem || _origemView || "dem-todas";
     if (!_cache.length) await _load();
-    const dem = _cache.find(r => String(r.id||r._row) === String(id));
+    let dem = _cache.find(r => String(r.id||r._row) === String(id));
+    if (!dem) {
+      try {
+        const res = await fetch(`${apiBaseUrl()}/rest/v1/demandas?id=eq.${id}&select=*&limit=1`, { headers: apiHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            dem = { ...data[0], _row: data[0].id, status: _toLabel(data[0].status) };
+            _cache.push(dem);
+          }
+        }
+      } catch(_) {}
+    }
     if (!dem) {
       if (typeof T === "function") T("Erro","Demanda não encontrada");
       return;
