@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   SIPEN — Processos Eleitorais  v6.49.1
+   SIPEN — Processos Eleitorais  v6.49.2
    modules/conselho/eleicoes.js
 ═══════════════════════════════════════════════════════════ */
 
@@ -1206,30 +1206,35 @@
     // Agrupa indicações por nome+tipo
     const mapa = {};
     _indicacoes.forEach(ind => {
-      const key = `${(ind.indicado_nome||"").trim()}||${ind.tipo}`;
-      if (!mapa[key]) mapa[key] = { nome: (ind.indicado_nome||"").trim(), tipo: ind.tipo, count: 0 };
+      const nomeRaw = (ind.indicado_nome||"").trim();
+      const key = `${nomeRaw.toLowerCase()}||${ind.tipo}`;
+      if (!mapa[key]) mapa[key] = { nome: nomeRaw, tipo: ind.tipo, count: 0 };
       mapa[key].count++;
     });
-    const indicados = Object.values(mapa).sort((a, b) => b.count - a.count || a.nome.localeCompare(b.nome));
+    const indicados = Object.values(mapa)
+      .filter(ind => ind.nome)
+      .sort((a, b) => b.count - a.count || a.nome.localeCompare(b.nome));
 
-    // Merge com avaliações salvas
+    // Merge com avaliações salvas (normalizado)
     const avalMap = {};
-    _avaliacoes.forEach(a => { avalMap[`${a.nome}||${a.tipo}`] = a; });
+    _avaliacoes.forEach(a => { avalMap[`${(a.nome||"").toLowerCase()}||${a.tipo}`] = a; });
 
     const total     = indicados.length;
     const aprovados = _avaliacoes.filter(a => a.avaliacao === "aprovado").length;
     const reprovados= _avaliacoes.filter(a => a.avaliacao === "reprovado").length;
+    const declinou  = _avaliacoes.filter(a => a.avaliacao === "declinou").length;
     const pendentes = total - _avaliacoes.filter(a => a.avaliacao !== "pendente").length;
 
     const thS = "text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);font-weight:700";
     const tdS = "padding:8px 10px;font-size:12.5px;color:var(--tx2)";
 
     el.innerHTML = `
-      <div class="kpis c4" style="margin-bottom:16px">
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,.12);color:var(--sky)">◎</div><div class="kpi-body"><div class="kpi-lbl">Total indicados</div><div class="kpi-val">${total}</div></div></div>
+      <div class="kpis" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:16px">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,.12);color:var(--sky)">◎</div><div class="kpi-body"><div class="kpi-lbl">Total</div><div class="kpi-val">${total}</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:rgba(208,144,64,.12);color:var(--amber)">⏳</div><div class="kpi-body"><div class="kpi-lbl">Pendentes</div><div class="kpi-val">${pendentes}</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,.12);color:var(--gr)">✓</div><div class="kpi-body"><div class="kpi-lbl">Aprovados</div><div class="kpi-val">${aprovados}</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:rgba(208,96,96,.12);color:var(--rose)">✕</div><div class="kpi-body"><div class="kpi-lbl">Reprovados</div><div class="kpi-val">${reprovados}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,.12);color:var(--violet)">↩</div><div class="kpi-body"><div class="kpi-lbl">Declinou</div><div class="kpi-val">${declinou}</div></div></div>
       </div>
       <div class="card">
         <div class="ctit" style="margin-bottom:14px">Avaliação dos Indicados</div>
@@ -1249,15 +1254,15 @@
             </thead>
             <tbody>
               ${indicados.map((ind, i) => {
-                const key = `${ind.nome}||${ind.tipo}`;
+                const key = `${ind.nome.toLowerCase()}||${ind.tipo}`;
                 const av  = avalMap[key];
                 const status = av?.avaliacao || "pendente";
                 const obs    = av?.avaliacao_obs || "";
                 const cor    = ind.tipo === "presbitero" ? "var(--sky)" : "var(--teal)";
                 const lbl    = ind.tipo === "presbitero" ? "Presbítero" : "Diácono";
-                const stCor  = status === "aprovado" ? "var(--gr)" : status === "reprovado" ? "var(--rose)" : "var(--amber)";
-                const stBg   = status === "aprovado" ? "rgba(58,170,92,.12)" : status === "reprovado" ? "rgba(208,96,96,.12)" : "rgba(208,144,64,.12)";
-                const stLbl  = status === "aprovado" ? "Aprovado" : status === "reprovado" ? "Reprovado" : "Pendente";
+                const stCor  = status === "aprovado" ? "var(--gr)" : status === "reprovado" ? "var(--rose)" : status === "declinou" ? "var(--violet)" : "var(--amber)";
+                const stBg   = status === "aprovado" ? "rgba(58,170,92,.12)" : status === "reprovado" ? "rgba(208,96,96,.12)" : status === "declinou" ? "rgba(139,111,212,.12)" : "rgba(208,144,64,.12)";
+                const stLbl  = status === "aprovado" ? "Aprovado" : status === "reprovado" ? "Reprovado" : status === "declinou" ? "Declinou" : "Pendente";
                 const nEsc   = _esc(ind.nome).replace(/'/g,"&#39;");
                 const tEsc   = ind.tipo;
                 return `<tr style="border-bottom:1px solid var(--bd1)"
@@ -1273,6 +1278,8 @@
                     <div style="display:flex;gap:5px;justify-content:flex-end">
                       ${status !== "aprovado" ? `<button onclick="eleicaoAvaliarIndicado('${nEsc}','${tEsc}','aprovado')"
                         style="background:rgba(58,170,92,.1);border:1px solid rgba(58,170,92,.3);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--gr);cursor:pointer">Aprovar</button>` : ""}
+                      ${status !== "declinou" ? `<button onclick="eleicaoAvaliarIndicado('${nEsc}','${tEsc}','declinou')"
+                        style="background:rgba(139,111,212,.08);border:1px solid rgba(139,111,212,.25);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--violet);cursor:pointer">Declinou</button>` : ""}
                       ${status !== "reprovado" ? `<button onclick="eleicaoAvaliarIndicadoObs('${nEsc}','${tEsc}')"
                         style="background:rgba(208,96,96,.08);border:1px solid rgba(208,96,96,.25);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--rose);cursor:pointer">Reprovar</button>` : ""}
                       ${status !== "pendente" ? `<button onclick="eleicaoAvaliarIndicado('${nEsc}','${tEsc}','pendente')"
@@ -1297,7 +1304,7 @@
         tipo,
         avaliacao,
         avaliacao_obs: obs || null,
-        total_indicacoes: _indicacoes.filter(i => (i.indicado_nome||"").trim() === nome && i.tipo === tipo).length,
+        total_indicacoes: _indicacoes.filter(i => (i.indicado_nome||"").trim().toLowerCase() === nome.trim().toLowerCase() && i.tipo === tipo).length,
         atualizado_em: new Date().toISOString(),
       }, { onConflict: "processo_id,nome,tipo" });
 

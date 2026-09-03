@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS public.eleicao_avaliacao_indicados (
   tipo             TEXT        NOT NULL CHECK (tipo IN ('presbitero','diacono')),
   pessoa_id        UUID        REFERENCES public.pessoas(id) ON DELETE SET NULL,
   avaliacao        TEXT        NOT NULL DEFAULT 'pendente'
-                               CHECK (avaliacao IN ('pendente','aprovado','reprovado')),
+                               CHECK (avaliacao IN ('pendente','aprovado','reprovado','declinou')),
   avaliacao_obs    TEXT,
   total_indicacoes INT         NOT NULL DEFAULT 0,
   criado_em        TIMESTAMPTZ NOT NULL DEFAULT now(),
