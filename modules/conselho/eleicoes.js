@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   SIPEN — Processos Eleitorais  v6.49.0
+   SIPEN — Processos Eleitorais  v6.49.1
    modules/conselho/eleicoes.js
 ═══════════════════════════════════════════════════════════ */
 
@@ -1206,8 +1206,8 @@
     // Agrupa indicações por nome+tipo
     const mapa = {};
     _indicacoes.forEach(ind => {
-      const key = `${(ind.nome_indicado||"").trim()}||${ind.tipo}`;
-      if (!mapa[key]) mapa[key] = { nome: (ind.nome_indicado||"").trim(), tipo: ind.tipo, count: 0 };
+      const key = `${(ind.indicado_nome||"").trim()}||${ind.tipo}`;
+      if (!mapa[key]) mapa[key] = { nome: (ind.indicado_nome||"").trim(), tipo: ind.tipo, count: 0 };
       mapa[key].count++;
     });
     const indicados = Object.values(mapa).sort((a, b) => b.count - a.count || a.nome.localeCompare(b.nome));
@@ -1297,7 +1297,7 @@
         tipo,
         avaliacao,
         avaliacao_obs: obs || null,
-        total_indicacoes: _indicacoes.filter(i => (i.nome_indicado||"").trim() === nome && i.tipo === tipo).length,
+        total_indicacoes: _indicacoes.filter(i => (i.indicado_nome||"").trim() === nome && i.tipo === tipo).length,
         atualizado_em: new Date().toISOString(),
       }, { onConflict: "processo_id,nome,tipo" });
 
