@@ -89,10 +89,8 @@
     if(r.pessoa_id){
       const pessoa = _pessoas.find(p => p.id === r.pessoa_id);
       if(pessoa){
-        const inativo = !!pessoa.deleted_at;
         return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
           <span style="color:var(--tx1);font-weight:700">${escapeHtml(_dn(pessoa.nome))}</span>
-          ${inativo ? `<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:999px;background:rgba(212,168,67,.15);color:#d4a843">inativo</span>` : ""}
         </div>`;
       }
     }
@@ -266,7 +264,7 @@
       document.body.appendChild(modal);
     }
     const pessoasAtivas = _pessoas.filter(p => !p.deleted_at);
-    // Inclui a pessoa atual mesmo que inativa, para não perder o vínculo ao editar
+    // Inclui a pessoa atual mesmo que com deleted_at, para não perder o vínculo ao editar
     const pessoaAtual = reg?.pessoa_id ? _pessoas.find(p => p.id === reg.pessoa_id) : null;
     const pessoasSelect = pessoaAtual && pessoaAtual.deleted_at
       ? [pessoaAtual, ...pessoasAtivas]
