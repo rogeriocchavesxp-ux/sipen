@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   SIPEN — Processos Eleitorais  v6.43.0
+   SIPEN — Processos Eleitorais  v6.44.0
    modules/conselho/eleicoes.js
 ═══════════════════════════════════════════════════════════ */
 
@@ -971,12 +971,24 @@
           const url  = PERFIL_URL + c.token_perfil;
           const tipo = c.tipo === "presbitero" ? "Presbítero" : "Diácono";
           const cor  = c.tipo === "presbitero" ? "var(--sky)" : "var(--teal)";
+          const primeiroNome = _esc(c.nome).split(" ")[0];
+          const waMsg = encodeURIComponent(
+            `Olá, ${c.nome.split(" ")[0]}! 🎉\n\n` +
+            `Parabéns! Você foi aprovado(a) como candidato(a) a ${tipo} no processo de *${p.nome}*.\n\n` +
+            `Para que a Igreja possa conhecê-lo(a) melhor, pedimos que preencha seu mini-currículo pelo link abaixo:\n\n` +
+            `${url}\n\n` +
+            `São apenas três campos breves: vida familiar, eclesiástica e profissional. Você também pode incluir uma foto.\n\n` +
+            `_Igreja Presbiteriana da Penha_`
+          );
+          const waHref = `https://wa.me/?text=${waMsg}`;
           return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd1)">
             <span style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid ${cor}44;color:${cor};background:${cor}11;flex-shrink:0">${tipo}</span>
             <span style="flex:1;font-size:13px;color:var(--tx1);font-weight:500">${_esc(c.nome)}</span>
-            <input readonly value="${url}" style="width:220px;padding:6px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--sky);font-size:11px;outline:none">
+            <input readonly value="${url}" style="width:200px;padding:6px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--sky);font-size:11px;outline:none">
             <button onclick="navigator.clipboard.writeText('${url}').then(()=>T&&T('Copiado!','${url}'))"
               style="padding:6px 12px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:12px;cursor:pointer;white-space:nowrap">Copiar</button>
+            <a href="${waHref}" target="_blank"
+              style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.3);color:#25d366;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">📱 WA</a>
           </div>`;
         }).join("");
         return `<div class="card" style="margin-bottom:14px">
