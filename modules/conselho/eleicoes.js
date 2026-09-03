@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   SIPEN — Processos Eleitorais  v6.46.0
+   SIPEN — Processos Eleitorais  v6.47.0
    modules/conselho/eleicoes.js
 ═══════════════════════════════════════════════════════════ */
 
@@ -21,6 +21,7 @@
   let _filtroCongreg = "todas";
   let _editando      = false;
   let _candidatos    = [];
+  let _avaliacoes    = [];  // eleicao_avaliacao_indicados
   let _votacaoConfig = null;
   let _votSubTab     = "config";
   let _candFiltroTipo = "todos";
@@ -145,6 +146,14 @@
       .order("ordem")
       .order("criado_em");
     _candidatos = data || [];
+  }
+
+  async function _carregarAvaliacoes(processoId) {
+    const { data } = await _sb()
+      .from("eleicao_avaliacao_indicados")
+      .select("*")
+      .eq("processo_id", processoId);
+    _avaliacoes = data || [];
   }
 
   async function _carregarVotacaoConfig(processoId) {
@@ -492,6 +501,7 @@
       _carregarMembros(),
       _carregarCandidatos(processoId),
       _carregarVotacaoConfig(processoId),
+      _carregarAvaliacoes(processoId),
     ]);
     _renderDetalhe();
   }
@@ -526,6 +536,7 @@
       <div class="bnav" style="--mc:var(--sky);margin-bottom:16px">
         <div class="bni ${_detTab==="stats"?"on":""}"        id="edt-stats" onclick="eleicaoDetTab('stats')">Estatísticas</div>
         <div class="bni ${_detTab==="indicacoes"?"on":""}"   id="edt-ind"   onclick="eleicaoDetTab('indicacoes')">Indicações</div>
+        <div class="bni ${_detTab==="avaliacao"?"on":""}"    id="edt-aval"  onclick="eleicaoDetTab('avaliacao')">Avaliação</div>
         <div class="bni ${_detTab==="candidatos"?"on":""}"   id="edt-cand"  onclick="eleicaoDetTab('candidatos')">Candidatos</div>
         <div class="bni ${_detTab==="votacao"?"on":""}"      id="edt-vot"   onclick="eleicaoDetTab('votacao')">Votação</div>
         <div class="bni ${_detTab==="compartilhar"?"on":""}" id="edt-comp"  onclick="eleicaoDetTab('compartilhar')">Compartilhar</div>
@@ -538,7 +549,7 @@
 
   window.eleicaoDetTab = function(tab) {
     _detTab = tab;
-    const tabMap = { stats:"stats", indicacoes:"ind", candidatos:"cand", votacao:"vot", compartilhar:"comp", relatorio:"rel" };
+    const tabMap = { stats:"stats", indicacoes:"ind", avaliacao:"aval", candidatos:"cand", votacao:"vot", compartilhar:"comp", relatorio:"rel" };
     Object.keys(tabMap).forEach(t => {
       document.getElementById(`edt-${tabMap[t]}`)?.classList.toggle("on", t === tab);
     });
@@ -548,10 +559,11 @@
   function _renderDetTab() {
     if      (_detTab === "stats")        _renderStats();
     else if (_detTab === "indicacoes")   _renderIndicacoesTab();
+    else if (_detTab === "avaliacao")    _renderAvaliacaoTab();
     else if (_detTab === "candidatos")   _renderCandidatosTab();
     else if (_detTab === "votacao")      _renderVotacaoTab();
     else if (_detTab === "compartilhar") _renderCompartilhar();
-    else if (_detTab === "relatorio")   _renderRelatorio();
+    else if (_detTab === "relatorio")    _renderRelatorio();
   }
 
   /* ── Stats ─────────────────────────────────────────── */
@@ -1039,6 +1051,7 @@
       _carregarIndicacoes(_processo.id),
       _carregarCandidatos(_processo.id),
       _carregarVotacaoConfig(_processo.id),
+      _carregarAvaliacoes(_processo.id),
     ]);
     _renderDetTab();
   };
@@ -1122,9 +1135,14 @@
     const ind_done   = ["encerrado","arquivado","apurado"].includes(p.status);
     const ind_active = p.status === "aberto" || p.status === "agendado";
 
+    const aval_aprov  = _avaliacoes.filter(a => a.avaliacao === "aprovado").length;
+    const aval_total  = _avaliacoes.length;
+    const aval_done   = ind_done && aval_total > 0 && aval_aprov > 0;
+    const aval_active = ind_done && aval_total === 0;
+
     const candAtivos = _candidatos.filter(c => c.ativo).length;
     const cand_done  = candAtivos > 0 && vc && vc.status_votacao !== "rascunho";
-    const cand_active = ind_done && candAtivos === 0;
+    const cand_active = aval_done && candAtivos === 0;
 
     const vot_done   = vc && ["encerrada","apurada"].includes(vc.status_votacao);
     const vot_active = vc && vc.status_votacao === "aberta";
@@ -1136,34 +1154,35 @@
       {
         icon:"📋", fase:"Fase 1", label:"Indicações",
         sub: ind_done ? "Encerrado" : ind_active ? "Em andamento" : "Pendente",
-        done: ind_done, active: ind_active,
-        nav: () => eleicaoDetTab("indicacoes"),
+        done: ind_done, active: ind_active, tab: "indicacoes",
       },
       {
-        icon:"✓", fase:"Fase 2", label:"Candidatos",
+        icon:"🔍", fase:"Fase 2", label:"Avaliação",
+        sub: aval_done ? `${aval_aprov} aprovado(s)` : aval_active ? "Aguardando" : ind_done && aval_total > 0 ? `${aval_total} avaliado(s)` : "—",
+        done: aval_done, active: aval_active || (ind_done && aval_total > 0 && !aval_done), tab: "avaliacao",
+      },
+      {
+        icon:"✓", fase:"Fase 3", label:"Candidatos",
         sub: cand_done ? `${candAtivos} homologado(s)` : candAtivos ? `${candAtivos} cadastrado(s)` : ind_done ? "Aguardando" : "—",
-        done: cand_done, active: cand_active || (ind_done && candAtivos > 0 && !cand_done),
-        nav: () => eleicaoDetTab("candidatos"),
+        done: cand_done, active: cand_active || (ind_done && candAtivos > 0 && !cand_done), tab: "candidatos",
       },
       {
-        icon:"🗳", fase:"Fase 3", label:"Votação",
+        icon:"🗳", fase:"Fase 4", label:"Votação",
         sub: vot_done ? "Encerrada" : vot_active ? "Em andamento" : vc ? "Configurada" : "Não configurada",
-        done: vot_done, active: vot_active,
-        nav: () => eleicaoDetTab("votacao"),
+        done: vot_done, active: vot_active, tab: "votacao",
       },
       {
-        icon:"📊", fase:"Fase 4", label:"Apuração",
+        icon:"📊", fase:"Fase 5", label:"Apuração",
         sub: apr_done ? "Concluída" : apr_active ? "Pendente" : "—",
-        done: apr_done, active: apr_active,
-        nav: () => eleicaoDetTab("votacao"),
+        done: apr_done, active: apr_active, tab: "votacao",
       },
     ];
 
     return `
       <div style="display:flex;align-items:stretch;margin-bottom:18px;background:var(--bg-surface);border:1px solid var(--bd1);border-radius:12px;overflow:hidden">
         ${fases.map((f, i) => `
-          <div onclick="eleicaoDetTab('${["indicacoes","candidatos","votacao","votacao"][i]}')"
-            style="flex:1;padding:11px 14px;border-right:${i<3?"1px solid var(--bd1)":"none"};
+          <div onclick="eleicaoDetTab('${f.tab}')"
+            style="flex:1;padding:11px 14px;border-right:${i<4?"1px solid var(--bd1)":"none"};
                    border-left:${f.done?"3px solid var(--gr)":f.active?"3px solid var(--sky)":"3px solid transparent"};
                    background:${f.done?"rgba(58,170,92,.03)":f.active?"rgba(74,156,245,.04)":"none"};
                    cursor:pointer;transition:background .15s;min-width:0"
@@ -1176,6 +1195,136 @@
           </div>`).join("")}
       </div>`;
   }
+
+  /* ══════════════════════════════════════════════════════
+     ABA AVALIAÇÃO
+  ══════════════════════════════════════════════════════ */
+  function _renderAvaliacaoTab() {
+    const el = document.getElementById("edt-content");
+    if (!el || !_processo) return;
+
+    // Agrupa indicações por nome+tipo
+    const mapa = {};
+    _indicacoes.forEach(ind => {
+      const key = `${(ind.nome_indicado||"").trim()}||${ind.tipo}`;
+      if (!mapa[key]) mapa[key] = { nome: (ind.nome_indicado||"").trim(), tipo: ind.tipo, count: 0 };
+      mapa[key].count++;
+    });
+    const indicados = Object.values(mapa).sort((a, b) => b.count - a.count || a.nome.localeCompare(b.nome));
+
+    // Merge com avaliações salvas
+    const avalMap = {};
+    _avaliacoes.forEach(a => { avalMap[`${a.nome}||${a.tipo}`] = a; });
+
+    const total     = indicados.length;
+    const aprovados = _avaliacoes.filter(a => a.avaliacao === "aprovado").length;
+    const reprovados= _avaliacoes.filter(a => a.avaliacao === "reprovado").length;
+    const pendentes = total - _avaliacoes.filter(a => a.avaliacao !== "pendente").length;
+
+    const thS = "text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);font-weight:700";
+    const tdS = "padding:8px 10px;font-size:12.5px;color:var(--tx2)";
+
+    el.innerHTML = `
+      <div class="kpis c4" style="margin-bottom:16px">
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,.12);color:var(--sky)">◎</div><div class="kpi-body"><div class="kpi-lbl">Total indicados</div><div class="kpi-val">${total}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(208,144,64,.12);color:var(--amber)">⏳</div><div class="kpi-body"><div class="kpi-lbl">Pendentes</div><div class="kpi-val">${pendentes}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,.12);color:var(--gr)">✓</div><div class="kpi-body"><div class="kpi-lbl">Aprovados</div><div class="kpi-val">${aprovados}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(208,96,96,.12);color:var(--rose)">✕</div><div class="kpi-body"><div class="kpi-lbl">Reprovados</div><div class="kpi-val">${reprovados}</div></div></div>
+      </div>
+      <div class="card">
+        <div class="ctit" style="margin-bottom:14px">Avaliação dos Indicados</div>
+        ${!indicados.length ? `<div style="text-align:center;padding:32px;color:var(--tx3)">Nenhuma indicação registrada neste processo.</div>` : `
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr style="background:var(--bg-surface);border-bottom:2px solid var(--amber)">
+                <th style="${thS};width:36px">#</th>
+                <th style="${thS}">Nome</th>
+                <th style="${thS}">Tipo</th>
+                <th style="${thS};text-align:center">Indicações</th>
+                <th style="${thS}">Avaliação</th>
+                <th style="${thS}">Obs</th>
+                <th style="${thS}"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${indicados.map((ind, i) => {
+                const key = `${ind.nome}||${ind.tipo}`;
+                const av  = avalMap[key];
+                const status = av?.avaliacao || "pendente";
+                const obs    = av?.avaliacao_obs || "";
+                const cor    = ind.tipo === "presbitero" ? "var(--sky)" : "var(--teal)";
+                const lbl    = ind.tipo === "presbitero" ? "Presbítero" : "Diácono";
+                const stCor  = status === "aprovado" ? "var(--gr)" : status === "reprovado" ? "var(--rose)" : "var(--amber)";
+                const stBg   = status === "aprovado" ? "rgba(58,170,92,.12)" : status === "reprovado" ? "rgba(208,96,96,.12)" : "rgba(208,144,64,.12)";
+                const stLbl  = status === "aprovado" ? "Aprovado" : status === "reprovado" ? "Reprovado" : "Pendente";
+                const nEsc   = _esc(ind.nome).replace(/'/g,"&#39;");
+                const tEsc   = ind.tipo;
+                return `<tr style="border-bottom:1px solid var(--bd1)"
+                  onmouseover="this.style.background='var(--bg-hover)'"
+                  onmouseout="this.style.background=''">
+                  <td style="${tdS};font-size:11px;color:var(--tx4);font-weight:700">${i+1}</td>
+                  <td style="${tdS};font-weight:600;color:var(--tx1)">${_esc(ind.nome)}</td>
+                  <td style="${tdS}"><span style="font-size:10px;padding:2px 9px;border-radius:6px;border:1px solid ${cor}44;color:${cor};background:${cor}11">${lbl}</span></td>
+                  <td style="${tdS};text-align:center;font-weight:700;color:var(--tx1)">${ind.count}</td>
+                  <td style="${tdS}"><span style="font-size:10px;padding:2px 9px;border-radius:6px;background:${stBg};color:${stCor}">${stLbl}</span></td>
+                  <td style="${tdS};font-size:11px;color:var(--tx3);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(obs)}</td>
+                  <td style="padding:8px 10px">
+                    <div style="display:flex;gap:5px;justify-content:flex-end">
+                      ${status !== "aprovado" ? `<button onclick="eleicaoAvaliarIndicado('${nEsc}','${tEsc}','aprovado')"
+                        style="background:rgba(58,170,92,.1);border:1px solid rgba(58,170,92,.3);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--gr);cursor:pointer">Aprovar</button>` : ""}
+                      ${status !== "reprovado" ? `<button onclick="eleicaoAvaliarIndicadoObs('${nEsc}','${tEsc}')"
+                        style="background:rgba(208,96,96,.08);border:1px solid rgba(208,96,96,.25);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--rose);cursor:pointer">Reprovar</button>` : ""}
+                      ${status !== "pendente" ? `<button onclick="eleicaoAvaliarIndicado('${nEsc}','${tEsc}','pendente')"
+                        style="background:none;border:1px solid var(--bd2);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--tx3);cursor:pointer">Desfazer</button>` : ""}
+                    </div>
+                  </td>
+                </tr>`;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>`}
+      </div>`;
+  }
+
+  window.eleicaoAvaliarIndicado = async function(nome, tipo, avaliacao, obs) {
+    if (!_processo) return;
+    const { error } = await _sb()
+      .from("eleicao_avaliacao_indicados")
+      .upsert({
+        processo_id:   _processo.id,
+        nome,
+        tipo,
+        avaliacao,
+        avaliacao_obs: obs || null,
+        total_indicacoes: _indicacoes.filter(i => (i.nome_indicado||"").trim() === nome && i.tipo === tipo).length,
+        atualizado_em: new Date().toISOString(),
+      }, { onConflict: "processo_id,nome,tipo" });
+
+    if (error) { alert("Erro ao salvar avaliação: " + error.message); return; }
+
+    // Se aprovado, importa como candidato (se ainda não existe)
+    if (avaliacao === "aprovado") {
+      const jaExiste = _candidatos.some(c =>
+        c.nome.trim().toLowerCase() === nome.trim().toLowerCase() && c.tipo === tipo
+      );
+      if (!jaExiste) {
+        await _sb().from("eleicao_candidatos").insert({
+          processo_id: _processo.id, nome, tipo, origem: "avaliacao", ativo: true,
+        });
+        await _carregarCandidatos(_processo.id);
+      }
+    }
+
+    await _carregarAvaliacoes(_processo.id);
+    _renderAvaliacaoTab();
+  };
+
+  window.eleicaoAvaliarIndicadoObs = function(nome, tipo) {
+    const obs = prompt(`Motivo da reprovação de "${nome}" (opcional):`);
+    if (obs === null) return; // cancelou
+    eleicaoAvaliarIndicado(nome, tipo, "reprovado", obs);
+  };
 
   /* ══════════════════════════════════════════════════════
      ABA CANDIDATOS
