@@ -243,9 +243,10 @@ const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const HDRS = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" };
 
 /* ── Estado ──────────────────────────────────────────── */
-let processo  = null;
-let membros   = [];
-let oficiais  = [];   // oficiais com mandato vencendo no ano do processo
+let processo   = null;
+let membros    = [];
+let oficiais   = [];   // oficiais com mandato vencendo no ano do processo
+let candidatos = [];   // candidatos com perfil público preenchido
 let indicante = null;
 let dItems    = [];  // indicações de diáconos
 let pItems    = [];  // indicações de presbíteros
@@ -347,6 +348,19 @@ async function init() {
       oficiais = todos || [];
     } catch (_) {
       oficiais = [];
+    }
+
+    // Carrega candidatos com perfil preenchido
+    try {
+      const raw = await sbGet(
+        `eleicao_candidatos?processo_id=eq.${processo.id}&ativo=eq.true&deleted_at=is.null` +
+        `&select=nome,tipo,congregacao,vida_familiar,vida_eclesiastica,vida_profissional,foto_url`
+      );
+      candidatos = (raw || []).filter(c =>
+        c.vida_familiar || c.vida_eclesiastica || c.vida_profissional
+      );
+    } catch (_) {
+      candidatos = [];
     }
 
     renderInfo();
@@ -454,7 +468,44 @@ function renderInfo() {
           ${p.data_encerramento ? `<div class="detail-row"><dt>Encerramento</dt><dd>${fmtD(p.data_encerramento)}</dd></div>` : ""}
         </dl>
       </div>
-    </div>`;
+    </div>
+
+    ${candidatos.length ? `
+    <hr class="sec-divider" style="margin-top:24px">
+    <div style="margin-top:24px">
+      <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:16px">
+        Conheça os Candidatos
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        ${candidatos.map(c => {
+          const cor = c.tipo === "presbitero" ? "var(--green)" : "#2A6A9A";
+          const bg  = c.tipo === "presbitero" ? "var(--green-tint)" : "rgba(74,143,191,.08)";
+          const brd = c.tipo === "presbitero" ? "var(--green-border)" : "rgba(74,143,191,.35)";
+          const lbl = c.tipo === "presbitero" ? "Presbítero" : "Diácono";
+          const avatar = c.foto_url
+            ? `<img src="${eh(c.foto_url)}" alt="Foto" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid ${brd};flex-shrink:0">`
+            : `<div style="width:64px;height:64px;border-radius:50%;background:${bg};border:2px solid ${brd};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;color:${cor}">👤</div>`;
+          const seccao = (titulo, texto) => texto
+            ? `<div style="margin-top:10px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:3px">${titulo}</div><div style="font-size:13px;color:var(--tx1);line-height:1.6">${eh(texto)}</div></div>`
+            : "";
+          return `<div style="background:var(--surface);border:1px solid var(--bd);border-radius:var(--radius-lg);padding:20px">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:4px">
+              ${avatar}
+              <div>
+                <div style="font-size:15px;font-weight:700;color:var(--tx1)">${eh(fmtNome(c.nome))}</div>
+                <div style="margin-top:5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <span style="padding:2px 10px;border-radius:12px;font-size:10px;font-weight:700;background:${bg};color:${cor};border:1px solid ${brd}">${lbl}</span>
+                  ${c.congregacao ? `<span style="font-size:11px;color:var(--tx3)">${eh(c.congregacao)}</span>` : ""}
+                </div>
+              </div>
+            </div>
+            ${seccao("Vida Familiar", c.vida_familiar)}
+            ${seccao("Vida Eclesiástica", c.vida_eclesiastica)}
+            ${seccao("Vida Profissional", c.vida_profissional)}
+          </div>`;
+        }).join("")}
+      </div>
+    </div>` : ""}`;
 }
 
 /* ═══════════════════════════════════════════════════════

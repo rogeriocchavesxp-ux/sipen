@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   SIPEN — Processos Eleitorais  v6.41.0
+   SIPEN — Processos Eleitorais  v6.42.0
    modules/conselho/eleicoes.js
 ═══════════════════════════════════════════════════════════ */
 
@@ -320,7 +320,7 @@
                     </div>
                   </td>
                 </tr>`).join("") : `
-                <tr><td colspan="7" style="text-align:center;padding:28px;color:var(--tx3)">Nenhum processo registrado.</td></tr>`}
+                <tr><td colspan="8" style="text-align:center;padding:28px;color:var(--tx3)">Nenhum processo registrado.</td></tr>`}
             </tbody>
           </table>
         </div>
@@ -1204,6 +1204,7 @@
                 <th style="${thS}">Congregação</th>
                 <th style="${thS}">Origem</th>
                 <th style="${thS}">Status</th>
+                <th style="${thS}">Mini-currículo</th>
                 <th style="${thS}"></th>
               </tr>
             </thead>
@@ -1212,6 +1213,7 @@
                 const cor  = c.tipo === "presbitero" ? "var(--sky)" : "var(--teal)";
                 const lbl  = c.tipo === "presbitero" ? "Presbítero" : "Diácono";
                 const nEsc = _esc(c.nome).replace(/'/g,"&#39;");
+                const perfPreench = !!(c.vida_familiar || c.vida_eclesiastica || c.vida_profissional);
                 return `<tr style="border-bottom:1px solid var(--bd1);opacity:${c.ativo?1:.5}"
                   onmouseover="this.style.background='var(--bg-hover)'"
                   onmouseout="this.style.background=''">
@@ -1225,8 +1227,16 @@
                       ${c.ativo ? "Ativo" : "Inativo"}
                     </span>
                   </td>
+                  <td style="${tdS}">
+                    <span style="font-size:10px;padding:2px 9px;border-radius:6px;background:${perfPreench?"rgba(58,170,92,.12)":"rgba(208,144,64,.12)"};color:${perfPreench?"var(--gr)":"var(--amber)"}">
+                      ${perfPreench ? "Preenchido" : "Pendente"}
+                    </span>
+                  </td>
                   <td style="padding:8px 10px">
                     <div style="display:flex;gap:6px;justify-content:flex-end">
+                      ${c.token_perfil ? `<button onclick="eleicaoCopiarLinkPerfil('${c.token_perfil}')"
+                        style="background:none;border:1px solid var(--bd2);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--tx2);cursor:pointer"
+                        title="Copiar link do mini-currículo">🔗</button>` : ""}
                       <button onclick="eleicaoToggleCandidato('${c.id}',${!c.ativo})"
                         style="background:none;border:1px solid var(--bd2);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--tx2);cursor:pointer"
                         title="${c.ativo?"Inativar":"Ativar"}">${c.ativo ? "○" : "●"}</button>
@@ -1248,6 +1258,17 @@
   window.eleicaoCandFiltroTipo = function(v) {
     _candFiltroTipo = v;
     _renderCandidatosTab();
+  };
+
+  window.eleicaoCopiarLinkPerfil = function(token) {
+    const url = "https://www.sipen.com.br/perfil-candidato.html?t=" + token;
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(url).then(() => {
+        alert("Link copiado! Envie ao candidato para que ele preencha o mini-currículo.");
+      }).catch(() => prompt("Copie o link abaixo:", url));
+    } else {
+      prompt("Copie o link abaixo:", url);
+    }
   };
 
   window.eleicaoAbrirImportarIndicacoes = function() {

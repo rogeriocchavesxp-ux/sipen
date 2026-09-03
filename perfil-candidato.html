@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perfil do Candidato — IPPenha</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png">
+<style>
+:root {
+  --green: #2E6E48; --green-mid: #3A8A5A; --green-tint: #EBF5EF; --green-border: #C0DECA;
+  --tx1: #1B2019; --tx2: #506050; --tx3: #8C9A8A;
+  --bg: #F7F8F4; --surface: #FFFFFF; --bd: #DEE4DC; --bd2: #CDD5CB;
+  --radius: 10px; --radius-sm: 6px;
+  --f-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --f-serif: Georgia, "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --green: #4AAF72; --green-tint: #162A1F; --green-border: #264035;
+    --tx1: #E2E7DF; --tx2: #9AAA95; --tx3: #5A6858;
+    --bg: #131611; --surface: #1A1E18; --bd: #272E24; --bd2: #323A30;
+  }
+}
+:root[data-theme="dark"] {
+  --green: #4AAF72; --green-tint: #162A1F; --green-border: #264035;
+  --tx1: #E2E7DF; --tx2: #9AAA95; --tx3: #5A6858;
+  --bg: #131611; --surface: #1A1E18; --bd: #272E24; --bd2: #323A30;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--f-sans); background: var(--bg); color: var(--tx1); min-height: 100vh; line-height: 1.6; }
+.wrap { max-width: 560px; margin: 0 auto; padding: 32px 20px 72px; }
+.logo-row { display: flex; justify-content: center; margin-bottom: 32px; }
+.logo-row img { width: 160px; height: auto; }
+
+/* card */
+.card { background: var(--surface); border: 1px solid var(--bd); border-radius: var(--radius); padding: 28px; }
+
+/* candidato header */
+.cand-header { display: flex; align-items: center; gap: 18px; margin-bottom: 28px; padding-bottom: 24px; border-bottom: 1px solid var(--bd); }
+.foto-wrap { position: relative; flex-shrink: 0; }
+.foto-circle { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--green-border); background: var(--green-tint); display: flex; align-items: center; justify-content: center; font-size: 28px; color: var(--green); overflow: hidden; }
+.foto-circle img { width: 100%; height: 100%; object-fit: cover; }
+.foto-edit-btn { position: absolute; bottom: 0; right: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--green); border: 2px solid var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; }
+.cand-info { flex: 1; min-width: 0; }
+.cand-nome { font-size: 17px; font-weight: 700; color: var(--tx1); margin-bottom: 4px; }
+.cand-tipo { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; color: var(--green); background: var(--green-tint); border: 1px solid var(--green-border); border-radius: 20px; padding: 3px 10px; }
+.cand-cong { font-size: 12px; color: var(--tx3); margin-top: 4px; }
+
+/* fields */
+.field { margin-bottom: 20px; }
+.field label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--tx3); margin-bottom: 6px; }
+.field .hint { font-size: 11px; color: var(--tx3); margin-bottom: 6px; }
+textarea { width: 100%; background: var(--bg); border: 1px solid var(--bd2); border-radius: var(--radius-sm); color: var(--tx1); font-family: var(--f-sans); font-size: 13.5px; line-height: 1.65; padding: 10px 12px; resize: vertical; outline: none; transition: border-color .15s; }
+textarea:focus { border-color: var(--green); }
+.char-count { font-size: 10.5px; color: var(--tx3); text-align: right; margin-top: 3px; }
+.char-count.over { color: #d06060; }
+
+/* foto upload */
+.foto-upload-area { border: 2px dashed var(--bd2); border-radius: var(--radius-sm); padding: 20px; text-align: center; cursor: pointer; transition: border-color .15s; }
+.foto-upload-area:hover { border-color: var(--green); }
+.foto-upload-area input { display: none; }
+.foto-upload-area .upload-txt { font-size: 12.5px; color: var(--tx3); }
+.foto-upload-area .upload-txt strong { color: var(--green); }
+.foto-preview { display: none; margin-top: 12px; }
+.foto-preview img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid var(--green-border); }
+.foto-rm { display: block; margin-top: 6px; font-size: 11px; color: var(--tx3); cursor: pointer; }
+.foto-rm:hover { color: #d06060; }
+
+/* actions */
+.actions { display: flex; gap: 10px; margin-top: 24px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 20px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--bd2); background: var(--surface); color: var(--tx1); transition: background .15s; }
+.btn:hover { background: var(--bg); }
+.btn-pri { background: var(--green); border-color: var(--green); color: #fff; flex: 1; }
+.btn-pri:hover { background: var(--green-mid); }
+.btn-pri:disabled { opacity: .55; cursor: not-allowed; }
+
+/* states */
+.loader { text-align: center; padding: 60px 20px; color: var(--tx3); }
+.spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid var(--bd2); border-top-color: var(--green); border-radius: 50%; animation: spin .7s linear infinite; margin-bottom: 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.state-card { text-align: center; padding: 48px 24px; }
+.state-icon { font-size: 48px; margin-bottom: 16px; }
+.state-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.state-desc { font-size: 14px; color: var(--tx3); }
+.alert { padding: 12px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 16px; display: none; }
+.alert-ok  { background: var(--green-tint); border: 1px solid var(--green-border); color: var(--green); }
+.alert-err { background: rgba(208,96,96,.1); border: 1px solid rgba(208,96,96,.3); color: #c05050; }
+.footer { margin-top: 48px; text-align: center; font-size: 12px; color: var(--tx3); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo-row">
+    <img src="/icons/logo-ippenha.svg" alt="IPPenha" onerror="this.style.display='none'">
+  </div>
+  <div id="app">
+    <div class="loader">
+      <div class="spinner"></div>
+      <div>Carregando…</div>
+    </div>
+  </div>
+  <div class="footer">SIPEN — Sistema Integrado da IPPenha</div>
+</div>
+
+<script>
+const SB_URL = "https://erhwryfzpycahgsohhbh.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyaHdyeWZ6cHljYWhnc29oaGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg2MTUsImV4cCI6MjA5MTg0NDYxNX0.T0hp90Bmufj6a3oUPq1vYcLiGx9YjyMaZiE38S0e3_8";
+const HDRS = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" };
+const MAX_CHARS = 600;
+
+let _token = null;
+let _cand  = null;
+let _fotoB64 = null; // nova foto selecionada
+
+function eh(v) {
+  return String(v ?? "").replace(/[&<>"']/g, c =>
+    ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+async function rpc(fn, params) {
+  const r = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, {
+    method: "POST",
+    headers: HDRS,
+    body: JSON.stringify(params),
+  });
+  if (!r.ok) throw new Error(await r.text().catch(() => `HTTP ${r.status}`));
+  return r.json();
+}
+
+function app(html) { document.getElementById("app").innerHTML = html; }
+
+function stateCard(icon, title, desc) {
+  app(`<div class="card state-card">
+    <div class="state-icon">${icon}</div>
+    <div class="state-title">${title}</div>
+    <div class="state-desc">${desc}</div>
+  </div>`);
+}
+
+// ── Redimensionar foto para no máx 300×300 JPEG ──────────────
+function _redimensionar(file) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const maxD = 300;
+      let w = img.width, h = img.height;
+      if (w > maxD || h > maxD) {
+        if (w > h) { h = Math.round(h * maxD / w); w = maxD; }
+        else       { w = Math.round(w * maxD / h); h = maxD; }
+      }
+      const cv = document.createElement("canvas");
+      cv.width = w; cv.height = h;
+      cv.getContext("2d").drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      res(cv.toDataURL("image/jpeg", 0.82));
+    };
+    img.onerror = () => rej(new Error("Não foi possível ler a imagem."));
+    img.src = url;
+  });
+}
+
+// ── Foto: selecionar ─────────────────────────────────────────
+window.selecionarFoto = function() {
+  document.getElementById("foto-input").click();
+};
+window.onFotoChange = async function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    alert("Arquivo muito grande. Selecione uma imagem menor que 5MB.");
+    return;
+  }
+  try {
+    _fotoB64 = await _redimensionar(file);
+    const prev = document.getElementById("foto-preview");
+    const img  = document.getElementById("foto-preview-img");
+    if (img)  img.src = _fotoB64;
+    if (prev) prev.style.display = "block";
+    // Atualiza avatar no header
+    const avatar = document.getElementById("avatar-img");
+    if (avatar) { avatar.src = _fotoB64; avatar.style.display = "block"; }
+    const avatarIcon = document.getElementById("avatar-icon");
+    if (avatarIcon) avatarIcon.style.display = "none";
+  } catch(e) { alert(e.message); }
+};
+window.removerFoto = function() {
+  _fotoB64 = "";
+  document.getElementById("foto-input").value = "";
+  const prev = document.getElementById("foto-preview");
+  if (prev) prev.style.display = "none";
+  // Restaura avatar
+  const avatar   = document.getElementById("avatar-img");
+  const avatarIcon = document.getElementById("avatar-icon");
+  if (avatar)    { avatar.src = ""; avatar.style.display = "none"; }
+  if (avatarIcon) avatarIcon.style.display = "block";
+};
+
+// ── Contagem de caracteres ───────────────────────────────────
+window.contarChars = function(ta, counterId) {
+  const n = ta.value.length;
+  const el = document.getElementById(counterId);
+  if (!el) return;
+  el.textContent = `${n}/${MAX_CHARS}`;
+  el.className = "char-count" + (n > MAX_CHARS ? " over" : "");
+};
+
+// ── Salvar perfil ────────────────────────────────────────────
+window.salvarPerfil = async function() {
+  const btn = document.getElementById("btn-salvar");
+  const alertOk  = document.getElementById("alert-ok");
+  const alertErr = document.getElementById("alert-err");
+  [alertOk, alertErr].forEach(a => { if(a) a.style.display = "none"; });
+
+  const fam  = (document.getElementById("f-familiar")?.value || "").trim();
+  const ecl  = (document.getElementById("f-eclesiastica")?.value || "").trim();
+  const prof = (document.getElementById("f-profissional")?.value || "").trim();
+
+  if (fam.length > MAX_CHARS || ecl.length > MAX_CHARS || prof.length > MAX_CHARS) {
+    if (alertErr) { alertErr.textContent = `Cada campo pode ter no máximo ${MAX_CHARS} caracteres.`; alertErr.style.display = "block"; }
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = "Salvando…"; }
+
+  try {
+    const params = {
+      p_token:             _token,
+      p_vida_familiar:     fam  || null,
+      p_vida_eclesiastica: ecl  || null,
+      p_vida_profissional: prof || null,
+    };
+    if (_fotoB64 !== null) params.p_foto_url = _fotoB64 || null;
+
+    const res = await rpc("eleicao_salvar_perfil", params);
+    if (res?.ok) {
+      if (alertOk) { alertOk.style.display = "block"; }
+      _fotoB64 = null; // reset — foto já salva
+    } else {
+      if (alertErr) { alertErr.textContent = res?.erro || "Erro ao salvar. Tente novamente."; alertErr.style.display = "block"; }
+    }
+  } catch(e) {
+    if (alertErr) { alertErr.textContent = e.message || "Erro ao salvar."; alertErr.style.display = "block"; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "Salvar perfil"; }
+  }
+};
+
+// ── Render do formulário ─────────────────────────────────────
+function renderForm(c) {
+  const tipo = c.tipo === "presbitero" ? "Presbítero" : "Diácono";
+  const fotoAtual = c.foto_url || "";
+  const avatarHtml = fotoAtual
+    ? `<div class="foto-circle"><img id="avatar-img" src="${eh(fotoAtual)}" alt="Foto"></div>`
+    : `<div class="foto-circle"><span id="avatar-icon" style="font-size:28px">👤</span><img id="avatar-img" src="" alt="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%"></div>`;
+
+  app(`<div class="card">
+    <div class="cand-header">
+      <div class="foto-wrap">
+        ${avatarHtml}
+        <button class="foto-edit-btn" onclick="selecionarFoto()" title="Alterar foto">✎</button>
+      </div>
+      <div class="cand-info">
+        <div class="cand-nome">${eh(c.nome)}</div>
+        <div class="cand-tipo">${eh(tipo)}</div>
+        ${c.congregacao ? `<div class="cand-cong">${eh(c.congregacao)}</div>` : ""}
+      </div>
+    </div>
+
+    <div class="alert alert-ok" id="alert-ok">✓ Perfil salvo com sucesso!</div>
+    <div class="alert alert-err" id="alert-err"></div>
+
+    <div class="field">
+      <label>Foto</label>
+      <div class="hint" style="font-size:11px;color:var(--tx3);margin-bottom:8px">Envie uma foto sua (máx. 5MB). Será redimensionada automaticamente.</div>
+      <div class="foto-upload-area" onclick="selecionarFoto()">
+        <input type="file" id="foto-input" accept="image/*" onchange="onFotoChange(this)">
+        <div class="upload-txt">Clique para <strong>escolher uma foto</strong></div>
+      </div>
+      <div class="foto-preview" id="foto-preview">
+        <img id="foto-preview-img" src="" alt="Prévia">
+        <span class="foto-rm" onclick="removerFoto()">Remover foto</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Vida Familiar</label>
+      <div class="hint">Estado civil, filhos, família. Breve e pessoal.</div>
+      <textarea id="f-familiar" rows="4" maxlength="${MAX_CHARS}"
+        placeholder="Ex.: Casado com Maria há 15 anos, pai de dois filhos…"
+        oninput="contarChars(this,'cc-familiar')">${eh(c.vida_familiar || "")}</textarea>
+      <div class="char-count" id="cc-familiar">${(c.vida_familiar||"").length}/${MAX_CHARS}</div>
+    </div>
+
+    <div class="field">
+      <label>Vida Eclesiástica</label>
+      <div class="hint">Há quanto tempo é membro, ministérios, funções, serviços na igreja.</div>
+      <textarea id="f-eclesiastica" rows="4" maxlength="${MAX_CHARS}"
+        placeholder="Ex.: Membro da IPPenha há 20 anos, líder de PG, voluntário no ministério de música…"
+        oninput="contarChars(this,'cc-eclesiastica')">${eh(c.vida_eclesiastica || "")}</textarea>
+      <div class="char-count" id="cc-eclesiastica">${(c.vida_eclesiastica||"").length}/${MAX_CHARS}</div>
+    </div>
+
+    <div class="field">
+      <label>Vida Profissional</label>
+      <div class="hint">Ocupação, área de atuação.</div>
+      <textarea id="f-profissional" rows="3" maxlength="${MAX_CHARS}"
+        placeholder="Ex.: Engenheiro civil, trabalha na área de construção há 10 anos…"
+        oninput="contarChars(this,'cc-profissional')">${eh(c.vida_profissional || "")}</textarea>
+      <div class="char-count" id="cc-profissional">${(c.vida_profissional||"").length}/${MAX_CHARS}</div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-pri" id="btn-salvar" onclick="salvarPerfil()">Salvar perfil</button>
+    </div>
+  </div>`);
+}
+
+// ── Inicialização ────────────────────────────────────────────
+async function init() {
+  _token = new URLSearchParams(location.search).get("t");
+  if (!_token) {
+    stateCard("🔒", "Link inválido", "Este link não é válido. Verifique com o responsável pela eleição.");
+    return;
+  }
+  try {
+    const res = await rpc("eleicao_perfil_por_token", { p_token: _token });
+    if (!res?.ok) {
+      stateCard("🔒", "Link inválido", res?.erro || "Candidato não encontrado. Verifique o link.");
+      return;
+    }
+    _cand = res;
+    renderForm(_cand);
+  } catch(e) {
+    stateCard("⚠️", "Erro ao carregar", e.message || "Tente novamente em instantes.");
+  }
+}
+
+init();
+</script>
+</body>
+</html>
