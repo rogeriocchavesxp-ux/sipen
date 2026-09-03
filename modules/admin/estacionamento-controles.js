@@ -271,7 +271,7 @@
     const pessoasSelect = pessoaAtual && pessoaAtual.deleted_at
       ? [pessoaAtual, ...pessoasAtivas]
       : pessoasAtivas;
-    const opts = `<option value="">— Selecionar pessoa —</option>` + pessoasSelect.map(p=>`<option value="${escapeHtmlAttr(p.id)}"${reg?.pessoa_id===p.id?" selected":""}>${escapeHtml(_dn(p.nome))}${p.deleted_at?" (inativo)":""}</option>`).join("");
+    const opts = `<option value="">— Selecionar pessoa —</option>` + pessoasSelect.map(p=>`<option value="${escapeHtmlAttr(p.id)}"${reg?.pessoa_id===p.id?" selected":""}>${escapeHtml(_dn(p.nome))}</option>`).join("");
     const status = reg?.status || "disponivel";
     modal.innerHTML = `<div style="width:min(720px,94vw);max-height:90vh;overflow:auto;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:20px">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><div style="font-size:20px">🅿</div><div><div style="font-size:14px;font-weight:800;color:var(--tx1)">${reg?"Editar":"Novo"} controle</div><div style="font-size:10.5px;color:var(--tx3)">Nice · código base 1EF9C96</div></div><button onclick="ceFecharModal()" style="margin-left:auto;background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer">✕</button></div>
