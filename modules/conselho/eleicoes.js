@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   SIPEN — Processos Eleitorais  v6.44.0
+   SIPEN — Processos Eleitorais  v6.45.0
    modules/conselho/eleicoes.js
 ═══════════════════════════════════════════════════════════ */
 
@@ -139,12 +139,15 @@
   async function _carregarCandidatos(processoId) {
     const { data } = await _sb()
       .from("eleicao_candidatos")
-      .select("*")
+      .select("*, pessoas(celular, telefone)")
       .is("deleted_at", null)
       .eq("processo_id", processoId)
       .order("ordem")
       .order("criado_em");
-    _candidatos = data || [];
+    _candidatos = (data || []).map(c => ({
+      ...c,
+      _celular: c.pessoas?.celular || c.pessoas?.telefone || null,
+    }));
   }
 
   async function _carregarVotacaoConfig(processoId) {
@@ -971,24 +974,14 @@
           const url  = PERFIL_URL + c.token_perfil;
           const tipo = c.tipo === "presbitero" ? "Presbítero" : "Diácono";
           const cor  = c.tipo === "presbitero" ? "var(--sky)" : "var(--teal)";
-          const primeiroNome = _esc(c.nome).split(" ")[0];
-          const waMsg = encodeURIComponent(
-            `Olá, ${c.nome.split(" ")[0]}! 🎉\n\n` +
-            `Parabéns! Você foi aprovado(a) como candidato(a) a ${tipo} no processo de *${p.nome}*.\n\n` +
-            `Para que a Igreja possa conhecê-lo(a) melhor, pedimos que preencha seu mini-currículo pelo link abaixo:\n\n` +
-            `${url}\n\n` +
-            `São apenas três campos breves: vida familiar, eclesiástica e profissional. Você também pode incluir uma foto.\n\n` +
-            `_Igreja Presbiteriana da Penha_`
-          );
-          const waHref = `https://wa.me/?text=${waMsg}`;
           return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd1)">
             <span style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid ${cor}44;color:${cor};background:${cor}11;flex-shrink:0">${tipo}</span>
             <span style="flex:1;font-size:13px;color:var(--tx1);font-weight:500">${_esc(c.nome)}</span>
             <input readonly value="${url}" style="width:200px;padding:6px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--sky);font-size:11px;outline:none">
             <button onclick="navigator.clipboard.writeText('${url}').then(()=>T&&T('Copiado!','${url}'))"
               style="padding:6px 12px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:12px;cursor:pointer;white-space:nowrap">Copiar</button>
-            <a href="${waHref}" target="_blank"
-              style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.3);color:#25d366;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">📱 WA</a>
+            <button onclick="eleicaoEnviarWACandidato('${c.id}')"
+              style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.3);color:#25d366;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;border-width:1px;border-style:solid">📱 WA</button>
           </div>`;
         }).join("");
         return `<div class="card" style="margin-bottom:14px">
@@ -1292,6 +1285,37 @@
   window.eleicaoCandFiltroTipo = function(v) {
     _candFiltroTipo = v;
     _renderCandidatosTab();
+  };
+
+  window.eleicaoEnviarWACandidato = async function(id) {
+    const c = _candidatos.find(x => x.id === id);
+    if (!c) return;
+    const tel = c._celular;
+    if (!tel) {
+      alert("Este candidato não tem telefone cadastrado no SIPEN. Cadastre o celular na ficha de membro antes de enviar.");
+      return;
+    }
+    const tipo = c.tipo === "presbitero" ? "Presbítero" : "Diácono";
+    const url  = PERFIL_URL + c.token_perfil;
+    const nome = c.nome.split(" ")[0];
+    const mensagem =
+      `Olá, ${nome}! 🎉\n\n` +
+      `Parabéns! Você foi aprovado(a) como candidato(a) a ${tipo} no processo de *${_processo?.nome || "Eleição de Oficiais"}*.\n\n` +
+      `Para que a Igreja possa conhecê-lo(a) melhor, pedimos que preencha seu mini-currículo pelo link:\n\n` +
+      `${url}\n\n` +
+      `São apenas três campos breves: vida familiar, eclesiástica e profissional. Você também pode incluir uma foto.\n\n` +
+      `_Igreja Presbiteriana da Penha_`;
+    try {
+      const r = await WA.send({ para: tel, nome: c.nome, mensagem, modulo: "ELEICOES" });
+      if (r?.ok === false) {
+        const msg = r.status === "modulo_inativo"
+          ? "Módulo ELEICOES inativo no WhatsApp. Ative-o em Configurações → WhatsApp → Módulos."
+          : r.error || r.status || "Erro ao enviar.";
+        alert(msg);
+      }
+    } catch (e) {
+      alert("Erro ao enviar: " + (e.message || e));
+    }
   };
 
   window.eleicaoCopiarLinkPerfil = function(token) {
