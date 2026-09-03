@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   SIPEN — Processos Eleitorais  v6.45.0
+   SIPEN — Processos Eleitorais  v6.46.0
    modules/conselho/eleicoes.js
 ═══════════════════════════════════════════════════════════ */
 
@@ -139,15 +139,12 @@
   async function _carregarCandidatos(processoId) {
     const { data } = await _sb()
       .from("eleicao_candidatos")
-      .select("*, pessoas(celular, telefone)")
+      .select("*")
       .is("deleted_at", null)
       .eq("processo_id", processoId)
       .order("ordem")
       .order("criado_em");
-    _candidatos = (data || []).map(c => ({
-      ...c,
-      _celular: c.pessoas?.celular || c.pessoas?.telefone || null,
-    }));
+    _candidatos = data || [];
   }
 
   async function _carregarVotacaoConfig(processoId) {
@@ -1290,7 +1287,11 @@
   window.eleicaoEnviarWACandidato = async function(id) {
     const c = _candidatos.find(x => x.id === id);
     if (!c) return;
-    const tel = c._celular;
+    let tel = null;
+    if (c.pessoa_id) {
+      const { data: p } = await _sb().from("pessoas").select("celular,telefone").eq("id", c.pessoa_id).maybeSingle();
+      tel = p?.celular || p?.telefone || null;
+    }
     if (!tel) {
       alert("Este candidato não tem telefone cadastrado no SIPEN. Cadastre o celular na ficha de membro antes de enviar.");
       return;
