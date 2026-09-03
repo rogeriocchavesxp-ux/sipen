@@ -329,7 +329,7 @@
       ceFecharModal();
       T("Controle salvo", `${codigo_controle} registrado com sucesso.`);
       await ceCarregar();
-      if(!id) _ceModalGenerall(codigo_controle, _pessoaNome(pessoa_id));
+      _ceModalGenerall(codigo_controle, _pessoaNome(pessoa_id));
     } catch(e) {
       console.error("salvar controle:", e);
       T("Erro ao salvar", _erro(e));
