@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   SIPEN — Processos Eleitorais  v6.47.0
+   SIPEN — Processos Eleitorais  v6.48.0
    modules/conselho/eleicoes.js
 ═══════════════════════════════════════════════════════════ */
 
@@ -1407,9 +1407,9 @@
                   </td>
                   <td style="padding:8px 10px">
                     <div style="display:flex;gap:6px;justify-content:flex-end">
-                      ${c.token_perfil ? `<button onclick="eleicaoCopiarLinkPerfil('${c.token_perfil}')"
-                        style="background:none;border:1px solid var(--bd2);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--tx2);cursor:pointer"
-                        title="Copiar link do mini-currículo">🔗</button>` : ""}
+                      ${c.token_perfil ? `<button onclick="eleicaoEnviarWACandidato('${c.id}')"
+                        style="background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.3);border-radius:5px;padding:3px 8px;font-size:11px;color:#25d366;cursor:pointer"
+                        title="Enviar link do mini-currículo via WhatsApp">📱</button>` : ""}
                       <button onclick="eleicaoToggleCandidato('${c.id}',${!c.ativo})"
                         style="background:none;border:1px solid var(--bd2);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--tx2);cursor:pointer"
                         title="${c.ativo?"Inativar":"Ativar"}">${c.ativo ? "○" : "●"}</button>
