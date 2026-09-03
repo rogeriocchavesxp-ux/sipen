@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   SIPEN — Processos Eleitorais  v6.42.0
+   SIPEN — Processos Eleitorais  v6.43.0
    modules/conselho/eleicoes.js
 ═══════════════════════════════════════════════════════════ */
 
@@ -8,6 +8,7 @@
   /* ── Config ─────────────────────────────────────────── */
   const BASE_URL    = "https://www.sipen.com.br/eleicoes.html?p=";
   const VOTACAO_URL = "https://www.sipen.com.br/votacao.html?p=";
+  const PERFIL_URL  = "https://www.sipen.com.br/perfil-candidato.html?t=";
 
   /* ── Estado ─────────────────────────────────────────── */
   let _processos  = [];
@@ -962,7 +963,28 @@
         linkVot, `vot-${p.slug}`, statusVot,
         `*${p.nome}*\n\nA votação está aberta! Participe agora:\n${linkVot}`,
         `Prezado(a) membro,\n\nVotação aberta para: ${p.nome}.\n\nVote pelo link: ${linkVot}`
-      )}`;
+      )}
+      ${(() => {
+        const cands = _candidatos.filter(c => c.ativo && c.token_perfil);
+        if (!cands.length) return "";
+        const linhas = cands.map(c => {
+          const url  = PERFIL_URL + c.token_perfil;
+          const tipo = c.tipo === "presbitero" ? "Presbítero" : "Diácono";
+          const cor  = c.tipo === "presbitero" ? "var(--sky)" : "var(--teal)";
+          return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd1)">
+            <span style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid ${cor}44;color:${cor};background:${cor}11;flex-shrink:0">${tipo}</span>
+            <span style="flex:1;font-size:13px;color:var(--tx1);font-weight:500">${_esc(c.nome)}</span>
+            <input readonly value="${url}" style="width:220px;padding:6px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--sky);font-size:11px;outline:none">
+            <button onclick="navigator.clipboard.writeText('${url}').then(()=>T&&T('Copiado!','${url}'))"
+              style="padding:6px 12px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:12px;cursor:pointer;white-space:nowrap">Copiar</button>
+          </div>`;
+        }).join("");
+        return `<div class="card" style="margin-bottom:14px">
+          <div class="ctit" style="margin-bottom:4px">Links de Mini-currículo</div>
+          <div style="font-size:11.5px;color:var(--tx3);margin-bottom:14px">Envie o link individual para cada candidato preencher seu perfil.</div>
+          ${linhas}
+        </div>`;
+      })()}`;
   }
 
   /* ── Actions globais ─────────────────────────────────── */
