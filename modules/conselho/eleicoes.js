@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   SIPEN — Processos Eleitorais  v6.48.0
+   SIPEN — Processos Eleitorais  v6.49.0
    modules/conselho/eleicoes.js
 ═══════════════════════════════════════════════════════════ */
 
@@ -1309,8 +1309,11 @@
         c.nome.trim().toLowerCase() === nome.trim().toLowerCase() && c.tipo === tipo
       );
       if (!jaExiste) {
+        const match = _membros.find(m => m.nome.trim().toLowerCase() === nome.trim().toLowerCase());
         await _sb().from("eleicao_candidatos").insert({
           processo_id: _processo.id, nome, tipo, origem: "avaliacao", ativo: true,
+          pessoa_id: match?.pessoa_id || null,
+          congregacao: match?.congregacao || null,
         });
         await _carregarCandidatos(_processo.id);
       }
@@ -1606,13 +1609,21 @@
     const inp = "width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:13px;box-sizing:border-box;outline:none;font-family:inherit";
     const lbl = "display:block;font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px";
 
+    const optsM = _membros
+      .slice().sort((a,b) => a.nome.localeCompare(b.nome))
+      .map(m => `<option value="${m.pessoa_id}" data-cong="${_esc(m.congregacao||'')}">${_esc(m.nome)}</option>`)
+      .join("");
+
     panel.innerHTML = `
       <div class="card" style="margin-bottom:14px;border-color:var(--sky)">
         <div class="ctit" style="margin-bottom:14px">Adicionar candidato manualmente</div>
         <div style="display:grid;grid-template-columns:1fr 180px 180px;gap:12px;align-items:end;flex-wrap:wrap">
           <div>
-            <label style="${lbl}">Nome completo *</label>
-            <input id="cand-add-nome" style="${inp}" placeholder="Nome do candidato">
+            <label style="${lbl}">Membro *</label>
+            <select id="cand-add-pessoa" style="${inp}" onchange="eleicaoCandAddPessoa(this)">
+              <option value="">— Selecione —</option>
+              ${optsM}
+            </select>
           </div>
           <div>
             <label style="${lbl}">Tipo *</label>
@@ -1632,19 +1643,29 @@
         </div>
       </div>`;
     panel.style.display = "block";
-    document.getElementById("cand-add-nome")?.focus();
+    document.getElementById("cand-add-pessoa")?.focus();
+  };
+
+  window.eleicaoCandAddPessoa = function(sel) {
+    const opt = sel.options[sel.selectedIndex];
+    const cong = opt?.dataset?.cong || "";
+    const congEl = document.getElementById("cand-add-cong");
+    if (congEl && cong) congEl.value = cong;
   };
 
   window.eleicaoSalvarCandidatoManual = async function() {
-    const nome = document.getElementById("cand-add-nome")?.value?.trim();
-    const tipo = document.getElementById("cand-add-tipo")?.value;
-    const cong = document.getElementById("cand-add-cong")?.value?.trim() || null;
+    const sel      = document.getElementById("cand-add-pessoa");
+    const pessoaId = sel?.value || null;
+    const nome     = sel?.options[sel.selectedIndex]?.text?.trim();
+    const tipo     = document.getElementById("cand-add-tipo")?.value;
+    const cong     = document.getElementById("cand-add-cong")?.value?.trim() || null;
 
-    if (!nome) { alert("Nome obrigatório."); return; }
+    if (!pessoaId || !nome) { alert("Selecione um membro."); return; }
 
     const { error } = await _sb().from("eleicao_candidatos").insert({
       processo_id: _processo.id,
       nome, tipo, congregacao: cong,
+      pessoa_id: pessoaId,
       origem: "manual", ativo: true,
     });
     if (error) { alert("Erro ao adicionar: " + error.message); return; }
