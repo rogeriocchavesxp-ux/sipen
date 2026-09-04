@@ -1452,8 +1452,10 @@
       tel = p?.celular || p?.telefone || null;
     }
     if (!tel) {
-      alert("Este candidato não tem telefone cadastrado no SIPEN. Cadastre o celular na ficha de membro antes de enviar.");
-      return;
+      const digitado = prompt(`Telefone não encontrado para ${c.nome}.\nDigite o número com DDD (apenas dígitos):`);
+      if (!digitado) return;
+      tel = digitado.replace(/\D/g, "");
+      if (tel.length < 10) { alert("Número inválido."); return; }
     }
     const tipo = c.tipo === "presbitero" ? "Presbítero" : "Diácono";
     const url  = PERFIL_URL + c.token_perfil;
