@@ -374,7 +374,9 @@ window.sipenFetchTodos = sipenFetchTodos;
 async function apiRead(sheet, limit = 200) {
   const tbl = tableName(sheet);
   // Membros e visitantes têm bases grandes — busca tudo para filtro local correto
-  const lim = (sheet === "MEMBROS" || sheet === "VISITANTES") ? 5000 : limit;
+  const lim = (sheet === "MEMBROS" || sheet === "VISITANTES") ? 5000
+            : sheet === "DEMANDAS" ? 1000
+            : limit;
   const res = await fetch(`${apiBaseUrl()}/rest/v1/${tbl}?select=*&order=id.desc.nullslast&limit=${lim}`, {
     method: "GET",
     headers: apiHeaders({ "Prefer": "count=none" })
