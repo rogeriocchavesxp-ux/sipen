@@ -1411,12 +1411,16 @@
                     </span>
                   </td>
                   <td style="${tdS}">
-                    <span style="font-size:10px;padding:2px 9px;border-radius:6px;background:${perfPreench?"rgba(58,170,92,.12)":"rgba(208,144,64,.12)"};color:${perfPreench?"var(--gr)":"var(--amber)"}">
+                    <span onclick="${perfPreench ? `eleicaoVerMiniCurriculo('${c.id}')` : ""}"
+                      style="font-size:10px;padding:2px 9px;border-radius:6px;background:${perfPreench?"rgba(58,170,92,.12)":"rgba(208,144,64,.12)"};color:${perfPreench?"var(--gr)":"var(--amber)"};cursor:${perfPreench?"pointer":"default"}">
                       ${perfPreench ? "Preenchido" : "Pendente"}
                     </span>
                   </td>
                   <td style="padding:8px 10px">
                     <div style="display:flex;gap:6px;justify-content:flex-end">
+                      ${perfPreench ? `<button onclick="eleicaoVerMiniCurriculo('${c.id}')"
+                        style="background:rgba(74,156,245,.1);border:1px solid rgba(74,156,245,.3);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--sky);cursor:pointer"
+                        title="Ver mini-currículo">👁</button>` : ""}
                       ${c.token_perfil ? `<button onclick="eleicaoEnviarWACandidato('${c.id}')"
                         style="background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.3);border-radius:5px;padding:3px 8px;font-size:11px;color:#25d366;cursor:pointer"
                         title="Enviar link do mini-currículo via WhatsApp">📱</button>` : ""}
@@ -1489,6 +1493,44 @@
     } else {
       prompt("Copie o link abaixo:", url);
     }
+  };
+
+  window.eleicaoVerMiniCurriculo = function(id) {
+    const c = _candidatos.find(x => x.id === id);
+    if (!c) return;
+    const tipo = c.tipo === "presbitero" ? "Presbítero" : "Diácono";
+    const campos = [
+      { lbl: "Vida Familiar",       val: c.vida_familiar },
+      { lbl: "Vida Eclesiástica",   val: c.vida_eclesiastica },
+      { lbl: "Vida Profissional",   val: c.vida_profissional },
+    ];
+    const corpo = campos.map(f => f.val ? `
+      <div style="margin-bottom:18px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:6px">${_esc(f.lbl)}</div>
+        <div style="font-size:13.5px;color:var(--tx1);line-height:1.6;white-space:pre-wrap">${_esc(f.val)}</div>
+      </div>` : "").join("");
+    const foto = c.foto_url ? `<img src="${c.foto_url}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--bd2);flex-shrink:0">` : `<div style="width:80px;height:80px;border-radius:50%;background:var(--bg3);border:2px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">👤</div>`;
+    document.getElementById("mc-modal")?.remove();
+    const m = document.createElement("div");
+    m.id = "mc-modal";
+    m.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px";
+    m.innerHTML = `
+      <div style="background:var(--bg2);border-radius:12px;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.28)">
+        <div style="padding:20px 20px 16px;border-bottom:1px solid var(--bd1);display:flex;gap:14px;align-items:center">
+          ${foto}
+          <div style="flex:1;min-width:0">
+            <div style="font-size:15px;font-weight:700;color:var(--tx1)">${_esc(c.nome)}</div>
+            <div style="font-size:11px;color:var(--tx3);margin-top:2px">${tipo} · ${_esc(c.congregacao||"Sede")}</div>
+          </div>
+          <button onclick="document.getElementById('mc-modal').remove()"
+            style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--tx3);padding:4px 8px;border-radius:6px">✕</button>
+        </div>
+        <div style="padding:20px">
+          ${corpo || "<p style='color:var(--tx3);font-size:13px'>Nenhum campo preenchido.</p>"}
+        </div>
+      </div>`;
+    m.onclick = e => { if (e.target === m) m.remove(); };
+    document.body.appendChild(m);
   };
 
   window.eleicaoAbrirImportarIndicacoes = function() {
