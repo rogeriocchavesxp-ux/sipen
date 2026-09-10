@@ -248,7 +248,7 @@
         style="background:var(--bg-card);border:1px solid ${destaque?"var(--bd2)":"var(--bd1)"};border-radius:12px;padding:${destaque?"18px":"14px"} 20px;cursor:pointer;transition:border-color .15s;${isAberto?"border-left:3px solid var(--gr)":""}"
         onmouseover="this.style.borderColor='var(--sky)'" onmouseout="this.style.borderColor='${destaque?"var(--bd2)":"var(--bd1)"}'">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
-          <div style="flex:1;min-width:0">
+          <div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
               ${_statusBadge(p.status)}
               <span style="font-size:10px;color:var(--tx3)">${TIPO_CFG[p.tipo]||"Ambos"} · ${p.ano}</span>
@@ -790,7 +790,7 @@
       const hiC = pos <= 3 ? cor : "var(--tx3)";
       return `<div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--bd1)">
         <span style="font-size:10.5px;font-weight:700;color:${hiC};width:20px;text-align:right;flex-shrink:0">${pos}</span>
-        <div style="flex:1;min-width:0">
+        <div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
             <span style="font-size:12px;font-weight:500;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px">${_esc(r.nome)}</span>
             <span style="font-size:13px;font-weight:700;color:var(--tx1);flex-shrink:0;margin-left:8px">${r.n}<span style="font-size:10px;color:var(--tx3);font-weight:400">×</span></span>
@@ -1509,21 +1509,21 @@
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:6px">${_esc(f.lbl)}</div>
         <div style="font-size:13.5px;color:var(--tx1);line-height:1.6;white-space:pre-wrap">${_esc(f.val)}</div>
       </div>` : "").join("");
-    const foto = c.foto_url ? `<img src="${c.foto_url}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--bd2);flex-shrink:0">` : `<div style="width:80px;height:80px;border-radius:50%;background:var(--bg3);border:2px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">👤</div>`;
+    const foto = c.foto_url ? `<img src="${c.foto_url}" style="width:240px;height:240px;border-radius:50%;object-fit:cover;border:3px solid var(--bd2);flex-shrink:0">` : `<div style="width:240px;height:240px;border-radius:50%;background:var(--bg3);border:3px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:80px;flex-shrink:0">👤</div>`;
     document.getElementById("mc-modal")?.remove();
     const m = document.createElement("div");
     m.id = "mc-modal";
     m.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px";
     m.innerHTML = `
       <div style="background:var(--bg1,#fff);border:1px solid var(--bd1);border-radius:12px;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.45)">
-        <div style="padding:20px 20px 16px;border-bottom:1px solid var(--bd1);display:flex;gap:14px;align-items:center">
+        <div style="padding:24px 20px 20px;border-bottom:1px solid var(--bd1);display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;position:relative">
           ${foto}
-          <div style="flex:1;min-width:0">
+          <div>
             <div style="font-size:15px;font-weight:700;color:var(--tx1)">${_esc(c.nome)}</div>
             <div style="font-size:11px;color:var(--tx3);margin-top:2px">${tipo} · ${_esc(c.congregacao||"Sede")}</div>
           </div>
           <button onclick="document.getElementById('mc-modal').remove()"
-            style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--tx3);padding:4px 8px;border-radius:6px">✕</button>
+            style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--tx3);padding:4px 8px;border-radius:6px;position:absolute;top:12px;right:12px">✕</button>
         </div>
         <div style="padding:20px">
           ${corpo || "<p style='color:var(--tx3);font-size:13px'>Nenhum campo preenchido.</p>"}
@@ -2247,7 +2247,7 @@
             : [...ativos, ...rascunhos].map(p => `
               <div onclick="go('conselho-eleicoes')" style="cursor:pointer;border-bottom:1px solid var(--bd1);padding:10px 0;display:flex;align-items:center;gap:12px"
                    onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
-                <div style="flex:1;min-width:0">
+                <div>
                   <div style="font-size:13px;font-weight:600;color:var(--tx1)">${_esc(p.nome)}</div>
                   <div style="font-size:11px;color:var(--tx3);margin-top:2px">${p.tipo||"—"} · ${_fmtAno(p)}</div>
                 </div>
