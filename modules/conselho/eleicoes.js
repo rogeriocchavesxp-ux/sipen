@@ -1513,9 +1513,9 @@
     document.getElementById("mc-modal")?.remove();
     const m = document.createElement("div");
     m.id = "mc-modal";
-    m.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px";
+    m.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px";
     m.innerHTML = `
-      <div style="background:var(--bg2);border-radius:12px;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.28)">
+      <div style="background:var(--bg1,#fff);border:1px solid var(--bd1);border-radius:12px;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.45)">
         <div style="padding:20px 20px 16px;border-bottom:1px solid var(--bd1);display:flex;gap:14px;align-items:center">
           ${foto}
           <div style="flex:1;min-width:0">
