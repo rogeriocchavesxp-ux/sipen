@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Cultos / Frequência
-   mobile/cultos.js · v1.1.8
+   mobile/cultos.js · v1.1.9
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -227,9 +227,10 @@
     btn.disabled = true; btn.textContent = 'Salvando…';
 
     const _mostrarErro = (msg) => {
-      err(msg);
-      mobToast(msg, 'error');
       if (btn) { btn.disabled = false; btn.textContent = id ? 'Atualizar' : 'Registrar'; }
+      err(msg);
+      try { mobToast(msg, 'error'); } catch (_) {}
+      console.error('[cultos] erro ao salvar:', msg);
     };
 
     try {
