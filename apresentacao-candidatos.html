@@ -222,6 +222,35 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .load-txt { font-family: sans-serif; font-size: 12px; color: var(--w50); }
 
+  /* ── Mobile ────────────────────────────── */
+  @media (max-width: 640px) {
+    .slide-cand {
+      padding: 20px 16px 72px;
+      justify-content: flex-start;
+      overflow-y: auto;
+      gap: 16px;
+    }
+    .cand-header { gap: 14px; }
+    .cand-foto, .cand-sem-foto { width: 76px; height: 76px; }
+    .cand-sem-foto { font-size: 30px; }
+    .cand-nome { font-size: 22px; }
+    .cand-campos {
+      grid-template-columns: 1fr;
+      height: auto;
+    }
+    .cand-campo { min-height: 0; }
+    .campo-val  { max-height: none; overflow-y: visible; }
+    #nav-prev, #nav-next {
+      top: auto; bottom: 20px; transform: none;
+      width: 44px; height: 44px; font-size: 18px;
+    }
+    #nav-prev { left: calc(50% - 52px); }
+    #nav-next { left: calc(50% + 8px);  }
+    #progress { bottom: 6px; }
+    #autoplay-btn { font-size: 10px; padding: 4px 10px; }
+    #wm { display: none; }
+  }
+
   /* ── Watermark ──────────────────────────── */
   #wm {
     position: fixed; bottom: 42px; right: 20px;
@@ -428,6 +457,20 @@ function toggleAutoplay() {
     }, 8000);
   } else { clearInterval(autoTimer); }
 }
+
+// Swipe touch
+let _tx = null;
+document.addEventListener("touchstart", e => { _tx = e.touches[0].clientX; }, { passive: true });
+document.addEventListener("touchend", e => {
+  if (_tx === null) return;
+  const dx = e.changedTouches[0].clientX - _tx;
+  _tx = null;
+  if (Math.abs(dx) < 40) return;
+  // só navega se o toque não foi num card scrollável
+  const target = e.target.closest(".cand-campo");
+  if (target) return;
+  slide(dx < 0 ? 1 : -1);
+}, { passive: true });
 
 document.addEventListener("keydown", e => {
   if (e.key==="ArrowRight"||e.key==="ArrowDown"||e.key===" "){ e.preventDefault(); slide(1); }
