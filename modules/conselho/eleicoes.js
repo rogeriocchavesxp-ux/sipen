@@ -1509,7 +1509,14 @@
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:6px">${_esc(f.lbl)}</div>
         <div style="font-size:13.5px;color:var(--tx1);line-height:1.6;white-space:pre-wrap">${_esc(f.val)}</div>
       </div>` : "").join("");
-    const foto = c.foto_url ? `<img src="${c.foto_url}" style="width:240px;height:240px;border-radius:50%;object-fit:cover;border:3px solid var(--bd2);flex-shrink:0">` : `<div style="width:240px;height:240px;border-radius:50%;background:var(--bg3);border:3px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:80px;flex-shrink:0">👤</div>`;
+    const nomeArq = c.nome.replace(/\s+/g,"_").toLowerCase();
+    const foto = c.foto_url
+      ? `<div style="position:relative;display:inline-block">
+           <img src="${c.foto_url}" style="width:240px;height:240px;border-radius:50%;object-fit:cover;border:3px solid var(--bd2);display:block">
+           <a href="${c.foto_url}" download="foto_${nomeArq}.jpg"
+             style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.65);color:#fff;border-radius:20px;padding:5px 10px;font-size:11px;text-decoration:none;font-weight:600;line-height:1">⬇ Baixar</a>
+         </div>`
+      : `<div style="width:240px;height:240px;border-radius:50%;background:var(--bg3);border:3px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:80px;flex-shrink:0">👤</div>`;
     document.getElementById("mc-modal")?.remove();
     const m = document.createElement("div");
     m.id = "mc-modal";
