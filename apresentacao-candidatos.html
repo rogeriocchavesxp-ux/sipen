@@ -225,27 +225,38 @@
   /* ── Mobile ────────────────────────────── */
   @media (max-width: 640px) {
     .slide-cand {
-      padding: 20px 16px 72px;
+      padding: 32px 20px 80px;
       justify-content: flex-start;
       overflow-y: auto;
-      gap: 16px;
+      gap: 20px;
     }
-    .cand-header { gap: 14px; }
-    .cand-foto, .cand-sem-foto { width: 76px; height: 76px; }
-    .cand-sem-foto { font-size: 30px; }
+    /* Header vira coluna: foto centralizada, info abaixo */
+    .cand-header {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 14px;
+    }
+    .cand-foto, .cand-sem-foto {
+      width: 100px; height: 100px;
+    }
+    .cand-sem-foto { font-size: 40px; }
     .cand-nome { font-size: 22px; }
+    .cand-congr { font-size: 12px; }
+    /* Cards em coluna */
     .cand-campos {
       grid-template-columns: 1fr;
       height: auto;
     }
     .cand-campo { min-height: 0; }
     .campo-val  { max-height: none; overflow-y: visible; }
+    /* Setas na base */
     #nav-prev, #nav-next {
-      top: auto; bottom: 20px; transform: none;
+      top: auto; bottom: 22px; transform: none;
       width: 44px; height: 44px; font-size: 18px;
     }
-    #nav-prev { left: calc(50% - 52px); }
-    #nav-next { left: calc(50% + 8px);  }
+    #nav-prev { left: calc(50% - 54px); }
+    #nav-next { left: calc(50% + 10px); }
     #progress { bottom: 6px; }
     #autoplay-btn { font-size: 10px; padding: 4px 10px; }
     #wm { display: none; }
