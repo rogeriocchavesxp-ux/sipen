@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   SIPEN — Processos Eleitorais  v6.49.2
+   SIPEN — Processos Eleitorais  v6.49.48
    modules/conselho/eleicoes.js
 ═══════════════════════════════════════════════════════════ */
 
@@ -9,6 +9,7 @@
   const BASE_URL    = "https://www.sipen.com.br/eleicoes.html?p=";
   const VOTACAO_URL = "https://www.sipen.com.br/votacao.html?p=";
   const PERFIL_URL  = "https://www.sipen.com.br/perfil-candidato.html?t=";
+  const APRES_URL   = "https://www.sipen.com.br/apresentacao-candidatos.html?p=";
 
   /* ── Estado ─────────────────────────────────────────── */
   let _processos  = [];
@@ -976,6 +977,19 @@
         `*${p.nome}*\n\nA votação está aberta! Participe agora:\n${linkVot}`,
         `Prezado(a) membro,\n\nVotação aberta para: ${p.nome}.\n\nVote pelo link: ${linkVot}`
       )}
+      ${(() => {
+        const linkApres = APRES_URL + p.slug;
+        const candAtivos = _candidatos.filter(c => c.ativo).length;
+        const statusApres = candAtivos
+          ? `✅ ${candAtivos} candidato${candAtivos!==1?"s":""} ativo${candAtivos!==1?"s":""}. Use este link para projetar a apresentação na igreja.`
+          : "⚠️ Nenhum candidato ativo cadastrado ainda.";
+        return _linkCard(
+          "Apresentação de Candidatos",
+          linkApres, `apres-${p.slug}`, statusApres,
+          `*${p.nome}*\n\nConheça os candidatos:\n${linkApres}`,
+          `Prezado(a) membro,\n\nConheça os candidatos de: ${p.nome}.\n\nAcesse: ${linkApres}`
+        );
+      })()}
       ${(() => {
         const cands = _candidatos.filter(c => c.ativo && c.token_perfil);
         if (!cands.length) return "";
