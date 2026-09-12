@@ -263,9 +263,22 @@ async function init() {
       </div>`;
     return;
   }
-  const temPerfil = c => c.vida_familiar || c.vida_eclesiastica || c.vida_profissional || c.foto_url;
-  const presbiteros = data.filter(c => c.tipo === "presbitero" && temPerfil(c));
-  const diaconos    = data.filter(c => c.tipo === "diacono"    && temPerfil(c));
+  // Deduplicar por nome, mantendo o registro mais completo (maior pontuação de campos)
+  function dedup(arr) {
+    const map = new Map();
+    arr.forEach(c => {
+      const key   = c.nome.trim().toLowerCase();
+      const score = (c.foto_url ? 1 : 0)
+                  + (c.vida_familiar ? 3 : 0)
+                  + (c.vida_eclesiastica ? 3 : 0)
+                  + (c.vida_profissional ? 3 : 0);
+      const prev = map.get(key);
+      if (!prev || score > prev._score) map.set(key, { ...c, _score: score });
+    });
+    return [...map.values()].filter(c => c._score > 0);
+  }
+  const presbiteros = dedup(data.filter(c => c.tipo === "presbitero"));
+  const diaconos    = dedup(data.filter(c => c.tipo === "diacono"));
   build(presbiteros, diaconos);
   renderSlide();
   document.getElementById("loading").style.display = "none";
