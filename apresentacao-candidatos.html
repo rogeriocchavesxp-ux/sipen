@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Candidatos — Eleição de Oficiais 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:    #0b1220;
+    --navy2:   #111c30;
+    --gold:    #c9a84a;
+    --gold2:   #e8c96b;
+    --sky:     #4a9cf5;
+    --teal:    #2dd4bf;
+    --white:   #ffffff;
+    --white60: rgba(255,255,255,.6);
+    --white30: rgba(255,255,255,.3);
+    --white10: rgba(255,255,255,.1);
+    --white06: rgba(255,255,255,.06);
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Georgia', serif;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* ── Slides ──────────────────────────────────── */
+  #deck {
+    width: 100%; height: 100%;
+    position: relative;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 60px;
+    opacity: 0;
+    transform: translateX(60px);
+    transition: opacity .5s ease, transform .5s ease;
+    pointer-events: none;
+  }
+  .slide.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+  }
+  .slide.exit-left {
+    opacity: 0;
+    transform: translateX(-60px);
+    pointer-events: none;
+  }
+
+  /* ── Capa ─────────────────────────────────────── */
+  .slide-capa {
+    background: radial-gradient(ellipse at 50% 40%, #1a2e4a 0%, var(--navy) 70%);
+    text-align: center;
+    gap: 16px;
+  }
+  .capa-logo {
+    width: 72px;
+    height: 72px;
+    margin-bottom: 8px;
+    opacity: .9;
+  }
+  .capa-igreja {
+    font-size: 13px;
+    letter-spacing: .25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-family: sans-serif;
+    font-weight: 600;
+  }
+  .capa-titulo {
+    font-size: clamp(32px, 5vw, 58px);
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--white);
+    text-shadow: 0 2px 24px rgba(0,0,0,.4);
+  }
+  .capa-titulo em {
+    color: var(--gold2);
+    font-style: normal;
+  }
+  .capa-ano {
+    font-size: 18px;
+    color: var(--white60);
+    font-family: sans-serif;
+    margin-top: 4px;
+  }
+  .capa-versículo {
+    max-width: 520px;
+    font-size: 14px;
+    font-style: italic;
+    color: var(--white60);
+    line-height: 1.7;
+    margin-top: 24px;
+    border-top: 1px solid var(--white10);
+    padding-top: 20px;
+  }
+
+  /* ── Divisor de seção ─────────────────────────── */
+  .slide-divisor {
+    background: radial-gradient(ellipse at 50% 50%, #142040 0%, var(--navy) 75%);
+    text-align: center;
+    gap: 12px;
+  }
+  .divisor-linha {
+    width: 60px;
+    height: 3px;
+    border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+  .divisor-subtitulo {
+    font-size: 12px;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    font-family: sans-serif;
+    font-weight: 600;
+    color: var(--white30);
+    margin-bottom: 12px;
+  }
+  .divisor-titulo {
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .divisor-count {
+    font-size: 13px;
+    font-family: sans-serif;
+    color: var(--white60);
+    margin-top: 8px;
+  }
+  .divisor-icon {
+    font-size: 56px;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 0 20px currentColor);
+  }
+
+  /* ── Candidato ────────────────────────────────── */
+  .slide-candidato {
+    background: linear-gradient(160deg, #0f1a2e 0%, var(--navy) 100%);
+    gap: 0;
+    padding: 32px 80px;
+    justify-content: flex-start;
+    overflow-y: auto;
+  }
+
+  .cand-header {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto 28px;
+    flex-shrink: 0;
+  }
+  .cand-foto-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+  .cand-foto {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--white10);
+    box-shadow: 0 0 0 6px rgba(255,255,255,.05), 0 8px 32px rgba(0,0,0,.5);
+    display: block;
+  }
+  .cand-sem-foto {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: var(--white06);
+    border: 3px solid var(--white10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 56px;
+  }
+  .cand-info { flex: 1; min-width: 0; }
+  .cand-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10.5px;
+    font-family: sans-serif;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+  }
+  .cand-nome {
+    font-size: clamp(22px, 3vw, 34px);
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--white);
+  }
+  .cand-congregacao {
+    font-size: 13px;
+    font-family: sans-serif;
+    color: var(--white60);
+    margin-top: 5px;
+  }
+
+  .cand-campos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    flex: 1;
+  }
+  .cand-campo {
+    background: var(--white06);
+    border: 1px solid var(--white10);
+    border-radius: 10px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .campo-lbl {
+    font-size: 9.5px;
+    font-family: sans-serif;
+    font-weight: 700;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--white30);
+  }
+  .campo-val {
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: rgba(255,255,255,.85);
+    overflow-y: auto;
+    max-height: 160px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--white10) transparent;
+  }
+  .campo-vazio {
+    font-style: italic;
+    color: var(--white30);
+    font-size: 13px;
+  }
+
+  /* ── Ornamento de acento na borda ─────────────── */
+  .slide-candidato::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent, var(--gold)), transparent);
+    z-index: 2;
+  }
+
+  /* ── Navegação ────────────────────────────────── */
+  #nav-prev, #nav-next {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 1px solid var(--white10);
+    background: rgba(255,255,255,.06);
+    color: var(--white60);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .2s, color .2s, opacity .2s;
+    backdrop-filter: blur(8px);
+  }
+  #nav-prev { left: 20px; }
+  #nav-next { right: 20px; }
+  #nav-prev:hover, #nav-next:hover {
+    background: rgba(255,255,255,.14);
+    color: var(--white);
+  }
+  #nav-prev.hidden, #nav-next.hidden { opacity: 0; pointer-events: none; }
+
+  /* ── Progresso ────────────────────────────────── */
+  #progress {
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 100;
+  }
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--white30);
+    transition: background .3s, width .3s;
+    cursor: pointer;
+  }
+  .dot.active {
+    background: var(--gold);
+    width: 20px;
+    border-radius: 3px;
+  }
+  .dot.section-dot {
+    background: var(--white10);
+  }
+
+  /* ── Counter ──────────────────────────────────── */
+  #counter {
+    position: fixed;
+    top: 20px;
+    right: 24px;
+    font-size: 11px;
+    font-family: sans-serif;
+    color: var(--white30);
+    z-index: 100;
+    letter-spacing: .05em;
+  }
+
+  /* ── Auto-play ────────────────────────────────── */
+  #autoplay-btn {
+    position: fixed;
+    top: 20px;
+    left: 24px;
+    font-size: 11px;
+    font-family: sans-serif;
+    background: var(--white06);
+    border: 1px solid var(--white10);
+    color: var(--white60);
+    padding: 5px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    z-index: 100;
+    transition: background .2s;
+  }
+  #autoplay-btn:hover { background: var(--white10); color: var(--white); }
+  #autoplay-btn.on { color: var(--gold); border-color: var(--gold); }
+
+  /* ── Loading ──────────────────────────────────── */
+  #loading {
+    position: fixed;
+    inset: 0;
+    background: var(--navy);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 999;
+  }
+  .spin {
+    width: 36px; height: 36px;
+    border: 3px solid var(--white10);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .load-txt { font-family: sans-serif; font-size: 13px; color: var(--white60); }
+
+  /* ── Estrelas de fundo ────────────────────────── */
+  .stars {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,.15) 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 20%, rgba(255,255,255,.10) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 70%, rgba(255,255,255,.12) 0%, transparent 100%),
+      radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,.08) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 60%, rgba(255,255,255,.10) 0%, transparent 100%),
+      radial-gradient(1px 1px at 40% 90%, rgba(255,255,255,.07) 0%, transparent 100%);
+  }
+</style>
+</head>
+<body>
+
+<div class="stars"></div>
+<div id="loading"><div class="spin"></div><div class="load-txt">Carregando candidatos…</div></div>
+
+<div id="deck"></div>
+
+<button id="nav-prev" onclick="slide(-1)">‹</button>
+<button id="nav-next" onclick="slide(1)">›</button>
+<div id="progress"></div>
+<div id="counter"></div>
+<button id="autoplay-btn" onclick="toggleAutoplay()">▶ Auto</button>
+
+<script>
+const SUPA_URL = "https://erhwryfzpycahgsohhbh.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyaHdyeWZ6cHljYWhnc29oaGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg2MTUsImV4cCI6MjA5MTg0NDYxNX0.T0hp90Bmufj6a3oUPq1vYcLiGx9YjyMaZiE38S0e3_8";
+const SLUG   = new URLSearchParams(location.search).get("p") || "eleicao-de-oficiais-2026-2026-2";
+
+let slides = [];
+let current = 0;
+let autoTimer = null;
+let autoOn = false;
+
+function esc(s) {
+  if (!s) return "";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+async function init() {
+  const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+  const { data, error } = await sb.rpc("eleicao_candidatos_publicos", { p_slug: SLUG });
+
+  if (error || !data) {
+    document.getElementById("loading").innerHTML =
+      `<div style="font-family:sans-serif;color:#e55;font-size:13px">Erro ao carregar candidatos.<br><small>${esc(error?.message||"")}</small></div>`;
+    return;
+  }
+
+  const presbiteros = data.filter(c => c.tipo === "presbitero");
+  const diaconos    = data.filter(c => c.tipo === "diacono");
+
+  buildSlides(presbiteros, diaconos);
+  render();
+  document.getElementById("loading").style.display = "none";
+}
+
+function buildSlides(presbiteros, diaconos) {
+  const deck = document.getElementById("deck");
+
+  // Slide 0 — Capa
+  slides.push({ type: "capa" });
+  deck.insertAdjacentHTML("beforeend", `
+    <div class="slide slide-capa" id="s-0">
+      <img class="capa-logo" src="icons/logo-ippenha.svg" alt="IPPenha"
+           onerror="this.style.display='none'">
+      <div class="capa-igreja">Igreja Presbiteriana da Penha</div>
+      <h1 class="capa-titulo">Eleição de<br><em>Oficiais 2026</em></h1>
+      <p class="capa-ano">Conheça os candidatos</p>
+      <p class="capa-versículo">
+        "Cada um coloque a serviço dos outros o dom que recebeu,
+        como bons administradores da multiforme graça de Deus."
+        <br><strong>1 Pedro 4:10</strong>
+      </p>
+    </div>`);
+
+  // Divisor — Presbíteros
+  if (presbiteros.length) {
+    const idx = slides.length;
+    slides.push({ type: "divisor" });
+    deck.insertAdjacentHTML("beforeend", `
+      <div class="slide slide-divisor" id="s-${idx}">
+        <div class="divisor-icon" style="color:var(--sky)">⛪</div>
+        <div class="divisor-subtitulo">Candidatos ao</div>
+        <h2 class="divisor-titulo" style="color:var(--sky)">Presbiterato</h2>
+        <div class="divisor-count">${presbiteros.length} candidato${presbiteros.length!==1?"s":""}</div>
+      </div>`);
+
+    presbiteros.forEach(c => {
+      const idx2 = slides.length;
+      slides.push({ type: "candidato", data: c, tipo: "presbitero" });
+      deck.insertAdjacentHTML("beforeend", buildCandSlide(idx2, c, "presbitero"));
+    });
+  }
+
+  // Divisor — Diáconos
+  if (diaconos.length) {
+    const idx = slides.length;
+    slides.push({ type: "divisor" });
+    deck.insertAdjacentHTML("beforeend", `
+      <div class="slide slide-divisor" id="s-${idx}">
+        <div class="divisor-icon" style="color:var(--teal)">🤝</div>
+        <div class="divisor-subtitulo">Candidatos ao</div>
+        <h2 class="divisor-titulo" style="color:var(--teal)">Diaconato</h2>
+        <div class="divisor-count">${diaconos.length} candidato${diaconos.length!==1?"s":""}</div>
+      </div>`);
+
+    diaconos.forEach(c => {
+      const idx2 = slides.length;
+      slides.push({ type: "candidato", data: c, tipo: "diacono" });
+      deck.insertAdjacentHTML("beforeend", buildCandSlide(idx2, c, "diacono"));
+    });
+  }
+
+  // Slide final
+  const idxF = slides.length;
+  slides.push({ type: "fim" });
+  deck.insertAdjacentHTML("beforeend", `
+    <div class="slide slide-capa" id="s-${idxF}" style="gap:14px">
+      <div style="font-size:48px">🙏</div>
+      <h2 style="font-size:clamp(24px,3.5vw,42px);text-align:center;font-weight:700">
+        Que o Senhor guie<br>nossa escolha
+      </h2>
+      <p class="capa-versículo" style="margin-top:16px">
+        "Reconhece-o em todos os teus caminhos,<br>
+        e ele endireitará as tuas veredas."<br>
+        <strong>Provérbios 3:6</strong>
+      </p>
+    </div>`);
+
+  buildDots();
+}
+
+function buildCandSlide(idx, c, tipo) {
+  const cor   = tipo === "presbitero" ? "var(--sky)" : "var(--teal)";
+  const bgCor = tipo === "presbitero" ? "rgba(74,156,245,.12)" : "rgba(45,212,191,.12)";
+  const lbl   = tipo === "presbitero" ? "Presbítero" : "Diácono";
+  const foto  = c.foto_url
+    ? `<img class="cand-foto" src="${esc(c.foto_url)}" alt="${esc(c.nome)}">`
+    : `<div class="cand-sem-foto">👤</div>`;
+
+  const campo = (lbl, val) => `
+    <div class="cand-campo">
+      <div class="campo-lbl">${lbl}</div>
+      ${val
+        ? `<div class="campo-val">${esc(val)}</div>`
+        : `<div class="campo-val campo-vazio">Não informado</div>`}
+    </div>`;
+
+  return `
+    <div class="slide slide-candidato" id="s-${idx}" style="--accent:${cor}">
+      <div class="cand-header">
+        <div class="cand-foto-wrap">${foto}</div>
+        <div class="cand-info">
+          <div class="cand-badge" style="background:${bgCor};color:${cor}">
+            ${lbl}
+          </div>
+          <div class="cand-nome">${esc(c.nome)}</div>
+          <div class="cand-congregacao">${esc(c.congregacao || "Sede")}</div>
+        </div>
+      </div>
+      <div class="cand-campos">
+        ${campo("Vida Familiar", c.vida_familiar)}
+        ${campo("Vida Eclesiástica", c.vida_eclesiastica)}
+        ${campo("Vida Profissional", c.vida_profissional)}
+      </div>
+    </div>`;
+}
+
+function buildDots() {
+  const prog = document.getElementById("progress");
+  prog.innerHTML = slides.map((s, i) => {
+    const cls = s.type === "divisor" || s.type === "capa" || s.type === "fim" ? "dot section-dot" : "dot";
+    return `<div class="${cls}" id="dot-${i}" onclick="goTo(${i})"></div>`;
+  }).join("");
+}
+
+function render() {
+  const prev = document.querySelector(".slide.active");
+  const next = document.getElementById(`s-${current}`);
+
+  if (prev && prev !== next) {
+    prev.classList.remove("active");
+    prev.classList.add("exit-left");
+    setTimeout(() => prev.classList.remove("exit-left"), 600);
+  }
+  if (next) {
+    next.classList.add("active");
+  }
+
+  // dots
+  document.querySelectorAll(".dot").forEach((d, i) => {
+    d.classList.toggle("active", i === current);
+  });
+
+  // counter
+  const cands = slides.filter(s => s.type === "candidato");
+  const candIdx = slides.slice(0, current + 1).filter(s => s.type === "candidato").length;
+  const total = cands.length;
+  const sl = slides[current];
+  document.getElementById("counter").textContent =
+    sl?.type === "candidato" ? `${candIdx} / ${total}` : "";
+
+  // nav arrows
+  document.getElementById("nav-prev").classList.toggle("hidden", current === 0);
+  document.getElementById("nav-next").classList.toggle("hidden", current === slides.length - 1);
+}
+
+function slide(dir) {
+  const next = current + dir;
+  if (next < 0 || next >= slides.length) return;
+  current = next;
+  render();
+}
+
+function goTo(i) {
+  if (i < 0 || i >= slides.length) return;
+  current = i;
+  render();
+}
+
+function toggleAutoplay() {
+  autoOn = !autoOn;
+  const btn = document.getElementById("autoplay-btn");
+  btn.classList.toggle("on", autoOn);
+  btn.textContent = autoOn ? "⏸ Auto" : "▶ Auto";
+  if (autoOn) {
+    autoTimer = setInterval(() => {
+      if (current < slides.length - 1) slide(1);
+      else { autoOn = false; clearInterval(autoTimer); btn.classList.remove("on"); btn.textContent = "▶ Auto"; }
+    }, 8000);
+  } else {
+    clearInterval(autoTimer);
+  }
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === " ") { e.preventDefault(); slide(1); }
+  if (e.key === "ArrowLeft"  || e.key === "ArrowUp")                    { e.preventDefault(); slide(-1); }
+  if (e.key === "f" || e.key === "F") document.documentElement.requestFullscreen?.();
+});
+
+init();
+</script>
+</body>
+</html>
