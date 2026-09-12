@@ -89,8 +89,9 @@
   /* ── Candidato ──────────────────────────── */
   .slide-cand {
     background: linear-gradient(155deg, #0f2419 0%, var(--dark) 100%);
-    padding: 28px 56px;
-    justify-content: flex-start;
+    padding: 40px 56px 48px;
+    justify-content: center;
+    gap: 20px;
   }
 
   .slide-cand::before {
@@ -108,8 +109,6 @@
     gap: 24px;
     width: 100%;
     max-width: 960px;
-    margin: 0 auto 20px;
-    flex-shrink: 0;
   }
   .cand-foto {
     width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
@@ -139,9 +138,7 @@
     gap: 14px;
     width: 100%;
     max-width: 960px;
-    margin: 0 auto;
-    flex: 1;
-    min-height: 0;
+    height: 260px;
   }
   .cand-campo {
     background: var(--w06);
@@ -266,8 +263,9 @@ async function init() {
       </div>`;
     return;
   }
-  const presbiteros = data.filter(c => c.tipo === "presbitero");
-  const diaconos    = data.filter(c => c.tipo === "diacono");
+  const temPerfil = c => c.vida_familiar || c.vida_eclesiastica || c.vida_profissional || c.foto_url;
+  const presbiteros = data.filter(c => c.tipo === "presbitero" && temPerfil(c));
+  const diaconos    = data.filter(c => c.tipo === "diacono"    && temPerfil(c));
   build(presbiteros, diaconos);
   renderSlide();
   document.getElementById("loading").style.display = "none";
