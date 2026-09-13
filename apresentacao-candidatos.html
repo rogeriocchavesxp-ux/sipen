@@ -303,39 +303,39 @@ async function init() {
       </div>`;
     return;
   }
-  // Lista oficial de candidatos (exatamente os 23 da aba Candidatos do SIPEN)
-  const LISTA = new Set([
-    "rafael cavalcante dos santos",
-    "eli da conceição coelho",
-    "raimo dizio nappi",
-    "maurício ramos costa",
-    "alberto sinhiti noguti",
-    "euclides portella da rocha",
-    "marcus vinícius barros de novaes",
-    "edmar aquotti",
-    "rodrigo cunha nascimento",
-    "wesley silva franco",
-    "enrico aguiar vrunski",
-    "adriano portella da rocha",
-    "flavio yamane de oliveira",
-    "guilherme mastro pietro",
-    "thiago magalhães de souza",
-    "adilson aparecido villano",
-    "lucas soranso dizio nappi",
-    "marcelo augusto macedo",
-    "wilians frança dias",
-    "josé vieira araújo",
-    "danilo lino dos santos",
-    "kevin verduguez miranda",
-    "osias vasconcelos júnior"
+  // Lista oficial: nome normalizado → tipo exato (evita THIAGO aparecer como presbitero)
+  const LISTA = new Map([
+    ["rafael cavalcante dos santos",      "presbitero"],
+    ["eli da conceição coelho",           "presbitero"],
+    ["raimo dizio nappi",                 "presbitero"],
+    ["maurício ramos costa",              "presbitero"],
+    ["alberto sinhiti noguti",            "presbitero"],
+    ["euclides portella da rocha",        "presbitero"],
+    ["marcus vinícius barros de novaes",  "presbitero"],
+    ["edmar aquotti",                     "presbitero"],
+    ["rodrigo cunha nascimento",          "presbitero"],
+    ["wesley silva franco",               "diacono"],
+    ["enrico aguiar vrunski",             "diacono"],
+    ["adriano portella da rocha",         "diacono"],
+    ["flavio yamane de oliveira",         "diacono"],
+    ["guilherme mastro pietro",           "diacono"],
+    ["thiago magalhães de souza",         "diacono"],
+    ["adilson aparecido villano",         "diacono"],
+    ["lucas soranso dizio nappi",         "diacono"],
+    ["marcelo augusto macedo",            "diacono"],
+    ["wilians frança dias",               "diacono"],
+    ["josé vieira araújo",                "diacono"],
+    ["danilo lino dos santos",            "diacono"],
+    ["kevin verduguez miranda",           "diacono"],
+    ["osias vasconcelos júnior",          "diacono"]
   ]);
 
-  // Filtrar pela lista oficial e deduplicar, mantendo o registro mais completo
+  // Filtrar pela lista oficial (nome + tipo) e deduplicar pelo registro mais completo
   const hasVal = v => v && v.trim().length > 0;
   function dedup(arr) {
     const map = new Map();
     arr
-      .filter(c => LISTA.has(c.nome.trim().toLowerCase()))
+      .filter(c => LISTA.get(c.nome.trim().toLowerCase()) === c.tipo)
       .forEach(c => {
         const key   = c.nome.trim().toLowerCase();
         const score = (hasVal(c.foto_url) ? 1 : 0)
