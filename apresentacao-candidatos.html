@@ -303,18 +303,48 @@ async function init() {
       </div>`;
     return;
   }
-  // Deduplicar por nome, mantendo o registro mais completo (maior pontuação de campos)
+  // Lista oficial de candidatos (exatamente os 23 da aba Candidatos do SIPEN)
+  const LISTA = new Set([
+    "rafael cavalcante dos santos",
+    "eli da conceição coelho",
+    "raimo dizio nappi",
+    "maurício ramos costa",
+    "alberto sinhiti noguti",
+    "euclides portella da rocha",
+    "marcus vinícius barros de novaes",
+    "edmar aquotti",
+    "rodrigo cunha nascimento",
+    "wesley silva franco",
+    "enrico aguiar vrunski",
+    "adriano portella da rocha",
+    "flavio yamane de oliveira",
+    "guilherme mastro pietro",
+    "thiago magalhães de souza",
+    "adilson aparecido villano",
+    "lucas soranso dizio nappi",
+    "marcelo augusto macedo",
+    "wilians frança dias",
+    "josé vieira araújo",
+    "danilo lino dos santos",
+    "kevin verduguez miranda",
+    "osias vasconcelos júnior"
+  ]);
+
+  // Filtrar pela lista oficial e deduplicar, mantendo o registro mais completo
+  const hasVal = v => v && v.trim().length > 0;
   function dedup(arr) {
     const map = new Map();
-    arr.forEach(c => {
-      const key   = c.nome.trim().toLowerCase();
-      const score = (c.foto_url ? 1 : 0)
-                  + (c.vida_familiar ? 3 : 0)
-                  + (c.vida_eclesiastica ? 3 : 0)
-                  + (c.vida_profissional ? 3 : 0);
-      const prev = map.get(key);
-      if (!prev || score > prev._score) map.set(key, { ...c, _score: score });
-    });
+    arr
+      .filter(c => LISTA.has(c.nome.trim().toLowerCase()))
+      .forEach(c => {
+        const key   = c.nome.trim().toLowerCase();
+        const score = (hasVal(c.foto_url) ? 1 : 0)
+                    + (hasVal(c.vida_familiar) ? 3 : 0)
+                    + (hasVal(c.vida_eclesiastica) ? 3 : 0)
+                    + (hasVal(c.vida_profissional) ? 3 : 0);
+        const prev = map.get(key);
+        if (!prev || score > prev._score) map.set(key, { ...c, _score: score });
+      });
     return [...map.values()];
   }
   const presbiteros = dedup(data.filter(c => c.tipo === "presbitero"));
