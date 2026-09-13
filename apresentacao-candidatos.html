@@ -61,7 +61,7 @@
     text-align: center;
     padding: 40px 60px;
   }
-  .capa-logo { width: 80px; height: auto; margin-bottom: 4px; }
+  .capa-logo { width: 160px; height: auto; margin-bottom: 8px; }
   .capa-sup {
     font-size: 11px; letter-spacing: .28em; text-transform: uppercase;
     font-family: sans-serif; font-weight: 700; color: var(--verde3);
@@ -315,7 +315,7 @@ async function init() {
       const prev = map.get(key);
       if (!prev || score > prev._score) map.set(key, { ...c, _score: score });
     });
-    return [...map.values()].filter(c => c._score > 0);
+    return [...map.values()];
   }
   const presbiteros = dedup(data.filter(c => c.tipo === "presbitero"));
   const diaconos    = dedup(data.filter(c => c.tipo === "diacono"));
@@ -367,7 +367,6 @@ function build(presbiteros, diaconos) {
   deck.insertAdjacentHTML("beforeend", `
     <div class="slide slide-capa" id="s-0">
       <img class="capa-logo" src="icons/logo-ippenha.svg" alt="IPPenha" onerror="this.style.display='none'">
-      <div class="capa-sup">Igreja Presbiteriana da Penha</div>
       <h1 class="capa-titulo">Eleição de<br><em>Oficiais 2026</em></h1>
       <p class="capa-sub">Conheça os candidatos</p>
       <p class="capa-versiculo">
