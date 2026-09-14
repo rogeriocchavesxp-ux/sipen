@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Cultos / Frequência
-   mobile/cultos.js · v1.1.9
+   mobile/cultos.js · v1.2.0
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -106,42 +106,53 @@
     const userId = window.MOB_USER?.id;
     if (!userId) return;
     try {
-      const rC = await fetch(
-        `${apiBaseUrl()}/rest/v1/congregacoes?deleted_at=is.null&select=id,nome&order=nome.asc`,
-        { headers: apiHeaders() }
-      );
-      const todas = await rC.json();
+      const [rC, rP] = await Promise.all([
+        fetch(`${apiBaseUrl()}/rest/v1/congregacoes?deleted_at=is.null&select=id,nome&order=nome.asc`, { headers: apiHeaders() }),
+        fetch(`${apiBaseUrl()}/rest/v1/pessoas?auth_user_id=eq.${encodeURIComponent(userId)}&select=id&limit=1`, { headers: apiHeaders() }),
+      ]);
+      const todas   = await rC.json();
+      const [pessoa] = await rP.json();
       if (!Array.isArray(todas) || !todas.length) return;
 
-      // Tenta restringir pelo nomeados; se não encontrar, abre todas
-      const rP = await fetch(
-        `${apiBaseUrl()}/rest/v1/pessoas?auth_user_id=eq.${encodeURIComponent(userId)}&select=id&limit=1`,
-        { headers: apiHeaders() }
-      );
-      const [pessoa] = await rP.json();
-
       if (pessoa) {
+        // Busca nomeados com orgao_tipo=congregacao, incluindo congregacao_id (UUID)
         const rN = await fetch(
-          `${apiBaseUrl()}/rest/v1/nomeados?pessoa_id=eq.${encodeURIComponent(pessoa.id)}&orgao_tipo=eq.congregacao&status=eq.ativo&select=orgao,cargo`,
+          `${apiBaseUrl()}/rest/v1/nomeados?pessoa_id=eq.${encodeURIComponent(pessoa.id)}&orgao_tipo=eq.congregacao&status=eq.ativo&select=orgao,cargo,congregacao_id`,
           { headers: apiHeaders() }
         );
         const nomeados = await rN.json();
+
         if (Array.isArray(nomeados) && nomeados.length) {
-          const cargosEditar = ['pastor', 'supervisor', 'coordenador', 'conselheiro', 'tesoureiro', 'diácono', 'diacono'];
-          const orgaos = nomeados
-            .filter(n => cargosEditar.some(c => (n.cargo || '').toLowerCase().includes(c)))
-            .map(n => n.orgao);
+          // 1ª opção: match por congregacao_id (UUID exato — mais confiável)
+          const ids = nomeados.map(n => n.congregacao_id).filter(Boolean);
+          if (ids.length) {
+            const filtradas = todas.filter(c => ids.includes(c.id));
+            if (filtradas.length) { _congregacoes = filtradas; return; }
+          }
+
+          // 2ª opção: match por nome (registros legados sem congregacao_id)
+          const orgaos = nomeados.map(n => n.orgao).filter(Boolean);
           if (orgaos.length) {
             const filtradas = todas.filter(c =>
-              orgaos.some(o => o?.toLowerCase() === c.nome?.toLowerCase())
+              orgaos.some(o => o.toLowerCase() === c.nome?.toLowerCase())
             );
             if (filtradas.length) { _congregacoes = filtradas; return; }
           }
         }
+
+        // Sem nomeados de congregação: verifica se tem qualquer cargo oficial
+        // (pastor, admin, secretário etc.) → acesso a todas as congregações
+        const rA = await fetch(
+          `${apiBaseUrl()}/rest/v1/nomeados?pessoa_id=eq.${encodeURIComponent(pessoa.id)}&status=eq.ativo&select=id&limit=1`,
+          { headers: apiHeaders() }
+        );
+        const [qualquerCargo] = await rA.json();
+        if (qualquerCargo) { _congregacoes = todas; return; }
       }
 
-      // Fallback: acesso a todas as congregações ativas
-      _congregacoes = todas;
+      // Sem vínculo algum: restringe à Sede
+      const sede = todas.filter(c => c.nome?.toLowerCase().includes('sede'));
+      _congregacoes = sede.length ? sede : todas.slice(0, 1);
     } catch (_) { /* silencioso */ }
   }
 
