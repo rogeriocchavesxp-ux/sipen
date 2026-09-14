@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Cultos / Frequência
-   mobile/cultos.js · v1.2.1
+   mobile/cultos.js · v1.2.2
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -106,21 +106,28 @@
     const userId = window.MOB_USER?.id;
     if (!userId) return;
     try {
-      const [rC, rP] = await Promise.all([
-        fetch(`${apiBaseUrl()}/rest/v1/congregacoes?deleted_at=is.null&select=id,nome&order=nome.asc`, { headers: apiHeaders() }),
-        fetch(`${apiBaseUrl()}/rest/v1/pessoas?auth_user_id=eq.${encodeURIComponent(userId)}&select=id,congregacao_id&limit=1`, { headers: apiHeaders() }),
-      ]);
-      const todas    = await rC.json();
-      const [pessoa] = await rP.json();
+      // status=eq.ativa — congregacoes não tem deleted_at
+      const rC = await fetch(
+        `${apiBaseUrl()}/rest/v1/congregacoes?status=eq.ativa&select=id,nome&order=nome.asc`,
+        { headers: apiHeaders() }
+      );
+      const todas = await rC.json();
       if (!Array.isArray(todas) || !todas.length) return;
 
-      // Se a pessoa tem congregacao_id → restringe a essa congregação
-      if (pessoa?.congregacao_id) {
-        const filtrada = todas.filter(c => c.id === pessoa.congregacao_id);
-        if (filtrada.length) { _congregacoes = filtrada; return; }
-      }
+      // Tenta obter congregacao_id da pessoa (requer migration pessoas-add-congregacao-id.sql)
+      try {
+        const rP = await fetch(
+          `${apiBaseUrl()}/rest/v1/pessoas?auth_user_id=eq.${encodeURIComponent(userId)}&select=id,congregacao_id&limit=1`,
+          { headers: apiHeaders() }
+        );
+        const [pessoa] = await rP.json();
+        if (pessoa?.congregacao_id) {
+          const filtrada = todas.filter(c => c.id === pessoa.congregacao_id);
+          if (filtrada.length) { _congregacoes = filtrada; return; }
+        }
+      } catch (_) { /* coluna ainda não existe — fallback para todas */ }
 
-      // Sem congregacao_id → acesso a todas (admin/pastor/gestor)
+      // Sem congregacao_id definido → acesso a todas (admin/pastor/gestor)
       _congregacoes = todas;
     } catch (_) { /* silencioso */ }
   }
