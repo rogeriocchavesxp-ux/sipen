@@ -76,7 +76,7 @@
           <div class="sni-sep"></div>
           <div class="sni" onclick="go('infra-demandas-infra')">Infraestrutura e Conservação</div>
         </div>
-        <div class="ctit">Filtros <span class="cact" onclick="infraDemFiltrar('infra-demandas-content')">↻ Atualizar</span></div>
+        <div class="ctit">Filtros <span class="cact" onclick="infraDemFiltrar('infra-demandas-content')">↻ Atualizar</span> <span class="cact" onclick="demGerarPDF('infra-demandas-content',{titulo:'Demandas de Infraestrutura'})" style="margin-left:8px">📄 PDF</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
           <select id="infra-demandas-content-fstatus" onchange="infraDemFiltrar('infra-demandas-content')" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
             <option value="">Todos os status</option>
@@ -119,7 +119,7 @@
           <div class="sni-sep"></div>
           <div class="sni on">Infraestrutura e Conservação</div>
         </div>
-        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('infra-demandas-infra-content',{area:'Infraestrutura e Conservação'})">↻ Atualizar</span></div>
+        <div class="ctit">Filtros <span class="cact" onclick="demFiltrar('infra-demandas-infra-content',{area:'Infraestrutura e Conservação'})">↻ Atualizar</span> <span class="cact" onclick="demGerarPDF('infra-demandas-infra-content',{titulo:'Infraestrutura e Conservação'})" style="margin-left:8px">📄 PDF</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
           <select id="infra-demandas-infra-content-fstatus" onchange="demFiltrar('infra-demandas-infra-content',{area:'Infraestrutura e Conservação'})" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
             <option value="">Todos os status</option>
@@ -200,7 +200,7 @@
       </div>
       <!-- Filtros -->
       <div class="card">
-        <div class="ctit">Filtros <span class="cact" onclick="manFiltrar()">↻ Atualizar</span></div>
+        <div class="ctit">Filtros <span class="cact" onclick="manFiltrar()">↻ Atualizar</span> <span class="cact" onclick="demGerarPDF('man-list-content',{titulo:'Manutenção',ids:{fstatus:'man-list-fstatus',fprio:'man-list-fprio',fbusca:'man-list-fbusca'}})" style="margin-left:8px">📄 PDF</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
           <select id="man-list-fstatus" onchange="manFiltrar()" style="font-size:11.5px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1)">
             <option value="">Todos os status</option>
