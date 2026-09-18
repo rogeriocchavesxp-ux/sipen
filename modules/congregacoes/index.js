@@ -2238,7 +2238,7 @@ async function renderTab_reunioes(cong, el) {
 function _renderReunioesList(cong, el) {
   const podeEd = _podeEditar(cong.id);
   const lista  = _reuData || [];
-  const tcor = t => t === 'Diretoria'
+  const tcor = t => t === 'Mesa Administrativa'
     ? 'background:rgba(74,156,245,.12);color:var(--blue)'
     : 'background:rgba(139,111,212,.12);color:var(--violet)';
 
@@ -2296,8 +2296,8 @@ window._reuVerDetalhe = function(reuId) {
   o.id = 'reu-detalhe-overlay';
   o.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9800;display:flex;align-items:center;justify-content:center;padding:16px';
   o.onclick = e => { if(e.target===o) o.remove(); };
-  const tc = r.tipo==='Diretoria'?'rgba(74,156,245,.12)':'rgba(139,111,212,.12)';
-  const tv = r.tipo==='Diretoria'?'var(--blue)':'var(--violet)';
+  const tc = r.tipo==='Mesa Administrativa'?'rgba(74,156,245,.12)':'rgba(139,111,212,.12)';
+  const tv = r.tipo==='Mesa Administrativa'?'var(--blue)':'var(--violet)';
   o.innerHTML = `
     <div style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:16px;padding:24px;max-width:580px;width:100%;max-height:90vh;overflow-y:auto;position:relative">
       <button onclick="document.getElementById('reu-detalhe-overlay').remove()" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:20px;color:var(--tx3);cursor:pointer;line-height:1">✕</button>
@@ -2318,7 +2318,7 @@ window.abrirModalNovaReuniao = function(congId, reuId) {
   if (!m) return;
   document.getElementById('reu-modal-titulo').textContent = reuId ? 'Editar Reunião' : 'Nova Reunião';
   document.getElementById('reu-cong-id').value         = congId;
-  document.getElementById('reu-tipo').value            = r?.tipo   || 'Diretoria';
+  document.getElementById('reu-tipo').value            = r?.tipo   || 'Mesa Administrativa';
   document.getElementById('reu-data').value            = r?.data   || new Date().toISOString().slice(0,10);
   document.getElementById('reu-pauta').value           = r?.pauta  || '';
   document.getElementById('reu-participantes').value   = r?.participantes || '';
