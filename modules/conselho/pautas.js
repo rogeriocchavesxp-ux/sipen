@@ -1175,8 +1175,8 @@
         <!-- Deliberação -->
         ${p.deliberacao ? `<div style="margin-top:10px;padding:9px 12px;background:rgba(58,170,92,.07);border:1px solid rgba(58,170,92,.18);border-radius:7px;font-size:12px;color:var(--tx2);line-height:1.55"><span style="font-size:10.5px;font-weight:700;color:var(--gr);letter-spacing:.04em;text-transform:uppercase;margin-right:6px">Deliberação</span>${_eh(p.deliberacao)}${p.responsaveis ? `<span style="display:block;font-size:10.5px;color:var(--tx3);margin-top:4px">Responsáveis: ${_eh(p.responsaveis)}</span>` : ""}</div>` : ""}
 
-        <!-- Anexo -->
-        ${p.arquivo_path ? `<div style="margin-top:10px"><button onclick="pautasAbrirAnexo('${_ea(p.arquivo_path)}')" style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--blue);background:rgba(74,156,245,.08);border:1px solid rgba(74,156,245,.25);border-radius:6px;padding:5px 10px;cursor:pointer">📎 ${_eh(p.arquivo_nome || "Ver documento")}</button></div>` : ""}
+        <!-- Anexos -->
+        ${_renderAnexosBtns(p, true)}
 
         <!-- Tramitação: destino -->
         ${p.reuniao_destino_id ? `<div style="margin-top:8px;padding:6px 10px;background:rgba(74,156,245,.08);border:1px solid rgba(74,156,245,.2);border-radius:6px;font-size:11.5px;color:var(--blue)">Adiada para: <strong>${_labelReuniao(p.reuniao_destino_id) || "outra reunião"}</strong>${p.motivo_adiamento ? ` <span style="color:var(--tx3);font-weight:400">· ${_eh(p.motivo_adiamento)}</span>` : ""}</div>` : ""}
@@ -1206,6 +1206,22 @@
     if (campo === "categoria") _filtroCategoria = valor;
     _renderListaPautas();
   };
+
+  // Retorna todos os arquivos de uma pauta (legado + array)
+  function _todosArquivos(p) {
+    const lista = Array.isArray(p?.arquivos) ? [...p.arquivos] : [];
+    if (p?.arquivo_path && !lista.some(a => a.path === p.arquivo_path)) {
+      lista.unshift({ path: p.arquivo_path, nome: p.arquivo_nome || p.arquivo_path.split("/").pop(), legado: true });
+    }
+    return lista;
+  }
+
+  function _renderAnexosBtns(p, small) {
+    const all = _todosArquivos(p);
+    if (!all.length) return "";
+    const btns = all.map(a => `<button onclick="pautasAbrirAnexo('${_ea(a.path)}')" style="display:inline-flex;align-items:center;gap:6px;font-size:${small?"11.5px":"12px"};color:var(--blue);background:rgba(74,156,245,.08);border:1px solid rgba(74,156,245,.25);border-radius:6px;padding:${small?"5px 10px":"7px 12px"};cursor:pointer">📎 ${_eh(a.nome || "Ver documento")}</button>`).join("");
+    return `<div style="margin-top:${small?"10":"12"}px;display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`;
+  }
 
   window.pautasNovaPauta = function () { _abrirModalPauta(null); };
   window.pautasEditarPauta = function (id) {
@@ -1243,7 +1259,7 @@
         ${p.encaminhamento ? `<div class="sr"><span class="sl">Encaminhamento</span><span class="sv">${_eh(p.encaminhamento)}</span></div>` : ""}
         ${p.sintese ? `<div style="margin-top:12px"><div style="font-size:11px;color:var(--tx3);margin-bottom:6px">Síntese</div><div style="font-size:13px;color:var(--tx2);line-height:1.6;background:var(--bg-card);border-radius:6px;padding:10px 12px">${_eh(p.sintese)}</div></div>` : ""}
         ${p.observacoes ? `<div style="margin-top:10px"><div style="font-size:11px;color:var(--tx3);margin-bottom:4px">Observações</div><div style="font-size:12px;color:var(--tx3);line-height:1.5">${_eh(p.observacoes)}</div></div>` : ""}
-        ${p.arquivo_path ? `<div style="margin-top:12px"><button onclick="pautasAbrirAnexo('${_ea(p.arquivo_path)}')" style="display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--blue);background:rgba(74,156,245,.08);border:1px solid rgba(74,156,245,.25);border-radius:7px;padding:7px 12px;cursor:pointer">📎 ${_eh(p.arquivo_nome || "Abrir documento")}</button></div>` : ""}
+        ${_renderAnexosBtns(p, false)}
         ${p.deliberacao ? `<div style="margin-top:14px;padding:12px;background:rgba(58,170,92,.08);border:1px solid rgba(58,170,92,.2);border-radius:8px">
           <div style="font-size:11px;color:var(--gr);font-weight:700;margin-bottom:6px">Deliberação Final</div>
           <div style="font-size:13px;color:var(--tx2);line-height:1.6">${_eh(p.deliberacao)}</div>
@@ -1314,19 +1330,22 @@
             <textarea id="mp-obs" rows="2" style="width:100%;background:var(--bg-input,#1a1d21);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:13px;padding:9px 11px;resize:vertical">${_eh(pauta?.observacoes || "")}</textarea>
           </div>
           <div>
-            <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:6px">Documento anexo</label>
-            ${pauta?.arquivo_path ? `
-            <div id="mp-anexo-atual" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px;margin-bottom:8px">
-              <span style="font-size:18px">📎</span>
-              <span style="flex:1;font-size:12px;color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_eh(pauta.arquivo_nome || pauta.arquivo_path.split("/").pop())}</span>
-              <button type="button" onclick="pautasRemoverAnexo('${_ea(pauta.id)}')" style="background:none;border:none;color:var(--rose);font-size:12px;cursor:pointer;flex-shrink:0">Remover</button>
-            </div>` : ""}
+            <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:6px">Documentos anexos</label>
+            <div id="mp-anexos-lista" style="display:flex;flex-direction:column;gap:5px;margin-bottom:${_todosArquivos(pauta).length?"8":"0"}px">
+              ${_todosArquivos(pauta).map(a => `
+              <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg-card);border:1px solid var(--bd2);border-radius:6px">
+                <span style="font-size:15px">📎</span>
+                <span style="flex:1;font-size:12px;color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_eh(a.nome)}</span>
+                <button type="button" onclick="pautasRemoverArquivo('${_ea(pauta?.id||"")}','${_ea(a.path)}',${a.legado?"true":"false"})" style="background:none;border:none;color:var(--rose);font-size:12px;cursor:pointer;flex-shrink:0;padding:0 4px">✕</button>
+              </div>`).join("")}
+            </div>
             <label id="mp-file-label" style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg-input,#1a1d21);border:1px dashed var(--bd2);border-radius:6px;cursor:pointer;font-size:12px;color:var(--tx3)">
               <span style="font-size:16px">⊕</span>
-              <span id="mp-file-name">${pauta?.arquivo_path ? "Substituir arquivo…" : "Selecionar arquivo (PDF, DOCX, imagem — máx. 10 MB)"}</span>
-              <input type="file" id="mp-file" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" style="display:none"
-                onchange="document.getElementById('mp-file-name').textContent = this.files[0]?.name || 'Selecionar arquivo…'">
+              <span id="mp-file-name">Adicionar arquivo(s) (PDF, DOCX, imagem — máx. 10 MB cada)</span>
+              <input type="file" id="mp-file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" style="display:none"
+                onchange="_pautasAtualizarNomesArquivos(this)">
             </label>
+            <div id="mp-file-preview" style="margin-top:6px;display:flex;flex-direction:column;gap:4px"></div>
           </div>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px">
@@ -1370,6 +1389,43 @@
     window.open(data.signedUrl, "_blank");
   };
 
+  window._pautasAtualizarNomesArquivos = function(input) {
+    const prev = document.getElementById("mp-file-preview");
+    const lbl  = document.getElementById("mp-file-name");
+    if (!prev || !lbl) return;
+    const files = Array.from(input.files || []);
+    lbl.textContent = files.length ? `${files.length} arquivo(s) selecionado(s)` : "Adicionar arquivo(s) (PDF, DOCX, imagem — máx. 10 MB cada)";
+    prev.innerHTML = files.map(f => `<div style="font-size:11.5px;color:var(--tx3);padding:3px 0">📄 ${_eh(f.name)}</div>`).join("");
+  };
+
+  window.pautasRemoverArquivo = async function (pautaId, filePath, isLegado) {
+    if (!pautaId || !filePath) return;
+    if (!confirm("Remover este documento?")) return;
+    try {
+      const sb = typeof getSupabase === "function" ? getSupabase() : null;
+      if (sb) await sb.storage.from(_BUCKET).remove([filePath]);
+      const p = (_pautas || []).find(x => x.id === pautaId);
+      if (!p) return;
+      const patch = {};
+      if (isLegado) {
+        patch.arquivo_path = null;
+        patch.arquivo_nome = null;
+      } else {
+        const arr = (Array.isArray(p.arquivos) ? p.arquivos : []).filter(a => a.path !== filePath);
+        patch.arquivos = arr;
+      }
+      await _fetchJson(`${_api()}/rest/v1/conselho_pautas?id=eq.${encodeURIComponent(pautaId)}`, {
+        method: "PATCH",
+        headers: _headers({ "Content-Type": "application/json", Prefer: "return=minimal" }),
+        body: JSON.stringify(patch),
+      });
+      await _carregarPautas(true);
+      _renderListaPautas();
+      _fecharModal();
+      _toast("Removido", "Documento removido.");
+    } catch (e) { _toast("Erro", e.message); }
+  };
+
   window.pautasRemoverAnexo = async function (pautaId) {
     if (!confirm("Remover o documento anexado?")) return;
     try {
@@ -1398,7 +1454,7 @@
     const obs    = (_view("mp-obs")?.value || "").trim();
     const status = _view("mp-status")?.value || "PENDENTE";
     const fileInput = _view("mp-file");
-    const file = fileInput?.files?.[0] || null;
+    const files = fileInput ? Array.from(fileInput.files || []) : [];
 
     if (!titulo) { _toast("Campo obrigatório", "Informe o título do assunto."); return; }
 
@@ -1417,12 +1473,16 @@
 
       if (id) {
         pautaAntes = (_pautas || []).find(p => p.id === id) || null;
-        if (file) {
+        if (files.length) {
           const btn = document.getElementById("btn-salvar-pauta");
-          if (btn) btn.textContent = "Enviando arquivo…";
-          const { path, nome } = await _uploadPautaAnexo(file, id);
-          payload.arquivo_path = path;
-          payload.arquivo_nome = nome;
+          if (btn) btn.textContent = "Enviando arquivo(s)…";
+          const pAtual = (_pautas || []).find(p => p.id === id);
+          const arrAtual = Array.isArray(pAtual?.arquivos) ? [...pAtual.arquivos] : [];
+          for (const f of files) {
+            const { path, nome } = await _uploadPautaAnexo(f, id);
+            arrAtual.push({ path, nome });
+          }
+          payload.arquivos = arrAtual;
         }
         await _fetchJson(`${_api()}/rest/v1/conselho_pautas?id=eq.${encodeURIComponent(id)}`, {
           method: "PATCH",
@@ -1450,14 +1510,18 @@
         });
         await _registrarHistorico(null, "criacao", null, titulo);
         if (novaPauta?.id) {
-          if (file) {
+          if (files.length) {
             const btnEl = document.getElementById("btn-salvar-pauta");
-            if (btnEl) btnEl.textContent = "Enviando arquivo…";
-            const { path, nome } = await _uploadPautaAnexo(file, novaPauta.id);
+            if (btnEl) btnEl.textContent = "Enviando arquivo(s)…";
+            const arrNovos = [];
+            for (const f of files) {
+              const { path, nome } = await _uploadPautaAnexo(f, novaPauta.id);
+              arrNovos.push({ path, nome });
+            }
             await _fetchJson(`${_api()}/rest/v1/conselho_pautas?id=eq.${encodeURIComponent(novaPauta.id)}`, {
               method: "PATCH",
               headers: _headers({ "Content-Type": "application/json", Prefer: "return=minimal" }),
-              body: JSON.stringify({ arquivo_path: path, arquivo_nome: nome }),
+              body: JSON.stringify({ arquivos: arrNovos }),
             });
           }
           const reuniaoTitulo = _reuniaoAtual?.titulo || "";
