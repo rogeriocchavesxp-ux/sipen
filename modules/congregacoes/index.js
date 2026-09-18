@@ -863,7 +863,7 @@ async function renderTab_membresia(cong, el){
     ?`<div style="color:var(--tx3);font-size:11px;padding:8px 0">Nenhum membro vinculado a esta congregação ainda.</div>`
     :membros.map(mb=>{
       const nome=mb.nome||`Membro #${mb.pessoa_id?.slice(0,6)}`;
-      const sub=[mb.email,mb.telefone].filter(Boolean).join(" · ");
+      const sub=[mb.email,mb.telefone].filter(v=>v&&v!=="null"&&v!=="undefined").join(" · ");
       return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd1)">
         <div style="width:32px;height:32px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:var(--gr);flex-shrink:0">${iniciais(nome)}</div>
         <div style="flex:1;min-width:0">
@@ -936,9 +936,12 @@ function renderTab_cultos(cong, el){
                 <div style="font-size:13px;font-weight:700;color:var(--gr)">${total}</div>
                 <div style="font-size:10.5px;color:var(--tx3)">presentes</div>
               </div>
-              ${podeEd?`<div style="display:flex;gap:4px">
-                <button class="tbt" style="font-size:10px;padding:2px 7px" onclick="abrirModalEditarCulto('${cong.id}',${idx})">Editar</button>
-                <button class="tbt" style="font-size:10px;padding:2px 7px;color:var(--rose)" onclick="excluirCulto('${cong.id}',${idx})">Excluir</button>
+              ${podeEd?`<div style="position:relative">
+                <button class="tbt" style="font-size:14px;padding:1px 6px;line-height:1" onclick="event.stopPropagation();const m=this.nextElementSibling;m.style.display=m.style.display==='block'?'none':'block'">⋯</button>
+                <div style="display:none;position:absolute;right:0;top:100%;background:var(--bg-card);border:1px solid var(--bd1);border-radius:8px;padding:4px;z-index:100;min-width:100px;box-shadow:0 4px 12px rgba(0,0,0,.12)" onclick="event.stopPropagation()">
+                  <div class="tbt" style="display:block;padding:6px 10px;font-size:11.5px;cursor:pointer;border-radius:5px" onclick="this.closest('div[style*=position]').querySelector('div').style.display='none';abrirModalEditarCulto('${cong.id}',${idx})">Editar</div>
+                  <div class="tbt" style="display:block;padding:6px 10px;font-size:11.5px;cursor:pointer;border-radius:5px;color:var(--rose)" onclick="this.closest('div[style*=position]').querySelector('div').style.display='none';excluirCulto('${cong.id}',${idx})">Excluir</div>
+                </div>
               </div>`:""}
             </div>
           </div>
@@ -946,7 +949,13 @@ function renderTab_cultos(cong, el){
       }).join("");
 
   el.innerHTML=`
-    <div class="g2" style="margin-top:14px">
+    <div class="kpis c4" style="margin-top:14px">
+      <div class="kpi"><div class="kn">Média Adultos</div><div class="kv">${freqAdultos}</div></div>
+      <div class="kpi"><div class="kn">Média Crianças</div><div class="kv" style="color:var(--sky)">${freqCriancas}</div></div>
+      <div class="kpi"><div class="kn">Média Total</div><div class="kv" style="color:var(--gr)">${freqTotal}</div></div>
+      <div class="kpi"><div class="kn">Presentes no Mês</div><div class="kv">${totalMes}</div></div>
+    </div>
+    <div class="g2" style="margin-top:12px">
       <div class="card">
         <div class="ctit" style="display:flex;justify-content:space-between;align-items:center">
           Programação
@@ -954,17 +963,6 @@ function renderTab_cultos(cong, el){
         </div>
         <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">${a.cultos_por_semana} culto(s)/semana</div>
         ${(a.horarios||[]).map(h=>`<div style="padding:5px 0;border-bottom:1px solid var(--bd1);font-size:11.5px;color:var(--tx1)">🕐 ${h}</div>`).join("")||`<div style="color:var(--tx3);font-size:11px">Sem horários cadastrados</div>`}
-        <div style="margin-top:14px">
-          <div class="ctit" style="margin-bottom:8px">Indicadores</div>
-          <div class="kpis c2" style="margin:0 0 8px">
-            <div class="kpi" style="padding:8px"><div class="kn">Média Adultos</div><div class="kv">${freqAdultos}</div></div>
-            <div class="kpi" style="padding:8px"><div class="kn">Média Crianças</div><div class="kv" style="color:var(--sky)">${freqCriancas}</div></div>
-          </div>
-          <div class="kpis c2" style="margin:0">
-            <div class="kpi" style="padding:8px"><div class="kn">Média Total</div><div class="kv" style="color:var(--gr)">${freqTotal}</div></div>
-            <div class="kpi" style="padding:8px"><div class="kn">Presentes no Mês</div><div class="kv">${totalMes}</div></div>
-          </div>
-        </div>
         <div style="margin-top:14px">
           <div class="ctit" style="margin-bottom:6px">Atividades</div>
           ${atividades.map(([nome,ativo])=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:11.5px"><span style="color:${ativo?"var(--gr)":"var(--tx3)"}">${ativo?"✓":"○"}</span><span style="color:${ativo?"var(--tx1)":"var(--tx3)"}">${nome}</span></div>`).join("")}
