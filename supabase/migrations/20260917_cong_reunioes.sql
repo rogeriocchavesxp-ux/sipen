@@ -4,7 +4,7 @@
 CREATE TABLE IF NOT EXISTS public.cong_reunioes (
   id              UUID        NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   congregacao_id  UUID        NOT NULL,
-  tipo            TEXT        NOT NULL CHECK (tipo IN ('Diretoria', 'Planejamento')),
+  tipo            TEXT        NOT NULL CHECK (tipo IN ('Mesa Administrativa', 'Planejamento')),
   data            DATE        NOT NULL,
   pauta           TEXT,
   participantes   TEXT,
