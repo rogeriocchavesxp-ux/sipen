@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Demandas
-   mobile/demandas.js · v1.3.3
+   mobile/demandas.js · v1.4.0
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -98,11 +98,11 @@
   const _isFechada = st => _FECHADAS_SET.has((st||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''));
 
   const FILTROS = [
-    { key:'abertas',     label:'Abertas',     query:'', clientFilter: d => !_isFechada(d.status) },
-    { key:'analise',     label:'Em Análise',  query:'status=eq.Em%20An%C3%A1lise' },
-    { key:'andamento',   label:'Andamento',   query:'status=eq.Em%20Andamento' },
-    { key:'concluidas',  label:'Concluídas',  query:'', clientFilter: d => _isFechada(d.status) },
-    { key:'todas',       label:'Todas',       query:'' },
+    { key:'abertas',    label:'Abertas',    clientFilter: d => !_isFechada(d.status) },
+    { key:'analise',    label:'Em Análise', clientFilter: d => (d.status||'').toUpperCase() === 'EM_ANALISE' || d.status === 'Em Análise' },
+    { key:'andamento',  label:'Andamento',  clientFilter: d => (d.status||'').toUpperCase() === 'EM_ANDAMENTO' || d.status === 'Em Andamento' },
+    { key:'concluidas', label:'Concluídas', clientFilter: d => _isFechada(d.status) },
+    { key:'todas',      label:'Todas' },
   ];
 
   let _filtroAtivo = 'abertas';
@@ -150,12 +150,11 @@
     const f = FILTROS.find(x => x.key === _filtroAtivo) || FILTROS[0];
 
     // build cleanly
-    const params = ['select=id,titulo,status,area,prioridade,solicitante,criado_em','order=criado_em.desc','limit=60'];
-    if (f.query) params.unshift(f.query);
+    const params = ['select=id,titulo,status,area,prioridade,solicitante,criado_em','order=criado_em.desc','limit=500'];
 
     try {
       const res  = await fetch(
-        `${apiBaseUrl()}/rest/v1/demandas?${params.join('&')}`,
+        `${apiBaseUrl()}/rest/v1/v_demandas?${params.join('&')}`,
         { headers: apiHeaders() }
       );
       let data = await res.json();
@@ -193,7 +192,8 @@
   }
 
   function _rowHtml(d) {
-    const sc = STATUS_COR[d.status] || { bg:'var(--bg-hover)', cl:'var(--tx3)' };
+    const label = _toLabel(d.status);
+    const sc = STATUS_COR[label] || { bg:'var(--bg-hover)', cl:'var(--tx3)' };
     const _PC = {Urgente:'#dc2626',Alta:'#f97316',Média:'#eab308',Baixa:'#22c55e'};
     const pr = d.prioridade && d.prioridade !== 'Baixa' ? `<span style="color:${_PC[d.prioridade]||'#f97316'};font-size:10px;font-weight:700"> ●</span>` : '';
     return `
@@ -203,7 +203,7 @@
         </div>
         <div class="mob-list-body">
           <div class="mob-list-title">${_esc(d.titulo || 'Sem título')}${pr}</div>
-          <div class="mob-list-sub">${d.area ? _esc(d.area) + ' · ' : ''}${_statusBadge(d.status)}</div>
+          <div class="mob-list-sub">${d.area ? _esc(d.area) + ' · ' : ''}${_statusBadge(label)}</div>
         </div>
         <div class="mob-list-chev">›</div>
       </div>
@@ -267,7 +267,7 @@
     el.innerHTML = `<div class="mob-loading-state">Carregando…</div>`;
     try {
       const res  = await fetch(
-        `${apiBaseUrl()}/rest/v1/demandas?id=eq.${encodeURIComponent(params.id)}&select=*&limit=1`,
+        `${apiBaseUrl()}/rest/v1/v_demandas?id=eq.${encodeURIComponent(params.id)}&select=*&limit=1`,
         { headers: apiHeaders() }
       );
       const [d] = await res.json();

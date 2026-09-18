@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Agenda
-   mobile/agenda.js · v1.0.0
+   mobile/agenda.js · v1.0.1
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -52,7 +52,7 @@
 
     try {
       const res  = await fetch(
-        `${apiBaseUrl()}/rest/v1/agenda?deleted_at=is.null&data=gte.${hoje}&data=lte.${fim}&status=not.in.(cancelado,recusado,arquivado)&select=id,titulo,tipo,data,hora_inicio,hora_fim,espaco,organizador,status&order=data.asc,hora_inicio.asc&limit=80`,
+        `${apiBaseUrl()}/rest/v1/agenda?deleted_at=is.null&data=gte.${hoje}&data=lte.${fim}&status=not.in.(cancelado,recusado,arquivado)&select=id,titulo,tipo,data,hora_inicio,hora_fim,espaco,organizador,status&order=data.asc,hora_inicio.asc&limit=300`,
         { headers: apiHeaders() }
       );
       const data = await res.json();
@@ -137,7 +137,7 @@
 
           <div class="mob-detail-card">
             <div class="mob-detail-card-title">Quando e onde</div>
-            ${_row('Data', _fmtDia(ev.data_inicio))}
+            ${_row('Data', _fmtDia(ev.data))}
             ${hora ? _row('Horário', hora + (horaF ? ' – ' + horaF : '')) : ''}
             ${_row('Local', ev.espaco)}
           </div>
@@ -148,10 +148,10 @@
             ${_row('Solicitante', ev.solicitante)}
           </div>
 
-          ${ev.observacao ? `
+          ${(ev.observacoes || ev.observacao) ? `
           <div class="mob-detail-card">
             <div class="mob-detail-card-title">Observações</div>
-            <div style="padding:14px 16px;font-size:14px;color:var(--tx2);line-height:1.6">${_esc(ev.observacao)}</div>
+            <div style="padding:14px 16px;font-size:14px;color:var(--tx2);line-height:1.6">${_esc(ev.observacoes || ev.observacao)}</div>
           </div>` : ''}
         </div>
       `;

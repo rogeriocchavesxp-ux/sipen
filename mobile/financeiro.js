@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Financeiro
-   mobile/financeiro.js · v1.0.3
+   mobile/financeiro.js · v1.1.0
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -13,7 +13,7 @@
   mobRegisterPage('fin-pagar-det',   renderPagarDetalhe);
 
   /* ── Constantes ──────────────────────────────────── */
-  const _FECHADAS = new Set(['Pago', 'Concluída', 'Cancelada', 'Cancelado']);
+  const _FECHADAS = new Set(['Pago','Concluída','Cancelada','Cancelado','PAGO','CONCLUIDA','CANCELADA','CANCELADO']);
 
   const _ST_CFG = {
     'Pendente':             { cor:'var(--amber)',  bg:'rgba(234,179,8,.12)'   },
@@ -26,6 +26,18 @@
     'Cancelada':            { cor:'var(--tx3)',    bg:'rgba(90,96,104,.15)'   },
     'Cancelado':            { cor:'var(--tx3)',    bg:'rgba(90,96,104,.15)'   },
   };
+
+  function _normSt(s) {
+    const m = {
+      'PENDENTE':'Pendente','ABERTA':'Pendente',
+      'EM_ANALISE':'Em Análise','EM_ANDAMENTO':'Em Andamento',
+      'AGUARDANDO_PAGAMENTO':'Aguardando Pagamento',
+      'PAGAMENTO_AGENDADO':'Pagamento Agendado',
+      'CONCLUIDA':'Concluída','PAGO':'Pago',
+      'CANCELADA':'Cancelada','CANCELADO':'Cancelado',
+    };
+    return m[s] || s || 'Pendente';
+  }
 
   /* ── Cache ───────────────────────────────────────── */
   let _demCache   = null;
@@ -90,7 +102,7 @@
     const hoje = _isoHoje();
     try {
       const [rDem, rPagar, rAtras] = await Promise.all([
-        fetch(`${apiBaseUrl()}/rest/v1/v_demandas?area=eq.Financeiro&status=not.in.(Pago,Conclu%C3%ADda,Cancelada,Cancelado)&select=id`, { headers: h }),
+        fetch(`${apiBaseUrl()}/rest/v1/v_demandas?area=eq.Financeiro&status=not.in.(PAGO,CONCLUIDA,CANCELADA,CANCELADO)&select=id`, { headers: h }),
         fetch(`${apiBaseUrl()}/rest/v1/financeiro_solicitacoes?status=not.in.(pago,cancelado)&select=id`, { headers: h }),
         fetch(`${apiBaseUrl()}/rest/v1/financeiro_solicitacoes?status=not.in.(pago,cancelado)&vencimento=lt.${hoje}&select=id`, { headers: h }),
       ]);
@@ -125,7 +137,7 @@
     if (!el) return;
     try {
       const res  = await fetch(
-        `${apiBaseUrl()}/rest/v1/v_demandas?area=eq.Financeiro&status=not.in.(Pago,Conclu%C3%ADda,Cancelada,Cancelado)&select=id,titulo,status,subcategoria,financial_data&order=criado_em.desc.nullslast&limit=5`,
+        `${apiBaseUrl()}/rest/v1/v_demandas?area=eq.Financeiro&status=not.in.(PAGO,CONCLUIDA,CANCELADA,CANCELADO)&select=id,titulo,status,subcategoria,financial_data&order=criado_em.desc.nullslast&limit=5`,
         { headers: apiHeaders() }
       );
       const data = await res.json();
@@ -195,7 +207,7 @@
     if (!el) return;
     try {
       const res = await fetch(
-        `${apiBaseUrl()}/rest/v1/v_demandas?area=eq.Financeiro&select=id,titulo,status,numero_chamado,subcategoria,solicitante,criado_em,financial_data&order=criado_em.desc.nullslast&limit=300`,
+        `${apiBaseUrl()}/rest/v1/v_demandas?area=eq.Financeiro&select=id,titulo,status,numero_chamado,subcategoria,solicitante,criado_em,financial_data&order=criado_em.desc.nullslast&limit=500`,
         { headers: apiHeaders() }
       );
       const data = await res.json();
@@ -210,9 +222,9 @@
     if (!el || !_demCache) return;
     let rows = [..._demCache];
     if (_demFiltro === 'abertas') {
-      rows = rows.filter(r => !_FECHADAS.has(r.status));
+      rows = rows.filter(r => !_FECHADAS.has(_normSt(r.status)));
     } else if (_demFiltro !== 'todas') {
-      rows = rows.filter(r => r.status === _demFiltro);
+      rows = rows.filter(r => _normSt(r.status) === _demFiltro);
     }
     if (!rows.length) {
       el.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">📋</div><div class="mob-empty-text">Nenhuma demanda encontrada.</div></div>`;
@@ -234,7 +246,7 @@
   };
 
   function _rowDem(d) {
-    const st  = d.status || 'Pendente';
+    const st  = _normSt(d.status);
     const cfg = _ST_CFG[st] || { cor:'var(--tx3)', bg:'rgba(90,96,104,.15)' };
     const val = d.financial_data?.valor;
     return `
@@ -265,7 +277,7 @@
       }
       if (!d) throw new Error('não encontrado');
 
-      const st  = d.status || 'Pendente';
+      const st  = _normSt(d.status);
       const cfg = _ST_CFG[st] || { cor:'var(--tx3)', bg:'rgba(90,96,104,.15)' };
       const fd  = d.financial_data || {};
 
@@ -375,7 +387,7 @@
     if (!el) return;
     try {
       const res = await fetch(
-        `${apiBaseUrl()}/rest/v1/financeiro_solicitacoes?select=*&order=vencimento.asc.nullslast&limit=300`,
+        `${apiBaseUrl()}/rest/v1/financeiro_solicitacoes?deleted_at=is.null&select=*&order=vencimento.asc.nullslast&limit=500`,
         { headers: apiHeaders() }
       );
       const data = await res.json();
