@@ -2580,13 +2580,13 @@ function fmtD(d) {
       const saldo = verba - gasto;
       const fmt = v => v.toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
       if (verba === 0) {
-        infoEl.style.background = "rgba(255,149,0,.1)";
+        infoEl.style.background = "rgba(255,149,0,.08)";
         infoEl.style.color = "var(--amber,#ff9500)";
-        infoEl.textContent = `⚠ Nenhuma verba aprovada para ${orgao} em ${ano}.`;
+        infoEl.textContent = `ℹ Nenhuma verba cadastrada para ${orgao} em ${ano}. O chamado pode ser aberto normalmente.`;
       } else if (saldo <= 0) {
-        infoEl.style.background = "rgba(255,59,48,.1)";
-        infoEl.style.color = "var(--rose,#ff3b30)";
-        infoEl.textContent = `⛔ Verba esgotada — ${fmt(verba)} aprovada, ${fmt(gasto)} gasto.`;
+        infoEl.style.background = "rgba(255,149,0,.08)";
+        infoEl.style.color = "var(--amber,#ff9500)";
+        infoEl.textContent = `⚠ Verba aprovada (${fmt(verba)}) já foi utilizada (${fmt(gasto)} gasto). O chamado pode ser aberto e o tesoureiro será notificado.`;
       } else {
         infoEl.style.background = "rgba(52,199,89,.1)";
         infoEl.style.color = "var(--gr,#34c759)";
