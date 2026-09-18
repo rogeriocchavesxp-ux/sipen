@@ -33,6 +33,7 @@ const _CONG_TABS=[
   {id:'planejamento',label:'Planejamento',     icon:_S('<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/>'), key:'planejamento'},
   {id:'departamentos',label:'Departamentos',   icon:_S('<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>'), key:'departamentos'},
   {id:'adm',         label:'Administração',    icon:_S('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'), adm:true},
+  {id:'reunioes',    label:'Reuniões',         icon:_S('<path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/>'), key:'reunioes'},
 ];
 
 // Mapeamento índice antigo → ID de aba (para compat com irParaSecaoCong)
@@ -602,6 +603,7 @@ function _renderCongTabContent(tabId, cong){
     'desafios':    renderTab_desafios,
     'planejamento':renderTab_planejamento,
     'departamentos':renderTab_departamentos,
+    'reunioes':     renderTab_reunioes,
     'adm':         renderTab_adm_cong,
   };
   const r=map[tabId];
@@ -2028,6 +2030,7 @@ function renderTab_adm_cong(cong, el){
     {key:'desafios',     label:'Desafios',           desc:'Desafios e pontos de atenção'},
     {key:'planejamento', label:'Planejamento',        desc:'Metas, eventos e ações previstas'},
     {key:'departamentos',label:'Departamentos',      desc:'Departamentos e grupos de serviço'},
+    {key:'reunioes',     label:'Reuniões',           desc:'Atas e registros de reuniões'},
   ];
 
   const _tog=(key,on)=>`
@@ -2209,5 +2212,175 @@ window._congSyncOnNav = function(){
     })
     .catch(()=>{});
 };
+
+// ── REUNIÕES ──────────────────────────────────────────
+let _reuCongId = null;
+let _reuData   = null;
+let _reuEditId = null;
+
+async function _reunioesLoad(congId) {
+  if (!SUPABASE_URL || !congId) return [];
+  try {
+    const url = `${apiBaseUrl()}/rest/v1/cong_reunioes?congregacao_id=eq.${encodeURIComponent(congId)}&order=data.desc`;
+    const r = await fetch(url, { headers: apiHeaders() });
+    if (!r.ok) return [];
+    return await r.json();
+  } catch(e) { return []; }
+}
+
+async function renderTab_reunioes(cong, el) {
+  if (_reuCongId !== cong.id) { _reuCongId = cong.id; _reuData = null; }
+  el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--tx3);font-size:12px">Carregando reuniões...</div>';
+  if (!_reuData) _reuData = await _reunioesLoad(cong.id);
+  _renderReunioesList(cong, el);
+}
+
+function _renderReunioesList(cong, el) {
+  const podeEd = _podeEditar(cong.id);
+  const lista  = _reuData || [];
+  const tcor = t => t === 'Diretoria'
+    ? 'background:rgba(74,156,245,.12);color:var(--blue)'
+    : 'background:rgba(139,111,212,.12);color:var(--violet)';
+
+  const linhas = lista.length === 0
+    ? '<div style="color:var(--tx3);font-size:11.5px;padding:20px 0;text-align:center">Nenhuma reunião registrada</div>'
+    : lista.map(r => {
+        const df  = r.data ? new Date(r.data + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+        const enc = Array.isArray(r.encaminhamentos) ? r.encaminhamentos : [];
+        return `
+        <div style="padding:12px 0;border-bottom:1px solid var(--bd1)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+                <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;${tcor(r.tipo)}">${escapeHtml(r.tipo)}</span>
+                <span style="font-size:12.5px;font-weight:600;color:var(--tx1)">${df}</span>
+                ${r.participantes ? `<span style="font-size:11px;color:var(--tx3)">· ${escapeHtml(r.participantes)}</span>` : ''}
+              </div>
+              ${r.pauta ? `<div style="font-size:11.5px;color:var(--tx2);margin-bottom:2px"><b>Pauta:</b> ${escapeHtml(r.pauta.slice(0,120))}${r.pauta.length>120?'…':''}</div>` : ''}
+              ${r.ata   ? `<div style="font-size:11px;color:var(--tx3);font-style:italic">${escapeHtml(r.ata.slice(0,100))}${r.ata.length>100?'…':''}</div>` : ''}
+              ${enc.length ? `<div style="font-size:11px;color:var(--tx3);margin-top:2px">${enc.length} encaminhamento${enc.length!==1?'s':''}</div>` : ''}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;align-items:flex-end">
+              <button class="tbt" style="font-size:10px;padding:3px 8px" onclick="_reuVerDetalhe('${r.id}')">Ver</button>
+              ${podeEd ? `
+                <button class="tbt" style="font-size:10px;padding:3px 8px" onclick="abrirModalNovaReuniao('${cong.id}','${r.id}')">Editar</button>
+                <button class="tbt" style="font-size:10px;padding:3px 8px;color:var(--rose)" onclick="excluirReuniao('${r.id}','${cong.id}')">Excluir</button>` : ''}
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+  el.innerHTML = `
+    <div style="margin-top:14px">
+      <div class="card">
+        <div class="ctit" style="display:flex;justify-content:space-between;align-items:center">
+          Reuniões
+          <div style="display:flex;gap:6px;align-items:center">
+            <span style="font-weight:400;color:var(--tx3);font-size:11px">${lista.length} registro${lista.length!==1?'s':''}</span>
+            ${podeEd?`<button class="tbt" style="font-size:10px;padding:4px 9px" onclick="abrirModalNovaReuniao('${cong.id}')">+ Nova Reunião</button>`:''}
+          </div>
+        </div>
+        ${linhas}
+      </div>
+    </div>`;
+}
+
+window._reuVerDetalhe = function(reuId) {
+  const r = (_reuData||[]).find(x=>x.id===reuId);
+  if (!r) return;
+  const df  = r.data ? new Date(r.data+'T00:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) : '—';
+  const enc = Array.isArray(r.encaminhamentos) ? r.encaminhamentos : [];
+  const ol  = document.getElementById('reu-detalhe-overlay');
+  if (ol) ol.remove();
+  const o = document.createElement('div');
+  o.id = 'reu-detalhe-overlay';
+  o.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9800;display:flex;align-items:center;justify-content:center;padding:16px';
+  o.onclick = e => { if(e.target===o) o.remove(); };
+  const tc = r.tipo==='Diretoria'?'rgba(74,156,245,.12)':'rgba(139,111,212,.12)';
+  const tv = r.tipo==='Diretoria'?'var(--blue)':'var(--violet)';
+  o.innerHTML = `
+    <div style="background:var(--bg-card);border:1px solid var(--bd1);border-radius:16px;padding:24px;max-width:580px;width:100%;max-height:90vh;overflow-y:auto;position:relative">
+      <button onclick="document.getElementById('reu-detalhe-overlay').remove()" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:20px;color:var(--tx3);cursor:pointer;line-height:1">✕</button>
+      <div style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;display:inline-block;margin-bottom:10px;background:${tc};color:${tv}">${escapeHtml(r.tipo)}</div>
+      <div style="font-size:16px;font-weight:700;color:var(--tx1);margin-bottom:4px">${df}</div>
+      ${r.participantes?`<div style="font-size:11.5px;color:var(--tx3);margin-bottom:14px">Participantes: ${escapeHtml(r.participantes)}</div>`:''}
+      ${r.pauta?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);margin-bottom:6px">Pauta</div><div style="font-size:13px;color:var(--tx1);white-space:pre-wrap;line-height:1.6">${escapeHtml(r.pauta)}</div></div>`:''}
+      ${enc.length?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);margin-bottom:6px">Encaminhamentos</div>${enc.map((e,i)=>`<div style="padding:7px 10px;border-radius:7px;background:var(--bg1);margin-bottom:5px;font-size:12.5px;color:var(--tx1)">${i+1}. ${escapeHtml(e)}</div>`).join('')}</div>`:''}
+      ${r.ata?`<div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);margin-bottom:6px">Ata</div><div style="font-size:13px;color:var(--tx1);white-space:pre-wrap;line-height:1.6">${escapeHtml(r.ata)}</div></div>`:''}
+    </div>`;
+  document.body.appendChild(o);
+};
+
+window.abrirModalNovaReuniao = function(congId, reuId) {
+  _reuEditId = reuId || null;
+  const r = reuId ? (_reuData||[]).find(x=>x.id===reuId) : null;
+  const m = document.getElementById('modal-nova-reuniao');
+  if (!m) return;
+  document.getElementById('reu-modal-titulo').textContent = reuId ? 'Editar Reunião' : 'Nova Reunião';
+  document.getElementById('reu-cong-id').value         = congId;
+  document.getElementById('reu-tipo').value            = r?.tipo   || 'Diretoria';
+  document.getElementById('reu-data').value            = r?.data   || new Date().toISOString().slice(0,10);
+  document.getElementById('reu-pauta').value           = r?.pauta  || '';
+  document.getElementById('reu-participantes').value   = r?.participantes || '';
+  document.getElementById('reu-encaminhamentos').value = (Array.isArray(r?.encaminhamentos)?r.encaminhamentos:[]).join('\n');
+  document.getElementById('reu-ata').value             = r?.ata    || '';
+  m.style.display = 'flex';
+};
+
+window.fecharModalNovaReuniao = function() {
+  const m = document.getElementById('modal-nova-reuniao');
+  if (m) m.style.display = 'none';
+};
+
+window.salvarReuniao = async function() {
+  const congId = document.getElementById('reu-cong-id')?.value;
+  const tipo   = document.getElementById('reu-tipo')?.value;
+  const data   = document.getElementById('reu-data')?.value;
+  if (!congId || !tipo || !data) {
+    if (typeof T==='function') T('Campos obrigatórios','Informe tipo e data da reunião');
+    return;
+  }
+  const encArr = (document.getElementById('reu-encaminhamentos')?.value||'')
+    .split('\n').map(s=>s.trim()).filter(Boolean);
+  const payload = {
+    congregacao_id: congId, tipo, data,
+    pauta:          document.getElementById('reu-pauta')?.value         || null,
+    participantes:  document.getElementById('reu-participantes')?.value || null,
+    encaminhamentos: encArr,
+    ata:            document.getElementById('reu-ata')?.value           || null,
+    updated_at:     new Date().toISOString(),
+  };
+  const h = {...apiHeaders(), 'Content-Type':'application/json', Prefer:'return=representation'};
+  try {
+    const url = _reuEditId
+      ? `${apiBaseUrl()}/rest/v1/cong_reunioes?id=eq.${_reuEditId}`
+      : `${apiBaseUrl()}/rest/v1/cong_reunioes`;
+    const res = await fetch(url, {method:_reuEditId?'PATCH':'POST', headers:h, body:JSON.stringify(payload)});
+    if (!res.ok) throw new Error(await res.text());
+    fecharModalNovaReuniao();
+    _reuData = null;
+    switchCongTabNamed('reunioes');
+    if (typeof T==='function') T('Reunião salva', _reuEditId?'Alterações salvas.':'Reunião registrada.');
+  } catch(e) {
+    if (typeof T==='function') T('Erro','Não foi possível salvar.');
+    console.error('salvarReuniao:', e);
+  }
+};
+
+window.excluirReuniao = async function(reuId, congId) {
+  if (!confirm('Excluir esta reunião? Esta ação não pode ser desfeita.')) return;
+  try {
+    const res = await fetch(`${apiBaseUrl()}/rest/v1/cong_reunioes?id=eq.${reuId}`, {
+      method:'DELETE', headers:apiHeaders(),
+    });
+    if (!res.ok) throw new Error();
+    _reuData = null;
+    switchCongTabNamed('reunioes');
+    if (typeof T==='function') T('Reunião excluída','');
+  } catch(e) {
+    if (typeof T==='function') T('Erro','Não foi possível excluir.');
+  }
+};
+
 
 })();
