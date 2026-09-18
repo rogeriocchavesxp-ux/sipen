@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Membros
-   mobile/membros.js · v1.1.0
+   mobile/membros.js · v1.2.0
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -8,6 +8,7 @@
 
   mobRegisterPage('membros',     renderMembros);
   mobRegisterPage('memb-perfil', renderPerfil);
+  mobRegisterPage('memb-anivs',  renderAnivs);
 
   const PAGE_SIZE = 50;
 
@@ -25,6 +26,15 @@
     if (_observer) { _observer.disconnect(); _observer = null; }
 
     el.innerHTML = `
+      <div style="padding:12px 16px 0;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:13px;font-weight:600;color:var(--tx2)">Membros</span>
+        <button onclick="mobGo('memb-anivs',{title:'Aniversariantes'})"
+          style="display:flex;align-items:center;gap:6px;background:var(--amberbg,rgba(234,179,8,.12));
+                 color:var(--amber);border:none;border-radius:20px;padding:5px 12px;font-size:12px;
+                 font-weight:600;cursor:pointer">
+          🎂 Aniversariantes
+        </button>
+      </div>
       <div class="mob-search-wrap">
         <input class="mob-search" type="search" placeholder="Buscar membros…"
                value="${_esc(_busca)}"
@@ -150,6 +160,124 @@
     }, 280);
   };
 
+  /* ── Aniversariantes ──────────────────────────────── */
+  async function renderAnivs(el) {
+    el.innerHTML = `<div class="mob-loading-state">Carregando…</div>`;
+    const hoje    = new Date();
+    const mes     = String(hoje.getMonth() + 1).padStart(2, '0');
+    const nomeMes = hoje.toLocaleDateString('pt-BR', { month: 'long' });
+    const nomeMesCap = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
+
+    try {
+      const res = await fetch(
+        `${apiBaseUrl()}/rest/v1/v_membros?select=id,nome,data_nascimento&data_nascimento=like.*-${mes}-*&order=data_nascimento.asc&limit=300`,
+        { headers: apiHeaders() }
+      );
+      const data = await res.json();
+      if (!Array.isArray(data) || !data.length) {
+        el.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">🎂</div><div class="mob-empty-text">Nenhum aniversariante em ${nomeMesCap}.</div></div>`;
+        return;
+      }
+      data.sort((a, b) => {
+        const da = Number((a.data_nascimento || '').split('-')[2]);
+        const db = Number((b.data_nascimento || '').split('-')[2]);
+        return da - db;
+      });
+      el.innerHTML = `
+        <div class="mob-section">
+          <div class="mob-section-title" style="padding:16px 16px 8px">
+            ${nomeMesCap} · ${data.length} aniversariante${data.length !== 1 ? 's' : ''}
+          </div>
+          <div class="mob-card-list">
+            ${data.map(m => {
+              const dia      = Number((m.data_nascimento || '').split('-')[2]);
+              const initials = (m.nome || '?').trim().split(/\s+/).map(n => n[0]).slice(0, 2).join('').toUpperCase();
+              const isHoje   = _isAnivHoje(m.data_nascimento);
+              return `
+                <div class="mob-list-item" onclick="mobGo('memb-perfil',{id:'${m.id}',title:'${_esc(m.nome)}'})">
+                  <div class="mob-list-ico"
+                       style="background:${isHoje ? 'var(--gr)' : 'rgba(234,179,8,.12)'};
+                              color:${isHoje ? '#fff' : 'var(--amber)'};
+                              font-size:13px;font-weight:700;border-radius:50%">
+                    ${initials}
+                  </div>
+                  <div class="mob-list-body">
+                    <div class="mob-list-title">${_esc(m.nome)}${isHoje ? ' 🎂' : ''}</div>
+                    <div class="mob-list-sub">Dia ${dia}${isHoje ? ' — Hoje!' : ''}</div>
+                  </div>
+                  <div class="mob-list-chev">›</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    } catch (_) {
+      el.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">⚠️</div><div class="mob-empty-text">Erro ao carregar aniversariantes.</div></div>`;
+    }
+  }
+
+  /* ── Editar Membro ────────────────────────────────── */
+  window._membAbrirEditForm = function (pessoaId, membId, celular, email, dataNasc) {
+    document.getElementById('memb-edit-sheet')?.remove();
+    const s = document.createElement('div');
+    s.id = 'memb-edit-sheet';
+    s.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end';
+    s.innerHTML = `
+      <div onclick="document.getElementById('memb-edit-sheet')?.remove()"
+           style="flex:1;background:rgba(0,0,0,.4)"></div>
+      <div style="background:var(--bg-surface);border-radius:18px 18px 0 0;
+                  padding:20px 16px;padding-bottom:calc(var(--safe-bottom) + 20px);
+                  max-height:90vh;overflow-y:auto">
+        <div style="font-size:16px;font-weight:700;color:var(--tx1);margin-bottom:16px;text-align:center">
+          Editar Contato
+        </div>
+        <div class="mob-field">
+          <label class="mob-label">CELULAR</label>
+          <input id="memb-e-cel" class="mob-input" type="tel" inputmode="tel"
+                 value="${_esc(celular || '')}" placeholder="(11) 99999-9999">
+        </div>
+        <div class="mob-field">
+          <label class="mob-label">E-MAIL</label>
+          <input id="memb-e-email" class="mob-input" type="email" inputmode="email"
+                 value="${_esc(email || '')}" placeholder="nome@email.com">
+        </div>
+        <div class="mob-field">
+          <label class="mob-label">DATA DE NASCIMENTO</label>
+          <input id="memb-e-nasc" class="mob-input" type="date" value="${_esc(dataNasc || '')}">
+        </div>
+        <div id="memb-e-err" style="font-size:13px;color:var(--rose);min-height:16px"></div>
+        <button id="memb-e-btn" class="mob-btn-primary"
+                onclick="_membSalvarEdit('${pessoaId}')">
+          Salvar alterações
+        </button>
+      </div>
+    `;
+    document.body.appendChild(s);
+  };
+
+  window._membSalvarEdit = async function (pessoaId) {
+    const btn   = document.getElementById('memb-e-btn');
+    const errEl = document.getElementById('memb-e-err');
+    const cel   = (document.getElementById('memb-e-cel')?.value   || '').trim() || null;
+    const email = (document.getElementById('memb-e-email')?.value  || '').trim() || null;
+    const nasc  = (document.getElementById('memb-e-nasc')?.value   || '').trim() || null;
+    if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
+    try {
+      const { error } = await getSupabase()
+        .from('pessoas')
+        .update({ celular: cel, email, data_nascimento: nasc })
+        .eq('id', pessoaId);
+      if (error) throw error;
+      document.getElementById('memb-edit-sheet')?.remove();
+      mobToast('Contato atualizado');
+      mobBack();
+    } catch (e) {
+      if (errEl) errEl.textContent = e.message || 'Erro ao salvar';
+      if (btn) { btn.disabled = false; btn.textContent = 'Salvar alterações'; }
+    }
+  };
+
   /* ── Perfil ────────────────────────────────────────── */
   async function renderPerfil(el, params) {
     el.innerHTML = `<div class="mob-loading-state">Carregando…</div>`;
@@ -195,6 +323,13 @@
             <div class="mob-detail-card-title">Pessoal</div>
             ${_row('Nascimento', _fmtData(m.data_nascimento))}
           </div>` : ''}
+
+          <div style="padding:0 16px 32px">
+            <button class="mob-btn-secondary"
+                    onclick="_membAbrirEditForm('${m.pessoa_id}','${m.id}','${_esc(m.celular||'')}','${_esc(m.email||'')}','${_esc(m.data_nascimento||'')}')">
+              Editar informações de contato
+            </button>
+          </div>
         </div>
       `;
     } catch (_) {

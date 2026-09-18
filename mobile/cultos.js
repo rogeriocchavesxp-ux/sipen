@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Cultos / Frequência
-   mobile/cultos.js · v1.2.2
+   mobile/cultos.js · v1.3.0
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -33,6 +33,7 @@
 
     el.innerHTML = `
       <div style="padding-bottom:80px">
+        <div id="cult-kpi" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 16px 0"></div>
         <div id="cult-lista" class="mob-section">
           <div class="mob-card-list mob-loading-state">Carregando registros…</div>
         </div>
@@ -72,9 +73,38 @@
       }
       _cache = data;
       _renderLista(el, data);
+      _renderKPIs(data);
     } catch (_) {
       el.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">⚠️</div><div class="mob-empty-text">Erro ao carregar registros.</div></div>`;
     }
+  }
+
+  function _renderKPIs(data) {
+    const kpiEl = document.getElementById('cult-kpi');
+    if (!kpiEl || !data.length) return;
+
+    const hoje  = new Date();
+    const mesAt = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+    const doMes = data.filter(c => (c.data || '').startsWith(mesAt));
+
+    const totalCultos = doMes.length;
+    const totalPres   = doMes.reduce((s, c) => s + (c.participantes || ((c.adultos || 0) + (c.criancas || 0))), 0);
+    const totalOnline = doMes.reduce((s, c) => s + (c.online || 0), 0);
+    const media       = totalCultos ? Math.round(totalPres / totalCultos) : 0;
+
+    const nomeMes = hoje.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+    const KPI = (val, lbl, cor = 'var(--violet)') => `
+      <div style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:12px;
+                  padding:12px 8px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:${cor};line-height:1">${val}</div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:3px">${lbl}</div>
+      </div>
+    `;
+
+    kpiEl.innerHTML =
+      KPI(totalCultos, `Cultos (${nomeMes})`) +
+      KPI(media, 'Média presentes', 'var(--blue)') +
+      KPI(totalOnline || totalPres, totalOnline ? 'Online' : 'Total presentes', totalOnline ? 'var(--amber)' : 'var(--gr)');
   }
 
   function _renderLista(el, data) {

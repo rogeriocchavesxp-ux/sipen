@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Agenda
-   mobile/agenda.js · v1.0.1
+   mobile/agenda.js · v1.1.0
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -30,13 +30,24 @@
   /* ── Lista ─────────────────────────────────────────── */
   async function renderAgenda(el) {
     el.innerHTML = `
-      <div class="mob-chips" id="ag-chips">
-        ${FILTROS.map(f => `
-          <button class="mob-chip ${f.key===_filtroAtivo?'active':''}"
-                  onclick="_agFiltro('${f.key}')">${f.label}</button>
-        `).join('')}
+      <div style="padding-bottom:80px">
+        <div class="mob-chips" id="ag-chips">
+          ${FILTROS.map(f => `
+            <button class="mob-chip ${f.key===_filtroAtivo?'active':''}"
+                    onclick="_agFiltro('${f.key}')">${f.label}</button>
+          `).join('')}
+        </div>
+        <div id="ag-lista"></div>
       </div>
-      <div id="ag-lista"></div>
+      <!-- FAB -->
+      <button onclick="_agAbrirForm()"
+        style="position:fixed;bottom:calc(var(--tab-h) + var(--safe-bottom) + 16px);right:18px;
+               z-index:200;width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;
+               background:var(--teal,#2dd4bf);color:#fff;font-size:22px;font-weight:300;
+               display:flex;align-items:center;justify-content:center;
+               box-shadow:0 4px 16px rgba(45,212,191,.45)">
+        +
+      </button>
     `;
     await _carregarAgenda();
   }
@@ -159,6 +170,154 @@
       el.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">⚠️</div><div class="mob-empty-text">Evento não encontrado.</div></div>`;
     }
   }
+
+  /* ── Criar Evento ──────────────────────────────────── */
+  const TIPOS_AG = ['Culto','Reunião','Evento','Ensaio','Casamento','Conferência','Congresso','Aniversário'];
+  const ESPACOS  = ['Templo Principal','Salão Anexo','Sala 1','Sala 2','Sala 3','Hall','Auditório','Espaço Externo'];
+
+  window._agAbrirForm = function () {
+    document.getElementById('ag-form-sheet')?.remove();
+    const hoje = new Date().toISOString().split('T')[0];
+    const nome = window.MOB_USER?.nome || '';
+    const s = document.createElement('div');
+    s.id = 'ag-form-sheet';
+    s.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end';
+    s.innerHTML = `
+      <div onclick="document.getElementById('ag-form-sheet')?.remove()"
+           style="flex:1;background:rgba(0,0,0,.4)"></div>
+      <div style="background:var(--bg-surface);border-radius:18px 18px 0 0;
+                  padding:20px 16px;padding-bottom:calc(var(--safe-bottom) + 20px);
+                  max-height:92vh;overflow-y:auto">
+        <div style="font-size:16px;font-weight:700;color:var(--tx1);margin-bottom:16px;text-align:center">
+          Solicitar Evento
+        </div>
+
+        <div class="mob-field">
+          <label class="mob-label">TÍTULO <span style="color:var(--rose)">*</span></label>
+          <input id="ag-f-titulo" class="mob-input" type="text"
+                 maxlength="120" placeholder="Ex: Reunião de Liderança">
+        </div>
+
+        <div class="mob-field">
+          <label class="mob-label">TIPO <span style="color:var(--rose)">*</span></label>
+          <select id="ag-f-tipo" class="mob-input" style="-webkit-appearance:auto;appearance:auto">
+            ${TIPOS_AG.map(t => `<option value="${t}">${t}</option>`).join('')}
+          </select>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="mob-field">
+            <label class="mob-label">DATA <span style="color:var(--rose)">*</span></label>
+            <input id="ag-f-data" class="mob-input" type="date" value="${hoje}">
+          </div>
+          <div class="mob-field">
+            <label class="mob-label">DATA FIM <span style="color:var(--tx3);font-weight:400">(opcional)</span></label>
+            <input id="ag-f-data-fim" class="mob-input" type="date" value="${hoje}">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="mob-field">
+            <label class="mob-label">INÍCIO</label>
+            <input id="ag-f-hi" class="mob-input" type="time">
+          </div>
+          <div class="mob-field">
+            <label class="mob-label">FIM</label>
+            <input id="ag-f-hf" class="mob-input" type="time">
+          </div>
+        </div>
+
+        <div class="mob-field">
+          <label class="mob-label">ESPAÇO</label>
+          <select id="ag-f-espaco" class="mob-input" style="-webkit-appearance:auto;appearance:auto">
+            <option value="">Selecione (opcional)</option>
+            ${ESPACOS.map(e => `<option value="${e}">${e}</option>`).join('')}
+            <option value="__outro__">Outro…</option>
+          </select>
+        </div>
+        <div class="mob-field" id="ag-f-espaco-outro-wrap" style="display:none">
+          <label class="mob-label">ESPAÇO (especificar)</label>
+          <input id="ag-f-espaco-outro" class="mob-input" type="text" placeholder="Nome do espaço">
+        </div>
+
+        <div class="mob-field">
+          <label class="mob-label">SOLICITANTE</label>
+          <input id="ag-f-sol" class="mob-input" type="text"
+                 value="${_esc(nome)}" placeholder="Seu nome">
+        </div>
+
+        <div class="mob-field">
+          <label class="mob-label">OBSERVAÇÕES <span style="color:var(--tx3);font-weight:400">(opcional)</span></label>
+          <textarea id="ag-f-obs" class="mob-input" rows="2" style="resize:none"
+                    placeholder="Detalhes, necessidades especiais…"></textarea>
+        </div>
+
+        <div id="ag-f-err" style="font-size:13px;color:var(--rose);min-height:16px"></div>
+        <button id="ag-f-btn" class="mob-btn-primary" onclick="_agSalvar()">
+          Solicitar Evento
+        </button>
+      </div>
+    `;
+    document.body.appendChild(s);
+    document.getElementById('ag-f-espaco').onchange = function () {
+      const outro = document.getElementById('ag-f-espaco-outro-wrap');
+      if (outro) outro.style.display = this.value === '__outro__' ? '' : 'none';
+    };
+  };
+
+  window._agSalvar = async function () {
+    const btn    = document.getElementById('ag-f-btn');
+    const errEl  = document.getElementById('ag-f-err');
+    const titulo = (document.getElementById('ag-f-titulo')?.value || '').trim();
+    const tipo   = document.getElementById('ag-f-tipo')?.value || 'Evento';
+    const data   = document.getElementById('ag-f-data')?.value || '';
+    const dataFim= document.getElementById('ag-f-data-fim')?.value || data;
+    const hi     = document.getElementById('ag-f-hi')?.value   || null;
+    const hf     = document.getElementById('ag-f-hf')?.value   || null;
+    const espSel = document.getElementById('ag-f-espaco')?.value || '';
+    const espOutro = (document.getElementById('ag-f-espaco-outro')?.value || '').trim();
+    const espaco = espSel === '__outro__' ? espOutro : (espSel || null);
+    const sol    = (document.getElementById('ag-f-sol')?.value  || '').trim();
+    const obs    = (document.getElementById('ag-f-obs')?.value  || '').trim() || null;
+
+    if (errEl) errEl.textContent = '';
+    if (!titulo) { if (errEl) errEl.textContent = 'Informe o título do evento.'; return; }
+    if (!data)   { if (errEl) errEl.textContent = 'Informe a data.'; return; }
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Enviando…'; }
+
+    try {
+      const d       = new Date(data + 'T12:00:00');
+      const diaSem  = d.toLocaleDateString('pt-BR', { weekday: 'long' });
+      const nomeMes = d.toLocaleDateString('pt-BR', { month: 'long' });
+      const payload = {
+        titulo,
+        tipo,
+        data,
+        data_encerramento: dataFim || data,
+        mes:        nomeMes,
+        dia_semana: diaSem,
+        hora_inicio: hi || null,
+        hora_fim:    hf || null,
+        espaco:      espaco || null,
+        organizador: sol || null,
+        solicitante_txt: sol || null,
+        observacao:  obs,
+        status:      'pendente',
+        visibilidade_publica: false,
+      };
+
+      const { error } = await getSupabase().from('agenda').insert(payload);
+      if (error) throw error;
+
+      document.getElementById('ag-form-sheet')?.remove();
+      mobToast('Evento solicitado — aguardando aprovação');
+      await _carregarAgenda();
+    } catch (e) {
+      if (errEl) errEl.textContent = e.message || 'Erro ao solicitar evento.';
+      if (btn) { btn.disabled = false; btn.textContent = 'Solicitar Evento'; }
+    }
+  };
 
   /* ── Helpers ───────────────────────────────────────── */
   function _row(label, val) {

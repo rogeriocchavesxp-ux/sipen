@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Financeiro
-   mobile/financeiro.js · v1.1.0
+   mobile/financeiro.js · v1.2.0
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -25,6 +25,30 @@
     'Concluída':            { cor:'var(--gr)',     bg:'rgba(48,209,88,.12)'   },
     'Cancelada':            { cor:'var(--tx3)',    bg:'rgba(90,96,104,.15)'   },
     'Cancelado':            { cor:'var(--tx3)',    bg:'rgba(90,96,104,.15)'   },
+  };
+
+  const _ST_ENUM = {
+    'Pendente':             'PENDENTE',
+    'Em Análise':           'EM_ANALISE',
+    'Em Andamento':         'EM_ANDAMENTO',
+    'Aguardando Pagamento': 'AGUARDANDO_PAGAMENTO',
+    'Pagamento Agendado':   'PAGAMENTO_AGENDADO',
+    'Pago':                 'PAGO',
+    'Concluída':            'CONCLUIDA',
+    'Cancelada':            'CANCELADA',
+    'Cancelado':            'CANCELADO',
+  };
+
+  const _ST_TRANSITIONS = {
+    'Pendente':             ['Em Análise','Em Andamento','Cancelada'],
+    'Em Análise':           ['Em Andamento','Aguardando Pagamento','Cancelada'],
+    'Em Andamento':         ['Aguardando Pagamento','Concluída','Cancelada'],
+    'Aguardando Pagamento': ['Pagamento Agendado','Pago','Cancelada'],
+    'Pagamento Agendado':   ['Pago','Cancelada'],
+    'Pago':                 [],
+    'Concluída':            [],
+    'Cancelada':            [],
+    'Cancelado':            [],
   };
 
   function _normSt(s) {
@@ -249,6 +273,7 @@
     const st  = _normSt(d.status);
     const cfg = _ST_CFG[st] || { cor:'var(--tx3)', bg:'rgba(90,96,104,.15)' };
     const val = d.financial_data?.valor;
+    const aguard = st === 'Aguardando Pagamento';
     return `
       <div class="mob-list-item" onclick="mobGo('fin-dem-detalhe',{id:'${_esc(String(d.id || d._row))}',title:'${_esc(d.titulo || 'Demanda')}',_area:'fin-demandas'})">
         <div class="mob-list-ico" style="background:var(--rosebg);color:var(--rose)">💰</div>
@@ -256,7 +281,14 @@
           <div class="mob-list-title">${_esc(d.titulo || 'Sem título')}</div>
           <div class="mob-list-sub">${d.subcategoria ? _esc(d.subcategoria) + (val != null ? ' · ' : '') : ''}${val != null ? _brl(val) : _fmtDat(d.criado_em) || ''}</div>
         </div>
-        <span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:${cfg.bg};color:${cfg.cor};white-space:nowrap;flex-shrink:0">${_esc(st)}</span>
+        ${aguard
+          ? `<button onclick="event.stopPropagation();_demAprovar('${_esc(String(d.id))}',event)"
+               style="flex-shrink:0;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;
+                      background:var(--gr);color:#fff;cursor:pointer;line-height:1.3">
+               Aprovar
+             </button>`
+          : `<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:${cfg.bg};color:${cfg.cor};white-space:nowrap;flex-shrink:0">${_esc(st)}</span>`
+        }
       </div>
     `;
   }
@@ -534,6 +566,135 @@
       mobBack();
     } catch (e) {
       mobToast('Erro: ' + (e.message || 'falha ao atualizar'));
+    }
+  };
+
+  /* ── Status sheet e andamentos ───────────────────── */
+  window._demAprovar = async function (id, ev) {
+    const btn = ev?.target;
+    if (btn) { btn.disabled = true; btn.textContent = '…'; }
+    try {
+      const { error } = await getSupabase()
+        .from('demandas')
+        .update({ status: 'PAGAMENTO_AGENDADO', updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw error;
+      _demCache = null;
+      mobToast('Pagamento aprovado — Agendado');
+      const el = document.getElementById('fin-dem-lista');
+      if (el) await _fetchDemandas();
+      await _loadHubDem();
+    } catch (e) {
+      mobToast('Erro: ' + (e.message || 'falha'), 'error');
+      if (btn) { btn.disabled = false; btn.textContent = 'Aprovar'; }
+    }
+  };
+
+  window._demAbrirStatusSheet = function (demId, stAtual) {
+    const proximos = _ST_TRANSITIONS[stAtual] || [];
+    if (!proximos.length) { mobToast('Nenhuma transição disponível neste status.'); return; }
+    document.getElementById('dem-status-sheet')?.remove();
+    const s = document.createElement('div');
+    s.id = 'dem-status-sheet';
+    s.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end';
+    s.innerHTML = `
+      <div onclick="document.getElementById('dem-status-sheet')?.remove()"
+           style="flex:1;background:rgba(0,0,0,.4)"></div>
+      <div style="background:var(--bg-surface);border-radius:18px 18px 0 0;
+                  padding:20px 16px;padding-bottom:calc(var(--safe-bottom) + 20px)">
+        <div style="font-size:16px;font-weight:700;color:var(--tx1);margin-bottom:16px;text-align:center">
+          Alterar Status
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${proximos.map(novoSt => {
+            const cfg = _ST_CFG[novoSt] || { cor:'var(--tx1)', bg:'var(--bg-hover)' };
+            const isAprovar = novoSt === 'Pagamento Agendado' || novoSt === 'Pago';
+            return `<button onclick="_demAlterarStatus('${demId}','${novoSt}')"
+              style="padding:12px 16px;border-radius:12px;border:1.5px solid ${cfg.cor};
+                     background:${isAprovar ? cfg.bg : 'transparent'};color:${cfg.cor};
+                     font-size:14px;font-weight:600;cursor:pointer;text-align:left">
+              ${novoSt}${novoSt === 'Pagamento Agendado' ? ' — Aprovar pagamento' : ''}
+            </button>`;
+          }).join('')}
+        </div>
+      </div>
+    `;
+    document.body.appendChild(s);
+  };
+
+  window._demAlterarStatus = async function (demId, novoLabel) {
+    const novoEnum = _ST_ENUM[novoLabel];
+    if (!novoEnum) return;
+    document.getElementById('dem-status-sheet')?.remove();
+    try {
+      const { error } = await getSupabase()
+        .from('demandas')
+        .update({ status: novoEnum, updated_at: new Date().toISOString() })
+        .eq('id', demId);
+      if (error) throw error;
+      const cfg = _ST_CFG[novoLabel] || { cor:'var(--tx3)', bg:'rgba(90,96,104,.15)' };
+      const badge = document.getElementById(`dem-status-badge-${demId}`);
+      if (badge) {
+        badge.textContent = novoLabel;
+        badge.style.background = cfg.bg;
+        badge.style.color = cfg.cor;
+      }
+      _demCache = null;
+      mobToast('Status atualizado: ' + novoLabel);
+    } catch (e) {
+      mobToast('Erro: ' + (e.message || 'falha'), 'error');
+    }
+  };
+
+  window._demCarregarAndamentos = async function (demId) {
+    const el = document.getElementById(`dem-and-list-${demId}`);
+    if (!el) return;
+    try {
+      const res = await fetch(
+        `${apiBaseUrl()}/rest/v1/demanda_andamentos?demanda_id=eq.${encodeURIComponent(demId)}&select=id,conteudo,autor_nome,created_at&order=created_at.asc&limit=50`,
+        { headers: apiHeaders() }
+      );
+      const data = await res.json();
+      if (!Array.isArray(data) || !data.length) {
+        el.innerHTML = `<div style="padding:8px 0;font-size:13px;color:var(--tx3)">Nenhum andamento registrado.</div>`;
+        return;
+      }
+      el.innerHTML = data.map(a => `
+        <div style="padding:10px 0;border-bottom:1px solid var(--bd1)">
+          <div style="font-size:12px;color:var(--tx3);margin-bottom:4px">
+            ${_esc(a.autor_nome || 'Sistema')} · ${_fmtDat(a.created_at) || ''}
+          </div>
+          <div style="font-size:14px;color:var(--tx1);line-height:1.5">${_esc(a.conteudo || '')}</div>
+        </div>
+      `).join('');
+    } catch (_) {
+      el.innerHTML = `<div style="padding:8px 0;font-size:13px;color:var(--tx3)">Erro ao carregar andamentos.</div>`;
+    }
+  };
+
+  window._demRegistrarAndamento = async function (demId) {
+    const txtEl = document.getElementById(`dem-and-txt-${demId}`);
+    const btn   = document.getElementById(`dem-and-btn-${demId}`);
+    const texto = (txtEl?.value || '').trim();
+    if (!texto) { mobToast('Digite um andamento.'); return; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Registrando…'; }
+    try {
+      const { error } = await getSupabase()
+        .from('demanda_andamentos')
+        .insert({
+          demanda_id:  demId,
+          conteudo:    texto,
+          autor_nome:  window.MOB_USER?.nome || null,
+          created_at:  new Date().toISOString(),
+        });
+      if (error) throw error;
+      if (txtEl) txtEl.value = '';
+      if (btn) { btn.disabled = false; btn.textContent = 'Registrar andamento'; }
+      mobToast('Andamento registrado');
+      window._demCarregarAndamentos(demId);
+    } catch (e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Registrar andamento'; }
+      mobToast('Erro: ' + (e.message || 'falha'), 'error');
     }
   };
 
