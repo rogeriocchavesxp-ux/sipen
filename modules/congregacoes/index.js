@@ -762,6 +762,20 @@ function renderTab_visaoGeral(cong, el){
 }
 
 // ── Tab 1: Membresia ──────────────────────────────────
+function _funcaoLabel(f) {
+  const map = {
+    'lider_congregacao': 'Líder de Congregação',
+    'lider_ministerio':  'Líder de Ministério',
+    'coordenador':       'Coordenador',
+    'tesoureiro':        'Tesoureiro',
+    'supervisor':        'Supervisor',
+    'cooperador':        'Cooperador',
+    'diacono':           'Diácono',
+    'presbitero':        'Presbítero',
+    'membro':            'Membro',
+  };
+  return map[f] || f.replace(/_/g,' ').replace(/\b\w/g, ch=>ch.toUpperCase());
+}
 async function _membrosLoad(congId){
   if(!congId) return [];
   try{
@@ -782,8 +796,8 @@ async function renderTab_membresia(cong, el){
 
   el.innerHTML=`
     <div class="kpis c4" style="margin-top:14px">
-      <div class="kpi"><div class="kn">Membros Ativos</div><div class="kv">${m.membros_ativos}</div></div>
-      <div class="kpi"><div class="kn">Cooperadores</div><div class="kv">${m.membros_cooperadores||0}</div></div>
+      <div class="kpi"><div class="kn">Membros Ativos</div><div class="kv" id="kpi-mbr-ativos">${m.membros_ativos}</div></div>
+      <div class="kpi"><div class="kn">Cooperadores</div><div class="kv" id="kpi-mbr-coop">${m.membros_cooperadores||0}</div></div>
       <div class="kpi"><div class="kn">Batizados/Ano</div><div class="kv" style="color:var(--gr)">${m.batizados_ano}</div></div>
       <div class="kpi"><div class="kn">Meta ${new Date().getFullYear()}</div><div class="kv">${m.meta_membros||"—"}</div></div>
     </div>
@@ -836,6 +850,15 @@ async function renderTab_membresia(cong, el){
   const countEl=document.getElementById("cong-mbr-count");
   if(!listaEl) return;
   if(countEl) countEl.textContent=`${membros.length} cadastrado(s)`;
+  // Update KPI cards with real member counts
+  const ativosEl = document.getElementById('kpi-mbr-ativos');
+  const coopEl   = document.getElementById('kpi-mbr-coop');
+  if (ativosEl || coopEl) {
+    const ativos = membros.filter(mb => (mb.status||'ativo') === 'ativo' && mb.funcao !== 'cooperador').length;
+    const coops  = membros.filter(mb => mb.funcao === 'cooperador').length;
+    if (ativosEl) ativosEl.textContent = ativos;
+    if (coopEl)   coopEl.textContent   = coops;
+  }
   listaEl.innerHTML=membros.length===0
     ?`<div style="color:var(--tx3);font-size:11px;padding:8px 0">Nenhum membro vinculado a esta congregação ainda.</div>`
     :membros.map(mb=>{
@@ -846,7 +869,7 @@ async function renderTab_membresia(cong, el){
         <div style="flex:1;min-width:0">
           <div style="font-size:12.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(nome)}</div>
           ${sub?`<div style="font-size:11px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(sub)}</div>`:""}
-          ${mb.funcao?`<div style="font-size:11px;color:var(--tx3)">${escapeHtml(mb.funcao)}</div>`:""}
+          ${mb.funcao?`<div style="font-size:11px;color:var(--tx3)">${escapeHtml(_funcaoLabel(mb.funcao))}</div>`:""}
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
           ${statusBadge(mb.status||"ativo")}
