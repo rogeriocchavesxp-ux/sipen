@@ -290,4 +290,47 @@
     </div>
   </div>
 
+
+  <!-- ════ MODAL: NOVA REUNIÃO ═══════════════════════════════════ -->
+  <div class="mo" id="modal-nova-reuniao" onclick="if(event.target===this)fecharModalNovaReuniao()" style="display:none">
+    <div class="md" style="width:540px;max-height:90vh;overflow-y:auto">
+      <div class="md-t" id="reu-modal-titulo">Nova Reunião</div>
+      <div class="md-s">Registre a pauta, ata e encaminhamentos</div>
+      <input type="hidden" id="reu-cong-id">
+      <div class="frow">
+        <div class="fg">
+          <label class="flb">Tipo *</label>
+          <select class="fi2" id="reu-tipo">
+            <option value="Diretoria">Reunião de Diretoria</option>
+            <option value="Planejamento">Reunião de Planejamento</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="flb">Data *</label>
+          <input class="fi2" type="date" id="reu-data">
+        </div>
+      </div>
+      <div class="fg">
+        <label class="flb">Participantes</label>
+        <input class="fi2" id="reu-participantes" placeholder="Nomes separados por vírgula">
+      </div>
+      <div class="fg">
+        <label class="flb">Pauta</label>
+        <textarea class="fi2" id="reu-pauta" rows="3" placeholder="Itens da pauta..."></textarea>
+      </div>
+      <div class="fg">
+        <label class="flb">Encaminhamentos <span style="font-size:10.5px;color:var(--tx3)">(um por linha)</span></label>
+        <textarea class="fi2" id="reu-encaminhamentos" rows="3" placeholder="Um encaminhamento por linha..."></textarea>
+      </div>
+      <div class="fg">
+        <label class="flb">Ata</label>
+        <textarea class="fi2" id="reu-ata" rows="5" placeholder="Resumo do que foi discutido e decidido..."></textarea>
+      </div>
+      <div class="ma">
+        <button class="btn" onclick="fecharModalNovaReuniao()">Cancelar</button>
+        <button class="btn btn-p" onclick="salvarReuniao()">Salvar Reunião</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ════ ÁREA DO MEMBRO ═══════════════════════════ -->
