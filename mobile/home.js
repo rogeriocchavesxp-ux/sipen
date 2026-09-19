@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Tela Inicial
-   mobile/home.js · v1.0.3
+   mobile/home.js · v1.0.4
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -74,7 +74,8 @@
       </div>
     `;
 
-    await Promise.all([_loadKPIs(), _loadEventos(), _loadDemandas()]);
+    await _loadKPIs();
+    await Promise.all([_loadEventos(), _loadDemandas()]);
   }
 
   /* ── KPIs ──────────────────────────────────────────── */
@@ -158,7 +159,7 @@
     if (!el) return;
     try {
       const res  = await fetch(
-        `${apiBaseUrl()}/rest/v1/demandas?select=id,titulo,status,area&order=criado_em.desc&limit=50`,
+        `${apiBaseUrl()}/rest/v1/v_demandas?select=id,titulo,status,area,solicitante&order=criado_em.desc&limit=50`,
         { headers: apiHeaders() }
       );
       const all  = await res.json();

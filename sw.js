@@ -6,7 +6,7 @@
 // ⚠ Ao fazer deploy de uma nova versão, incremente CACHE_VERSION.
 // ════════════════════════════════════════════════════════════════
 
-const CACHE_VERSION = 'sipen-v7.2.0';
+const CACHE_VERSION = 'sipen-v7.3.0';
 
 // Base path — detectado automaticamente para funcionar em qualquer subdiretório
 // Ex.: GitHub Pages em /sipen/ → BASE = '/sipen'
@@ -19,6 +19,7 @@ const OFFLINE_URL = BASE + '/offline.html';
 const APP_SHELL = [
   BASE + '/',
   BASE + '/index.html',
+  BASE + '/mobile.html',
   BASE + '/sipen.css',
   BASE + '/offline.html',
   BASE + '/manifest.json',

@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Membros
-   mobile/membros.js · v1.4.0
+   mobile/membros.js · v1.4.1
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -82,7 +82,8 @@
       const res  = await fetch(url, {
         headers: { ...apiHeaders(), 'Prefer': 'count=exact' }
       });
-      const data = Array.isArray(await res.clone().json()) ? await res.json() : [];
+      const raw  = await res.json();
+      const data = Array.isArray(raw) ? raw : [];
 
       if (reset) lista.innerHTML = '';
 

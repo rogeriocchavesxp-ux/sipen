@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Cultos / Frequência
-   mobile/cultos.js · v1.4.0
+   mobile/cultos.js · v1.4.1
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -63,7 +63,7 @@
 
     try {
       const res = await fetch(
-        `${apiBaseUrl()}/rest/v1/congregacao_cultos?${filter}&select=id,data,tipo,adultos,criancas,participantes,online,obs,cong_id&order=data.desc&limit=30`,
+        `${apiBaseUrl()}/rest/v1/congregacao_cultos?${filter}&select=id,data,tipo,adultos,criancas,participantes,online,obs,cong_id&order=data.desc&limit=200`,
         { headers: apiHeaders() }
       );
       const data = await res.json();
