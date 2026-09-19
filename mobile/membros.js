@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Membros
-   mobile/membros.js · v1.3.0
+   mobile/membros.js · v1.4.0
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -17,33 +17,47 @@
   let _hasMore   = false;
   let _loading   = false;
   let _observer  = null;
+  let _congs     = null;
 
   /* ── Lista ─────────────────────────────────────────── */
   async function renderMembros(el) {
     _offset  = 0;
     _hasMore = false;
     _loading = false;
+    _congs   = null;
     if (_observer) { _observer.disconnect(); _observer = null; }
 
     el.innerHTML = `
-      <div style="padding:12px 16px 0;display:flex;align-items:center;justify-content:space-between">
-        <span style="font-size:13px;font-weight:600;color:var(--tx2)">Membros</span>
-        <button onclick="mobGo('memb-anivs',{title:'Aniversariantes'})"
-          style="display:flex;align-items:center;gap:6px;background:var(--amberbg,rgba(234,179,8,.12));
-                 color:var(--amber);border:none;border-radius:20px;padding:5px 12px;font-size:12px;
-                 font-weight:600;cursor:pointer">
-          🎂 Aniversariantes
-        </button>
+      <div style="padding-bottom:80px">
+        <div style="padding:12px 16px 0;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:13px;font-weight:600;color:var(--tx2)">Membros</span>
+          <button onclick="mobGo('memb-anivs',{title:'Aniversariantes'})"
+            style="display:flex;align-items:center;gap:6px;background:var(--amberbg,rgba(234,179,8,.12));
+                   color:var(--amber);border:none;border-radius:20px;padding:5px 12px;font-size:12px;
+                   font-weight:600;cursor:pointer">
+            🎂 Aniversariantes
+          </button>
+        </div>
+        <div class="mob-search-wrap">
+          <input class="mob-search" type="search" placeholder="Buscar membros…"
+                 value="${_esc(_busca)}"
+                 oninput="_membBusca(this.value)"
+                 onsearch="_membBusca(this.value)">
+        </div>
+        <div id="memb-lista" class="mob-section"></div>
+        <div id="memb-sentinel" style="height:1px"></div>
       </div>
-      <div class="mob-search-wrap">
-        <input class="mob-search" type="search" placeholder="Buscar membros…"
-               value="${_esc(_busca)}"
-               oninput="_membBusca(this.value)"
-               onsearch="_membBusca(this.value)">
-      </div>
-      <div id="memb-lista" class="mob-section"></div>
-      <div id="memb-sentinel" style="height:1px"></div>
+      <!-- FAB -->
+      <button onclick="_membAbrirNovoForm()"
+        style="position:fixed;bottom:calc(var(--tab-h) + var(--safe-bottom) + 16px);right:18px;
+               z-index:200;width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;
+               background:var(--gr,#30d158);color:#fff;font-size:22px;font-weight:300;
+               display:flex;align-items:center;justify-content:center;
+               box-shadow:0 4px 16px rgba(48,209,88,.45)">
+        +
+      </button>
     `;
+    _carregarCongsMob();
     await _carregarPagina(true);
   }
 
@@ -158,6 +172,162 @@
       if (_observer) { _observer.disconnect(); _observer = null; }
       _carregarPagina(true);
     }, 280);
+  };
+
+  /* ── Congregações (cache) ────────────────────────── */
+  async function _carregarCongsMob() {
+    if (_congs) return;
+    try {
+      const res  = await fetch(
+        `${apiBaseUrl()}/rest/v1/congregacoes?status=eq.ativa&select=id,nome&order=nome.asc`,
+        { headers: apiHeaders() }
+      );
+      const data = await res.json();
+      _congs = Array.isArray(data) ? data : [];
+    } catch (_) {
+      _congs = [];
+    }
+  }
+
+  /* ── Ingresso de Novo Membro ─────────────────────── */
+  window._membAbrirNovoForm = async function () {
+    if (!_congs) await _carregarCongsMob();
+    const hoje = new Date().toISOString().split('T')[0];
+    const congOpts = (_congs || []).map(c =>
+      `<option value="${_esc(c.id)}">${_esc(c.nome)}</option>`
+    ).join('');
+
+    document.getElementById('memb-novo-sheet')?.remove();
+    const s = document.createElement('div');
+    s.id = 'memb-novo-sheet';
+    s.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end';
+    s.innerHTML = `
+      <div onclick="document.getElementById('memb-novo-sheet')?.remove()"
+           style="flex:1;background:rgba(0,0,0,.4)"></div>
+      <div style="background:var(--bg-surface);border-radius:18px 18px 0 0;
+                  padding:20px 16px;padding-bottom:calc(var(--safe-bottom) + 20px);
+                  max-height:92vh;overflow-y:auto">
+        <div style="font-size:16px;font-weight:700;color:var(--tx1);margin-bottom:16px;text-align:center">
+          Novo Membro
+        </div>
+
+        <div class="mob-field">
+          <label class="mob-label">NOME COMPLETO <span style="color:var(--rose)">*</span></label>
+          <input id="mn-nome" class="mob-input" type="text" maxlength="120" placeholder="Nome completo">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="mob-field">
+            <label class="mob-label">TIPO DE INGRESSO <span style="color:var(--rose)">*</span></label>
+            <select id="mn-ingresso" class="mob-input" style="-webkit-appearance:auto;appearance:auto">
+              <option value="">Selecione</option>
+              <option>Profissão de Fé</option>
+              <option>Transferência</option>
+              <option>Jurisdição</option>
+              <option>Reversão</option>
+              <option>Adesão</option>
+            </select>
+          </div>
+          <div class="mob-field">
+            <label class="mob-label">TIPO DE MEMBRO</label>
+            <select id="mn-tipo" class="mob-input" style="-webkit-appearance:auto;appearance:auto">
+              <option value="">Selecione</option>
+              <option>Comungante</option>
+              <option>Não Comungante</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="mob-field">
+            <label class="mob-label">DATA DE INGRESSO <span style="color:var(--rose)">*</span></label>
+            <input id="mn-data" class="mob-input" type="date" value="${hoje}">
+          </div>
+          <div class="mob-field">
+            <label class="mob-label">CONGREGAÇÃO</label>
+            <select id="mn-cong" class="mob-input" style="-webkit-appearance:auto;appearance:auto">
+              <option value="">Selecione</option>
+              ${congOpts}
+            </select>
+          </div>
+        </div>
+
+        <div class="mob-field">
+          <label class="mob-label">CELULAR <span style="color:var(--tx3);font-weight:400">(opcional)</span></label>
+          <input id="mn-cel" class="mob-input" type="tel" inputmode="tel" placeholder="(11) 99999-9999">
+        </div>
+
+        <div class="mob-field">
+          <label class="mob-label">E-MAIL <span style="color:var(--tx3);font-weight:400">(opcional)</span></label>
+          <input id="mn-email" class="mob-input" type="email" inputmode="email" placeholder="nome@email.com">
+        </div>
+
+        <div class="mob-field">
+          <label class="mob-label">DATA DE NASCIMENTO <span style="color:var(--tx3);font-weight:400">(opcional)</span></label>
+          <input id="mn-nasc" class="mob-input" type="date">
+        </div>
+
+        <div id="mn-err" style="font-size:13px;color:var(--rose);min-height:16px"></div>
+        <button id="mn-btn" class="mob-btn-primary" onclick="_membSalvarNovo()">
+          Registrar Membro
+        </button>
+      </div>
+    `;
+    document.body.appendChild(s);
+  };
+
+  window._membSalvarNovo = async function () {
+    const btn      = document.getElementById('mn-btn');
+    const errEl    = document.getElementById('mn-err');
+    const nome     = (document.getElementById('mn-nome')?.value     || '').trim();
+    const ingresso = document.getElementById('mn-ingresso')?.value  || '';
+    const tipo     = document.getElementById('mn-tipo')?.value      || null;
+    const dataIng  = document.getElementById('mn-data')?.value      || null;
+    const congId   = document.getElementById('mn-cong')?.value      || null;
+    const cel      = (document.getElementById('mn-cel')?.value      || '').trim() || null;
+    const email    = (document.getElementById('mn-email')?.value    || '').trim() || null;
+    const nasc     = document.getElementById('mn-nasc')?.value      || null;
+
+    if (errEl) errEl.textContent = '';
+    if (!nome)     { if (errEl) errEl.textContent = 'Informe o nome.';                return; }
+    if (!ingresso) { if (errEl) errEl.textContent = 'Selecione o tipo de ingresso.';  return; }
+    if (!dataIng)  { if (errEl) errEl.textContent = 'Informe a data de ingresso.';    return; }
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
+
+    const congNome = (_congs || []).find(c => c.id === congId)?.nome || null;
+
+    try {
+      const sb = getSupabase();
+
+      const { data: pessoaRows, error: errP } = await sb
+        .from('pessoas')
+        .insert({ nome, celular: cel, email, data_nascimento: nasc || null })
+        .select('id');
+      if (errP) throw errP;
+      const pessoaId = pessoaRows?.[0]?.id;
+      if (!pessoaId) throw new Error('Erro ao criar registro de pessoa.');
+
+      const { error: errM } = await sb.from('membros').insert({
+        pessoa_id:     pessoaId,
+        tipo_membro:   tipo    || null,
+        tipo_ingresso: ingresso,
+        data_ingresso: dataIng,
+        congregacao:   congNome,
+        status:        'ativo',
+      });
+      if (errM) throw errM;
+
+      document.getElementById('memb-novo-sheet')?.remove();
+      mobToast('Membro registrado');
+      _offset  = 0;
+      _hasMore = false;
+      if (_observer) { _observer.disconnect(); _observer = null; }
+      await _carregarPagina(true);
+    } catch (e) {
+      if (errEl) errEl.textContent = e.message || 'Erro ao registrar.';
+      if (btn) { btn.disabled = false; btn.textContent = 'Registrar Membro'; }
+    }
   };
 
   /* ── Aniversariantes ──────────────────────────────── */
@@ -299,6 +469,77 @@
     }
   };
 
+  /* ── Desligamento ───────────────────────────────────── */
+  window._membAbrirDesligarSheet = function (membId, nome) {
+    document.getElementById('memb-des-sheet')?.remove();
+    const hoje = new Date().toISOString().split('T')[0];
+    const s = document.createElement('div');
+    s.id = 'memb-des-sheet';
+    s.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end';
+    s.innerHTML = `
+      <div onclick="document.getElementById('memb-des-sheet')?.remove()"
+           style="flex:1;background:rgba(0,0,0,.4)"></div>
+      <div style="background:var(--bg-surface);border-radius:18px 18px 0 0;
+                  padding:20px 16px;padding-bottom:calc(var(--safe-bottom) + 20px)">
+        <div style="font-size:16px;font-weight:700;color:var(--rose);margin-bottom:4px;text-align:center">
+          Registrar Desligamento
+        </div>
+        <div style="font-size:13px;color:var(--tx2);text-align:center;margin-bottom:16px">${_esc(nome)}</div>
+
+        <div class="mob-field">
+          <label class="mob-label">TIPO DE SAÍDA <span style="color:var(--rose)">*</span></label>
+          <select id="des-tipo" class="mob-input" style="-webkit-appearance:auto;appearance:auto">
+            <option value="">Selecione</option>
+            <option>Transferência</option>
+            <option>Exclusão</option>
+            <option>Falecimento</option>
+            <option>Solicitação</option>
+            <option>Jurisdição</option>
+          </select>
+        </div>
+
+        <div class="mob-field">
+          <label class="mob-label">DATA DE SAÍDA</label>
+          <input id="des-data" class="mob-input" type="date" value="${hoje}">
+        </div>
+
+        <div id="des-err" style="font-size:13px;color:var(--rose);min-height:16px"></div>
+        <button id="des-btn" class="mob-btn-primary"
+                style="background:var(--rose)"
+                onclick="_membConfirmarDesligamento('${membId}')">
+          Confirmar Desligamento
+        </button>
+      </div>
+    `;
+    document.body.appendChild(s);
+  };
+
+  window._membConfirmarDesligamento = async function (membId) {
+    const btn   = document.getElementById('des-btn');
+    const errEl = document.getElementById('des-err');
+    const tipoS = document.getElementById('des-tipo')?.value || '';
+    const dataS = document.getElementById('des-data')?.value || null;
+
+    if (errEl) errEl.textContent = '';
+    if (!tipoS) { if (errEl) errEl.textContent = 'Selecione o tipo de saída.'; return; }
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
+
+    try {
+      const { error } = await getSupabase()
+        .from('membros')
+        .update({ status: 'INATIVO', tipo_saida: tipoS, data_saida: dataS })
+        .eq('id', membId);
+      if (error) throw error;
+      document.getElementById('memb-des-sheet')?.remove();
+      mobToast('Desligamento registrado');
+      mobBack();
+    } catch (e) {
+      if (errEl) errEl.textContent = e.message || 'Erro ao registrar desligamento.';
+      if (btn) { btn.disabled = false; btn.textContent = 'Confirmar Desligamento'; }
+    }
+  };
+
   /* ── Perfil ────────────────────────────────────────── */
   async function renderPerfil(el, params) {
     el.innerHTML = `<div class="mob-loading-state">Carregando…</div>`;
@@ -345,10 +586,15 @@
             ${_row('Nascimento', _fmtData(m.data_nascimento))}
           </div>` : ''}
 
-          <div style="padding:0 16px 32px">
+          <div style="padding:0 16px 32px;display:flex;flex-direction:column;gap:10px">
             <button class="mob-btn-secondary"
                     onclick="_membAbrirEditForm('${m.pessoa_id}','${m.id}','${_esc(m.celular||'')}','${_esc(m.email||'')}','${_esc(m.data_nascimento||'')}','${_esc(m.tipo_membro||'')}')">
               Editar informações de contato
+            </button>
+            <button class="mob-btn-secondary"
+                    style="border-color:rgba(224,85,85,.4);color:var(--rose)"
+                    onclick="_membAbrirDesligarSheet('${m.id}','${_esc(m.nome)}')">
+              Registrar Desligamento
             </button>
           </div>
         </div>
