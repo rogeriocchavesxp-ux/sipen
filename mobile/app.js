@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — App Shell
-   mobile/app.js · v1.0.0
+   mobile/app.js · v1.0.2
    Auth, routing, navigation, toast, user menu
 ════════════════════════════════════════════════════ */
 
@@ -42,6 +42,10 @@
       if (!sb) throw new Error('Supabase client não inicializado');
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { _showLogin(); return; }
+      window._sipenFreshToken = session.access_token;
+      sb.auth.onAuthStateChange((_ev, s) => {
+        window._sipenFreshToken = s?.access_token || null;
+      });
       await _loadUser(session);
       _showApp();
       mobGo('home');
@@ -115,6 +119,7 @@
         btn.textContent = 'Entrar';
         return;
       }
+      window._sipenFreshToken = data.session.access_token;
       await _loadUser(data.session);
       _showApp();
       mobGo('home');
