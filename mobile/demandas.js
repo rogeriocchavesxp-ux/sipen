@@ -63,7 +63,7 @@
           'Estudo pré-batismal',
       ]},
     ]},
-    { nome:'Agendamentos',         icon:'📅', resp:'Secretaria / Liderança', subcats:[
+    { nome:'Agendamentos',         icon:'📌', resp:'Secretaria / Liderança', subcats:[
       { grupo:'Programação / Espaços', itens:['Culto','Reunião','Evento','Ensaio','Casamento','Aniversário','Congresso','Conferência','Outros'] },
     ]},
     { nome:'Secretaria',           icon:'📄', resp:'Secretaria / Conselho',   subcats:['Emissão de documentos','Elaboração de relatórios','Solicitação ao Conselho','Protocolos oficiais','Registro de atas/documentos'] },

@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Reuniões & Atas
-   mobile/reunioes.js · v1.0.0
+   mobile/reunioes.js · v1.0.1
 
    Páginas:
    - reunioes-hub     → hub com submenu
@@ -66,7 +66,7 @@
 
         <div class="mob-card-list" style="margin-bottom:16px">
           <div class="mob-list-item" onclick="mobGo('reunioes-mob',{title:'Reuniões'})">
-            <div class="mob-list-ico" style="background:rgba(10,132,255,.12);color:var(--blue)">📅</div>
+            <div class="mob-list-ico" style="background:rgba(10,132,255,.12);color:var(--blue)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
             <div class="mob-list-body">
               <div class="mob-list-title">Reuniões do Conselho</div>
               <div class="mob-list-sub">Ordinárias, extraordinárias e pautas</div>
@@ -206,7 +206,7 @@
     const rows = _filtro === 'todas' ? _cache : _cache.filter(r => r.status === _filtro);
 
     if (!rows.length) {
-      el.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">📅</div><div class="mob-empty-text">Nenhuma reunião encontrada.</div></div>`;
+      el.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">🤝</div><div class="mob-empty-text">Nenhuma reunião encontrada.</div></div>`;
       return;
     }
 
@@ -217,7 +217,7 @@
           const tipo = _tipoLabel(r.tipo);
           return `
             <div class="mob-list-item" onclick="mobGo('reuniao-detalhe',{id:'${r.id}',title:'${_esc(r.titulo)}'})">
-              <div class="mob-list-ico" style="background:${st.bg};color:${st.cor}">📅</div>
+              <div class="mob-list-ico" style="background:${st.bg};color:${st.cor}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
               <div class="mob-list-body">
                 <div class="mob-list-title">${_esc(r.titulo)}</div>
                 <div class="mob-list-sub">${_fmtData(r.data_reuniao)}${r.horario ? ' · ' + r.horario.slice(0,5) : ''} · ${_esc(tipo)}</div>
@@ -263,7 +263,7 @@
           <div style="padding:20px 16px;background:var(--bg-surface);border-bottom:1px solid var(--bd1)">
             <div style="display:flex;align-items:flex-start;gap:12px">
               <div style="width:44px;height:44px;border-radius:12px;background:${st.bg};color:${st.cor};
-                          display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📅</div>
+                          display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
               <div style="flex:1;min-width:0">
                 <div style="font-size:17px;font-weight:700;color:var(--tx1);line-height:1.3">${_esc(r.titulo)}</div>
                 <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">

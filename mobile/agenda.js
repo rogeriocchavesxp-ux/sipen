@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Agenda
-   mobile/agenda.js · v1.3.0
+   mobile/agenda.js · v1.3.1
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -116,7 +116,7 @@
   }
 
   function _eventoRow(ev) {
-    const cfg  = TIPO_COR[ev.tipo] || { ico:'📅', cor:'var(--teal)' };
+    const cfg  = TIPO_COR[ev.tipo] || { ico:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', cor:'var(--teal)' };
     const hora = ev.hora_inicio ? ev.hora_inicio.slice(0,5) : '';
     return `
       <div class="mob-list-item" onclick="mobGo('agenda-evento',{id:'${ev.id}',title:'${_esc(ev.titulo)}'})">
@@ -151,7 +151,7 @@
 
       _eventoAtual = ev;
 
-      const cfg    = TIPO_COR[ev.tipo] || { ico:'📅', cor:'var(--teal)' };
+      const cfg    = TIPO_COR[ev.tipo] || { ico:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', cor:'var(--teal)' };
       const hora   = ev.hora_inicio ? ev.hora_inicio.slice(0,5) : null;
       const horaF  = ev.hora_fim    ? ev.hora_fim.slice(0,5)    : null;
       const stLbl  = ev.status === 'confirmado' ? 'Confirmado' : ev.status === 'cancelado' ? 'Cancelado' : 'Pendente';

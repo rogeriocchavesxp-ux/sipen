@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Tela Inicial
-   mobile/home.js · v1.0.4
+   mobile/home.js · v1.0.5
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -140,7 +140,7 @@
       }
       el.innerHTML = data.map(ev => `
         <div class="mob-list-item" onclick="mobGo('agenda-evento',{id:'${ev.id}',title:'${_esc(ev.titulo)}'})">
-          <div class="mob-list-ico" style="background:var(--tealbg);color:var(--teal)">🗓</div>
+          <div class="mob-list-ico" style="background:var(--tealbg);color:var(--teal)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
           <div class="mob-list-body">
             <div class="mob-list-title">${_esc(ev.titulo)}</div>
             <div class="mob-list-sub">${_fmtDia(ev.data)}${ev.hora_inicio ? ' · ' + ev.hora_inicio.slice(0,5) : ''}${ev.espaco ? ' · ' + _esc(ev.espaco) : ''}</div>
