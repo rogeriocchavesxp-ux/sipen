@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Agenda
-   mobile/agenda.js · v1.2.0
+   mobile/agenda.js · v1.3.0
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -25,8 +25,9 @@
     { key:'mes',      label:'Este mês',      dias:30 },
     { key:'proximos', label:'Próximos 90d',  dias:90 },
   ];
-  let _filtroAtivo = 'semana';
-  let _espacos     = null;
+  let _filtroAtivo  = 'semana';
+  let _espacos      = null;
+  let _eventoAtual  = null;
 
   /* ── Lista ─────────────────────────────────────────── */
   async function renderAgenda(el) {
@@ -148,9 +149,14 @@
       const [ev] = await res.json();
       if (!ev) throw new Error('não encontrado');
 
-      const cfg   = TIPO_COR[ev.tipo] || { ico:'📅', cor:'var(--teal)' };
-      const hora  = ev.hora_inicio ? ev.hora_inicio.slice(0,5) : null;
-      const horaF = ev.hora_fim    ? ev.hora_fim.slice(0,5)    : null;
+      _eventoAtual = ev;
+
+      const cfg    = TIPO_COR[ev.tipo] || { ico:'📅', cor:'var(--teal)' };
+      const hora   = ev.hora_inicio ? ev.hora_inicio.slice(0,5) : null;
+      const horaF  = ev.hora_fim    ? ev.hora_fim.slice(0,5)    : null;
+      const stLbl  = ev.status === 'confirmado' ? 'Confirmado' : ev.status === 'cancelado' ? 'Cancelado' : 'Pendente';
+      const stCor  = ev.status === 'confirmado' ? 'var(--gr)' : ev.status === 'cancelado' ? 'var(--tx3)' : 'var(--amber)';
+      const stBg   = ev.status === 'confirmado' ? 'rgba(48,209,88,0.12)' : ev.status === 'cancelado' ? 'rgba(90,96,104,.15)' : 'rgba(234,179,8,.12)';
 
       el.innerHTML = `
         <div class="mob-detail">
@@ -160,7 +166,7 @@
               <div class="mob-detail-title">${_esc(ev.titulo)}</div>
               <div class="mob-detail-meta">
                 ${ev.tipo ? `<span class="mob-badge" style="background:var(--tealbg);color:var(--teal)">${_esc(ev.tipo)}</span>` : ''}
-                ${ev.status === 'confirmado' ? `<span class="mob-badge" style="background:rgba(48,209,88,0.12);color:var(--gr)">Confirmado</span>` : ''}
+                <span class="mob-badge" style="background:${stBg};color:${stCor}">${stLbl}</span>
               </div>
             </div>
           </div>
@@ -183,6 +189,10 @@
             <div class="mob-detail-card-title">Observações</div>
             <div style="padding:14px 16px;font-size:14px;color:var(--tx2);line-height:1.6">${_esc(ev.observacoes || ev.observacao)}</div>
           </div>` : ''}
+
+          <div style="padding:0 16px 32px">
+            <button class="mob-btn-secondary" onclick="_agAbrirEditForm()">Editar Evento</button>
+          </div>
         </div>
       `;
     } catch (_) {
@@ -335,6 +345,177 @@
     } catch (e) {
       if (errEl) errEl.textContent = e.message || 'Erro ao solicitar evento.';
       if (btn) { btn.disabled = false; btn.textContent = 'Solicitar Evento'; }
+    }
+  };
+
+  /* ── Editar Evento ─────────────────────────────────── */
+  window._agAbrirEditForm = function () {
+    const ev = _eventoAtual;
+    if (!ev) { mobToast('Evento não carregado.', 'error'); return; }
+
+    document.getElementById('ag-edit-sheet')?.remove();
+    const s = document.createElement('div');
+    s.id = 'ag-edit-sheet';
+    s.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end';
+
+    const dataFimVal = ev.data_encerramento || ev.data || '';
+    const espValido  = (_espacos || ESPACOS_FALLBACK).includes(ev.espaco || '');
+    const espSel     = ev.espaco ? (espValido ? ev.espaco : '__outro__') : '';
+    const espOutroVal= espValido ? '' : (ev.espaco || '');
+
+    s.innerHTML = `
+      <div onclick="document.getElementById('ag-edit-sheet')?.remove()"
+           style="flex:1;background:rgba(0,0,0,.4)"></div>
+      <div style="background:var(--bg-surface);border-radius:18px 18px 0 0;
+                  padding:20px 16px;padding-bottom:calc(var(--safe-bottom) + 20px);
+                  max-height:92vh;overflow-y:auto">
+        <div style="font-size:16px;font-weight:700;color:var(--tx1);margin-bottom:16px;text-align:center">
+          Editar Evento
+        </div>
+
+        <div class="mob-field">
+          <label class="mob-label">TÍTULO <span style="color:var(--rose)">*</span></label>
+          <input id="ag-e-titulo" class="mob-input" type="text"
+                 maxlength="120" value="${_esc(ev.titulo || '')}">
+        </div>
+
+        <div class="mob-field">
+          <label class="mob-label">TIPO <span style="color:var(--rose)">*</span></label>
+          <select id="ag-e-tipo" class="mob-input" style="-webkit-appearance:auto;appearance:auto">
+            ${TIPOS_AG.map(t => `<option value="${t}" ${t === ev.tipo ? 'selected' : ''}>${t}</option>`).join('')}
+          </select>
+        </div>
+
+        <div class="mob-field">
+          <label class="mob-label">STATUS</label>
+          <select id="ag-e-status" class="mob-input" style="-webkit-appearance:auto;appearance:auto">
+            <option value="pendente"   ${ev.status === 'pendente'   ? 'selected' : ''}>Pendente</option>
+            <option value="confirmado" ${ev.status === 'confirmado' ? 'selected' : ''}>Confirmado</option>
+            <option value="cancelado"  ${ev.status === 'cancelado'  ? 'selected' : ''}>Cancelado</option>
+          </select>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="mob-field">
+            <label class="mob-label">DATA <span style="color:var(--rose)">*</span></label>
+            <input id="ag-e-data" class="mob-input" type="date" value="${_esc(ev.data || '')}">
+          </div>
+          <div class="mob-field">
+            <label class="mob-label">DATA FIM</label>
+            <input id="ag-e-data-fim" class="mob-input" type="date" value="${_esc(dataFimVal)}">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="mob-field">
+            <label class="mob-label">INÍCIO</label>
+            <input id="ag-e-hi" class="mob-input" type="time" value="${_esc((ev.hora_inicio || '').slice(0,5))}">
+          </div>
+          <div class="mob-field">
+            <label class="mob-label">FIM</label>
+            <input id="ag-e-hf" class="mob-input" type="time" value="${_esc((ev.hora_fim || '').slice(0,5))}">
+          </div>
+        </div>
+
+        <div class="mob-field">
+          <label class="mob-label">ESPAÇO</label>
+          <select id="ag-e-espaco" class="mob-input" style="-webkit-appearance:auto;appearance:auto">
+            <option value="">Nenhum</option>
+            ${(_espacos || ESPACOS_FALLBACK).map(e => `<option value="${e}" ${e === ev.espaco ? 'selected' : ''}>${e}</option>`).join('')}
+            <option value="__outro__" ${!espValido && ev.espaco ? 'selected' : ''}>Outro…</option>
+          </select>
+        </div>
+        <div class="mob-field" id="ag-e-espaco-outro-wrap" style="display:${espOutroVal ? '' : 'none'}">
+          <label class="mob-label">ESPAÇO (especificar)</label>
+          <input id="ag-e-espaco-outro" class="mob-input" type="text" value="${_esc(espOutroVal)}">
+        </div>
+
+        <div class="mob-field">
+          <label class="mob-label">RESPONSÁVEL</label>
+          <input id="ag-e-resp" class="mob-input" type="text"
+                 value="${_esc(ev.responsavel || ev.organizador || '')}">
+        </div>
+
+        <div class="mob-field">
+          <label class="mob-label">OBSERVAÇÕES</label>
+          <textarea id="ag-e-obs" class="mob-input" rows="2" style="resize:none">${_esc(ev.observacao || ev.observacoes || '')}</textarea>
+        </div>
+
+        <div id="ag-e-err" style="font-size:13px;color:var(--rose);min-height:16px"></div>
+        <button id="ag-e-btn" class="mob-btn-primary" onclick="_agSalvarEdit('${_esc(String(ev.id))}')">
+          Salvar alterações
+        </button>
+      </div>
+    `;
+    document.body.appendChild(s);
+    document.getElementById('ag-e-espaco').onchange = function () {
+      const outro = document.getElementById('ag-e-espaco-outro-wrap');
+      if (outro) outro.style.display = this.value === '__outro__' ? '' : 'none';
+    };
+  };
+
+  window._agSalvarEdit = async function (evId) {
+    const btn    = document.getElementById('ag-e-btn');
+    const errEl  = document.getElementById('ag-e-err');
+    const titulo = (document.getElementById('ag-e-titulo')?.value || '').trim();
+    const tipo   = document.getElementById('ag-e-tipo')?.value   || 'Evento';
+    const status = document.getElementById('ag-e-status')?.value || 'pendente';
+    const data   = document.getElementById('ag-e-data')?.value   || '';
+    const dataFim= document.getElementById('ag-e-data-fim')?.value || data;
+    const hi     = document.getElementById('ag-e-hi')?.value     || null;
+    const hf     = document.getElementById('ag-e-hf')?.value     || null;
+    const espSel = document.getElementById('ag-e-espaco')?.value || '';
+    const espOutro = (document.getElementById('ag-e-espaco-outro')?.value || '').trim();
+    const espaco = espSel === '__outro__' ? espOutro : (espSel || null);
+    const resp   = (document.getElementById('ag-e-resp')?.value  || '').trim() || null;
+    const obs    = (document.getElementById('ag-e-obs')?.value   || '').trim() || null;
+
+    if (errEl) errEl.textContent = '';
+    if (!titulo) { if (errEl) errEl.textContent = 'Informe o título do evento.'; return; }
+    if (!data)   { if (errEl) errEl.textContent = 'Informe a data.'; return; }
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
+
+    try {
+      const d       = new Date(data + 'T12:00:00');
+      const diaSem  = d.toLocaleDateString('pt-BR', { weekday: 'long' });
+      const nomeMes = d.toLocaleDateString('pt-BR', { month: 'long' });
+      const { error } = await getSupabase()
+        .from('agenda')
+        .update({
+          titulo,
+          tipo,
+          status,
+          data,
+          data_encerramento: dataFim || data,
+          mes:               nomeMes,
+          dia_semana:        diaSem,
+          hora_inicio:       hi || null,
+          hora_fim:          hf || null,
+          espaco:            espaco || null,
+          organizador:       resp || null,
+          observacao:        obs,
+          updated_at:        new Date().toISOString(),
+        })
+        .eq('id', evId);
+      if (error) throw error;
+
+      document.getElementById('ag-edit-sheet')?.remove();
+      mobToast('Evento atualizado');
+      // Re-renderiza o detalhe com dados atualizados
+      const reRes = await fetch(
+        `${apiBaseUrl()}/rest/v1/agenda?id=eq.${encodeURIComponent(evId)}&select=*&limit=1`,
+        { headers: apiHeaders() }
+      );
+      const [novo] = await reRes.json();
+      if (novo) {
+        _eventoAtual = novo;
+        const conteudo = document.getElementById('mob-content');
+        if (conteudo) await renderEvento(conteudo, { id: evId });
+      }
+    } catch (e) {
+      if (errEl) errEl.textContent = e.message || 'Erro ao salvar.';
+      if (btn) { btn.disabled = false; btn.textContent = 'Salvar alterações'; }
     }
   };
 
