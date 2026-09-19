@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Atas e Deliberações
-   mobile/atas.js · v1.0.3
+   mobile/atas.js · v1.0.4
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -76,6 +76,12 @@
   function _pillDem(st) {
     const s = ST_DEM[st] || { label: (st || '—').replace(/_/g,' '), bg:'rgba(90,96,104,.15)', cor:'var(--tx3)' };
     return `<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap;background:${s.bg};color:${s.cor}">${s.label}</span>`;
+  }
+
+  function _numBadge(n) {
+    const s  = String(n || '—');
+    const fs = s.length > 5 ? '8px' : s.length > 3 ? '10px' : '13px';
+    return `<span style="font-size:${fs};line-height:1;font-weight:700">${_esc(s)}</span>`;
   }
 
   /* ════════════════════════════════════════════════════
@@ -187,8 +193,8 @@
           const tipo = _tipoLabel(a.tipo);
           return `
             <div class="mob-list-item" onclick="mobGo('ata-detalhe',{id:'${a.id}',title:'Ata ${_esc(a.numero||'')}'})">
-              <div class="mob-list-ico" style="background:var(--bluebg,rgba(10,132,255,.1));color:var(--blue);font-size:13px;font-weight:700;border-radius:10px;font-family:var(--mono)">
-                ${a.numero ? _esc(a.numero).slice(-3) : '—'}
+              <div class="mob-list-ico" style="background:var(--bluebg,rgba(10,132,255,.1));color:var(--blue);border-radius:10px;font-family:var(--mono)">
+                ${_numBadge(a.numero)}
               </div>
               <div class="mob-list-body">
                 <div class="mob-list-title">Ata ${_esc(a.numero||'—')} · ${_esc(tipo)}</div>
@@ -245,8 +251,8 @@
           <!-- Cabeçalho -->
           <div style="padding:20px 16px;background:var(--bg-surface);border-bottom:1px solid var(--bd1)">
             <div style="display:flex;align-items:flex-start;gap:12px">
-              <div style="width:44px;height:44px;border-radius:10px;background:var(--bluebg,rgba(10,132,255,.1));color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;font-family:var(--mono)">
-                ${ata.numero ? _esc(ata.numero).slice(-3) : '—'}
+              <div style="width:44px;height:44px;border-radius:10px;background:var(--bluebg,rgba(10,132,255,.1));color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono)">
+                ${_numBadge(ata.numero)}
               </div>
               <div style="flex:1;min-width:0">
                 <div style="font-size:17px;font-weight:700;color:var(--tx1);line-height:1.3">Ata ${_esc(ata.numero||'—')} — ${_esc(tipo)}</div>
