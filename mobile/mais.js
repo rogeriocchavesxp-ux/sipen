@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Mais / Menu Completo
-   mobile/mais.js · v1.0.9
+   mobile/mais.js · v1.1.0
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -14,7 +14,7 @@
       itens: [
         { ico:'💰', cor:'var(--gr)',    bg:'rgba(48,209,88,.12)',   label:'Financeiro',    page:'financeiro-mob' },
         { ico:'📝', cor:'var(--blue)',  bg:'var(--bluebg)',          label:'Contratos',     page:'contratos-mob'  },
-        { ico:'🏛', cor:'var(--sky)',   bg:'var(--skybg)',           label:'Atas',          page:'atas-mob'       },
+        { ico:'📅', cor:'var(--blue)',  bg:'var(--bluebg)',          label:'Reuniões',      page:'reunioes-hub'   },
         { ico:'📊', cor:'var(--teal)', bg:'var(--tealbg)',          label:'Projetos',      page:'projetos-mob'   },
       ],
     },
@@ -96,6 +96,7 @@
     'congregacoes-mob':    'congregacoes-mob',
     'cultos-mob':          'cultos-mob',
     'atas-mob':            'atas',
+    'reunioes-hub':        'reunioes-hub',
   };
 
   window._maisGo = function (page) {
