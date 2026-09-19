@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Mais / Menu Completo
-   mobile/mais.js · v1.0.8
+   mobile/mais.js · v1.0.9
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -16,6 +16,14 @@
         { ico:'📝', cor:'var(--blue)',  bg:'var(--bluebg)',          label:'Contratos',     page:'contratos-mob'  },
         { ico:'🏛', cor:'var(--sky)',   bg:'var(--skybg)',           label:'Atas',          page:'atas-mob'       },
         { ico:'📊', cor:'var(--teal)', bg:'var(--tealbg)',          label:'Projetos',      page:'projetos-mob'   },
+      ],
+    },
+    {
+      titulo: 'Conselho',
+      itens: [
+        { ico:'📋', cor:'var(--violet)', bg:'var(--violetbg)', label:'Pautas',    page:'pautas-mob'   },
+        { ico:'🗳', cor:'var(--blue)',   bg:'var(--bluebg)',   label:'Eleições',  page:'eleicoes-mob' },
+        { ico:'📜', cor:'var(--gold)',   bg:'var(--goldbg)',   label:'Resoluções',page:'resolucoes-mob'},
       ],
     },
     {
