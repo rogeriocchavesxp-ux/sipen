@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Atas e Deliberações
-   mobile/atas.js · v1.0.2
+   mobile/atas.js · v1.0.3
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -132,7 +132,7 @@
     if (!el) return;
     try {
       const res  = await fetch(
-        `${apiBaseUrl()}/rest/v1/atas?select=id,numero,tipo,data,presidente,secretario,sintese,status&order=data.desc,numero.desc`,
+        `${apiBaseUrl()}/rest/v1/atas?select=id,numero,tipo,data,presidente,secretario,sintese,status&order=data.desc,numero.desc&limit=500`,
         { headers: apiHeaders() }
       );
       const data = await res.json();
