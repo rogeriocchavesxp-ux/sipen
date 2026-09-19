@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Congregações
-   mobile/congregacoes.js · v2.0.0
+   mobile/congregacoes.js · v2.1.0
 
    Permissões:
    - Supervisor / Coordenador / Conselheiro → edita tudo
@@ -73,18 +73,31 @@
   async function renderLista(el) {
     _cache = null;
     el.innerHTML = `
-      <div class="mob-search-wrap">
-        <input class="mob-search" type="search" placeholder="Buscar congregações…"
-               oninput="_congBusca(this.value)"
-               onsearch="_congBusca(this.value)">
-      </div>
-      <div id="cong-lista" style="padding-bottom:24px">
-        <div class="mob-loading-state">Carregando…</div>
+      <div style="padding-bottom:80px">
+        <div class="mob-search-wrap">
+          <input class="mob-search" type="search" placeholder="Buscar congregações…"
+                 oninput="_congBusca(this.value)"
+                 onsearch="_congBusca(this.value)">
+        </div>
+        <div id="cong-lista" style="padding-bottom:24px">
+          <div class="mob-loading-state">Carregando…</div>
+        </div>
       </div>
     `;
 
-    const [perm] = await Promise.all([_carregarPermissao(), _carregar()]);
-    _ = perm; // garante que permissão está pronta antes de renderizar
+    await Promise.all([_carregarPermissao(), _carregar()]);
+
+    if (_perm?.podeEditar) {
+      const fab = document.createElement('button');
+      fab.onclick = _congAbrirNovaSheet;
+      fab.style.cssText = 'position:fixed;bottom:calc(var(--tab-h) + var(--safe-bottom) + 16px);right:18px;' +
+        'z-index:200;width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;' +
+        'background:var(--violet,#8b6fd4);color:#fff;font-size:22px;font-weight:300;' +
+        'display:flex;align-items:center;justify-content:center;' +
+        'box-shadow:0 4px 16px rgba(139,111,212,.45)';
+      fab.textContent = '+';
+      el.appendChild(fab);
+    }
   }
 
   async function _carregar() {
@@ -603,6 +616,91 @@
     } catch (e) {
       if (errEl) errEl.textContent = e.message;
       btn.disabled = false; btn.textContent = 'Salvar';
+    }
+  };
+
+  /* ── Sheet: Nova Congregação ──────────────────── */
+  function _congAbrirNovaSheet() {
+    document.getElementById('cong-sheet')?.remove();
+    _abrirSheet('Nova Congregação', `
+      <div class="mob-field">
+        <label class="mob-label">NOME <span style="color:var(--rose)">*</span></label>
+        <input id="nc-nome" class="mob-input" type="text" maxlength="100" placeholder="Ex: Congregação Ermelino">
+      </div>
+      <div class="mob-field">
+        <label class="mob-label">BAIRRO / REGIÃO</label>
+        <input id="nc-loc" class="mob-input" type="text" placeholder="Ex: Ermelino Matarazzo">
+      </div>
+      <div class="mob-field">
+        <label class="mob-label">ENDEREÇO</label>
+        <input id="nc-end" class="mob-input" type="text" placeholder="Rua, número, bairro…">
+      </div>
+      <div class="mob-field">
+        <label class="mob-label">STATUS</label>
+        <select id="nc-status" class="mob-input" style="-webkit-appearance:auto;appearance:auto">
+          <option value="ativa">Ativa</option>
+          <option value="inativa">Inativa</option>
+        </select>
+      </div>
+      <div class="mob-field">
+        <label class="mob-label">SUPERVISOR</label>
+        <input id="nc-sup" class="mob-input" type="text" placeholder="Nome do supervisor">
+      </div>
+      <div class="mob-field">
+        <label class="mob-label">COORDENAÇÃO</label>
+        <input id="nc-coord" class="mob-input" type="text" placeholder="Nome do coordenador(a)">
+      </div>
+      <div class="mob-field">
+        <label class="mob-label">CULTOS POR SEMANA</label>
+        <input id="nc-cultos" class="mob-input" type="number" min="0" value="1" inputmode="numeric">
+      </div>
+      <div id="nc-err" style="font-size:13px;color:var(--rose);min-height:16px;margin-bottom:4px"></div>
+      <button id="nc-btn" class="mob-btn-primary" onclick="_congSalvarNova()">Criar Congregação</button>
+    `);
+  }
+
+  window._congSalvarNova = async function () {
+    const nome   = (document.getElementById('nc-nome')?.value   || '').trim();
+    const loc    = (document.getElementById('nc-loc')?.value    || '').trim() || null;
+    const end    = (document.getElementById('nc-end')?.value    || '').trim() || null;
+    const status = document.getElementById('nc-status')?.value  || 'ativa';
+    const sup    = (document.getElementById('nc-sup')?.value    || '').trim() || null;
+    const coord  = (document.getElementById('nc-coord')?.value  || '').trim() || null;
+    const cultos = parseInt(document.getElementById('nc-cultos')?.value || '1') || null;
+    const errEl  = document.getElementById('nc-err');
+    const btn    = document.getElementById('nc-btn');
+
+    if (!nome) { if (errEl) errEl.textContent = 'Informe o nome da congregação.'; return; }
+    if (errEl) errEl.textContent = '';
+    btn.disabled = true; btn.textContent = 'Criando…';
+
+    try {
+      const { data: rows, error } = await getSupabase()
+        .from('congregacoes')
+        .insert({
+          nome,
+          localizacao:       loc,
+          endereco:          end,
+          status,
+          supervisao:        sup,
+          coordenacao:       coord,
+          cultos_por_semana: cultos,
+          membros_ativos:    0,
+        })
+        .select('id,nome');
+      if (error) throw error;
+      _fecharSheet();
+      _cache = null;
+      mobToast('Congregação criada');
+      const nova = rows?.[0];
+      if (nova) {
+        mobGo('cong-detalhe', { id: nova.id, title: nova.nome });
+      } else {
+        await _carregar();
+      }
+    } catch (e) {
+      if (errEl) errEl.textContent = e.message || 'Erro ao criar congregação.';
+      btn.disabled = false; btn.textContent = 'Criar Congregação';
     }
   };
 
