@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Membros
-   mobile/membros.js · v1.2.0
+   mobile/membros.js · v1.3.0
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -218,8 +218,16 @@
   }
 
   /* ── Editar Membro ────────────────────────────────── */
-  window._membAbrirEditForm = function (pessoaId, membId, celular, email, dataNasc) {
+  const _TIPOS_MEMBRO = ['Comungante', 'Não Comungante'];
+
+  window._membAbrirEditForm = function (pessoaId, membId, celular, email, dataNasc, tipoMembro) {
     document.getElementById('memb-edit-sheet')?.remove();
+    const tipoOpts = _TIPOS_MEMBRO.map(t =>
+      `<option value="${t}"${t === tipoMembro ? ' selected' : ''}>${t}</option>`
+    ).join('');
+    const tipoExtra = tipoMembro && !_TIPOS_MEMBRO.includes(tipoMembro)
+      ? `<option value="${_esc(tipoMembro)}" selected>${_esc(tipoMembro)}</option>` : '';
+
     const s = document.createElement('div');
     s.id = 'memb-edit-sheet';
     s.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end';
@@ -230,7 +238,14 @@
                   padding:20px 16px;padding-bottom:calc(var(--safe-bottom) + 20px);
                   max-height:90vh;overflow-y:auto">
         <div style="font-size:16px;font-weight:700;color:var(--tx1);margin-bottom:16px;text-align:center">
-          Editar Contato
+          Editar Dados
+        </div>
+        <div class="mob-field">
+          <label class="mob-label">TIPO DE MEMBRO</label>
+          <select id="memb-e-tipo" class="mob-input" style="-webkit-appearance:auto;appearance:auto">
+            <option value="">Não definido</option>
+            ${tipoExtra}${tipoOpts}
+          </select>
         </div>
         <div class="mob-field">
           <label class="mob-label">CELULAR</label>
@@ -248,7 +263,7 @@
         </div>
         <div id="memb-e-err" style="font-size:13px;color:var(--rose);min-height:16px"></div>
         <button id="memb-e-btn" class="mob-btn-primary"
-                onclick="_membSalvarEdit('${pessoaId}')">
+                onclick="_membSalvarEdit('${pessoaId}','${membId}')">
           Salvar alterações
         </button>
       </div>
@@ -256,21 +271,27 @@
     document.body.appendChild(s);
   };
 
-  window._membSalvarEdit = async function (pessoaId) {
+  window._membSalvarEdit = async function (pessoaId, membId) {
     const btn   = document.getElementById('memb-e-btn');
     const errEl = document.getElementById('memb-e-err');
     const cel   = (document.getElementById('memb-e-cel')?.value   || '').trim() || null;
     const email = (document.getElementById('memb-e-email')?.value  || '').trim() || null;
     const nasc  = (document.getElementById('memb-e-nasc')?.value   || '').trim() || null;
+    const tipo  = (document.getElementById('memb-e-tipo')?.value   || '').trim() || null;
     if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
     try {
-      const { error } = await getSupabase()
-        .from('pessoas')
-        .update({ celular: cel, email, data_nascimento: nasc })
-        .eq('id', pessoaId);
-      if (error) throw error;
+      const sb = getSupabase();
+      const ops = [
+        sb.from('pessoas').update({ celular: cel, email, data_nascimento: nasc }).eq('id', pessoaId),
+      ];
+      if (membId) {
+        ops.push(sb.from('membros').update({ tipo_membro: tipo }).eq('id', membId));
+      }
+      const results = await Promise.all(ops);
+      const err = results.find(r => r.error)?.error;
+      if (err) throw err;
       document.getElementById('memb-edit-sheet')?.remove();
-      mobToast('Contato atualizado');
+      mobToast('Dados atualizados');
       mobBack();
     } catch (e) {
       if (errEl) errEl.textContent = e.message || 'Erro ao salvar';
@@ -326,7 +347,7 @@
 
           <div style="padding:0 16px 32px">
             <button class="mob-btn-secondary"
-                    onclick="_membAbrirEditForm('${m.pessoa_id}','${m.id}','${_esc(m.celular||'')}','${_esc(m.email||'')}','${_esc(m.data_nascimento||'')}')">
+                    onclick="_membAbrirEditForm('${m.pessoa_id}','${m.id}','${_esc(m.celular||'')}','${_esc(m.email||'')}','${_esc(m.data_nascimento||'')}','${_esc(m.tipo_membro||'')}')">
               Editar informações de contato
             </button>
           </div>

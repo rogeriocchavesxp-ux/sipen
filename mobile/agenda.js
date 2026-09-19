@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Agenda
-   mobile/agenda.js · v1.1.0
+   mobile/agenda.js · v1.2.0
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -26,6 +26,7 @@
     { key:'proximos', label:'Próximos 90d',  dias:90 },
   ];
   let _filtroAtivo = 'semana';
+  let _espacos     = null;
 
   /* ── Lista ─────────────────────────────────────────── */
   async function renderAgenda(el) {
@@ -49,7 +50,25 @@
         +
       </button>
     `;
+    _carregarEspacos();
     await _carregarAgenda();
+  }
+
+  async function _carregarEspacos() {
+    const FALLBACK = ['Templo Principal','Salão Anexo','Sala 1','Sala 2','Sala 3','Hall','Auditório','Espaço Externo'];
+    try {
+      const res  = await fetch(
+        `${apiBaseUrl()}/rest/v1/agenda?select=espaco&espaco=not.is.null&limit=500`,
+        { headers: apiHeaders() }
+      );
+      const data = await res.json();
+      const fromDB = Array.isArray(data)
+        ? [...new Set(data.map(r => r.espaco).filter(Boolean))].sort()
+        : [];
+      _espacos = [...new Set([...fromDB, ...FALLBACK])].sort();
+    } catch (_) {
+      _espacos = FALLBACK;
+    }
   }
 
   async function _carregarAgenda() {
@@ -172,8 +191,8 @@
   }
 
   /* ── Criar Evento ──────────────────────────────────── */
-  const TIPOS_AG = ['Culto','Reunião','Evento','Ensaio','Casamento','Conferência','Congresso','Aniversário'];
-  const ESPACOS  = ['Templo Principal','Salão Anexo','Sala 1','Sala 2','Sala 3','Hall','Auditório','Espaço Externo'];
+  const TIPOS_AG        = ['Culto','Reunião','Evento','Ensaio','Casamento','Conferência','Congresso','Aniversário'];
+  const ESPACOS_FALLBACK = ['Templo Principal','Salão Anexo','Sala 1','Sala 2','Sala 3','Hall','Auditório','Espaço Externo'];
 
   window._agAbrirForm = function () {
     document.getElementById('ag-form-sheet')?.remove();
@@ -231,7 +250,7 @@
           <label class="mob-label">ESPAÇO</label>
           <select id="ag-f-espaco" class="mob-input" style="-webkit-appearance:auto;appearance:auto">
             <option value="">Selecione (opcional)</option>
-            ${ESPACOS.map(e => `<option value="${e}">${e}</option>`).join('')}
+            ${(_espacos || ESPACOS_FALLBACK).map(e => `<option value="${e}">${e}</option>`).join('')}
             <option value="__outro__">Outro…</option>
           </select>
         </div>
