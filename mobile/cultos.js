@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Cultos / Frequência
-   mobile/cultos.js · v1.3.0
+   mobile/cultos.js · v1.4.0
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -123,13 +123,27 @@
                 <div class="mob-list-title">${_esc(cu.tipo || 'Culto')}</div>
                 <div class="mob-list-sub">${dt} · ${_esc(congNome)}${onl ? ` · ${onl} online` : ''}</div>
               </div>
-              <div style="font-size:18px;font-weight:700;color:var(--tx1);flex-shrink:0">${tot || '—'}</div>
+              <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+                <div style="font-size:18px;font-weight:700;color:var(--tx1)">${tot || '—'}</div>
+                <button onclick="event.stopPropagation();_cultEditarRegistro('${_esc(String(cu.id))}')"
+                  style="border:1px solid var(--bd2);background:transparent;color:var(--tx3);
+                         border-radius:8px;padding:4px 8px;font-size:11px;cursor:pointer;
+                         line-height:1.3;flex-shrink:0">
+                  Editar
+                </button>
+              </div>
             </div>`;
         }).join('')}
       </div>
       <div style="padding:10px 0 6px;text-align:center;font-size:11px;color:var(--tx4)">${data.length} registro${data.length !== 1 ? 's' : ''}</div>
     `;
   }
+
+  window._cultEditarRegistro = function (id) {
+    const registro = (_cache || []).find(c => String(c.id) === String(id));
+    if (!registro) { mobToast('Registro não encontrado'); return; }
+    _cultAbrirForm(registro);
+  };
 
   /* ── Carregar congregações com permissão ──────────── */
   async function _carregarCongsPermitidas() {

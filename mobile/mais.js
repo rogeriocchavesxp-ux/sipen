@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Mais / Menu Completo
-   mobile/mais.js · v1.0.6
+   mobile/mais.js · v1.0.7
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -46,6 +46,10 @@
     },
   ];
 
+  function _isImplementado(item) {
+    return !!(item.href || _ROTAS[item.page]);
+  }
+
   function renderMais(el) {
     el.innerHTML = `
       <div style="padding-bottom:24px">
@@ -53,17 +57,22 @@
           <div class="mob-section">
             <div class="mob-section-title">${s.titulo}</div>
             <div class="mob-card-list">
-              ${s.itens.map(item => `
-                <div class="mob-list-item" onclick="${item.href ? `window.location.href='${item.href}'` : `_maisGo('${item.page}')`}">
+              ${s.itens.map(item => {
+                const impl = _isImplementado(item);
+                return `
+                <div class="mob-list-item"
+                     style="${impl ? '' : 'opacity:.5;pointer-events:none'}"
+                     onclick="${item.href ? `window.location.href='${item.href}'` : `_maisGo('${item.page}')`}">
                   <div class="mob-list-ico" style="background:${item.bg};color:${item.cor}">
                     ${item.ico}
                   </div>
                   <div class="mob-list-body">
                     <div class="mob-list-title">${item.label}</div>
+                    ${impl ? '' : `<div class="mob-list-sub" style="font-size:10px;color:var(--tx3)">Em breve</div>`}
                   </div>
-                  <div class="mob-list-chev">${item.href ? '↗' : '›'}</div>
-                </div>
-              `).join('')}
+                  <div class="mob-list-chev">${item.href ? '↗' : impl ? '›' : ''}</div>
+                </div>`;
+              }).join('')}
             </div>
           </div>
         `).join('')}
