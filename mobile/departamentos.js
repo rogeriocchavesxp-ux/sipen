@@ -1,13 +1,14 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Departamentos
-   mobile/departamentos.js · v1.4.0
+   mobile/departamentos.js · v1.5.0
 ════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  mobRegisterPage('departamentos', renderLista);
-  mobRegisterPage('dep-detalhe',   renderDetalhe);
+  mobRegisterPage('departamentos',     renderLista);
+  mobRegisterPage('dep-detalhe',       renderDetalhe);
+  mobRegisterPage('dep-escala-musica', renderEscalaMusica);
 
   /* ── Constantes ───────────────────────────────────── */
   // Mapa tipo → { label, ic, cor, bg }
@@ -308,6 +309,7 @@
       lideres, membros, cntMem,
       nivelLabel: { supervisor:'Supervisor', coordenador:'Coordenador', conselheiro:'Conselheiro' },
       podeAdicionar: _depNiveisAtual.length > 0,
+      isMusica: tipoKey === 'MUSICA',
     });
   }
 
@@ -353,7 +355,7 @@
 
   /* ── Template de detalhe compartilhado ─────────── */
   function _htmlDetalhe({ ic, nome, descricao, badge1, badge2, lideres, membros, cntMem, nivelLabel,
-                          podeAdicionar = false }) {
+                          podeAdicionar = false, isMusica = false }) {
     return `
       <div class="mob-detail">
         <div class="mob-detail-hero">
@@ -407,6 +409,20 @@
               Exibindo ${membros.length} de ${cntMem} membros
             </div>` : ''}
           </div>` : ''}
+        </div>` : ''}
+
+        ${isMusica ? `
+        <div class="mob-detail-card">
+          <div class="mob-detail-card-title">Escala de Música</div>
+          <div style="padding:12px 16px 16px">
+            <div style="font-size:13px;color:var(--tx2);margin-bottom:12px">
+              Gerencie a escala mensal de dirigentes e equipes de louvor.
+            </div>
+            <button onclick="mobGo('dep-escala-musica',{title:'Escala de Música'})"
+                    class="mob-btn-secondary">
+              Ver Escala de Música
+            </button>
+          </div>
         </div>` : ''}
 
         ${podeAdicionar ? `
@@ -607,6 +623,292 @@
       btn.textContent = 'Adicionar';
     }
   };
+
+  /* ══════════════════════════════════════════════════
+     ESCALA DE MÚSICA
+  ══════════════════════════════════════════════════ */
+  const _SLOTS_MUS = {
+    domingo_manha:      'Domingo Manhã',
+    domingo_noite:      'Domingo Noite',
+    conexao_com_deus:   'Conexão com Deus',
+    tarde_da_esperanca: 'Tarde da Esperança',
+  };
+  const _SLOT_COR = {
+    domingo_manha:      'var(--blue)',
+    domingo_noite:      'var(--violet)',
+    conexao_com_deus:   'var(--teal)',
+    tarde_da_esperanca: 'var(--amber)',
+  };
+  const _ST_MUS = {
+    PENDENTE:   { cor:'var(--amber)', bg:'rgba(234,179,8,.12)',  label:'Pendente'   },
+    PREENCHIDA: { cor:'var(--blue)',  bg:'rgba(10,132,255,.12)', label:'Preenchida' },
+    CONFIRMADA: { cor:'var(--gr)',    bg:'rgba(48,209,88,.12)',  label:'Confirmada' },
+  };
+
+  let _escalaCache   = null;
+  let _musicosCache  = null;
+  let _escalaSlotKey = null;
+
+  async function renderEscalaMusica(el) {
+    _escalaCache = null;
+    el.innerHTML = `<div class="mob-loading-state">Carregando…</div>`;
+
+    const hoje = _isoOffset(0);
+    const fim  = _isoOffset(60);
+
+    try {
+      const [rEsc, rMus] = await Promise.all([
+        fetch(
+          `${apiBaseUrl()}/rest/v1/escala_musica?data=gte.${hoje}&data=lte.${fim}&order=data.asc,culto_tipo.asc&limit=300`,
+          { headers: apiHeaders() }
+        ),
+        fetch(
+          `${apiBaseUrl()}/rest/v1/musicos?ativo=eq.true&order=nome.asc&limit=200`,
+          { headers: apiHeaders() }
+        ),
+      ]);
+
+      const rows  = rEsc.ok ? await rEsc.json() : [];
+      _musicosCache = rMus.ok ? await rMus.json() : [];
+
+      // Indexar por "data-culto_tipo"
+      _escalaCache = {};
+      (Array.isArray(rows) ? rows : []).forEach(r => {
+        _escalaCache[`${r.data}-${r.culto_tipo}`] = r;
+      });
+
+      _renderEscalaLista(el, hoje, fim);
+    } catch (_) {
+      el.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">⚠️</div><div class="mob-empty-text">Erro ao carregar escala.</div></div>`;
+    }
+  }
+
+  function _renderEscalaLista(el, hoje, fim) {
+    // Gerar todos os dias do intervalo
+    const dias = [];
+    let cur = new Date(hoje + 'T12:00:00');
+    const fimD = new Date(fim + 'T12:00:00');
+    while (cur <= fimD) {
+      dias.push(cur.toISOString().slice(0, 10));
+      cur.setDate(cur.getDate() + 1);
+    }
+
+    // Filtrar apenas dias que têm slots ou são domingo/quarta
+    const diasComSlots = dias.filter(d => {
+      const dow = new Date(d + 'T12:00:00').getDay();
+      // Domingos (0) têm manhã e noite; quartas (3) têm Conexão; sábados (6) têm Tarde
+      return dow === 0 || dow === 3 || dow === 6 ||
+        Object.keys(_escalaCache).some(k => k.startsWith(d + '-'));
+    });
+
+    if (!diasComSlots.length) {
+      el.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">🎵</div><div class="mob-empty-text">Nenhum slot nos próximos 60 dias.</div></div>`;
+      return;
+    }
+
+    const DIAS_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    const MESES_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+    // Agrupar slots por data
+    const grupos = diasComSlots.map(d => {
+      const dt  = new Date(d + 'T12:00:00');
+      const dow = dt.getDay();
+      // Slots relevantes para esse dia
+      const slotKeys = Object.keys(_SLOTS_MUS).filter(k => {
+        if (k === 'domingo_manha' || k === 'domingo_noite') return dow === 0;
+        if (k === 'conexao_com_deus') return dow === 3;
+        if (k === 'tarde_da_esperanca') return dow === 6;
+        return false;
+      });
+      // Incluir também qualquer slot existente nesse dia não coberto acima
+      Object.keys(_escalaCache).filter(k => k.startsWith(d + '-')).forEach(k => {
+        const tipo = k.slice(d.length + 1);
+        if (!slotKeys.includes(tipo)) slotKeys.push(tipo);
+      });
+      if (!slotKeys.length) return null;
+
+      const isHoje = d === hoje;
+      const lbl  = `${DIAS_PT[dow]}, ${dt.getDate()} ${MESES_PT[dt.getMonth()]}`;
+
+      return { d, lbl, isHoje, slotKeys };
+    }).filter(Boolean);
+
+    el.innerHTML = `
+      <div style="padding-bottom:24px">
+        ${grupos.map(g => `
+          <div class="mob-day-group">
+            <div class="mob-day-hdr ${g.isHoje ? 'mob-day-today' : ''}">${_esc(g.lbl)}</div>
+            <div class="mob-card-list" style="margin:0 16px">
+              ${g.slotKeys.map(k => {
+                const slot = _escalaCache[`${g.d}-${k}`];
+                const st   = slot?.status || 'PENDENTE';
+                const stCfg = _ST_MUS[st] || _ST_MUS.PENDENTE;
+                const slotLbl = _SLOTS_MUS[k] || k;
+                const cor   = _SLOT_COR[k] || 'var(--violet)';
+                return `
+                  <div class="mob-list-item"
+                       onclick="_depEscAbrirSlot('${_esc(g.d)}','${_esc(k)}')">
+                    <div class="mob-list-ico"
+                         style="background:${stCfg.bg};color:${cor};font-size:18px">🎵</div>
+                    <div class="mob-list-body">
+                      <div class="mob-list-title">${_esc(slotLbl)}</div>
+                      <div class="mob-list-sub">
+                        ${slot?.dirigente_nome
+                          ? _esc(slot.dirigente_nome) + (slot.equipe ? ' · ' + _esc(slot.equipe) : '')
+                          : '<span style="color:var(--tx4)">Não atribuído</span>'}
+                      </div>
+                    </div>
+                    <span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;
+                                 background:${stCfg.bg};color:${stCfg.cor};white-space:nowrap;flex-shrink:0">
+                      ${stCfg.label}
+                    </span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  window._depEscAbrirSlot = function (data, cultoTipo) {
+    _escalaSlotKey = `${data}-${cultoTipo}`;
+    const slot     = _escalaCache?.[_escalaSlotKey];
+    const slotLbl  = _SLOTS_MUS[cultoTipo] || cultoTipo;
+    const [y, m, d] = data.split('-');
+    const dataFmt  = `${d}/${m}/${y}`;
+
+    document.getElementById('dep-esc-sheet')?.remove();
+    const s = document.createElement('div');
+    s.id = 'dep-esc-sheet';
+    s.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end';
+
+    const musOpts = (_musicosCache || []).map(mu =>
+      `<option value="${_esc(mu.nome)}" ${mu.nome === slot?.dirigente_nome ? 'selected' : ''}>${_esc(mu.nome)}</option>`
+    ).join('');
+
+    s.innerHTML = `
+      <div onclick="document.getElementById('dep-esc-sheet')?.remove()"
+           style="flex:1;background:rgba(0,0,0,.4)"></div>
+      <div style="background:var(--bg-surface);border-radius:18px 18px 0 0;
+                  padding:20px 16px;padding-bottom:calc(var(--safe-bottom) + 20px);
+                  max-height:88vh;overflow-y:auto">
+        <div style="font-size:11px;font-weight:600;color:var(--violet);text-transform:uppercase;
+                    letter-spacing:.06em;margin-bottom:4px">${_esc(slotLbl)}</div>
+        <div style="font-size:16px;font-weight:700;color:var(--tx1);margin-bottom:16px">${_esc(dataFmt)}</div>
+
+        <div class="mob-field">
+          <label class="mob-label">DIRIGENTE / LÍDER DE LOUVOR</label>
+          <select id="esc-dirigente" class="mob-input" style="-webkit-appearance:auto;appearance:auto">
+            <option value="">Não atribuído</option>
+            ${musOpts}
+          </select>
+        </div>
+
+        <div class="mob-field">
+          <label class="mob-label">EQUIPE <span style="font-weight:400;color:var(--tx3)">(opcional)</span></label>
+          <input id="esc-equipe" class="mob-input" type="text"
+                 value="${_esc(slot?.equipe || '')}"
+                 placeholder="Ex: Equipe A, voz + violão…">
+        </div>
+
+        <div class="mob-field">
+          <label class="mob-label">STATUS</label>
+          <select id="esc-status" class="mob-input" style="-webkit-appearance:auto;appearance:auto">
+            <option value="PENDENTE"   ${(slot?.status || 'PENDENTE') === 'PENDENTE'   ? 'selected' : ''}>Pendente</option>
+            <option value="PREENCHIDA" ${slot?.status === 'PREENCHIDA' ? 'selected' : ''}>Preenchida</option>
+            <option value="CONFIRMADA" ${slot?.status === 'CONFIRMADA' ? 'selected' : ''}>Confirmada</option>
+          </select>
+        </div>
+
+        <div class="mob-field">
+          <label class="mob-label">OBSERVAÇÕES <span style="font-weight:400;color:var(--tx3)">(opcional)</span></label>
+          <textarea id="esc-obs" class="mob-input" rows="2" style="resize:none"
+                    placeholder="Notas, temas…">${_esc(slot?.obs || '')}</textarea>
+        </div>
+
+        <div id="esc-err" style="font-size:13px;color:var(--rose);min-height:16px"></div>
+        <button id="esc-btn" class="mob-btn-primary"
+                onclick="_depEscSalvarSlot('${_esc(data)}','${_esc(cultoTipo)}')">
+          Salvar
+        </button>
+      </div>
+    `;
+    document.body.appendChild(s);
+  };
+
+  window._depEscSalvarSlot = async function (data, cultoTipo) {
+    const dirigente = (document.getElementById('esc-dirigente')?.value || '').trim();
+    const equipe    = (document.getElementById('esc-equipe')?.value    || '').trim() || null;
+    const statusSel = document.getElementById('esc-status')?.value     || 'PENDENTE';
+    const obs       = (document.getElementById('esc-obs')?.value       || '').trim() || null;
+    const errEl     = document.getElementById('esc-err');
+    const btn       = document.getElementById('esc-btn');
+
+    if (errEl) errEl.textContent = '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
+
+    const autoSt = !dirigente ? 'PENDENTE' : (statusSel === 'PENDENTE' ? 'PREENCHIDA' : statusSel);
+
+    try {
+      const key      = `${data}-${cultoTipo}`;
+      const existing = _escalaCache?.[key];
+      const payload  = {
+        dirigente_nome: dirigente || null,
+        equipe,
+        obs,
+        status: autoSt,
+      };
+
+      let r;
+      if (existing?.id) {
+        r = await fetch(
+          `${apiBaseUrl()}/rest/v1/escala_musica?id=eq.${encodeURIComponent(existing.id)}`,
+          {
+            method: 'PATCH',
+            headers: { ...apiHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+            body: JSON.stringify(payload),
+          }
+        );
+      } else {
+        r = await fetch(
+          `${apiBaseUrl()}/rest/v1/escala_musica`,
+          {
+            method: 'POST',
+            headers: { ...apiHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+            body: JSON.stringify({ data, culto_tipo: cultoTipo, ...payload }),
+          }
+        );
+      }
+
+      if (!r.ok) throw new Error(`Erro ${r.status}`);
+      const [saved] = await r.json();
+
+      if (_escalaCache) _escalaCache[key] = saved;
+      document.getElementById('dep-esc-sheet')?.remove();
+      mobToast('Escala atualizada');
+
+      // Re-renderiza a lista
+      const conteudo = document.getElementById('mob-content');
+      if (conteudo) {
+        const hoje = _isoOffset(0);
+        const fim  = _isoOffset(60);
+        _renderEscalaLista(conteudo.querySelector('div') || conteudo, hoje, fim);
+        // Re-renderiza completamente para consistência
+        await renderEscalaMusica(conteudo);
+      }
+    } catch (e) {
+      if (errEl) errEl.textContent = e.message || 'Erro ao salvar.';
+      if (btn) { btn.disabled = false; btn.textContent = 'Salvar'; }
+    }
+  };
+
+  function _isoOffset(dias) {
+    const d = new Date();
+    d.setDate(d.getDate() + dias);
+    return d.toISOString().slice(0, 10);
+  }
 
   /* ── Helpers ──────────────────────────────────────── */
   function _parseCount(cr) {
