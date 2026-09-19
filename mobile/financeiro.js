@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Financeiro
-   mobile/financeiro.js · v1.2.0
+   mobile/financeiro.js · v1.3.0
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -359,7 +359,7 @@
             <div style="padding:12px 16px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
               <span id="dem-status-badge-${d.id}" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;background:${cfg.bg};color:${cfg.cor}">${_esc(st)}</span>
               <button class="mob-btn-secondary" style="flex-shrink:0"
-                      onclick="_demAbrirStatusSheet('${d.id}','${_esc(st)}')">
+                      onclick="_finDemAbrirStatusSheet('${d.id}','${_esc(st)}')">
                 Alterar
               </button>
             </div>
@@ -379,7 +379,7 @@
                        box-sizing:border-box"
                 placeholder="Registre um andamento…"></textarea>
               <button class="mob-btn-primary" id="dem-and-btn-${d.id}"
-                      onclick="_demRegistrarAndamento('${d.id}')">
+                      onclick="_finDemRegistrarAndamento('${d.id}')">
                 Registrar andamento
               </button>
             </div>
@@ -387,7 +387,7 @@
         </div>
       `;
 
-      window._demCarregarAndamentos(d.id);
+      window._finDemCarregarAndamentos(d.id);
     } catch (_) {
       el.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">⚠️</div><div class="mob-empty-text">Demanda não encontrada.</div></div>`;
     }
@@ -558,7 +558,7 @@
       const sb = getSupabase();
       const { error } = await sb
         .from('financeiro_solicitacoes')
-        .update({ status: 'pago', updated_at: new Date().toISOString() })
+        .update({ status: 'pago', pago_em: new Date().toISOString(), updated_at: new Date().toISOString() })
         .eq('id', id);
       if (error) throw error;
       _pagarCache = null;
@@ -590,7 +590,7 @@
     }
   };
 
-  window._demAbrirStatusSheet = function (demId, stAtual) {
+  window._finDemAbrirStatusSheet = function (demId, stAtual) {
     const proximos = _ST_TRANSITIONS[stAtual] || [];
     if (!proximos.length) { mobToast('Nenhuma transição disponível neste status.'); return; }
     document.getElementById('dem-status-sheet')?.remove();
@@ -646,12 +646,12 @@
     }
   };
 
-  window._demCarregarAndamentos = async function (demId) {
+  window._finDemCarregarAndamentos = async function (demId) {
     const el = document.getElementById(`dem-and-list-${demId}`);
     if (!el) return;
     try {
       const res = await fetch(
-        `${apiBaseUrl()}/rest/v1/demanda_andamentos?demanda_id=eq.${encodeURIComponent(demId)}&select=id,conteudo,autor_nome,created_at&order=created_at.asc&limit=50`,
+        `${apiBaseUrl()}/rest/v1/demanda_andamentos?demanda_id=eq.${encodeURIComponent(demId)}&select=id,texto,usuario_nome,created_at&order=created_at.asc&limit=50`,
         { headers: apiHeaders() }
       );
       const data = await res.json();
@@ -662,9 +662,9 @@
       el.innerHTML = data.map(a => `
         <div style="padding:10px 0;border-bottom:1px solid var(--bd1)">
           <div style="font-size:12px;color:var(--tx3);margin-bottom:4px">
-            ${_esc(a.autor_nome || 'Sistema')} · ${_fmtDat(a.created_at) || ''}
+            ${_esc(a.usuario_nome || 'Sistema')} · ${_fmtDat(a.created_at) || ''}
           </div>
-          <div style="font-size:14px;color:var(--tx1);line-height:1.5">${_esc(a.conteudo || '')}</div>
+          <div style="font-size:14px;color:var(--tx1);line-height:1.5">${_esc(a.texto || '')}</div>
         </div>
       `).join('');
     } catch (_) {
@@ -672,7 +672,7 @@
     }
   };
 
-  window._demRegistrarAndamento = async function (demId) {
+  window._finDemRegistrarAndamento = async function (demId) {
     const txtEl = document.getElementById(`dem-and-txt-${demId}`);
     const btn   = document.getElementById(`dem-and-btn-${demId}`);
     const texto = (txtEl?.value || '').trim();
@@ -682,16 +682,16 @@
       const { error } = await getSupabase()
         .from('demanda_andamentos')
         .insert({
-          demanda_id:  demId,
-          conteudo:    texto,
-          autor_nome:  window.MOB_USER?.nome || null,
-          created_at:  new Date().toISOString(),
+          demanda_id:   demId,
+          texto,
+          usuario_nome: window.MOB_USER?.nome || null,
+          automatico:   false,
         });
       if (error) throw error;
       if (txtEl) txtEl.value = '';
       if (btn) { btn.disabled = false; btn.textContent = 'Registrar andamento'; }
       mobToast('Andamento registrado');
-      window._demCarregarAndamentos(demId);
+      window._finDemCarregarAndamentos(demId);
     } catch (e) {
       if (btn) { btn.disabled = false; btn.textContent = 'Registrar andamento'; }
       mobToast('Erro: ' + (e.message || 'falha'), 'error');
