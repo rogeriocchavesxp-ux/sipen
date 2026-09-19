@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Financeiro
-   mobile/financeiro.js · v1.4.0
+   mobile/financeiro.js · v1.4.1
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -570,8 +570,40 @@
     }
   }
 
-  window._finMarcarPago = async function (id) {
-    if (!confirm('Marcar esta solicitação como paga?')) return;
+  window._finMarcarPago = function (id) {
+    document.getElementById('fin-confirm-sheet')?.remove();
+    const s = document.createElement('div');
+    s.id = 'fin-confirm-sheet';
+    s.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end';
+    s.innerHTML = `
+      <div onclick="document.getElementById('fin-confirm-sheet')?.remove()"
+           style="flex:1;background:rgba(0,0,0,.4)"></div>
+      <div style="background:var(--bg-surface);border-radius:18px 18px 0 0;
+                  padding:24px 16px;padding-bottom:calc(var(--safe-bottom,0px) + 24px)">
+        <div style="font-size:16px;font-weight:700;color:var(--tx1);text-align:center;margin-bottom:6px">
+          Confirmar Pagamento
+        </div>
+        <div style="font-size:13px;color:var(--tx3);text-align:center;margin-bottom:20px">
+          Marcar esta solicitação como paga?
+        </div>
+        <button id="fin-conf-btn" class="mob-btn-primary"
+                onclick="_finConfirmarPago('${_esc(String(id))}')">
+          Marcar como Pago
+        </button>
+        <button onclick="document.getElementById('fin-confirm-sheet')?.remove()"
+          style="width:100%;padding:13px;background:transparent;border:none;
+                 font-size:15px;color:var(--tx2);cursor:pointer;margin-top:4px">
+          Cancelar
+        </button>
+      </div>
+    `;
+    document.body.appendChild(s);
+  };
+
+  window._finConfirmarPago = async function (id) {
+    const btn = document.getElementById('fin-conf-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
+    document.getElementById('fin-confirm-sheet')?.remove();
     try {
       const sb = getSupabase();
       const { error } = await sb

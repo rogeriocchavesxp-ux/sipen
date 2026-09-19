@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Congregações
-   mobile/congregacoes.js · v2.1.0
+   mobile/congregacoes.js · v2.2.0
 
    Permissões:
    - Supervisor / Coordenador / Conselheiro → edita tudo
@@ -221,6 +221,7 @@
       const [c]    = rCong.ok   ? await rCong.json()   : [];
       const cultos = rCultos.ok ? await rCultos.json() : [];
       if (!c) throw new Error('não encontrada');
+      _cacheDetalhe = c;
 
       const cor  = c.cor  || '#30d158';
       const icon = c.icon || '⛪';
@@ -268,6 +269,12 @@
               ${c.status === 'ativa' ? 'Ativa' : 'Inativa'}
             </span>
           </div>
+          ${perm.podeEditar ? `
+          <button onclick="_congAbrirEditSheet('${_esc(String(c.id))}')"
+            style="flex-shrink:0;padding:6px 14px;border-radius:10px;border:1.5px solid var(--bd2);
+                   background:transparent;color:var(--tx2);font-size:13px;font-weight:600;cursor:pointer">
+            Editar
+          </button>` : ''}
         </div>
 
         <!-- KPIs -->
@@ -701,6 +708,96 @@
     } catch (e) {
       if (errEl) errEl.textContent = e.message || 'Erro ao criar congregação.';
       btn.disabled = false; btn.textContent = 'Criar Congregação';
+    }
+  };
+
+  /* ── Sheet: Editar Congregação ───────────────── */
+  window._congAbrirEditSheet = function (congId) {
+    document.getElementById('cong-sheet')?.remove();
+    const c = _cacheDetalhe;
+    _abrirSheet('Editar Congregação', `
+      <div class="mob-field">
+        <label class="mob-label">NOME <span style="color:var(--rose)">*</span></label>
+        <input id="ec-nome" class="mob-input" type="text" maxlength="100"
+               value="${_esc(c?.nome || '')}">
+      </div>
+      <div class="mob-field">
+        <label class="mob-label">BAIRRO / REGIÃO</label>
+        <input id="ec-loc" class="mob-input" type="text"
+               value="${_esc(c?.localizacao || '')}" placeholder="Ex: Ermelino Matarazzo">
+      </div>
+      <div class="mob-field">
+        <label class="mob-label">ENDEREÇO</label>
+        <input id="ec-end" class="mob-input" type="text"
+               value="${_esc(c?.endereco || '')}" placeholder="Rua, número, bairro…">
+      </div>
+      <div class="mob-field">
+        <label class="mob-label">STATUS</label>
+        <select id="ec-status" class="mob-input" style="-webkit-appearance:auto;appearance:auto">
+          <option value="ativa"${c?.status === 'ativa' ? ' selected' : ''}>Ativa</option>
+          <option value="inativa"${c?.status === 'inativa' ? ' selected' : ''}>Inativa</option>
+        </select>
+      </div>
+      <div class="mob-field">
+        <label class="mob-label">SUPERVISOR</label>
+        <input id="ec-sup" class="mob-input" type="text"
+               value="${_esc(c?.supervisao || '')}" placeholder="Nome do supervisor">
+      </div>
+      <div class="mob-field">
+        <label class="mob-label">COORDENAÇÃO</label>
+        <input id="ec-coord" class="mob-input" type="text"
+               value="${_esc(c?.coordenacao || '')}" placeholder="Nome do coordenador(a)">
+      </div>
+      <div class="mob-field">
+        <label class="mob-label">CULTOS POR SEMANA</label>
+        <input id="ec-cultos" class="mob-input" type="number" min="0" inputmode="numeric"
+               value="${c?.cultos_por_semana || 1}">
+      </div>
+      <div id="ec-err" style="font-size:13px;color:var(--rose);min-height:16px;margin-bottom:4px"></div>
+      <button id="ec-btn" class="mob-btn-primary" onclick="_congSalvarEdit('${_esc(String(congId))}')">Salvar</button>
+    `);
+  };
+
+  window._congSalvarEdit = async function (congId) {
+    const nome   = (document.getElementById('ec-nome')?.value   || '').trim();
+    const loc    = (document.getElementById('ec-loc')?.value    || '').trim() || null;
+    const end    = (document.getElementById('ec-end')?.value    || '').trim() || null;
+    const status = document.getElementById('ec-status')?.value  || 'ativa';
+    const sup    = (document.getElementById('ec-sup')?.value    || '').trim() || null;
+    const coord  = (document.getElementById('ec-coord')?.value  || '').trim() || null;
+    const cultos = parseInt(document.getElementById('ec-cultos')?.value || '1') || null;
+    const errEl  = document.getElementById('ec-err');
+    const btn    = document.getElementById('ec-btn');
+
+    if (!nome) { if (errEl) errEl.textContent = 'Informe o nome da congregação.'; return; }
+    if (errEl) errEl.textContent = '';
+    btn.disabled = true; btn.textContent = 'Salvando…';
+
+    try {
+      const r = await fetch(
+        `${apiBaseUrl()}/rest/v1/congregacoes?id=eq.${encodeURIComponent(congId)}`,
+        {
+          method: 'PATCH',
+          headers: { ...apiHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({
+            nome,
+            localizacao:       loc,
+            endereco:          end,
+            status,
+            supervisao:        sup,
+            coordenacao:       coord,
+            cultos_por_semana: cultos,
+          }),
+        }
+      );
+      if (!r.ok) throw new Error(`Erro ${r.status}`);
+      _cacheDetalhe = null;
+      _fecharSheet();
+      mobToast('Congregação atualizada');
+      mobGo('cong-detalhe', { id: congId, title: nome });
+    } catch (e) {
+      if (errEl) errEl.textContent = e.message;
+      btn.disabled = false; btn.textContent = 'Salvar';
     }
   };
 
