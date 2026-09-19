@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Atas e Deliberações
-   mobile/atas.js · v1.0.1
+   mobile/atas.js · v1.0.2
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -567,6 +567,25 @@
   };
 
   window._ataAprovar = async function (ataId) {
+    // Validação antes de confirmar
+    try {
+      const [ataRows, deliberRows] = await Promise.all([
+        fetch(`${apiBaseUrl()}/rest/v1/atas?id=eq.${encodeURIComponent(ataId)}&select=numero,presidente,secretario&limit=1`, { headers: apiHeaders() }).then(r => r.json()),
+        fetch(`${apiBaseUrl()}/rest/v1/atas_deliberacoes?ata_id=eq.${encodeURIComponent(ataId)}&select=id&limit=1`, { headers: apiHeaders() }).then(r => r.json()),
+      ]);
+      const ata = Array.isArray(ataRows) ? ataRows[0] : null;
+      if (ata) {
+        const erros = [];
+        if (!(ata.presidente || '').trim()) erros.push('presidente não preenchido');
+        if (!(ata.secretario || '').trim()) erros.push('secretário não preenchido');
+        if (!Array.isArray(deliberRows) || !deliberRows.length) erros.push('nenhuma deliberação registrada');
+        if (erros.length) {
+          mobToast('Não é possível aprovar: ' + erros.join(', ') + '.', 'error');
+          return;
+        }
+      }
+    } catch (_) { /* prossegue se validação não acessível */ }
+
     if (!confirm('Aprovar esta ata? O banco irá gerar automaticamente as demandas das deliberações encaminhadas.')) return;
     try {
       const { error } = await getSupabase().from('atas').update({ status: 'APROVADA' }).eq('id', ataId);
