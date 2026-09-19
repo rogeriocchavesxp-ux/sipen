@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Módulo Financeiro
-   mobile/financeiro.js · v1.3.0
+   mobile/financeiro.js · v1.4.0
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -11,6 +11,8 @@
   mobRegisterPage('fin-dem-detalhe', renderDemDetalhe);
   mobRegisterPage('fin-pagar',       renderPagar);
   mobRegisterPage('fin-pagar-det',   renderPagarDetalhe);
+  mobRegisterPage('fin-lancamentos', renderLancamentos);
+  mobRegisterPage('fin-fluxo',       renderFluxo);
 
   /* ── Constantes ──────────────────────────────────── */
   const _FECHADAS = new Set(['Pago','Concluída','Cancelada','Cancelado','PAGO','CONCLUIDA','CANCELADA','CANCELADO']);
@@ -99,6 +101,22 @@
             <div class="mob-list-body">
               <div class="mob-list-title">A Pagar</div>
               <div class="mob-list-sub">Solicitações financeiras</div>
+            </div>
+            <div class="mob-list-chev">›</div>
+          </div>
+          <div class="mob-list-item" onclick="mobGo('fin-lancamentos',{title:'Lançamentos'})">
+            <div class="mob-list-ico" style="background:rgba(10,132,255,.12);color:var(--blue)">📒</div>
+            <div class="mob-list-body">
+              <div class="mob-list-title">Lançamentos</div>
+              <div class="mob-list-sub">Receitas e despesas</div>
+            </div>
+            <div class="mob-list-chev">›</div>
+          </div>
+          <div class="mob-list-item" onclick="mobGo('fin-fluxo',{title:'Fluxo de Caixa'})">
+            <div class="mob-list-ico" style="background:rgba(48,209,88,.12);color:var(--gr)">📈</div>
+            <div class="mob-list-body">
+              <div class="mob-list-title">Fluxo de Caixa</div>
+              <div class="mob-list-sub">Resumo mensal</div>
             </div>
             <div class="mob-list-chev">›</div>
           </div>
@@ -697,6 +715,204 @@
       mobToast('Erro: ' + (e.message || 'falha'), 'error');
     }
   };
+
+  /* ══════════════════════════════════════════════════
+     LANÇAMENTOS — Receitas e Despesas
+  ══════════════════════════════════════════════════ */
+  let _lancCache  = null;
+  let _lancFiltro = 'todos';
+
+  async function renderLancamentos(el) {
+    _lancCache  = null;
+    _lancFiltro = 'todos';
+
+    el.innerHTML = `
+      <div class="mob-chips" id="fin-lanc-chips">
+        <button class="mob-chip active" data-key="todos"    onclick="_finLancFiltro('todos')">Todos</button>
+        <button class="mob-chip"        data-key="receita"  onclick="_finLancFiltro('receita')">Receitas</button>
+        <button class="mob-chip"        data-key="despesa"  onclick="_finLancFiltro('despesa')">Despesas</button>
+      </div>
+      <div id="fin-lanc-lista" class="mob-section">
+        <div class="mob-card-list mob-loading-state">Carregando…</div>
+      </div>
+    `;
+
+    await _fetchLancamentos();
+  }
+
+  async function _fetchLancamentos() {
+    const el = document.getElementById('fin-lanc-lista');
+    if (!el) return;
+    try {
+      const res = await fetch(
+        `${apiBaseUrl()}/rest/v1/v_demandas?area=eq.Financeiro&select=id,titulo,status,subcategoria,financial_data,criado_em&order=criado_em.desc.nullslast&limit=200`,
+        { headers: apiHeaders() }
+      );
+      const data = await res.json();
+      _lancCache = Array.isArray(data)
+        ? data.map(d => ({
+            id:          d.id,
+            titulo:      d.titulo,
+            status:      d.status,
+            subcategoria: d.subcategoria,
+            tipo:        (d.financial_data?.tipo || '').toLowerCase(),
+            valor:       d.financial_data?.valor ?? null,
+            data:        d.financial_data?.data_vencimento || d.criado_em,
+          }))
+        : [];
+      _renderLancRows(el);
+    } catch (_) {
+      el.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">⚠️</div><div class="mob-empty-text">Erro ao carregar lançamentos.</div></div>`;
+    }
+  }
+
+  function _renderLancRows(el) {
+    if (!el || !_lancCache) return;
+    let rows = [..._lancCache];
+    if (_lancFiltro === 'receita') rows = rows.filter(r => r.tipo === 'receita');
+    else if (_lancFiltro === 'despesa') rows = rows.filter(r => r.tipo === 'despesa');
+
+    const totalRec  = rows.filter(r => r.tipo === 'receita').reduce((s, r) => s + (r.valor || 0), 0);
+    const totalDesp = rows.filter(r => r.tipo === 'despesa').reduce((s, r) => s + (r.valor || 0), 0);
+
+    if (!rows.length) {
+      el.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">📒</div><div class="mob-empty-text">Nenhum lançamento encontrado.</div></div>`;
+      return;
+    }
+
+    el.innerHTML = `
+      <div style="display:flex;gap:8px;padding:0 0 12px">
+        <div style="flex:1;background:rgba(48,209,88,.1);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:11px;color:var(--gr);font-weight:600;margin-bottom:4px">Receitas</div>
+          <div style="font-size:15px;font-weight:700;color:var(--gr)">${_brl(totalRec)}</div>
+        </div>
+        <div style="flex:1;background:rgba(255,69,58,.1);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:11px;color:var(--rose);font-weight:600;margin-bottom:4px">Despesas</div>
+          <div style="font-size:15px;font-weight:700;color:var(--rose)">${_brl(totalDesp)}</div>
+        </div>
+      </div>
+      <div class="mob-card-list">${rows.map(r => _rowLanc(r)).join('')}</div>
+      <div style="padding:12px 0;text-align:center;font-size:11px;color:var(--tx4)">${rows.length} lançamento${rows.length !== 1 ? 's' : ''}</div>
+    `;
+  }
+
+  window._finLancFiltro = function (key) {
+    _lancFiltro = key;
+    document.querySelectorAll('#fin-lanc-chips .mob-chip').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.key === key);
+    });
+    const el = document.getElementById('fin-lanc-lista');
+    if (el) _renderLancRows(el);
+  };
+
+  function _rowLanc(r) {
+    const isRec  = r.tipo === 'receita';
+    const isDesp = r.tipo === 'despesa';
+    const cor    = isRec ? 'var(--gr)' : isDesp ? 'var(--rose)' : 'var(--tx3)';
+    const ico    = isRec ? '⬆' : isDesp ? '⬇' : '•';
+    const icoBg  = isRec ? 'rgba(48,209,88,.12)' : isDesp ? 'rgba(255,69,58,.12)' : 'rgba(90,96,104,.15)';
+    const st     = _normSt(r.status);
+    const cfg    = _ST_CFG[st] || { cor:'var(--tx3)', bg:'rgba(90,96,104,.15)' };
+
+    return `
+      <div class="mob-list-item" onclick="mobGo('fin-dem-detalhe',{id:'${_esc(String(r.id))}',title:'${_esc(r.titulo || 'Lançamento')}',_area:'fin-lancamentos'})">
+        <div class="mob-list-ico" style="background:${icoBg};color:${cor};font-size:16px">${ico}</div>
+        <div class="mob-list-body">
+          <div class="mob-list-title">${_esc(r.titulo || 'Sem título')}</div>
+          <div class="mob-list-sub">${r.subcategoria ? _esc(r.subcategoria) + (r.valor != null ? ' · ' : '') : ''}${r.valor != null ? `<span style="color:${cor};font-weight:600">${_brl(r.valor)}</span>` : _fmtDat(r.data) || ''}</div>
+        </div>
+        <span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:${cfg.bg};color:${cfg.cor};white-space:nowrap;flex-shrink:0">${_esc(st)}</span>
+      </div>
+    `;
+  }
+
+  /* ══════════════════════════════════════════════════
+     FLUXO DE CAIXA — Resumo Mensal
+  ══════════════════════════════════════════════════ */
+  async function renderFluxo(el) {
+    el.innerHTML = `<div class="mob-loading-state">Carregando…</div>`;
+    try {
+      const res = await fetch(
+        `${apiBaseUrl()}/rest/v1/v_demandas?area=eq.Financeiro&select=financial_data,criado_em&order=criado_em.desc.nullslast&limit=500`,
+        { headers: apiHeaders() }
+      );
+      const data = await res.json();
+      if (!Array.isArray(data) || !data.length) {
+        el.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">📈</div><div class="mob-empty-text">Nenhum dado disponível.</div></div>`;
+        return;
+      }
+
+      const meses = {};
+      for (const d of data) {
+        const tipo  = (d.financial_data?.tipo || '').toLowerCase();
+        const valor = d.financial_data?.valor;
+        if (valor == null) continue;
+        const mes = (d.financial_data?.data_vencimento || d.criado_em || '').substring(0, 7);
+        if (!mes || mes.length < 7) continue;
+        if (!meses[mes]) meses[mes] = { rec: 0, desp: 0 };
+        if (tipo === 'receita')       meses[mes].rec  += Number(valor);
+        else if (tipo === 'despesa')  meses[mes].desp += Number(valor);
+      }
+
+      const keys = Object.keys(meses).sort().reverse();
+      if (!keys.length) {
+        el.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">📈</div><div class="mob-empty-text">Nenhum lançamento com valor registrado.</div></div>`;
+        return;
+      }
+
+      const totalRec  = keys.reduce((s, k) => s + meses[k].rec, 0);
+      const totalDesp = keys.reduce((s, k) => s + meses[k].desp, 0);
+      const resultado = totalRec - totalDesp;
+
+      el.innerHTML = `
+        <div style="display:flex;gap:8px;padding:0 0 16px">
+          <div style="flex:1;background:rgba(48,209,88,.1);border-radius:12px;padding:12px;text-align:center">
+            <div style="font-size:10px;color:var(--gr);font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">Total Rec.</div>
+            <div style="font-size:14px;font-weight:700;color:var(--gr)">${_brl(totalRec)}</div>
+          </div>
+          <div style="flex:1;background:rgba(255,69,58,.1);border-radius:12px;padding:12px;text-align:center">
+            <div style="font-size:10px;color:var(--rose);font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">Total Desp.</div>
+            <div style="font-size:14px;font-weight:700;color:var(--rose)">${_brl(totalDesp)}</div>
+          </div>
+          <div style="flex:1;background:${resultado >= 0 ? 'rgba(48,209,88,.1)' : 'rgba(255,69,58,.1)'};border-radius:12px;padding:12px;text-align:center">
+            <div style="font-size:10px;color:${resultado >= 0 ? 'var(--gr)' : 'var(--rose)'};font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">Resultado</div>
+            <div style="font-size:14px;font-weight:700;color:${resultado >= 0 ? 'var(--gr)' : 'var(--rose)'}">${_brl(resultado)}</div>
+          </div>
+        </div>
+
+        <div class="mob-card-list">
+          ${keys.map(mes => {
+            const m = meses[mes];
+            const res = m.rec - m.desp;
+            const [ano, num] = mes.split('-');
+            const nomeMes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][parseInt(num, 10) - 1] || num;
+            return `
+              <div class="mob-list-item" style="flex-direction:column;align-items:stretch;gap:8px;padding:14px 16px">
+                <div style="font-size:14px;font-weight:700;color:var(--tx1)">${nomeMes} ${ano}</div>
+                <div style="display:flex;gap:12px">
+                  <div style="flex:1">
+                    <div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Receitas</div>
+                    <div style="font-size:13px;font-weight:600;color:var(--gr)">${_brl(m.rec)}</div>
+                  </div>
+                  <div style="flex:1">
+                    <div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Despesas</div>
+                    <div style="font-size:13px;font-weight:600;color:var(--rose)">${_brl(m.desp)}</div>
+                  </div>
+                  <div style="flex:1">
+                    <div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Resultado</div>
+                    <div style="font-size:13px;font-weight:700;color:${res >= 0 ? 'var(--gr)' : 'var(--rose)'}">${_brl(res)}</div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div style="padding:12px 0;text-align:center;font-size:11px;color:var(--tx4)">${keys.length} ${keys.length !== 1 ? 'meses' : 'mês'}</div>
+      `;
+    } catch (_) {
+      el.innerHTML = `<div class="mob-empty"><div class="mob-empty-icon">⚠️</div><div class="mob-empty-text">Erro ao carregar fluxo de caixa.</div></div>`;
+    }
+  }
 
   /* ── Helpers ─────────────────────────────────────── */
   function _brl(v) {

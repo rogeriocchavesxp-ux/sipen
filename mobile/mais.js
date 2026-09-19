@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Mais / Menu Completo
-   mobile/mais.js · v1.0.7
+   mobile/mais.js · v1.0.8
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -81,11 +81,13 @@
   }
 
   const _ROTAS = {
-    'financeiro-mob':    'financeiro',
-    'ministerios-mob':   'departamentos',
-    'congregacoes-mob':  'congregacoes-mob',
-    'cultos-mob':        'cultos-mob',
-    'atas-mob':          'atas',
+    'financeiro-mob':      'financeiro',
+    'fin-lancamentos-mob': 'fin-lancamentos',
+    'fin-fluxo-mob':       'fin-fluxo',
+    'ministerios-mob':     'departamentos',
+    'congregacoes-mob':    'congregacoes-mob',
+    'cultos-mob':          'cultos-mob',
+    'atas-mob':            'atas',
   };
 
   window._maisGo = function (page) {
