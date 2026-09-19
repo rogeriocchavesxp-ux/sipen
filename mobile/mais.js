@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Mais / Menu Completo
-   mobile/mais.js · v1.0.5
+   mobile/mais.js · v1.0.6
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -76,6 +76,7 @@
     'ministerios-mob':   'departamentos',
     'congregacoes-mob':  'congregacoes-mob',
     'cultos-mob':        'cultos-mob',
+    'atas-mob':          'atas',
   };
 
   window._maisGo = function (page) {
