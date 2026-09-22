@@ -264,7 +264,7 @@ async function _comSyncStatus(agendaId, acao, motivo) {
         await fetch(`${apiBaseUrl()}/rest/v1/com_solicitacoes_arte?id=eq.${r.id}`, {
           method: "PATCH",
           headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=minimal" },
-          body: JSON.stringify({ status: novoStatus, atualizado_em: new Date().toISOString() }),
+          body: JSON.stringify({ status: novoStatus }),
         });
       }
       if (texto) {
