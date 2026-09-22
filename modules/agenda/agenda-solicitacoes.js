@@ -238,7 +238,7 @@ async function agConfirmarAjuste(id) {
     const res = await fetch(`${apiBaseUrl()}/rest/v1/agenda?id=eq.${id}`, {
       method: "PATCH",
       headers: { ...apiHeaders(), "Content-Type": "application/json", "Prefer": "return=representation" },
-      body: JSON.stringify({ status: "ajuste_solicitado", atualizado_em: new Date().toISOString() }),
+      body: JSON.stringify({ status: "ajuste_solicitado" }),
     });
     if (!res.ok) throw new Error(await res.text());
     const rows = await res.json();
