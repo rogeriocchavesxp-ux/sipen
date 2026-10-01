@@ -260,7 +260,7 @@ function renderEvento(evt, totalInscritos) {
        </div>`
     : "";
 
-  const valorHtml = !evt.gratuito && evt.valor
+  const valorHtml = !evt.gratuito && evt.valor && !evt.tabela_precos?.length
     ? `<div class="event-valor">💰 ${fmtMoeda(evt.valor)} por pessoa</div>`
     : "";
 
@@ -382,7 +382,7 @@ function renderFormHtml(evt) {
        </div>`
     : "";
 
-  const casalHtml = mostrar.casal ? `
+  const casalHtml = (mostrar.casal || evt.tabela_precos?.length) ? `
     <div class="field" style="margin-bottom:6px">
       <label>Tipo de Cadastro<span class="req">*</span></label>
       <div style="display:flex;gap:20px;flex-wrap:wrap;padding:6px 0">
