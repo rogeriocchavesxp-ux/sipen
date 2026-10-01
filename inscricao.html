@@ -79,6 +79,8 @@
   .filhos-sec.show { display: block; }
   .inst-sec { display: none; }
   .inst-sec.show { display: block; }
+  .ind-sec { display: none; }
+  .ind-sec.show { display: block; }
 
   .btn-submit {
     width: 100%; padding: 13px; border-radius: 9px; border: none;
@@ -399,6 +401,24 @@ function renderFormHtml(evt) {
         </label>
       </div>
     </div>
+    <div class="ind-sec show" id="ind-sec">
+      <div style="padding:14px;background:rgba(208,144,64,.05);border:1px solid rgba(208,144,64,.2);border-radius:8px;margin-bottom:14px;display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.07em">Acomodação</div>
+        <div class="field" style="margin:0">
+          <label>Preferência de quarto<span class="req">*</span></label>
+          <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">
+            <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:var(--tx1)">
+              <input type="radio" name="f-acomodacao" value="sozinho" checked style="width:16px;height:16px;accent-color:var(--sky)">
+              Prefiro ficar sozinho(a)
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:var(--tx1)">
+              <input type="radio" name="f-acomodacao" value="dividir" style="width:16px;height:16px;accent-color:var(--sky)">
+              Aceito dividir quarto
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="casal-sec" id="casal-sec">
       <div style="padding:14px;background:rgba(74,156,245,.05);border:1px solid rgba(74,156,245,.2);border-radius:8px;margin-bottom:14px;display:flex;flex-direction:column;gap:12px">
         <div style="font-size:10px;font-weight:700;color:var(--sky);text-transform:uppercase;letter-spacing:.07em">Dados do casal</div>
@@ -497,9 +517,11 @@ function onTipoChange() {
 }
 
 function onCadastroTipoChange() {
-  const tipo    = document.querySelector('input[name="f-cadastro-tipo"]:checked')?.value;
+  const tipo     = document.querySelector('input[name="f-cadastro-tipo"]:checked')?.value;
+  const secInd   = document.getElementById("ind-sec");
   const secCasal = document.getElementById("casal-sec");
   const secInst  = document.getElementById("inst-sec");
+  if (secInd)   secInd.classList.toggle("show",   tipo === "individual");
   if (secCasal) secCasal.classList.toggle("show", tipo === "casal");
   if (secInst)  secInst.classList.toggle("show",  tipo === "institucional");
 }
@@ -585,6 +607,7 @@ async function submitForm() {
       responsavel_telefone: g("f-resp-tel"),
       observacao:           g("f-obs"),
       cadastro_tipo:        cadastroTipo,
+      acomodacao_pref:      cadastroTipo === "individual" ? (document.querySelector('input[name="f-acomodacao"]:checked')?.value || "sozinho") : null,
       conjuge_nome:         cadastroTipo === "casal" ? g("f-conjuge-nome") : null,
       tem_filhos:           temFilhos,
       num_filhos:           (temFilhos && numFilhosRaw) ? parseInt(numFilhosRaw, 10) : null,
