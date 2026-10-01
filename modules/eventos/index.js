@@ -509,6 +509,7 @@
         ${i.responsavel_nome ? `<div style="font-size:10px;color:var(--tx3)">Resp.: ${_eh(i.responsavel_nome)}</div>` : ""}
         ${i.familia ? `<div style="font-size:10px;color:var(--tx3)">Família: ${_eh(i.familia)}</div>` : ""}
         ${i.cadastro_tipo === "casal" ? `<div style="font-size:10px;color:var(--sky)">Casal · Cônjuge: ${_eh(i.conjuge_nome || "—")}${i.tem_filhos ? ` · ${i.num_filhos || "?"} filho(s)` : " · sem filhos"}</div>` : ""}
+        ${i.cadastro_tipo === "institucional" ? `<div style="font-size:10px;color:var(--gr)">${_eh(i.instituicao_nome || "—")}${i.representante_cargo ? ` · ${_eh(i.representante_cargo)}` : ""}</div>` : ""}
       </td>
       <td style="padding:10px 8px;font-size:11.5px;color:var(--tx2)">${_eh(tipoLabels[i.tipo] || i.tipo || "—")}</td>
       <td style="padding:10px 8px;font-size:11px;color:var(--tx3)">
