@@ -508,6 +508,7 @@
         <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${_eh(i.nome)}</div>
         ${i.responsavel_nome ? `<div style="font-size:10px;color:var(--tx3)">Resp.: ${_eh(i.responsavel_nome)}</div>` : ""}
         ${i.familia ? `<div style="font-size:10px;color:var(--tx3)">Família: ${_eh(i.familia)}</div>` : ""}
+        ${i.cadastro_tipo === "casal" ? `<div style="font-size:10px;color:var(--sky)">Casal · Cônjuge: ${_eh(i.conjuge_nome || "—")}${i.tem_filhos ? ` · ${i.num_filhos || "?"} filho(s)` : " · sem filhos"}</div>` : ""}
       </td>
       <td style="padding:10px 8px;font-size:11.5px;color:var(--tx2)">${_eh(tipoLabels[i.tipo] || i.tipo || "—")}</td>
       <td style="padding:10px 8px;font-size:11px;color:var(--tx3)">
@@ -1183,6 +1184,7 @@ tr:nth-child(even) td{background:#f9fafb}
                     campo("tipo_pessoa", "Tipo de pessoa",   true),
                     campo("congregacao", "Congregação",      true),
                     campo("observacoes", "Observações",      true),
+                    campo("casal",       "Cadastro Casal (cônjuge + filhos)", false),
                   ].join("");
                 })()}
               </div>
@@ -1351,6 +1353,7 @@ tr:nth-child(even) td{background:#f9fafb}
         tipo_pessoa: cbk("eve-f-campo-tipo_pessoa"),
         congregacao: cbk("eve-f-campo-congregacao"),
         observacoes: cbk("eve-f-campo-observacoes"),
+        casal:       cbk("eve-f-campo-casal"),
       },
       observacoes:            g("eve-f-obs"),
       ocultar_logo:           cbk("eve-f-ocultar-logo"),
