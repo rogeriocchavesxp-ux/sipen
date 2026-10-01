@@ -104,6 +104,18 @@
   .loader { text-align: center; padding: 60px 24px; color: var(--tx3); }
   .spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid var(--bd); border-top-color: var(--sky); border-radius: 50%; animation: spin .7s linear infinite; margin-bottom: 12px; }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Chips de seleção */
+  .tipo-chip, .acom-chip {
+    display: flex; align-items: center; justify-content: center;
+    padding: 9px 12px; border-radius: 8px; border: 1.5px solid var(--inpbd);
+    background: var(--inp); cursor: pointer; font-size: 13px; font-weight: 500;
+    color: var(--tx2); text-align: center; transition: all .15s; user-select: none;
+  }
+  .tipo-chip.active, .acom-chip.active {
+    border-color: var(--sky); background: rgba(74,156,245,.08);
+    color: var(--sky); font-weight: 600;
+  }
 </style>
 </head>
 <body>
@@ -383,78 +395,78 @@ function renderFormHtml(evt) {
     : "";
 
   const casalHtml = (mostrar.casal || evt.tabela_precos?.length) ? `
-    <div class="field" style="margin-bottom:6px">
-      <label>Tipo de Cadastro<span class="req">*</span></label>
-      <div style="display:flex;gap:20px;flex-wrap:wrap;padding:6px 0">
-        <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:var(--tx1);font-weight:600">
-          <input type="radio" name="f-cadastro-tipo" value="individual" checked onchange="onCadastroTipoChange();calcularTotal()" style="width:16px;height:16px;accent-color:var(--sky)">
-          Individual
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Tipo de Cadastro<span class="req">*</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <label style="flex:1;min-width:90px">
+          <input type="radio" name="f-cadastro-tipo" value="individual" checked onchange="onCadastroTipoChange();calcularTotal()" style="display:none">
+          <span class="tipo-chip" data-val="individual" style="display:flex;align-items:center;justify-content:center;padding:9px 12px;border-radius:8px;border:1.5px solid var(--inpbd);background:var(--inp);cursor:pointer;font-size:13px;font-weight:500;color:var(--tx2);text-align:center;transition:all .15s;user-select:none">Individual</span>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:var(--tx1);font-weight:600">
-          <input type="radio" name="f-cadastro-tipo" value="casal" onchange="onCadastroTipoChange();calcularTotal()" style="width:16px;height:16px;accent-color:var(--sky)">
-          Casal
+        <label style="flex:1;min-width:90px">
+          <input type="radio" name="f-cadastro-tipo" value="casal" onchange="onCadastroTipoChange();calcularTotal()" style="display:none">
+          <span class="tipo-chip" data-val="casal" style="display:flex;align-items:center;justify-content:center;padding:9px 12px;border-radius:8px;border:1.5px solid var(--inpbd);background:var(--inp);cursor:pointer;font-size:13px;font-weight:500;color:var(--tx2);text-align:center;transition:all .15s;user-select:none">Casal</span>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:var(--tx1);font-weight:600">
-          <input type="radio" name="f-cadastro-tipo" value="institucional" onchange="onCadastroTipoChange();calcularTotal()" style="width:16px;height:16px;accent-color:var(--sky)">
-          Institucional
+        <label style="flex:1;min-width:90px">
+          <input type="radio" name="f-cadastro-tipo" value="institucional" onchange="onCadastroTipoChange();calcularTotal()" style="display:none">
+          <span class="tipo-chip" data-val="institucional" style="display:flex;align-items:center;justify-content:center;padding:9px 12px;border-radius:8px;border:1.5px solid var(--inpbd);background:var(--inp);cursor:pointer;font-size:13px;font-weight:500;color:var(--tx2);text-align:center;transition:all .15s;user-select:none">Institucional</span>
         </label>
       </div>
     </div>
-    <div class="ind-sec show" id="ind-sec">
-      <div style="padding:14px;background:rgba(208,144,64,.05);border:1px solid rgba(208,144,64,.2);border-radius:8px;margin-bottom:14px;display:flex;flex-direction:column;gap:10px">
-        <div style="font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.07em">Acomodação</div>
-        <div class="field" style="margin:0">
-          <label>Preferência de quarto<span class="req">*</span></label>
-          <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">
-            <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:var(--tx1)">
-              <input type="radio" name="f-acomodacao" value="sozinho" checked oninput="calcularTotal()" style="width:16px;height:16px;accent-color:var(--sky)">
-              Prefiro ficar sozinho(a)
-            </label>
-            <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:var(--tx1)">
-              <input type="radio" name="f-acomodacao" value="dividir" oninput="calcularTotal()" style="width:16px;height:16px;accent-color:var(--sky)">
-              Aceito dividir quarto
-            </label>
-          </div>
-        </div>
+    <div class="ind-sec show" id="ind-sec" style="margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Preferência de Acomodação<span class="req">*</span></div>
+      <div style="display:flex;gap:8px">
+        <label style="flex:1">
+          <input type="radio" name="f-acomodacao" value="sozinho" checked oninput="calcularTotal();_syncAcomChip()" style="display:none">
+          <span class="acom-chip" data-val="sozinho" style="display:flex;align-items:center;justify-content:center;padding:9px 12px;border-radius:8px;border:1.5px solid var(--inpbd);background:var(--inp);cursor:pointer;font-size:13px;font-weight:500;color:var(--tx2);text-align:center;transition:all .15s;user-select:none">Prefiro quarto individual</span>
+        </label>
+        <label style="flex:1">
+          <input type="radio" name="f-acomodacao" value="dividir" oninput="calcularTotal();_syncAcomChip()" style="display:none">
+          <span class="acom-chip" data-val="dividir" style="display:flex;align-items:center;justify-content:center;padding:9px 12px;border-radius:8px;border:1.5px solid var(--inpbd);background:var(--inp);cursor:pointer;font-size:13px;font-weight:500;color:var(--tx2);text-align:center;transition:all .15s;user-select:none">Aceito dividir quarto</span>
+        </label>
       </div>
     </div>
     <div class="casal-sec" id="casal-sec">
-      <div style="padding:14px;background:rgba(74,156,245,.05);border:1px solid rgba(74,156,245,.2);border-radius:8px;margin-bottom:14px;display:flex;flex-direction:column;gap:12px">
-        <div style="font-size:10px;font-weight:700;color:var(--sky);text-transform:uppercase;letter-spacing:.07em">Dados do casal</div>
-        <div class="field" style="margin:0">
-          <label>Nome do Cônjuge<span class="req">*</span></label>
-          <input id="f-conjuge-nome" type="text" placeholder="Nome completo do cônjuge" autocomplete="off">
-        </div>
-        <div class="field" style="margin:0">
-          <label>Filhos <span style="font-size:10px;font-weight:400;color:var(--tx3)">(deixe 0 se não tem)</span></label>
-          <div style="display:flex;flex-direction:column;gap:8px;padding:6px 0">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-              <span style="font-size:12.5px;color:var(--tx2)">0–4 anos <span style="font-size:11px;color:var(--gr);font-weight:600">(gratuito)</span></span>
-              <input id="f-filhos-0-4" type="number" min="0" max="20" value="0" oninput="calcularTotal()" style="width:64px;padding:6px 8px;border-radius:7px;border:1px solid var(--inpbd);background:var(--inp);color:var(--tx1);font-size:13px;text-align:center">
+      <div class="field">
+        <label>Nome do Cônjuge<span class="req">*</span></label>
+        <input id="f-conjuge-nome" type="text" placeholder="Nome completo do cônjuge" autocomplete="off">
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Filhos</div>
+        <div style="border:1px solid var(--bd);border-radius:8px;overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--bd)">
+            <div>
+              <div style="font-size:13px;color:var(--tx1);font-weight:500">0–4 anos</div>
+              <div style="font-size:11px;color:var(--gr);margin-top:1px">Gratuito</div>
             </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-              <span style="font-size:12.5px;color:var(--tx2)">5–11 anos</span>
-              <input id="f-filhos-5-11" type="number" min="0" max="20" value="0" oninput="calcularTotal()" style="width:64px;padding:6px 8px;border-radius:7px;border:1px solid var(--inpbd);background:var(--inp);color:var(--tx1);font-size:13px;text-align:center">
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-              <span style="font-size:12.5px;color:var(--tx2)">12+ anos</span>
-              <input id="f-filhos-12-mais" type="number" min="0" max="20" value="0" oninput="calcularTotal()" style="width:64px;padding:6px 8px;border-radius:7px;border:1px solid var(--inpbd);background:var(--inp);color:var(--tx1);font-size:13px;text-align:center">
-            </div>
+            <input id="f-filhos-0-4" type="number" min="0" max="20" value="0" oninput="calcularTotal()" style="width:60px;padding:6px 8px;border-radius:7px;border:1px solid var(--inpbd);background:var(--inp);color:var(--tx1);font-size:14px;text-align:center;font-family:inherit">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--bd)">
+            <div style="font-size:13px;color:var(--tx1);font-weight:500">5–11 anos</div>
+            <input id="f-filhos-5-11" type="number" min="0" max="20" value="0" oninput="calcularTotal()" style="width:60px;padding:6px 8px;border-radius:7px;border:1px solid var(--inpbd);background:var(--inp);color:var(--tx1);font-size:14px;text-align:center;font-family:inherit">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px">
+            <div style="font-size:13px;color:var(--tx1);font-weight:500">12+ anos</div>
+            <input id="f-filhos-12-mais" type="number" min="0" max="20" value="0" oninput="calcularTotal()" style="width:60px;padding:6px 8px;border-radius:7px;border:1px solid var(--inpbd);background:var(--inp);color:var(--tx1);font-size:14px;text-align:center;font-family:inherit">
           </div>
         </div>
       </div>
     </div>
     <div class="inst-sec" id="inst-sec">
-      <div style="padding:14px;background:rgba(58,170,92,.05);border:1px solid rgba(58,170,92,.2);border-radius:8px;margin-bottom:14px;display:flex;flex-direction:column;gap:12px">
-        <div style="font-size:10px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.07em">Dados da instituição</div>
-        <div class="field" style="margin:0">
-          <label>Nome da Instituição<span class="req">*</span></label>
-          <input id="f-inst-nome" type="text" placeholder="Ex: Igreja Presbiteriana, Ministério Jovem..." autocomplete="organization">
+      <div class="field">
+        <label>Nome da Instituição<span class="req">*</span></label>
+        <input id="f-inst-nome" type="text" placeholder="Ex: Igreja Presbiteriana, Ministério Jovem..." autocomplete="organization">
+      </div>
+      <div class="field">
+        <label>Cargo do Representante</label>
+        <input id="f-inst-cargo" type="text" placeholder="Ex: Pastor, Presidente, Coordenador...">
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em">Participantes do Grupo</div>
+          <button type="button" onclick="addGrupoParticipante()" style="padding:4px 10px;border-radius:6px;border:1px solid var(--sky);background:transparent;color:var(--sky);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">+ Adicionar</button>
         </div>
-        <div class="field" style="margin:0">
-          <label>Cargo do Representante</label>
-          <input id="f-inst-cargo" type="text" placeholder="Ex: Pastor, Presidente, Coordenador...">
-        </div>
+        <div style="font-size:11.5px;color:var(--tx3);margin-bottom:10px">O responsável acima é o 1º participante. Adicione os demais abaixo.</div>
+        <div id="inst-participantes"></div>
       </div>
     </div>` : "";
 
@@ -526,6 +538,8 @@ function onCadastroTipoChange() {
   if (secInd)   secInd.classList.toggle("show",   tipo === "individual");
   if (secCasal) secCasal.classList.toggle("show", tipo === "casal");
   if (secInst)  secInst.classList.toggle("show",  tipo === "institucional");
+  _syncTipoChip();
+  if (tipo === "institucional") { _grupoParticipantes = []; renderGrupoParticipantes(); }
 }
 
 function onTemFilhosChange() {
@@ -539,6 +553,7 @@ function onTemFilhosChange() {
 let _submitting = false;
 let _eventoAtual = null;
 let _totalCalculado = 0;
+let _grupoParticipantes = [];
 
 function _uuid() {
   return crypto.randomUUID?.() ||
@@ -548,6 +563,49 @@ function _uuid() {
     });
 }
 
+function _syncTipoChip() {
+  const val = document.querySelector('input[name="f-cadastro-tipo"]:checked')?.value;
+  document.querySelectorAll('.tipo-chip').forEach(el => {
+    el.classList.toggle('active', el.dataset.val === val);
+  });
+}
+
+function _syncAcomChip() {
+  const val = document.querySelector('input[name="f-acomodacao"]:checked')?.value;
+  document.querySelectorAll('.acom-chip').forEach(el => {
+    el.classList.toggle('active', el.dataset.val === val);
+  });
+}
+
+function addGrupoParticipante() {
+  _grupoParticipantes.push({ nome: "" });
+  renderGrupoParticipantes();
+  calcularTotal();
+}
+
+function removeGrupoParticipante(i) {
+  _grupoParticipantes.splice(i, 1);
+  renderGrupoParticipantes();
+  calcularTotal();
+}
+
+function renderGrupoParticipantes() {
+  const container = document.getElementById("inst-participantes");
+  if (!container) return;
+  if (!_grupoParticipantes.length) {
+    container.innerHTML = `<div style="padding:12px;border-radius:8px;border:1px dashed var(--bd);text-align:center;font-size:12.5px;color:var(--tx3)">Nenhum participante adicional.</div>`;
+    return;
+  }
+  container.innerHTML = _grupoParticipantes.map((p, i) => `
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+      <div style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--bd);font-size:11px;font-weight:700;color:var(--tx3);flex-shrink:0">${i + 2}</div>
+      <input type="text" value="${eh(p.nome)}" placeholder="Nome do participante" oninput="_grupoParticipantes[${i}].nome=this.value"
+        style="flex:1;padding:10px 12px;border-radius:8px;border:1px solid var(--inpbd);background:var(--inp);color:var(--tx1);font-size:13.5px;font-family:inherit;outline:none">
+      <button type="button" onclick="removeGrupoParticipante(${i})" style="padding:0;width:34px;height:34px;flex-shrink:0;border-radius:7px;border:1px solid var(--bd);background:transparent;color:var(--tx3);cursor:pointer;font-size:18px;line-height:1">×</button>
+    </div>
+  `).join("");
+}
+
 function calcularTotal() {
   const tabela = _eventoAtual?.tabela_precos;
   if (!tabela || !tabela.length) return;
@@ -555,6 +613,7 @@ function calcularTotal() {
   const acomodacao = document.querySelector('input[name="f-acomodacao"]:checked')?.value || "sozinho";
   const filhos5_11   = Math.max(0, parseInt(document.getElementById("f-filhos-5-11")?.value   || "0", 10) || 0);
   const filhos12mais = Math.max(0, parseInt(document.getElementById("f-filhos-12-mais")?.value || "0", 10) || 0);
+  const numParticipantes = tipo === "institucional" ? 1 + _grupoParticipantes.length : 1;
   const itens = [];
   let total = 0;
   for (const item of tabela) {
@@ -574,8 +633,9 @@ function calcularTotal() {
       itens.push({ label: item.label, qtd: filhos12mais, subtotal: sub });
       total += sub;
     } else {
-      itens.push({ label: item.label, qtd: 1, subtotal: item.valor });
-      total += item.valor;
+      const sub = item.valor * numParticipantes;
+      itens.push({ label: item.label, qtd: numParticipantes, subtotal: sub });
+      total += sub;
     }
   }
   _totalCalculado = total;
@@ -605,6 +665,10 @@ function _renderResumoPrecos(itens, total) {
 
 function bindForm(evt) {
   _eventoAtual = evt;
+  _grupoParticipantes = [];
+  _syncTipoChip();
+  _syncAcomChip();
+  renderGrupoParticipantes();
   calcularTotal();
 }
 
@@ -627,6 +691,10 @@ async function submitForm() {
   if (cadastroTipo === "institucional" && !g("f-inst-nome")) {
     return showErr("Informe o nome da instituição.");
   }
+  if (cadastroTipo === "institucional") {
+    const vazios = _grupoParticipantes.some(p => !p.nome?.trim());
+    if (vazios) return showErr("Preencha o nome de todos os participantes adicionados.");
+  }
   hideErr();
   _submitting = true;
   const btn = document.getElementById("btn-sub");
@@ -636,15 +704,18 @@ async function submitForm() {
     const hoje = new Date().toISOString().slice(0, 10);
     const evt = _eventoAtual;
 
-    // Revalidar no momento do envio
     if (evt.prazo_inscricao && evt.prazo_inscricao < hoje) {
       return showErr("O prazo de inscrição foi encerrado.");
     }
 
-    if (evt.vagas) {
-      const cnt = await sbGet(`evento_inscricoes?evento_id=eq.${evt.id}&select=id&limit=1`);
-      // Approximate check — exact enforcement is done DB-side
-    }
+    const agora = new Date().toISOString();
+    const grupoId = cadastroTipo === "institucional" ? _uuid() : null;
+    const instNome = cadastroTipo === "institucional" ? g("f-inst-nome") : null;
+    const numTotal = cadastroTipo === "institucional" ? 1 + _grupoParticipantes.length : 1;
+    const valorPorPessoa = evt.gratuito ? null
+      : (evt.tabela_precos?.length
+          ? (numTotal > 0 ? (_totalCalculado / numTotal) : null)
+          : (evt.valor ? Number(evt.valor) : null));
 
     const inscricaoId = _uuid();
     const payload = {
@@ -665,16 +736,36 @@ async function submitForm() {
       filhos_0_4:           cadastroTipo === "casal" ? (parseInt(document.getElementById("f-filhos-0-4")?.value || "0", 10) || 0) : null,
       filhos_5_11:          cadastroTipo === "casal" ? (parseInt(document.getElementById("f-filhos-5-11")?.value || "0", 10) || 0) : null,
       filhos_12_mais:       cadastroTipo === "casal" ? (parseInt(document.getElementById("f-filhos-12-mais")?.value || "0", 10) || 0) : null,
-      instituicao_nome:     cadastroTipo === "institucional" ? g("f-inst-nome") : null,
+      instituicao_nome:     instNome,
       representante_cargo:  cadastroTipo === "institucional" ? g("f-inst-cargo") : null,
+      grupo_id:             grupoId,
+      grupo_nome:           instNome,
       status:               "pendente",
       pago:                 false,
       valor_cobrado:        evt.gratuito ? null : (evt.tabela_precos?.length ? (_totalCalculado || null) : (evt.valor ? Number(evt.valor) : null)),
-      criado_em:            new Date().toISOString(),
-      atualizado_em:        new Date().toISOString(),
+      criado_em:            agora,
+      atualizado_em:        agora,
     };
 
     await sbPost("evento_inscricoes", payload);
+
+    if (cadastroTipo === "institucional" && _grupoParticipantes.length) {
+      const extras = _grupoParticipantes.map(p => ({
+        id:               _uuid(),
+        evento_id:        evt.id,
+        nome:             p.nome.trim(),
+        cadastro_tipo:    "institucional",
+        instituicao_nome: instNome,
+        grupo_id:         grupoId,
+        grupo_nome:       instNome,
+        status:           "pendente",
+        pago:             false,
+        valor_cobrado:    valorPorPessoa,
+        criado_em:        agora,
+        atualizado_em:    agora,
+      }));
+      await sbPost("evento_inscricoes", extras);
+    }
     let paymentUrl = null;
     let paymentError = null;
     if (!evt.gratuito && evt.infinitypay_enabled) {
