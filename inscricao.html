@@ -77,6 +77,8 @@
   .casal-sec.show { display: block; }
   .filhos-sec { display: none; }
   .filhos-sec.show { display: block; }
+  .inst-sec { display: none; }
+  .inst-sec.show { display: block; }
 
   .btn-submit {
     width: 100%; padding: 13px; border-radius: 9px; border: none;
@@ -382,7 +384,7 @@ function renderFormHtml(evt) {
   const casalHtml = mostrar.casal ? `
     <div class="field" style="margin-bottom:6px">
       <label>Tipo de Cadastro<span class="req">*</span></label>
-      <div style="display:flex;gap:20px;padding:6px 0">
+      <div style="display:flex;gap:20px;flex-wrap:wrap;padding:6px 0">
         <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:var(--tx1);font-weight:600">
           <input type="radio" name="f-cadastro-tipo" value="individual" checked onchange="onCadastroTipoChange()" style="width:16px;height:16px;accent-color:var(--sky)">
           Individual
@@ -390,6 +392,10 @@ function renderFormHtml(evt) {
         <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:var(--tx1);font-weight:600">
           <input type="radio" name="f-cadastro-tipo" value="casal" onchange="onCadastroTipoChange()" style="width:16px;height:16px;accent-color:var(--sky)">
           Casal
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:var(--tx1);font-weight:600">
+          <input type="radio" name="f-cadastro-tipo" value="institucional" onchange="onCadastroTipoChange()" style="width:16px;height:16px;accent-color:var(--sky)">
+          Institucional
         </label>
       </div>
     </div>
@@ -416,6 +422,19 @@ function renderFormHtml(evt) {
         <div class="filhos-sec field" id="filhos-sec" style="margin:0">
           <label>Quantos filhos?<span class="req">*</span></label>
           <input id="f-num-filhos" type="number" min="1" max="20" placeholder="1">
+        </div>
+      </div>
+    </div>
+    <div class="inst-sec" id="inst-sec">
+      <div style="padding:14px;background:rgba(58,170,92,.05);border:1px solid rgba(58,170,92,.2);border-radius:8px;margin-bottom:14px;display:flex;flex-direction:column;gap:12px">
+        <div style="font-size:10px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.07em">Dados da instituição</div>
+        <div class="field" style="margin:0">
+          <label>Nome da Instituição<span class="req">*</span></label>
+          <input id="f-inst-nome" type="text" placeholder="Ex: Igreja Presbiteriana, Ministério Jovem..." autocomplete="organization">
+        </div>
+        <div class="field" style="margin:0">
+          <label>Cargo do Representante</label>
+          <input id="f-inst-cargo" type="text" placeholder="Ex: Pastor, Presidente, Coordenador...">
         </div>
       </div>
     </div>` : "";
@@ -478,11 +497,11 @@ function onTipoChange() {
 }
 
 function onCadastroTipoChange() {
-  const tipo = document.querySelector('input[name="f-cadastro-tipo"]:checked')?.value;
-  const sec  = document.getElementById("casal-sec");
-  if (!sec) return;
-  if (tipo === "casal") sec.classList.add("show");
-  else sec.classList.remove("show");
+  const tipo    = document.querySelector('input[name="f-cadastro-tipo"]:checked')?.value;
+  const secCasal = document.getElementById("casal-sec");
+  const secInst  = document.getElementById("inst-sec");
+  if (secCasal) secCasal.classList.toggle("show", tipo === "casal");
+  if (secInst)  secInst.classList.toggle("show",  tipo === "institucional");
 }
 
 function onTemFilhosChange() {
@@ -523,6 +542,9 @@ async function submitForm() {
   const cadastroTipo = document.querySelector('input[name="f-cadastro-tipo"]:checked')?.value || "individual";
   if (cadastroTipo === "casal" && !g("f-conjuge-nome")) {
     return showErr("Informe o nome do cônjuge.");
+  }
+  if (cadastroTipo === "institucional" && !g("f-inst-nome")) {
+    return showErr("Informe o nome da instituição.");
   }
   const temFilhosVal = document.querySelector('input[name="f-tem-filhos"]:checked')?.value;
   const temFilhos    = cadastroTipo === "casal" ? (temFilhosVal === "sim") : null;
@@ -566,6 +588,8 @@ async function submitForm() {
       conjuge_nome:         cadastroTipo === "casal" ? g("f-conjuge-nome") : null,
       tem_filhos:           temFilhos,
       num_filhos:           (temFilhos && numFilhosRaw) ? parseInt(numFilhosRaw, 10) : null,
+      instituicao_nome:     cadastroTipo === "institucional" ? g("f-inst-nome") : null,
+      representante_cargo:  cadastroTipo === "institucional" ? g("f-inst-cargo") : null,
       status:               "pendente",
       pago:                 false,
       valor_cobrado:        (!evt.gratuito && evt.valor) ? Number(evt.valor) : null,
