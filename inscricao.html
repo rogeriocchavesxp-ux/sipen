@@ -387,15 +387,15 @@ function renderFormHtml(evt) {
       <label>Tipo de Cadastro<span class="req">*</span></label>
       <div style="display:flex;gap:20px;flex-wrap:wrap;padding:6px 0">
         <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:var(--tx1);font-weight:600">
-          <input type="radio" name="f-cadastro-tipo" value="individual" checked onchange="onCadastroTipoChange()" style="width:16px;height:16px;accent-color:var(--sky)">
+          <input type="radio" name="f-cadastro-tipo" value="individual" checked onchange="onCadastroTipoChange();calcularTotal()" style="width:16px;height:16px;accent-color:var(--sky)">
           Individual
         </label>
         <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:var(--tx1);font-weight:600">
-          <input type="radio" name="f-cadastro-tipo" value="casal" onchange="onCadastroTipoChange()" style="width:16px;height:16px;accent-color:var(--sky)">
+          <input type="radio" name="f-cadastro-tipo" value="casal" onchange="onCadastroTipoChange();calcularTotal()" style="width:16px;height:16px;accent-color:var(--sky)">
           Casal
         </label>
         <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:var(--tx1);font-weight:600">
-          <input type="radio" name="f-cadastro-tipo" value="institucional" onchange="onCadastroTipoChange()" style="width:16px;height:16px;accent-color:var(--sky)">
+          <input type="radio" name="f-cadastro-tipo" value="institucional" onchange="onCadastroTipoChange();calcularTotal()" style="width:16px;height:16px;accent-color:var(--sky)">
           Institucional
         </label>
       </div>
@@ -407,11 +407,11 @@ function renderFormHtml(evt) {
           <label>Preferência de quarto<span class="req">*</span></label>
           <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">
             <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:var(--tx1)">
-              <input type="radio" name="f-acomodacao" value="sozinho" checked style="width:16px;height:16px;accent-color:var(--sky)">
+              <input type="radio" name="f-acomodacao" value="sozinho" checked oninput="calcularTotal()" style="width:16px;height:16px;accent-color:var(--sky)">
               Prefiro ficar sozinho(a)
             </label>
             <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:var(--tx1)">
-              <input type="radio" name="f-acomodacao" value="dividir" style="width:16px;height:16px;accent-color:var(--sky)">
+              <input type="radio" name="f-acomodacao" value="dividir" oninput="calcularTotal()" style="width:16px;height:16px;accent-color:var(--sky)">
               Aceito dividir quarto
             </label>
           </div>
@@ -426,21 +426,21 @@ function renderFormHtml(evt) {
           <input id="f-conjuge-nome" type="text" placeholder="Nome completo do cônjuge" autocomplete="off">
         </div>
         <div class="field" style="margin:0">
-          <label>Têm filhos?</label>
-          <div style="display:flex;gap:20px;padding:4px 0">
-            <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:var(--tx1)">
-              <input type="radio" name="f-tem-filhos" value="nao" checked onchange="onTemFilhosChange()" style="width:16px;height:16px;accent-color:var(--sky)">
-              Não
-            </label>
-            <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:var(--tx1)">
-              <input type="radio" name="f-tem-filhos" value="sim" onchange="onTemFilhosChange()" style="width:16px;height:16px;accent-color:var(--sky)">
-              Sim
-            </label>
+          <label>Filhos <span style="font-size:10px;font-weight:400;color:var(--tx3)">(deixe 0 se não tem)</span></label>
+          <div style="display:flex;flex-direction:column;gap:8px;padding:6px 0">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+              <span style="font-size:12.5px;color:var(--tx2)">0–4 anos <span style="font-size:11px;color:var(--gr);font-weight:600">(gratuito)</span></span>
+              <input id="f-filhos-0-4" type="number" min="0" max="20" value="0" oninput="calcularTotal()" style="width:64px;padding:6px 8px;border-radius:7px;border:1px solid var(--inpbd);background:var(--inp);color:var(--tx1);font-size:13px;text-align:center">
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+              <span style="font-size:12.5px;color:var(--tx2)">5–11 anos</span>
+              <input id="f-filhos-5-11" type="number" min="0" max="20" value="0" oninput="calcularTotal()" style="width:64px;padding:6px 8px;border-radius:7px;border:1px solid var(--inpbd);background:var(--inp);color:var(--tx1);font-size:13px;text-align:center">
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+              <span style="font-size:12.5px;color:var(--tx2)">12+ anos</span>
+              <input id="f-filhos-12-mais" type="number" min="0" max="20" value="0" oninput="calcularTotal()" style="width:64px;padding:6px 8px;border-radius:7px;border:1px solid var(--inpbd);background:var(--inp);color:var(--tx1);font-size:13px;text-align:center">
+            </div>
           </div>
-        </div>
-        <div class="filhos-sec field" id="filhos-sec" style="margin:0">
-          <label>Quantos filhos?<span class="req">*</span></label>
-          <input id="f-num-filhos" type="number" min="1" max="20" placeholder="1">
         </div>
       </div>
     </div>
@@ -490,7 +490,10 @@ function renderFormHtml(evt) {
 
       ${obsHtml}
 
-      ${!evt.gratuito && evt.valor ? `
+      ${!evt.gratuito && evt.tabela_precos?.length ? `
+      <div id="resumo-preco" style="display:none;padding:12px;border-radius:8px;background:rgba(74,156,245,.07);border:1px solid rgba(74,156,245,.18);margin-bottom:14px"></div>` : ""}
+
+      ${!evt.gratuito && !evt.tabela_precos?.length && evt.valor ? `
       <div style="padding:12px;border-radius:8px;background:rgba(74,156,245,.07);border:1px solid rgba(74,156,245,.18);margin-bottom:14px">
         <div style="font-size:11px;font-weight:700;color:var(--sky);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Evento Pago</div>
         <div style="font-size:13px;color:var(--tx2)">Valor: <strong style="color:var(--sky)">${fmtMoeda(evt.valor)}</strong> por pessoa. As instruções de pagamento serão enviadas após a inscrição.</div>
@@ -535,6 +538,7 @@ function onTemFilhosChange() {
 
 let _submitting = false;
 let _eventoAtual = null;
+let _totalCalculado = 0;
 
 function _uuid() {
   return crypto.randomUUID?.() ||
@@ -544,8 +548,64 @@ function _uuid() {
     });
 }
 
+function calcularTotal() {
+  const tabela = _eventoAtual?.tabela_precos;
+  if (!tabela || !tabela.length) return;
+  const tipo       = document.querySelector('input[name="f-cadastro-tipo"]:checked')?.value || "individual";
+  const acomodacao = document.querySelector('input[name="f-acomodacao"]:checked')?.value || "sozinho";
+  const filhos5_11   = Math.max(0, parseInt(document.getElementById("f-filhos-5-11")?.value   || "0", 10) || 0);
+  const filhos12mais = Math.max(0, parseInt(document.getElementById("f-filhos-12-mais")?.value || "0", 10) || 0);
+  const itens = [];
+  let total = 0;
+  for (const item of tabela) {
+    const ct = item.condicao_tipo;
+    const ca = item.condicao_acomodacao;
+    const cf = item.condicao_faixa_filho;
+    if (ct && ct !== tipo) continue;
+    if (ca && ca !== acomodacao) continue;
+    if (cf === "5_11") {
+      if (filhos5_11 <= 0) continue;
+      const sub = item.valor * filhos5_11;
+      itens.push({ label: item.label, qtd: filhos5_11, subtotal: sub });
+      total += sub;
+    } else if (cf === "12_mais") {
+      if (filhos12mais <= 0) continue;
+      const sub = item.valor * filhos12mais;
+      itens.push({ label: item.label, qtd: filhos12mais, subtotal: sub });
+      total += sub;
+    } else {
+      itens.push({ label: item.label, qtd: 1, subtotal: item.valor });
+      total += item.valor;
+    }
+  }
+  _totalCalculado = total;
+  _renderResumoPrecos(itens, total);
+}
+
+function _renderResumoPrecos(itens, total) {
+  const div = document.getElementById("resumo-preco");
+  if (!div) return;
+  if (!itens.length) { div.style.display = "none"; return; }
+  const linhas = itens.map(it =>
+    `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--tx2);margin-bottom:3px">
+      <span>${it.label}${it.qtd > 1 ? ` × ${it.qtd}` : ""}</span>
+      <span>${fmtMoeda(it.subtotal)}</span>
+    </div>`
+  ).join("");
+  div.style.display = "";
+  div.innerHTML = `
+    <div style="font-size:11px;font-weight:700;color:var(--sky);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Resumo de Valores</div>
+    ${linhas}
+    <div style="border-top:1px solid rgba(74,156,245,.2);margin-top:6px;padding-top:6px;display:flex;justify-content:space-between;font-size:14px;font-weight:700;color:var(--sky)">
+      <span>Total</span><span>${fmtMoeda(total)}</span>
+    </div>
+    <div style="font-size:11px;color:var(--tx3);margin-top:4px">As instruções de pagamento serão enviadas após a inscrição.</div>
+  `;
+}
+
 function bindForm(evt) {
   _eventoAtual = evt;
+  calcularTotal();
 }
 
 async function submitForm() {
@@ -566,12 +626,6 @@ async function submitForm() {
   }
   if (cadastroTipo === "institucional" && !g("f-inst-nome")) {
     return showErr("Informe o nome da instituição.");
-  }
-  const temFilhosVal = document.querySelector('input[name="f-tem-filhos"]:checked')?.value;
-  const temFilhos    = cadastroTipo === "casal" ? (temFilhosVal === "sim") : null;
-  const numFilhosRaw = g("f-num-filhos");
-  if (temFilhos && !numFilhosRaw) {
-    return showErr("Informe quantos filhos o casal tem.");
   }
   hideErr();
   _submitting = true;
@@ -608,13 +662,14 @@ async function submitForm() {
       cadastro_tipo:        cadastroTipo,
       acomodacao_pref:      cadastroTipo === "individual" ? (document.querySelector('input[name="f-acomodacao"]:checked')?.value || "sozinho") : null,
       conjuge_nome:         cadastroTipo === "casal" ? g("f-conjuge-nome") : null,
-      tem_filhos:           temFilhos,
-      num_filhos:           (temFilhos && numFilhosRaw) ? parseInt(numFilhosRaw, 10) : null,
+      filhos_0_4:           cadastroTipo === "casal" ? (parseInt(document.getElementById("f-filhos-0-4")?.value || "0", 10) || 0) : null,
+      filhos_5_11:          cadastroTipo === "casal" ? (parseInt(document.getElementById("f-filhos-5-11")?.value || "0", 10) || 0) : null,
+      filhos_12_mais:       cadastroTipo === "casal" ? (parseInt(document.getElementById("f-filhos-12-mais")?.value || "0", 10) || 0) : null,
       instituicao_nome:     cadastroTipo === "institucional" ? g("f-inst-nome") : null,
       representante_cargo:  cadastroTipo === "institucional" ? g("f-inst-cargo") : null,
       status:               "pendente",
       pago:                 false,
-      valor_cobrado:        (!evt.gratuito && evt.valor) ? Number(evt.valor) : null,
+      valor_cobrado:        evt.gratuito ? null : (evt.tabela_precos?.length ? (_totalCalculado || null) : (evt.valor ? Number(evt.valor) : null)),
       criado_em:            new Date().toISOString(),
       atualizado_em:        new Date().toISOString(),
     };
