@@ -57,6 +57,17 @@
   let _fStatus            = "";
   let _fTipo              = "";
   let _fBusca             = "";
+  let _tabelaPrecos       = [];
+
+  const TIPOS_TABELA = [
+    ["individual_sozinho", "Individual — quarto individual"],
+    ["individual_dividir", "Individual — divide quarto"],
+    ["casal",              "Casal (base)"],
+    ["filho_5_11",         "Filho 5–11 anos (por criança)"],
+    ["filho_12_mais",      "Filho 12+ anos (por criança)"],
+    ["institucional",      "Institucional"],
+    ["todos",              "Todos os tipos"],
+  ];
 
   /* ── Utilidades ─────────────────────────────────────── */
 
@@ -1113,6 +1124,18 @@ tr:nth-child(even) td{background:#f9fafb}
 
     const statusOpts = Object.entries(STATUS_EVE).map(([k, v]) => [k, v.label]);
     const pagHidden = evt?.gratuito === false ? "grid" : "none";
+    _tabelaPrecos = evt?.tabela_precos ? JSON.parse(JSON.stringify(evt.tabela_precos)).map(item => {
+      if (!item._tipo_key) {
+        if (item.condicao_faixa_filho === "5_11")        item._tipo_key = "filho_5_11";
+        else if (item.condicao_faixa_filho === "12_mais") item._tipo_key = "filho_12_mais";
+        else if (item.condicao_tipo === "individual" && item.condicao_acomodacao === "sozinho") item._tipo_key = "individual_sozinho";
+        else if (item.condicao_tipo === "individual" && item.condicao_acomodacao === "dividir") item._tipo_key = "individual_dividir";
+        else if (item.condicao_tipo === "casal")         item._tipo_key = "casal";
+        else if (item.condicao_tipo === "institucional") item._tipo_key = "institucional";
+        else                                              item._tipo_key = "todos";
+      }
+      return item;
+    }) : [];
 
     el.innerHTML = `
       <div style="width:min(680px,100%);background:var(--bg-card);border:1px solid var(--bd2);border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.3)">
@@ -1202,8 +1225,13 @@ tr:nth-child(even) td{background:#f9fafb}
               <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer"><input type="radio" name="eve-f-tipo" value="gratuito" ${evt?.gratuito !== false ? "checked" : ""} onchange="eveToogleGratuito(this.value)" style="accent-color:var(--sky)"> Gratuito</label>
               <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer"><input type="radio" name="eve-f-tipo" value="pago" ${evt?.gratuito === false ? "checked" : ""} onchange="eveToogleGratuito(this.value)" style="accent-color:var(--sky)"> Pago</label>
             </div>
-            <div id="eve-f-valor-sec" style="display:${pagHidden};grid-template-columns:1fr 1fr;gap:12px">
-              ${inp("eve-f-valor", "Valor (R$)", 'type="number" min="0" step="0.01" placeholder="0,00"', evt?.valor)}
+            <div id="eve-f-tabela-sec" style="display:${pagHidden === "grid" ? "block" : "none"}">
+              <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">Configure os itens de cobrança. Deixe vazio para usar valor único abaixo.</div>
+              <div id="eve-tabela-rows" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
+              <button type="button" onclick="eveTabelaAddItem()" style="padding:5px 12px;border-radius:7px;border:1px dashed var(--sky);background:transparent;color:var(--sky);font-size:12px;cursor:pointer">+ Adicionar item</button>
+            </div>
+            <div id="eve-f-valor-sec" style="display:${pagHidden};grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+              ${inp("eve-f-valor", "Valor único (R$) — se tabela vazia", 'type="number" min="0" step="0.01" placeholder="0,00"', evt?.valor)}
             </div>
             <div id="eve-f-ip-sec" style="display:${pagHidden};margin-top:12px;padding:12px;background:rgba(99,102,241,.05);border:1px solid rgba(99,102,241,.2);border-radius:8px">
               <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
@@ -1235,6 +1263,7 @@ tr:nth-child(even) td{background:#f9fafb}
       </div>`;
 
     el.style.display = "flex";
+    eveTabelaRender();
   }
 
   window.eveFecharFormEvento = function () {
@@ -1313,8 +1342,60 @@ tr:nth-child(even) td{background:#f9fafb}
   window.eveToogleGratuito = function (val) {
     const s  = document.getElementById("eve-f-valor-sec");
     const ip = document.getElementById("eve-f-ip-sec");
+    const tb = document.getElementById("eve-f-tabela-sec");
     if (s)  s.style.display  = val === "pago" ? "grid"  : "none";
     if (ip) ip.style.display = val === "pago" ? "block" : "none";
+    if (tb) tb.style.display = val === "pago" ? "block" : "none";
+  };
+
+  window.eveTabelaRender = function () {
+    const container = document.getElementById("eve-tabela-rows");
+    if (!container) return;
+    if (!_tabelaPrecos.length) { container.innerHTML = ""; return; }
+    container.innerHTML = _tabelaPrecos.map((item, i) => `
+      <div style="display:grid;grid-template-columns:1fr 180px 90px 28px;gap:6px;align-items:center">
+        <input type="text" value="${_ea(item.label || "")}" placeholder="Descrição" oninput="_tabelaUpdateLabel(${i},this.value)"
+          style="padding:6px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-input);color:var(--tx1);font-size:12px;box-sizing:border-box">
+        <select onchange="_tabelaUpdateTipo(${i},this.value)"
+          style="padding:6px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-input);color:var(--tx1);font-size:12px">
+          ${TIPOS_TABELA.map(([k, v]) => `<option value="${_ea(k)}"${k === item._tipo_key ? " selected" : ""}>${_eh(v)}</option>`).join("")}
+        </select>
+        <input type="number" min="0" step="0.01" value="${_ea(item.valor || "")}" placeholder="R$" oninput="_tabelaUpdateValor(${i},this.value)"
+          style="padding:6px 8px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-input);color:var(--tx1);font-size:12px;text-align:right;box-sizing:border-box">
+        <button type="button" onclick="eveTabelaRemoveItem(${i})" style="padding:0;width:26px;height:26px;border-radius:6px;border:1px solid rgba(224,85,85,.3);background:transparent;color:var(--rose);cursor:pointer;font-size:14px;line-height:1">×</button>
+      </div>`).join("");
+  };
+
+  window._tabelaUpdateLabel = function (i, v) { if (_tabelaPrecos[i]) _tabelaPrecos[i].label = v; };
+  window._tabelaUpdateValor = function (i, v) { if (_tabelaPrecos[i]) _tabelaPrecos[i].valor = parseFloat(v) || 0; };
+  window._tabelaUpdateTipo  = function (i, v) {
+    if (!_tabelaPrecos[i]) return;
+    _tabelaPrecos[i]._tipo_key = v;
+    const cond = _tabelaCondicao(v);
+    Object.assign(_tabelaPrecos[i], { condicao_tipo: cond.tipo, condicao_acomodacao: cond.acomodacao, condicao_faixa_filho: cond.faixa });
+  };
+
+  function _tabelaCondicao(key) {
+    const m = {
+      individual_sozinho: { tipo: "individual", acomodacao: "sozinho",  faixa: null },
+      individual_dividir: { tipo: "individual", acomodacao: "dividir",  faixa: null },
+      casal:              { tipo: "casal",       acomodacao: null,       faixa: null },
+      filho_5_11:         { tipo: null,          acomodacao: null,       faixa: "5_11" },
+      filho_12_mais:      { tipo: null,          acomodacao: null,       faixa: "12_mais" },
+      institucional:      { tipo: "institucional", acomodacao: null,     faixa: null },
+      todos:              { tipo: null,          acomodacao: null,       faixa: null },
+    };
+    return m[key] || { tipo: null, acomodacao: null, faixa: null };
+  }
+
+  window.eveTabelaAddItem = function () {
+    _tabelaPrecos.push({ label: "", valor: 0, _tipo_key: "todos", condicao_tipo: null, condicao_acomodacao: null, condicao_faixa_filho: null });
+    eveTabelaRender();
+  };
+
+  window.eveTabelaRemoveItem = function (i) {
+    _tabelaPrecos.splice(i, 1);
+    eveTabelaRender();
   };
 
   window.eveSalvarEvento = async function (editId) {
@@ -1342,6 +1423,7 @@ tr:nth-child(even) td{background:#f9fafb}
       ministerio_organizador: g("eve-f-ministerio"),
       gratuito,
       valor:                  (!gratuito && valorRaw) ? parseFloat(valorRaw) : null,
+      tabela_precos:          !gratuito && _tabelaPrecos.length ? _tabelaPrecos.map(({ _tipo_key: _, ...rest }) => rest) : null,
       infinitypay_enabled:    !gratuito && cbk("eve-f-ip-enabled"),
       vagas:                  g("eve-f-vagas") ? parseInt(g("eve-f-vagas"), 10) : null,
       prazo_inscricao:        g("eve-f-prazo") || null,
