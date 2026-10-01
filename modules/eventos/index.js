@@ -508,6 +508,7 @@
         <div style="font-size:12.5px;font-weight:600;color:var(--tx1)">${_eh(i.nome)}</div>
         ${i.responsavel_nome ? `<div style="font-size:10px;color:var(--tx3)">Resp.: ${_eh(i.responsavel_nome)}</div>` : ""}
         ${i.familia ? `<div style="font-size:10px;color:var(--tx3)">Família: ${_eh(i.familia)}</div>` : ""}
+        ${i.cadastro_tipo === "individual" && i.acomodacao_pref ? `<div style="font-size:10px;color:var(--amber)">${i.acomodacao_pref === "dividir" ? "Aceita dividir quarto" : "Quarto individual"}</div>` : ""}
         ${i.cadastro_tipo === "casal" ? `<div style="font-size:10px;color:var(--sky)">Casal · Cônjuge: ${_eh(i.conjuge_nome || "—")}${i.tem_filhos ? ` · ${i.num_filhos || "?"} filho(s)` : " · sem filhos"}</div>` : ""}
         ${i.cadastro_tipo === "institucional" ? `<div style="font-size:10px;color:var(--gr)">${_eh(i.instituicao_nome || "—")}${i.representante_cargo ? ` · ${_eh(i.representante_cargo)}` : ""}</div>` : ""}
       </td>
