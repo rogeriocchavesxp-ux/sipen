@@ -54,15 +54,28 @@
     _renderBody(el);
   }
 
+  const _FUNCOES_GLOBAIS = new Set(['admin_geral','conselho','adm_operacional','secretario','pastoral']);
+
+  function _congIdRestrito() {
+    const u = window.USUARIO_ATUAL;
+    if (!u) return null;
+    if (_FUNCOES_GLOBAIS.has(u.funcao)) return null;
+    return u.congregacao_id || null;
+  }
+
   async function _carregar() {
     try {
-      const [rC, rR] = await Promise.all([
-        _sb().from('congregacoes').select('id,nome').is('deleted_at', null).order('nome'),
-        _sb().from('congregacao_cultos')
-          .select('id,cong_id,data,tipo,adultos,criancas,participantes,online,obs')
-          .order('data', { ascending: false })
-          .limit(500),
-      ]);
+      const congId = _congIdRestrito();
+      let qCultos = _sb().from('congregacao_cultos')
+        .select('id,cong_id,data,tipo,adultos,criancas,participantes,online,obs')
+        .order('data', { ascending: false })
+        .limit(500);
+      if (congId) qCultos = qCultos.eq('cong_id', congId);
+
+      let qCongs = _sb().from('congregacoes').select('id,nome').is('deleted_at', null).order('nome');
+      if (congId) qCongs = qCongs.eq('id', congId);
+
+      const [rC, rR] = await Promise.all([qCongs, qCultos]);
       _congs     = rC.data  || [];
       _registros = rR.data  || [];
     } catch (_) {}
@@ -106,10 +119,10 @@
 
       <!-- Filtros -->
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
-        <select id="freq-f-cong" onchange="_freqFiltrar()" style="${_selStyle()}">
+        ${_congs.length > 1 ? `<select id="freq-f-cong" onchange="_freqFiltrar()" style="${_selStyle()}">
           <option value="">Todas as congregações</option>
           ${_congs.map(c => `<option value="${_esc(c.id)}"${_filtros.cong===c.id?' selected':''}>${_esc(c.nome)}</option>`).join('')}
-        </select>
+        </select>` : ''}
         <select id="freq-f-tipo" onchange="_freqFiltrar()" style="${_selStyle()}">
           <option value="">Todos os tipos</option>
           ${tipos.map(t => `<option value="${_esc(t)}"${_filtros.tipo===t?' selected':''}>${_esc(t)}</option>`).join('')}
