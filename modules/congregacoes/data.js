@@ -282,26 +282,39 @@ const CONG = (function(){
 
   async function saveToSupabase(cong){
     if(!_sbAvailable()) return;
-    const row = _congToRow(cong);
-    delete row.id;
+    const rowWithId = _congToRow(cong);
+    const rowNoId   = Object.fromEntries(Object.entries(rowWithId).filter(([k])=>k!=="id"));
     _savePending = true;
     _lastSaveTime = Date.now();
     try {
-      const res = await fetch(
+      // Tenta UPDATE primeiro
+      const resPatch = await fetch(
         `${_sbBase()}/rest/v1/congregacoes?id=eq.${encodeURIComponent(cong.id)}`,
         {
           method:  "PATCH",
           headers: _sbHdrs({ "Prefer": "return=representation", "Accept": "application/json" }),
-          body:    JSON.stringify(row)
+          body:    JSON.stringify(rowNoId)
         }
       );
-      if(!res.ok){
-        const err = await res.text();
-        throw new Error(err || `HTTP ${res.status}`);
+      if(!resPatch.ok){
+        const err = await resPatch.text();
+        throw new Error(err || `HTTP ${resPatch.status}`);
       }
-      const updated = await res.json();
+      const updated = await resPatch.json();
+      // Registro não existe ainda → INSERT
       if(!Array.isArray(updated) || updated.length === 0){
-        throw new Error("RLS bloqueou o UPDATE — execute a migration de permissão do Líder");
+        const resPost = await fetch(
+          `${_sbBase()}/rest/v1/congregacoes`,
+          {
+            method:  "POST",
+            headers: _sbHdrs({ "Prefer": "return=representation", "Accept": "application/json" }),
+            body:    JSON.stringify(rowWithId)
+          }
+        );
+        if(!resPost.ok){
+          const err = await resPost.text();
+          throw new Error(err || `HTTP ${resPost.status}`);
+        }
       }
     } finally {
       _savePending = false;
