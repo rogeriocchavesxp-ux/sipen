@@ -54,12 +54,16 @@
     _renderBody(el);
   }
 
-  const _FUNCOES_GLOBAIS = new Set(['admin_geral','conselho','adm_operacional','secretario','pastoral']);
+  const _PERFIS_RESTRITOS = new Set([
+    'LIDER_CONGREGACAO','MEMBRO_CONGREGACAO',
+    'LIDER_MINISTERIO','LIDER_AREA',
+    'MEMBRO_MINISTERIO','OPERACIONAL_SERVICOS','MEMBRO_IGREJA',
+  ]);
 
   function _congIdRestrito() {
     const u = window.USUARIO_ATUAL;
     if (!u) return null;
-    if (_FUNCOES_GLOBAIS.has(u.funcao)) return null;
+    if (!_PERFIS_RESTRITOS.has(u.perfil)) return null;
     return u.congregacao_id || null;
   }
 
