@@ -1289,7 +1289,7 @@ window.fecharModalNovaCong=fecharModalNovaCong;
 function salvarNovaCong(){
   const nome=document.getElementById("nc-nome")?.value?.trim();
   if(!nome){ alert("Informe o nome da congregação"); return; }
-  const id="cong-"+Date.now();
+  const id=crypto.randomUUID();
   const cong=CONG.emptyCong(id);
   cong.identificacao.nome=nome;
   cong.identificacao.localizacao=document.getElementById("nc-local")?.value||"";
