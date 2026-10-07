@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════════════════════
    CONTROLE DE ACESSO — Controles do Estacionamento
-   v1.2.0 — modal Generall apenas em entrega; fallback wa.me
+   v1.3.0 — menu ⋯ com opção Notificar Generall p/ reenvio
 ══════════════════════════════════════════════════════ */
 (function(){
   const TBL = "controle_estacionamento_controles";
@@ -99,6 +99,24 @@
       <button onclick="ceVincularMembro('${escapeHtmlAttr(r.id)}')" style="background:none;border:1px solid rgba(42,181,192,.35);border-radius:5px;color:var(--teal);font-size:10px;font-weight:800;padding:3px 7px;cursor:pointer">Vincular pessoa</button>
     </div>`;
   }
+  function _menuAcoes(r){
+    const mid = `ce-cm-${r.id.replace(/-/g,"")}`;
+    const eid = escapeHtmlAttr(r.id);
+    const itens = [
+      `<div onclick="ceAbrirModal('${eid}');document.getElementById('${mid}').style.display='none'" class="ce-cm-item">Editar</div>`,
+    ];
+    if(r.status === "entregue"){
+      itens.push(`<div onclick="ceNotificarGenerall('${eid}');document.getElementById('${mid}').style.display='none'" class="ce-cm-item">Notificar Generall</div>`);
+    }
+    itens.push(`<div onclick="ceExcluir('${eid}');document.getElementById('${mid}').style.display='none'" class="ce-cm-item ce-cm-danger">Excluir</div>`);
+    return `<div style="position:relative;display:inline-block">
+      <button class="ce-cm-btn" onclick="(function(e){e.stopPropagation();const m=document.getElementById('${mid}');const aberto=m.style.display==='block';document.querySelectorAll('.ce-cm-menu').forEach(x=>x.style.display='none');m.style.display=aberto?'none':'block'})(event)">⋯</button>
+      <div id="${mid}" class="ce-cm-menu" style="display:none">
+        ${itens.join("")}
+      </div>
+    </div>`;
+  }
+
   function _erro(e){
     const msg = e?.message || String(e || "Erro desconhecido");
     if(msg.includes("does not exist") || msg.includes("PGRST205")) return "Execute o script supabase-controle-estacionamento.sql no Supabase.";
@@ -227,6 +245,11 @@
       el.innerHTML = `<div style="color:var(--tx3);font-size:11.5px;padding:14px 0">Nenhum controle encontrado.</div>`;
       return;
     }
+    if(!document.getElementById("ce-cm-style")){
+      const s = document.createElement("style"); s.id = "ce-cm-style";
+      s.textContent = `.ce-cm-btn{background:var(--bg-surface);border:1px solid var(--bd1);border-radius:5px;color:var(--tx2);font-size:14px;font-weight:800;padding:3px 10px;cursor:pointer;line-height:1}.ce-cm-menu{position:absolute;right:0;top:100%;margin-top:3px;background:var(--bg-card);border:1px solid var(--bd2);border-radius:7px;box-shadow:0 4px 18px rgba(0,0,0,.2);min-width:175px;z-index:200;overflow:hidden}.ce-cm-item{padding:9px 14px;font-size:12px;cursor:pointer;color:var(--tx2);white-space:nowrap}.ce-cm-item:hover{background:var(--bg-surface)}.ce-cm-danger{color:var(--rose)!important}`;
+      document.head.appendChild(s);
+    }
     el.innerHTML = `<div style="overflow:auto">
       <table style="width:100%;border-collapse:collapse;font-size:11.5px;min-width:860px">
         <thead><tr style="border-bottom:1px solid var(--bd2);background:var(--bg-surface)">
@@ -236,7 +259,7 @@
           <th style="text-align:left;padding:9px 10px;color:var(--tx3);font-size:10px;text-transform:uppercase">Pagamento</th>
           <th style="text-align:left;padding:9px 10px;color:var(--tx3);font-size:10px;text-transform:uppercase">Status</th>
           <th style="text-align:left;padding:9px 10px;color:var(--tx3);font-size:10px;text-transform:uppercase">Entrega</th>
-          <th style="text-align:right;padding:9px 10px;color:var(--tx3);font-size:10px;text-transform:uppercase">Editar</th>
+          <th style="text-align:right;padding:9px 10px;color:var(--tx3);font-size:10px;text-transform:uppercase"></th>
         </tr></thead>
         <tbody>${rows.map(r => {
           return `<tr style="border-bottom:1px solid var(--bd1)">
@@ -246,9 +269,7 @@
             <td style="padding:9px 10px">${_pagamentoSelect(r)}</td>
             <td style="padding:9px 10px">${_statusSelect(r)}</td>
             <td style="padding:9px 10px;color:var(--tx2)">${escapeHtml(_fmtDate(r.data_entrega))}</td>
-            <td style="padding:9px 10px;text-align:right;white-space:nowrap">
-              <button onclick="ceAbrirModal('${escapeHtmlAttr(r.id)}')" style="background:var(--bg-surface);border:1px solid var(--bd1);border-radius:5px;color:var(--tx2);font-size:10px;font-weight:800;padding:5px 9px;cursor:pointer">Editar</button>
-            </td>
+            <td style="padding:9px 10px;text-align:right;white-space:nowrap">${_menuAcoes(r)}</td>
           </tr>`;
         }).join("")}</tbody>
       </table>
@@ -485,6 +506,14 @@
   window.ceMudarStatus = ceMudarStatus;
   window.ceExcluir = ceExcluir;
   window.cePrint = cePrint;
+
+  window.ceNotificarGenerall = function(id){
+    const r = _controles.find(x => x.id === id);
+    if(!r) return;
+    _ceModalGenerall(r.codigo_controle, _pessoaNome(r.pessoa_id));
+  };
+
+  document.addEventListener("click", function(){ document.querySelectorAll(".ce-cm-menu").forEach(m => m.style.display = "none"); });
 
   window.ceGenerallSalvarTel = function(){
     const v = (document.getElementById("ce-generall-tel")?.value || "").replace(/\D/g,"");
