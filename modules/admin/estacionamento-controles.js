@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════════════════════
    CONTROLE DE ACESSO — Controles do Estacionamento
-   v1.1.0 — notificação automática Generall via WhatsApp
+   v1.2.0 — modal Generall apenas em entrega; fallback wa.me
 ══════════════════════════════════════════════════════ */
 (function(){
   const TBL = "controle_estacionamento_controles";
@@ -165,6 +165,7 @@
   function _ceModalGenerall(codigo, nomePessoa){
     const tel = _generallTel();
     const mensagem = `Olá, Generall! Segue solicitação de cadastro de controle remoto:\n\nNome: ${nomePessoa || "—"}\nCódigo: ${codigo}\n\nPedimos o cadastramento no sistema. Obrigado!`;
+    const waLink = `https://wa.me/55${tel.replace(/\D/g,"")}?text=${encodeURIComponent(mensagem)}`;
     let ov = document.getElementById("ce-generall-ov");
     if(!ov){ ov = document.createElement("div"); ov.id = "ce-generall-ov"; document.body.appendChild(ov); }
     ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;display:flex;align-items:center;justify-content:center";
@@ -189,7 +190,8 @@
           <label style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Mensagem</label>
           <textarea id="ce-generall-msg" rows="6" style="width:100%;background:var(--bg-surface);border:1px solid var(--bd1);border-radius:6px;color:var(--tx1);font-size:12px;padding:9px 10px;outline:none;resize:vertical;line-height:1.55">${escapeHtml(mensagem)}</textarea>
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:8px">
+        <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap">
+          <a id="ce-generall-wa" href="${escapeHtmlAttr(waLink)}" target="_blank" rel="noopener" class="btn" style="text-decoration:none">Abrir WhatsApp</a>
           <button onclick="document.getElementById('ce-generall-ov').remove()" class="btn">Fechar</button>
           <button id="ce-generall-btn" onclick="ceGenerallEnviar()" class="btn btn-p">📲 Enviar WhatsApp</button>
         </div>
@@ -329,7 +331,7 @@
       ceFecharModal();
       T("Controle salvo", `${codigo_controle} registrado com sucesso.`);
       await ceCarregar();
-      _ceModalGenerall(codigo_controle, _pessoaNome(pessoa_id));
+      if(status === "entregue") _ceModalGenerall(codigo_controle, _pessoaNome(pessoa_id));
     } catch(e) {
       console.error("salvar controle:", e);
       T("Erro ao salvar", _erro(e));
@@ -499,18 +501,25 @@
     if(!mensagem.trim()) return T("Mensagem vazia", "Escreva a mensagem antes de enviar.");
     if(btn){ btn.disabled = true; btn.textContent = "Enviando…"; }
     _setGenerallTel(tel);
+    const waA = document.getElementById("ce-generall-wa");
+    if(waA) waA.href = `https://wa.me/55${tel}?text=${encodeURIComponent(mensagem)}`;
     try {
       const r = await WA.send({ para: tel, nome: "Generall", mensagem, modulo: "ESTACIONAMENTO" });
       if(r?.ok){
         T("Enviado!", "Mensagem enviada para a Generall.");
         document.getElementById("ce-generall-ov")?.remove();
       } else {
-        T("Erro no envio", r?.error || r?.status || "Tente novamente.");
+        const detalhe = r?.error || r?.status || "Tente novamente.";
+        T("Erro no envio", `${detalhe} — Use o botão "Abrir WhatsApp" como alternativa.`);
         if(btn){ btn.disabled = false; btn.textContent = "📲 Enviar WhatsApp"; }
+        const waA = document.getElementById("ce-generall-wa");
+        if(waA) waA.style.background = "var(--green,#3aaa5c)";
       }
     } catch(e){
-      T("Erro no envio", e.message || "Tente novamente.");
+      T("Erro no envio", `${e.message || "Tente novamente."} — Use "Abrir WhatsApp" como alternativa.`);
       if(btn){ btn.disabled = false; btn.textContent = "📲 Enviar WhatsApp"; }
+      const waA = document.getElementById("ce-generall-wa");
+      if(waA) waA.style.background = "var(--green,#3aaa5c)";
     }
   };
 })();
