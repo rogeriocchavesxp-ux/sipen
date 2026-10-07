@@ -1214,9 +1214,11 @@ function fmtD(d) {
       // Anexos (boleto, notas fiscais)
       const anexoBoleto = fmtAnexoBtn(fd.boleto, "Boleto");
       const anexoNF     = fmtAnexoBtn(fd.nota_fiscal, "Nota Fiscal");
-      const anexosNFs   = Array.isArray(fd.notas_fiscais) ? fd.notas_fiscais.map((nf, i) => {
+      const anexosNFs   = Array.isArray(fd.notas_fiscais) ? fd.notas_fiscais.flatMap((nf, i) => {
         const lbl = `NF ${i+1}${nf.obs?" — "+nf.obs:""}${nf.valor?" · R$ "+parseFloat(nf.valor).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}):""}`;
-        return fmtAnexoBtn(nf, lbl);
+        const btns = [fmtAnexoBtn(nf, lbl)];
+        if (nf.boleto?.storage_path) btns.push(fmtAnexoBtn(nf.boleto, `Boleto NF ${i+1}`));
+        return btns;
       }).filter(Boolean) : [];
       const todosAnexos = [anexoBoleto, anexoNF, ...anexosNFs].filter(Boolean);
       if (todosAnexos.length) {
