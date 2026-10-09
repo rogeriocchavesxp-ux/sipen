@@ -3362,7 +3362,7 @@ function fmtD(d) {
     const desc   = document.getElementById("dem-f-desc")?.value?.trim();
     const localCriarEl = document.getElementById("dem-f-local");
     const local_id = localCriarEl?.value?.trim() || null;
-    const local    = localCriarEl?.selectedOptions[0]?.dataset?.nome || null;
+    const local    = localCriarEl?.selectedOptions?.[0]?.dataset?.nome || null;
     const sol    = document.getElementById("dem-f-sol")?.value?.trim();
     const solId  = document.getElementById("dem-f-sol-id")?.value || null;
     const resp   = document.getElementById("dem-f-resp")?.value?.trim();
