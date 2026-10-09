@@ -644,6 +644,50 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
           <label for="f-local">Localização</label>
           <input type="text" id="f-local" placeholder="Ex: Hall da Secretaria, Templo Principal, Sala 3...">
         </div>
+
+        <!-- Docs de apoio — oculto para Financeiro (tem seção própria) -->
+        <div class="fin-anexos-bloco" id="gen-docs-sec" style="display:none">
+          <div class="fin-anexos-titulo" id="gen-docs-titulo">📎 Documentos de apoio — opcional</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="fin-file-row">
+              <label class="fin-file-label" id="lbl-doc-1">
+                <span class="fin-file-ic">📄</span>
+                <span class="fin-file-txt" id="txt-doc-1">Arquivo 1</span>
+                <input type="file" id="f-doc-1" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                  onchange="finAtualizarLabel('f-doc-1','txt-doc-1','lbl-doc-1')">
+              </label>
+              <button type="button" class="fin-cam-btn" title="Tirar foto"
+                onclick="finCapturarFoto('f-doc-1','txt-doc-1','lbl-doc-1')">📷</button>
+            </div>
+            <div class="fin-file-row" id="gen-doc-2-row" style="display:none">
+              <label class="fin-file-label" id="lbl-doc-2">
+                <span class="fin-file-ic">📄</span>
+                <span class="fin-file-txt" id="txt-doc-2">Arquivo 2</span>
+                <input type="file" id="f-doc-2" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                  onchange="finAtualizarLabel('f-doc-2','txt-doc-2','lbl-doc-2');document.getElementById('gen-doc-3-row').style.display=''">
+              </label>
+              <button type="button" class="fin-cam-btn" title="Tirar foto"
+                onclick="finCapturarFoto('f-doc-2','txt-doc-2','lbl-doc-2')">📷</button>
+            </div>
+            <div class="fin-file-row" id="gen-doc-3-row" style="display:none">
+              <label class="fin-file-label" id="lbl-doc-3">
+                <span class="fin-file-ic">📄</span>
+                <span class="fin-file-txt" id="txt-doc-3">Arquivo 3</span>
+                <input type="file" id="f-doc-3" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                  onchange="finAtualizarLabel('f-doc-3','txt-doc-3','lbl-doc-3')">
+              </label>
+              <button type="button" class="fin-cam-btn" title="Tirar foto"
+                onclick="finCapturarFoto('f-doc-3','txt-doc-3','lbl-doc-3')">📷</button>
+            </div>
+          </div>
+          <div id="gen-docs-add-row" style="margin-top:6px">
+            <button type="button" onclick="_genDocsAddSlot()"
+              style="background:none;border:none;color:var(--acc);font-size:12px;cursor:pointer;padding:0;text-decoration:underline">
+              + Adicionar outro arquivo
+            </button>
+          </div>
+          <div class="fin-file-hint">PDF, JPG ou PNG · máx. 10 MB · até 3 arquivos</div>
+        </div>
       </div>
 
       <!-- ── Financeiro: Solicitação de Pagamento ───────── -->
@@ -1420,11 +1464,39 @@ const CATS = [
 function _show(id) { const el = document.getElementById(id); if (el) el.style.display = ""; }
 function _hide(id) { const el = document.getElementById(id); if (el) el.style.display = "none"; }
 
+const _GEN_DOCS_LABEL = {
+  "Manutenção":         "📷 Fotos do problema — opcional",
+  "Conselho":           "📎 Documentos de referência — opcional",
+  "Secretaria":         "📎 Documentos de referência — opcional",
+  "Comunicação":        "📎 Material de referência — opcional",
+  "Administração":      "📎 Documentos de apoio — opcional",
+  "Financeiro":         null, /* tem seção própria */
+};
+
+function _atualizarGenDocs(catNome) {
+  const sec   = document.getElementById("gen-docs-sec");
+  const titulo = document.getElementById("gen-docs-titulo");
+  if (!sec) return;
+  const label = catNome ? (_GEN_DOCS_LABEL[catNome] ?? "📎 Documentos de apoio — opcional") : null;
+  if (!label) { sec.style.display = "none"; return; }
+  sec.style.display = "";
+  if (titulo) titulo.textContent = label;
+}
+
+function _genDocsAddSlot() {
+  const r2 = document.getElementById("gen-doc-2-row");
+  const r3 = document.getElementById("gen-doc-3-row");
+  const btn = document.getElementById("gen-docs-add-row");
+  if (r2 && r2.style.display === "none") { r2.style.display = ""; return; }
+  if (r3 && r3.style.display === "none") { r3.style.display = ""; if (btn) btn.style.display = "none"; }
+}
+
 function onCatChange() {
   const catNome = document.getElementById("f-cat").value;
   const cat     = CATS.find(c => c.nome === catNome);
   _ocultarFinanceiro();
   csubReset();
+  _atualizarGenDocs(catNome);
   if (!cat) return;
   const panel   = document.getElementById("f-sub-panel");
   const nSel    = document.getElementById("f-sub");
@@ -2227,9 +2299,7 @@ async function enviarChamado() {
     }
 
     // Upload de anexos (não bloqueia o fluxo)
-    if (cat === "Financeiro" || sub === "Controle de Acesso — Facial") {
-      _uploadAnexosPublicos(data.id || newId, sub).catch(() => {});
-    }
+    _uploadAnexosPublicos(data.id || newId, sub).catch(() => {});
 
     document.getElementById("ok-numero").textContent = protocolo || ticket;
     const okProtoEl = document.getElementById("ok-protocolo");
@@ -2283,27 +2353,34 @@ function finAtualizarLabel(inputId, txtId, lblId) {
 
 async function _uploadAnexosPublicos(demandaId, sub) {
   const BUCKET = "financial-documents";
+  const genDocs = ["f-doc-1","f-doc-2","f-doc-3"]
+    .map(id => ({ inputId: id, tipo: "outro" }));
   const mapa = sub === "Reembolso"
     ? [
         { inputId: "f-reimb-nota", tipo: "nota_fiscal"  },
         { inputId: "f-reimb-comp", tipo: "boleto"        },
+        ...genDocs,
       ]
     : sub === "Controle de Acesso — Facial"
     ? [
-        { inputId: "f-facial-foto", tipo: "foto_facial" },
+        { inputId: "f-facial-foto", tipo: "nota_fiscal" },
+        ...genDocs,
       ]
-    : [
+    : document.getElementById("f-cat")?.value === "Financeiro"
+    ? [
         { inputId: "f-fin-nota",   tipo: "nota_fiscal"  },
         { inputId: "f-fin-boleto", tipo: "boleto"        },
-      ];
+      ]
+    : genDocs;
 
   for (const { inputId, tipo } of mapa) {
     const file = document.getElementById(inputId)?.files?.[0];
     if (!file) continue;
     if (file.size > 10 * 1024 * 1024) continue;
 
-    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const path = `financeiro/publico/${demandaId}/${tipo}/${Date.now()}_${safe}`;
+    const safe    = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const prefixo = (tipo === "outro") ? "publico" : "financeiro/publico";
+    const path    = `${prefixo}/${demandaId}/${tipo}/${Date.now()}_${safe}`;
 
     try {
       // Upload para Storage
