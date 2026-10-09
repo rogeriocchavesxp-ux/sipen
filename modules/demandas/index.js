@@ -2899,6 +2899,9 @@ function fmtD(d) {
     /* Reset boleto notas state */
     _boletoNotas = [];
     _boletoNotaCtr = 0;
+    /* Reset docs anexos */
+    _demDocsFiles = [];
+    _demDocsRenderLista();
     const _nc = m.querySelector("#dem-f-notas-container");
     if (_nc) _nc.innerHTML = "";
     const _bt = m.querySelector("#dem-f-boleto-total");
@@ -2912,7 +2915,6 @@ function fmtD(d) {
     const _tRow = m.querySelector("#dem-f-boleto-total-row");
     if (_tRow) _tRow.style.display = "none";
     m.style.display = "flex";
-    _popularSelectEspacos("dem-f-local");
   };
 
   window.fecharModalNovaDemanda = function() {
@@ -3068,6 +3070,7 @@ function fmtD(d) {
 
   let _boletoNotas   = [];
   let _boletoNotaCtr = 0;
+  let _demDocsFiles  = [];
 
   function _boletoNotaHTML(id) {
     const si = "width:100%;padding:7px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:13px;box-sizing:border-box";
@@ -3314,6 +3317,33 @@ function fmtD(d) {
     } catch(e) {
       if (typeof T === "function") T("Erro ao excluir", e.message);
     }
+  };
+
+  function _demDocsRenderLista() {
+    const lista = document.getElementById("dem-f-docs-lista");
+    if (!lista) return;
+    if (!_demDocsFiles.length) { lista.innerHTML = ""; return; }
+    lista.innerHTML = _demDocsFiles.map((f, i) => `
+      <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg-surface);border-radius:6px;border:1px solid var(--bd1)">
+        <span style="font-size:14px">📄</span>
+        <span style="flex:1;font-size:12px;color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(f.name)}</span>
+        <span style="font-size:11px;color:var(--tx3);white-space:nowrap">${(f.size/1024/1024).toFixed(1)} MB</span>
+        <button onclick="window._demDocsRemover(${i})" style="background:none;border:none;color:var(--tx3);cursor:pointer;font-size:14px;padding:0 2px;line-height:1" title="Remover">✕</button>
+      </div>`).join("");
+  }
+
+  window._demDocsOnChange = function(input) {
+    const novos = Array.from(input.files || []);
+    const erros = novos.filter(f => f.size > 10 * 1024 * 1024).map(f => f.name);
+    if (erros.length) { if (typeof T === "function") T("Arquivo muito grande", `${erros.join(", ")} — limite 10 MB`); }
+    _demDocsFiles.push(...novos.filter(f => f.size <= 10 * 1024 * 1024));
+    input.value = "";
+    _demDocsRenderLista();
+  };
+
+  window._demDocsRemover = function(idx) {
+    _demDocsFiles.splice(idx, 1);
+    _demDocsRenderLista();
   };
 
   window.salvarNovaDemanda = async function() {
@@ -3603,6 +3633,33 @@ function fmtD(d) {
       const result = await apiWrite("create", "DEMANDAS", payload);
       const nova = Array.isArray(result) ? result[0] : result;
       if (typeof T === "function") T("✅ Demanda criada!", `Roteada para: ${payload.responsavel}`);
+      /* Upload de documentos gerais anexados no formulário */
+      if (nova?.id && _demDocsFiles.length) {
+        const sb = _sbClient();
+        const u  = typeof USUARIO_ATUAL !== "undefined" ? USUARIO_ATUAL : null;
+        for (const file of _demDocsFiles) {
+          try {
+            const ts   = Date.now();
+            const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+            const path = `demandas/${nova.id}/outros/${ts}_${safe}`;
+            const { error: upErr } = await sb.storage.from("financial-documents").upload(path, file, { contentType: file.type, upsert: false });
+            if (upErr) throw new Error(upErr.message);
+            await sb.from("financeiro_anexos").insert({
+              demanda_id:     nova.id,
+              tipo_arquivo:   "outro",
+              nome_original:  file.name,
+              storage_bucket: "financial-documents",
+              storage_path:   path,
+              mime_type:      file.type,
+              tamanho_bytes:  file.size,
+              criado_por:     u?.nome || "",
+            });
+          } catch(e) {
+            console.error("upload doc demanda:", e);
+          }
+        }
+        _demDocsFiles = [];
+      }
       window.fecharModalNovaDemanda();
       _invalidate();
       const view = document.querySelector(".view.on");
