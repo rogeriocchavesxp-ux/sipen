@@ -483,8 +483,15 @@ async function trocarArea() {
     return;
   }
   if (_isGestor()) {
-    // Gestor: mostra a tela de escolha de área novamente
-    _mostrarTelaEscolha();
+    // Toggle gestor ↔ membro
+    if (document.body.classList.contains("modo-membro")) {
+      _aplicarModoGestor();
+      await abrirPrimeiroModuloPermitido();
+    } else if (!_isMobile()) {
+      openMemberDrawer();
+    } else {
+      await entrarComoMembro();
+    }
   } else {
     // Não-gestor: toggle membro ↔ gestor
     if (document.body.classList.contains("modo-membro")) {
@@ -668,9 +675,7 @@ async function entrarNoSistema() {
   }
 
   if (_isGestor()) {
-    // Gestor: mostra tela de escolha de área
-    _mostrarTelaEscolha();
-    // Toast após a escolha (feito em entrarComoMembro/entrarComoGestor)
+    await entrarComoGestor();
     return;
   }
 
