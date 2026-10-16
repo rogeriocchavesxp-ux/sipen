@@ -28,8 +28,7 @@
   let _candFiltroTipo = "todos";
   let _votos         = [];    // { candidato_id } — votos brutos (oficiais/diaconos)
   let _totVotantes   = 0;     // total de eleitores que votaram
-  let _votosDiretoria = [];   // { eleitor_id, cargo, pessoa_id } — diretoria
-  let _membrosDir     = [];   // { pessoa_id, nome, congregacao } — lookup para apuração diretoria
+  let _votosDiretoria = [];   // { eleitor_id, cargo, candidato_id } — diretoria
 
   /* ── Helpers ────────────────────────────────────────── */
   const _sb  = () => (typeof getSupabase === "function" ? getSupabase() : null);
@@ -175,16 +174,12 @@
   async function _carregarVotos(processoId) {
     if (_ehDiretoria()) {
       const [{ data: votosDir }, { count }] = await Promise.all([
-        _sb().from("eleicao_votos_diretoria").select("eleitor_id,cargo,pessoa_id").eq("processo_id", processoId),
+        _sb().from("eleicao_votos_diretoria").select("eleitor_id,cargo,candidato_id").eq("processo_id", processoId),
         _sb().from("eleicao_votos_registro").select("*", { count: "exact", head: true }).eq("processo_id", processoId),
       ]);
       _votosDiretoria = votosDir || [];
       _votos          = [];
       _totVotantes    = count || 0;
-      if (!_membrosDir.length) {
-        const { data: membros } = await _sb().from("v_eleicao_form_membros").select("pessoa_id,nome,congregacao");
-        _membrosDir = membros || [];
-      }
     } else {
       const [{ data: votos }, { count }] = await Promise.all([
         _sb().from("eleicao_votos").select("candidato_id").eq("processo_id", processoId),
@@ -1437,26 +1432,6 @@
 
     const isDiret = _ehDiretoria();
 
-    if (isDiret) {
-      const cargos = _cargosProc();
-      el.innerHTML = `
-        <div class="card" style="margin-bottom:14px;border-color:rgba(139,111,212,.35)">
-          <div class="ctit" style="color:var(--violet);margin-bottom:10px">Candidatos da Diretoria</div>
-          <p style="font-size:13px;color:var(--tx2);line-height:1.7;margin-bottom:14px">
-            Na eleição de Diretoria, <strong>todos os pastores e presbíteros</strong> são candidatos automáticos para todos os cargos.<br>
-            Não é necessário cadastrar candidatos individualmente. Durante a votação, cada eleitor escolhe um nome por cargo.
-          </p>
-          <div style="padding:12px 16px;border-radius:8px;background:rgba(139,111,212,.08);border:1px solid rgba(139,111,212,.2);font-size:12.5px;color:var(--tx2)">
-            <strong style="color:var(--violet)">Cargos definidos:</strong>
-            ${cargos.length
-              ? cargos.map(c => `<span style="display:inline-block;margin:4px 4px 0 0;padding:3px 10px;border-radius:5px;border:1px solid rgba(139,111,212,.3);background:rgba(139,111,212,.06);color:var(--violet);font-size:11.5px">${_esc(c)}</span>`).join("")
-              : `<span style="color:var(--tx3)">Nenhum cargo definido. Edite o processo para adicionar cargos.</span>`
-            }
-          </div>
-        </div>`;
-      return;
-    }
-
     const cargos  = _cargosProc();
 
     const si  = "padding:7px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px";
@@ -1472,35 +1447,24 @@
 
     // KPIs
     const kpisHtml = isDiret
-      ? (() => {
-          const byCargo = {};
-          _candidatos.filter(c => c.ativo).forEach(c => { byCargo[c.cargo||"—"] = (byCargo[c.cargo||"—"]||0)+1; });
-          const cargoKpis = cargos.length
-            ? cargos.map(cargo => {
-                const n = byCargo[cargo] || 0;
-                return `<div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,.12);color:var(--violet)">◉</div><div class="kpi-body"><div class="kpi-lbl" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px">${_esc(cargo)}</div><div class="kpi-val">${n}</div></div></div>`;
-              }).join("")
-            : `<div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,.12);color:var(--violet)">◉</div><div class="kpi-body"><div class="kpi-lbl">Com cargo</div><div class="kpi-val">${Object.keys(byCargo).length}</div></div></div>`;
-          return `
-            <div class="kpis c4" style="margin-bottom:16px">
-              <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,.12);color:var(--sky)">◎</div><div class="kpi-body"><div class="kpi-lbl">Total</div><div class="kpi-val">${total}</div></div></div>
-              <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,.12);color:var(--gr)">✓</div><div class="kpi-body"><div class="kpi-lbl">Ativos</div><div class="kpi-val">${ativos}</div></div></div>
-              ${cargoKpis}
-            </div>`;
-        })()
-      : `
-        <div class="kpis c4" style="margin-bottom:16px">
-          <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,.12);color:var(--sky)">◎</div><div class="kpi-body"><div class="kpi-lbl">Total</div><div class="kpi-val">${total}</div></div></div>
-          <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,.12);color:var(--teal)">◈</div><div class="kpi-body"><div class="kpi-lbl">Presbíteros</div><div class="kpi-val">${_candidatos.filter(c=>c.tipo==="presbitero").length}</div></div></div>
-          <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,.12);color:var(--violet)">◉</div><div class="kpi-body"><div class="kpi-lbl">Diáconos</div><div class="kpi-val">${_candidatos.filter(c=>c.tipo==="diacono").length}</div></div></div>
-          <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,.12);color:var(--gr)">✓</div><div class="kpi-body"><div class="kpi-lbl">Ativos</div><div class="kpi-val">${ativos}</div></div></div>
-        </div>`;
+      ? `<div class="kpis c4" style="margin-bottom:16px">
+           <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,.12);color:var(--sky)">◎</div><div class="kpi-body"><div class="kpi-lbl">Total</div><div class="kpi-val">${total}</div></div></div>
+           <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,.12);color:var(--gr)">✓</div><div class="kpi-body"><div class="kpi-lbl">Ativos</div><div class="kpi-val">${ativos}</div></div></div>
+           <div class="kpi"><div class="kpi-ico" style="background:rgba(138,145,158,.12);color:var(--tx3)">✕</div><div class="kpi-body"><div class="kpi-lbl">Inativos</div><div class="kpi-val">${total-ativos}</div></div></div>
+         </div>`
+      : `<div class="kpis c4" style="margin-bottom:16px">
+           <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,.12);color:var(--sky)">◎</div><div class="kpi-body"><div class="kpi-lbl">Total</div><div class="kpi-val">${total}</div></div></div>
+           <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,.12);color:var(--teal)">◈</div><div class="kpi-body"><div class="kpi-lbl">Presbíteros</div><div class="kpi-val">${_candidatos.filter(c=>c.tipo==="presbitero").length}</div></div></div>
+           <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,.12);color:var(--violet)">◉</div><div class="kpi-body"><div class="kpi-lbl">Diáconos</div><div class="kpi-val">${_candidatos.filter(c=>c.tipo==="diacono").length}</div></div></div>
+           <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,.12);color:var(--gr)">✓</div><div class="kpi-body"><div class="kpi-lbl">Ativos</div><div class="kpi-val">${ativos}</div></div></div>
+         </div>`;
 
-    // Filtro
+    // Filtro — diretoria só mostra ativo/inativo
     const filtroHtml = isDiret
       ? `<select onchange="eleicaoCandFiltroTipo(this.value)" style="${si}">
-           <option value="todos">Todos os cargos</option>
-           ${cargos.map(c => `<option value="${_esc(c)}" ${_candFiltroTipo===c?"selected":""}>${_esc(c)}</option>`).join("")}
+           <option value="todos">Todos</option>
+           <option value="ativo"   ${_candFiltroTipo==="ativo"?"selected":""}>Apenas ativos</option>
+           <option value="inativo" ${_candFiltroTipo==="inativo"?"selected":""}>Apenas inativos</option>
          </select>`
       : `<select onchange="eleicaoCandFiltroTipo(this.value)" style="${si}">
            <option value="todos">Todos os tipos</option>
@@ -1508,11 +1472,17 @@
            <option value="diacono"    ${_candFiltroTipo==="diacono"?"selected":""}>Diácono</option>
          </select>`;
 
-    const colTipoHeader = isDiret ? `<th style="${thS}">Cargo</th>` : `<th style="${thS}">Tipo</th>`;
+    // Para diretoria, filtra por ativo/inativo ao invés de tipo
+    if (isDiret) {
+      if (_candFiltroTipo === "ativo")   rows = rows.filter(c => c.ativo);
+      if (_candFiltroTipo === "inativo") rows = rows.filter(c => !c.ativo);
+    }
+
+    const colTipoHeader = isDiret ? "" : `<th style="${thS}">Tipo</th>`;
 
     const rowsHtml = rows.length ? rows.map((c, i) => {
       const cor  = isDiret ? "var(--violet)" : (c.tipo === "presbitero" ? "var(--sky)" : "var(--teal)");
-      const lbl  = isDiret ? _esc(c.cargo||"—") : (c.tipo === "presbitero" ? "Presbítero" : "Diácono");
+      const lbl  = c.tipo === "presbitero" ? "Presbítero" : "Diácono";
       const nEsc = _esc(c.nome).replace(/'/g,"&#39;");
       const perfPreench = !!(c.vida_familiar || c.vida_eclesiastica || c.vida_profissional);
       return `<tr style="border-bottom:1px solid var(--bd1);opacity:${c.ativo?1:.5}"
@@ -1520,7 +1490,7 @@
         onmouseout="this.style.background=''">
         <td style="${tdS};font-size:11px;color:var(--tx4);font-weight:700">${i+1}</td>
         <td style="${tdS};font-weight:600;color:var(--tx1)">${_esc(c.nome)}</td>
-        <td style="${tdS}"><span style="font-size:10px;padding:2px 9px;border-radius:6px;border:1px solid ${cor}44;color:${cor};background:${cor}11">${lbl}</span></td>
+        ${isDiret ? "" : `<td style="${tdS}"><span style="font-size:10px;padding:2px 9px;border-radius:6px;border:1px solid ${cor}44;color:${cor};background:${cor}11">${lbl}</span></td>`}
         <td style="${tdS};font-size:11px;color:var(--tx3)">${_esc(c.congregacao||"Sede")}</td>
         <td style="${tdS};font-size:11px">${c.origem === "manual" ? "Manual" : "Indicação"}</td>
         <td style="${tdS}">
@@ -1528,18 +1498,18 @@
             ${c.ativo ? "Ativo" : "Inativo"}
           </span>
         </td>
-        <td style="${tdS}">
+        ${isDiret ? "" : `<td style="${tdS}">
           <span onclick="${perfPreench ? `eleicaoVerMiniCurriculo('${c.id}')` : ""}"
             style="font-size:10px;padding:2px 9px;border-radius:6px;background:${perfPreench?"rgba(58,170,92,.12)":"rgba(208,144,64,.12)"};color:${perfPreench?"var(--gr)":"var(--amber)"};cursor:${perfPreench?"pointer":"default"}">
             ${perfPreench ? "Preenchido" : "Pendente"}
           </span>
-        </td>
+        </td>`}
         <td style="padding:8px 10px">
           <div style="display:flex;gap:6px;justify-content:flex-end">
-            ${perfPreench ? `<button onclick="eleicaoVerMiniCurriculo('${c.id}')"
+            ${!isDiret && perfPreench ? `<button onclick="eleicaoVerMiniCurriculo('${c.id}')"
               style="background:rgba(74,156,245,.1);border:1px solid rgba(74,156,245,.3);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--sky);cursor:pointer"
               title="Ver mini-currículo">👁</button>` : ""}
-            ${c.token_perfil ? `<button onclick="eleicaoEnviarWACandidato('${c.id}')"
+            ${!isDiret && c.token_perfil ? `<button onclick="eleicaoEnviarWACandidato('${c.id}')"
               style="background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.3);border-radius:5px;padding:3px 8px;font-size:11px;color:#25d366;cursor:pointer"
               title="Enviar link do mini-currículo via WhatsApp">📱</button>` : ""}
             <button onclick="eleicaoToggleCandidato('${c.id}',${!c.ativo})"
@@ -1570,14 +1540,14 @@
         <div style="overflow-x:auto">
           <table style="width:100%;border-collapse:collapse">
             <thead>
-              <tr style="background:var(--bg-surface);border-bottom:2px solid var(--sky)">
+              <tr style="background:var(--bg-surface);border-bottom:2px solid ${isDiret?"var(--violet)":"var(--sky)"}">
                 <th style="${thS};width:36px">#</th>
                 <th style="${thS}">Nome</th>
                 ${colTipoHeader}
                 <th style="${thS}">Congregação</th>
                 <th style="${thS}">Origem</th>
                 <th style="${thS}">Status</th>
-                <th style="${thS}">Mini-currículo</th>
+                ${isDiret ? "" : `<th style="${thS}">Mini-currículo</th>`}
                 <th style="${thS}"></th>
               </tr>
             </thead>
@@ -1823,7 +1793,7 @@
     panel.innerHTML = `
       <div class="card" style="margin-bottom:14px;border-color:var(--sky)">
         <div class="ctit" style="margin-bottom:14px">Adicionar candidato manualmente</div>
-        <div style="display:grid;grid-template-columns:1fr 180px 180px;gap:12px;align-items:end;flex-wrap:wrap">
+        <div style="display:grid;grid-template-columns:${isDiret?"1fr 180px":"1fr 180px 180px"};gap:12px;align-items:end;flex-wrap:wrap">
           <div>
             <label style="${lbl}">Membro *</label>
             <select id="cand-add-pessoa" style="${inp}" onchange="eleicaoCandAddPessoa(this)">
@@ -1831,19 +1801,13 @@
               ${optsM}
             </select>
           </div>
-          <div>
-            <label style="${lbl}">${isDiret ? "Cargo *" : "Tipo *"}</label>
-            ${isDiret
-              ? `<select id="cand-add-cargo" style="${inp}">
-                   ${cargosD.length
-                     ? cargosD.map(c => `<option value="${_esc(c)}">${_esc(c)}</option>`).join("")
-                     : `<option value="">— nenhum cargo definido —</option>`}
-                 </select>`
-              : `<select id="cand-add-tipo" style="${inp}">
-                   <option value="presbitero">Presbítero</option>
-                   <option value="diacono">Diácono</option>
-                 </select>`}
-          </div>
+          ${isDiret ? "" : `<div>
+            <label style="${lbl}">Tipo *</label>
+            <select id="cand-add-tipo" style="${inp}">
+              <option value="presbitero">Presbítero</option>
+              <option value="diacono">Diácono</option>
+            </select>
+          </div>`}
           <div>
             <label style="${lbl}">Congregação</label>
             <input id="cand-add-cong" style="${inp}" placeholder="Sede">
@@ -1871,8 +1835,8 @@
     const nome     = sel?.options[sel.selectedIndex]?.text?.trim();
     const cong     = document.getElementById("cand-add-cong")?.value?.trim() || null;
     const isDiret  = _ehDiretoria();
-    const tipo     = isDiret ? "diretoria" : (document.getElementById("cand-add-tipo")?.value || "presbitero");
-    const cargo    = isDiret ? (document.getElementById("cand-add-cargo")?.value?.trim() || null) : null;
+    const tipo  = isDiret ? "diretoria" : (document.getElementById("cand-add-tipo")?.value || "presbitero");
+    const cargo = null;
 
     if (!pessoaId || !nome) { alert("Selecione um membro."); return; }
     if (isDiret && !cargo)  { alert("Selecione o cargo."); return; }
@@ -2114,17 +2078,17 @@
 
     const isDiret = _ehDiretoria();
 
-    // Diretoria: conta por cargo+pessoa a partir de _votosDiretoria
+    // Diretoria: conta por cargo+candidato_id a partir de _votosDiretoria
     const cntDir = {};
     if (isDiret) {
       _votosDiretoria.forEach(v => {
         if (!cntDir[v.cargo]) cntDir[v.cargo] = {};
-        cntDir[v.cargo][v.pessoa_id] = (cntDir[v.cargo][v.pessoa_id] || 0) + 1;
+        cntDir[v.cargo][v.candidato_id] = (cntDir[v.cargo][v.candidato_id] || 0) + 1;
       });
     }
 
-    const membrosIdx = {};
-    _membrosDir.forEach(m => { membrosIdx[m.pessoa_id] = m; });
+    const candIdx = {};
+    _candidatos.forEach(c => { candIdx[c.id] = c; });
 
     const cnt = {};
     _votos.forEach(v => cnt[v.candidato_id] = (cnt[v.candidato_id] || 0) + 1);
@@ -2184,9 +2148,9 @@
       return cargos.map(cargo => {
         const counts = cntDir[cargo] || {};
         const lista = Object.entries(counts)
-          .map(([pid, votos]) => ({
-            nome:         membrosIdx[pid]?.nome        || pid,
-            congregacao:  membrosIdx[pid]?.congregacao || "—",
+          .map(([cid, votos]) => ({
+            nome:        candIdx[cid]?.nome        || cid,
+            congregacao: candIdx[cid]?.congregacao || "—",
             votos,
           }))
           .sort((a, b) => b.votos - a.votos || a.nome.localeCompare(b.nome));
@@ -2268,16 +2232,16 @@
       const cntDirRes = {};
       _votosDiretoria.forEach(v => {
         if (!cntDirRes[v.cargo]) cntDirRes[v.cargo] = {};
-        cntDirRes[v.cargo][v.pessoa_id] = (cntDirRes[v.cargo][v.pessoa_id] || 0) + 1;
+        cntDirRes[v.cargo][v.candidato_id] = (cntDirRes[v.cargo][v.candidato_id] || 0) + 1;
       });
-      const membrosIdxRes = {};
-      _membrosDir.forEach(m => { membrosIdxRes[m.pessoa_id] = m; });
+      const candIdxRes = {};
+      _candidatos.forEach(c => { candIdxRes[c.id] = c; });
 
       const cargosUniq = _cargosProc().length ? _cargosProc() : Object.keys(cntDirRes);
       const eleitos = cargosUniq.map(cargo => {
         const counts  = cntDirRes[cargo] || {};
         const lista   = Object.entries(counts)
-          .map(([pid, votos]) => ({ nome: membrosIdxRes[pid]?.nome || pid, votos }))
+          .map(([cid, votos]) => ({ nome: candIdxRes[cid]?.nome || cid, votos }))
           .sort((a, b) => b.votos - a.votos || a.nome.localeCompare(b.nome))
           .slice(0, 1); // 1 eleito por cargo
         return { cargo, lista };
@@ -2374,21 +2338,21 @@
       const cntDirExp = {};
       _votosDiretoria.forEach(v => {
         if (!cntDirExp[v.cargo]) cntDirExp[v.cargo] = {};
-        cntDirExp[v.cargo][v.pessoa_id] = (cntDirExp[v.cargo][v.pessoa_id] || 0) + 1;
+        cntDirExp[v.cargo][v.candidato_id] = (cntDirExp[v.cargo][v.candidato_id] || 0) + 1;
       });
-      const membrosIdxExp = {};
-      _membrosDir.forEach(m => { membrosIdxExp[m.pessoa_id] = m; });
+      const candIdxExp = {};
+      _candidatos.forEach(c => { candIdxExp[c.id] = c; });
       hdr  = "Processo,Cargo,Nome,Congregação,Votos";
       const linhas = [];
       (_cargosProc().length ? _cargosProc() : Object.keys(cntDirExp)).forEach(cargo => {
         const counts = cntDirExp[cargo] || {};
-        Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([pid, votos]) => {
-          const m = membrosIdxExp[pid] || {};
+        Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([cid, votos]) => {
+          const c = candIdxExp[cid] || {};
           linhas.push([
             `"${(_processo.nome||"").replace(/"/g,'""')}"`,
             `"${cargo.replace(/"/g,'""')}"`,
-            `"${(m.nome||pid).replace(/"/g,'""')}"`,
-            `"${(m.congregacao||"Sede").replace(/"/g,'""')}"`,
+            `"${(c.nome||cid).replace(/"/g,'""')}"`,
+            `"${(c.congregacao||"Sede").replace(/"/g,'""')}"`,
             votos,
           ].join(","));
         });

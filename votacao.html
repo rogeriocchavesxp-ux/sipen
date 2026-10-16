@@ -278,11 +278,12 @@ let etapa       = "info"; // info | id | cedula | confirma | sucesso | jaVotou
 
 function ehDiretoria() { return processo?.tipo === "diretoria"; }
 function cargosAtivos() {
+  // Para diretoria, os cargos são definidos no processo (não nos candidatos)
+  if (ehDiretoria()) {
+    return Array.isArray(processo?.cargos_diretoria) ? processo.cargos_diretoria : [];
+  }
   const uniq = [];
   candidatos.forEach(c => { if (c.cargo && !uniq.includes(c.cargo)) uniq.push(c.cargo); });
-  // respeita a ordem definida no processo se disponível
-  const ordem = Array.isArray(processo?.cargos_diretoria) ? processo.cargos_diretoria : [];
-  if (ordem.length) return [...ordem.filter(o => uniq.includes(o)), ...uniq.filter(u => !ordem.includes(u))];
   return uniq;
 }
 
@@ -477,9 +478,9 @@ async function iniciarVotacao() {
     if (!membros.length) {
       membros = await sbGet("v_eleicao_form_membros?select=pessoa_id,nome,congregacao&limit=2000");
     }
-    // Diretoria: todos os membros são candidatos — não carrega eleicao_candidatos
-    if (!ehDiretoria() && !candidatos.length) {
-      candidatos = await sbGet(`eleicao_candidatos?processo_id=eq.${processo.id}&ativo=eq.true&deleted_at=is.null&select=*&order=tipo,nome`);
+    if (!candidatos.length) {
+      const order = ehDiretoria() ? "nome" : "tipo,nome";
+      candidatos = await sbGet(`eleicao_candidatos?processo_id=eq.${processo.id}&ativo=eq.true&deleted_at=is.null&select=*&order=${order}`);
     }
   } catch (e) { renderErro("Erro", e.message); return; }
   renderIdentificacao();
@@ -637,20 +638,17 @@ function renderCedula() {
 function renderCedulaDiretoria() {
   const cargos = cargosAtivos();
 
-  const membrosOrdenados = [...membros].sort((a, b) => (a.nome || "").localeCompare(b.nome, "pt-BR"));
-
   const secaoCargo = (cargo, idx) => {
-    const lista = membrosOrdenados;  // todos os membros para cada cargo
     const cargoEsc = cargo.replace(/'/g, "\\'");
     return `
       <div style="margin-bottom:24px">
         <div class="secao-titulo">
           <span>${eh(cargo)}</span>
-          <span class="secao-counter" id="cargo-counter-${idx}" style="">Escolha 1</span>
+          <span class="secao-counter" id="cargo-counter-${idx}">Escolha 1</span>
         </div>
         <div class="candidatos-grid">
-          ${lista.map(c => `
-            <div class="cand-card radio" id="dir-${idx}-${c.pessoa_id}" onclick="toggleCandidatoDir('${c.pessoa_id}','${cargoEsc}',${idx})">
+          ${candidatos.map(c => `
+            <div class="cand-card radio" id="cand-dir-${idx}-${c.id}" onclick="toggleCandidatoDir('${c.id}','${cargoEsc}',${idx})">
               <div class="cand-check"><span class="cand-check-mark">✓</span></div>
               <div class="cand-info">
                 <div class="cand-nome">${eh(c.nome)}</div>
@@ -742,20 +740,20 @@ window.toggleCandidato = function(id, tipo) {
   }
 };
 
-window.toggleCandidatoDir = function(pessoaId, cargo, idx) {
+window.toggleCandidatoDir = function(candId, cargo, idx) {
   const prev = selCargos[cargo];
-  if (prev && prev !== pessoaId) {
-    const prevCard = document.getElementById(`dir-${idx}-${prev}`);
+  if (prev && prev !== candId) {
+    const prevCard = document.getElementById(`cand-dir-${idx}-${prev}`);
     if (prevCard) prevCard.classList.remove("selected");
   }
 
-  if (selCargos[cargo] === pessoaId) {
+  if (selCargos[cargo] === candId) {
     selCargos[cargo] = null;
-    const card = document.getElementById(`dir-${idx}-${pessoaId}`);
+    const card = document.getElementById(`cand-dir-${idx}-${candId}`);
     if (card) card.classList.remove("selected");
   } else {
-    selCargos[cargo] = pessoaId;
-    const card = document.getElementById(`dir-${idx}-${pessoaId}`);
+    selCargos[cargo] = candId;
+    const card = document.getElementById(`cand-dir-${idx}-${candId}`);
     if (card) card.classList.add("selected");
   }
 
@@ -786,17 +784,12 @@ window.revisarVotos = function() {
     }
     etapa = "confirma";
 
-    // Lookup de membros por pessoa_id
-    const membrosIdx = {};
-    membros.forEach(m => { membrosIdx[m.pessoa_id] = m; });
-
     const secDir = cargosDir.map(cargo => {
-      const pid  = selCargos[cargo];
-      const membro = pid ? membrosIdx[pid] : null;
+      const cand = selCargos[cargo] ? byId[selCargos[cargo]] : null;
       return `<div class="rev-secao">
         <div class="rev-titulo">${eh(cargo)}</div>
-        ${membro
-          ? `<div class="rev-item"><div class="rev-num">✓</div><div class="rev-nome">${eh(membro.nome)}</div><div style="margin-left:auto;font-size:11.5px;color:var(--tx3)">${eh(membro.congregacao || "Sede")}</div></div>`
+        ${cand
+          ? `<div class="rev-item"><div class="rev-num">✓</div><div class="rev-nome">${eh(cand.nome)}</div><div style="margin-left:auto;font-size:11.5px;color:var(--tx3)">${eh(cand.congregacao || "Sede")}</div></div>`
           : `<div class="rev-empty">Sem voto para este cargo</div>`}
       </div>`;
     }).join("");
@@ -889,8 +882,8 @@ window.submeterVotos = async function() {
     let res;
     if (ehDiretoria()) {
       const votos = Object.entries(selCargos)
-        .filter(([, pid]) => !!pid)
-        .map(([cargo, pessoa_id]) => ({ cargo, pessoa_id }));
+        .filter(([, candId]) => !!candId)
+        .map(([cargo, candidato_id]) => ({ cargo, candidato_id }));
       res = await sbRpc("registrar_voto_diretoria", {
         p_slug:       slug,
         p_eleitor_id: eleitor.pessoa_id,
