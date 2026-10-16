@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   SIPEN — Processos Eleitorais  v6.50.0
+   SIPEN — Processos Eleitorais  v6.50.1
    modules/conselho/eleicoes.js
 ═══════════════════════════════════════════════════════════ */
 
@@ -479,7 +479,7 @@
       data_abertura:      document.getElementById("ep-abertura")?.value    || null,
       data_encerramento:  document.getElementById("ep-encerramento")?.value || null,
       slug,
-      max_indicacoes:     tipo !== "diretoria" ? (parseInt(document.getElementById("ep-max-ind")?.value) || 5) : null,
+      max_indicacoes:     tipo !== "diretoria" ? (parseInt(document.getElementById("ep-max-ind")?.value) || 5) : 0,
       cargos_diretoria:   cargosRaw?.length ? cargosRaw : null,
       atualizado_em:      new Date().toISOString(),
     };
