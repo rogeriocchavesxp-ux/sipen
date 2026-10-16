@@ -1835,7 +1835,7 @@
     const nome     = sel?.options[sel.selectedIndex]?.text?.trim();
     const cong     = document.getElementById("cand-add-cong")?.value?.trim() || null;
     const isDiret  = _ehDiretoria();
-    const tipo  = isDiret ? "diretoria" : (document.getElementById("cand-add-tipo")?.value || "presbitero");
+    const tipo  = isDiret ? "presbitero" : (document.getElementById("cand-add-tipo")?.value || "presbitero");
     const cargo = null;
 
     if (!pessoaId || !nome) { alert("Selecione um membro."); return; }
