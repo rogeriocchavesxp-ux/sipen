@@ -1839,7 +1839,6 @@
     const cargo = null;
 
     if (!pessoaId || !nome) { alert("Selecione um membro."); return; }
-    if (isDiret && !cargo)  { alert("Selecione o cargo."); return; }
 
     const { error } = await _sb().from("eleicao_candidatos").insert({
       processo_id: _processo.id,
