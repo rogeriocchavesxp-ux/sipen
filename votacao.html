@@ -477,9 +477,9 @@ async function iniciarVotacao() {
     if (!membros.length) {
       membros = await sbGet("v_eleicao_form_membros?select=pessoa_id,nome,congregacao&limit=2000");
     }
-    if (!candidatos.length) {
-      const order = ehDiretoria() ? "cargo,nome" : "tipo,nome";
-      candidatos = await sbGet(`eleicao_candidatos?processo_id=eq.${processo.id}&ativo=eq.true&deleted_at=is.null&select=*&order=${order}`);
+    // Diretoria: todos os membros são candidatos — não carrega eleicao_candidatos
+    if (!ehDiretoria() && !candidatos.length) {
+      candidatos = await sbGet(`eleicao_candidatos?processo_id=eq.${processo.id}&ativo=eq.true&deleted_at=is.null&select=*&order=tipo,nome`);
     }
   } catch (e) { renderErro("Erro", e.message); return; }
   renderIdentificacao();
@@ -637,8 +637,10 @@ function renderCedula() {
 function renderCedulaDiretoria() {
   const cargos = cargosAtivos();
 
+  const membrosOrdenados = [...membros].sort((a, b) => (a.nome || "").localeCompare(b.nome, "pt-BR"));
+
   const secaoCargo = (cargo, idx) => {
-    const lista = candidatos.filter(c => c.cargo === cargo);
+    const lista = membrosOrdenados;  // todos os membros para cada cargo
     const cargoEsc = cargo.replace(/'/g, "\\'");
     return `
       <div style="margin-bottom:24px">
@@ -648,7 +650,7 @@ function renderCedulaDiretoria() {
         </div>
         <div class="candidatos-grid">
           ${lista.map(c => `
-            <div class="cand-card radio" id="cand-${c.id}" onclick="toggleCandidatoDir('${c.id}','${cargoEsc}',${idx})">
+            <div class="cand-card radio" id="dir-${idx}-${c.pessoa_id}" onclick="toggleCandidatoDir('${c.pessoa_id}','${cargoEsc}',${idx})">
               <div class="cand-check"><span class="cand-check-mark">✓</span></div>
               <div class="cand-info">
                 <div class="cand-nome">${eh(c.nome)}</div>
@@ -740,20 +742,20 @@ window.toggleCandidato = function(id, tipo) {
   }
 };
 
-window.toggleCandidatoDir = function(id, cargo, idx) {
+window.toggleCandidatoDir = function(pessoaId, cargo, idx) {
   const prev = selCargos[cargo];
-  if (prev && prev !== id) {
-    const prevCard = document.getElementById(`cand-${prev}`);
+  if (prev && prev !== pessoaId) {
+    const prevCard = document.getElementById(`dir-${idx}-${prev}`);
     if (prevCard) prevCard.classList.remove("selected");
   }
 
-  if (selCargos[cargo] === id) {
+  if (selCargos[cargo] === pessoaId) {
     selCargos[cargo] = null;
-    const card = document.getElementById(`cand-${id}`);
+    const card = document.getElementById(`dir-${idx}-${pessoaId}`);
     if (card) card.classList.remove("selected");
   } else {
-    selCargos[cargo] = id;
-    const card = document.getElementById(`cand-${id}`);
+    selCargos[cargo] = pessoaId;
+    const card = document.getElementById(`dir-${idx}-${pessoaId}`);
     if (card) card.classList.add("selected");
   }
 
@@ -775,8 +777,8 @@ window.revisarVotos = function() {
   candidatos.forEach(c => byId[c.id] = c);
 
   if (ehDiretoria()) {
-    const cargos  = cargosAtivos();
-    const nenhum  = cargos.every(c => !selCargos[c]);
+    const cargosDir = cargosAtivos();
+    const nenhum    = cargosDir.every(c => !selCargos[c]);
     if (nenhum) {
       const msg = document.getElementById("ced-msg");
       if (msg) { msg.textContent = "Selecione ao menos um candidato."; msg.className = "form-msg err"; }
@@ -784,12 +786,17 @@ window.revisarVotos = function() {
     }
     etapa = "confirma";
 
-    const secDir = cargos.map(cargo => {
-      const cand = selCargos[cargo] ? byId[selCargos[cargo]] : null;
+    // Lookup de membros por pessoa_id
+    const membrosIdx = {};
+    membros.forEach(m => { membrosIdx[m.pessoa_id] = m; });
+
+    const secDir = cargosDir.map(cargo => {
+      const pid  = selCargos[cargo];
+      const membro = pid ? membrosIdx[pid] : null;
       return `<div class="rev-secao">
         <div class="rev-titulo">${eh(cargo)}</div>
-        ${cand
-          ? `<div class="rev-item"><div class="rev-num">✓</div><div class="rev-nome">${eh(cand.nome)}</div><div style="margin-left:auto;font-size:11.5px;color:var(--tx3)">${eh(cand.congregacao || "Sede")}</div></div>`
+        ${membro
+          ? `<div class="rev-item"><div class="rev-num">✓</div><div class="rev-nome">${eh(membro.nome)}</div><div style="margin-left:auto;font-size:11.5px;color:var(--tx3)">${eh(membro.congregacao || "Sede")}</div></div>`
           : `<div class="rev-empty">Sem voto para este cargo</div>`}
       </div>`;
     }).join("");
@@ -878,16 +885,24 @@ window.submeterVotos = async function() {
   if (btn) { btn.disabled = true; btn.textContent = "Enviando…"; }
   if (msgEl) msgEl.textContent = "";
 
-  const todosIds = ehDiretoria()
-    ? Object.values(selCargos).filter(Boolean)
-    : [...selPresb, ...selDiac];
-
   try {
-    const res = await sbRpc("registrar_voto", {
-      p_slug:       slug,
-      p_eleitor_id: eleitor.pessoa_id,
-      p_candidatos: todosIds,
-    });
+    let res;
+    if (ehDiretoria()) {
+      const votos = Object.entries(selCargos)
+        .filter(([, pid]) => !!pid)
+        .map(([cargo, pessoa_id]) => ({ cargo, pessoa_id }));
+      res = await sbRpc("registrar_voto_diretoria", {
+        p_slug:       slug,
+        p_eleitor_id: eleitor.pessoa_id,
+        p_votos:      votos,
+      });
+    } else {
+      res = await sbRpc("registrar_voto", {
+        p_slug:       slug,
+        p_eleitor_id: eleitor.pessoa_id,
+        p_candidatos: [...selPresb, ...selDiac],
+      });
+    }
 
     if (res.ja_votou) { renderJaVotou(); return; }
     if (!res.ok) throw new Error(res.erro || "Erro desconhecido.");

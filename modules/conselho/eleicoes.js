@@ -26,8 +26,10 @@
   let _votacaoConfig = null;
   let _votSubTab     = "config";
   let _candFiltroTipo = "todos";
-  let _votos         = [];    // { candidato_id } — votos brutos carregados
+  let _votos         = [];    // { candidato_id } — votos brutos (oficiais/diaconos)
   let _totVotantes   = 0;     // total de eleitores que votaram
+  let _votosDiretoria = [];   // { eleitor_id, cargo, pessoa_id } — diretoria
+  let _membrosDir     = [];   // { pessoa_id, nome, congregacao } — lookup para apuração diretoria
 
   /* ── Helpers ────────────────────────────────────────── */
   const _sb  = () => (typeof getSupabase === "function" ? getSupabase() : null);
@@ -171,12 +173,26 @@
   }
 
   async function _carregarVotos(processoId) {
-    const [{ data: votos }, { count }] = await Promise.all([
-      _sb().from("eleicao_votos").select("candidato_id").eq("processo_id", processoId),
-      _sb().from("eleicao_votos_registro").select("*", { count: "exact", head: true }).eq("processo_id", processoId),
-    ]);
-    _votos       = votos || [];
-    _totVotantes = count || 0;
+    if (_ehDiretoria()) {
+      const [{ data: votosDir }, { count }] = await Promise.all([
+        _sb().from("eleicao_votos_diretoria").select("eleitor_id,cargo,pessoa_id").eq("processo_id", processoId),
+        _sb().from("eleicao_votos_registro").select("*", { count: "exact", head: true }).eq("processo_id", processoId),
+      ]);
+      _votosDiretoria = votosDir || [];
+      _votos          = [];
+      _totVotantes    = count || 0;
+      if (!_membrosDir.length) {
+        const { data: membros } = await _sb().from("v_eleicao_form_membros").select("pessoa_id,nome,congregacao");
+        _membrosDir = membros || [];
+      }
+    } else {
+      const [{ data: votos }, { count }] = await Promise.all([
+        _sb().from("eleicao_votos").select("candidato_id").eq("processo_id", processoId),
+        _sb().from("eleicao_votos_registro").select("*", { count: "exact", head: true }).eq("processo_id", processoId),
+      ]);
+      _votos       = votos || [];
+      _totVotantes = count || 0;
+    }
   }
 
   /* ── Navegação interna ───────────────────────────────── */
@@ -1420,6 +1436,27 @@
     if (!el) return;
 
     const isDiret = _ehDiretoria();
+
+    if (isDiret) {
+      const cargos = _cargosProc();
+      el.innerHTML = `
+        <div class="card" style="margin-bottom:14px;border-color:rgba(139,111,212,.35)">
+          <div class="ctit" style="color:var(--violet);margin-bottom:10px">Candidatos da Diretoria</div>
+          <p style="font-size:13px;color:var(--tx2);line-height:1.7;margin-bottom:14px">
+            Na eleição de Diretoria, <strong>todos os pastores e presbíteros</strong> são candidatos automáticos para todos os cargos.<br>
+            Não é necessário cadastrar candidatos individualmente. Durante a votação, cada eleitor escolhe um nome por cargo.
+          </p>
+          <div style="padding:12px 16px;border-radius:8px;background:rgba(139,111,212,.08);border:1px solid rgba(139,111,212,.2);font-size:12.5px;color:var(--tx2)">
+            <strong style="color:var(--violet)">Cargos definidos:</strong>
+            ${cargos.length
+              ? cargos.map(c => `<span style="display:inline-block;margin:4px 4px 0 0;padding:3px 10px;border-radius:5px;border:1px solid rgba(139,111,212,.3);background:rgba(139,111,212,.06);color:var(--violet);font-size:11.5px">${_esc(c)}</span>`).join("")
+              : `<span style="color:var(--tx3)">Nenhum cargo definido. Edite o processo para adicionar cargos.</span>`
+            }
+          </div>
+        </div>`;
+      return;
+    }
+
     const cargos  = _cargosProc();
 
     const si  = "padding:7px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-card);color:var(--tx1);font-size:12px";
@@ -2063,7 +2100,8 @@
     const el = document.getElementById("vot-sub-content");
     if (!el) return;
 
-    if (!_votos.length && !_totVotantes) {
+    const semVotosApur = _ehDiretoria() ? (!_votosDiretoria.length && !_totVotantes) : (!_votos.length && !_totVotantes);
+    if (semVotosApur) {
       el.innerHTML = `
         <div style="text-align:center;padding:48px;background:var(--bg-surface);border:1.5px dashed var(--bd2);border-radius:12px">
           <div style="font-size:32px;margin-bottom:12px;opacity:.4">📊</div>
@@ -2074,6 +2112,20 @@
       return;
     }
 
+    const isDiret = _ehDiretoria();
+
+    // Diretoria: conta por cargo+pessoa a partir de _votosDiretoria
+    const cntDir = {};
+    if (isDiret) {
+      _votosDiretoria.forEach(v => {
+        if (!cntDir[v.cargo]) cntDir[v.cargo] = {};
+        cntDir[v.cargo][v.pessoa_id] = (cntDir[v.cargo][v.pessoa_id] || 0) + 1;
+      });
+    }
+
+    const membrosIdx = {};
+    _membrosDir.forEach(m => { membrosIdx[m.pessoa_id] = m; });
+
     const cnt = {};
     _votos.forEach(v => cnt[v.candidato_id] = (cnt[v.candidato_id] || 0) + 1);
 
@@ -2082,8 +2134,7 @@
       .map(c => ({ ...c, votos: cnt[c.id] || 0 }))
       .sort((a, b) => b.votos - a.votos || a.nome.localeCompare(b.nome));
 
-    const totalVotos = _votos.length;
-    const isDiret    = _ehDiretoria();
+    const totalVotos = isDiret ? _votosDiretoria.length : _votos.length;
 
     const thS = "text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);font-weight:700";
     const tdS = "padding:8px 10px;font-size:12.5px;color:var(--tx2)";
@@ -2126,23 +2177,29 @@
         </div>`;
     };
 
-    // Diretoria: uma tabela por cargo
+    // Diretoria: uma tabela por cargo usando _votosDiretoria
     const diretoriaHtml = isDiret ? (() => {
-      const cargosUniq = _cargosProc().length
-        ? _cargosProc()
-        : [...new Set(ranking.map(c => c.cargo||"—"))];
-      return cargosUniq.map(cargo => {
-        const lista = ranking.filter(c => c.cargo === cargo);
+      const cargos = _cargosProc().length ? _cargosProc() : Object.keys(cntDir);
+      if (!cargos.length) return `<div style="text-align:center;padding:32px;color:var(--tx3)">Nenhum voto registrado ainda.</div>`;
+      return cargos.map(cargo => {
+        const counts = cntDir[cargo] || {};
+        const lista = Object.entries(counts)
+          .map(([pid, votos]) => ({
+            nome:         membrosIdx[pid]?.nome        || pid,
+            congregacao:  membrosIdx[pid]?.congregacao || "—",
+            votos,
+          }))
+          .sort((a, b) => b.votos - a.votos || a.nome.localeCompare(b.nome));
         return tabelaHtml(cargo, lista, "var(--violet)");
-      }).join("") || `<div style="text-align:center;padding:32px;color:var(--tx3)">Nenhum candidato ou voto registrado.</div>`;
+      }).join("");
     })() : "";
 
     el.innerHTML = `
       <div class="kpis c4" style="margin-bottom:16px">
         <div class="kpi"><div class="kpi-ico" style="background:rgba(74,156,245,.12);color:var(--sky)">◎</div><div class="kpi-body"><div class="kpi-lbl">Total votos</div><div class="kpi-val">${totalVotos}</div></div></div>
         <div class="kpi"><div class="kpi-ico" style="background:rgba(42,181,192,.12);color:var(--teal)">◈</div><div class="kpi-body"><div class="kpi-lbl">Eleitores</div><div class="kpi-val">${_totVotantes}</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,.12);color:var(--violet)">◉</div><div class="kpi-body"><div class="kpi-lbl">Candidatos</div><div class="kpi-val">${ranking.length}</div></div></div>
-        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,.12);color:var(--gr)">✓</div><div class="kpi-body"><div class="kpi-lbl">Média</div><div class="kpi-val">${ranking.length?(totalVotos/ranking.length).toFixed(1):"—"}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(139,111,212,.12);color:var(--violet)">◉</div><div class="kpi-body"><div class="kpi-lbl">${isDiret?"Cargos":"Candidatos"}</div><div class="kpi-val">${isDiret?_cargosProc().length:ranking.length}</div></div></div>
+        <div class="kpi"><div class="kpi-ico" style="background:rgba(58,170,92,.12);color:var(--gr)">✓</div><div class="kpi-body"><div class="kpi-lbl">Votantes</div><div class="kpi-val">${_totVotantes || "—"}</div></div></div>
       </div>
 
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px">
@@ -2162,7 +2219,9 @@
     const el = document.getElementById("vot-sub-content");
     if (!el) return;
 
-    if (!_votos.length && !_totVotantes) {
+    const isDiretRes = _ehDiretoria();
+    const semVotos   = isDiretRes ? (!_votosDiretoria.length && !_totVotantes) : (!_votos.length && !_totVotantes);
+    if (semVotos) {
       el.innerHTML = `
         <div style="text-align:center;padding:40px;background:var(--bg-surface);border:1.5px dashed var(--bd2);border-radius:12px">
           <div style="font-size:14px;font-weight:700;color:var(--tx2);margin-bottom:6px">Carregue os votos primeiro</div>
@@ -2174,10 +2233,9 @@
 
     const vc      = _votacaoConfig;
     const p       = _processo;
-    const isDiret = _ehDiretoria();
+    const isDiret = isDiretRes;
     const maxPr   = vc?.max_votos_presbiteros ?? 5;
     const maxDi   = vc?.max_votos_diaconos   ?? 4;
-    const maxDiret= vc?.max_votos_diretoria  ?? 1;
 
     const cnt = {};
     _votos.forEach(v => cnt[v.candidato_id] = (cnt[v.candidato_id] || 0) + 1);
@@ -2206,16 +2264,27 @@
 
     let resultText, cardContent;
     if (isDiret) {
-      const cargosUniq = _cargosProc().length
-        ? _cargosProc()
-        : [...new Set(ranking.map(c => c.cargo||"—"))];
-      const eleitos = cargosUniq.map(cargo => ({
-        cargo,
-        lista: ranking.filter(c => c.cargo === cargo).slice(0, maxDiret),
-      }));
+      // Conta votos de diretoria por cargo
+      const cntDirRes = {};
+      _votosDiretoria.forEach(v => {
+        if (!cntDirRes[v.cargo]) cntDirRes[v.cargo] = {};
+        cntDirRes[v.cargo][v.pessoa_id] = (cntDirRes[v.cargo][v.pessoa_id] || 0) + 1;
+      });
+      const membrosIdxRes = {};
+      _membrosDir.forEach(m => { membrosIdxRes[m.pessoa_id] = m; });
+
+      const cargosUniq = _cargosProc().length ? _cargosProc() : Object.keys(cntDirRes);
+      const eleitos = cargosUniq.map(cargo => {
+        const counts  = cntDirRes[cargo] || {};
+        const lista   = Object.entries(counts)
+          .map(([pid, votos]) => ({ nome: membrosIdxRes[pid]?.nome || pid, votos }))
+          .sort((a, b) => b.votos - a.votos || a.nome.localeCompare(b.nome))
+          .slice(0, 1); // 1 eleito por cargo
+        return { cargo, lista };
+      });
       cardContent = eleitos.map(e => cardRow(e.lista, e.cargo, "var(--violet)")).join("") +
         `<div style="padding:10px 14px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--bd1);font-size:12px;color:var(--tx3)">
-           ${_totVotantes} participante(s) · ${_votos.length} voto(s) computado(s)
+           ${_totVotantes} participante(s) · ${_votosDiretoria.length} voto(s) computado(s)
          </div>`;
       const linhasCargo = (titulo, lista) => lista.length
         ? `${titulo}:\n${lista.map((c, i) => `  ${i+1}. ${c.nome} (${c.votos} voto${c.votos !== 1 ? "s" : ""})`).join("\n")}`
@@ -2228,7 +2297,7 @@
         ...eleitos.flatMap(e => [linhasCargo(e.cargo.toUpperCase(), e.lista), ""]),
         `${"─".repeat(44)}`,
         `Total de participantes: ${_totVotantes}`,
-        `Total de votos computados: ${_votos.length}`,
+        `Total de votos computados: ${_votosDiretoria.length}`,
         `Data de apuração: ${hoje}`,
         "",
         `Igreja Presbiteriana da Penha`,
@@ -2296,27 +2365,51 @@
   };
 
   window.eleicaoExportarResultados = function() {
-    if (!_votos.length && !_totVotantes) { alert("Carregue os votos primeiro."); return; }
-
-    const cnt = {};
-    _votos.forEach(v => cnt[v.candidato_id] = (cnt[v.candidato_id] || 0) + 1);
-    const rows = _candidatos
-      .filter(c => c.ativo)
-      .map(c => ({ ...c, votos: cnt[c.id] || 0 }))
-      .sort((a, b) => {
-        if (a.tipo !== b.tipo) return a.tipo === "presbitero" ? -1 : 1;
-        return b.votos - a.votos;
-      });
-
     const isDiret = _ehDiretoria();
-    const hdr  = isDiret ? "Processo,Cargo,Nome,Congregação,Votos" : "Processo,Tipo,Nome,Congregação,Votos";
-    const body = rows.map(r => [
-      `"${(_processo.nome||"").replace(/"/g,'""')}"`,
-      isDiret ? `"${(r.cargo||"—").replace(/"/g,'""')}"` : (r.tipo === "presbitero" ? "Presbítero" : "Diácono"),
-      `"${(r.nome||"").replace(/"/g,'""')}"`,
-      `"${(r.congregacao||"Sede").replace(/"/g,'""')}"`,
-      r.votos,
-    ].join(",")).join("\n");
+    const semDados = isDiret ? (!_votosDiretoria.length && !_totVotantes) : (!_votos.length && !_totVotantes);
+    if (semDados) { alert("Carregue os votos primeiro."); return; }
+
+    let hdr, body;
+    if (isDiret) {
+      const cntDirExp = {};
+      _votosDiretoria.forEach(v => {
+        if (!cntDirExp[v.cargo]) cntDirExp[v.cargo] = {};
+        cntDirExp[v.cargo][v.pessoa_id] = (cntDirExp[v.cargo][v.pessoa_id] || 0) + 1;
+      });
+      const membrosIdxExp = {};
+      _membrosDir.forEach(m => { membrosIdxExp[m.pessoa_id] = m; });
+      hdr  = "Processo,Cargo,Nome,Congregação,Votos";
+      const linhas = [];
+      (_cargosProc().length ? _cargosProc() : Object.keys(cntDirExp)).forEach(cargo => {
+        const counts = cntDirExp[cargo] || {};
+        Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([pid, votos]) => {
+          const m = membrosIdxExp[pid] || {};
+          linhas.push([
+            `"${(_processo.nome||"").replace(/"/g,'""')}"`,
+            `"${cargo.replace(/"/g,'""')}"`,
+            `"${(m.nome||pid).replace(/"/g,'""')}"`,
+            `"${(m.congregacao||"Sede").replace(/"/g,'""')}"`,
+            votos,
+          ].join(","));
+        });
+      });
+      body = linhas.join("\n");
+    } else {
+      const cnt = {};
+      _votos.forEach(v => cnt[v.candidato_id] = (cnt[v.candidato_id] || 0) + 1);
+      const rows = _candidatos
+        .filter(c => c.ativo)
+        .map(c => ({ ...c, votos: cnt[c.id] || 0 }))
+        .sort((a, b) => { if (a.tipo !== b.tipo) return a.tipo === "presbitero" ? -1 : 1; return b.votos - a.votos; });
+      hdr  = "Processo,Tipo,Nome,Congregação,Votos";
+      body = rows.map(r => [
+        `"${(_processo.nome||"").replace(/"/g,'""')}"`,
+        r.tipo === "presbitero" ? "Presbítero" : "Diácono",
+        `"${(r.nome||"").replace(/"/g,'""')}"`,
+        `"${(r.congregacao||"Sede").replace(/"/g,'""')}"`,
+        r.votos,
+      ].join(",")).join("\n");
+    }
 
     const csv  = "﻿" + hdr + "\n" + body;
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
