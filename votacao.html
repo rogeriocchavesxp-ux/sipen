@@ -202,6 +202,7 @@ body {
   background: var(--bg); flex-shrink: 0; margin-top: 1px;
   display: flex; align-items: center; justify-content: center; transition: all .15s;
 }
+.cand-card.radio .cand-check { border-radius: 50%; }
 .cand-check-mark { color: #fff; font-size: 12px; font-weight: 700; display: none; }
 .cand-card.selected .cand-check-mark { display: block; }
 .cand-info { flex: 1; min-width: 0; }
@@ -272,7 +273,18 @@ let membros     = [];    // para lookup de eleitor
 let eleitor     = null;  // { pessoa_id, nome, congregacao }
 let selPresb    = [];    // UUIDs selecionados (presbíteros)
 let selDiac     = [];    // UUIDs selecionados (diáconos)
+let selCargos   = {};    // { [cargo]: candidato_id } — para diretoria
 let etapa       = "info"; // info | id | cedula | confirma | sucesso | jaVotou
+
+function ehDiretoria() { return processo?.tipo === "diretoria"; }
+function cargosAtivos() {
+  const uniq = [];
+  candidatos.forEach(c => { if (c.cargo && !uniq.includes(c.cargo)) uniq.push(c.cargo); });
+  // respeita a ordem definida no processo se disponível
+  const ordem = Array.isArray(processo?.cargos_diretoria) ? processo.cargos_diretoria : [];
+  if (ordem.length) return [...ordem.filter(o => uniq.includes(o)), ...uniq.filter(u => !ordem.includes(u))];
+  return uniq;
+}
 
 /* ═══════════════════════════════════════════════════════
    HELPERS
@@ -367,13 +379,15 @@ function renderInfo() {
 
   const presb = (vc?.max_votos_presbiteros ?? 5);
   const diac  = (vc?.max_votos_diaconos   ?? 4);
-  const tipoLbl = { presbiteros:"Presbíteros", diaconos:"Diáconos", ambos:"Presbíteros e Diáconos" };
+  const tipoLbl = { presbiteros:"Presbíteros", diaconos:"Diáconos", ambos:"Presbíteros e Diáconos", diretoria:"Diretoria" };
+  const isDiret = ehDiretoria();
+  const cargosDir = Array.isArray(p.cargos_diretoria) ? p.cargos_diretoria : [];
 
   app.innerHTML = `
     <div class="proc-header">
-      <div class="proc-eyebrow">Igreja Presbiteriana da Penha · Eleição de Oficiais</div>
+      <div class="proc-eyebrow">Igreja Presbiteriana da Penha · ${isDiret ? "Eleição de Diretoria" : "Eleição de Oficiais"}</div>
       <h1 class="proc-title">${eh(p.nome)}</h1>
-      <p class="proc-subtitle">Votação oficial para eleição de oficiais — ${tipoLbl[p.tipo] || "Presbíteros e Diáconos"} · ${p.ano}</p>
+      <p class="proc-subtitle">Votação oficial — ${tipoLbl[p.tipo] || "Presbíteros e Diáconos"} · ${p.ano}</p>
       <div class="proc-meta">
         <div class="meta-chip ${STATUS_CLS[status]||""}">
           <span class="meta-dot"></span>
@@ -389,9 +403,10 @@ function renderInfo() {
     <div class="card" style="border-color:var(--green-border)">
       <h2 class="card-title">Exercer seu voto</h2>
       <p class="card-sub">
-        Cada membro apto pode votar em até <strong>${presb} presbítero(s)</strong>
-        ${p.tipo !== "presbiteros" ? ` e <strong>${diac} diácono(s)</strong>` : ""}.
-        Seu voto é <strong>sigiloso</strong>: o sistema registra apenas que você votou, sem revelar em quem.
+        ${isDiret
+          ? `Escolha <strong>um candidato por cargo</strong> da Diretoria. Você pode deixar um cargo em branco se preferir. Seu voto é <strong>sigiloso</strong>.`
+          : `Cada membro apto pode votar em até <strong>${presb} presbítero(s)</strong>${p.tipo !== "presbiteros" ? ` e <strong>${diac} diácono(s)</strong>` : ""}. Seu voto é <strong>sigiloso</strong>: o sistema registra apenas que você votou, sem revelar em quem.`
+        }
       </p>
       <button class="cta-btn" onclick="iniciarVotacao()">Votar agora</button>
     </div>` : agendada ? `
@@ -408,10 +423,14 @@ function renderInfo() {
       <div class="info-card">
         <div class="info-card-title">Regras de votação</div>
         <dl class="detail-list">
-          ${p.tipo !== "diaconos" ? `<div class="detail-row"><dt>Presbíteros</dt><dd>até ${presb} voto(s)</dd></div>` : ""}
-          ${p.tipo !== "presbiteros" ? `<div class="detail-row"><dt>Diáconos</dt><dd>até ${diac} voto(s)</dd></div>` : ""}
-          <div class="detail-row"><dt>Sigilo</dt><dd>Garantido</dd></div>
-          <div class="detail-row"><dt>Votos por membro</dt><dd>1 participação</dd></div>
+          ${isDiret
+            ? cargosDir.map(c => `<div class="detail-row"><dt>${eh(c)}</dt><dd>1 eleito</dd></div>`).join("")
+              + `<div class="detail-row"><dt>Sigilo</dt><dd>Garantido</dd></div><div class="detail-row"><dt>Votos por membro</dt><dd>1 participação</dd></div>`
+            : `${p.tipo !== "diaconos" ? `<div class="detail-row"><dt>Presbíteros</dt><dd>até ${presb} voto(s)</dd></div>` : ""}
+               ${p.tipo !== "presbiteros" ? `<div class="detail-row"><dt>Diáconos</dt><dd>até ${diac} voto(s)</dd></div>` : ""}
+               <div class="detail-row"><dt>Sigilo</dt><dd>Garantido</dd></div>
+               <div class="detail-row"><dt>Votos por membro</dt><dd>1 participação</dd></div>`
+          }
         </dl>
       </div>
       <div class="info-card">
@@ -459,7 +478,8 @@ async function iniciarVotacao() {
       membros = await sbGet("v_eleicao_form_membros?select=pessoa_id,nome,congregacao&limit=2000");
     }
     if (!candidatos.length) {
-      candidatos = await sbGet(`eleicao_candidatos?processo_id=eq.${processo.id}&ativo=eq.true&deleted_at=is.null&select=*&order=tipo,nome`);
+      const order = ehDiretoria() ? "cargo,nome" : "tipo,nome";
+      candidatos = await sbGet(`eleicao_candidatos?processo_id=eq.${processo.id}&ativo=eq.true&deleted_at=is.null&select=*&order=${order}`);
     }
   } catch (e) { renderErro("Erro", e.message); return; }
   renderIdentificacao();
@@ -553,9 +573,13 @@ window.confirmarIdentificacao = async function() {
    ETAPA 3 — CÉDULA
 ═══════════════════════════════════════════════════════ */
 function renderCedula() {
-  etapa = "cedula";
+  etapa    = "cedula";
   selPresb = [];
   selDiac  = [];
+  selCargos = {};
+
+  if (ehDiretoria()) { renderCedulaDiretoria(); return; }
+
   const vc    = votConfig;
   const maxPr = vc?.max_votos_presbiteros ?? 5;
   const maxDi = vc?.max_votos_diaconos   ?? 4;
@@ -599,6 +623,61 @@ function renderCedula() {
     <div id="cedula-content">
       ${p.tipo !== "diaconos"    ? secaoHtml("Presbíteros",  presbs, "presbitero", maxPr) : ""}
       ${p.tipo !== "presbiteros" ? secaoHtml("Diáconos",     diacs,  "diacono",    maxDi) : ""}
+    </div>
+
+    <div class="card" style="border-color:var(--green-border)">
+      <div class="action-row" style="margin-top:0">
+        <button class="btn-sec" onclick="renderIdentificacao()">← Voltar</button>
+        <button class="btn-pri" onclick="revisarVotos()">Revisar votos →</button>
+      </div>
+      <div id="ced-msg" class="form-msg" style="margin-top:10px"></div>
+    </div>`;
+}
+
+function renderCedulaDiretoria() {
+  const cargos = cargosAtivos();
+
+  const secaoCargo = (cargo, idx) => {
+    const lista = candidatos.filter(c => c.cargo === cargo);
+    const cargoEsc = cargo.replace(/'/g, "\\'");
+    return `
+      <div style="margin-bottom:24px">
+        <div class="secao-titulo">
+          <span>${eh(cargo)}</span>
+          <span class="secao-counter" id="cargo-counter-${idx}" style="">Escolha 1</span>
+        </div>
+        <div class="candidatos-grid">
+          ${lista.map(c => `
+            <div class="cand-card radio" id="cand-${c.id}" onclick="toggleCandidatoDir('${c.id}','${cargoEsc}',${idx})">
+              <div class="cand-check"><span class="cand-check-mark">✓</span></div>
+              <div class="cand-info">
+                <div class="cand-nome">${eh(c.nome)}</div>
+                <div class="cand-meta">${eh(c.congregacao || "Sede")}</div>
+              </div>
+            </div>`).join("")}
+        </div>
+      </div>`;
+  };
+
+  app.innerHTML = `
+    ${stepsHtml()}
+    <div class="member-badge">
+      <div class="member-av">${eh(eleitor.nome[0])}</div>
+      <div>
+        <div class="member-name">${eh(eleitor.nome)}</div>
+        <div class="member-cong">${eh(eleitor.congregacao || "Sede")}</div>
+      </div>
+      <button class="member-swap" onclick="renderIdentificacao()">Trocar</button>
+    </div>
+    <div class="card">
+      <h2 class="card-title">Cédula de Votação</h2>
+      <p class="card-sub">
+        Escolha <strong>um candidato por cargo</strong>. Você pode deixar um cargo em branco se preferir não votar nele.
+      </p>
+    </div>
+
+    <div id="cedula-content">
+      ${cargos.map((c, i) => secaoCargo(c, i)).join("")}
     </div>
 
     <div class="card" style="border-color:var(--green-border)">
@@ -661,12 +740,84 @@ window.toggleCandidato = function(id, tipo) {
   }
 };
 
+window.toggleCandidatoDir = function(id, cargo, idx) {
+  const prev = selCargos[cargo];
+  if (prev && prev !== id) {
+    const prevCard = document.getElementById(`cand-${prev}`);
+    if (prevCard) prevCard.classList.remove("selected");
+  }
+
+  if (selCargos[cargo] === id) {
+    selCargos[cargo] = null;
+    const card = document.getElementById(`cand-${id}`);
+    if (card) card.classList.remove("selected");
+  } else {
+    selCargos[cargo] = id;
+    const card = document.getElementById(`cand-${id}`);
+    if (card) card.classList.add("selected");
+  }
+
+  const counter = document.getElementById(`cargo-counter-${idx}`);
+  if (counter) {
+    const selecionado = !!selCargos[cargo];
+    counter.textContent = selecionado ? "1 / 1 selecionado" : "Escolha 1";
+    counter.className   = `secao-counter ${selecionado ? "ok" : ""}`;
+  }
+};
+
 /* ═══════════════════════════════════════════════════════
    ETAPA 4 — REVISÃO
 ═══════════════════════════════════════════════════════ */
 window.revisarVotos = function() {
-  const vc = votConfig;
   const p  = processo;
+
+  const byId = {};
+  candidatos.forEach(c => byId[c.id] = c);
+
+  if (ehDiretoria()) {
+    const cargos  = cargosAtivos();
+    const nenhum  = cargos.every(c => !selCargos[c]);
+    if (nenhum) {
+      const msg = document.getElementById("ced-msg");
+      if (msg) { msg.textContent = "Selecione ao menos um candidato."; msg.className = "form-msg err"; }
+      return;
+    }
+    etapa = "confirma";
+
+    const secDir = cargos.map(cargo => {
+      const cand = selCargos[cargo] ? byId[selCargos[cargo]] : null;
+      return `<div class="rev-secao">
+        <div class="rev-titulo">${eh(cargo)}</div>
+        ${cand
+          ? `<div class="rev-item"><div class="rev-num">✓</div><div class="rev-nome">${eh(cand.nome)}</div><div style="margin-left:auto;font-size:11.5px;color:var(--tx3)">${eh(cand.congregacao || "Sede")}</div></div>`
+          : `<div class="rev-empty">Sem voto para este cargo</div>`}
+      </div>`;
+    }).join("");
+
+    app.innerHTML = `
+      ${stepsHtml()}
+      <div class="member-badge">
+        <div class="member-av">${eh(eleitor.nome[0])}</div>
+        <div>
+          <div class="member-name">${eh(eleitor.nome)}</div>
+          <div class="member-cong">${eh(eleitor.congregacao || "Sede")}</div>
+        </div>
+      </div>
+      <div class="card">
+        <h2 class="card-title">Confirme seus votos</h2>
+        <p class="card-sub">Verifique com atenção. Após confirmar, seu voto não poderá ser alterado.</p>
+        ${secDir}
+        <div style="margin-top:18px;padding:12px 14px;border-radius:8px;background:var(--green-tint);border:1px solid var(--green-border);font-size:12.5px;color:var(--tx2)">
+          Ao confirmar, o sistema registra que você votou, sem associar seu nome aos candidatos escolhidos.
+        </div>
+        <div class="action-row" style="margin-top:18px">
+          <button class="btn-sec" onclick="renderCedula()">← Corrigir</button>
+          <button class="btn-pri" id="btn-votar" onclick="submeterVotos()">Confirmar e votar</button>
+        </div>
+        <div id="vot-msg" class="form-msg" style="margin-top:10px"></div>
+      </div>`;
+    return;
+  }
 
   if (selPresb.length === 0 && selDiac.length === 0 && p.tipo === "ambos") {
     const msg = document.getElementById("ced-msg");
@@ -675,9 +826,6 @@ window.revisarVotos = function() {
   }
 
   etapa = "confirma";
-
-  const byId = {};
-  candidatos.forEach(c => byId[c.id] = c);
 
   const listaPresb = selPresb.map(id => byId[id]).filter(Boolean);
   const listaDiac  = selDiac.map(id => byId[id]).filter(Boolean);
@@ -730,7 +878,9 @@ window.submeterVotos = async function() {
   if (btn) { btn.disabled = true; btn.textContent = "Enviando…"; }
   if (msgEl) msgEl.textContent = "";
 
-  const todosIds = [...selPresb, ...selDiac];
+  const todosIds = ehDiretoria()
+    ? Object.values(selCargos).filter(Boolean)
+    : [...selPresb, ...selDiac];
 
   try {
     const res = await sbRpc("registrar_voto", {
@@ -753,6 +903,10 @@ window.submeterVotos = async function() {
 ═══════════════════════════════════════════════════════ */
 function renderSucesso(res) {
   etapa = "sucesso";
+  const detalhe = ehDiretoria()
+    ? `Votos registrados para <strong>${Object.values(selCargos).filter(Boolean).length}</strong> cargo(s) da Diretoria.<br>`
+    : `${res.presbiteros > 0 ? `Presbíteros: <strong>${res.presbiteros}</strong> voto(s).<br>` : ""}${res.diaconos > 0 ? `Diáconos: <strong>${res.diaconos}</strong> voto(s).<br>` : ""}`;
+
   app.innerHTML = `
     <div class="state-block ok">
       <div style="font-size:44px;margin-bottom:16px">🗳️</div>
@@ -760,8 +914,7 @@ function renderSucesso(res) {
       <p>
         Obrigado, <strong>${eh(eleitor.nome)}</strong>.<br>
         Seu voto foi registrado com sigilo.<br><br>
-        ${res.presbiteros > 0 ? `Presbíteros: <strong>${res.presbiteros}</strong> voto(s).<br>` : ""}
-        ${res.diaconos > 0    ? `Diáconos: <strong>${res.diaconos}</strong> voto(s).<br>` : ""}
+        ${detalhe}
         <br>O Conselho da IPPenha divulgará o resultado após o encerramento da votação.
       </p>
     </div>`;
