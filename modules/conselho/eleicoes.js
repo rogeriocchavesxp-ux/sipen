@@ -2299,9 +2299,9 @@
         <div>${cardContent}</div>
         <div class="card">
           <div class="ctit" style="margin-bottom:12px">Texto para publicação</div>
-          <textarea readonly rows="14" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx1);font-size:11.5px;font-family:monospace;resize:vertical;line-height:1.7;outline:none">${_esc(resultText)}</textarea>
+          <textarea id="res-txt" readonly rows="14" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx1);font-size:11.5px;font-family:monospace;resize:vertical;line-height:1.7;outline:none"></textarea>
           <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-            <button onclick="navigator.clipboard.writeText(${JSON.stringify(resultText)}).then(()=>typeof T==='function'&&T('Copiado!','Texto do resultado copiado.'))"
+            <button id="res-copy-btn"
               style="padding:8px 16px;border-radius:6px;border:none;background:var(--sky);color:#fff;font-size:12px;font-weight:700;cursor:pointer">Copiar texto</button>
             <button onclick="eleicaoExportarResultados()"
               style="padding:8px 16px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg-surface);color:var(--tx2);font-size:12px;cursor:pointer">⬇ CSV detalhado</button>
@@ -2311,6 +2311,12 @@
       <div style="font-size:11.5px;color:var(--tx3);padding:10px 14px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--bd1)">
         Os candidatos exibidos são os mais votados dentro do limite configurado para cada cargo. A aprovação final é de competência do Conselho da IPPenha.
       </div>`;
+    const txtEl = el.querySelector("#res-txt");
+    if (txtEl) txtEl.value = resultText;
+    const copyBtn = el.querySelector("#res-copy-btn");
+    if (copyBtn) copyBtn.onclick = () =>
+      navigator.clipboard.writeText(resultText)
+        .then(() => typeof T === "function" && T("Copiado!", "Texto do resultado copiado."));
   }
 
   window.eleicaoCarregarVotos = async function() {
