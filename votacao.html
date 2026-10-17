@@ -269,12 +269,18 @@ const HDRS   = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content
 let processo    = null;
 let votConfig   = null;
 let candidatos  = [];    // todos os candidatos ativos
-let membros     = [];    // para lookup de eleitor
-let eleitor     = null;  // { pessoa_id, nome, congregacao }
+let membros     = [];    // não usado (voto anônimo)
+let eleitor     = null;  // { pessoa_id } — ID de sessão anônimo
 let selPresb    = [];    // UUIDs selecionados (presbíteros)
 let selDiac     = [];    // UUIDs selecionados (diáconos)
 let selCargos   = {};    // { [cargo]: candidato_id } — para diretoria
-let etapa       = "info"; // info | id | cedula | confirma | sucesso | jaVotou
+let etapa       = "info"; // info | cedula | confirma | sucesso | jaVotou
+
+function sessaoId() {
+  let id = sessionStorage.getItem("sipen_voto_sess");
+  if (!id) { id = crypto.randomUUID(); sessionStorage.setItem("sipen_voto_sess", id); }
+  return id;
+}
 
 function ehDiretoria() { return processo?.tipo === "diretoria"; }
 function cargosAtivos() {
@@ -450,23 +456,16 @@ function renderInfo() {
    ETAPA 2 — IDENTIFICAÇÃO
 ═══════════════════════════════════════════════════════ */
 function stepsHtml() {
-  const s = (e) => etapa === e ? "on" : (["cedula","confirma","sucesso"].indexOf(e) < ["cedula","confirma","sucesso"].indexOf(etapa) ? "done" : "");
-  const n = (lbl, e) => etapa === "sucesso" || ["cedula","confirma"].includes(etapa) && e !== etapa && e !== "confirma" ? "✓" : lbl;
   return `<div class="steps">
     <div class="step done"><div class="step-n">✓</div><span class="step-lbl">Processo</span></div>
     <div class="step-sep"></div>
-    <div class="step ${etapa==="id"?"on":["cedula","confirma","sucesso"].includes(etapa)?"done":""}">
-      <div class="step-n">${["cedula","confirma","sucesso"].includes(etapa)?"✓":"2"}</div>
-      <span class="step-lbl">Identificação</span>
-    </div>
-    <div class="step-sep"></div>
     <div class="step ${etapa==="cedula"?"on":["confirma","sucesso"].includes(etapa)?"done":""}">
-      <div class="step-n">${["confirma","sucesso"].includes(etapa)?"✓":"3"}</div>
+      <div class="step-n">${["confirma","sucesso"].includes(etapa)?"✓":"2"}</div>
       <span class="step-lbl">Cédula</span>
     </div>
     <div class="step-sep"></div>
     <div class="step ${etapa==="confirma"?"on":etapa==="sucesso"?"done":""}">
-      <div class="step-n">${etapa==="sucesso"?"✓":"4"}</div>
+      <div class="step-n">${etapa==="sucesso"?"✓":"3"}</div>
       <span class="step-lbl">Confirmar</span>
     </div>
   </div>`;
@@ -475,15 +474,13 @@ function stepsHtml() {
 async function iniciarVotacao() {
   app.innerHTML = `<div class="loader"><div class="spinner"></div></div>`;
   try {
-    if (!membros.length) {
-      membros = await sbGet("v_eleicao_form_membros?select=pessoa_id,nome,congregacao&limit=2000");
-    }
     if (!candidatos.length) {
       const order = ehDiretoria() ? "nome" : "tipo,nome";
       candidatos = await sbGet(`eleicao_candidatos?processo_id=eq.${processo.id}&ativo=eq.true&deleted_at=is.null&select=*&order=${order}`);
     }
   } catch (e) { renderErro("Erro", e.message); return; }
-  renderIdentificacao();
+  eleitor = { pessoa_id: sessaoId() };
+  renderCedula();
 }
 
 function renderIdentificacao() {
@@ -605,14 +602,6 @@ function renderCedula() {
 
   app.innerHTML = `
     ${stepsHtml()}
-    <div class="member-badge">
-      <div class="member-av">${eh(eleitor.nome[0])}</div>
-      <div>
-        <div class="member-name">${eh(eleitor.nome)}</div>
-        <div class="member-cong">${eh(eleitor.congregacao || "Sede")}</div>
-      </div>
-      <button class="member-swap" onclick="renderIdentificacao()">Trocar</button>
-    </div>
     <div class="card">
       <h2 class="card-title">Cédula de Votação</h2>
       <p class="card-sub">
@@ -628,7 +617,7 @@ function renderCedula() {
 
     <div class="card" style="border-color:var(--green-border)">
       <div class="action-row" style="margin-top:0">
-        <button class="btn-sec" onclick="renderIdentificacao()">← Voltar</button>
+        <button class="btn-sec" onclick="renderInfo()">← Voltar</button>
         <button class="btn-pri" onclick="revisarVotos()">Revisar votos →</button>
       </div>
       <div id="ced-msg" class="form-msg" style="margin-top:10px"></div>
@@ -661,14 +650,6 @@ function renderCedulaDiretoria() {
 
   app.innerHTML = `
     ${stepsHtml()}
-    <div class="member-badge">
-      <div class="member-av">${eh(eleitor.nome[0])}</div>
-      <div>
-        <div class="member-name">${eh(eleitor.nome)}</div>
-        <div class="member-cong">${eh(eleitor.congregacao || "Sede")}</div>
-      </div>
-      <button class="member-swap" onclick="renderIdentificacao()">Trocar</button>
-    </div>
     <div class="card">
       <h2 class="card-title">Cédula de Votação</h2>
       <p class="card-sub">
@@ -682,7 +663,7 @@ function renderCedulaDiretoria() {
 
     <div class="card" style="border-color:var(--green-border)">
       <div class="action-row" style="margin-top:0">
-        <button class="btn-sec" onclick="renderIdentificacao()">← Voltar</button>
+        <button class="btn-sec" onclick="renderInfo()">← Voltar</button>
         <button class="btn-pri" onclick="revisarVotos()">Revisar votos →</button>
       </div>
       <div id="ced-msg" class="form-msg" style="margin-top:10px"></div>
@@ -796,19 +777,12 @@ window.revisarVotos = function() {
 
     app.innerHTML = `
       ${stepsHtml()}
-      <div class="member-badge">
-        <div class="member-av">${eh(eleitor.nome[0])}</div>
-        <div>
-          <div class="member-name">${eh(eleitor.nome)}</div>
-          <div class="member-cong">${eh(eleitor.congregacao || "Sede")}</div>
-        </div>
-      </div>
       <div class="card">
         <h2 class="card-title">Confirme seus votos</h2>
         <p class="card-sub">Verifique com atenção. Após confirmar, seu voto não poderá ser alterado.</p>
         ${secDir}
         <div style="margin-top:18px;padding:12px 14px;border-radius:8px;background:var(--green-tint);border:1px solid var(--green-border);font-size:12.5px;color:var(--tx2)">
-          Ao confirmar, o sistema registra que você votou, sem associar seu nome aos candidatos escolhidos.
+          Seu voto é sigiloso — o sistema não associa sua identidade aos candidatos escolhidos.
         </div>
         <div class="action-row" style="margin-top:18px">
           <button class="btn-sec" onclick="renderCedula()">← Corrigir</button>
@@ -843,13 +817,6 @@ window.revisarVotos = function() {
 
   app.innerHTML = `
     ${stepsHtml()}
-    <div class="member-badge">
-      <div class="member-av">${eh(eleitor.nome[0])}</div>
-      <div>
-        <div class="member-name">${eh(eleitor.nome)}</div>
-        <div class="member-cong">${eh(eleitor.congregacao || "Sede")}</div>
-      </div>
-    </div>
     <div class="card">
       <h2 class="card-title">Confirme seus votos</h2>
       <p class="card-sub">Verifique com atenção. Após confirmar, seu voto não poderá ser alterado.</p>
@@ -858,7 +825,7 @@ window.revisarVotos = function() {
       ${p.tipo !== "presbiteros" ? secRevHtml("Diáconos",    listaDiac)  : ""}
 
       <div style="margin-top:18px;padding:12px 14px;border-radius:8px;background:var(--green-tint);border:1px solid var(--green-border);font-size:12.5px;color:var(--tx2)">
-        Ao confirmar, o sistema registra que você votou, sem associar seu nome aos candidatos escolhidos.
+        Seu voto é sigiloso — o sistema não associa sua identidade aos candidatos escolhidos.
       </div>
 
       <div class="action-row" style="margin-top:18px">
@@ -920,7 +887,6 @@ function renderSucesso(res) {
       <div style="font-size:44px;margin-bottom:16px">🗳️</div>
       <h2>Voto registrado</h2>
       <p>
-        Obrigado, <strong>${eh(eleitor.nome)}</strong>.<br>
         Seu voto foi registrado com sigilo.<br><br>
         ${detalhe}
         <br>O Conselho da IPPenha divulgará o resultado após o encerramento da votação.
@@ -934,7 +900,7 @@ function renderJaVotou() {
       <div style="font-size:44px;margin-bottom:16px">✅</div>
       <h2>Voto já registrado</h2>
       <p>
-        <strong>${eleitor ? eh(eleitor.nome) : "Você"}</strong>, seu voto neste processo já foi registrado anteriormente.<br><br>
+        Seu voto neste processo já foi registrado anteriormente.<br><br>
         Caso acredite que isso seja um erro, entre em contato com a secretaria da Igreja Presbiteriana da Penha.
       </p>
     </div>`;
