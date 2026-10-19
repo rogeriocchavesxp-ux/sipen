@@ -189,6 +189,104 @@ window._dashToggleSede=function(v){
   renderDashboardGeral();
 };
 
+let _dashCultos=[];
+let _dashFreqMode='mensal';
+window._dashToggleFreq=function(mode){ _dashFreqMode=mode; _renderEvolucaoChart(); };
+
+function _renderEvolucaoChart(){
+  const evolEl=document.getElementById("cong-dash-evolucao");
+  if(!evolEl) return;
+  const todosCultos=_dashCultos;
+  if(!todosCultos.length){ evolEl.innerHTML=''; return; }
+  const _tc=c=>c.participantes||(c.adultos||0)+(c.criancas||0);
+  const mode=_dashFreqMode;
+
+  let pdata, titulo;
+  if(mode==='semanal'){
+    const today=new Date();
+    const semanas=[];
+    for(let i=11;i>=0;i--){
+      const d=new Date(today);
+      d.setDate(d.getDate()-d.getDay()-i*7);
+      semanas.push(d.toISOString().slice(0,10));
+    }
+    pdata=semanas.map((wStart,idx)=>{
+      const wEnd=new Date(wStart+'T00:00:00');
+      wEnd.setDate(wEnd.getDate()+6);
+      const wEndStr=wEnd.toISOString().slice(0,10);
+      const wc=todosCultos.filter(c=>c.data&&c.data>=wStart&&c.data<=wEndStr);
+      const d=new Date(wStart+'T00:00:00');
+      const lbl=idx===semanas.length-1?'Esta sem.':`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+      return{lbl,total:wc.reduce((s,c)=>s+_tc(c),0),count:wc.length,cur:idx===semanas.length-1};
+    });
+    titulo='Evolução de Frequência — últimas 12 semanas';
+  } else {
+    const MN=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+    const months=[];
+    for(let i=8;i>=0;i--){
+      const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()-i);
+      months.push(d.toISOString().slice(0,7));
+    }
+    const mesAtual=new Date().toISOString().slice(0,7);
+    pdata=months.map(m=>{
+      const mc=todosCultos.filter(c=>c.data?.startsWith(m));
+      return{lbl:MN[+m.slice(5,7)-1],total:mc.reduce((s,c)=>s+_tc(c),0),count:mc.length,cur:m===mesAtual};
+    });
+    titulo='Evolução de Frequência — últimos 9 meses';
+  }
+
+  const maxV=Math.max(...pdata.map(m=>m.total),1);
+  const W=700,H=130,PT=22,PB=22,PL=38,PR=8;
+  const cw=W-PL-PR, ch=H-PT-PB, n=pdata.length;
+  const pts=pdata.map((m,i)=>({...m,x:PL+(n<=1?cw/2:i/(n-1)*cw),y:PT+ch-(m.total/maxV)*ch}));
+  const pL=pts.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const pA=`${pL} L${pts[pts.length-1].x.toFixed(1)},${(H-PB).toFixed(1)} L${pts[0].x.toFixed(1)},${(H-PB).toFixed(1)} Z`;
+  const grid=[.25,.5,.75,1].map(f=>{
+    const y=(PT+ch-f*ch).toFixed(1);
+    return`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="var(--bd1)" stroke-width="1"/>
+           <text x="${PL-5}" y="${(+y+3.5).toFixed(1)}" text-anchor="end" fill="var(--tx3)" font-size="9">${Math.round(f*maxV)}</text>`;
+  });
+  const dots=pts.map(p=>{
+    return`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.cur?5:3.5}" fill="#3AAA5C" stroke="var(--surface,#fff)" stroke-width="${p.cur?2.5:1.5}"/>
+           ${p.total>0?`<text x="${p.x.toFixed(1)}" y="${(p.y-9).toFixed(1)}" text-anchor="middle" fill="${p.cur?"#3AAA5C":"var(--tx2)"}" font-size="${p.cur?11:9.5}" font-weight="${p.cur?700:500}">${p.total}</text>`:''}
+           <text x="${p.x.toFixed(1)}" y="${(H-PB+14).toFixed(1)}" text-anchor="middle" fill="${p.cur?"var(--tx1)":"var(--tx3)"}" font-size="${p.cur?10:9}" font-weight="${p.cur?700:400}">${p.lbl}</text>`;
+  });
+  const btnTab=(m,lbl)=>{
+    const on=mode===m;
+    return`<button onclick="window._dashToggleFreq('${m}')" style="cursor:pointer;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:600;border:1px solid ${on?"var(--gr)":"var(--bd1)"};background:${on?"var(--gr)":"transparent"};color:${on?"#fff":"var(--tx3)"};transition:all .15s">${lbl}</button>`;
+  };
+  const mesAtualCalc=new Date().toISOString().slice(0,7);
+  const cultosMesCalc=todosCultos.filter(c=>c.data?.startsWith(mesAtualCalc));
+  const visM=cultosMesCalc.reduce((s,c)=>s+(c.visitantes||0),0);
+  const decM=cultosMesCalc.reduce((s,c)=>s+(c.decisoes||0),0);
+  evolEl.innerHTML=`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0">
+          <div class="ctit" style="margin:0">${titulo}</div>
+          <div style="display:flex;gap:4px">${btnTab('mensal','Mensal')}${btnTab('semanal','Semanal')}</div>
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          ${visM>0?`<div style="font-size:11px;color:var(--tx3)">Visitantes este mês: <b style="color:var(--amber)">${visM}</b></div>`:''}
+          ${decM>0?`<div style="font-size:11px;color:var(--tx3)">Decisões este mês: <b style="color:#3AAA5C">${decM}</b></div>`:''}
+          <div style="font-size:11px;color:var(--tx3)">${todosCultos.length} cultos registrados</div>
+        </div>
+      </div>
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block;overflow:visible;font-family:var(--sans)" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="cg-area" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3AAA5C" stop-opacity=".18"/>
+            <stop offset="100%" stop-color="#3AAA5C" stop-opacity=".01"/>
+          </linearGradient>
+        </defs>
+        ${grid.join('')}
+        <path d="${pA}" fill="url(#cg-area)"/>
+        <path d="${pL}" fill="none" stroke="#3AAA5C" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+        ${dots.join('')}
+      </svg>
+    </div>`;
+}
+
 // ── Dashboard Geral ───────────────────────────────────
 function renderDashboardGeral(){
   if(_isLiderCong()){
@@ -248,64 +346,9 @@ function renderDashboardGeral(){
     `;
   }
 
-  // ── Gráfico de evolução mensal (SVG inline) ────────────
-  const evolEl=document.getElementById("cong-dash-evolucao");
-  if(evolEl){
-    if(todosCultos.length>0){
-      const MN=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-      const months=[];
-      for(let i=8;i>=0;i--){
-        const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()-i);
-        months.push(d.toISOString().slice(0,7));
-      }
-      const mdata=months.map(m=>{
-        const mc=todosCultos.filter(c=>c.data?.startsWith(m));
-        return{mes:m,lbl:MN[+m.slice(5,7)-1],total:mc.reduce((s,c)=>s+_tc(c),0),count:mc.length};
-      });
-      const maxV=Math.max(...mdata.map(m=>m.total),1);
-      const W=700,H=130,PT=22,PB=22,PL=38,PR=8;
-      const cw=W-PL-PR, ch=H-PT-PB, n=mdata.length;
-      const pts=mdata.map((m,i)=>({...m,x:PL+(n<=1?cw/2:i/(n-1)*cw),y:PT+ch-(m.total/maxV)*ch}));
-      const pL=pts.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-      const pA=`${pL} L${pts[pts.length-1].x.toFixed(1)},${(H-PB).toFixed(1)} L${pts[0].x.toFixed(1)},${(H-PB).toFixed(1)} Z`;
-      const grid=[.25,.5,.75,1].map(f=>{
-        const y=(PT+ch-f*ch).toFixed(1);
-        return`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="var(--bd1)" stroke-width="1"/>
-               <text x="${PL-5}" y="${(+y+3.5).toFixed(1)}" text-anchor="end" fill="var(--tx3)" font-size="9">${Math.round(f*maxV)}</text>`;
-      });
-      const dots=pts.map(p=>{
-        const cur=p.mes===mesAtual;
-        return`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${cur?5:3.5}" fill="#3AAA5C" stroke="var(--surface,#fff)" stroke-width="${cur?2.5:1.5}"/>
-               ${p.total>0?`<text x="${p.x.toFixed(1)}" y="${(p.y-9).toFixed(1)}" text-anchor="middle" fill="${cur?"#3AAA5C":"var(--tx2)"}" font-size="${cur?11:9.5}" font-weight="${cur?700:500}">${p.total}</text>`:''}
-               <text x="${p.x.toFixed(1)}" y="${(H-PB+14).toFixed(1)}" text-anchor="middle" fill="${cur?"var(--tx1)":"var(--tx3)"}" font-size="${cur?10:9}" font-weight="${cur?700:400}">${p.lbl}</text>`;
-      });
-      evolEl.innerHTML=`
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-            <div class="ctit" style="margin:0">Evolução de Frequência — últimos 9 meses</div>
-            <div style="display:flex;gap:16px;flex-wrap:wrap">
-              ${totalVisitantesMes>0?`<div style="font-size:11px;color:var(--tx3)">Visitantes este mês: <b style="color:var(--amber)">${totalVisitantesMes}</b></div>`:''}
-              ${totalDecisoesMes>0?`<div style="font-size:11px;color:var(--tx3)">Decisões este mês: <b style="color:#3AAA5C">${totalDecisoesMes}</b></div>`:''}
-              <div style="font-size:11px;color:var(--tx3)">${todosCultos.length} cultos registrados</div>
-            </div>
-          </div>
-          <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block;overflow:visible;font-family:var(--sans)" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="cg-area" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#3AAA5C" stop-opacity=".18"/>
-                <stop offset="100%" stop-color="#3AAA5C" stop-opacity=".01"/>
-              </linearGradient>
-            </defs>
-            ${grid.join('')}
-            <path d="${pA}" fill="url(#cg-area)"/>
-            <path d="${pL}" fill="none" stroke="#3AAA5C" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-            ${dots.join('')}
-          </svg>
-        </div>`;
-    } else {
-      evolEl.innerHTML='';
-    }
-  }
+  // ── Gráfico de evolução (SVG inline) ─────────────────
+  _dashCultos=todosCultos;
+  _renderEvolucaoChart();
 
   // ── Cards de congregações ──────────────────────────────
   const listaEl=document.getElementById("cong-dash-lista");
