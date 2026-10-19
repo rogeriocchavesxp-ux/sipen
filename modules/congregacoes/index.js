@@ -213,15 +213,16 @@ function renderDashboardGeral(){
   // ── KPIs (6) ──────────────────────────────────────────
   const kpisEl=document.getElementById("cong-dash-kpis");
   if(kpisEl){
-    kpisEl.style.gridTemplateColumns="repeat(6,1fr)";
+    kpisEl.className="kpis c6";
+    kpisEl.style.gridTemplateColumns="";
     const tnd=(pct,up)=>pct!==null?`<span style="font-size:10px;font-weight:700;margin-left:4px;color:${up?"var(--gr)":"var(--rose)"}">${up?"↑":"↓"}${Math.abs(pct)}%</span>`:"";
     kpisEl.innerHTML=`
-      <div class="kpi"><div class="kn">Congregações</div><div class="kv">${ativas}<span style="font-size:12px;color:var(--tx3);font-weight:400"> / ${congs.length}</span></div><div style="font-size:10px;color:var(--tx3);margin-top:3px">${congs.length-ativas} inativa${congs.length-ativas!==1?"s":""}</div></div>
-      <div class="kpi"><div class="kn">Membros Ativos</div><div class="kv">${totalMembros}</div><div style="font-size:10px;color:var(--tx3);margin-top:3px">total somado</div></div>
-      <div class="kpi"><div class="kn">Cultos (mês)</div><div class="kv" style="color:var(--sky)">${cultosMes.length}</div><div style="font-size:10px;color:var(--tx3);margin-top:3px">${todosCultos.length} no total</div></div>
-      <div class="kpi"><div class="kn">Participantes (mês)</div><div class="kv" style="color:var(--gr)">${totalPartMes}${tnd(tendGeralPct,tendGeralUp)}</div><div style="font-size:10px;color:var(--tx3);margin-top:3px">mês anterior: ${totalPartPrev}</div></div>
-      <div class="kpi"><div class="kn">Média por culto</div><div class="kv">${mediaGeralMes}</div><div style="font-size:10px;color:var(--tx3);margin-top:3px">${cultosMes.length} culto${cultosMes.length!==1?"s":""} este mês</div></div>
-      <div class="kpi"><div class="kn">Decisões de Fé</div><div class="kv" style="color:var(--amber)">${totalDecisoesMes}</div><div style="font-size:10px;color:var(--tx3);margin-top:3px">${totalVisitantesMes} visitante${totalVisitantesMes!==1?"s":""}</div></div>
+      <div class="kpi"><div class="kpi-lbl">Congregações</div><div class="kpi-val">${ativas}<span style="font-size:13px;color:var(--tx3);font-weight:400"> / ${congs.length}</span></div><div class="kpi-d" style="color:var(--tx3)">${congs.length-ativas} inativa${congs.length-ativas!==1?"s":""}</div></div>
+      <div class="kpi"><div class="kpi-lbl">Membros Ativos</div><div class="kpi-val">${totalMembros}</div><div class="kpi-d" style="color:var(--tx3)">total somado</div></div>
+      <div class="kpi"><div class="kpi-lbl">Cultos (mês)</div><div class="kpi-val" style="color:var(--sky)">${cultosMes.length}</div><div class="kpi-d" style="color:var(--tx3)">${todosCultos.length} no total</div></div>
+      <div class="kpi"><div class="kpi-lbl">Participantes (mês)</div><div class="kpi-val" style="color:var(--gr)">${totalPartMes}${tnd(tendGeralPct,tendGeralUp)}</div><div class="kpi-d" style="color:var(--tx3)">mês anterior: ${totalPartPrev}</div></div>
+      <div class="kpi"><div class="kpi-lbl">Média por culto</div><div class="kpi-val">${mediaGeralMes}</div><div class="kpi-d" style="color:var(--tx3)">${cultosMes.length} culto${cultosMes.length!==1?"s":""} este mês</div></div>
+      <div class="kpi"><div class="kpi-lbl">Decisões de Fé</div><div class="kpi-val" style="color:var(--amber)">${totalDecisoesMes}</div><div class="kpi-d" style="color:var(--tx3)">${totalVisitantesMes} visitante${totalVisitantesMes!==1?"s":""}</div></div>
     `;
   }
 
@@ -248,13 +249,13 @@ function renderDashboardGeral(){
       const grid=[.25,.5,.75,1].map(f=>{
         const y=(PT+ch-f*ch).toFixed(1);
         return`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="var(--bd1)" stroke-width="1"/>
-               <text x="${PL-5}" y="${(+y+3.5).toFixed(1)}" text-anchor="end" fill="var(--tx3)" font-size="9" font-family="inherit">${Math.round(f*maxV)}</text>`;
+               <text x="${PL-5}" y="${(+y+3.5).toFixed(1)}" text-anchor="end" fill="var(--tx3)" font-size="9">${Math.round(f*maxV)}</text>`;
       });
       const dots=pts.map(p=>{
         const cur=p.mes===mesAtual;
         return`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${cur?5:3.5}" fill="#3AAA5C" stroke="var(--surface,#fff)" stroke-width="${cur?2.5:1.5}"/>
-               ${p.total>0?`<text x="${p.x.toFixed(1)}" y="${(p.y-9).toFixed(1)}" text-anchor="middle" fill="${cur?"#3AAA5C":"var(--tx2)"}" font-size="${cur?11:9.5}" font-weight="${cur?700:500}" font-family="inherit">${p.total}</text>`:''}
-               <text x="${p.x.toFixed(1)}" y="${(H-PB+14).toFixed(1)}" text-anchor="middle" fill="${cur?"var(--tx1)":"var(--tx3)"}" font-size="${cur?10:9}" font-weight="${cur?700:400}" font-family="inherit">${p.lbl}</text>`;
+               ${p.total>0?`<text x="${p.x.toFixed(1)}" y="${(p.y-9).toFixed(1)}" text-anchor="middle" fill="${cur?"#3AAA5C":"var(--tx2)"}" font-size="${cur?11:9.5}" font-weight="${cur?700:500}">${p.total}</text>`:''}
+               <text x="${p.x.toFixed(1)}" y="${(H-PB+14).toFixed(1)}" text-anchor="middle" fill="${cur?"var(--tx1)":"var(--tx3)"}" font-size="${cur?10:9}" font-weight="${cur?700:400}">${p.lbl}</text>`;
       });
       evolEl.innerHTML=`
         <div class="card">
@@ -266,7 +267,7 @@ function renderDashboardGeral(){
               <div style="font-size:11px;color:var(--tx3)">${todosCultos.length} cultos registrados</div>
             </div>
           </div>
-          <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block;overflow:visible" preserveAspectRatio="none">
+          <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block;overflow:visible;font-family:var(--sans)" preserveAspectRatio="none">
             <defs>
               <linearGradient id="cg-area" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stop-color="#3AAA5C" stop-opacity=".18"/>
