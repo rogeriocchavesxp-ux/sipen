@@ -369,16 +369,27 @@ function renderDashboardGeral(){
           ${congs.map(c=>{
             const cor=c.identificacao.cor||"#3AAA5C";
             const hist=c.atividades_igreja?.historico_cultos||[];
-            const hist4=hist.slice(0,4), hist8=hist.slice(0,8);
-            const avg4=hist4.length?Math.round(hist4.reduce((s,cu)=>s+_tc(cu),0)/hist4.length):0;
-            const avg4p=hist.slice(4,8);
-            const avgPrev=avg4p.length?Math.round(avg4p.reduce((s,cu)=>s+_tc(cu),0)/avg4p.length):0;
+            // Agrupar serviços por data (manhã + noite = total do dia)
+            const byDate={};
+            hist.forEach(cu=>{
+              const d=cu.data||'';
+              if(!d) return;
+              if(!byDate[d]) byDate[d]={total:0,adultos:0,criancas:0,visitantes:0,data:d};
+              byDate[d].total+=_tc(cu);
+              byDate[d].adultos+=cu.adultos||0;
+              byDate[d].criancas+=cu.criancas||0;
+              byDate[d].visitantes+=cu.visitantes||0;
+            });
+            const dias=Object.keys(byDate).sort().reverse();
+            const dias4=dias.slice(0,4), dias4p=dias.slice(4,8);
+            const avg4=dias4.length?Math.round(dias4.reduce((s,d)=>s+byDate[d].total,0)/dias4.length):0;
+            const avgPrev=dias4p.length?Math.round(dias4p.reduce((s,d)=>s+byDate[d].total,0)/dias4p.length):0;
             const tPct=avgPrev>0?Math.round(((avg4-avgPrev)/avgPrev)*100):null;
             const tUp=tPct!==null&&tPct>=0;
-            const ultimo=hist[0];
-            const sparkMax=hist4.length?Math.max(...hist4.map(_tc))||1:1;
-            const spark=hist4.length>=2?`<div style="display:flex;align-items:flex-end;gap:3px;height:20px;margin-top:6px">
-              ${hist4.slice().reverse().map(cu=>{const h=Math.max(3,Math.round((_tc(cu)/sparkMax)*18));return`<div style="width:6px;flex-shrink:0;height:${h}px;background:${cor};opacity:.75;border-radius:2px 2px 0 0"></div>`;}).join('')}
+            const ultimoDia=dias[0]?byDate[dias[0]]:null;
+            const sparkMax=dias4.length?Math.max(...dias4.map(d=>byDate[d].total))||1:1;
+            const spark=dias4.length>=2?`<div style="display:flex;align-items:flex-end;gap:3px;height:20px;margin-top:6px">
+              ${dias4.slice().reverse().map(d=>{const h=Math.max(3,Math.round((byDate[d].total/sparkMax)*18));return`<div style="width:6px;flex-shrink:0;height:${h}px;background:${cor};opacity:.75;border-radius:2px 2px 0 0"></div>`;}).join('')}
             </div>`:'';
             const membros=c.panorama_membresia?.membros_ativos||0;
             return`<div class="card" style="cursor:pointer;padding:12px;border-top:3px solid ${cor};display:flex;flex-direction:column;gap:0;min-width:0;overflow:hidden" onclick="abrirCongView('${c.id}')">
@@ -400,16 +411,16 @@ function renderDashboardGeral(){
                   <div style="font-size:18px;font-weight:800;color:${cor};line-height:1.1">${avg4}${tPct!==null?`<span style="font-size:9.5px;margin-left:3px;color:${tUp?"var(--gr)":"var(--rose)"}">${tUp?"↑":"↓"}${Math.abs(tPct)}%</span>`:''}</div>
                 </div>
               </div>
-              ${ultimo?`<div style="padding:6px 8px;border-radius:6px;border:1px solid var(--bd1)">
+              ${ultimoDia?`<div style="padding:6px 8px;border-radius:6px;border:1px solid var(--bd1)">
                 <div style="font-size:9.5px;color:var(--tx3);display:flex;justify-content:space-between;align-items:center">
-                  <span>Último culto · ${fmtData(ultimo.data)}</span>
-                  <b style="font-size:13px;color:${cor}">${_tc(ultimo)}</b>
+                  <span>Último culto · ${fmtData(ultimoDia.data)}</span>
+                  <b style="font-size:13px;color:${cor}">${ultimoDia.total}</b>
                 </div>
-                <div style="font-size:9.5px;color:var(--tx3);margin-top:2px">Ad: <b style="color:var(--tx2)">${ultimo.adultos||0}</b> · Cr: <b style="color:var(--sky)">${ultimo.criancas||0}</b>${ultimo.visitantes>0?` · Vis: <b style="color:var(--amber)">${ultimo.visitantes}</b>`:''}</div>
+                <div style="font-size:9.5px;color:var(--tx3);margin-top:2px">Ad: <b style="color:var(--tx2)">${ultimoDia.adultos}</b> · Cr: <b style="color:var(--sky)">${ultimoDia.criancas}</b>${ultimoDia.visitantes>0?` · Vis: <b style="color:var(--amber)">${ultimoDia.visitantes}</b>`:''}</div>
                 ${spark}
               </div>`:`<div style="font-size:10px;color:var(--tx3);padding:4px 0;font-style:italic">Nenhum culto registrado</div>`}
               <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:7px;border-top:1px solid var(--bd1)">
-                <span style="font-size:9.5px;color:var(--tx3)">${hist.length} culto${hist.length!==1?"s":""}</span>
+                <span style="font-size:9.5px;color:var(--tx3)">${dias.length} dia${dias.length!==1?"s":""} · ${hist.length} culto${hist.length!==1?"s":""}</span>
                 <span style="font-size:11px;color:var(--gr);font-weight:600">Abrir →</span>
               </div>
             </div>`;
@@ -442,10 +453,13 @@ function renderDashboardGeral(){
   if(!freqEl) return;
 
   const rankData=congs.map(c=>{
-    const hist=(c.atividades_igreja?.historico_cultos||[]).slice(0,8);
-    const media=hist.length?Math.round(hist.reduce((s,cu)=>s+_tc(cu),0)/hist.length):0;
+    const hist=c.atividades_igreja?.historico_cultos||[];
+    const bdR={};
+    hist.forEach(cu=>{const d=cu.data||'';if(!d)return;if(!bdR[d])bdR[d]=0;bdR[d]+=_tc(cu);});
+    const diasR=Object.keys(bdR).sort().reverse().slice(0,8);
+    const media=diasR.length?Math.round(diasR.reduce((s,d)=>s+bdR[d],0)/diasR.length):0;
     const membros=c.panorama_membresia?.membros_ativos||0;
-    return{id:c.id,nome:c.identificacao.nome,cor:c.identificacao.cor||"#3AAA5C",icon:c.identificacao.icon||"⛪",media,membros,totalCultos:hist.length};
+    return{id:c.id,nome:c.identificacao.nome,cor:c.identificacao.cor||"#3AAA5C",icon:c.identificacao.icon||"⛪",media,membros,totalCultos:diasR.length};
   });
   const byFreq=rankData.filter(c=>c.media>0).sort((a,b)=>b.media-a.media);
   const byMbr=rankData.filter(c=>c.membros>0).sort((a,b)=>b.membros-a.membros);
@@ -459,7 +473,7 @@ function renderDashboardGeral(){
       <div class="card">
         <div class="ctit" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
           Frequência Média
-          <span style="font-size:11px;color:var(--tx3);font-weight:400">últimos 8 cultos</span>
+          <span style="font-size:11px;color:var(--tx3);font-weight:400">últimos 8 dias</span>
         </div>
         ${byFreq.length===0?`<div style="color:var(--tx3);font-size:11px;text-align:center;padding:20px 0">Sem dados de frequência</div>`:`
         <div style="display:flex;flex-direction:column;gap:10px">
