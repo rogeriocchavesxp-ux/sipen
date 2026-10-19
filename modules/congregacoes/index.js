@@ -183,7 +183,7 @@ function irParaSecaoCong(i){
 window.irParaSecaoCong=irParaSecaoCong;
 
 let _dashExclSede=false;
-const _isSede=c=>/^sede\b/i.test(c.identificacao?.nome||"");
+const _isSede=c=>/ippenha/i.test(c.identificacao?.nome||"");
 window._dashToggleSede=function(v){
   _dashExclSede=v!==undefined?v:!_dashExclSede;
   renderDashboardGeral();
@@ -210,7 +210,7 @@ function renderDashboardGeral(){
     filtrosEl.innerHTML=`<div style="display:flex;align-items:center;gap:6px">
       <span style="font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Visualizar:</span>
       <button style="${btnStyle(!_dashExclSede)}" onclick="window._dashToggleSede(false)">Todas</button>
-      <button style="${btnStyle(_dashExclSede)}" onclick="window._dashToggleSede(true)">Sem Sede</button>
+      <button style="${btnStyle(_dashExclSede)}" onclick="window._dashToggleSede(true)">Sem IPPenha</button>
     </div>`;
   } else if(filtrosEl){
     filtrosEl.innerHTML='';
@@ -239,7 +239,7 @@ function renderDashboardGeral(){
     kpisEl.style.gridTemplateColumns="";
     const tnd=(pct,up)=>pct!==null?`<span style="font-size:10px;font-weight:700;margin-left:4px;color:${up?"var(--gr)":"var(--rose)"}">${up?"↑":"↓"}${Math.abs(pct)}%</span>`:"";
     kpisEl.innerHTML=`
-      <div class="kpi"><div class="kpi-body"><div class="kpi-lbl">Congregações${_dashExclSede?' <span style="color:var(--amber);font-weight:700">·sem sede</span>':''}</div><div class="kpi-val">${ativas}<span style="font-size:13px;color:var(--tx3);font-weight:400"> / ${congs.length}</span></div><div class="kpi-d" style="color:var(--tx3)">${congs.length-ativas} inativa${congs.length-ativas!==1?"s":""}</div></div></div>
+      <div class="kpi"><div class="kpi-body"><div class="kpi-lbl">Congregações${_dashExclSede?' <span style="color:var(--amber);font-weight:700">·sem IPPenha</span>':''}</div><div class="kpi-val">${ativas}<span style="font-size:13px;color:var(--tx3);font-weight:400"> / ${congs.length}</span></div><div class="kpi-d" style="color:var(--tx3)">${congs.length-ativas} inativa${congs.length-ativas!==1?"s":""}</div></div></div>
       <div class="kpi"><div class="kpi-body"><div class="kpi-lbl">Membros Ativos</div><div class="kpi-val">${totalMembros}</div><div class="kpi-d" style="color:var(--tx3)">total somado</div></div></div>
       <div class="kpi"><div class="kpi-body"><div class="kpi-lbl">Cultos (mês)</div><div class="kpi-val" style="color:var(--sky)">${cultosMes.length}</div><div class="kpi-d" style="color:var(--tx3)">${todosCultos.length} no total</div></div></div>
       <div class="kpi"><div class="kpi-body"><div class="kpi-lbl">Participantes (mês)</div><div class="kpi-val" style="color:var(--gr)">${totalPartMes}${tnd(tendGeralPct,tendGeralUp)}</div><div class="kpi-d" style="color:var(--tx3)">mês anterior: ${totalPartPrev}</div></div></div>
