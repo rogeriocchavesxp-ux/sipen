@@ -191,20 +191,13 @@ function renderDashboardGeral(){
     return;
   }
   const congs=CONG.listCongs();
-  const ativas       =congs.filter(c=>c.identificacao.status==="ativa").length;
-  const comSupervisao=congs.filter(c=>(c.lideranca_estruturada||{}).supervisao).length;
-  const comEBD       =congs.filter(c=>((c.lideranca_estruturada||{}).professores_ebd||[]).length>0).length;
-  const totalLideres =congs.reduce((s,c)=>{
-    const le=c.lideranca_estruturada||{};
-    return s + (le.supervisao?1:0) + (le.conselheiro?1:0) + (le.coordenacao?1:0) + (le.tesoureiro?1:0)
-             + (le.equipe||[]).length + (le.mesa_administrativa||[]).length
-             + (le.professores_ebd||[]).length;
-  },0);
+  const ativas=congs.filter(c=>c.identificacao.status==="ativa").length;
+  const totalMembros=congs.reduce((s,c)=>s+(c.panorama_membresia?.membros_ativos||0),0);
 
-  // Estatísticas de frequência
   const _tc=c=>c.participantes||(c.adultos||0)+(c.criancas||0);
   const todosCultos=congs.flatMap(c=>(c.atividades_igreja?.historico_cultos||[]).map(cu=>({...cu,_congId:c.id,_congNome:c.identificacao.nome,_cor:c.identificacao.cor||"#3AAA5C"})));
   todosCultos.sort((a,b)=>(b.data||"").localeCompare(a.data||""));
+
   const mesAtual=new Date().toISOString().slice(0,7);
   const mesPrev=new Date(new Date().getFullYear(),new Date().getMonth()-1,1).toISOString().slice(0,7);
   const cultosMes=todosCultos.filter(c=>c.data?.startsWith(mesAtual));
@@ -214,36 +207,84 @@ function renderDashboardGeral(){
   const mediaGeralMes=cultosMes.length?Math.round(totalPartMes/cultosMes.length):0;
   const tendGeralPct=totalPartPrev>0?Math.round(((totalPartMes-totalPartPrev)/totalPartPrev)*100):null;
   const tendGeralUp=tendGeralPct!==null&&tendGeralPct>=0;
-  // Média por congregação (últimos 8 cultos de cada)
-  const mediaPorCong=congs.map(c=>{
-    const hist=(c.atividades_igreja?.historico_cultos||[]).slice(0,8);
-    const media=hist.length?Math.round(hist.reduce((s,cu)=>s+_tc(cu),0)/hist.length):0;
-    return {id:c.id,nome:c.identificacao.nome,cor:c.identificacao.cor||"#3AAA5C",icon:c.identificacao.icon||"⛪",media,totalCultos:(c.atividades_igreja?.historico_cultos||[]).length};
-  }).filter(x=>x.media>0).sort((a,b)=>b.media-a.media);
-  const mediaPorCongMax=mediaPorCong.length?mediaPorCong[0].media||1:1;
+  const totalDecisoesMes=cultosMes.reduce((s,c)=>s+(c.decisoes||0),0);
+  const totalVisitantesMes=cultosMes.reduce((s,c)=>s+(c.visitantes||0),0);
 
-  // KPIs: mistura estrutural + frequência (prioriza dados relevantes)
+  // ── KPIs (6) ──────────────────────────────────────────
   const kpisEl=document.getElementById("cong-dash-kpis");
   if(kpisEl){
-    const temFreq=todosCultos.length>0;
-    if(temFreq){
-      kpisEl.innerHTML=`
-        <div class="kpi"><div class="kn">Congregações Ativas</div><div class="kv">${ativas}<span style="font-size:11px;color:var(--tx3);font-weight:400"> / ${congs.length}</span></div></div>
-        <div class="kpi"><div class="kn">Cultos este mês</div><div class="kv" style="color:var(--sky)">${cultosMes.length}</div></div>
-        <div class="kpi"><div class="kn">Participantes (mês)</div><div class="kv" style="color:var(--gr)">${totalPartMes}${tendGeralPct!==null?`<span style="font-size:11px;font-weight:600;margin-left:6px;color:${tendGeralUp?"var(--gr)":"var(--rose)"}">${tendGeralUp?"↑":"↓"}${Math.abs(tendGeralPct)}%</span>`:""}</div></div>
-        <div class="kpi"><div class="kn">Média por culto</div><div class="kv">${mediaGeralMes}</div></div>
-      `;
+    kpisEl.style.gridTemplateColumns="repeat(6,1fr)";
+    const tnd=(pct,up)=>pct!==null?`<span style="font-size:10px;font-weight:700;margin-left:4px;color:${up?"var(--gr)":"var(--rose)"}">${up?"↑":"↓"}${Math.abs(pct)}%</span>`:"";
+    kpisEl.innerHTML=`
+      <div class="kpi"><div class="kn">Congregações</div><div class="kv">${ativas}<span style="font-size:12px;color:var(--tx3);font-weight:400"> / ${congs.length}</span></div><div style="font-size:10px;color:var(--tx3);margin-top:3px">${congs.length-ativas} inativa${congs.length-ativas!==1?"s":""}</div></div>
+      <div class="kpi"><div class="kn">Membros Ativos</div><div class="kv">${totalMembros}</div><div style="font-size:10px;color:var(--tx3);margin-top:3px">total somado</div></div>
+      <div class="kpi"><div class="kn">Cultos (mês)</div><div class="kv" style="color:var(--sky)">${cultosMes.length}</div><div style="font-size:10px;color:var(--tx3);margin-top:3px">${todosCultos.length} no total</div></div>
+      <div class="kpi"><div class="kn">Participantes (mês)</div><div class="kv" style="color:var(--gr)">${totalPartMes}${tnd(tendGeralPct,tendGeralUp)}</div><div style="font-size:10px;color:var(--tx3);margin-top:3px">mês anterior: ${totalPartPrev}</div></div>
+      <div class="kpi"><div class="kn">Média por culto</div><div class="kv">${mediaGeralMes}</div><div style="font-size:10px;color:var(--tx3);margin-top:3px">${cultosMes.length} culto${cultosMes.length!==1?"s":""} este mês</div></div>
+      <div class="kpi"><div class="kn">Decisões de Fé</div><div class="kv" style="color:var(--amber)">${totalDecisoesMes}</div><div style="font-size:10px;color:var(--tx3);margin-top:3px">${totalVisitantesMes} visitante${totalVisitantesMes!==1?"s":""}</div></div>
+    `;
+  }
+
+  // ── Gráfico de evolução mensal (SVG inline) ────────────
+  const evolEl=document.getElementById("cong-dash-evolucao");
+  if(evolEl){
+    if(todosCultos.length>0){
+      const MN=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+      const months=[];
+      for(let i=8;i>=0;i--){
+        const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()-i);
+        months.push(d.toISOString().slice(0,7));
+      }
+      const mdata=months.map(m=>{
+        const mc=todosCultos.filter(c=>c.data?.startsWith(m));
+        return{mes:m,lbl:MN[+m.slice(5,7)-1],total:mc.reduce((s,c)=>s+_tc(c),0),count:mc.length};
+      });
+      const maxV=Math.max(...mdata.map(m=>m.total),1);
+      const W=700,H=130,PT=22,PB=22,PL=38,PR=8;
+      const cw=W-PL-PR, ch=H-PT-PB, n=mdata.length;
+      const pts=mdata.map((m,i)=>({...m,x:PL+(n<=1?cw/2:i/(n-1)*cw),y:PT+ch-(m.total/maxV)*ch}));
+      const pL=pts.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+      const pA=`${pL} L${pts[pts.length-1].x.toFixed(1)},${(H-PB).toFixed(1)} L${pts[0].x.toFixed(1)},${(H-PB).toFixed(1)} Z`;
+      const grid=[.25,.5,.75,1].map(f=>{
+        const y=(PT+ch-f*ch).toFixed(1);
+        return`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="var(--bd1)" stroke-width="1"/>
+               <text x="${PL-5}" y="${(+y+3.5).toFixed(1)}" text-anchor="end" fill="var(--tx3)" font-size="9" font-family="inherit">${Math.round(f*maxV)}</text>`;
+      });
+      const dots=pts.map(p=>{
+        const cur=p.mes===mesAtual;
+        return`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${cur?5:3.5}" fill="#3AAA5C" stroke="var(--surface,#fff)" stroke-width="${cur?2.5:1.5}"/>
+               ${p.total>0?`<text x="${p.x.toFixed(1)}" y="${(p.y-9).toFixed(1)}" text-anchor="middle" fill="${cur?"#3AAA5C":"var(--tx2)"}" font-size="${cur?11:9.5}" font-weight="${cur?700:500}" font-family="inherit">${p.total}</text>`:''}
+               <text x="${p.x.toFixed(1)}" y="${(H-PB+14).toFixed(1)}" text-anchor="middle" fill="${cur?"var(--tx1)":"var(--tx3)"}" font-size="${cur?10:9}" font-weight="${cur?700:400}" font-family="inherit">${p.lbl}</text>`;
+      });
+      evolEl.innerHTML=`
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+            <div class="ctit" style="margin:0">Evolução de Frequência — últimos 9 meses</div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap">
+              ${totalVisitantesMes>0?`<div style="font-size:11px;color:var(--tx3)">Visitantes este mês: <b style="color:var(--amber)">${totalVisitantesMes}</b></div>`:''}
+              ${totalDecisoesMes>0?`<div style="font-size:11px;color:var(--tx3)">Decisões este mês: <b style="color:#3AAA5C">${totalDecisoesMes}</b></div>`:''}
+              <div style="font-size:11px;color:var(--tx3)">${todosCultos.length} cultos registrados</div>
+            </div>
+          </div>
+          <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block;overflow:visible" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="cg-area" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#3AAA5C" stop-opacity=".18"/>
+                <stop offset="100%" stop-color="#3AAA5C" stop-opacity=".01"/>
+              </linearGradient>
+            </defs>
+            ${grid.join('')}
+            <path d="${pA}" fill="url(#cg-area)"/>
+            <path d="${pL}" fill="none" stroke="#3AAA5C" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+            ${dots.join('')}
+          </svg>
+        </div>`;
     } else {
-      kpisEl.innerHTML=`
-        <div class="kpi"><div class="kn">Congregações Ativas</div><div class="kv">${ativas}</div></div>
-        <div class="kpi"><div class="kn">Com Supervisão</div><div class="kv">${comSupervisao}</div></div>
-        <div class="kpi"><div class="kn">Líderes Cadastrados</div><div class="kv">${totalLideres}</div></div>
-        <div class="kpi"><div class="kn">Com EBD</div><div class="kv">${comEBD}</div></div>
-      `;
+      evolEl.innerHTML='';
     }
   }
 
-  // Cards de congregação com dados de frequência
+  // ── Cards de congregações ──────────────────────────────
   const listaEl=document.getElementById("cong-dash-lista");
   if(listaEl){
     if(congs.length===0){
@@ -254,95 +295,142 @@ function renderDashboardGeral(){
     } else {
       listaEl.innerHTML=`
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:12px">Congregações (${congs.length})</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px">
           ${congs.map(c=>{
             const cor=c.identificacao.cor||"#3AAA5C";
             const hist=c.atividades_igreja?.historico_cultos||[];
-            const hist4=hist.slice(0,4);
-            const mediaFreq=hist4.length?Math.round(hist4.reduce((s,cu)=>s+_tc(cu),0)/hist4.length):0;
+            const hist4=hist.slice(0,4), hist8=hist.slice(0,8);
+            const avg4=hist4.length?Math.round(hist4.reduce((s,cu)=>s+_tc(cu),0)/hist4.length):0;
+            const avg4p=hist.slice(4,8);
+            const avgPrev=avg4p.length?Math.round(avg4p.reduce((s,cu)=>s+_tc(cu),0)/avg4p.length):0;
+            const tPct=avgPrev>0?Math.round(((avg4-avgPrev)/avgPrev)*100):null;
+            const tUp=tPct!==null&&tPct>=0;
             const ultimo=hist[0];
-            const ultTot=ultimo?_tc(ultimo):0;
             const sparkMax=hist4.length?Math.max(...hist4.map(_tc))||1:1;
-            const spark=hist4.length?`<div style="display:flex;align-items:flex-end;gap:2px;height:20px;margin-top:6px">
-              ${hist4.slice().reverse().map(cu=>{
-                const h=Math.max(3,Math.round((_tc(cu)/sparkMax)*18));
-                return `<div style="width:6px;height:${h}px;background:${cor};opacity:.7;border-radius:1px 1px 0 0"></div>`;
-              }).join("")}
-            </div>`:"";
-            return `
-              <div class="card" style="cursor:pointer;display:flex;flex-direction:column;gap:0;border-top:2.5px solid ${cor}44" onclick="abrirCongView('${c.id}')">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-                  <div style="width:36px;height:36px;border-radius:50%;background:${cor}18;border:1.5px solid ${cor}44;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${c.identificacao.icon||"⛪"}</div>
-                  <div style="flex:1;min-width:0">
-                    <div style="font-size:12.5px;font-weight:700;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(c.identificacao.nome)}</div>
-                    <div style="font-size:10px;color:var(--tx3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(c.identificacao.localizacao||"")}</div>
-                  </div>
-                  ${statusBadge(c.identificacao.status)}
+            const spark=hist4.length?`<div style="display:flex;align-items:flex-end;gap:2px;height:22px;margin-top:6px">
+              ${hist4.slice().reverse().map(cu=>{const h=Math.max(3,Math.round((_tc(cu)/sparkMax)*20));return`<div style="flex:1;height:${h}px;background:${cor};opacity:.8;border-radius:2px 2px 0 0"></div>`;}).join('')}
+            </div>`:'';
+            const membros=c.panorama_membresia?.membros_ativos||0;
+            return`<div class="card" style="cursor:pointer;padding:12px;border-top:3px solid ${cor};display:flex;flex-direction:column;gap:0" onclick="abrirCongView('${c.id}')">
+              <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:9px">
+                <div style="width:34px;height:34px;border-radius:8px;background:${cor}18;border:1px solid ${cor}33;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">${c.identificacao.icon||"⛪"}</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:12px;font-weight:700;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(c.identificacao.nome)}</div>
+                  <div style="font-size:9.5px;color:var(--tx3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(c.identificacao.localizacao||"")}</div>
                 </div>
-                ${ultimo?`
-                <div style="background:var(--bg-hover,rgba(255,255,255,.04));border-radius:6px;padding:7px 9px;margin-bottom:4px">
-                  <div style="font-size:10.5px;color:var(--tx3)">Último culto <span style="color:var(--tx2);font-weight:500">${fmtData(ultimo.data)}</span></div>
-                  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:3px">
-                    <div style="font-size:11px;color:var(--tx3)">Ad: <b style="color:var(--tx2)">${ultimo.adultos||0}</b> &nbsp; Cr: <b style="color:var(--sky)">${ultimo.criancas||0}</b>${ultimo.visitantes>0?` &nbsp; Vis: <b style="color:var(--amber)">${ultimo.visitantes}</b>`:""}</div>
-                    <div style="font-size:14px;font-weight:700;color:${cor}">${ultTot}</div>
-                  </div>
-                  ${spark}
-                </div>`:`<div style="font-size:10.5px;color:var(--tx3);padding:6px 0 4px;font-style:italic">Nenhum culto registrado</div>`}
-                <div style="border-top:1px solid var(--bd1);padding-top:8px;display:flex;align-items:center;justify-content:space-between;margin-top:4px">
-                  <span style="font-size:10.5px;color:var(--tx3)">${hist.length} culto${hist.length!==1?"s":""} registrado${hist.length!==1?"s":""}</span>
-                  ${mediaFreq>0?`<span style="font-size:11.5px;color:${cor};font-weight:700">⌀ ${mediaFreq}</span>`:`<span style="font-size:11px;color:var(--gr);font-weight:500">Abrir →</span>`}
+                ${c.identificacao.status==="ativa"?'<span class="pill pv" style="font-size:9px;padding:1px 6px;flex-shrink:0">Ativa</span>':'<span class="pill pa" style="font-size:9px;padding:1px 6px;flex-shrink:0">Inativa</span>'}
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+                <div style="background:var(--bg3,rgba(0,0,0,.04));border-radius:6px;padding:6px 8px">
+                  <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);margin-bottom:1px">Membros</div>
+                  <div style="font-size:18px;font-weight:800;color:var(--tx1);line-height:1.1">${membros}</div>
                 </div>
-              </div>`;
-          }).join("")}
+                <div style="background:var(--bg3,rgba(0,0,0,.04));border-radius:6px;padding:6px 8px">
+                  <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);margin-bottom:1px">Média freq.</div>
+                  <div style="font-size:18px;font-weight:800;color:${cor};line-height:1.1">${avg4}${tPct!==null?`<span style="font-size:9.5px;margin-left:3px;color:${tUp?"var(--gr)":"var(--rose)"}">${tUp?"↑":"↓"}${Math.abs(tPct)}%</span>`:''}</div>
+                </div>
+              </div>
+              ${ultimo?`<div style="padding:6px 8px;border-radius:6px;border:1px solid var(--bd1)">
+                <div style="font-size:9.5px;color:var(--tx3);display:flex;justify-content:space-between;align-items:center">
+                  <span>Último culto · ${fmtData(ultimo.data)}</span>
+                  <b style="font-size:13px;color:${cor}">${_tc(ultimo)}</b>
+                </div>
+                <div style="font-size:9.5px;color:var(--tx3);margin-top:2px">Ad: <b style="color:var(--tx2)">${ultimo.adultos||0}</b> · Cr: <b style="color:var(--sky)">${ultimo.criancas||0}</b>${ultimo.visitantes>0?` · Vis: <b style="color:var(--amber)">${ultimo.visitantes}</b>`:''}</div>
+                ${spark}
+              </div>`:`<div style="font-size:10px;color:var(--tx3);padding:4px 0;font-style:italic">Nenhum culto registrado</div>`}
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:7px;border-top:1px solid var(--bd1)">
+                <span style="font-size:9.5px;color:var(--tx3)">${hist.length} culto${hist.length!==1?"s":""}</span>
+                <span style="font-size:11px;color:var(--gr);font-weight:600">Abrir →</span>
+              </div>
+            </div>`;
+          }).join('')}
         </div>`;
     }
   }
 
-  // Cultos recentes
-  const todosOsCultos=todosCultos;
+  // ── Cultos recentes ────────────────────────────────────
   const cultosEl=document.getElementById("cong-dash-cultos");
-  if(cultosEl) cultosEl.innerHTML=todosOsCultos.slice(0,8).map(cu=>{
+  if(cultosEl) cultosEl.innerHTML=todosCultos.slice(0,10).map(cu=>{
     const tot=_tc(cu);
-    return `
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd1)">
-      <div style="width:38px;text-align:center;flex-shrink:0">
-        <div style="font-size:13px;font-weight:700;color:var(--gr)">${tot}</div>
-        <div style="font-size:9px;color:var(--tx3)">pess.</div>
-      </div>
+    const pctMedia=mediaGeralMes>0?Math.round((tot/mediaGeralMes)*100):null;
+    return`<div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--bd1)">
+      <div style="width:3px;height:36px;background:${cu._cor};border-radius:2px;flex-shrink:0"></div>
       <div style="flex:1;min-width:0">
         <div style="font-size:11.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(cu._congNome)}</div>
-        <div style="font-size:10px;color:var(--tx3)">${cu.tipo||"Culto"} · ${fmtData(cu.data)}</div>
-        <div style="font-size:10px;color:var(--tx3)">Ad: ${cu.adultos||0} Cr: ${cu.criancas||0}${cu.visitantes>0?` · <span style="color:var(--amber)">${cu.visitantes} vis.</span>`:""}</div>
+        <div style="font-size:9.5px;color:var(--tx3)">${cu.tipo||"Culto"} · ${fmtData(cu.data)}</div>
+        <div style="font-size:9.5px;color:var(--tx3)">Ad: ${cu.adultos||0} · Cr: ${cu.criancas||0}${cu.visitantes>0?` · <span style="color:var(--amber)">${cu.visitantes} vis.</span>`:''}</div>
       </div>
-    </div>
-  `}).join("")||`<div style="color:var(--tx3);font-size:11px;padding:12px 0;text-align:center">Nenhum culto registrado</div>`;
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:16px;font-weight:800;color:var(--gr);line-height:1">${tot}</div>
+        ${pctMedia!==null?`<div style="font-size:9px;color:var(--tx3)">${pctMedia}% da média</div>`:''}
+      </div>
+    </div>`;
+  }).join('')||`<div style="color:var(--tx3);font-size:11px;padding:12px 0;text-align:center">Nenhum culto registrado</div>`;
 
-  // Ranking de frequência por congregação
+  // ── Rankings duplos ────────────────────────────────────
   const freqEl=document.getElementById("cong-dash-comparativo");
-  if(!freqEl||todosCultos.length===0) return;
-  freqEl.innerHTML=mediaPorCong.length===0?"":(`
-    <div class="card" style="margin-bottom:0">
-      <div class="ctit" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        Frequência média por congregação
-        <span style="font-size:11px;color:var(--tx3);font-weight:400">${todosCultos.length} cultos registrados</span>
+  if(!freqEl) return;
+
+  const rankData=congs.map(c=>{
+    const hist=(c.atividades_igreja?.historico_cultos||[]).slice(0,8);
+    const media=hist.length?Math.round(hist.reduce((s,cu)=>s+_tc(cu),0)/hist.length):0;
+    const membros=c.panorama_membresia?.membros_ativos||0;
+    return{id:c.id,nome:c.identificacao.nome,cor:c.identificacao.cor||"#3AAA5C",icon:c.identificacao.icon||"⛪",media,membros,totalCultos:hist.length};
+  });
+  const byFreq=rankData.filter(c=>c.media>0).sort((a,b)=>b.media-a.media);
+  const byMbr=rankData.filter(c=>c.membros>0).sort((a,b)=>b.membros-a.membros);
+  const maxFreq=byFreq[0]?.media||1;
+  const maxMbr=byMbr[0]?.membros||1;
+
+  if(byFreq.length===0&&byMbr.length===0){ freqEl.innerHTML=''; return; }
+
+  freqEl.innerHTML=`
+    <div class="g2" style="margin-bottom:0;gap:14px">
+      <div class="card">
+        <div class="ctit" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          Frequência Média
+          <span style="font-size:11px;color:var(--tx3);font-weight:400">últimos 8 cultos</span>
+        </div>
+        ${byFreq.length===0?`<div style="color:var(--tx3);font-size:11px;text-align:center;padding:20px 0">Sem dados de frequência</div>`:`
+        <div style="display:flex;flex-direction:column;gap:10px">
+          ${byFreq.map((c,i)=>{
+            const w=Math.max(4,Math.round((c.media/maxFreq)*100));
+            return`<div style="display:flex;align-items:center;gap:9px">
+              <div style="font-size:10px;color:var(--tx3);width:14px;text-align:center;font-weight:700;flex-shrink:0">${i+1}</div>
+              <div style="font-size:14px;width:18px;text-align:center;flex-shrink:0">${c.icon}</div>
+              <div style="font-size:11.5px;color:var(--tx1);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(c.nome)}</div>
+              <div style="width:100px;height:7px;background:var(--bd1);border-radius:4px;overflow:hidden;flex-shrink:0">
+                <div style="height:100%;width:${w}%;background:${c.cor};border-radius:4px"></div>
+              </div>
+              <div style="font-size:14px;font-weight:800;color:var(--tx1);width:28px;text-align:right;font-variant-numeric:tabular-nums;flex-shrink:0">${c.media}</div>
+              <div style="font-size:9.5px;color:var(--tx3);width:44px;text-align:right;flex-shrink:0">${c.totalCultos} cult.</div>
+            </div>`;
+          }).join('')}
+        </div>`}
       </div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        ${mediaPorCong.map((c,i)=>{
-          const w=Math.max(6,Math.round((c.media/mediaPorCongMax)*100));
-          return `<div style="display:flex;align-items:center;gap:10px">
-            <div style="font-size:10px;color:var(--tx3);width:16px;text-align:center;font-weight:600">${i+1}</div>
-            <div style="font-size:12px;width:20px;text-align:center">${c.icon}</div>
-            <div style="font-size:11.5px;color:var(--tx1);width:130px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(c.nome)}</div>
-            <div style="flex:1;height:8px;background:var(--bd1);border-radius:4px;overflow:hidden">
-              <div style="height:100%;width:${w}%;background:${c.cor};border-radius:4px"></div>
-            </div>
-            <div style="font-size:13px;font-weight:700;color:var(--tx1);width:30px;text-align:right;font-variant-numeric:tabular-nums">${c.media}</div>
-            <div style="font-size:10px;color:var(--tx3);width:52px;text-align:right">${c.totalCultos} culto${c.totalCultos!==1?"s":""}</div>
-          </div>`;
-        }).join("")}
+      <div class="card">
+        <div class="ctit" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          Membros por Congregação
+          <span style="font-size:11px;color:var(--tx3);font-weight:400">total: ${totalMembros}</span>
+        </div>
+        ${byMbr.length===0?`<div style="color:var(--tx3);font-size:11px;text-align:center;padding:20px 0">Nenhum membro cadastrado</div>`:`
+        <div style="display:flex;flex-direction:column;gap:10px">
+          ${byMbr.map((c,i)=>{
+            const w=Math.max(4,Math.round((c.membros/maxMbr)*100));
+            const pct=totalMembros>0?Math.round((c.membros/totalMembros)*100):0;
+            return`<div style="display:flex;align-items:center;gap:9px">
+              <div style="font-size:14px;width:18px;text-align:center;flex-shrink:0">${c.icon}</div>
+              <div style="font-size:11.5px;color:var(--tx1);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(c.nome)}</div>
+              <div style="width:100px;height:7px;background:var(--bd1);border-radius:4px;overflow:hidden;flex-shrink:0">
+                <div style="height:100%;width:${w}%;background:${c.cor};opacity:.8;border-radius:4px"></div>
+              </div>
+              <div style="font-size:14px;font-weight:800;color:var(--tx1);width:28px;text-align:right;font-variant-numeric:tabular-nums;flex-shrink:0">${c.membros}</div>
+              <div style="font-size:9.5px;color:var(--tx3);width:28px;text-align:right;flex-shrink:0">${pct}%</div>
+            </div>`;
+          }).join('')}
+        </div>`}
       </div>
-    </div>
-  `);
+    </div>`;
 }
 window.renderDashboardGeral=renderDashboardGeral;
 
