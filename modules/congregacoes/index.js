@@ -295,8 +295,11 @@ function renderDashboardGeral(){
       </div>`;
     } else {
       listaEl.innerHTML=`
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:12px">Congregações (${congs.length})</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span class="ctit" style="margin:0">Congregações</span>
+          <span style="font-size:11px;color:var(--tx3);font-weight:500">${congs.length} ativa${congs.length!==1?"s":""}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">
           ${congs.map(c=>{
             const cor=c.identificacao.cor||"#3AAA5C";
             const hist=c.atividades_igreja?.historico_cultos||[];
@@ -386,7 +389,7 @@ function renderDashboardGeral(){
   if(byFreq.length===0&&byMbr.length===0){ freqEl.innerHTML=''; return; }
 
   freqEl.innerHTML=`
-    <div class="g2" style="margin-bottom:0;gap:14px">
+    <div class="g2" style="margin-bottom:0;gap:14px;min-width:0;overflow:hidden">
       <div class="card">
         <div class="ctit" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
           Frequência Média
@@ -400,11 +403,10 @@ function renderDashboardGeral(){
               <div style="font-size:10px;color:var(--tx3);width:14px;text-align:center;font-weight:700;flex-shrink:0">${i+1}</div>
               <div style="font-size:14px;width:18px;text-align:center;flex-shrink:0">${c.icon}</div>
               <div style="font-size:11.5px;color:var(--tx1);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(c.nome)}</div>
-              <div style="width:100px;height:7px;background:var(--bd1);border-radius:4px;overflow:hidden;flex-shrink:0">
+              <div style="flex:1;min-width:36px;max-width:90px;height:7px;background:var(--bd1);border-radius:4px;overflow:hidden">
                 <div style="height:100%;width:${w}%;background:${c.cor};border-radius:4px"></div>
               </div>
-              <div style="font-size:14px;font-weight:800;color:var(--tx1);width:28px;text-align:right;font-variant-numeric:tabular-nums;flex-shrink:0">${c.media}</div>
-              <div style="font-size:9.5px;color:var(--tx3);width:44px;text-align:right;flex-shrink:0">${c.totalCultos} cult.</div>
+              <div style="font-size:14px;font-weight:800;color:var(--tx1);min-width:24px;text-align:right;font-variant-numeric:tabular-nums;flex-shrink:0">${c.media}</div>
             </div>`;
           }).join('')}
         </div>`}
@@ -422,11 +424,11 @@ function renderDashboardGeral(){
             return`<div style="display:flex;align-items:center;gap:9px">
               <div style="font-size:14px;width:18px;text-align:center;flex-shrink:0">${c.icon}</div>
               <div style="font-size:11.5px;color:var(--tx1);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(c.nome)}</div>
-              <div style="width:100px;height:7px;background:var(--bd1);border-radius:4px;overflow:hidden;flex-shrink:0">
+              <div style="flex:1;min-width:36px;max-width:90px;height:7px;background:var(--bd1);border-radius:4px;overflow:hidden">
                 <div style="height:100%;width:${w}%;background:${c.cor};opacity:.8;border-radius:4px"></div>
               </div>
-              <div style="font-size:14px;font-weight:800;color:var(--tx1);width:28px;text-align:right;font-variant-numeric:tabular-nums;flex-shrink:0">${c.membros}</div>
-              <div style="font-size:9.5px;color:var(--tx3);width:28px;text-align:right;flex-shrink:0">${pct}%</div>
+              <div style="font-size:14px;font-weight:800;color:var(--tx1);min-width:24px;text-align:right;font-variant-numeric:tabular-nums;flex-shrink:0">${c.membros}</div>
+              <div style="font-size:9.5px;color:var(--tx3);min-width:22px;text-align:right;flex-shrink:0">${pct}%</div>
             </div>`;
           }).join('')}
         </div>`}
