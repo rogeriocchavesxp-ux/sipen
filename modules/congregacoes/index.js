@@ -294,12 +294,13 @@ function renderDashboardGeral(){
         <span style="font-size:12px;color:var(--tx3)">Nenhuma congregação cadastrada</span>
       </div>`;
     } else {
+      const cols=Math.min(4,congs.length);
       listaEl.innerHTML=`
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
           <span class="ctit" style="margin:0">Congregações</span>
           <span style="font-size:11px;color:var(--tx3);font-weight:500">${congs.length} ativa${congs.length!==1?"s":""}</span>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">
+        <div style="display:grid;grid-template-columns:repeat(${cols},minmax(0,1fr));gap:10px;width:100%;box-sizing:border-box">
           ${congs.map(c=>{
             const cor=c.identificacao.cor||"#3AAA5C";
             const hist=c.atividades_igreja?.historico_cultos||[];
@@ -315,7 +316,7 @@ function renderDashboardGeral(){
               ${hist4.slice().reverse().map(cu=>{const h=Math.max(3,Math.round((_tc(cu)/sparkMax)*20));return`<div style="flex:1;height:${h}px;background:${cor};opacity:.8;border-radius:2px 2px 0 0"></div>`;}).join('')}
             </div>`:'';
             const membros=c.panorama_membresia?.membros_ativos||0;
-            return`<div class="card" style="cursor:pointer;padding:12px;border-top:3px solid ${cor};display:flex;flex-direction:column;gap:0" onclick="abrirCongView('${c.id}')">
+            return`<div class="card" style="cursor:pointer;padding:12px;border-top:3px solid ${cor};display:flex;flex-direction:column;gap:0;min-width:0;overflow:hidden" onclick="abrirCongView('${c.id}')">
               <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:9px">
                 <div style="width:34px;height:34px;border-radius:8px;background:${cor}18;border:1px solid ${cor}33;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">${c.identificacao.icon||"⛪"}</div>
                 <div style="flex:1;min-width:0">
