@@ -421,9 +421,9 @@ function renderDashboardGeral(){
                 ${servicosDoDia.length>1
                   ?servicosDoDia.map(cu=>`<div style="font-size:9px;display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-top:1px solid var(--bd1)">
                     <span style="color:var(--tx2);font-weight:500">${(cu.tipo||'Culto').replace(/domingo\s*[—-]\s*/i,'').replace(/^(\w)/,s=>s.toUpperCase())}</span>
-                    <span style="color:var(--tx3)">Ad:<b style="color:var(--tx2)">${cu.adultos||0}</b> Cr:<b style="color:var(--sky)">${cu.criancas||0}</b> <b style="color:${cor}">${_tc(cu)}</b></span>
+                    <span style="color:var(--tx3)">Adultos:<b style="color:var(--tx2)">${cu.adultos||0}</b> Crianças:<b style="color:var(--sky)">${cu.criancas||0}</b> → <b style="color:${cor}">${_tc(cu)}</b></span>
                   </div>`).join('')
-                  :`<div style="font-size:9.5px;color:var(--tx3)">Ad: <b style="color:var(--tx2)">${ultimoDia.adultos}</b> · Cr: <b style="color:var(--sky)">${ultimoDia.criancas}</b>${ultimoDia.visitantes>0?` · Vis: <b style="color:var(--amber)">${ultimoDia.visitantes}</b>`:''}</div>`
+                  :`<div style="font-size:9.5px;color:var(--tx3)">Adultos: <b style="color:var(--tx2)">${ultimoDia.adultos}</b> · Crianças: <b style="color:var(--sky)">${ultimoDia.criancas}</b>${ultimoDia.visitantes>0?` · Visitantes: <b style="color:var(--amber)">${ultimoDia.visitantes}</b>`:''}</div>`
                 }
                 ${spark}
               </div>`:`<div style="font-size:10px;color:var(--tx3);padding:4px 0;font-style:italic">Nenhum culto registrado</div>`}
@@ -447,7 +447,7 @@ function renderDashboardGeral(){
       <div style="flex:1;min-width:0">
         <div style="font-size:11.5px;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(cu._congNome)}</div>
         <div style="font-size:9.5px;color:var(--tx3)">${cu.tipo||"Culto"} · ${fmtData(cu.data)}</div>
-        <div style="font-size:9.5px;color:var(--tx3)">Ad: ${cu.adultos||0} · Cr: ${cu.criancas||0}${cu.visitantes>0?` · <span style="color:var(--amber)">${cu.visitantes} vis.</span>`:''}</div>
+        <div style="font-size:9.5px;color:var(--tx3)">Adultos: ${cu.adultos||0} · Crianças: ${cu.criancas||0}${cu.visitantes>0?` · <span style="color:var(--amber)">${cu.visitantes} visitantes</span>`:''}</div>
       </div>
       <div style="text-align:right;flex-shrink:0">
         <div style="font-size:16px;font-weight:800;color:var(--gr);line-height:1">${tot}</div>
@@ -613,7 +613,7 @@ async function renderDashboardCongregacao(cong){
                 <div style="flex:1;min-width:0">
                   <div style="font-size:11.5px;font-weight:600;color:var(--tx1)">${escapeHtml(cu.tipo||"Culto")}</div>
                   <div style="font-size:10px;color:var(--tx3)">${cu.pregador?escapeHtml(cu.pregador):""}${cu.visitantes>0?` · <span style="color:var(--amber)">${cu.visitantes} vis.</span>`:""}</div>
-                  <div style="font-size:10px;color:var(--tx3)">Ad: <b>${cu.adultos||0}</b> &nbsp; Cr: <b style="color:var(--sky)">${cu.criancas||0}</b></div>
+                  <div style="font-size:10px;color:var(--tx3)">Adultos: <b>${cu.adultos||0}</b> &nbsp; Crianças: <b style="color:var(--sky)">${cu.criancas||0}</b></div>
                 </div>
                 <div style="text-align:right;flex-shrink:0">
                   <div style="font-size:13px;font-weight:700;color:var(--gr)">${tot}</div>
