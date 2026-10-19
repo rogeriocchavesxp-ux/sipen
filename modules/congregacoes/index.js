@@ -217,12 +217,12 @@ function renderDashboardGeral(){
     kpisEl.style.gridTemplateColumns="";
     const tnd=(pct,up)=>pct!==null?`<span style="font-size:10px;font-weight:700;margin-left:4px;color:${up?"var(--gr)":"var(--rose)"}">${up?"↑":"↓"}${Math.abs(pct)}%</span>`:"";
     kpisEl.innerHTML=`
-      <div class="kpi"><div class="kpi-lbl">Congregações</div><div class="kpi-val">${ativas}<span style="font-size:13px;color:var(--tx3);font-weight:400"> / ${congs.length}</span></div><div class="kpi-d" style="color:var(--tx3)">${congs.length-ativas} inativa${congs.length-ativas!==1?"s":""}</div></div>
-      <div class="kpi"><div class="kpi-lbl">Membros Ativos</div><div class="kpi-val">${totalMembros}</div><div class="kpi-d" style="color:var(--tx3)">total somado</div></div>
-      <div class="kpi"><div class="kpi-lbl">Cultos (mês)</div><div class="kpi-val" style="color:var(--sky)">${cultosMes.length}</div><div class="kpi-d" style="color:var(--tx3)">${todosCultos.length} no total</div></div>
-      <div class="kpi"><div class="kpi-lbl">Participantes (mês)</div><div class="kpi-val" style="color:var(--gr)">${totalPartMes}${tnd(tendGeralPct,tendGeralUp)}</div><div class="kpi-d" style="color:var(--tx3)">mês anterior: ${totalPartPrev}</div></div>
-      <div class="kpi"><div class="kpi-lbl">Média por culto</div><div class="kpi-val">${mediaGeralMes}</div><div class="kpi-d" style="color:var(--tx3)">${cultosMes.length} culto${cultosMes.length!==1?"s":""} este mês</div></div>
-      <div class="kpi"><div class="kpi-lbl">Decisões de Fé</div><div class="kpi-val" style="color:var(--amber)">${totalDecisoesMes}</div><div class="kpi-d" style="color:var(--tx3)">${totalVisitantesMes} visitante${totalVisitantesMes!==1?"s":""}</div></div>
+      <div class="kpi"><div class="kpi-body"><div class="kpi-lbl">Congregações</div><div class="kpi-val">${ativas}<span style="font-size:13px;color:var(--tx3);font-weight:400"> / ${congs.length}</span></div><div class="kpi-d" style="color:var(--tx3)">${congs.length-ativas} inativa${congs.length-ativas!==1?"s":""}</div></div></div>
+      <div class="kpi"><div class="kpi-body"><div class="kpi-lbl">Membros Ativos</div><div class="kpi-val">${totalMembros}</div><div class="kpi-d" style="color:var(--tx3)">total somado</div></div></div>
+      <div class="kpi"><div class="kpi-body"><div class="kpi-lbl">Cultos (mês)</div><div class="kpi-val" style="color:var(--sky)">${cultosMes.length}</div><div class="kpi-d" style="color:var(--tx3)">${todosCultos.length} no total</div></div></div>
+      <div class="kpi"><div class="kpi-body"><div class="kpi-lbl">Participantes (mês)</div><div class="kpi-val" style="color:var(--gr)">${totalPartMes}${tnd(tendGeralPct,tendGeralUp)}</div><div class="kpi-d" style="color:var(--tx3)">mês anterior: ${totalPartPrev}</div></div></div>
+      <div class="kpi"><div class="kpi-body"><div class="kpi-lbl">Média por culto</div><div class="kpi-val">${mediaGeralMes}</div><div class="kpi-d" style="color:var(--tx3)">${cultosMes.length} culto${cultosMes.length!==1?"s":""} este mês</div></div></div>
+      <div class="kpi"><div class="kpi-body"><div class="kpi-lbl">Decisões de Fé</div><div class="kpi-val" style="color:var(--amber)">${totalDecisoesMes}</div><div class="kpi-d" style="color:var(--tx3)">${totalVisitantesMes} visitante${totalVisitantesMes!==1?"s":""}</div></div></div>
     `;
   }
 
@@ -312,8 +312,8 @@ function renderDashboardGeral(){
             const tUp=tPct!==null&&tPct>=0;
             const ultimo=hist[0];
             const sparkMax=hist4.length?Math.max(...hist4.map(_tc))||1:1;
-            const spark=hist4.length?`<div style="display:flex;align-items:flex-end;gap:2px;height:22px;margin-top:6px">
-              ${hist4.slice().reverse().map(cu=>{const h=Math.max(3,Math.round((_tc(cu)/sparkMax)*20));return`<div style="flex:1;height:${h}px;background:${cor};opacity:.8;border-radius:2px 2px 0 0"></div>`;}).join('')}
+            const spark=hist4.length>=2?`<div style="display:flex;align-items:flex-end;gap:3px;height:20px;margin-top:6px">
+              ${hist4.slice().reverse().map(cu=>{const h=Math.max(3,Math.round((_tc(cu)/sparkMax)*18));return`<div style="width:6px;flex-shrink:0;height:${h}px;background:${cor};opacity:.75;border-radius:2px 2px 0 0"></div>`;}).join('')}
             </div>`:'';
             const membros=c.panorama_membresia?.membros_ativos||0;
             return`<div class="card" style="cursor:pointer;padding:12px;border-top:3px solid ${cor};display:flex;flex-direction:column;gap:0;min-width:0;overflow:hidden" onclick="abrirCongView('${c.id}')">
