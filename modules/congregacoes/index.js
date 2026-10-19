@@ -182,6 +182,13 @@ function irParaSecaoCong(i){
 }
 window.irParaSecaoCong=irParaSecaoCong;
 
+let _dashExclSede=false;
+const _isSede=c=>/^sede\b/i.test(c.identificacao?.nome||"");
+window._dashToggleSede=function(v){
+  _dashExclSede=v!==undefined?v:!_dashExclSede;
+  renderDashboardGeral();
+};
+
 // ── Dashboard Geral ───────────────────────────────────
 function renderDashboardGeral(){
   if(_isLiderCong()){
@@ -190,9 +197,24 @@ function renderDashboardGeral(){
     if(cong) renderDashboardCongregacao(cong);
     return;
   }
-  const congs=CONG.listCongs();
+  const congsAll=CONG.listCongs();
+  const temSede=congsAll.some(_isSede);
+  const congs=_dashExclSede?congsAll.filter(c=>!_isSede(c)):congsAll;
   const ativas=congs.filter(c=>c.identificacao.status==="ativa").length;
   const totalMembros=congs.reduce((s,c)=>s+(c.panorama_membresia?.membros_ativos||0),0);
+
+  // ── Toggle Sede ──────────────────────────────────────
+  const filtrosEl=document.getElementById("cong-dash-filtros");
+  if(filtrosEl&&temSede){
+    const btnStyle=(on)=>`cursor:pointer;padding:4px 12px;border-radius:20px;font-size:10.5px;font-weight:600;border:1px solid ${on?"var(--gr)":"var(--bd1)"};background:${on?"var(--gr)":"transparent"};color:${on?"#fff":"var(--tx3)"};transition:all .15s`;
+    filtrosEl.innerHTML=`<div style="display:flex;align-items:center;gap:6px">
+      <span style="font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Visualizar:</span>
+      <button style="${btnStyle(!_dashExclSede)}" onclick="window._dashToggleSede(false)">Todas</button>
+      <button style="${btnStyle(_dashExclSede)}" onclick="window._dashToggleSede(true)">Sem Sede</button>
+    </div>`;
+  } else if(filtrosEl){
+    filtrosEl.innerHTML='';
+  }
 
   const _tc=c=>c.participantes||(c.adultos||0)+(c.criancas||0);
   const todosCultos=congs.flatMap(c=>(c.atividades_igreja?.historico_cultos||[]).map(cu=>({...cu,_congId:c.id,_congNome:c.identificacao.nome,_cor:c.identificacao.cor||"#3AAA5C"})));
@@ -217,7 +239,7 @@ function renderDashboardGeral(){
     kpisEl.style.gridTemplateColumns="";
     const tnd=(pct,up)=>pct!==null?`<span style="font-size:10px;font-weight:700;margin-left:4px;color:${up?"var(--gr)":"var(--rose)"}">${up?"↑":"↓"}${Math.abs(pct)}%</span>`:"";
     kpisEl.innerHTML=`
-      <div class="kpi"><div class="kpi-body"><div class="kpi-lbl">Congregações</div><div class="kpi-val">${ativas}<span style="font-size:13px;color:var(--tx3);font-weight:400"> / ${congs.length}</span></div><div class="kpi-d" style="color:var(--tx3)">${congs.length-ativas} inativa${congs.length-ativas!==1?"s":""}</div></div></div>
+      <div class="kpi"><div class="kpi-body"><div class="kpi-lbl">Congregações${_dashExclSede?' <span style="color:var(--amber);font-weight:700">·sem sede</span>':''}</div><div class="kpi-val">${ativas}<span style="font-size:13px;color:var(--tx3);font-weight:400"> / ${congs.length}</span></div><div class="kpi-d" style="color:var(--tx3)">${congs.length-ativas} inativa${congs.length-ativas!==1?"s":""}</div></div></div>
       <div class="kpi"><div class="kpi-body"><div class="kpi-lbl">Membros Ativos</div><div class="kpi-val">${totalMembros}</div><div class="kpi-d" style="color:var(--tx3)">total somado</div></div></div>
       <div class="kpi"><div class="kpi-body"><div class="kpi-lbl">Cultos (mês)</div><div class="kpi-val" style="color:var(--sky)">${cultosMes.length}</div><div class="kpi-d" style="color:var(--tx3)">${todosCultos.length} no total</div></div></div>
       <div class="kpi"><div class="kpi-body"><div class="kpi-lbl">Participantes (mês)</div><div class="kpi-val" style="color:var(--gr)">${totalPartMes}${tnd(tendGeralPct,tendGeralUp)}</div><div class="kpi-d" style="color:var(--tx3)">mês anterior: ${totalPartPrev}</div></div></div>
