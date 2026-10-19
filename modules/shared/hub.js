@@ -239,7 +239,7 @@ function renderHubGov(){
     </div>`;
 
   const mes=new Date().toISOString().slice(0,7);
-  _cnt('membros','').then(n=>_set('k-gov-memb',n));
+  _cnt('membros','&or=(status.eq.ativo,status.is.null)').then(n=>_set('k-gov-memb',n));
   _cnt('nomeados','&deleted_at=is.null').then(n=>_set('k-gov-nomeados',n));
   _cnt('conselho_reunioes',`&data_reuniao=gte.${mes}-01`).then(n=>_set('k-gov-reun',n));
   _cnt('demandas',`&area=ilike.*iaconal*&status=neq.Conclu%C3%ADda`).then(n=>_set('k-gov-diac',n));
