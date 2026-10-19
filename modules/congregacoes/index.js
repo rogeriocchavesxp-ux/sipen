@@ -386,7 +386,9 @@ function renderDashboardGeral(){
             const avgPrev=dias4p.length?Math.round(dias4p.reduce((s,d)=>s+byDate[d].total,0)/dias4p.length):0;
             const tPct=avgPrev>0?Math.round(((avg4-avgPrev)/avgPrev)*100):null;
             const tUp=tPct!==null&&tPct>=0;
-            const ultimoDia=dias[0]?byDate[dias[0]]:null;
+            const ultimaData=dias[0]||null;
+            const ultimoDia=ultimaData?byDate[ultimaData]:null;
+            const servicosDoDia=ultimaData?hist.filter(cu=>cu.data===ultimaData).sort((a,b)=>(a.tipo||'').localeCompare(b.tipo||'')):[];
             const sparkMax=dias4.length?Math.max(...dias4.map(d=>byDate[d].total))||1:1;
             const spark=dias4.length>=2?`<div style="display:flex;align-items:flex-end;gap:3px;height:20px;margin-top:6px">
               ${dias4.slice().reverse().map(d=>{const h=Math.max(3,Math.round((byDate[d].total/sparkMax)*18));return`<div style="width:6px;flex-shrink:0;height:${h}px;background:${cor};opacity:.75;border-radius:2px 2px 0 0"></div>`;}).join('')}
@@ -412,11 +414,17 @@ function renderDashboardGeral(){
                 </div>
               </div>
               ${ultimoDia?`<div style="padding:6px 8px;border-radius:6px;border:1px solid var(--bd1)">
-                <div style="font-size:9.5px;color:var(--tx3);display:flex;justify-content:space-between;align-items:center">
-                  <span>Último culto · ${fmtData(ultimoDia.data)}</span>
+                <div style="font-size:9.5px;color:var(--tx3);display:flex;justify-content:space-between;align-items:center;margin-bottom:${servicosDoDia.length>1?'5px':'2px'}">
+                  <span>${fmtData(ultimaData)}</span>
                   <b style="font-size:13px;color:${cor}">${ultimoDia.total}</b>
                 </div>
-                <div style="font-size:9.5px;color:var(--tx3);margin-top:2px">Ad: <b style="color:var(--tx2)">${ultimoDia.adultos}</b> · Cr: <b style="color:var(--sky)">${ultimoDia.criancas}</b>${ultimoDia.visitantes>0?` · Vis: <b style="color:var(--amber)">${ultimoDia.visitantes}</b>`:''}</div>
+                ${servicosDoDia.length>1
+                  ?servicosDoDia.map(cu=>`<div style="font-size:9px;display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-top:1px solid var(--bd1)">
+                    <span style="color:var(--tx2);font-weight:500">${(cu.tipo||'Culto').replace(/domingo\s*[—-]\s*/i,'').replace(/^(\w)/,s=>s.toUpperCase())}</span>
+                    <span style="color:var(--tx3)">Ad:<b style="color:var(--tx2)">${cu.adultos||0}</b> Cr:<b style="color:var(--sky)">${cu.criancas||0}</b> <b style="color:${cor}">${_tc(cu)}</b></span>
+                  </div>`).join('')
+                  :`<div style="font-size:9.5px;color:var(--tx3)">Ad: <b style="color:var(--tx2)">${ultimoDia.adultos}</b> · Cr: <b style="color:var(--sky)">${ultimoDia.criancas}</b>${ultimoDia.visitantes>0?` · Vis: <b style="color:var(--amber)">${ultimoDia.visitantes}</b>`:''}</div>`
+                }
                 ${spark}
               </div>`:`<div style="font-size:10px;color:var(--tx3);padding:4px 0;font-style:italic">Nenhum culto registrado</div>`}
               <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:7px;border-top:1px solid var(--bd1)">
