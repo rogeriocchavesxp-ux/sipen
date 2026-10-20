@@ -154,7 +154,7 @@ async function listarMembros(containerId, countId, filtroFixo = {}, somenteInati
     if (!_membCache.length) {
       _membCache = await apiRead("MEMBROS");
     }
-    let rows = _membCache.filter(r => r.funcao !== "colaborador");
+    let rows = _membCache.filter(r => r.funcao !== "colaborador" && r.funcao !== "cooperador");
     // filtro fixo (tipo_ingresso, status, etc.)
     if (filtroFixo && Object.keys(filtroFixo).length) {
       rows = rows.filter(row => Object.entries(filtroFixo).every(([k, v]) =>
@@ -215,10 +215,10 @@ async function carregarMembresiaDash() {
     _visCache  = visitantes;
 
     // Colaborador puro não entra no rol de membros
-    const membros_rol = membros.filter(r => r.funcao !== "colaborador");
+    const membros_rol = membros.filter(r => r.funcao !== "colaborador" && r.funcao !== "cooperador");
 
     const anoAtual      = new Date().getFullYear();
-    const ativos        = membros_rol.filter(r => r.status === "ativo").length;
+    const ativos        = membros_rol.filter(r => !r.status || r.status === "ativo").length;
     const batizados     = membros_rol.filter(r => r.batizado === true || (r.data_batismo && r.data_batismo !== null)).length;
     const transferidos  = membros_rol.filter(r => r.tipo_ingresso === "transferência").length;
     const homens        = membros_rol.filter(r => r.genero === "M").length;

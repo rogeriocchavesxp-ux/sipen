@@ -501,8 +501,9 @@ async function loadKPIs() {
       apiRead("FINANCEIRO").catch(()=>[]),
     ]);
 
-    const membrosAtivos   = membros.filter(r => String(r.status || "").toLowerCase() === "ativo").length || membros.length;
-    const membrosAtivosArr = membros.filter(r => String(r.status || "").toLowerCase() === "ativo");
+    const _isAtivoRol = r => (!r.status || String(r.status).toLowerCase() === "ativo") && r.funcao !== "colaborador" && r.funcao !== "cooperador";
+    const membrosAtivosArr = membros.filter(_isAtivoRol);
+    const membrosAtivos   = membrosAtivosArr.length;
     const comungantes     = membrosAtivosArr.filter(r => (r.tipo_membro || "comungante") === "comungante").length;
     const naoComungantes  = membrosAtivosArr.filter(r => r.tipo_membro === "nao_comungante").length;
     const demandasAbertas = demandas.filter(r => !["concluído","concluido","fechado","cancelado"].includes(String(r.status||"").toLowerCase())).length;
