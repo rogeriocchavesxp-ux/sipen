@@ -36,7 +36,7 @@ BEGIN
   SELECT cuidador_id, cuidado_id
     INTO v_cuidador_id, v_cuidado_id
     FROM rede_cuidado
-   WHERE id = p_vinculo_id AND deleted_at IS NULL;
+   WHERE id = p_vinculo_id AND ativo = true;
 
   IF v_cuidador_id IS NULL THEN
     RAISE EXCEPTION 'Vínculo não encontrado';
