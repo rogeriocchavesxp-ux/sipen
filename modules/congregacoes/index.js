@@ -389,6 +389,9 @@ function renderDashboardGeral(){
             const ultimaData=dias[0]||null;
             const ultimoDia=ultimaData?byDate[ultimaData]:null;
             const servicosDoDia=ultimaData?hist.filter(cu=>cu.data===ultimaData).sort((a,b)=>(a.tipo||'').localeCompare(b.tipo||'')):[];
+            const _7diasAtras=new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
+            const diasSem=dias.filter(d=>d>=_7diasAtras);
+            const cultosSem=hist.filter(cu=>(cu.data||'')>=_7diasAtras);
             const sparkMax=dias4.length?Math.max(...dias4.map(d=>byDate[d].total))||1:1;
             const spark=dias4.length>=2?`<div style="display:flex;align-items:flex-end;gap:3px;height:20px;margin-top:6px">
               ${dias4.slice().reverse().map(d=>{const h=Math.max(3,Math.round((byDate[d].total/sparkMax)*18));return`<div style="width:6px;flex-shrink:0;height:${h}px;background:${cor};opacity:.75;border-radius:2px 2px 0 0"></div>`;}).join('')}
@@ -428,7 +431,7 @@ function renderDashboardGeral(){
                 ${spark}
               </div>`:`<div style="font-size:10px;color:var(--tx3);padding:4px 0;font-style:italic">Nenhum culto registrado</div>`}
               <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:7px;border-top:1px solid var(--bd1)">
-                <span style="font-size:9.5px;color:var(--tx3)">${dias.length} dia${dias.length!==1?"s":""} · ${hist.length} culto${hist.length!==1?"s":""}</span>
+                <span style="font-size:9.5px;color:var(--tx3)">${diasSem.length} dia${diasSem.length!==1?"s":""} · ${cultosSem.length} culto${cultosSem.length!==1?"s":""} <span style="opacity:.6">(7 dias)</span></span>
                 <span style="font-size:11px;color:var(--gr);font-weight:600">Abrir →</span>
               </div>
             </div>`;
