@@ -191,6 +191,66 @@ window._dashToggleSede=function(v){
 
 let _dashCultos=[];
 
+// ── Tooltip singleton ──────────────────────────────────────────
+(function(){
+  if(document.getElementById('_cg-tip')) return;
+  const el=document.createElement('div');
+  el.id='_cg-tip';
+  el.style.cssText='position:fixed;z-index:9999;pointer-events:none;display:none;'
+    +'background:var(--card,#fff);border:1px solid var(--bd,#ddd);border-radius:9px;'
+    +'box-shadow:0 6px 20px rgba(0,0,0,.15);padding:9px 12px;min-width:130px;max-width:220px;'
+    +'font-family:system-ui,sans-serif;font-size:11px;line-height:1.55;color:var(--tx1,#1a1d21)';
+  document.body.appendChild(el);
+})();
+
+window._cgTip=function(e,el){
+  const tip=document.getElementById('_cg-tip');
+  if(!tip) return;
+  const data=JSON.parse(el.dataset.tip||'{}');
+  if(!data.total && !Object.keys(data.tipos||{}).length){ tip.style.display='none'; return; }
+  const cor=el.dataset.cor||'#3aaa5c';
+  const fmtD=s=>{if(!s)return'';const p=s.split('-');return`${p[2]}/${p[1]}`};
+  let html=`<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">${data.lbl} ${data.wStart?'· '+fmtD(data.wStart):''}</div>`;
+  const tipos=data.tipos||{};
+  const keys=Object.keys(tipos);
+  if(keys.length===0){
+    html+=`<div style="color:var(--tx3);font-style:italic">Sem cultos registrados</div>`;
+  } else if(keys.length===1){
+    const t=tipos[keys[0]];
+    html+=`<div style="display:flex;justify-content:space-between;gap:10px"><span style="font-weight:600;color:${cor}">${t.total}</span><span style="color:var(--tx3)">participantes</span></div>`;
+    if(t.adultos||t.criancas) html+=`<div style="color:var(--tx3);font-size:10px;margin-top:2px">Adultos: <b style="color:var(--tx2)">${t.adultos}</b> · Crianças: <b style="color:var(--tx2)">${t.criancas}</b></div>`;
+  } else {
+    keys.forEach(k=>{
+      const t=tipos[k];
+      html+=`<div style="display:flex;justify-content:space-between;gap:8px;padding:2px 0;border-bottom:1px solid var(--bd,#eee)">
+        <span style="color:var(--tx2);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${k}</span>
+        <span style="font-weight:700;color:${cor};flex-shrink:0">${t.total}</span>
+      </div>`;
+    });
+    html+=`<div style="display:flex;justify-content:space-between;gap:8px;padding-top:4px;margin-top:1px">
+      <span style="font-weight:700;color:var(--tx1)">Total</span>
+      <span style="font-weight:800;color:${cor}">${data.total}</span>
+    </div>`;
+  }
+  tip.innerHTML=html;
+  tip.style.display='block';
+  window._cgTipMove(e);
+};
+window._cgTipMove=function(e){
+  const tip=document.getElementById('_cg-tip');
+  if(!tip||tip.style.display==='none') return;
+  const vw=window.innerWidth,vh=window.innerHeight;
+  const tw=tip.offsetWidth||180,th=tip.offsetHeight||80;
+  let x=e.clientX+14,y=e.clientY-th-10;
+  if(x+tw>vw-8) x=e.clientX-tw-14;
+  if(y<8) y=e.clientY+14;
+  tip.style.left=x+'px'; tip.style.top=y+'px';
+};
+window._cgTipHide=function(){
+  const tip=document.getElementById('_cg-tip');
+  if(tip) tip.style.display='none';
+};
+
 function _miniLineChart(hist, cor){
   const _tc=c=>c.participantes||(c.adultos||0)+(c.criancas||0);
   const today=new Date();
@@ -207,7 +267,16 @@ function _miniLineChart(hist, cor){
     const wc=hist.filter(c=>c.data&&c.data>=wStart&&c.data<=wEndStr);
     const d=new Date(wStart+'T00:00:00');
     const lbl=idx===semanas.length-1?'Sem.':`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
-    return{lbl,total:wc.reduce((s,c)=>s+_tc(c),0),cur:idx===semanas.length-1};
+    const total=wc.reduce((s,c)=>s+_tc(c),0);
+    const tipos={};
+    wc.forEach(c=>{
+      const t=(c.tipo||'Culto').replace(/domingo\s*[—-]\s*/i,'').replace(/^(\w)/,s=>s.toUpperCase());
+      if(!tipos[t]) tipos[t]={adultos:0,criancas:0,total:0};
+      tipos[t].adultos+=c.adultos||0;
+      tipos[t].criancas+=c.criancas||0;
+      tipos[t].total+=_tc(c);
+    });
+    return{lbl,total,cur:idx===semanas.length-1,wStart,tipos};
   });
   const maxV=Math.max(...pdata.map(p=>p.total),1);
   const W=280,H=64,PT=14,PB=16,PL=4,PR=4;
@@ -215,19 +284,25 @@ function _miniLineChart(hist, cor){
   const pts=pdata.map((p,i)=>({...p,x:PL+(n<=1?cw/2:i/(n-1)*cw),y:PT+ch-(p.total/maxV)*ch}));
   const pL=pts.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
   const pA=`${pL} L${pts[pts.length-1].x.toFixed(1)},${(H-PB).toFixed(1)} L${pts[0].x.toFixed(1)},${(H-PB).toFixed(1)} Z`;
-  const dots=pts.map(p=>`
-    <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.cur?4:2.5}" fill="${cor}" stroke="var(--card,#fff)" stroke-width="${p.cur?2:1}"/>
-    ${p.total>0?`<text x="${p.x.toFixed(1)}" y="${(p.y-7).toFixed(1)}" text-anchor="middle" fill="${p.cur?cor:"var(--tx3)"}" font-size="${p.cur?10:8}" font-weight="${p.cur?700:400}">${p.total}</text>`:''}
-    <text x="${p.x.toFixed(1)}" y="${(H-PB+11).toFixed(1)}" text-anchor="middle" fill="${p.cur?"var(--tx2)":"var(--tx3)"}" font-size="7.5" font-weight="${p.cur?700:400}">${p.lbl}</text>
-  `);
+  const dots=pts.map(p=>{
+    const tipJson=JSON.stringify({lbl:p.lbl,wStart:p.wStart,total:p.total,tipos:p.tipos}).replace(/"/g,'&quot;');
+    return`
+    <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.cur?6:4}" fill="transparent" stroke="none"
+      data-tip="${tipJson}" data-cor="${cor}"
+      onmouseenter="window._cgTip(event,this)" onmousemove="window._cgTipMove(event)" onmouseleave="window._cgTipHide()"
+      style="cursor:pointer"/>
+    <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.cur?4:2.5}" fill="${cor}" stroke="var(--card,#fff)" stroke-width="${p.cur?2:1}" pointer-events="none"/>
+    ${p.total>0?`<text x="${p.x.toFixed(1)}" y="${(p.y-7).toFixed(1)}" text-anchor="middle" fill="${p.cur?cor:"var(--tx3)"}" font-size="${p.cur?10:8}" font-weight="${p.cur?700:400}" pointer-events="none">${p.total}</text>`:''}
+    <text x="${p.x.toFixed(1)}" y="${(H-PB+11).toFixed(1)}" text-anchor="middle" fill="${p.cur?"var(--tx2)":"var(--tx3)"}" font-size="7.5" font-weight="${p.cur?700:400}" pointer-events="none">${p.lbl}</text>
+  `});
   const gid='cg'+Math.random().toString(36).slice(2,8);
   return`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block;overflow:visible" preserveAspectRatio="none">
     <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="${cor}" stop-opacity=".15"/>
       <stop offset="100%" stop-color="${cor}" stop-opacity=".01"/>
     </linearGradient></defs>
-    <path d="${pA}" fill="url(#${gid})"/>
-    <path d="${pL}" fill="none" stroke="${cor}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="${pA}" fill="url(#${gid})" pointer-events="none"/>
+    <path d="${pL}" fill="none" stroke="${cor}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>
     ${dots.join('')}
   </svg>`;
 }
