@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Rede de Cuidado
-   mobile/rede.js · v1.0.0
+   mobile/rede.js · v1.0.1
 
    Página:
    - rede-mob  → minha rede + visão geral (admin/pastor)
@@ -90,21 +90,23 @@
     el.innerHTML = '<div class="mob-loading">Carregando…</div>';
 
     try {
+      // v_rede_cuidado já filtra deleted_at em ambos os lados — evita contar
+      // vínculos cujo cuidado foi removido do cadastro
       const vinculos = await fetch(
-        `${apiBaseUrl()}/rest/v1/rede_cuidado?cuidador_id=eq.${encodeURIComponent(perm.pessoaId)}&ativo=eq.true&select=id,cuidado_id&limit=10`,
+        `${apiBaseUrl()}/rest/v1/v_rede_cuidado?cuidador_id=eq.${encodeURIComponent(perm.pessoaId)}&ativo=eq.true&select=id,cuidado_id,cuidado_nome&limit=10`,
         { headers: apiHeaders() }
       ).then(r => r.ok ? r.json() : []);
 
-      let pessoas = [];
+      // Busca contato separadamente (view não expõe celular/telefone)
+      let pessoaMap = {};
       if (vinculos.length > 0) {
         const ids = vinculos.map(v => v.cuidado_id).join(',');
-        pessoas = await fetch(
-          `${apiBaseUrl()}/rest/v1/pessoas?id=in.(${ids})&deleted_at=is.null&select=id,nome,celular,telefone`,
+        const contatos = await fetch(
+          `${apiBaseUrl()}/rest/v1/pessoas?id=in.(${ids})&deleted_at=is.null&select=id,celular,telefone`,
           { headers: apiHeaders() }
         ).then(r => r.ok ? r.json() : []);
+        pessoaMap = Object.fromEntries(contatos.map(p => [p.id, p]));
       }
-
-      const pessoaMap = Object.fromEntries(pessoas.map(p => [p.id, p]));
       const vagas = 5 - vinculos.length;
 
       let html = `
@@ -132,7 +134,7 @@
         html += `<div style="display:flex;flex-direction:column;gap:10px">`;
         vinculos.forEach(v => {
           const p = pessoaMap[v.cuidado_id] || {};
-          const nome = p.nome || '—';
+          const nome = v.cuidado_nome || '—';
           html += `
             <div style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;padding:14px 16px">
               <div style="display:flex;align-items:center;gap:10px">
