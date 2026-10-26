@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Rede de Cuidado
-   mobile/rede.js · v1.2.1
+   mobile/rede.js · v1.2.2
 
    Páginas:
    - rede-mob  → minha rede + visão geral (admin/pastor)
@@ -520,6 +520,149 @@
     }
   }
 
+  /* ── Relatório de contatos ────────────────────── */
+  const _TIPO_ICO = { ligacao: '📞', whatsapp: '💬', visita: '🏠', outro: '✍️' };
+  const _TIPO_LBL = { ligacao: 'Ligação', whatsapp: 'WhatsApp', visita: 'Visita', outro: 'Outro' };
+
+  const _MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                  'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+  function _fmtMes(chave) {
+    const [ano, mes] = chave.split('-');
+    return `${_MESES[parseInt(mes) - 1]} ${ano}`;
+  }
+
+  function _fmtDataCurta(dataStr) {
+    const [, mes, dia] = dataStr.split('-');
+    return `${dia}/${mes}`;
+  }
+
+  async function _renderRelatorio(el) {
+    const perm = await _carregarPerm();
+    el.innerHTML = '<div class="mob-loading">Carregando relatório…</div>';
+
+    try {
+      let rows = [];
+
+      if (perm.podeVerGeral) {
+        rows = await fetch(
+          `${apiBaseUrl()}/rest/v1/rede_interacoes?order=data_contato.desc,criado_em.desc&select=id,cuidador_id,cuidado_id,tipo,observacao,data_contato&limit=500`,
+          { headers: apiHeaders() }
+        ).then(r => r.ok ? r.json() : []);
+      } else if (perm.pessoaId) {
+        rows = await fetch(
+          `${apiBaseUrl()}/rest/v1/rede_interacoes?cuidador_id=eq.${encodeURIComponent(perm.pessoaId)}&order=data_contato.desc,criado_em.desc&select=id,cuidador_id,cuidado_id,tipo,observacao,data_contato&limit=200`,
+          { headers: apiHeaders() }
+        ).then(r => r.ok ? r.json() : []);
+      }
+
+      if (rows.length === 0) {
+        el.innerHTML = '<div class="mob-empty" style="padding:40px 0"><div class="mob-empty-text">Nenhum contato registrado ainda.</div></div>';
+        return;
+      }
+
+      // Carrega nomes de todas as pessoas envolvidas
+      const allIds = [...new Set(rows.flatMap(r => [r.cuidador_id, r.cuidado_id]))];
+      const pessoas = await fetch(
+        `${apiBaseUrl()}/rest/v1/pessoas?id=in.(${allIds.join(',')})&select=id,nome`,
+        { headers: apiHeaders() }
+      ).then(r => r.ok ? r.json() : []);
+      const nomesMap = Object.fromEntries(pessoas.map(p => [p.id, p.nome]));
+
+      let html = `<div style="padding:0 16px 24px">`;
+
+      if (perm.podeVerGeral) {
+        // Admin: agrupa por cuidador
+        const porCuidador = {};
+        rows.forEach(r => {
+          if (!porCuidador[r.cuidador_id]) porCuidador[r.cuidador_id] = [];
+          porCuidador[r.cuidador_id].push(r);
+        });
+
+        // ordena cuidadores por nome
+        const cuidadoresOrdenados = Object.keys(porCuidador)
+          .sort((a, b) => (nomesMap[a] || '').localeCompare(nomesMap[b] || ''));
+
+        html += `<div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">${rows.length} contato${rows.length !== 1 ? 's' : ''} registrado${rows.length !== 1 ? 's' : ''}</div>`;
+        html += `<div style="display:flex;flex-direction:column;gap:10px">`;
+
+        cuidadoresOrdenados.forEach(cuidadorId => {
+          const contatos = porCuidador[cuidadorId];
+          const nCuidador = nomesMap[cuidadorId] || '—';
+          html += `
+            <div style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;overflow:hidden">
+              <div style="padding:12px 14px 10px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between">
+                <div style="font-size:13px;font-weight:700;color:var(--tx1)">${_esc(nCuidador)}</div>
+                <span style="font-size:11px;background:var(--rosebg,rgba(224,85,85,.1));color:var(--rose);border-radius:10px;padding:2px 8px;font-weight:600">${contatos.length}</span>
+              </div>
+              <div style="display:flex;flex-direction:column">`;
+
+          contatos.forEach((c, i) => {
+            const nomeCuidado = nomesMap[c.cuidado_id] || '—';
+            html += `
+                <div style="padding:10px 14px;${i < contatos.length - 1 ? 'border-bottom:1px solid var(--bd1)' : ''}">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${c.observacao ? '4px' : '0'}">
+                    <div style="display:flex;align-items:center;gap:6px">
+                      <span style="font-size:14px">${_TIPO_ICO[c.tipo] || '✍️'}</span>
+                      <span style="font-size:13px;color:var(--tx1);font-weight:500">${_esc(_primeiroNome(nomeCuidado))}</span>
+                      <span style="font-size:11px;color:var(--tx3)">${_TIPO_LBL[c.tipo] || c.tipo}</span>
+                    </div>
+                    <span style="font-size:11px;color:var(--tx3);flex-shrink:0">${_fmtDataCurta(c.data_contato)}</span>
+                  </div>
+                  ${c.observacao ? `<div style="font-size:12px;color:var(--tx2);padding-left:20px;line-height:1.4">${_esc(c.observacao)}</div>` : ''}
+                </div>`;
+          });
+
+          html += `</div></div>`;
+        });
+
+        html += `</div>`;
+
+      } else {
+        // Líder: agrupa por mês
+        const porMes = {};
+        rows.forEach(r => {
+          const chave = r.data_contato.slice(0, 7);
+          if (!porMes[chave]) porMes[chave] = [];
+          porMes[chave].push(r);
+        });
+
+        html += `<div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">${rows.length} contato${rows.length !== 1 ? 's' : ''} registrado${rows.length !== 1 ? 's' : ''}</div>`;
+
+        Object.keys(porMes).sort().reverse().forEach(chave => {
+          const contatos = porMes[chave];
+          html += `
+            <div style="margin-bottom:16px">
+              <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">${_fmtMes(chave)}</div>
+              <div style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;overflow:hidden">`;
+
+          contatos.forEach((c, i) => {
+            const nomeCuidado = nomesMap[c.cuidado_id] || '—';
+            html += `
+                <div style="padding:12px 14px;${i < contatos.length - 1 ? 'border-bottom:1px solid var(--bd1)' : ''}">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${c.observacao ? '4px' : '0'}">
+                    <div style="display:flex;align-items:center;gap:6px">
+                      <span style="font-size:15px">${_TIPO_ICO[c.tipo] || '✍️'}</span>
+                      <span style="font-size:13px;font-weight:600;color:var(--tx1)">${_esc(_primeiroNome(nomeCuidado))}</span>
+                      <span style="font-size:11px;color:var(--tx3)">${_TIPO_LBL[c.tipo] || c.tipo}</span>
+                    </div>
+                    <span style="font-size:11px;color:var(--tx3);flex-shrink:0">${_fmtDataCurta(c.data_contato)}</span>
+                  </div>
+                  ${c.observacao ? `<div style="font-size:12px;color:var(--tx2);padding-left:22px;line-height:1.4">${_esc(c.observacao)}</div>` : ''}
+                </div>`;
+          });
+
+          html += `</div></div>`;
+        });
+      }
+
+      html += `</div>`;
+      el.innerHTML = html;
+    } catch (e) {
+      el.innerHTML = `<div class="mob-empty"><div class="mob-empty-text">Erro ao carregar: ${_esc(e.message)}</div></div>`;
+    }
+  }
+
   function _kpi(val, lbl, cor) {
     return `<div style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:12px;text-align:center">
       <div style="font-size:22px;font-weight:800;color:${cor};line-height:1">${val}</div>
@@ -531,12 +674,6 @@
   async function renderRedeMob(container, params) {
     const perm = await _carregarPerm();
 
-    if (!perm.podeVerGeral) {
-      container.innerHTML = `<div id="rc-minha"></div>`;
-      await _renderMinhaRede(document.getElementById('rc-minha'));
-      return;
-    }
-
     let _aba = params?._aba || 'minha';
 
     const _btnAba = (id, lbl) => {
@@ -545,11 +682,14 @@
         style="flex:1;padding:9px 0;font-size:13px;font-weight:600;border:none;background:${on ? 'var(--rose)' : 'transparent'};color:${on ? '#fff' : 'var(--tx3)'};border-radius:8px;cursor:pointer;transition:all .15s">${lbl}</button>`;
     };
 
+    const abas = perm.podeVerGeral
+      ? `${_btnAba('minha', 'Minha Rede')}${_btnAba('geral', 'Visão Geral')}${_btnAba('relatorio', 'Relatório')}`
+      : `${_btnAba('minha', 'Minha Rede')}${_btnAba('relatorio', 'Relatório')}`;
+
     container.innerHTML = `
       <div style="padding:12px 16px 8px">
         <div style="display:flex;background:var(--bg-card);border:1px solid var(--bd2);border-radius:10px;padding:3px;gap:3px">
-          ${_btnAba('minha', 'Minha Rede')}
-          ${_btnAba('geral', 'Visão Geral')}
+          ${abas}
         </div>
       </div>
       <div id="rc-conteudo" style="padding-top:4px"></div>`;
@@ -562,13 +702,15 @@
         btn.style.color      = on ? '#fff'        : 'var(--tx3)';
       });
       const c = document.getElementById('rc-conteudo');
-      if (aba === 'minha') _renderMinhaRede(c);
-      else                  _renderVisaoGeral(c);
+      if (aba === 'minha')     _renderMinhaRede(c);
+      else if (aba === 'geral') _renderVisaoGeral(c);
+      else                      _renderRelatorio(c);
     };
 
     const conteudo = document.getElementById('rc-conteudo');
-    if (_aba === 'minha') await _renderMinhaRede(conteudo);
-    else                   await _renderVisaoGeral(conteudo);
+    if (_aba === 'minha')      await _renderMinhaRede(conteudo);
+    else if (_aba === 'geral') await _renderVisaoGeral(conteudo);
+    else                       await _renderRelatorio(conteudo);
   }
 
 })();
