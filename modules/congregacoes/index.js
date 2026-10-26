@@ -189,6 +189,19 @@ window._dashToggleSede=function(v){
   renderDashboardGeral();
 };
 
+let _congHidden=new Set(JSON.parse(localStorage.getItem('sipen_cong_hidden')||'[]'));
+window._congToggleCard=function(id,e){
+  e.stopPropagation();
+  if(_congHidden.has(id)) _congHidden.delete(id); else _congHidden.add(id);
+  localStorage.setItem('sipen_cong_hidden',JSON.stringify([..._congHidden]));
+  renderDashboardGeral();
+};
+window._congMostrarTodos=function(){
+  _congHidden.clear();
+  localStorage.removeItem('sipen_cong_hidden');
+  renderDashboardGeral();
+};
+
 let _dashCultos=[];
 
 // ── Tooltip singleton ──────────────────────────────────────────
@@ -475,14 +488,19 @@ function renderDashboardGeral(){
         <span style="font-size:12px;color:var(--tx3)">Nenhuma congregação cadastrada</span>
       </div>`;
     } else {
-      const cols=Math.min(4,congs.length);
+      const visibleCongs=congs.filter(c=>!_congHidden.has(c.id));
+      const hiddenCount=_congHidden.size;
+      const cols=Math.min(4,Math.max(visibleCongs.length,1));
       listaEl.innerHTML=`
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
           <span class="ctit" style="margin:0">Congregações</span>
-          <span style="font-size:11px;color:var(--tx3);font-weight:500">${congs.length} ativa${congs.length!==1?"s":""}</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            ${hiddenCount>0?`<button onclick="window._congMostrarTodos()" style="font-size:11px;color:var(--acc);background:none;border:none;cursor:pointer;padding:0;font-weight:600">${hiddenCount} oculta${hiddenCount!==1?"s":""} · Mostrar todas</button>`:''}
+            <span style="font-size:11px;color:var(--tx3);font-weight:500">${visibleCongs.length} de ${congs.length}</span>
+          </div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(${cols},minmax(0,1fr));gap:10px;width:100%;box-sizing:border-box">
-          ${congs.map(c=>{
+          ${visibleCongs.map(c=>{
             const cor=c.identificacao.cor||"#3AAA5C";
             const hist=c.atividades_igreja?.historico_cultos||[];
             // Agrupar serviços por data (manhã + noite = total do dia)
@@ -510,7 +528,8 @@ function renderDashboardGeral(){
             const cultosSem=hist.filter(cu=>(cu.data||'')>=_7diasAtras);
             const spark=_miniLineChart(hist,cor);
             const membros=c.panorama_membresia?.membros_ativos||0;
-            return`<div class="card" style="cursor:pointer;padding:12px;border-top:3px solid ${cor};display:flex;flex-direction:column;gap:0;min-width:0;overflow:hidden" onclick="abrirCongView('${c.id}')">
+            return`<div class="card _cong-card" style="cursor:pointer;padding:12px;border-top:3px solid ${cor};display:flex;flex-direction:column;gap:0;min-width:0;overflow:hidden;position:relative" onclick="abrirCongView('${c.id}')">
+              <button class="_cong-hide-btn" title="Ocultar card" onclick="window._congToggleCard('${c.id}',event)" style="position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;border:none;background:var(--bg3,rgba(0,0,0,.06));color:var(--tx3);font-size:11px;line-height:1;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:2;padding:0">✕</button>
               <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:9px">
                 <div style="width:34px;height:34px;border-radius:8px;background:${cor}18;border:1px solid ${cor}33;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">${c.identificacao.icon||"⛪"}</div>
                 <div style="flex:1;min-width:0">
@@ -550,6 +569,11 @@ function renderDashboardGeral(){
             </div>`;
           }).join('')}
         </div>`;
+      // Show hide button on card hover
+      listaEl.querySelectorAll('._cong-card').forEach(card=>{
+        card.addEventListener('mouseenter',()=>{const b=card.querySelector('._cong-hide-btn');if(b)b.style.display='flex';});
+        card.addEventListener('mouseleave',()=>{const b=card.querySelector('._cong-hide-btn');if(b)b.style.display='none';});
+      });
     }
   }
 
