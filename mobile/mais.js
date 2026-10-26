@@ -97,6 +97,7 @@
     'cultos-mob':          'cultos-mob',
     'atas-mob':            'atas',
     'reunioes-hub':        'reunioes-hub',
+    'rede-mob':            'rede-mob',
   };
 
   window._maisGo = function (page) {
