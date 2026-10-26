@@ -545,6 +545,7 @@ async function ag2Enviar() {
         p_origem:            "link_publico",
         p_data_encerramento: df    || null,
         p_demanda_id:        newId,
+        p_tipo_atividade:    tipoAtiv,
       }),
     });
     if (rpcRes.ok) {
