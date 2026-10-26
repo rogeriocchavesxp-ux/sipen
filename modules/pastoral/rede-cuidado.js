@@ -74,43 +74,50 @@
 
   /* ══ ESTADO ══════════════════════════════════════════════════════ */
 
-  let _vinculosCache   = null; // vínculos do cuidador atual
-  let _pessoasCache    = null; // lista para autocomplete
+  let _vinculosCache   = null; // vínculos do próprio cuidador
+  let _todosCache      = null; // todos os vínculos (admin)
+  let _pessoasCache    = null;
   let _buscaTimeout    = null;
 
-  function _invalidate() { _vinculosCache = null; }
+  function _invalidate() { _vinculosCache = null; _todosCache = null; }
 
   /* ══ CARREGAMENTO DE DADOS ═══════════════════════════════════════ */
 
+  // Sempre filtra pelo cuidador atual — independente do perfil
   async function _carregarVinculos() {
     if (_vinculosCache) return _vinculosCache;
     const pid = _pessoaId();
     if (!pid) return [];
 
     try {
-      if (_isAdmin()) {
-        // Admin: carrega a view completa
-        const rows = await _get('v_rede_cuidado?ativo=eq.true&order=cuidador_nome.asc,cuidado_nome.asc&limit=500');
-        _vinculosCache = rows;
-      } else {
-        // Líder: só os seus vínculos ativos
-        const rows = await _get(
-          `rede_cuidado?cuidador_id=eq.${pid}&ativo=eq.true&select=id,cuidado_id,nivel,observacoes,criado_em`
-        );
-        // Enriquece com nome do cuidado
-        if (rows.length > 0) {
-          const ids = rows.map(r => r.cuidado_id).join(',');
-          const pessoas = await _get(`pessoas?id=in.(${ids})&select=id,nome&deleted_at=is.null`);
-          const map = Object.fromEntries(pessoas.map(p => [p.id, p.nome]));
-          rows.forEach(r => { r.cuidado_nome = map[r.cuidado_id] || '—'; });
-        }
-        _vinculosCache = rows;
+      const rows = await _get(
+        `rede_cuidado?cuidador_id=eq.${pid}&ativo=eq.true&select=id,cuidado_id,nivel,observacoes,criado_em`
+      );
+      if (rows.length > 0) {
+        const ids = rows.map(r => r.cuidado_id).join(',');
+        const pessoas = await _get(`pessoas?id=in.(${ids})&select=id,nome&deleted_at=is.null`);
+        const map = Object.fromEntries(pessoas.map(p => [p.id, p.nome]));
+        rows.forEach(r => { r.cuidado_nome = map[r.cuidado_id] || '—'; });
       }
+      _vinculosCache = rows;
     } catch (e) {
       console.error('[rede-cuidado] carregarVinculos:', e.message);
       _vinculosCache = [];
     }
     return _vinculosCache;
+  }
+
+  // Admin: visão completa de toda a rede
+  async function _carregarTodosVinculos() {
+    if (_todosCache) return _todosCache;
+    try {
+      const rows = await _get('v_rede_cuidado?ativo=eq.true&order=cuidador_nome.asc,cuidado_nome.asc&limit=500');
+      _todosCache = rows;
+    } catch (e) {
+      console.error('[rede-cuidado] carregarTodos:', e.message);
+      _todosCache = [];
+    }
+    return _todosCache;
   }
 
   async function _buscarPessoas(termo) {
@@ -318,7 +325,7 @@
   async function _renderAdmin(container) {
     container.innerHTML = `<div style="padding:24px 0;color:var(--tx3);font-size:13px;text-align:center">Carregando rede completa…</div>`;
 
-    const todos = await _carregarVinculos();
+    const todos = await _carregarTodosVinculos();
 
     // Agrupa por cuidador
     const porCuidador = {};
