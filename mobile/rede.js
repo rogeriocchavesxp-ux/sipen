@@ -1,9 +1,11 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Rede de Cuidado
-   mobile/rede.js · v1.1.0
+   mobile/rede.js · v1.2.0
 
-   Página:
+   Páginas:
    - rede-mob  → minha rede + visão geral (admin/pastor)
+
+   v1.2.0 — registro de contatos + relatório mensal
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -60,6 +62,20 @@
     return f.replace(/\D/g, '');
   }
 
+  function _fmtDias(dataContato) {
+    if (!dataContato) return null;
+    const d    = new Date(dataContato + 'T00:00:00');
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    d.setHours(0, 0, 0, 0);
+    const diff = Math.round((hoje - d) / 86400000);
+    if (diff === 0)  return { txt: 'hoje',             cor: 'var(--gr)'    };
+    if (diff === 1)  return { txt: 'ontem',            cor: 'var(--gr)'    };
+    if (diff < 14)   return { txt: `há ${diff} dias`,  cor: 'var(--gr)'    };
+    if (diff < 30)   return { txt: `há ${diff} dias`,  cor: 'var(--amber)' };
+    return               { txt: `há ${diff} dias`,  cor: 'var(--rose)'  };
+  }
+
   /* ── Botões de contato ────────────────────────── */
   function _btnContato(celular, telefone, nome) {
     const fone = _fmtFone(celular || telefone);
@@ -80,8 +96,8 @@
       </div>`;
   }
 
-  /* ── Add Sheet ────────────────────────────────── */
-  let _addEl = null; // elemento do container para re-render após salvar
+  /* ── Sheet: adicionar membro ──────────────────── */
+  let _addEl      = null;
   let _buscaTimer = null;
 
   function _abrirAddSheet(el) {
@@ -137,7 +153,7 @@
         return;
       }
       el.innerHTML = rows.map(p => `
-        <div onclick="window._redeSelecionar('${_esc(p.id)}','${_esc(p.nome.replace(/'/g,"&#39;"))}')"
+        <div onclick="window._redeSelecionar('${_esc(p.id)}','${_esc(p.nome.replace(/'/g, '&#39;'))}')"
           style="padding:13px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid var(--bd1)">
           <div style="width:32px;height:32px;border-radius:50%;background:var(--rosebg,rgba(224,85,85,.1));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--rose);flex-shrink:0">
             ${_esc(_primeiroNome(p.nome).charAt(0).toUpperCase())}
@@ -186,6 +202,103 @@
     }
   };
 
+  /* ── Sheet: registrar contato ─────────────────── */
+  let _contatoVinculoId = null;
+  let _contatoEl        = null;
+  let _contatoTipo      = 'ligacao';
+
+  const _TIPOS = [
+    { id: 'ligacao',  ico: '📞', lbl: 'Ligação'  },
+    { id: 'whatsapp', ico: '💬', lbl: 'WhatsApp' },
+    { id: 'visita',   ico: '🏠', lbl: 'Visita'   },
+    { id: 'outro',    ico: '✍️', lbl: 'Outro'    },
+  ];
+
+  function _abrirContatoSheet(vinculoId, nome, el) {
+    _contatoVinculoId = vinculoId;
+    _contatoEl        = el;
+    _contatoTipo      = 'ligacao';
+
+    const sheet = document.createElement('div');
+    sheet.id = 'rc-contato-sheet';
+    sheet.innerHTML = `
+      <div class="mob-sheet-overlay" onclick="document.getElementById('rc-contato-sheet')?.remove()"></div>
+      <div class="mob-sheet-panel">
+        <div class="mob-sheet-drag-handle"></div>
+        <div style="padding:16px 16px 0">
+          <div style="font-size:15px;font-weight:700;color:var(--tx1);margin-bottom:3px">Registrar contato</div>
+          <div style="font-size:13px;color:var(--tx3);margin-bottom:20px">${_esc(nome)}</div>
+
+          <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Tipo de contato</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px" id="rc-tipo-grid">
+            ${_TIPOS.map(t => `
+              <button data-tipo="${t.id}" onclick="window._redeContatoTipo('${t.id}')"
+                style="display:flex;align-items:center;gap:8px;padding:11px 12px;border-radius:10px;cursor:pointer;transition:all .12s;font-size:13px;font-weight:600;background:${t.id === 'ligacao' ? 'var(--rosebg,rgba(224,85,85,.1))' : 'var(--bg-card)'};border:1.5px solid ${t.id === 'ligacao' ? 'var(--rose)' : 'var(--bd2)'};color:${t.id === 'ligacao' ? 'var(--rose)' : 'var(--tx2)'}">
+                <span style="font-size:16px">${t.ico}</span>
+                ${t.lbl}
+              </button>`).join('')}
+          </div>
+
+          <div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Observação <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></div>
+          <textarea id="rc-contato-obs" rows="3"
+            placeholder="Como foi o contato? Algum pedido de oração?"
+            style="width:100%;box-sizing:border-box;background:var(--bg-surface,var(--bg-card));border:1px solid var(--bd2);border-radius:10px;color:var(--tx1);font-size:14px;padding:10px 14px;outline:none;resize:none;font-family:inherit;line-height:1.5"></textarea>
+
+          <div id="rc-contato-err" style="display:none;margin-top:8px;font-size:12px;color:var(--rose)"></div>
+
+          <button id="rc-contato-save-btn" onclick="window._redeSalvarContato()"
+            style="width:100%;margin-top:14px;padding:13px;background:var(--rose);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer">
+            Salvar
+          </button>
+        </div>
+        <div class="mob-safe-bottom" style="height:24px"></div>
+      </div>`;
+
+    document.body.appendChild(sheet);
+    requestAnimationFrame(() => sheet.querySelector('.mob-sheet-panel').classList.add('open'));
+  }
+
+  window._redeContatoTipo = function (tipo) {
+    _contatoTipo = tipo;
+    document.querySelectorAll('#rc-tipo-grid [data-tipo]').forEach(btn => {
+      const on = btn.dataset.tipo === tipo;
+      btn.style.background = on ? 'var(--rosebg,rgba(224,85,85,.1))' : 'var(--bg-card)';
+      btn.style.border     = on ? '1.5px solid var(--rose)' : '1.5px solid var(--bd2)';
+      btn.style.color      = on ? 'var(--rose)' : 'var(--tx2)';
+    });
+  };
+
+  window._redeSalvarContato = async function () {
+    const errEl  = document.getElementById('rc-contato-err');
+    const saveBtn = document.getElementById('rc-contato-save-btn');
+    const obs    = (document.getElementById('rc-contato-obs')?.value || '').trim();
+
+    if (errEl)  { errEl.style.display = 'none'; errEl.textContent = ''; }
+    if (saveBtn) saveBtn.disabled = true;
+
+    try {
+      await fetch(`${apiBaseUrl()}/rest/v1/rpc/registrar_interacao_rede`, {
+        method: 'POST',
+        headers: { ...apiHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          p_vinculo_id: _contatoVinculoId,
+          p_tipo:       _contatoTipo,
+          p_observacao: obs || null,
+        })
+      }).then(async r => {
+        if (!r.ok) throw new Error(await r.text());
+        return r.json();
+      });
+
+      document.getElementById('rc-contato-sheet')?.remove();
+      mobToast('Contato registrado', 'success');
+      if (_contatoEl) _renderMinhaRede(_contatoEl);
+    } catch (e) {
+      if (errEl)  { errEl.textContent = 'Erro ao salvar. Tente novamente.'; errEl.style.display = 'block'; }
+      if (saveBtn) saveBtn.disabled = false;
+    }
+  };
+
   /* ── Minha Rede ───────────────────────────────── */
   async function _renderMinhaRede(el) {
     const perm = await _carregarPerm();
@@ -202,17 +315,31 @@
         { headers: apiHeaders() }
       ).then(r => r.ok ? r.json() : []);
 
-      let pessoaMap = {};
+      let pessoaMap   = {};
+      let ultimoMap   = {};
+
       if (vinculos.length > 0) {
-        const ids = vinculos.map(v => v.cuidado_id).join(',');
-        const contatos = await fetch(
-          `${apiBaseUrl()}/rest/v1/pessoas?id=in.(${ids})&deleted_at=is.null&select=id,celular,telefone`,
-          { headers: apiHeaders() }
-        ).then(r => r.ok ? r.json() : []);
+        const ids    = vinculos.map(v => v.cuidado_id).join(',');
+        const vIds   = vinculos.map(v => v.id).join(',');
+
+        const [contatos, ultimas] = await Promise.all([
+          fetch(
+            `${apiBaseUrl()}/rest/v1/pessoas?id=in.(${ids})&deleted_at=is.null&select=id,celular,telefone`,
+            { headers: apiHeaders() }
+          ).then(r => r.ok ? r.json() : []),
+          fetch(
+            `${apiBaseUrl()}/rest/v1/rede_interacoes?vinculo_id=in.(${vIds})&order=data_contato.desc&select=vinculo_id,data_contato,tipo&limit=100`,
+            { headers: apiHeaders() }
+          ).then(r => r.ok ? r.json() : []),
+        ]);
+
         pessoaMap = Object.fromEntries(contatos.map(p => [p.id, p]));
+        ultimas.forEach(i => {
+          if (!ultimoMap[i.vinculo_id]) ultimoMap[i.vinculo_id] = i;
+        });
       }
 
-      const vagas = 5 - vinculos.length;
+      const vagas       = 5 - vinculos.length;
       const podeAdicionar = perm.podeGerirRede && vagas > 0;
 
       let html = `
@@ -245,8 +372,12 @@
       } else {
         html += `<div style="display:flex;flex-direction:column;gap:10px">`;
         vinculos.forEach(v => {
-          const p    = pessoaMap[v.cuidado_id] || {};
-          const nome = v.cuidado_nome || '—';
+          const p       = pessoaMap[v.cuidado_id] || {};
+          const nome    = v.cuidado_nome || '—';
+          const ultimo  = ultimoMap[v.id];
+          const dias    = ultimo ? _fmtDias(ultimo.data_contato) : null;
+          const tipoLbl = ultimo ? ({ ligacao: 'Ligação', whatsapp: 'WhatsApp', visita: 'Visita', outro: 'Contato' }[ultimo.tipo] || 'Contato') : null;
+
           html += `
             <div style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;padding:14px 16px">
               <div style="display:flex;align-items:center;gap:10px">
@@ -255,10 +386,18 @@
                 </div>
                 <div style="flex:1;min-width:0">
                   <div style="font-size:14px;font-weight:600;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(nome)}</div>
-                  ${p.celular || p.telefone ? `<div style="font-size:11px;color:var(--tx3);margin-top:1px">${_esc(p.celular || p.telefone)}</div>` : ''}
+                  ${dias
+                    ? `<div style="font-size:11px;color:${dias.cor};margin-top:1px">${tipoLbl} · ${dias.txt}</div>`
+                    : `<div style="font-size:11px;color:var(--tx3);margin-top:1px">Sem contato registrado</div>`
+                  }
                 </div>
               </div>
               ${_btnContato(p.celular, p.telefone, nome)}
+              <button onclick="window._redeRegistrarContato('${_esc(v.id)}','${_esc(nome.replace(/'/g, "&#39;"))}')"
+                style="width:100%;margin-top:8px;padding:8px 0;background:transparent;border:1px dashed var(--bd2);border-radius:8px;color:var(--tx3);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12.5 19.79 19.79 0 0 1 1.61 4a2 2 0 0 1 1.99-2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.29 6.29l.9-.9a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                Registrar contato
+              </button>
             </div>`;
         });
         html += `</div>`;
@@ -267,8 +406,8 @@
       html += `</div>`;
       el.innerHTML = html;
 
-      // guarda referência para o add sheet poder re-renderizar
       window._redeAbrirAdd = () => _abrirAddSheet(el);
+      window._redeRegistrarContato = (vinculoId, nome) => _abrirContatoSheet(vinculoId, nome, el);
     } catch (e) {
       el.innerHTML = `<div class="mob-empty"><div class="mob-empty-text">Erro ao carregar: ${_esc(e.message)}</div></div>`;
     }
@@ -279,17 +418,35 @@
     el.innerHTML = '<div class="mob-loading">Carregando rede completa…</div>';
 
     try {
-      const todos = await fetch(
-        `${apiBaseUrl()}/rest/v1/v_rede_cuidado?ativo=eq.true&order=cuidador_nome.asc,cuidado_nome.asc&limit=500`,
-        { headers: apiHeaders() }
-      ).then(r => r.ok ? r.json() : []);
+      const hoje30 = new Date();
+      hoje30.setDate(hoje30.getDate() - 30);
+      const limite = hoje30.toISOString().slice(0, 10);
+
+      const [todos, interacoes30] = await Promise.all([
+        fetch(
+          `${apiBaseUrl()}/rest/v1/v_rede_cuidado?ativo=eq.true&order=cuidador_nome.asc,cuidado_nome.asc&limit=500`,
+          { headers: apiHeaders() }
+        ).then(r => r.ok ? r.json() : []),
+        fetch(
+          `${apiBaseUrl()}/rest/v1/rede_interacoes?data_contato=gte.${limite}&order=data_contato.desc&select=cuidador_id,cuidado_id,vinculo_id,tipo,data_contato&limit=1000`,
+          { headers: apiHeaders() }
+        ).then(r => r.ok ? r.json() : []),
+      ]);
 
       const porCuidador = {};
       todos.forEach(v => {
         if (!porCuidador[v.cuidador_id]) {
-          porCuidador[v.cuidador_id] = { nome: v.cuidador_nome, membros: [] };
+          porCuidador[v.cuidador_id] = { nome: v.cuidador_nome, membros: [], membrosIds: new Set() };
         }
         porCuidador[v.cuidador_id].membros.push(v.cuidado_nome);
+        porCuidador[v.cuidador_id].membrosIds.add(v.cuidado_id);
+      });
+
+      // Contatos únicos por cuidador nos últimos 30 dias
+      const contatados30 = {};
+      interacoes30.forEach(i => {
+        if (!contatados30[i.cuidador_id]) contatados30[i.cuidador_id] = new Set();
+        contatados30[i.cuidador_id].add(i.cuidado_id);
       });
 
       const cuidadosIds = [...new Set(todos.map(v => v.cuidado_id))];
@@ -309,6 +466,31 @@
           ${_kpi(semCuidador, 'Sem cuidador', semCuidador > 0 ? 'var(--amber)' : 'var(--tx3)')}
         </div>`;
 
+      // Relatório 30 dias
+      if (nCuidadores > 0) {
+        html += `
+          <div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Contatos — últimos 30 dias</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px">`;
+
+        Object.entries(porCuidador)
+          .sort(([,a],[,b]) => a.nome.localeCompare(b.nome))
+          .forEach(([cuidadorId, g]) => {
+            const total    = g.membros.length;
+            const contats  = contatados30[cuidadorId]?.size || 0;
+            const pct      = total > 0 ? contats / total : 0;
+            const cor      = pct === 0 ? 'var(--rose)' : pct < 0.8 ? 'var(--amber)' : 'var(--gr)';
+            const bg       = pct === 0 ? 'rgba(224,85,85,.08)' : pct < 0.8 ? 'rgba(255,159,10,.08)' : 'rgba(52,199,89,.08)';
+            const bdCor    = pct === 0 ? 'rgba(224,85,85,.25)' : pct < 0.8 ? 'rgba(255,159,10,.25)' : 'rgba(52,199,89,.25)';
+            html += `
+              <div style="background:${bg};border:1px solid ${bdCor};border-radius:10px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between">
+                <div style="font-size:13px;font-weight:600;color:var(--tx1)">${_esc(g.nome)}</div>
+                <div style="font-size:12px;font-weight:700;color:${cor}">${contats}/${total}</div>
+              </div>`;
+          });
+        html += `</div>`;
+      }
+
+      // Lista por cuidador
       if (nCuidadores === 0) {
         html += `<div class="mob-empty"><div class="mob-empty-text">Nenhum vínculo cadastrado.</div></div>`;
       } else {
