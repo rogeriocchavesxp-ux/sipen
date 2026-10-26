@@ -4001,6 +4001,39 @@ function fmtD(d) {
   let _cpModalEl = null;
   let _cpEditId  = null;
 
+  async function _cpCarregarResponsaveis(valorAtual) {
+    const sel = document.getElementById('cp-responsavel');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">— Selecione —</option>';
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/oficiais?status=eq.ativo&deleted_at=is.null&select=id,nome,cargo,congregacao&order=nome.asc`,
+        { headers: apiHeaders() }
+      );
+      if (!r.ok) throw new Error(await r.text());
+      const oficiais = await r.json();
+      oficiais.forEach(o => {
+        const opt = document.createElement('option');
+        opt.value = o.nome;
+        const cargo = o.cargo ? ` (${o.cargo})` : '';
+        const cong  = o.congregacao ? ` — ${o.congregacao}` : '';
+        opt.textContent = o.nome + cargo + cong;
+        if (o.nome === valorAtual) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      // Se o valor atual não bate com nenhum oficial, adiciona como opção avulsa
+      if (valorAtual && !oficiais.find(o => o.nome === valorAtual)) {
+        const opt = document.createElement('option');
+        opt.value = valorAtual;
+        opt.textContent = valorAtual + ' (outro)';
+        opt.selected = true;
+        sel.insertBefore(opt, sel.options[1]);
+      }
+    } catch(e) {
+      console.warn('_cpCarregarResponsaveis:', e);
+    }
+  }
+
   function _garantirModalCasoPri() {
     if (_cpModalEl) return _cpModalEl;
     const el = document.createElement('div');
@@ -4051,7 +4084,9 @@ function fmtD(d) {
           </div>
           <div>
             <label style="${_CP_LB}">Responsável pelo Acompanhamento</label>
-            <input type="text" id="cp-responsavel" style="${_CP_INP}" placeholder="Nome do responsável">
+            <select id="cp-responsavel" style="${_CP_INP}">
+              <option value="">— Carregando... —</option>
+            </select>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div>
@@ -4089,7 +4124,7 @@ function fmtD(d) {
     document.getElementById('cp-solicitante').value    = dados?.solicitante    || '';
     document.getElementById('cp-titulo').value         = dados?.titulo         || '';
     document.getElementById('cp-descricao').value      = dados?.descricao      || '';
-    document.getElementById('cp-responsavel').value    = dados?.responsavel    || '';
+    _cpCarregarResponsaveis(dados?.responsavel || '');
     document.getElementById('cp-prioridade').value     = dados?.prioridade     || 'Alta';
     document.getElementById('cp-status').value         = dados?.status         || 'ABERTA';
     document.getElementById('cp-data-abertura').value  = dados?.data_abertura  ? dados.data_abertura.slice(0,10)  : hoje;
