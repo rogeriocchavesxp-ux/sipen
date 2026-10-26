@@ -6,8 +6,12 @@ ALTER TABLE public.agenda
   ADD COLUMN IF NOT EXISTS tipo_atividade TEXT;
 
 -- ── 2. RPC: solicitar_agendamento — adiciona p_tipo_atividade ─
--- Drop da assinatura atual (14 params) + nova com 15 params.
+-- Drop de todas as sobrecargas conhecidas antes de recriar.
+DROP FUNCTION IF EXISTS public.solicitar_agendamento(TEXT,DATE,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,INTEGER,TEXT);
+DROP FUNCTION IF EXISTS public.solicitar_agendamento(TEXT,DATE,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,INTEGER,TEXT,BOOLEAN);
+DROP FUNCTION IF EXISTS public.solicitar_agendamento(TEXT,DATE,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,INTEGER,TEXT,BOOLEAN,DATE);
 DROP FUNCTION IF EXISTS public.solicitar_agendamento(TEXT,DATE,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,INTEGER,TEXT,BOOLEAN,DATE,UUID);
+DROP FUNCTION IF EXISTS public.solicitar_agendamento(TEXT,DATE,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,INTEGER,TEXT,BOOLEAN,DATE,UUID,TEXT);
 
 CREATE OR REPLACE FUNCTION public.solicitar_agendamento(
   p_titulo            TEXT,
@@ -140,7 +144,9 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.solicitar_agendamento FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.solicitar_agendamento(
+  TEXT,DATE,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,INTEGER,TEXT,BOOLEAN,DATE,UUID,TEXT
+) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.solicitar_agendamento(
   TEXT,DATE,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,TEXT,INTEGER,TEXT,BOOLEAN,DATE,UUID,TEXT
 ) TO anon, authenticated;
