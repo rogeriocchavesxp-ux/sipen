@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Rede de Cuidado
-   mobile/rede.js · v1.0.1
+   mobile/rede.js · v1.1.0
 
    Página:
    - rede-mob  → minha rede + visão geral (admin/pastor)
@@ -16,7 +16,7 @@
 
   async function _carregarPerm() {
     if (_perm !== null) return _perm;
-    _perm = { pessoaId: null, nome: '', podeVerGeral: false };
+    _perm = { pessoaId: null, nome: '', podeVerGeral: false, podeGerirRede: false };
 
     const uid = window.MOB_USER?.id;
     if (!uid) return _perm;
@@ -37,7 +37,8 @@
       ).then(r => r.ok ? r.json() : []);
 
       const funcoes = nRows.map(n => (n.funcao_lider || n.cargo || '').toLowerCase()).join(' ');
-      _perm.podeVerGeral = /admin|pastor|pastoral|presbitero|presidente/.test(funcoes);
+      _perm.podeVerGeral  = /admin|pastor|pastoral|presbitero|presidente/.test(funcoes);
+      _perm.podeGerirRede = _perm.podeVerGeral;
     } catch (_) {}
 
     return _perm;
@@ -79,6 +80,112 @@
       </div>`;
   }
 
+  /* ── Add Sheet ────────────────────────────────── */
+  let _addEl = null; // elemento do container para re-render após salvar
+  let _buscaTimer = null;
+
+  function _abrirAddSheet(el) {
+    _addEl = el;
+    const sheet = document.createElement('div');
+    sheet.id = 'rc-add-sheet';
+    sheet.innerHTML = `
+      <div class="mob-sheet-overlay" onclick="document.getElementById('rc-add-sheet')?.remove()"></div>
+      <div class="mob-sheet-panel" style="max-height:85vh;display:flex;flex-direction:column">
+        <div class="mob-sheet-drag-handle"></div>
+        <div style="padding:0 16px 12px;border-bottom:1px solid var(--bd2)">
+          <div style="font-size:15px;font-weight:700;color:var(--tx1);margin-bottom:12px">Adicionar à rede</div>
+          <div style="position:relative">
+            <input id="rc-busca-inp" type="search" autocomplete="off" placeholder="Digite o nome do membro…"
+              style="width:100%;box-sizing:border-box;background:var(--bg-surface,var(--bg-card));border:1px solid var(--bd2);border-radius:10px;color:var(--tx1);font-size:14px;padding:10px 14px;outline:none;-webkit-appearance:none">
+          </div>
+          <div id="rc-add-err" style="display:none;margin-top:8px;font-size:12px;color:var(--rose)"></div>
+        </div>
+        <div id="rc-sugestoes" style="flex:1;overflow-y:auto;padding:8px 0">
+          <div style="padding:20px 16px;text-align:center;font-size:13px;color:var(--tx3)">Digite ao menos 2 letras para buscar.</div>
+        </div>
+        <div class="mob-safe-bottom"></div>
+      </div>`;
+    document.body.appendChild(sheet);
+    requestAnimationFrame(() => sheet.querySelector('.mob-sheet-panel').classList.add('open'));
+
+    const inp = document.getElementById('rc-busca-inp');
+    inp.focus();
+    inp.addEventListener('input', () => {
+      clearTimeout(_buscaTimer);
+      const termo = inp.value.trim();
+      if (termo.length < 2) {
+        document.getElementById('rc-sugestoes').innerHTML =
+          '<div style="padding:20px 16px;text-align:center;font-size:13px;color:var(--tx3)">Digite ao menos 2 letras para buscar.</div>';
+        return;
+      }
+      _buscaTimer = setTimeout(() => _buscarSugestoes(termo), 280);
+    });
+  }
+
+  async function _buscarSugestoes(termo) {
+    const el = document.getElementById('rc-sugestoes');
+    if (!el) return;
+    el.innerHTML = '<div style="padding:16px;text-align:center;font-size:12px;color:var(--tx3)">Buscando…</div>';
+    try {
+      const rows = await fetch(
+        `${apiBaseUrl()}/rest/v1/pessoas?nome=ilike.*${encodeURIComponent(termo)}*&deleted_at=is.null&select=id,nome&order=nome.asc&limit=20`,
+        { headers: apiHeaders() }
+      ).then(r => r.ok ? r.json() : []);
+
+      if (!rows.length) {
+        el.innerHTML = '<div style="padding:20px 16px;text-align:center;font-size:13px;color:var(--tx3)">Nenhum resultado.</div>';
+        return;
+      }
+      el.innerHTML = rows.map(p => `
+        <div onclick="window._redeSelecionar('${_esc(p.id)}','${_esc(p.nome.replace(/'/g,"&#39;"))}')"
+          style="padding:13px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid var(--bd1)">
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--rosebg,rgba(224,85,85,.1));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--rose);flex-shrink:0">
+            ${_esc(_primeiroNome(p.nome).charAt(0).toUpperCase())}
+          </div>
+          <div style="font-size:14px;color:var(--tx1)">${_esc(p.nome)}</div>
+        </div>`).join('');
+    } catch (e) {
+      el.innerHTML = `<div style="padding:16px;font-size:12px;color:var(--rose)">Erro: ${_esc(e.message)}</div>`;
+    }
+  }
+
+  window._redeSelecionar = async function (pessoaId, nome) {
+    const errEl = document.getElementById('rc-add-err');
+    const sugg  = document.getElementById('rc-sugestoes');
+    if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+
+    const perm = await _carregarPerm();
+    if (!perm.pessoaId) return;
+
+    if (pessoaId === perm.pessoaId) {
+      if (errEl) { errEl.textContent = 'Você não pode se adicionar à própria rede.'; errEl.style.display = 'block'; }
+      return;
+    }
+
+    if (sugg) sugg.innerHTML = '<div style="padding:16px;text-align:center;font-size:13px;color:var(--tx3)">Salvando…</div>';
+
+    try {
+      const res = await fetch(`${apiBaseUrl()}/rest/v1/rpc/adicionar_membro_rede_cuidado`, {
+        method: 'POST',
+        headers: { ...apiHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify({ p_cuidador_id: perm.pessoaId, p_cuidado_id: pessoaId, p_nivel: 1 })
+      }).then(r => r.json());
+
+      if (res?.ok === false) {
+        if (errEl) { errEl.textContent = res.erro || 'Erro ao adicionar.'; errEl.style.display = 'block'; }
+        if (sugg) sugg.innerHTML = '';
+        return;
+      }
+
+      document.getElementById('rc-add-sheet')?.remove();
+      mobToast(`${_primeiroNome(nome)} adicionado(a) à rede`, 'success');
+      if (_addEl) _renderMinhaRede(_addEl);
+    } catch (e) {
+      if (errEl) { errEl.textContent = e.message; errEl.style.display = 'block'; }
+      if (sugg) sugg.innerHTML = '';
+    }
+  };
+
   /* ── Minha Rede ───────────────────────────────── */
   async function _renderMinhaRede(el) {
     const perm = await _carregarPerm();
@@ -90,14 +197,11 @@
     el.innerHTML = '<div class="mob-loading">Carregando…</div>';
 
     try {
-      // v_rede_cuidado já filtra deleted_at em ambos os lados — evita contar
-      // vínculos cujo cuidado foi removido do cadastro
       const vinculos = await fetch(
         `${apiBaseUrl()}/rest/v1/v_rede_cuidado?cuidador_id=eq.${encodeURIComponent(perm.pessoaId)}&ativo=eq.true&select=id,cuidado_id,cuidado_nome&limit=10`,
         { headers: apiHeaders() }
       ).then(r => r.ok ? r.json() : []);
 
-      // Busca contato separadamente (view não expõe celular/telefone)
       let pessoaMap = {};
       if (vinculos.length > 0) {
         const ids = vinculos.map(v => v.cuidado_id).join(',');
@@ -107,7 +211,9 @@
         ).then(r => r.ok ? r.json() : []);
         pessoaMap = Object.fromEntries(contatos.map(p => [p.id, p]));
       }
+
       const vagas = 5 - vinculos.length;
+      const podeAdicionar = perm.podeGerirRede && vagas > 0;
 
       let html = `
         <div style="padding:0 16px 16px">
@@ -116,24 +222,30 @@
               <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Sua rede</div>
               <div style="font-size:17px;font-weight:700;color:var(--tx1)">${_esc(perm.nome)}</div>
             </div>
-            <div style="text-align:right">
-              <div style="font-size:26px;font-weight:800;color:var(--rose)">${vinculos.length}<span style="font-size:13px;color:var(--tx3);font-weight:400">/5</span></div>
-              <div style="font-size:10px;color:var(--tx3)">${vagas > 0 ? vagas + ' vaga' + (vagas > 1 ? 's' : '') : 'Completa'}</div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="text-align:right">
+                <div style="font-size:26px;font-weight:800;color:var(--rose)">${vinculos.length}<span style="font-size:13px;color:var(--tx3);font-weight:400">/5</span></div>
+                <div style="font-size:10px;color:var(--tx3)">${vagas > 0 ? vagas + ' vaga' + (vagas > 1 ? 's' : '') : 'Completa'}</div>
+              </div>
+              ${podeAdicionar ? `
+              <button onclick="window._redeAbrirAdd()"
+                style="width:36px;height:36px;border-radius:50%;background:var(--rose);border:none;color:#fff;font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</button>
+              ` : ''}
             </div>
           </div>`;
 
       if (vinculos.length === 0) {
-        html += `<div class="mob-empty" style="padding:32px 0">
+        html += `<div class="mob-empty" style="padding:24px 0">
           <div class="mob-empty-icon">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--tx3)"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           </div>
           <div class="mob-empty-text">Nenhuma pessoa vinculada ainda.</div>
-          <div class="mob-empty-sub">Fale com o pastor ou administrador para configurar sua rede.</div>
+          ${!podeAdicionar ? '<div class="mob-empty-sub">Fale com o pastor ou administrador para configurar sua rede.</div>' : ''}
         </div>`;
       } else {
         html += `<div style="display:flex;flex-direction:column;gap:10px">`;
         vinculos.forEach(v => {
-          const p = pessoaMap[v.cuidado_id] || {};
+          const p    = pessoaMap[v.cuidado_id] || {};
           const nome = v.cuidado_nome || '—';
           html += `
             <div style="background:var(--bg-card);border:1px solid var(--bd2);border-radius:12px;padding:14px 16px">
@@ -154,6 +266,9 @@
 
       html += `</div>`;
       el.innerHTML = html;
+
+      // guarda referência para o add sheet poder re-renderizar
+      window._redeAbrirAdd = () => _abrirAddSheet(el);
     } catch (e) {
       el.innerHTML = `<div class="mob-empty"><div class="mob-empty-text">Erro ao carregar: ${_esc(e.message)}</div></div>`;
     }
@@ -169,7 +284,6 @@
         { headers: apiHeaders() }
       ).then(r => r.ok ? r.json() : []);
 
-      // Agrupa por cuidador
       const porCuidador = {};
       todos.forEach(v => {
         if (!porCuidador[v.cuidador_id]) {
@@ -180,44 +294,26 @@
 
       const cuidadosIds = [...new Set(todos.map(v => v.cuidado_id))];
       let semCuidador = 0;
-      if (cuidadosIds.length > 0) {
-        const r = await fetch(
-          `${apiBaseUrl()}/rest/v1/membros?deleted_at=is.null&select=id&id=not.in.(${
-            // pessoas que já têm cuidador
-            cuidadosIds.join(',')
-          })&limit=1`,
-          { headers: { ...apiHeaders(), 'Prefer': 'count=exact' } }
-        );
-        const cr = r.headers.get('content-range');
-        semCuidador = cr ? parseInt(cr.split('/')[1]) || 0 : 0;
-      } else {
-        const r = await fetch(
-          `${apiBaseUrl()}/rest/v1/membros?deleted_at=is.null&select=id&limit=1`,
-          { headers: { ...apiHeaders(), 'Prefer': 'count=exact' } }
-        );
-        const cr = r.headers.get('content-range');
-        semCuidador = cr ? parseInt(cr.split('/')[1]) || 0 : 0;
-      }
+      const semUrl = cuidadosIds.length > 0
+        ? `${apiBaseUrl()}/rest/v1/membros?deleted_at=is.null&select=id&id=not.in.(${cuidadosIds.join(',')})&limit=1`
+        : `${apiBaseUrl()}/rest/v1/membros?deleted_at=is.null&select=id&limit=1`;
+      const semRes = await fetch(semUrl, { headers: { ...apiHeaders(), 'Prefer': 'count=exact' } });
+      const cr = semRes.headers.get('content-range');
+      semCuidador = cr ? parseInt(cr.split('/')[1]) || 0 : 0;
 
       const nCuidadores = Object.keys(porCuidador).length;
-
-      let html = `<div style="padding:0 16px 24px">`;
-
-      // KPIs
-      html += `
+      let html = `<div style="padding:0 16px 24px">
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px">
           ${_kpi(todos.length, 'Vínculos', 'var(--rose)')}
           ${_kpi(nCuidadores, 'Cuidadores', 'var(--gr)')}
           ${_kpi(semCuidador, 'Sem cuidador', semCuidador > 0 ? 'var(--amber)' : 'var(--tx3)')}
         </div>`;
 
-      // Lista por cuidador
       if (nCuidadores === 0) {
         html += `<div class="mob-empty"><div class="mob-empty-text">Nenhum vínculo cadastrado.</div></div>`;
       } else {
         html += `<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Por cuidador</div>
                  <div style="display:flex;flex-direction:column;gap:8px">`;
-
         Object.values(porCuidador)
           .sort((a, b) => a.nome.localeCompare(b.nome))
           .forEach(g => {
@@ -232,7 +328,6 @@
                 </div>
               </div>`;
           });
-
         html += `</div>`;
       }
 
@@ -255,13 +350,11 @@
     const perm = await _carregarPerm();
 
     if (!perm.podeVerGeral) {
-      // Líder normal: apenas minha rede, sem tabs
       container.innerHTML = `<div id="rc-minha"></div>`;
       await _renderMinhaRede(document.getElementById('rc-minha'));
       return;
     }
 
-    // Admin/pastor: tabs Minha Rede | Visão Geral
     let _aba = params?._aba || 'minha';
 
     const _btnAba = (id, lbl) => {
@@ -281,15 +374,14 @@
 
     window._redeToggleAba = function (aba) {
       _aba = aba;
-      const tabs = container.querySelectorAll('[onclick^="window._redeToggleAba"]');
-      tabs.forEach(btn => {
-        const isOn = btn.getAttribute('onclick').includes(`'${aba}'`);
-        btn.style.background = isOn ? 'var(--rose)' : 'transparent';
-        btn.style.color      = isOn ? '#fff'        : 'var(--tx3)';
+      container.querySelectorAll('[onclick^="window._redeToggleAba"]').forEach(btn => {
+        const on = btn.getAttribute('onclick').includes(`'${aba}'`);
+        btn.style.background = on ? 'var(--rose)' : 'transparent';
+        btn.style.color      = on ? '#fff'        : 'var(--tx3)';
       });
-      const conteudo = document.getElementById('rc-conteudo');
-      if (aba === 'minha') _renderMinhaRede(conteudo);
-      else                  _renderVisaoGeral(conteudo);
+      const c = document.getElementById('rc-conteudo');
+      if (aba === 'minha') _renderMinhaRede(c);
+      else                  _renderVisaoGeral(c);
     };
 
     const conteudo = document.getElementById('rc-conteudo');
