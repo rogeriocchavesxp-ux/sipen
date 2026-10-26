@@ -363,6 +363,9 @@ function ag2ToggleEspaco(nome) {
     _ag2EspacosSelecionados.delete(nome);
   } else {
     _ag2EspacosSelecionados.add(nome);
+    // Selecionar espaço interno → força Atividade Interna
+    const btnInterna = document.querySelector(".ag2-ativ-btn[data-val='Atividade Interna (Igreja)']");
+    if (btnInterna) ag2SetAtiv(btnInterna);
   }
   ag2AtualizarSelecao();
 }
