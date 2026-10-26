@@ -247,17 +247,29 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 /* ── screen-agend: tipo de solicitação ──────────────────────── */
 .ag-tipo-grid { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px 0; }
 .ag2-tipo-lbl {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 16px; border-radius: 20px;
-  border: 1.5px solid var(--inpbd); cursor: pointer;
-  font-size: 13.5px; background: var(--inp); color: var(--tx2);
-  user-select: none; transition: border-color .12s, background .12s, color .12s;
+  display: inline-flex; align-items: center;
+  padding: 9px 20px; border-radius: 10px;
+  border: 1.5px solid var(--bd); cursor: pointer;
+  font-size: 13px; font-weight: 500;
+  background: var(--card); color: var(--tx1);
+  user-select: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  transition: border-color .15s, background .15s, color .15s, box-shadow .15s, transform .1s;
 }
 .ag2-tipo-lbl input[type="radio"] { display: none; }
 .ag2-tipo-lbl.sel, .ag2-tipo-lbl:has(input:checked) {
-  border-color: var(--acc); background: var(--accbg); color: var(--acc); font-weight: 600;
+  border-color: var(--acc);
+  background: var(--acc);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 3px 10px rgba(74,156,245,.35);
+  transform: translateY(-1px);
 }
-.ag2-tipo-lbl:not(.sel):hover { border-color: var(--acc); color: var(--tx1); }
+.ag2-tipo-lbl:not(.sel):hover {
+  border-color: var(--acc); color: var(--acc);
+  background: var(--accbg);
+  box-shadow: 0 2px 6px rgba(74,156,245,.15);
+}
 
 /* ── screen-agend: botão verificar disponibilidade ──────────── */
 .btn-verif {
