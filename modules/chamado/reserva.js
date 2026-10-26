@@ -38,6 +38,7 @@ function agIniciar(tipo) {
     const el = document.getElementById(id); if (el) el.value = "";
   });
   document.querySelectorAll("input[name='ag2-arte']").forEach(r => r.checked = false);
+  document.querySelectorAll(".ag2-ativ-btn").forEach((b, i) => b.classList.toggle("active", i === 0));
 
   const errEl = document.getElementById("ag2-err");
   if (errEl) { errEl.textContent = ""; errEl.classList.remove("show"); }
@@ -54,6 +55,15 @@ function ag2Voltar() {
   csubReset();
   _ocultarFinanceiro();
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function ag2SetAtiv(btn) {
+  document.querySelectorAll(".ag2-ativ-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+}
+
+function _ag2GetAtiv() {
+  return document.querySelector(".ag2-ativ-btn.active")?.dataset.val || "Atividade Interna (Igreja)";
 }
 
 function ag2TipoChange(tipo) {
@@ -436,9 +446,11 @@ async function ag2Enviar() {
   const resp      = catObj?.resp || "Secretaria / Liderança";
   const hoje      = new Date().toISOString().split("T")[0];
   const multiDia  = df && df !== di;
+  const tipoAtiv  = _ag2GetAtiv();
   const descFinal = [
     desc,
     "━━━ Dados da Programação ━━━",
+    `Tipo de atividade: ${tipoAtiv}`,
     multiDia
       ? `Período: ${fmtDataBR(di)}${hi ? " às " + hi : ""} até ${fmtDataBR(df)}${hf ? " às " + hf : ""}`
       : `Data: ${fmtDataBR(di)}`,
@@ -619,6 +631,7 @@ function novoEnvio() {
   _arteHoraEvt   = null;
   _arteLocal     = null;
   document.querySelectorAll("input[name='ag-arte']").forEach(r => r.checked = false);
+  document.querySelectorAll(".ag2-ativ-btn").forEach((b, i) => b.classList.toggle("active", i === 0));
   ["s2-resp","s2-tel","s2-desc","s2-prazo","s2-info"].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = "";
   });

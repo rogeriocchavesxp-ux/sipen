@@ -579,6 +579,19 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
   line-height: 1;
 }
 .fin-cam-btn:hover { border-color: var(--acc); }
+
+/* ── Agendamentos: toggle atividade interna / externa ──────── */
+.ag2-ativ-toggle {
+  display: flex; border-radius: 8px; border: 1.5px solid var(--inpbd);
+  overflow: hidden; background: var(--inp);
+}
+.ag2-ativ-btn {
+  flex: 1; padding: 9px 12px; border: none; background: transparent;
+  font-size: 13px; color: var(--tx2); cursor: pointer; font-family: inherit;
+  transition: background .15s, color .15s; text-align: center; line-height: 1.4;
+}
+.ag2-ativ-btn.active { background: var(--acc); color: #fff; font-weight: 600; }
+.ag2-ativ-btn:not(.active):hover { background: var(--accbg); color: var(--acc); }
 </style>
 </head>
 <body>
@@ -1304,6 +1317,13 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
     <div id="ag2-card-form" style="display:none">
       <div class="card">
         <div class="card-title">Dados da programação</div>
+        <div class="field">
+          <label>Tipo de atividade</label>
+          <div class="ag2-ativ-toggle">
+            <button type="button" class="ag2-ativ-btn active" data-val="Atividade Interna (Igreja)" onclick="ag2SetAtiv(this)">Atividade Interna (Igreja)</button>
+            <button type="button" class="ag2-ativ-btn" data-val="Atividade Externa" onclick="ag2SetAtiv(this)">Atividade Externa</button>
+          </div>
+        </div>
         <div class="field">
           <label for="ag2-titulo">Título <span class="req">*</span></label>
           <input type="text" id="ag2-titulo" placeholder="Descreva brevemente o evento" maxlength="200">
