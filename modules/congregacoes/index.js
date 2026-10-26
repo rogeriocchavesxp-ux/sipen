@@ -190,7 +190,7 @@ window._dashToggleSede=function(v){
 };
 
 let _dashCultos=[];
-let _dashFreqMode='mensal';
+let _dashFreqMode='semanal';
 window._dashToggleFreq=function(mode){ _dashFreqMode=mode; _renderEvolucaoChart(); };
 
 function _renderEvolucaoChart(){
