@@ -190,6 +190,47 @@ window._dashToggleSede=function(v){
 };
 
 let _dashCultos=[];
+
+function _miniLineChart(hist, cor){
+  const _tc=c=>c.participantes||(c.adultos||0)+(c.criancas||0);
+  const today=new Date();
+  const semanas=[];
+  for(let i=7;i>=0;i--){
+    const d=new Date(today);
+    d.setDate(d.getDate()-d.getDay()-i*7);
+    semanas.push(d.toISOString().slice(0,10));
+  }
+  const pdata=semanas.map((wStart,idx)=>{
+    const wEnd=new Date(wStart+'T00:00:00');
+    wEnd.setDate(wEnd.getDate()+6);
+    const wEndStr=wEnd.toISOString().slice(0,10);
+    const wc=hist.filter(c=>c.data&&c.data>=wStart&&c.data<=wEndStr);
+    const d=new Date(wStart+'T00:00:00');
+    const lbl=idx===semanas.length-1?'Sem.':`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+    return{lbl,total:wc.reduce((s,c)=>s+_tc(c),0),cur:idx===semanas.length-1};
+  });
+  const maxV=Math.max(...pdata.map(p=>p.total),1);
+  const W=280,H=64,PT=14,PB=16,PL=4,PR=4;
+  const cw=W-PL-PR,ch=H-PT-PB,n=pdata.length;
+  const pts=pdata.map((p,i)=>({...p,x:PL+(n<=1?cw/2:i/(n-1)*cw),y:PT+ch-(p.total/maxV)*ch}));
+  const pL=pts.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const pA=`${pL} L${pts[pts.length-1].x.toFixed(1)},${(H-PB).toFixed(1)} L${pts[0].x.toFixed(1)},${(H-PB).toFixed(1)} Z`;
+  const dots=pts.map(p=>`
+    <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.cur?4:2.5}" fill="${cor}" stroke="var(--card,#fff)" stroke-width="${p.cur?2:1}"/>
+    ${p.total>0?`<text x="${p.x.toFixed(1)}" y="${(p.y-7).toFixed(1)}" text-anchor="middle" fill="${p.cur?cor:"var(--tx3)"}" font-size="${p.cur?10:8}" font-weight="${p.cur?700:400}">${p.total}</text>`:''}
+    <text x="${p.x.toFixed(1)}" y="${(H-PB+11).toFixed(1)}" text-anchor="middle" fill="${p.cur?"var(--tx2)":"var(--tx3)"}" font-size="7.5" font-weight="${p.cur?700:400}">${p.lbl}</text>
+  `);
+  const gid='cg'+Math.random().toString(36).slice(2,8);
+  return`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block;overflow:visible" preserveAspectRatio="none">
+    <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${cor}" stop-opacity=".15"/>
+      <stop offset="100%" stop-color="${cor}" stop-opacity=".01"/>
+    </linearGradient></defs>
+    <path d="${pA}" fill="url(#${gid})"/>
+    <path d="${pL}" fill="none" stroke="${cor}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots.join('')}
+  </svg>`;
+}
 let _dashFreqMode='semanal';
 window._dashToggleFreq=function(mode){ _dashFreqMode=mode; _renderEvolucaoChart(); };
 
@@ -392,10 +433,7 @@ function renderDashboardGeral(){
             const _7diasAtras=new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
             const diasSem=dias.filter(d=>d>=_7diasAtras);
             const cultosSem=hist.filter(cu=>(cu.data||'')>=_7diasAtras);
-            const sparkMax=dias4.length?Math.max(...dias4.map(d=>byDate[d].total))||1:1;
-            const spark=dias4.length>=2?`<div style="display:flex;align-items:flex-end;gap:3px;height:20px;margin-top:6px">
-              ${dias4.slice().reverse().map(d=>{const h=Math.max(3,Math.round((byDate[d].total/sparkMax)*18));return`<div style="width:6px;flex-shrink:0;height:${h}px;background:${cor};opacity:.75;border-radius:2px 2px 0 0"></div>`;}).join('')}
-            </div>`:'';
+            const spark=_miniLineChart(hist,cor);
             const membros=c.panorama_membresia?.membros_ativos||0;
             return`<div class="card" style="cursor:pointer;padding:12px;border-top:3px solid ${cor};display:flex;flex-direction:column;gap:0;min-width:0;overflow:hidden" onclick="abrirCongView('${c.id}')">
               <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:9px">
@@ -416,7 +454,7 @@ function renderDashboardGeral(){
                   <div style="font-size:18px;font-weight:800;color:${cor};line-height:1.1">${avg4}${tPct!==null?`<span style="font-size:9.5px;margin-left:3px;color:${tUp?"var(--gr)":"var(--rose)"}">${tUp?"↑":"↓"}${Math.abs(tPct)}%</span>`:''}</div>
                 </div>
               </div>
-              ${ultimoDia?`<div style="padding:6px 8px;border-radius:6px;border:1px solid var(--bd1)">
+              ${ultimoDia?`<div style="padding:6px 8px;border-radius:6px;border:1px solid var(--bd1);margin-bottom:6px">
                 <div style="font-size:9.5px;color:var(--tx3);display:flex;justify-content:space-between;align-items:center;margin-bottom:${servicosDoDia.length>1?'5px':'2px'}">
                   <span>${fmtData(ultimaData)}</span>
                   <b style="font-size:13px;color:${cor}">${ultimoDia.total}</b>
@@ -428,8 +466,8 @@ function renderDashboardGeral(){
                   </div>`).join('')
                   :`<div style="font-size:9.5px;color:var(--tx3)">Adultos: <b style="color:var(--tx2)">${ultimoDia.adultos}</b> · Crianças: <b style="color:var(--sky)">${ultimoDia.criancas}</b>${ultimoDia.visitantes>0?` · Visitantes: <b style="color:var(--amber)">${ultimoDia.visitantes}</b>`:''}</div>`
                 }
-                ${spark}
-              </div>`:`<div style="font-size:10px;color:var(--tx3);padding:4px 0;font-style:italic">Nenhum culto registrado</div>`}
+              </div>`:''}
+              <div style="padding:4px 0">${spark}</div>
               <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:7px;border-top:1px solid var(--bd1)">
                 <span style="font-size:9.5px;color:var(--tx3)">${diasSem.length} dia${diasSem.length!==1?"s":""} · ${cultosSem.length} culto${cultosSem.length!==1?"s":""} <span style="opacity:.6">(7 dias)</span></span>
                 <span style="font-size:11px;color:var(--gr);font-weight:600">Abrir →</span>
