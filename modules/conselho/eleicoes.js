@@ -1512,6 +1512,9 @@
             ${!isDiret && c.token_perfil ? `<button onclick="eleicaoEnviarWACandidato('${c.id}')"
               style="background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.3);border-radius:5px;padding:3px 8px;font-size:11px;color:#25d366;cursor:pointer"
               title="Enviar link do mini-currículo via WhatsApp">📱</button>` : ""}
+            ${c.ativo ? `<button onclick="eleicaoAbrirMsgPosse('${c.id}')"
+              style="background:rgba(255,193,7,.1);border:1px solid rgba(255,193,7,.35);border-radius:5px;padding:3px 8px;font-size:11px;color:#b08000;cursor:pointer"
+              title="Enviar mensagem de posse">🎉</button>` : ""}
             <button onclick="eleicaoToggleCandidato('${c.id}',${!c.ativo})"
               style="background:none;border:1px solid var(--bd2);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--tx2);cursor:pointer"
               title="${c.ativo?"Inativar":"Ativar"}">${c.ativo ? "○" : "●"}</button>
@@ -1534,6 +1537,7 @@
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             ${filtroHtml}
             ${!isDiret ? _btn("⬇ Importar das Indicações", "eleicaoAbrirImportarIndicacoes()") : ""}
+            <button onclick="eleicaoAbrirMsgPosse()" style="display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;border:1px solid rgba(37,211,102,.4);background:rgba(37,211,102,.08);color:#1a9e4a;font-size:12px;font-weight:600;cursor:pointer">🎉 Enviar mensagem de posse</button>
             ${_btnPri("+ Adicionar manualmente", "eleicaoAbrirAdicionarCandidato()")}
           </div>
         </div>
@@ -1596,6 +1600,121 @@
       }
     } catch (e) {
       alert("Erro ao enviar: " + (e.message || e));
+    }
+  };
+
+  // ── Modal: Mensagem de Posse ──────────────────────────────────────
+  function _msgPosseDefault(nome, tipo) {
+    const primeiroNome = nome ? nome.split(" ")[0] : "";
+    const cargo = tipo === "presbitero" ? "Presbítero" : tipo === "diacono" ? "Diácono" : "Oficial";
+    return `Olá, ${primeiroNome}! 🎉\n\n` +
+      `Parabenizamos pela sua eleição como *${cargo}* na Igreja Presbiteriana da Penha!\n\n` +
+      `Informamos que a cerimônia de *Posse dos Oficiais* eleitos está agendada para o dia *15 de novembro de 2026 (domingo)*, durante o culto da manhã.\n\n` +
+      `Contamos com a sua presença neste momento tão especial para a nossa Igreja!\n\n` +
+      `_Igreja Presbiteriana da Penha_`;
+  }
+
+  window.eleicaoAbrirMsgPosse = function(candidatoId) {
+    const candidatoUnico = candidatoId ? _candidatos.find(c => c.id === candidatoId) : null;
+    const ativos = _candidatos.filter(c => c.ativo);
+
+    document.getElementById("modal-msg-posse")?.remove();
+    const m = document.createElement("div");
+    m.id = "modal-msg-posse";
+    m.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px";
+
+    const msgDefault = candidatoUnico
+      ? _msgPosseDefault(candidatoUnico.nome, candidatoUnico.tipo)
+      : _msgPosseDefault("[Nome]", "");
+    const destinatarios = candidatoUnico
+      ? `<div style="padding:10px 14px;background:rgba(37,211,102,.08);border:1px solid rgba(37,211,102,.25);border-radius:7px;font-size:12px;color:var(--tx2)">
+           <strong style="color:var(--tx1)">${_esc(candidatoUnico.nome)}</strong>
+           <span style="color:var(--tx3);margin-left:6px">${candidatoUnico.tipo === "presbitero" ? "Presbítero" : "Diácono"} · ${_esc(candidatoUnico.congregacao||"Sede")}</span>
+         </div>`
+      : `<div style="padding:10px 14px;background:rgba(37,211,102,.08);border:1px solid rgba(37,211,102,.25);border-radius:7px;font-size:12px;color:var(--tx2)">
+           <strong style="color:var(--tx1)">${ativos.length} candidato${ativos.length!==1?"s":""} ativo${ativos.length!==1?"s":""}</strong>
+           <span style="color:var(--tx3);margin-left:6px">— mensagem enviada individualmente a cada um</span>
+         </div>`;
+
+    m.innerHTML = `
+      <div style="background:var(--bg-card,#fff);border:1px solid var(--bd1);border-radius:12px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;box-shadow:0 16px 48px rgba(0,0,0,.35)">
+        <div style="padding:20px 24px 16px;border-bottom:1px solid var(--bd1);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg-card,#fff);z-index:1">
+          <div>
+            <div style="font-size:10.5px;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Eleições · Posse</div>
+            <div style="font-size:17px;font-weight:700;color:var(--tx1)">🎉 Mensagem de Posse</div>
+          </div>
+          <button onclick="document.getElementById('modal-msg-posse').remove()" style="background:none;border:none;font-size:22px;color:var(--tx3);cursor:pointer;padding:4px 8px;border-radius:6px">×</button>
+        </div>
+        <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px">
+          <div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);margin-bottom:7px">Destinatário${candidatoUnico?"":"s"}</div>
+            ${destinatarios}
+          </div>
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)">Mensagem (editável)</div>
+              <button onclick="document.getElementById('mp-texto').value=${JSON.stringify(msgDefault)}" style="font-size:10px;color:var(--acc);background:none;border:none;cursor:pointer;padding:0">↺ Restaurar padrão</button>
+            </div>
+            <textarea id="mp-texto" rows="12" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--bg-input,var(--bg-card));color:var(--tx1);font-size:12.5px;line-height:1.6;font-family:inherit;resize:vertical;box-sizing:border-box">${msgDefault.replace(/</g,"&lt;")}</textarea>
+            <div style="font-size:10.5px;color:var(--tx3);margin-top:5px">O texto em *asteriscos* aparece em negrito no WhatsApp.</div>
+          </div>
+          <div id="mp-status" style="display:none;padding:10px 14px;border-radius:7px;font-size:12px"></div>
+        </div>
+        <div style="padding:14px 24px 20px;border-top:1px solid var(--bd1);display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:var(--bg-card,#fff)">
+          <button onclick="document.getElementById('modal-msg-posse').remove()" style="padding:9px 20px;border-radius:8px;border:1px solid var(--bd2);background:none;color:var(--tx2);font-size:13px;cursor:pointer">Cancelar</button>
+          <button id="mp-btn" onclick="eleicaoEnviarMsgPosse('${candidatoId||""}')" style="padding:9px 24px;border-radius:8px;border:none;background:#1a9e4a;color:#fff;font-size:13px;font-weight:600;cursor:pointer">
+            ${candidatoUnico ? "📱 Enviar" : `📱 Enviar para ${ativos.length} candidato${ativos.length!==1?"s":""}`}
+          </button>
+        </div>
+      </div>`;
+    document.body.appendChild(m);
+    m.addEventListener("click", e => { if (e.target === m) m.remove(); });
+  };
+
+  window.eleicaoEnviarMsgPosse = async function(candidatoId) {
+    const btn = document.getElementById("mp-btn");
+    const statusEl = document.getElementById("mp-status");
+    const texto = document.getElementById("mp-texto")?.value?.trim();
+    if (!texto) return;
+
+    const alvos = candidatoId
+      ? _candidatos.filter(c => c.id === candidatoId && c.ativo)
+      : _candidatos.filter(c => c.ativo);
+
+    if (!alvos.length) { alert("Nenhum candidato ativo encontrado."); return; }
+
+    if (btn) { btn.disabled = true; btn.textContent = "Enviando…"; }
+    if (statusEl) { statusEl.style.display = "none"; }
+
+    let ok = 0, falha = 0;
+    for (const c of alvos) {
+      let tel = null;
+      if (c.pessoa_id) {
+        const { data: p } = await _sb().from("pessoas").select("celular,telefone").eq("id", c.pessoa_id).maybeSingle();
+        tel = p?.celular || p?.telefone || null;
+      }
+      if (!tel) { falha++; continue; }
+
+      const primeiroNome = c.nome.split(" ")[0];
+      const cargo = c.tipo === "presbitero" ? "Presbítero" : "Diácono";
+      const msgPersonalizada = texto
+        .replace(/\[Nome\]/gi, primeiroNome)
+        .replace(/\[Cargo\]/gi, cargo);
+
+      try {
+        const r = await WA.send({ para: tel, nome: c.nome, mensagem: msgPersonalizada, modulo: "ELEICOES" });
+        if (r?.ok === false) falha++; else ok++;
+      } catch { falha++; }
+    }
+
+    if (btn) { btn.disabled = false; btn.textContent = "📱 Enviar"; }
+    if (statusEl) {
+      const cor = falha === 0 ? "#1a9e4a" : (ok === 0 ? "#c00" : "#b08000");
+      const bg  = falha === 0 ? "rgba(26,158,74,.1)" : (ok === 0 ? "rgba(192,0,0,.08)" : "rgba(176,128,0,.1)");
+      statusEl.style.cssText = `display:block;padding:10px 14px;border-radius:7px;font-size:12px;background:${bg};color:${cor};border:1px solid currentColor`;
+      statusEl.textContent = ok > 0
+        ? `✓ ${ok} mensagem${ok!==1?"s":""} enviada${ok!==1?"s":""}${falha?` · ${falha} sem telefone`:""}.`
+        : `Nenhuma mensagem enviada — ${falha} candidato${falha!==1?"s":""} sem telefone cadastrado.`;
     }
   };
 
