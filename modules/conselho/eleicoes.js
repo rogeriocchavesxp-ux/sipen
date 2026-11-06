@@ -1605,12 +1605,13 @@
 
   // ── Modal: Mensagem de Posse ──────────────────────────────────────
   function _msgPosseDefault(nome, tipo) {
-    const primeiroNome = nome ? nome.split(" ")[0] : "";
-    const cargo = tipo === "presbitero" ? "Presbítero" : tipo === "diacono" ? "Diácono" : "Oficial";
+    const primeiroNome = nome ? nome.split(" ")[0] : "[Nome]";
     return `Olá, ${primeiroNome}! 🎉\n\n` +
-      `Parabenizamos pela sua eleição como *${cargo}* na Igreja Presbiteriana da Penha!\n\n` +
-      `Informamos que a cerimônia de *Posse dos Oficiais* eleitos está agendada para o dia *15 de novembro de 2026 (domingo)*, durante o culto da manhã.\n\n` +
-      `Contamos com a sua presença neste momento tão especial para a nossa Igreja!\n\n` +
+      `É com muita alegria e gratidão a Deus que queremos parabenizá-lo por sua eleição ao presbiterato! Louvamos ao Senhor por sua vida e rogamos que Ele continue abençoando sua caminhada, concedendo-lhe sabedoria, graça e um coração sempre disposto a servir à Sua Igreja.\n\n` +
+      `Com grande alegria, informamos que sua posse acontecerá no domingo, dia *15/11/2026*, durante o culto solene das *18h*.\n\n` +
+      `Queremos também incentivá-lo a convidar seus familiares e amigos para que estejam presentes e compartilhem com o irmão esse momento tão significativo e especial!\n\n` +
+      `Que o Senhor o fortaleça e o conduza em cada passo deste precioso chamado. Receba nosso carinho, nossas orações e nossas felicitações!\n\n` +
+      `Deus o abençoe grandemente!\n\n` +
       `_Igreja Presbiteriana da Penha_`;
   }
 
