@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Escala Pastoral
-   mobile/escala.js · v1.0.4
+   mobile/escala.js · v1.0.5-diag
 
    Páginas:
    - escala-mob → visualização da escala + disponibilidade (pastores)
@@ -391,10 +391,17 @@
       const hoje = new Date();
       const start = `${hoje.getFullYear()}-${_pad(hoje.getMonth() + 1)}-${_pad(hoje.getDate())}`;
 
-      // Busca todos os cultos futuros (sem limite de data)
-      // Tenta com oficial_id; se coluna não existir, refaz sem
+      // — diagnóstico: busca sem filtro de data para ver se há qualquer dado
+      const _diagRes = await fetch(
+        `${apiBaseUrl()}/rest/v1/escala_pregacao?select=id,data&limit=5`,
+        { headers: apiHeaders() }
+      );
+      const _diagStatus = _diagRes.status;
+      const _diagBody   = _diagRes.ok ? await _diagRes.json() : await _diagRes.text();
+
+      // Busca cultos futuros
       let slots = null;
-      let _res = await fetch(
+      const _res = await fetch(
         `${apiBaseUrl()}/rest/v1/escala_pregacao?data=gte.${start}&order=data.asc,culto_tipo.asc&select=id,data,culto_tipo,pastor_id,oficial_id,status&limit=300`,
         { headers: apiHeaders() }
       );
@@ -402,7 +409,6 @@
         slots = await _res.json();
       } else {
         const _errText = await _res.text();
-        // 400 com "oficial_id" = coluna não existe ainda → tenta sem
         if (_res.status === 400 && _errText.includes('oficial_id')) {
           const _res2 = await fetch(
             `${apiBaseUrl()}/rest/v1/escala_pregacao?data=gte.${start}&order=data.asc,culto_tipo.asc&select=id,data,culto_tipo,pastor_id,status&limit=300`,
@@ -410,13 +416,18 @@
           );
           slots = _res2.ok ? await _res2.json() : [];
         } else {
-          el.innerHTML = `<div style="padding:16px"><div style="color:var(--rose);font-size:12px">Erro ao carregar escala (${_res.status}): ${_errText.slice(0,120)}</div></div>`;
+          el.innerHTML = `<div style="padding:16px"><div style="color:var(--rose);font-size:12px">Erro (${_res.status}): ${_errText.slice(0,200)}</div></div>`;
           return;
         }
       }
 
+      const _diagInfo = `<div style="margin:12px 16px;padding:10px 12px;background:#f5f5f5;border-radius:8px;font-size:10px;color:#555;font-family:monospace">
+        DIAG: status_sem_filtro=${_diagStatus} | total_sem_filtro=${Array.isArray(_diagBody)?_diagBody.length:'err'} | datas=[${Array.isArray(_diagBody)?_diagBody.map(r=>r.data).join(','):''}]<br>
+        hoje=${start} | slots_futuros=${slots?.length ?? 0} | pastorId=${perm.pastorId||'null'} | oficialId=${perm.oficialId||'null'}
+      </div>`;
+
       if (!slots.length) {
-        el.innerHTML = `<div style="padding:0 16px">${_vazio('📅', 'Nenhum culto cadastrado a partir de hoje.')}</div>`;
+        el.innerHTML = `${_diagInfo}<div style="padding:0 16px">${_vazio('📅', 'Nenhum culto cadastrado a partir de hoje.')}</div>`;
         return;
       }
 
