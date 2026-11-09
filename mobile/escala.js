@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Escala Pastoral
-   mobile/escala.js · v1.0.1
+   mobile/escala.js · v1.0.2
 
    Páginas:
    - escala-mob → visualização da escala + disponibilidade (pastores)
@@ -80,8 +80,6 @@
 
   async function _carregarPerm() {
     if (_perm !== null) return _perm;
-    // oficialId = FK para oficiais (novo sistema)
-    // pastorId  = FK para pastores (legado)
     _perm = { pessoaId: null, nome: '', oficialId: null, pastorId: null, podeDisp: false };
 
     const uid = window.MOB_USER?.id;
@@ -97,29 +95,25 @@
       _perm.pessoaId = pRows[0].id;
       _perm.nome     = pRows[0].nome || '';
 
-      // 1. Verifica permissão via nomeados (igual rede.js — confiável)
-      const nRows = await fetch(
-        `${apiBaseUrl()}/rest/v1/nomeados?pessoa_id=eq.${encodeURIComponent(_perm.pessoaId)}&status=eq.ativo&deleted_at=is.null&select=funcao_lider,cargo&limit=10`,
-        { headers: apiHeaders() }
-      ).then(r => r.ok ? r.json() : []);
-
-      const funcoes = nRows.map(n => (n.funcao_lider || n.cargo || '').toLowerCase()).join(' ');
-      _perm.podeDisp = /pastor/.test(funcoes);
-
-      if (!_perm.podeDisp) return _perm;
-
-      // 2. Tenta oficial_id via tabela oficiais (novo sistema)
-      const oRows = await fetch(
-        `${apiBaseUrl()}/rest/v1/oficiais?pessoa_id=eq.${encodeURIComponent(_perm.pessoaId)}&cargo=eq.pastor&status=eq.ativo&deleted_at=is.null&select=id&limit=1`,
-        { headers: apiHeaders() }
-      ).then(r => r.ok ? r.json() : []);
+      // 1. Busca na tabela oficiais (novo sistema — pastor por pessoa_id)
+      const [oRows, nRows] = await Promise.all([
+        fetch(
+          `${apiBaseUrl()}/rest/v1/oficiais?pessoa_id=eq.${encodeURIComponent(_perm.pessoaId)}&cargo=eq.pastor&status=eq.ativo&deleted_at=is.null&select=id&limit=1`,
+          { headers: apiHeaders() }
+        ).then(r => r.ok ? r.json() : []),
+        fetch(
+          `${apiBaseUrl()}/rest/v1/nomeados?pessoa_id=eq.${encodeURIComponent(_perm.pessoaId)}&status=eq.ativo&deleted_at=is.null&select=funcao_lider,cargo&limit=10`,
+          { headers: apiHeaders() }
+        ).then(r => r.ok ? r.json() : []),
+      ]);
 
       if (oRows?.[0]?.id) {
         _perm.oficialId = oRows[0].id;
+        _perm.podeDisp  = true;
         return _perm;
       }
 
-      // 3. Fallback: busca por nome na tabela legada pastores
+      // 2. Busca por nome na tabela legada pastores
       const primeiro = _perm.nome.split(' ')[0];
       if (primeiro) {
         const legado = await fetch(
@@ -132,8 +126,16 @@
           nomeLower.includes(p.nome_completo?.toLowerCase()?.split(' ').filter(w => w.length > 3)[0] || '__') ||
           (p.nome_completo || '').toLowerCase().includes(primeiro.toLowerCase())
         );
-        if (match) _perm.pastorId = match.id;
+        if (match) {
+          _perm.pastorId = match.id;
+          _perm.podeDisp = true;
+          return _perm;
+        }
       }
+
+      // 3. Fallback: nomeados com funcao_lider/cargo contendo "pastor"
+      const funcoes = nRows.map(n => (n.funcao_lider || n.cargo || '').toLowerCase()).join(' ');
+      _perm.podeDisp = /pastor/.test(funcoes);
     } catch (_) {}
 
     return _perm;
