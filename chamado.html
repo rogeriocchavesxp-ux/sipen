@@ -604,6 +604,27 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
 }
 .ag2-ativ-btn.active { background: var(--acc); color: #fff; font-weight: 600; }
 .ag2-ativ-btn:not(.active):hover { background: var(--accbg); color: var(--acc); }
+
+/* ── screen-nom: Nomeações ────────────────────────────────── */
+.nom-back { background:none; border:none; color:var(--acc); font-size:13px; font-weight:600; cursor:pointer; padding:4px 0; margin-bottom:16px; display:flex; align-items:center; gap:5px; font-family:inherit; }
+.nom-cargo-blk { margin-bottom:16px; }
+.nom-cargo-blk:last-child { margin-bottom:0; }
+.nom-cargo-label { font-size:10px; font-weight:700; color:var(--tx3); text-transform:uppercase; letter-spacing:.07em; margin-bottom:5px; }
+.nom-ac-wrap { position:relative; }
+.nom-ac-inp { width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid var(--inpbd); background:var(--inp); color:var(--tx1); font-size:13.5px; font-family:inherit; outline:none; transition:border-color .15s; }
+.nom-ac-inp:focus { border-color:var(--acc); }
+.nom-ac-drop { display:none; position:absolute; top:calc(100% + 3px); left:0; right:0; z-index:200; background:var(--card); border:1.5px solid var(--acc); border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,.12); overflow:hidden; }
+.nom-ac-drop.open { display:block; }
+.nom-ac-item { padding:8px 14px; font-size:13px; cursor:pointer; color:var(--tx1); transition:background .1s; }
+.nom-ac-item:hover, .nom-ac-item.focus { background:var(--accbg); color:var(--acc); }
+.nom-membro-row { display:flex; gap:8px; align-items:flex-start; margin-bottom:8px; }
+.nom-membro-row:last-child { margin-bottom:0; }
+.nom-membro-row .nom-ac-wrap { flex:1; }
+.nom-rem-btn { flex-shrink:0; width:36px; height:40px; border-radius:7px; border:1.5px solid var(--bd); background:var(--inp); color:var(--tx3); font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:border-color .15s, color .15s; padding:0; }
+.nom-rem-btn:hover { border-color:var(--rose); color:var(--rose); }
+.nom-add-btn { width:100%; padding:10px; border-radius:8px; border:1.5px dashed var(--inpbd); background:transparent; color:var(--tx2); font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; margin-top:8px; transition:all .15s; }
+.nom-add-btn:hover { border-color:var(--acc); color:var(--acc); }
+.nom-ok-card { background:var(--card); border:1px solid var(--bd); border-radius:16px; padding:44px 28px; text-align:center; }
 </style>
 </head>
 <body>
@@ -1394,6 +1415,96 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
     SIPEN - Sistema Integrado da IPPenha
   </div>
 
+  <!-- ── Tela: Nomeações 2027 ──────────────────────────── -->
+  <div id="screen-nom" style="display:none">
+
+    <header class="page-header">
+      <img src="/icons/logo-ippenha.svg" class="page-logo" alt="Igreja Presbiteriana da Penha"
+           onerror="this.style.display='none'">
+      <div class="page-title">Nomeações 2027</div>
+      <div class="page-sub">Indique os líderes e membros para o próximo ano.</div>
+    </header>
+
+    <button class="nom-back" onclick="nomVoltar()">
+      ← Voltar
+    </button>
+
+    <!-- Ministério -->
+    <div class="card">
+      <div class="card-title">Ministério / Comissão</div>
+      <div class="field">
+        <label for="nom-min">Selecione o ministério <span class="req">*</span></label>
+        <select id="nom-min" onchange="nomMinChange()">
+          <option value="">Carregando…</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Formulário de liderança (aparece após selecionar ministério) -->
+    <div id="nom-campos" style="display:none">
+
+      <!-- Liderança -->
+      <div class="card">
+        <div class="card-title">Liderança</div>
+
+        <div class="nom-cargo-blk">
+          <div class="nom-cargo-label">Supervisor</div>
+          <div class="nom-ac-wrap">
+            <input type="text" id="nom-supervisor" class="nom-ac-inp" placeholder="Nome da pessoa" autocomplete="off"
+                   oninput="nomBuscar(this,'nom-supervisor-pid','nom-supervisor-drop')"
+                   onblur="nomAcFechar('nom-supervisor-drop')">
+            <input type="hidden" id="nom-supervisor-pid">
+            <div class="nom-ac-drop" id="nom-supervisor-drop"></div>
+          </div>
+        </div>
+
+        <div class="nom-cargo-blk">
+          <div class="nom-cargo-label">Coordenador</div>
+          <div class="nom-ac-wrap">
+            <input type="text" id="nom-coordenador" class="nom-ac-inp" placeholder="Nome da pessoa" autocomplete="off"
+                   oninput="nomBuscar(this,'nom-coordenador-pid','nom-coordenador-drop')"
+                   onblur="nomAcFechar('nom-coordenador-drop')">
+            <input type="hidden" id="nom-coordenador-pid">
+            <div class="nom-ac-drop" id="nom-coordenador-drop"></div>
+          </div>
+        </div>
+
+        <div class="nom-cargo-blk">
+          <div class="nom-cargo-label">Líder de Área</div>
+          <div class="nom-ac-wrap">
+            <input type="text" id="nom-lider-area" class="nom-ac-inp" placeholder="Nome da pessoa" autocomplete="off"
+                   oninput="nomBuscar(this,'nom-lider-area-pid','nom-lider-area-drop')"
+                   onblur="nomAcFechar('nom-lider-area-drop')">
+            <input type="hidden" id="nom-lider-area-pid">
+            <div class="nom-ac-drop" id="nom-lider-area-drop"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Membros -->
+      <div class="card">
+        <div class="card-title">Membros</div>
+        <div id="nom-membros-list"></div>
+        <button type="button" class="nom-add-btn" onclick="nomAdicionarMembro()">+ Adicionar membro</button>
+      </div>
+
+      <div class="err-msg" id="nom-err"></div>
+      <button type="button" class="btn-submit" id="nom-btn" onclick="nomEnviar()">Confirmar Nomeações 2027</button>
+
+    </div>
+
+    <!-- Sucesso -->
+    <div id="nom-ok" style="display:none">
+      <div class="nom-ok-card">
+        <div class="ok-icon">✅</div>
+        <div class="ok-title">Nomeações registradas!</div>
+        <div class="ok-msg">As indicações para 2027 foram salvas e já aparecem no módulo de Nomeações do SIPEN.</div>
+        <button class="btn-novo" onclick="nomVoltar()">Fazer outra indicação</button>
+      </div>
+    </div>
+
+  </div>
+
 </div>
 <script>
 /* ── Supabase ──────────────────────────────────────────────── */
@@ -1461,7 +1572,10 @@ const CATS = [
   { nome:"Agendamentos",             icon:"📅", resp:"Secretaria / Liderança",           subcats:[
     { grupo:"Programação / Espaços", itens:["Culto","Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"] },
   ]},
-  { nome:"Secretaria",               icon:"📄", resp:"Secretaria / Conselho",            subcats:["Emissão de documentos","Elaboração de relatórios","Solicitação ao Conselho","Protocolos oficiais","Registro de atas/documentos"] },
+  { nome:"Secretaria",               icon:"📄", resp:"Secretaria / Conselho",            subcats:[
+    { grupo:"Documentos e Registros", itens:["Emissão de documentos","Elaboração de relatórios","Protocolos oficiais","Registro de atas/documentos","Solicitação ao Conselho"] },
+    { grupo:"Nomeações Anuais",       itens:["Nomeações 2027"] },
+  ]},
   { nome:"Oração",                   icon:"🙏", resp:"Pastores / Liderança",             subcats:["Pedido de oração"] },
   { nome:"Financeiro",               icon:"💰", resp:"Tesouraria / Financeiro",          subcats:["Solicitação de pagamento","Reembolso","Prestação de contas","Solicitação de verba","Orçamento de despesas"] },
   { nome:"Ação Social / Hebron",     icon:"🤝", resp:"Hebron / Ação Social",             subcats:["Solicitação de ajuda","Projetos sociais","Distribuição de recursos","Cadastro em programas sociais"] },
@@ -1799,6 +1913,7 @@ function onSubChange() {
   }
   if (cat === "Agendamentos"  && PROG_SUBS.has(sub)) { agIniciar(sub); return; }
   if (cat === "Comunicação"   && COM_SUBS.has(sub))  { _show("com-sol-sec"); _ensureComSol(sub); }
+  if (cat === "Secretaria"    && sub === "Nomeações 2027") { nomIniciar(); return; }
 }
 
 function _ocultarExtras() {
@@ -2456,7 +2571,224 @@ async function _uploadAnexosPublicos(demandaId, sub) {
 </script>
 
 <script src="modules/chamado/arte.js?v=6.49.70"></script>
-<script src="modules/chamado/reserva.js?v=6.49.70"></script>
+<script src="modules/chamado/reserva.js?v=6.49.71"></script>
+
+<script>
+/* ══ screen-nom: Nomeações 2027 ══════════════════════════════ */
+
+let _nomMinisterios   = [];
+let _nomMembroIdx     = 0;
+let _nomAcTimer       = null;
+
+async function nomIniciar() {
+  document.getElementById("screen-form").style.display = "none";
+  document.getElementById("screen-nom").style.display  = "";
+  document.getElementById("nom-campos").style.display  = "none";
+  document.getElementById("nom-ok").style.display      = "none";
+  _nomMembroIdx = 0;
+  document.getElementById("nom-membros-list").innerHTML = "";
+  ["nom-supervisor","nom-coordenador","nom-lider-area"].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = "";
+    const pid = document.getElementById(id + "-pid"); if (pid) pid.value = "";
+  });
+  _nomMostrarErro("");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  // Carrega ministérios
+  const sel = document.getElementById("nom-min");
+  sel.innerHTML = "<option value=''>Carregando…</option>";
+  try {
+    const r = await fetch(
+      `${SB_URL}/rest/v1/ministerios?ativo=eq.true&select=id,nome&order=nome.asc`,
+      { headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY } }
+    );
+    if (!r.ok) throw new Error("Erro ao carregar ministérios");
+    _nomMinisterios = await r.json();
+    sel.innerHTML = "<option value=''>Selecione o ministério…</option>" +
+      _nomMinisterios.map(m => `<option value="${m.id}">${m.nome}</option>`).join("");
+  } catch(e) {
+    sel.innerHTML = "<option value=''>Falha ao carregar — tente recarregar a página</option>";
+  }
+}
+
+function nomVoltar() {
+  document.getElementById("screen-nom").style.display  = "none";
+  document.getElementById("screen-form").style.display = "";
+  csubReset();
+  _ocultarFinanceiro();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function nomMinChange() {
+  const sel  = document.getElementById("nom-min");
+  const show = sel.value !== "";
+  document.getElementById("nom-campos").style.display = show ? "" : "none";
+  if (!show) return;
+  // Limpa campos ao trocar ministério
+  ["nom-supervisor","nom-coordenador","nom-lider-area"].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = "";
+    const pid = document.getElementById(id + "-pid"); if (pid) pid.value = "";
+  });
+  document.getElementById("nom-membros-list").innerHTML = "";
+  _nomMembroIdx = 0;
+  _nomMostrarErro("");
+}
+
+/* ── Autocomplete ─────────────────────────────────────────── */
+function nomBuscar(input, pidId, dropId) {
+  clearTimeout(_nomAcTimer);
+  const q = input.value.trim();
+  document.getElementById(pidId).value = "";
+  if (q.length < 2) { nomAcFechar(dropId); return; }
+  _nomAcTimer = setTimeout(async () => {
+    try {
+      const enc = encodeURIComponent(`%${q}%`);
+      const r   = await fetch(
+        `${SB_URL}/rest/v1/v_membros?nome=ilike.${enc}&status=eq.ativo&select=pessoa_id,nome&order=nome.asc&limit=10`,
+        { headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY } }
+      );
+      if (!r.ok) return;
+      const data = await r.json();
+      const drop = document.getElementById(dropId);
+      if (!data.length) { nomAcFechar(dropId); return; }
+      drop.innerHTML = data.map(p =>
+        `<div class="nom-ac-item" onmousedown="nomAcSelecionar(event,'${input.id}','${pidId}','${dropId}',${p.pessoa_id || 'null'},'${p.nome.replace(/'/g,"\\'")}')">
+          ${p.nome}
+        </div>`
+      ).join("");
+      drop.classList.add("open");
+    } catch(_) {}
+  }, 220);
+}
+
+function nomAcSelecionar(e, inpId, pidId, dropId, pid, nome) {
+  e.preventDefault();
+  document.getElementById(inpId).value  = nome;
+  document.getElementById(pidId).value  = pid || "";
+  nomAcFechar(dropId);
+}
+
+function nomAcFechar(dropId) {
+  setTimeout(() => {
+    const d = document.getElementById(dropId);
+    if (d) { d.classList.remove("open"); d.innerHTML = ""; }
+  }, 150);
+}
+
+/* ── Membros ──────────────────────────────────────────────── */
+function nomAdicionarMembro() {
+  const idx  = ++_nomMembroIdx;
+  const list = document.getElementById("nom-membros-list");
+  const row  = document.createElement("div");
+  row.className = "nom-membro-row";
+  row.id = `nom-mb-row-${idx}`;
+  row.innerHTML = `
+    <div class="nom-ac-wrap">
+      <input type="text" id="nom-mb-${idx}" class="nom-ac-inp" placeholder="Nome do membro" autocomplete="off"
+             oninput="nomBuscar(this,'nom-mb-pid-${idx}','nom-mb-drop-${idx}')"
+             onblur="nomAcFechar('nom-mb-drop-${idx}')">
+      <input type="hidden" id="nom-mb-pid-${idx}">
+      <div class="nom-ac-drop" id="nom-mb-drop-${idx}"></div>
+    </div>
+    <button type="button" class="nom-rem-btn" onclick="nomRemoverMembro(${idx})" title="Remover">×</button>`;
+  list.appendChild(row);
+  document.getElementById(`nom-mb-${idx}`).focus();
+}
+
+function nomRemoverMembro(idx) {
+  document.getElementById(`nom-mb-row-${idx}`)?.remove();
+}
+
+/* ── Envio ────────────────────────────────────────────────── */
+function _nomMostrarErro(msg) {
+  const el = document.getElementById("nom-err");
+  el.textContent = msg;
+  el.classList.toggle("show", !!msg);
+  if (msg) el.scrollIntoView({ behavior:"smooth", block:"nearest" });
+}
+
+async function nomEnviar() {
+  const minSel = document.getElementById("nom-min");
+  const minId  = minSel.value;
+  const minObj = _nomMinisterios.find(m => m.id == minId);
+  if (!minObj) { _nomMostrarErro("Selecione o ministério."); return; }
+
+  const liderancas = [
+    { nivel:"supervisor",  funcao_lider:"supervisor",  inp:"nom-supervisor",  pid:"nom-supervisor-pid"  },
+    { nivel:"coordenador", funcao_lider:"coordenador", inp:"nom-coordenador", pid:"nom-coordenador-pid" },
+    { nivel:"lider_area",  funcao_lider:"lider_area",  inp:"nom-lider-area",  pid:"nom-lider-area-pid"  },
+  ];
+
+  const membrosEls = document.querySelectorAll("#nom-membros-list .nom-membro-row");
+
+  const rows = [];
+
+  liderancas.forEach(({ nivel, funcao_lider, inp, pid }) => {
+    const nome = (document.getElementById(inp)?.value || "").trim();
+    if (!nome) return;
+    rows.push({
+      nome,
+      pessoa_id:     document.getElementById(pid)?.value || null,
+      ano:           2027,
+      nivel,
+      tipo_nomeacao: "lider",
+      funcao_lider,
+      orgao_tipo:    "ministerio",
+      orgao:         minObj.nome,
+      area:          minObj.nome,
+      status:        "indicado",
+    });
+  });
+
+  membrosEls.forEach(row => {
+    const idx  = row.id.replace("nom-mb-row-", "");
+    const nome = (document.getElementById(`nom-mb-${idx}`)?.value || "").trim();
+    if (!nome) return;
+    rows.push({
+      nome,
+      pessoa_id:     document.getElementById(`nom-mb-pid-${idx}`)?.value || null,
+      ano:           2027,
+      nivel:         "membro",
+      tipo_nomeacao: "membro",
+      tipo_membro:   "ministerio",
+      orgao_tipo:    "ministerio",
+      orgao:         minObj.nome,
+      area:          minObj.nome,
+      status:        "indicado",
+    });
+  });
+
+  if (!rows.length) { _nomMostrarErro("Adicione ao menos uma pessoa antes de confirmar."); return; }
+
+  // Limpa pessoa_id vazio
+  rows.forEach(r => { if (!r.pessoa_id) delete r.pessoa_id; });
+
+  const btn = document.getElementById("nom-btn");
+  btn.disabled    = true;
+  btn.textContent = "Salvando…";
+  _nomMostrarErro("");
+
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/nomeados`, {
+      method:  "POST",
+      headers: { ...HDRS, "Prefer": "return=minimal" },
+      body:    JSON.stringify(rows),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || err.hint || `Erro ${res.status}`);
+    }
+    document.getElementById("nom-campos").style.display = "none";
+    document.getElementById("nom-ok").style.display     = "";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch(e) {
+    _nomMostrarErro(e.message || "Falha ao salvar. Tente novamente.");
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = "Confirmar Nomeações 2027";
+  }
+}
+</script>
 
 <!-- Menu popup singleton (requisição de espaço) -->
 <div id="ag2-menu-popup" class="ag2-menu-popup">

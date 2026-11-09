@@ -667,6 +667,7 @@ function novoEnvio() {
   limparErro();
   document.getElementById("screen-ok").style.display   = "none";
   document.getElementById("screen-form").style.display = "";
+  const scrNom = document.getElementById("screen-nom"); if (scrNom) scrNom.style.display = "none";
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
