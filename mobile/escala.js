@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Escala Pastoral
-   mobile/escala.js · v1.0.5
+   mobile/escala.js · v1.1.0
 
    Páginas:
    - escala-mob → visualização da escala + disponibilidade (pastores)
@@ -391,27 +391,26 @@
       const hoje = new Date();
       const start = `${hoje.getFullYear()}-${_pad(hoje.getMonth() + 1)}-${_pad(hoje.getDate())}`;
 
-      // Busca cultos futuros
-      let slots = null;
-      const _res = await fetch(
-        `${apiBaseUrl()}/rest/v1/escala_pregacao?data=gte.${start}&order=data.asc,culto_tipo.asc&select=id,data,culto_tipo,pastor_id,oficial_id,status&limit=300`,
-        { headers: apiHeaders() }
-      );
-      if (_res.ok) {
-        slots = await _res.json();
-      } else {
-        const _errText = await _res.text();
-        if (_res.status === 400 && _errText.includes('oficial_id')) {
-          const _res2 = await fetch(
-            `${apiBaseUrl()}/rest/v1/escala_pregacao?data=gte.${start}&order=data.asc,culto_tipo.asc&select=id,data,culto_tipo,pastor_id,status&limit=300`,
-            { headers: apiHeaders() }
-          );
-          slots = _res2.ok ? await _res2.json() : [];
-        } else {
-          el.innerHTML = `<div style="padding:16px"><div style="color:var(--rose);font-size:12px">Erro (${_res.status}): ${_errText.slice(0,200)}</div></div>`;
-          return;
-        }
-      }
+      // Busca cultos futuros e minhas disponibilidades em paralelo
+      const [slotsRes, myDispRes] = await Promise.all([
+        fetch(
+          `${apiBaseUrl()}/rest/v1/escala_pregacao?data=gte.${start}&order=data.asc,culto_tipo.asc&select=id,data,culto_tipo,pastor_id,oficial_id,status&limit=300`,
+          { headers: apiHeaders() }
+        ),
+        fetch(
+          `${apiBaseUrl()}/rest/v1/disp_pregacao?${perm.oficialId ? `oficial_id=eq.${perm.oficialId}` : `pastor_id=eq.${perm.pastorId}`}&select=id,escala_pregacao_id`,
+          { headers: apiHeaders() }
+        ),
+      ]);
+
+      const slots   = slotsRes.ok   ? await slotsRes.json()   : [];
+      const myDisps = myDispRes.ok  ? await myDispRes.json()  : [];
+
+      // Set dos slot_ids onde eu já marquei disponibilidade
+      const myDispSet = new Set(myDisps.map(d => d.escala_pregacao_id));
+      // Map slot_id → disp_id (para cancelar pelo id certo)
+      const myDispId  = {};
+      myDisps.forEach(d => { myDispId[d.escala_pregacao_id] = d.id; });
 
       if (!slots.length) {
         el.innerHTML = `<div style="padding:0 16px">${_vazio('📅', 'Nenhum culto cadastrado a partir de hoje.')}</div>`;
@@ -419,10 +418,11 @@
       }
 
       function _slotStatus(s) {
-        if (!s.oficial_id && !s.pastor_id)              return 'vaga';
-        if (perm.oficialId && s.oficial_id === perm.oficialId) return 'meu';
-        if (perm.pastorId  && s.pastor_id  === perm.pastorId)  return 'meu';
-        return 'outro';
+        // Slot confirmado pelo admin → não pode alterar
+        if (s.status === 'CONFIRMADA') return 'confirmado';
+        // Eu já marquei disponibilidade
+        if (myDispSet.has(s.id)) return 'meu';
+        return 'vaga';
       }
 
       function _buildSlots() {
@@ -434,7 +434,7 @@
         });
 
         let h = `<div style="padding:0 16px 24px">
-          <div style="font-size:11px;color:var(--tx3);margin-bottom:16px;line-height:1.5">Toque em um culto para marcar ou cancelar sua disponibilidade.</div>`;
+          <div style="font-size:11px;color:var(--tx3);margin-bottom:16px;line-height:1.5">Marque os cultos em que você está disponível para pregar. O pastor responsável definirá quem prega em cada data.</div>`;
 
         Object.keys(byMes).sort().forEach(chave => {
           const [y, m] = chave.split('-').map(Number);
@@ -442,18 +442,20 @@
                 <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px">`;
 
           byMes[chave].forEach(s => {
-            const t   = TIPO[s.culto_tipo] || { label: s.culto_tipo, ico: '•', cor: '#888' };
-            const st  = _slotStatus(s);
-            const outroPastor = st === 'outro' ? (_nomesMap[s.oficial_id] || _nomesMap[s.pastor_id] || 'outro pastor') : null;
+            const t  = TIPO[s.culto_tipo] || { label: s.culto_tipo, ico: '•', cor: '#888' };
+            const st = _slotStatus(s);
 
-            const bg  = st === 'meu'   ? 'rgba(48,209,88,.08)'    : 'var(--bg-card)';
-            const bd  = st === 'meu'   ? '1.5px solid var(--gr)'  : '1px solid var(--bd2)';
-            const btn = st === 'outro'
-              ? `<span style="font-size:10px;color:var(--tx3);font-style:italic">${_esc(_nomesMap[s.oficial_id] || _nomesMap[s.pastor_id] || '—')}</span>`
+            const bg = st === 'meu'       ? 'rgba(48,209,88,.08)'    : 'var(--bg-card)';
+            const bd = st === 'meu'       ? '1.5px solid var(--gr)'  :
+                       st === 'confirmado'? '1.5px solid var(--blue)' : '1px solid var(--bd2)';
+
+            const quemPrega = _nomesMap[s.oficial_id] || _nomesMap[s.pastor_id] || '';
+            const btn = st === 'confirmado'
+              ? `<span style="font-size:10px;color:var(--blue);font-weight:700">${_esc(quemPrega || 'Confirmado')}</span>`
               : st === 'meu'
                 ? `<button onclick="window._escalaDesmarcar('${s.id}')"
                     style="padding:5px 12px;background:rgba(255,69,58,.1);border:1px solid rgba(255,69,58,.3);border-radius:8px;color:var(--rose);font-size:11px;font-weight:700;cursor:pointer">Cancelar</button>`
-                : `<button onclick="window._escalaMarcar('${s.id}','${s.data}','${s.culto_tipo}')"
+                : `<button onclick="window._escalaMarcar('${s.id}')"
                     style="padding:5px 12px;background:rgba(48,209,88,.1);border:1px solid rgba(48,209,88,.3);border-radius:8px;color:var(--gr);font-size:11px;font-weight:700;cursor:pointer">Disponível</button>`;
 
             h += `
@@ -464,8 +466,8 @@
                 </div>
                 <div style="flex:1;min-width:0">
                   <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:1px 7px;border-radius:5px;display:inline-block;background:${t.cor}1a;color:${t.cor};margin-bottom:3px">${t.ico} ${_esc(t.label)}</div>
-                  <div style="font-size:11px;color:${st === 'meu' ? 'var(--gr)' : 'var(--tx3)'}">
-                    ${st === 'meu' ? '✓ Marcado por você' : st === 'outro' ? '' : 'Vaga'}
+                  <div style="font-size:11px;color:${st === 'meu' ? 'var(--gr)' : st === 'confirmado' ? 'var(--blue)' : 'var(--tx3)'}">
+                    ${st === 'meu' ? '✓ Disponível' : st === 'confirmado' ? '✓ Pregador definido' : 'Vaga'}
                   </div>
                 </div>
                 ${btn}
@@ -481,36 +483,28 @@
 
       el.innerHTML = _buildSlots();
 
-      window._escalaMarcar = async function (slotId, data, culto_tipo) {
+      window._escalaMarcar = async function (slotId) {
         const btn = document.querySelector(`[data-slot-id="${slotId}"] button`);
         if (btn) { btn.disabled = true; btn.textContent = '…'; }
 
-        // Monta payload: prefere oficial_id (novo), fallback pastor_id (legado)
-        const payload = perm.oficialId
-          ? { oficial_id: perm.oficialId, status: 'PREENCHIDA' }
-          : { pastor_id: perm.pastorId,   status: 'PREENCHIDA' };
+        const body = perm.oficialId
+          ? { escala_pregacao_id: slotId, oficial_id: perm.oficialId }
+          : { escala_pregacao_id: slotId, pastor_id: perm.pastorId };
 
         try {
-          const existing = slots.find(s => s.id === slotId);
-          if (existing) {
-            const r = await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao?id=eq.${slotId}`, {
-              method: 'PATCH',
-              headers: { ...apiHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-              body: JSON.stringify(payload)
-            });
-            if (!r.ok) throw new Error(await r.text());
-            Object.assign(existing, payload);
-          } else {
-            const r = await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao`, {
-              method: 'POST',
-              headers: { ...apiHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-              body: JSON.stringify({ data, culto_tipo, local: 'Templo Principal', ...payload })
-            });
-            if (!r.ok) throw new Error(await r.text());
+          const r = await fetch(`${apiBaseUrl()}/rest/v1/disp_pregacao`, {
+            method: 'POST',
+            headers: { ...apiHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+            body: JSON.stringify(body)
+          });
+          if (!r.ok) throw new Error(await r.text());
+          const rows = await r.json();
+          if (rows?.[0]?.id) {
+            myDispSet.add(slotId);
+            myDispId[slotId] = rows[0].id;
           }
-          delete _cache[data.slice(0, 7)];
-          mobToast('Disponibilidade registrada', 'success');
-          _renderDisponibilidadeAba(el);
+          mobToast('Disponibilidade marcada', 'success');
+          el.innerHTML = _buildSlots();
         } catch (e) {
           if (btn) { btn.disabled = false; btn.textContent = 'Disponível'; }
           mobToast('Erro ao salvar', 'error');
@@ -521,17 +515,23 @@
         const btn = document.querySelector(`[data-slot-id="${slotId}"] button`);
         if (btn) { btn.disabled = true; btn.textContent = '…'; }
 
+        const dispId = myDispId[slotId];
+        const filter = dispId
+          ? `id=eq.${dispId}`
+          : perm.oficialId
+            ? `escala_pregacao_id=eq.${slotId}&oficial_id=eq.${perm.oficialId}`
+            : `escala_pregacao_id=eq.${slotId}&pastor_id=eq.${perm.pastorId}`;
+
         try {
-          const r = await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao?id=eq.${slotId}`, {
-            method: 'PATCH',
-            headers: { ...apiHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-            body: JSON.stringify({ oficial_id: null, pastor_id: null, status: 'PENDENTE' })
+          const r = await fetch(`${apiBaseUrl()}/rest/v1/disp_pregacao?${filter}`, {
+            method: 'DELETE',
+            headers: { ...apiHeaders(), 'Prefer': 'return=minimal' }
           });
           if (!r.ok) throw new Error(await r.text());
-          const s = slots.find(x => x.id === slotId);
-          if (s) { s.oficial_id = null; s.pastor_id = null; s.status = 'PENDENTE'; }
+          myDispSet.delete(slotId);
+          delete myDispId[slotId];
           mobToast('Disponibilidade cancelada', 'success');
-          _renderDisponibilidadeAba(el);
+          el.innerHTML = _buildSlots();
         } catch (e) {
           if (btn) { btn.disabled = false; btn.textContent = 'Cancelar'; }
           mobToast('Erro ao salvar', 'error');
