@@ -1572,9 +1572,9 @@ const CATS = [
   { nome:"Agendamentos",             icon:"📅", resp:"Secretaria / Liderança",           subcats:[
     { grupo:"Programação / Espaços", itens:["Culto","Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"] },
   ]},
-  { nome:"Secretaria",               icon:"📄", resp:"Secretaria / Conselho",            subcats:[
+  { nome:"Secretaria",               icon:"⭐", resp:"Secretaria / Conselho",            subcats:[
+    { grupo:"★ Nomeações Anuais",    itens:["★ Nomeações 2027"] },
     { grupo:"Documentos e Registros", itens:["Emissão de documentos","Elaboração de relatórios","Protocolos oficiais","Registro de atas/documentos","Solicitação ao Conselho"] },
-    { grupo:"Nomeações Anuais",       itens:["Nomeações 2027"] },
   ]},
   { nome:"Oração",                   icon:"🙏", resp:"Pastores / Liderança",             subcats:["Pedido de oração"] },
   { nome:"Financeiro",               icon:"💰", resp:"Tesouraria / Financeiro",          subcats:["Solicitação de pagamento","Reembolso","Prestação de contas","Solicitação de verba","Orçamento de despesas"] },
@@ -1596,6 +1596,8 @@ const CATS = [
 (function () {
   const sel = document.getElementById("f-cat");
   [...CATS].sort((a, b) => {
+    if (a.nome === 'Secretaria')    return -1;
+    if (b.nome === 'Secretaria')    return  1;
     if (a.nome === 'Administração') return -1;
     if (b.nome === 'Administração') return  1;
     return a.nome.localeCompare(b.nome, "pt-BR");
@@ -1913,7 +1915,7 @@ function onSubChange() {
   }
   if (cat === "Agendamentos"  && PROG_SUBS.has(sub)) { agIniciar(sub); return; }
   if (cat === "Comunicação"   && COM_SUBS.has(sub))  { _show("com-sol-sec"); _ensureComSol(sub); }
-  if (cat === "Secretaria"    && sub === "Nomeações 2027") { nomIniciar(); return; }
+  if (cat === "Secretaria"    && sub === "★ Nomeações 2027") { nomIniciar(); return; }
 }
 
 function _ocultarExtras() {
