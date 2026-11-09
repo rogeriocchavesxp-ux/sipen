@@ -152,11 +152,11 @@
   function _popularFiltroAnos() {
     const sel = _el('nom-ano-sel');
     if (!sel) return;
-    // Anos disponíveis: da tabela nomeacoes_anuais + anos distintos nos dados
+    const anoAtual  = new Date().getFullYear();
     const anosAnuais = _anuais.map(a => a.ano);
     const anosRows   = [...new Set(_rows.map(r => r.ano).filter(Boolean))];
-    const todos      = [...new Set([..._anoAtivo === new Date().getFullYear() ? [_anoAtivo] : [], ...anosAnuais, ...anosRows])].sort((a,b) => b - a);
-    if (todos.length === 0) todos.push(new Date().getFullYear());
+    // Sempre inclui o ano atual, o próximo e quaisquer anos com dados
+    const todos = [...new Set([anoAtual, anoAtual + 1, ...anosAnuais, ...anosRows])].sort((a,b) => b - a);
 
     sel.innerHTML = todos.map(a => `<option value="${a}" ${a === _anoAtivo ? 'selected' : ''}>${a}</option>`).join('');
   }
