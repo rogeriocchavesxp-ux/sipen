@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Escala Pastoral
-   mobile/escala.js · v1.0.5-diag
+   mobile/escala.js · v1.0.5
 
    Páginas:
    - escala-mob → visualização da escala + disponibilidade (pastores)
@@ -391,14 +391,6 @@
       const hoje = new Date();
       const start = `${hoje.getFullYear()}-${_pad(hoje.getMonth() + 1)}-${_pad(hoje.getDate())}`;
 
-      // — diagnóstico: busca sem filtro de data para ver se há qualquer dado
-      const _diagRes = await fetch(
-        `${apiBaseUrl()}/rest/v1/escala_pregacao?select=id,data&limit=5`,
-        { headers: apiHeaders() }
-      );
-      const _diagStatus = _diagRes.status;
-      const _diagBody   = _diagRes.ok ? await _diagRes.json() : await _diagRes.text();
-
       // Busca cultos futuros
       let slots = null;
       const _res = await fetch(
@@ -421,13 +413,8 @@
         }
       }
 
-      const _diagInfo = `<div style="margin:12px 16px;padding:10px 12px;background:#f5f5f5;border-radius:8px;font-size:10px;color:#555;font-family:monospace">
-        DIAG: status_sem_filtro=${_diagStatus} | total_sem_filtro=${Array.isArray(_diagBody)?_diagBody.length:'err'} | datas=[${Array.isArray(_diagBody)?_diagBody.map(r=>r.data).join(','):''}]<br>
-        hoje=${start} | slots_futuros=${slots?.length ?? 0} | pastorId=${perm.pastorId||'null'} | oficialId=${perm.oficialId||'null'}
-      </div>`;
-
       if (!slots.length) {
-        el.innerHTML = `${_diagInfo}<div style="padding:0 16px">${_vazio('📅', 'Nenhum culto cadastrado a partir de hoje.')}</div>`;
+        el.innerHTML = `<div style="padding:0 16px">${_vazio('📅', 'Nenhum culto cadastrado a partir de hoje.')}</div>`;
         return;
       }
 
