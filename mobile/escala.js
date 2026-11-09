@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Escala Pastoral
-   mobile/escala.js · v1.0.0
+   mobile/escala.js · v1.0.1
 
    Páginas:
    - escala-mob → visualização da escala + disponibilidade (pastores)
@@ -80,20 +80,35 @@
 
   async function _carregarPerm() {
     if (_perm !== null) return _perm;
-    _perm = { pessoaId: null, oficialId: null, podeDisp: false };
+    // oficialId = FK para oficiais (novo sistema)
+    // pastorId  = FK para pastores (legado)
+    _perm = { pessoaId: null, nome: '', oficialId: null, pastorId: null, podeDisp: false };
 
     const uid = window.MOB_USER?.id;
     if (!uid) return _perm;
 
     try {
       const pRows = await fetch(
-        `${apiBaseUrl()}/rest/v1/pessoas?auth_user_id=eq.${encodeURIComponent(uid)}&select=id&limit=1`,
+        `${apiBaseUrl()}/rest/v1/pessoas?auth_user_id=eq.${encodeURIComponent(uid)}&select=id,nome&limit=1`,
         { headers: apiHeaders() }
       ).then(r => r.ok ? r.json() : []);
 
       if (!pRows?.[0]?.id) return _perm;
       _perm.pessoaId = pRows[0].id;
+      _perm.nome     = pRows[0].nome || '';
 
+      // 1. Verifica permissão via nomeados (igual rede.js — confiável)
+      const nRows = await fetch(
+        `${apiBaseUrl()}/rest/v1/nomeados?pessoa_id=eq.${encodeURIComponent(_perm.pessoaId)}&status=eq.ativo&deleted_at=is.null&select=funcao_lider,cargo&limit=10`,
+        { headers: apiHeaders() }
+      ).then(r => r.ok ? r.json() : []);
+
+      const funcoes = nRows.map(n => (n.funcao_lider || n.cargo || '').toLowerCase()).join(' ');
+      _perm.podeDisp = /pastor/.test(funcoes);
+
+      if (!_perm.podeDisp) return _perm;
+
+      // 2. Tenta oficial_id via tabela oficiais (novo sistema)
       const oRows = await fetch(
         `${apiBaseUrl()}/rest/v1/oficiais?pessoa_id=eq.${encodeURIComponent(_perm.pessoaId)}&cargo=eq.pastor&status=eq.ativo&deleted_at=is.null&select=id&limit=1`,
         { headers: apiHeaders() }
@@ -101,7 +116,23 @@
 
       if (oRows?.[0]?.id) {
         _perm.oficialId = oRows[0].id;
-        _perm.podeDisp  = true;
+        return _perm;
+      }
+
+      // 3. Fallback: busca por nome na tabela legada pastores
+      const primeiro = _perm.nome.split(' ')[0];
+      if (primeiro) {
+        const legado = await fetch(
+          `${apiBaseUrl()}/rest/v1/pastores?nome_completo=ilike.*${encodeURIComponent(primeiro)}*&ativo=eq.true&select=id,nome_completo&limit=5`,
+          { headers: apiHeaders() }
+        ).then(r => r.ok ? r.json() : []);
+
+        const nomeLower = _perm.nome.toLowerCase();
+        const match = legado.find(p =>
+          nomeLower.includes(p.nome_completo?.toLowerCase()?.split(' ').filter(w => w.length > 3)[0] || '__') ||
+          (p.nome_completo || '').toLowerCase().includes(primeiro.toLowerCase())
+        );
+        if (match) _perm.pastorId = match.id;
       }
     } catch (_) {}
 
@@ -438,24 +469,30 @@
         const btn = document.querySelector(`[data-slot-id="${slotId}"] button`);
         if (btn) { btn.disabled = true; btn.textContent = '…'; }
 
+        // Monta payload: prefere oficial_id (novo), fallback pastor_id (legado)
+        const payload = perm.oficialId
+          ? { oficial_id: perm.oficialId, status: 'PREENCHIDA' }
+          : { pastor_id: perm.pastorId,   status: 'PREENCHIDA' };
+
         try {
           const existing = slots.find(s => s.id === slotId);
           if (existing) {
-            await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao?id=eq.${slotId}`, {
+            const r = await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao?id=eq.${slotId}`, {
               method: 'PATCH',
               headers: { ...apiHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-              body: JSON.stringify({ oficial_id: perm.oficialId, status: 'PREENCHIDA' })
+              body: JSON.stringify(payload)
             });
-            existing.oficial_id = perm.oficialId;
-            existing.status = 'PREENCHIDA';
+            if (!r.ok) throw new Error(await r.text());
+            Object.assign(existing, payload);
           } else {
-            await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao`, {
+            const r = await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao`, {
               method: 'POST',
               headers: { ...apiHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-              body: JSON.stringify({ data, culto_tipo, oficial_id: perm.oficialId, status: 'PREENCHIDA', local: 'Templo Principal' })
+              body: JSON.stringify({ data, culto_tipo, local: 'Templo Principal', ...payload })
             });
+            if (!r.ok) throw new Error(await r.text());
           }
-          delete _cache[data.slice(0, 7).replace('-', '-')];
+          delete _cache[data.slice(0, 7)];
           mobToast('Disponibilidade registrada', 'success');
           _renderDisponibilidadeAba(el);
         } catch (e) {
@@ -469,11 +506,12 @@
         if (btn) { btn.disabled = true; btn.textContent = '…'; }
 
         try {
-          await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao?id=eq.${slotId}`, {
+          const r = await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao?id=eq.${slotId}`, {
             method: 'PATCH',
             headers: { ...apiHeaders(), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
             body: JSON.stringify({ oficial_id: null, pastor_id: null, status: 'PENDENTE' })
           });
+          if (!r.ok) throw new Error(await r.text());
           const s = slots.find(x => x.id === slotId);
           if (s) { s.oficial_id = null; s.pastor_id = null; s.status = 'PENDENTE'; }
           mobToast('Disponibilidade cancelada', 'success');
