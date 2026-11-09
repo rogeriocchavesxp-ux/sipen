@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Escala Pastoral
-   mobile/escala.js · v1.0.3
+   mobile/escala.js · v1.0.4
 
    Páginas:
    - escala-mob → visualização da escala + disponibilidade (pastores)
@@ -389,27 +389,34 @@
       await _loadNomes();
 
       const hoje = new Date();
-      const ano2 = hoje.getMonth() >= 11 ? hoje.getFullYear() + 1 : hoje.getFullYear();
-      const mes2 = (hoje.getMonth() + 1) % 12;
-
       const start = `${hoje.getFullYear()}-${_pad(hoje.getMonth() + 1)}-${_pad(hoje.getDate())}`;
-      const end   = `${ano2}-${_pad(mes2 + 1)}-${_pad(new Date(ano2, mes2 + 1, 0).getDate())}`;
 
-      // Tenta com oficial_id; se a coluna não existir (migration pendente), cai sem o campo
-      let slots = await fetch(
-        `${apiBaseUrl()}/rest/v1/escala_pregacao?data=gte.${start}&data=lte.${end}&order=data.asc,culto_tipo.asc&select=id,data,culto_tipo,pastor_id,oficial_id,status&limit=200`,
+      // Busca todos os cultos futuros (sem limite de data)
+      // Tenta com oficial_id; se coluna não existir, refaz sem
+      let slots = null;
+      let _res = await fetch(
+        `${apiBaseUrl()}/rest/v1/escala_pregacao?data=gte.${start}&order=data.asc,culto_tipo.asc&select=id,data,culto_tipo,pastor_id,oficial_id,status&limit=300`,
         { headers: apiHeaders() }
-      ).then(r => r.ok ? r.json() : null);
-
-      if (slots === null) {
-        slots = await fetch(
-          `${apiBaseUrl()}/rest/v1/escala_pregacao?data=gte.${start}&data=lte.${end}&order=data.asc,culto_tipo.asc&select=id,data,culto_tipo,pastor_id,status&limit=200`,
-          { headers: apiHeaders() }
-        ).then(r => r.ok ? r.json() : []);
+      );
+      if (_res.ok) {
+        slots = await _res.json();
+      } else {
+        const _errText = await _res.text();
+        // 400 com "oficial_id" = coluna não existe ainda → tenta sem
+        if (_res.status === 400 && _errText.includes('oficial_id')) {
+          const _res2 = await fetch(
+            `${apiBaseUrl()}/rest/v1/escala_pregacao?data=gte.${start}&order=data.asc,culto_tipo.asc&select=id,data,culto_tipo,pastor_id,status&limit=300`,
+            { headers: apiHeaders() }
+          );
+          slots = _res2.ok ? await _res2.json() : [];
+        } else {
+          el.innerHTML = `<div style="padding:16px"><div style="color:var(--rose);font-size:12px">Erro ao carregar escala (${_res.status}): ${_errText.slice(0,120)}</div></div>`;
+          return;
+        }
       }
 
       if (!slots.length) {
-        el.innerHTML = `<div style="padding:0 16px">${_vazio('📅', 'Nenhum culto cadastrado nos próximos 2 meses.')}</div>`;
+        el.innerHTML = `<div style="padding:0 16px">${_vazio('📅', 'Nenhum culto cadastrado a partir de hoje.')}</div>`;
         return;
       }
 
