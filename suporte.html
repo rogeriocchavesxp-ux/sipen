@@ -1,0 +1,2799 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Administração IPPenha</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png">
+<style>
+:root {
+  --acc:   #4a9cf5;
+  --accbg: rgba(74,156,245,.10);
+  --gr:    #3aaa5c;
+  --rose:  #e05555;
+  --amber: #d09040;
+  --tx1:   #1a1d21; --tx2: #4a5260; --tx3: #8a919e;
+  --bg:    #f4f6f9; --card: #ffffff; --bd: #e2e6ec;
+  --inp:   #f8fafc; --inpbd: #cdd3da;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tx1: #e8eaed; --tx2: #9aa0ac; --tx3: #5c6370;
+    --bg:  #12151a; --card: #1e2128; --bd: #2c3040;
+    --inp: #272b34; --inpbd: #3a4050;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--tx1); min-height: 100vh; }
+
+.wrap { max-width: 600px; margin: 0 auto; padding: 24px 16px 64px; }
+
+.page-header {
+  display: flex; flex-direction: column; align-items: center;
+  margin-bottom: 24px; padding-bottom: 20px;
+  border-bottom: 1px solid var(--bd); text-align: center; gap: 12px;
+}
+.page-logo  { height: 104px; width: auto; }
+.page-title { font-size: 18px; font-weight: 700; color: var(--acc); line-height: 1.2; }
+.page-sub   { font-size: 12.5px; color: var(--tx2); line-height: 1.55; max-width: 460px; width: 100%; box-sizing: border-box; }
+@media (max-width: 480px) {
+  .page-logo  { height: 80px; }
+  .page-title { font-size: 16px; }
+  .page-sub   { font-size: 12px; padding: 0 8px; }
+}
+.page-agenda-link { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--acc); text-decoration: none; padding: 6px 14px; border: 1px solid var(--acc); border-radius: 20px; transition: background .15s, color .15s; }
+.page-agenda-link:hover { background: var(--acc); color: #fff; }
+
+.card {
+  background: var(--card); border: 1px solid var(--bd);
+  border-radius: 14px; padding: 22px 24px; margin-bottom: 16px;
+}
+.card-title {
+  font-size: 10.5px; font-weight: 700; color: var(--tx3);
+  text-transform: uppercase; letter-spacing: .08em;
+  margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--bd);
+}
+
+.field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+.field label { font-size: 10px; font-weight: 700; color: var(--tx3); text-transform: uppercase; letter-spacing: .07em; }
+.field input, .field select, .field textarea {
+  padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--inpbd);
+  background: var(--inp); color: var(--tx1); font-size: 13.5px; font-family: inherit;
+  outline: none; width: 100%; transition: border-color .15s;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--acc); }
+.field textarea { resize: vertical; min-height: 110px; }
+.req { color: var(--rose); }
+
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.row4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+/* Separador visual dentro de .row4 entre par de campos */
+.row4-sep { display: none; }
+@media (max-width: 480px) { .row2 { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .row3 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 380px) { .row3 { grid-template-columns: 1fr; } }
+@media (max-width: 580px) { .row4 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) { .row4 { grid-template-columns: 1fr; } }
+
+/* honeypot */
+.hp { position: absolute; left: -9999px; top: -9999px; opacity: 0; height: 0; overflow: hidden; }
+
+/* Seção financeira — ocultação via style inline; a classe .fin-sec é apenas agrupamento */
+
+.btn-submit {
+  width: 100%; padding: 14px; border-radius: 9px; border: none;
+  background: var(--acc); color: #fff; font-size: 14.5px; font-weight: 700;
+  cursor: pointer; font-family: inherit; margin-top: 4px; transition: opacity .15s;
+}
+.btn-submit:hover  { opacity: .88; }
+.btn-submit:disabled { opacity: .5; cursor: not-allowed; }
+
+.err-msg {
+  font-size: 12.5px; color: var(--rose); background: rgba(224,85,85,.08);
+  border: 1px solid rgba(224,85,85,.25); border-radius: 8px;
+  padding: 9px 12px; margin-top: 10px; display: none;
+}
+.err-msg.show { display: block; }
+
+/* Tela de sucesso */
+#screen-ok { display: none; }
+.ok-card   { background: var(--card); border: 1px solid var(--bd); border-radius: 16px; padding: 44px 28px; text-align: center; }
+.ok-icon   { font-size: 52px; margin-bottom: 16px; }
+.ok-title  { font-size: 21px; font-weight: 800; color: var(--tx1); margin-bottom: 8px; }
+.ok-ticket {
+  display: inline-block; font-size: 18px; font-weight: 800; letter-spacing: .06em;
+  color: var(--acc); background: var(--accbg);
+  padding: 8px 22px; border-radius: 8px; margin: 12px 0 18px;
+  font-variant-numeric: tabular-nums;
+}
+.ok-msg  { font-size: 13.5px; color: var(--tx2); line-height: 1.65; margin-bottom: 28px; }
+.btn-novo {
+  padding: 11px 26px; border-radius: 8px; border: 1.5px solid var(--acc);
+  background: transparent; color: var(--acc); font-size: 13.5px; font-weight: 700;
+  cursor: pointer; font-family: inherit; transition: all .15s;
+}
+.btn-novo:hover { background: var(--acc); color: #fff; }
+
+.footer-note { text-align: center; font-size: 11px; color: var(--tx3); margin-top: 32px; line-height: 1.7; }
+
+/* ── Custom subcategoria dropdown ─────────────────────────── */
+.csub { position: relative; }
+.csub-btn {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--inpbd);
+  background: var(--inp); color: var(--tx3); font-size: 13.5px; font-family: inherit;
+  cursor: pointer; text-align: left; width: 100%; min-height: 42px;
+  outline: none; transition: border-color .15s;
+}
+.csub-btn.has-val { color: var(--tx1); }
+.csub-btn:focus, .csub-btn.open { border-color: var(--acc); }
+.csub-btn svg { flex-shrink: 0; color: var(--tx3); transition: transform .2s; }
+.csub-btn.open svg { transform: rotate(180deg); }
+.csub-panel {
+  display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 300;
+  background: var(--card); border: 1.5px solid var(--acc); border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.14); overflow: hidden; max-height: 280px; overflow-y: auto;
+}
+.csub-panel.open { display: block; }
+.csub-glabel {
+  padding: 9px 12px 5px;
+  font-size: 10px; font-weight: 800; color: var(--acc);
+  text-transform: uppercase; letter-spacing: .09em;
+  border-top: 1px solid var(--bd);
+}
+.csub-glabel:first-child { border-top: none; padding-top: 11px; }
+.csub-opt {
+  padding: 8px 16px; font-size: 13.5px; color: var(--tx1);
+  cursor: pointer; transition: background .1s;
+}
+.csub-opt:hover { background: var(--accbg); color: var(--acc); }
+.csub-opt.sel   { background: var(--accbg); color: var(--acc); font-weight: 600; }
+
+/* ── Agendamentos: Programação ─────────────────────────────── */
+.spaces-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 6px 8px;
+  padding: 4px 0;
+}
+.space-chk {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 10px; border-radius: 7px; border: 1.5px solid var(--inpbd);
+  background: var(--inp); cursor: pointer; font-size: 13px; color: var(--tx1);
+  user-select: none; transition: border-color .12s, background .12s;
+}
+.space-chk:has(input:checked) { border-color: var(--acc); background: var(--accbg); color: var(--acc); }
+.space-chk input[type="checkbox"] { accent-color: var(--acc); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
+/* Espaço indisponível */
+.space-chk.sc-indisponivel {
+  opacity: .5; cursor: not-allowed; pointer-events: none;
+  border-color: var(--inpbd); background: var(--bg); color: var(--tx3);
+}
+.space-chk.sc-indisponivel input { cursor: not-allowed; }
+.sc-lock { font-size: 10px; margin-left: auto; flex-shrink: 0; color: var(--tx3); }
+/* Status de disponibilidade */
+.ag-disp-info {
+  font-size: 11px; color: var(--tx3); padding: 7px 10px;
+  border-radius: 7px; border: 1px solid var(--bd); background: var(--inp);
+  display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+}
+.ag-disp-aviso {
+  font-size: 11.5px; color: #8A4000; padding: 8px 12px;
+  border-radius: 7px; border: 1px solid rgba(214,148,0,.35);
+  background: rgba(214,148,0,.09); margin-bottom: 8px; display: none;
+}
+
+/* ── Arte Digital / Step 2 ─────────────────────────────────── */
+.ag-arte-sep {
+  margin-top: 18px; padding-top: 18px;
+  border-top: 1px solid var(--bd);
+}
+.ag-arte-title {
+  font-size: 10.5px; font-weight: 700; color: #7057ad;
+  text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px;
+}
+.ag-arte-desc {
+  font-size: 11.5px; color: var(--tx3); margin-bottom: 12px; line-height: 1.5;
+}
+.ag-arte-radios { display: flex; gap: 20px; }
+.ag-arte-radios label {
+  display: flex; align-items: center; gap: 7px;
+  cursor: pointer; font-size: 13px; color: var(--tx1); font-weight: 400;
+}
+
+/* Stepper */
+.ag-stepper {
+  display: flex; align-items: center; margin-bottom: 20px;
+}
+.ag-step { display: flex; align-items: center; gap: 7px; }
+.ag-step-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800; flex-shrink: 0;
+}
+.ag-step-num.done   { background: var(--gr);   color: #fff; }
+.ag-step-num.active { background: #7057ad;      color: #fff; }
+.ag-step-num.idle   { background: var(--bd);    color: var(--tx3); }
+.ag-step-label { font-size: 12px; font-weight: 600; }
+.ag-step-label.done   { color: var(--gr); }
+.ag-step-label.active { color: #7057ad; }
+.ag-step-label.idle   { color: var(--tx3); }
+.ag-step-sep { flex: 1; height: 2px; background: var(--bd); margin: 0 10px; }
+.ag-step-sep.done { background: var(--gr); }
+
+/* Formatos tags (step 2) */
+.s2-fmt-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.s2-fmt-lbl {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 20px;
+  border: 1.5px solid var(--inpbd); cursor: pointer;
+  font-size: 12.5px; background: var(--inp); color: var(--tx2);
+  user-select: none; transition: border-color .1s, background .1s, color .1s;
+}
+.s2-fmt-lbl:has(input:checked) {
+  border-color: #7057ad;
+  background: rgba(112,87,173,.12);
+  color: #7057ad;
+}
+
+/* Step 2 aviso programação pendente */
+.s2-aviso-pend {
+  display: none; font-size: 11.5px; color: #8A6010;
+  padding: 9px 13px; background: rgba(214,148,0,.1);
+  border: 1px solid rgba(214,148,0,.35); border-radius: 8px;
+  margin-bottom: 16px; line-height: 1.5;
+}
+
+/* ── screen-agend: tipo de solicitação ──────────────────────── */
+.ag-tipo-grid { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px 0; }
+.ag2-tipo-lbl {
+  display: inline-flex; align-items: center;
+  padding: 9px 20px; border-radius: 10px;
+  border: 1.5px solid var(--bd); cursor: pointer;
+  font-size: 13px; font-weight: 500;
+  background: var(--card); color: var(--tx1);
+  user-select: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  transition: border-color .15s, background .15s, color .15s, box-shadow .15s, transform .1s;
+}
+.ag2-tipo-lbl input[type="radio"] { display: none; }
+.ag2-tipo-lbl.sel, .ag2-tipo-lbl:has(input:checked) {
+  border-color: var(--acc);
+  background: var(--acc);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 3px 10px rgba(74,156,245,.35);
+  transform: translateY(-1px);
+}
+.ag2-tipo-lbl:not(.sel):hover {
+  border-color: var(--acc); color: var(--acc);
+  background: var(--accbg);
+  box-shadow: 0 2px 6px rgba(74,156,245,.15);
+}
+
+/* ── screen-agend: botão verificar disponibilidade ──────────── */
+.btn-verif {
+  width: 100%; padding: 12px; border-radius: 9px; border: none;
+  background: var(--acc); color: #fff; font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: inherit; margin-top: 10px; transition: opacity .15s;
+}
+.btn-verif:hover { opacity: .88; }
+.btn-verif:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── screen-agend: loading ───────────────────────────────────── */
+.ag2-loading {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12.5px; color: var(--tx3); margin-top: 10px;
+}
+.ag2-spinner {
+  width: 16px; height: 16px; flex-shrink: 0;
+  border: 2px solid var(--bd); border-top-color: var(--acc);
+  border-radius: 50%; animation: ag2-spin .7s linear infinite;
+}
+@keyframes ag2-spin { to { transform: rotate(360deg); } }
+
+/* ── screen-agend: aviso invalidação ────────────────────────── */
+.ag2-disp-aviso {
+  font-size: 11.5px; color: var(--amber); padding: 8px 12px;
+  border-radius: 7px; border: 1px solid rgba(208,144,64,.3);
+  background: rgba(208,144,64,.08); margin-top: 10px;
+}
+
+/* ── screen-agend: agrupamento ───────────────────────────────── */
+.ag2-grupo { margin-bottom: 20px; }
+.ag2-grupo:last-child { margin-bottom: 0; }
+.ag2-grupo-hdr {
+  font-size: 12px; font-weight: 800; color: var(--acc);
+  text-transform: uppercase; letter-spacing: .07em;
+  padding-bottom: 8px; margin-bottom: 10px;
+  border-bottom: 1px solid var(--bd);
+  display: flex; align-items: center; gap: 8px;
+}
+.ag2-grupo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 6px;
+  align-items: start;
+}
+
+/* ── screen-agend: cards de espaço ──────────────────────────── */
+.ag2-espaco-card {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 11px;
+  border-radius: 8px; border: 1.5px solid var(--inpbd);
+  background: var(--inp); cursor: pointer;
+  font-size: 13px; font-weight: 500; color: var(--tx1);
+  transition: border-color .12s, background .12s;
+  user-select: none;
+}
+.ag2-espaco-card:not(.ag2-espaco-indisp):hover {
+  border-color: var(--gr); background: rgba(58,170,92,.05);
+}
+.ag2-espaco-card.ag2-espaco-sel {
+  border-color: var(--gr); background: rgba(58,170,92,.1); color: #1a6b35;
+}
+
+/* checkbox visual */
+.ag2-chk {
+  width: 16px; height: 16px; flex-shrink: 0;
+  border: 1.5px solid var(--inpbd); border-radius: 4px;
+  background: var(--inp); position: relative;
+  transition: border-color .12s, background .12s;
+}
+.ag2-espaco-card.ag2-espaco-sel .ag2-chk {
+  background: var(--gr); border-color: var(--gr);
+}
+.ag2-espaco-card.ag2-espaco-sel .ag2-chk::after {
+  content: ''; position: absolute;
+  left: 3px; top: 0px; width: 5px; height: 9px;
+  border: 2px solid #fff; border-top: none; border-left: none;
+  transform: rotate(45deg);
+}
+.ag2-espaco-indisp .ag2-chk { background: var(--bd); border-color: var(--bd); }
+.ag2-espaco-indisp {
+  cursor: not-allowed; pointer-events: none;
+  border-color: var(--rose); background: rgba(220,53,69,.05);
+}
+.ag2-espaco-indisp .ag2-card-nome { color: var(--tx2); }
+.ag2-lock { font-size: 11px; flex-shrink: 0; margin-left: auto; }
+.ag2-tag-ocupado { font-size: 10px; color: var(--rose); flex-shrink: 0; }
+
+/* Cards com informação de ocupação (layout em coluna) */
+.ag2-espaco-com-occ { flex-direction: column; align-items: stretch; gap: 5px; }
+.ag2-card-hdr { display: flex; align-items: center; gap: 9px; width: 100%; }
+.ag2-card-nome { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Lista de intervalos ocupados dentro do card */
+.ag2-ocupacoes {
+  display: flex; flex-direction: column; gap: 2px;
+  padding-left: 25px;
+  font-size: 10.5px; font-weight: 500;
+}
+.ag2-ocupacoes .ag2-occ-item { color: var(--rose); }
+.ag2-occ-outros { color: var(--tx3); font-weight: 400; }
+.ag2-occ-outros .ag2-occ-item { color: var(--tx3); }
+
+/* Label "Indisponível" nos cards bloqueados */
+.ag2-indisp-label {
+  font-size: 10.5px; font-weight: 700; color: var(--rose);
+  line-height: 1.3; display: block;
+}
+
+/* Sub-info: localização e capacidade */
+.ag2-card-info {
+  display: block; font-size: 10px; color: var(--tx3);
+  font-weight: 400; line-height: 1.3; margin-top: 1px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ag2-espaco-indisp .ag2-card-info { opacity: .6; }
+
+/* Grupo recolhível */
+.ag2-grupo-hdr { cursor: pointer; user-select: none; }
+.ag2-grupo-chevron {
+  font-size: 15px; color: var(--acc);
+  transition: transform .2s; display: inline-block;
+  flex-shrink: 0; line-height: 1;
+}
+.ag2-grupo.collapsed .ag2-grupo-chevron { transform: rotate(-90deg); }
+.ag2-grupo.collapsed .ag2-grupo-grid { display: none; }
+
+/* ── req de espaço: menu ⋮ ─────────────────────────────────────── */
+.ag2-menu-btn {
+  pointer-events: auto; cursor: pointer;
+  background: none; border: none;
+  font-size: 15px; line-height: 1; color: var(--tx3);
+  padding: 0 3px; border-radius: 4px; flex-shrink: 0;
+  margin-left: auto;
+}
+.ag2-menu-btn:hover { background: rgba(0,0,0,.08); color: var(--tx1); }
+
+.ag2-menu-popup {
+  position: fixed; z-index: 9000;
+  background: var(--bg-card); border: 1px solid var(--bd2);
+  border-radius: 9px; box-shadow: 0 6px 24px rgba(0,0,0,.18);
+  min-width: 170px; padding: 5px;
+  display: none;
+}
+.ag2-menu-popup.aberto { display: block; }
+.ag2-menu-popup button {
+  display: block; width: 100%; text-align: left;
+  padding: 8px 13px; border: none; background: none;
+  border-radius: 6px; font-size: 12.5px; color: var(--tx1);
+  font-weight: 500; cursor: pointer;
+}
+.ag2-menu-popup button:hover { background: var(--bg-hover); }
+
+/* ── req de espaço: modal ────────────────────────────────────────── */
+.ag2-req-overlay {
+  position: fixed; inset: 0; z-index: 9500;
+  background: rgba(0,0,0,.48); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.ag2-req-box {
+  background: var(--bg-card); border-radius: 13px;
+  max-width: 580px; width: 100%; max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 10px 50px rgba(0,0,0,.25);
+  display: flex; flex-direction: column;
+}
+.ag2-req-hdr {
+  display: flex; align-items: center; gap: 10px;
+  padding: 16px 20px; border-bottom: 1px solid var(--bd);
+  position: sticky; top: 0; background: var(--bg-card); z-index: 1;
+}
+.ag2-req-hdr-txt { flex: 1; }
+.ag2-req-hdr-txt h3 { font-size: 14.5px; font-weight: 700; color: var(--tx1); margin: 0; }
+.ag2-req-hdr-txt p  { font-size: 11px; color: var(--tx3); margin: 2px 0 0; }
+.ag2-req-close {
+  background: none; border: none; font-size: 18px; color: var(--tx3);
+  cursor: pointer; padding: 3px 7px; border-radius: 6px; line-height: 1;
+}
+.ag2-req-close:hover { background: var(--bg-hover); color: var(--tx1); }
+.ag2-req-body { padding: 18px 20px; flex: 1; }
+.ag2-req-resumo {
+  background: rgba(220,53,69,.05); border: 1px solid rgba(220,53,69,.2);
+  border-radius: 8px; padding: 12px 14px; margin-bottom: 18px;
+  font-size: 12px; color: var(--tx2);
+}
+.ag2-req-resumo strong { color: var(--tx1); }
+.ag2-req-resumo ul { margin: 6px 0 0; padding-left: 16px; }
+.ag2-req-resumo li { margin-bottom: 2px; }
+.ag2-req-sec {
+  margin-bottom: 18px; padding-bottom: 18px;
+  border-bottom: 1px solid var(--bd);
+}
+.ag2-req-sec:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.ag2-req-sec-ttl {
+  font-size: 10px; font-weight: 800; color: var(--tx3);
+  text-transform: uppercase; letter-spacing: .1em; margin-bottom: 12px;
+}
+.ag2-req-row { display: flex; gap: 10px; margin-bottom: 10px; }
+.ag2-req-field { flex: 1; }
+.ag2-req-field label {
+  display: block; font-size: 10.5px; font-weight: 600; color: var(--tx3);
+  margin-bottom: 5px;
+}
+.ag2-req-field input,
+.ag2-req-field select,
+.ag2-req-field textarea {
+  width: 100%; box-sizing: border-box;
+  border: 1.5px solid var(--inpbd); border-radius: 7px;
+  padding: 8px 10px; font-size: 12.5px; color: var(--tx1);
+  background: var(--inp); outline: none; font-family: inherit;
+}
+.ag2-req-field textarea { min-height: 72px; resize: vertical; }
+.ag2-req-field input:focus, .ag2-req-field select:focus, .ag2-req-field textarea:focus {
+  border-color: var(--teal);
+}
+.ag2-req-radios { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; margin-top: 4px; }
+.ag2-req-radios label { display: flex; align-items: center; gap: 5px; cursor: pointer; color: var(--tx2); }
+.ag2-req-alt { margin-top: 10px; display: none; }
+.ag2-req-aviso {
+  background: rgba(234,88,12,.07); border: 1px solid rgba(234,88,12,.25);
+  border-radius: 8px; padding: 12px 14px; font-size: 12px; color: var(--tx2);
+  margin-bottom: 16px; line-height: 1.5;
+}
+.ag2-req-aviso strong { color: var(--orange); }
+.ag2-req-ftr {
+  display: flex; gap: 10px; justify-content: flex-end;
+  padding: 14px 20px; border-top: 1px solid var(--bd);
+  position: sticky; bottom: 0; background: var(--bg-card);
+}
+.ag2-req-ftr button { padding: 9px 18px; border-radius: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer; border: none; }
+.ag2-req-btn-cancel { background: var(--bg); border: 1px solid var(--bd2) !important; color: var(--tx2); }
+.ag2-req-btn-cancel:hover { background: var(--bg-hover); }
+.ag2-req-btn-next { background: var(--teal); color: #fff; }
+.ag2-req-btn-next:hover { opacity: .88; }
+.ag2-req-btn-submit { background: var(--orange); color: #fff; }
+.ag2-req-btn-submit:hover { opacity: .88; }
+@media (max-width: 480px) {
+  .ag2-req-row { flex-direction: column; }
+  .ag2-req-box { border-radius: 10px; }
+}
+
+/* ── screen-agend: contador ─────────────────────────────────── */
+.ag2-contador {
+  display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+  font-size: 11.5px; color: var(--tx3);
+  padding: 9px 13px; background: var(--bg);
+  border-radius: 8px; border: 1px solid var(--bd); margin-bottom: 16px;
+}
+.ag2-cnt-disp  { color: var(--gr);   font-weight: 600; }
+.ag2-cnt-indisp { color: var(--rose); font-weight: 600; }
+
+/* ── screen-agend: resumo seleção ────────────────────────────── */
+.ag2-resumo {
+  margin-top: 18px; padding: 12px 14px;
+  border: 1.5px solid var(--gr);
+  border-radius: 10px; background: rgba(58,170,92,.06);
+}
+.ag2-resumo-titulo {
+  font-size: 10px; font-weight: 800; color: var(--gr);
+  text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px;
+}
+.ag2-resumo-item {
+  font-size: 13px; color: var(--tx1);
+  display: flex; align-items: center; gap: 7px; padding: 2px 0;
+}
+.ag2-resumo-item::before { content: "✔"; color: var(--gr); font-size: 10px; font-weight: 700; flex-shrink: 0; }
+.ag2-resumo-total {
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid rgba(58,170,92,.22);
+  font-size: 11.5px; color: var(--gr); font-weight: 600;
+}
+.fin-anexos-bloco {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1.5px dashed var(--inpbd);
+}
+.fin-anexos-titulo {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin-bottom: 10px;
+}
+.fin-file-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--inpbd);
+  background: var(--inp);
+  color: var(--tx2);
+  cursor: pointer;
+  transition: border-color .15s;
+  font-size: 13.5px;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+  user-select: none;
+}
+.fin-file-label:hover       { border-color: var(--acc); }
+.fin-file-label.tem-arquivo { border-color: var(--acc); color: var(--tx1); }
+.fin-file-ic  { font-size: 15px; flex-shrink: 0; opacity: .65; }
+.fin-file-txt { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fin-file-hint { font-size: 10.5px; color: var(--tx3); margin-top: 6px; }
+.fin-file-row  { display: flex; gap: 8px; align-items: stretch; }
+.fin-file-row .fin-file-label { flex: 1; width: auto; }
+.fin-cam-btn {
+  flex-shrink: 0;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1.5px solid var(--inpbd);
+  background: var(--inp);
+  color: var(--tx2);
+  font-size: 17px;
+  cursor: pointer;
+  transition: border-color .15s;
+  line-height: 1;
+}
+.fin-cam-btn:hover { border-color: var(--acc); }
+
+/* ── Agendamentos: toggle atividade interna / externa ──────── */
+.ag2-ativ-toggle {
+  display: flex; border-radius: 8px; border: 1.5px solid var(--inpbd);
+  overflow: hidden; background: var(--inp);
+}
+.ag2-ativ-btn {
+  flex: 1; padding: 9px 12px; border: none; background: transparent;
+  font-size: 13px; color: var(--tx2); cursor: pointer; font-family: inherit;
+  transition: background .15s, color .15s; text-align: center; line-height: 1.4;
+}
+.ag2-ativ-btn.active { background: var(--acc); color: #fff; font-weight: 600; }
+.ag2-ativ-btn:not(.active):hover { background: var(--accbg); color: var(--acc); }
+
+/* ── screen-nom: Nomeações ────────────────────────────────── */
+.nom-back { background:none; border:none; color:var(--acc); font-size:13px; font-weight:600; cursor:pointer; padding:4px 0; margin-bottom:16px; display:flex; align-items:center; gap:5px; font-family:inherit; }
+.nom-cargo-blk { margin-bottom:16px; }
+.nom-cargo-blk:last-child { margin-bottom:0; }
+.nom-cargo-label { font-size:10px; font-weight:700; color:var(--tx3); text-transform:uppercase; letter-spacing:.07em; margin-bottom:5px; }
+.nom-ac-wrap { position:relative; }
+.nom-ac-inp { width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid var(--inpbd); background:var(--inp); color:var(--tx1); font-size:13.5px; font-family:inherit; outline:none; transition:border-color .15s; }
+.nom-ac-inp:focus { border-color:var(--acc); }
+.nom-ac-drop { display:none; position:absolute; top:calc(100% + 3px); left:0; right:0; z-index:200; background:var(--card); border:1.5px solid var(--acc); border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,.12); overflow:hidden; }
+.nom-ac-drop.open { display:block; }
+.nom-ac-item { padding:8px 14px; font-size:13px; cursor:pointer; color:var(--tx1); transition:background .1s; }
+.nom-ac-item:hover, .nom-ac-item.focus { background:var(--accbg); color:var(--acc); }
+.nom-membro-row { display:flex; gap:8px; align-items:flex-start; margin-bottom:8px; }
+.nom-membro-row:last-child { margin-bottom:0; }
+.nom-membro-row .nom-ac-wrap { flex:1; }
+.nom-rem-btn { flex-shrink:0; width:36px; height:40px; border-radius:7px; border:1.5px solid var(--bd); background:var(--inp); color:var(--tx3); font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:border-color .15s, color .15s; padding:0; }
+.nom-rem-btn:hover { border-color:var(--rose); color:var(--rose); }
+.nom-add-btn { width:100%; padding:10px; border-radius:8px; border:1.5px dashed var(--inpbd); background:transparent; color:var(--tx2); font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; margin-top:8px; transition:all .15s; }
+.nom-add-btn:hover { border-color:var(--acc); color:var(--acc); }
+.nom-ok-card { background:var(--card); border:1px solid var(--bd); border-radius:16px; padding:44px 28px; text-align:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ── Tela do formulário ─────────────────────────── -->
+  <div id="screen-form">
+
+    <header class="page-header">
+      <img src="/icons/logo-ippenha.svg" class="page-logo" alt="Igreja Presbiteriana da Penha"
+           onerror="this.style.display='none'">
+      <div class="page-title">Administração IPPenha</div>
+      <a href="/agenda" class="page-agenda-link" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Ver agenda de atividades
+      </a>
+    </header>
+
+    <form id="form-chamado" onsubmit="return false">
+
+      <!-- Honeypot -->
+      <div class="hp" aria-hidden="true">
+        <input type="text" name="_gotcha" id="_gotcha" tabindex="-1" autocomplete="off">
+      </div>
+
+      <!-- Detalhes da solicitação -->
+      <div class="card">
+        <div class="card-title">Solicitação</div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-cat">Área / Departamento <span class="req">*</span></label>
+            <select id="f-cat" onchange="onCatChange()">
+              <option value="">Selecione a área</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Tipo de solicitação <span class="req">*</span></label>
+            <div class="csub">
+              <button type="button" id="f-sub-btn" class="csub-btn" onclick="csubToggle()" aria-haspopup="listbox" aria-expanded="false">
+                <span id="f-sub-lbl">Selecione a área primeiro</span>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 5l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div class="csub-panel" id="f-sub-panel" role="listbox"></div>
+              <select id="f-sub" style="display:none" onchange="onSubChange()">
+                <option value="">Selecione a área primeiro</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="field" id="wrap-titulo">
+          <label for="f-titulo">Título <span class="req">*</span></label>
+          <input type="text" id="f-titulo" placeholder="Descreva brevemente sua solicitação" maxlength="200">
+        </div>
+
+        <div class="field" id="wrap-desc">
+          <label for="f-desc">Descrição detalhada <span class="req">*</span></label>
+          <textarea id="f-desc" placeholder="Forneça todos os detalhes que possam ajudar no atendimento: quando ocorreu, urgência, contexto etc."></textarea>
+        </div>
+
+        <div class="field" id="wrap-local">
+          <label for="f-local">Localização</label>
+          <input type="text" id="f-local" placeholder="Ex: Hall da Secretaria, Templo Principal, Sala 3...">
+        </div>
+
+        <!-- Docs de apoio — oculto para Financeiro (tem seção própria) -->
+        <div class="fin-anexos-bloco" id="gen-docs-sec" style="display:none">
+          <div class="fin-anexos-titulo" id="gen-docs-titulo">📎 Documentos de apoio — opcional</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="fin-file-row">
+              <label class="fin-file-label" id="lbl-doc-1">
+                <span class="fin-file-ic">📄</span>
+                <span class="fin-file-txt" id="txt-doc-1">Arquivo 1</span>
+                <input type="file" id="f-doc-1" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                  onchange="finAtualizarLabel('f-doc-1','txt-doc-1','lbl-doc-1')">
+              </label>
+              <button type="button" class="fin-cam-btn" title="Tirar foto"
+                onclick="finCapturarFoto('f-doc-1','txt-doc-1','lbl-doc-1')">📷</button>
+            </div>
+            <div class="fin-file-row" id="gen-doc-2-row" style="display:none">
+              <label class="fin-file-label" id="lbl-doc-2">
+                <span class="fin-file-ic">📄</span>
+                <span class="fin-file-txt" id="txt-doc-2">Arquivo 2</span>
+                <input type="file" id="f-doc-2" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                  onchange="finAtualizarLabel('f-doc-2','txt-doc-2','lbl-doc-2');document.getElementById('gen-doc-3-row').style.display=''">
+              </label>
+              <button type="button" class="fin-cam-btn" title="Tirar foto"
+                onclick="finCapturarFoto('f-doc-2','txt-doc-2','lbl-doc-2')">📷</button>
+            </div>
+            <div class="fin-file-row" id="gen-doc-3-row" style="display:none">
+              <label class="fin-file-label" id="lbl-doc-3">
+                <span class="fin-file-ic">📄</span>
+                <span class="fin-file-txt" id="txt-doc-3">Arquivo 3</span>
+                <input type="file" id="f-doc-3" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                  onchange="finAtualizarLabel('f-doc-3','txt-doc-3','lbl-doc-3')">
+              </label>
+              <button type="button" class="fin-cam-btn" title="Tirar foto"
+                onclick="finCapturarFoto('f-doc-3','txt-doc-3','lbl-doc-3')">📷</button>
+            </div>
+          </div>
+          <div id="gen-docs-add-row" style="margin-top:6px">
+            <button type="button" onclick="_genDocsAddSlot()"
+              style="background:none;border:none;color:var(--acc);font-size:12px;cursor:pointer;padding:0;text-decoration:underline">
+              + Adicionar outro arquivo
+            </button>
+          </div>
+          <div class="fin-file-hint">PDF, JPG ou PNG · máx. 10 MB · até 3 arquivos</div>
+        </div>
+      </div>
+
+      <!-- ── Financeiro: Solicitação de Pagamento ───────── -->
+      <div class="card fin-sec" id="fin-pag" style="display:none">
+        <div class="card-title">💰 Dados do Pagamento</div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-fin-tipo">Tipo de solicitação</label>
+            <select id="f-fin-tipo">
+              <option value="Pagamento">Pagamento</option>
+              <option value="Reembolso">Reembolso</option>
+              <option value="Adiantamento">Adiantamento</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="f-fin-valor">Valor (R$) <span class="req">*</span></label>
+            <input type="text" id="f-fin-valor" placeholder="0,00" inputmode="decimal">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-fin-venc">Data de vencimento</label>
+            <input type="date" id="f-fin-venc">
+          </div>
+          <div class="field">
+            <label for="f-fin-centro">Centro de custo</label>
+            <input type="text" id="f-fin-centro" placeholder="Ex: Ministério de Louvor">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-fin-benefic">Beneficiário / Favorecido <span class="req">*</span></label>
+            <input type="text" id="f-fin-benefic" placeholder="Nome ou razão social">
+          </div>
+          <div class="field">
+            <label for="f-fin-cpf">CPF / CNPJ</label>
+            <input type="text" id="f-fin-cpf" placeholder="000.000.000-00">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-fin-forma">Forma de pagamento <span class="req">*</span></label>
+          <select id="f-fin-forma" onchange="onFormaChange()">
+            <option value="">Selecione</option>
+            <option value="PIX">PIX</option>
+            <option value="Boleto">Boleto</option>
+            <option value="Cartão de Crédito">Cartão de Crédito</option>
+            <option value="Cartão de Débito">Cartão de Débito</option>
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Transferência Bancária">Transferência Bancária</option>
+            <option value="Débito em Conta">Débito em Conta</option>
+            <option value="Cheque">Cheque</option>
+            <option value="Reembolso">Reembolso</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+
+        <div class="field fin-sec" id="fin-pix-sec" style="display:none">
+          <label for="f-fin-pix">Chave PIX <span class="req">*</span></label>
+          <input type="text" id="f-fin-pix" placeholder="CPF, e-mail, telefone ou chave aleatória">
+        </div>
+
+        <div class="fin-sec" id="fin-ted-sec" style="display:none">
+          <div class="row3">
+            <div class="field">
+              <label for="f-fin-banco">Banco <span class="req">*</span></label>
+              <input type="text" id="f-fin-banco" placeholder="Ex: Bradesco">
+            </div>
+            <div class="field">
+              <label for="f-fin-ag">Agência <span class="req">*</span></label>
+              <input type="text" id="f-fin-ag" placeholder="0000">
+            </div>
+            <div class="field">
+              <label for="f-fin-conta">Conta <span class="req">*</span></label>
+              <input type="text" id="f-fin-conta" placeholder="00000-0">
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-fin-obs">Observações financeiras</label>
+          <textarea id="f-fin-obs" placeholder="Informações adicionais relevantes para o pagamento" style="min-height:70px"></textarea>
+        </div>
+
+        <div class="fin-anexos-bloco">
+          <div class="fin-anexos-titulo">📎 Documentos — opcional</div>
+          <div class="field">
+            <label>Nota fiscal / Recibo</label>
+            <div class="fin-file-row">
+              <label class="fin-file-label" id="lbl-fin-nota">
+                <span class="fin-file-ic">📄</span>
+                <span class="fin-file-txt" id="txt-fin-nota">Selecionar arquivo</span>
+                <input type="file" id="f-fin-nota" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                  onchange="finAtualizarLabel('f-fin-nota','txt-fin-nota','lbl-fin-nota')">
+              </label>
+              <button type="button" class="fin-cam-btn" title="Tirar foto"
+                onclick="finCapturarFoto('f-fin-nota','txt-fin-nota','lbl-fin-nota')">📷</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Boleto / Comprovante</label>
+            <div class="fin-file-row">
+              <label class="fin-file-label" id="lbl-fin-boleto">
+                <span class="fin-file-ic">🧾</span>
+                <span class="fin-file-txt" id="txt-fin-boleto">Selecionar arquivo</span>
+                <input type="file" id="f-fin-boleto" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                  onchange="finAtualizarLabel('f-fin-boleto','txt-fin-boleto','lbl-fin-boleto')">
+              </label>
+              <button type="button" class="fin-cam-btn" title="Tirar foto"
+                onclick="finCapturarFoto('f-fin-boleto','txt-fin-boleto','lbl-fin-boleto')">📷</button>
+            </div>
+          </div>
+          <div class="fin-file-hint">PDF, JPG ou PNG · máx. 10 MB por arquivo</div>
+        </div>
+      </div>
+
+      <!-- ── Financeiro: Reembolso ───────────────────── -->
+      <div class="card fin-sec" id="fin-reimb" style="display:none">
+        <div class="card-title">💰 Dados do Reembolso</div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-reimb-nome">Reembolsar para <span class="req">*</span></label>
+            <input type="text" id="f-reimb-nome" placeholder="Nome completo">
+          </div>
+          <div class="field">
+            <label for="f-reimb-valor">Valor (R$) <span class="req">*</span></label>
+            <input type="text" id="f-reimb-valor" placeholder="0,00" inputmode="decimal">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-reimb-motivo">Motivo do reembolso</label>
+          <textarea id="f-reimb-motivo" placeholder="Descreva o motivo e a finalidade do gasto..." style="min-height:70px"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="f-reimb-forma">Forma de pagamento <span class="req">*</span></label>
+          <select id="f-reimb-forma">
+            <option value="">Selecione</option>
+            <option value="PIX">PIX</option>
+            <option value="Boleto">Boleto</option>
+            <option value="Cartão de Crédito">Cartão de Crédito</option>
+            <option value="Cartão de Débito">Cartão de Débito</option>
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Transferência Bancária">Transferência Bancária</option>
+            <option value="Débito em Conta">Débito em Conta</option>
+            <option value="Cheque">Cheque</option>
+            <option value="Reembolso">Reembolso</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-reimb-pix">Chave PIX</label>
+            <input type="text" id="f-reimb-pix" placeholder="CPF, e-mail, telefone ou chave aleatória">
+          </div>
+          <div class="field">
+            <label for="f-reimb-min">Ministério / Área</label>
+            <input type="text" id="f-reimb-min" placeholder="Ex: EBD, Música, Ação Social">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-reimb-pastor">Aprovador (pastor ou líder)</label>
+          <input type="text" id="f-reimb-pastor" placeholder="Nome do aprovador">
+        </div>
+
+        <div class="field">
+          <label for="f-reimb-obs">Observações</label>
+          <textarea id="f-reimb-obs" placeholder="Informações adicionais..." style="min-height:70px"></textarea>
+        </div>
+
+        <div class="fin-anexos-bloco">
+          <div class="fin-anexos-titulo">📎 Documentos — opcional</div>
+          <div class="field">
+            <label>Nota fiscal / Recibo</label>
+            <div class="fin-file-row">
+              <label class="fin-file-label" id="lbl-reimb-nota">
+                <span class="fin-file-ic">📄</span>
+                <span class="fin-file-txt" id="txt-reimb-nota">Selecionar arquivo</span>
+                <input type="file" id="f-reimb-nota" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                  onchange="finAtualizarLabel('f-reimb-nota','txt-reimb-nota','lbl-reimb-nota')">
+              </label>
+              <button type="button" class="fin-cam-btn" title="Tirar foto"
+                onclick="finCapturarFoto('f-reimb-nota','txt-reimb-nota','lbl-reimb-nota')">📷</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Comprovante de pagamento</label>
+            <div class="fin-file-row">
+              <label class="fin-file-label" id="lbl-reimb-comp">
+                <span class="fin-file-ic">🧾</span>
+                <span class="fin-file-txt" id="txt-reimb-comp">Selecionar arquivo</span>
+                <input type="file" id="f-reimb-comp" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                  onchange="finAtualizarLabel('f-reimb-comp','txt-reimb-comp','lbl-reimb-comp')">
+              </label>
+              <button type="button" class="fin-cam-btn" title="Tirar foto"
+                onclick="finCapturarFoto('f-reimb-comp','txt-reimb-comp','lbl-reimb-comp')">📷</button>
+            </div>
+          </div>
+          <div class="fin-file-hint">PDF, JPG ou PNG · máx. 10 MB por arquivo</div>
+        </div>
+      </div>
+
+      <!-- ── Administração: Uso do Estacionamento ──────── -->
+      <div class="card" id="estac-sec" style="display:none">
+        <div class="card-title">🚗 Dados do Estacionamento</div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-estac-data-i">Data de entrada <span class="req">*</span></label>
+            <input type="date" id="f-estac-data-i">
+          </div>
+          <div class="field">
+            <label for="f-estac-data-f">Data de saída</label>
+            <input type="date" id="f-estac-data-f">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-estac-hora-i">Horário de entrada <span class="req">*</span></label>
+            <input type="time" id="f-estac-hora-i">
+          </div>
+          <div class="field">
+            <label for="f-estac-hora-f">Horário de saída</label>
+            <input type="time" id="f-estac-hora-f">
+          </div>
+        </div>
+
+        <div class="row3">
+          <div class="field">
+            <label for="f-estac-cor">Cor do veículo <span class="req">*</span></label>
+            <input type="text" id="f-estac-cor" placeholder="Ex: Prata">
+          </div>
+          <div class="field">
+            <label for="f-estac-placa">Placa <span class="req">*</span></label>
+            <input type="text" id="f-estac-placa" placeholder="ABC-1234" maxlength="8"
+              oninput="this.value=this.value.toUpperCase()">
+          </div>
+          <div class="field">
+            <label for="f-estac-modelo">Modelo <span class="req">*</span></label>
+            <input type="text" id="f-estac-modelo" placeholder="Ex: Gol, Civic">
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Controle de Acesso — Estacionamento ──────── -->
+      <div class="card" id="acesso-est-sec" style="display:none">
+        <div class="card-title">🅿 Solicitação de Controle do Estacionamento</div>
+        <div class="field">
+          <label for="f-cest-modelo">Modelo do veículo <span class="req">*</span></label>
+          <input type="text" id="f-cest-modelo" placeholder="Ex: Honda Civic, Volkswagen Gol">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="f-cest-placa">Placa <span class="req">*</span></label>
+            <input type="text" id="f-cest-placa" placeholder="ABC-1234" maxlength="8" oninput="this.value=this.value.toUpperCase()">
+          </div>
+          <div class="field">
+            <label for="f-cest-cor">Cor do veículo <span class="req">*</span></label>
+            <input type="text" id="f-cest-cor" placeholder="Ex: Prata">
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-cest-motivo">Motivo da solicitação <span class="req">*</span></label>
+          <select id="f-cest-motivo">
+            <option value="">— Selecione —</option>
+            <option value="Novo controle">Novo controle</option>
+            <option value="Controle com defeito">Controle com defeito</option>
+            <option value="Controle perdido">Controle perdido</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ── Controle de Acesso — Facial ───────────────── -->
+      <div class="card" id="acesso-facial-sec" style="display:none">
+        <div class="card-title">⊙ Cadastro de Acesso Facial</div>
+        <p style="font-size:12.5px;color:var(--tx2);margin:0 0 14px">Seus dados serão encaminhados para cadastro na leitora facial da portaria.</p>
+        <div class="row2">
+          <div class="field">
+            <label for="f-facial-cpf">CPF <span class="req">*</span></label>
+            <input type="text" id="f-facial-cpf" placeholder="000.000.000-00" maxlength="14" oninput="_fmtCpf(this)">
+          </div>
+          <div class="field">
+            <label for="f-facial-email">E-mail <span class="req">*</span></label>
+            <input type="email" id="f-facial-email" placeholder="seu@email.com">
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-facial-foto">Foto nítida de frente, sem óculos <span class="req">*</span></label>
+          <input type="file" id="f-facial-foto" accept="image/*" capture="user" style="padding:8px 0">
+        </div>
+      </div>
+
+      <!-- ── Agendamentos: Programação ─────────────────── -->
+      <div class="card" id="agend-prog" style="display:none">
+        <div class="card-title">📅 Dados da Programação</div>
+
+        <div class="row4">
+          <div class="field">
+            <label for="f-ag-data">Data início <span class="req">*</span></label>
+            <input type="date" id="f-ag-data" onchange="agSincronizarDataFim()">
+          </div>
+          <div class="field">
+            <label for="f-ag-inicio">Hora início</label>
+            <input type="time" id="f-ag-inicio" onchange="agValidarPeriodo();verificarDisponibilidade()">
+          </div>
+          <div class="field">
+            <label for="f-ag-data-fim">Data final</label>
+            <input type="date" id="f-ag-data-fim" onchange="agValidarPeriodo();verificarDisponibilidade()">
+          </div>
+          <div class="field">
+            <label for="f-ag-fim">Hora final</label>
+            <input type="time" id="f-ag-fim" onchange="agValidarPeriodo();verificarDisponibilidade()">
+          </div>
+        </div>
+        <div id="ag-periodo-erro" style="display:none;font-size:11.5px;color:var(--rose);margin-top:-6px;margin-bottom:10px;padding:8px 12px;background:rgba(224,85,85,.08);border-radius:7px;border:1px solid rgba(224,85,85,.25)">
+          O encerramento precisa ocorrer após o início da programação.
+        </div>
+
+        <div class="field">
+          <label for="f-ag-part">Quantidade estimada de participantes</label>
+          <input type="number" id="f-ag-part" placeholder="Ex: 50" min="1" inputmode="numeric">
+        </div>
+
+        <div class="field">
+          <label>Espaços necessários</label>
+          <div id="ag-disp-hint" class="ag-disp-info">
+            ℹ️ Informe data e horário de início para consultar a disponibilidade.
+          </div>
+          <div id="ag-disp-status" class="ag-disp-info" style="display:none">
+            <span id="ag-disp-status-txt">Verificando disponibilidade...</span>
+          </div>
+          <div id="ag-disp-aviso" class="ag-disp-aviso"></div>
+          <div class="spaces-grid" id="f-ag-spaces"></div>
+        </div>
+
+        <!-- Arte Digital -->
+        <div class="ag-arte-sep">
+          <div class="ag-arte-title">📢 Comunicação e Divulgação</div>
+          <div class="ag-arte-desc">
+            Esta programação precisará de arte digital? (banner, arte para WhatsApp, redes sociais, avisos, etc.)
+          </div>
+          <div class="ag-arte-radios">
+            <label>
+              <input type="radio" name="ag-arte" value="sim" style="accent-color:#7057ad;width:15px;height:15px">
+              Sim, vou precisar de arte
+            </label>
+            <label>
+              <input type="radio" name="ag-arte" value="nao" style="accent-color:#7057ad;width:15px;height:15px">
+              Não, obrigado
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Comunicação: Solicitação de Arte / Produção ──────── -->
+      <div class="card" id="com-sol-sec" style="display:none">
+        <div class="card-title">📢 Detalhes da Solicitação</div>
+
+        <div class="field">
+          <label>Áreas de comunicação necessárias</label>
+          <div class="spaces-grid" id="com-areas-grid" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))">
+            <!-- preenchido via JS -->
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Formatos de divulgação</label>
+          <div class="s2-fmt-grid" id="com-fmt-grid">
+            <!-- preenchido via JS -->
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-com-data">Data do evento</label>
+            <input type="date" id="f-com-data" onchange="_comSugPrazo()">
+          </div>
+          <div class="field">
+            <label for="f-com-hora">Horário do evento</label>
+            <input type="time" id="f-com-hora">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-com-prazo">Prazo de entrega</label>
+          <input type="date" id="f-com-prazo" onchange="_comValidarPrazo()">
+          <div id="com-prazo-aviso" style="display:none;font-size:11px;color:var(--rose);margin-top:4px"></div>
+        </div>
+      </div>
+
+      <!-- Dados do solicitante — aparece após os detalhes da solicitação -->
+      <div class="card" id="card-seus-dados">
+        <div class="card-title">Seus dados para contato</div>
+        <div class="row2">
+          <div class="field">
+            <label for="f-nome">Nome completo <span class="req">*</span></label>
+            <input type="text" id="f-nome" placeholder="Seu nome completo" autocomplete="name" maxlength="120">
+          </div>
+          <div class="field">
+            <label for="f-tel">Telefone / WhatsApp <span class="req">*</span></label>
+            <input type="tel" id="f-tel" placeholder="(11) 99999-9999"
+              oninput="fmtTel(this)" onblur="fmtTel(this)" maxlength="16">
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn-submit" id="btn-enviar" onclick="enviarChamado()">
+        Enviar Solicitação
+      </button>
+      <div class="err-msg" id="err-msg"></div>
+
+    </form>
+  </div>
+
+  <!-- ── Tela de sucesso ───────────────────────────── -->
+  <div id="screen-ok">
+    <div class="ok-card">
+      <div class="ok-icon">✅</div>
+      <div class="ok-title">Solicitação registrada</div>
+      <div class="ok-ticket" id="ok-numero">—</div>
+      <div id="ok-protocolo" style="display:none;margin-top:8px;padding:8px 16px;background:rgba(214,148,0,.12);border:1px solid rgba(214,148,0,.3);border-radius:8px;font-size:12px;font-weight:700;color:#8A6010;text-align:center"></div>
+      <div id="ok-aviso-conflito" style="display:none;margin-top:10px;padding:10px 14px;background:rgba(224,85,85,.09);border:1px solid rgba(224,85,85,.28);border-radius:8px;font-size:12px;color:#C03030;text-align:center">
+        ⚠️ Já existe uma solicitação para este espaço e horário. A administração entrará em contato para verificar disponibilidade.
+      </div>
+      <div class="ok-msg">
+        Nossa equipe analisará sua solicitação em breve e entrará em contato.<br><br>
+        Guarde os números acima para referência.<br><br>
+        <strong>Obrigado pelo contato!</strong>
+      </div>
+      <button class="btn-novo" onclick="novoEnvio()">Registrar outra solicitação</button>
+    </div>
+  </div>
+
+  <!-- ── Etapa 2: Solicitação de Arte Digital ────────────── -->
+  <div id="screen-step2" style="display:none">
+
+    <!-- Stepper -->
+    <div class="ag-stepper">
+      <div class="ag-step">
+        <div class="ag-step-num done">✓</div>
+        <span class="ag-step-label done">Programação</span>
+      </div>
+      <div class="ag-step-sep done"></div>
+      <div class="ag-step">
+        <div class="ag-step-num active">2</div>
+        <span class="ag-step-label active">Comunicação</span>
+      </div>
+    </div>
+
+    <!-- Resumo da etapa 1 -->
+    <div id="s2-resumo" style="font-size:12px;color:var(--tx2);padding:11px 15px;background:var(--card);border:1px solid var(--bd);border-radius:10px;margin-bottom:16px;line-height:1.6"></div>
+
+    <div class="card" style="border-color:rgba(112,87,173,.3)">
+      <div class="card-title" style="color:#7057ad">Etapa 2 de 2 — Arte Digital</div>
+
+      <div id="s2-aviso-pend" class="s2-aviso-pend">
+        ⚠️ Esta programação ainda aguarda aprovação administrativa. Você pode registrar a solicitação de arte agora; a equipe de Comunicação acompanhará desde o início.
+      </div>
+
+      <!-- Solicitante -->
+      <div style="font-size:9.5px;font-weight:700;color:#7057ad;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Solicitante</div>
+      <div class="row2">
+        <div class="field">
+          <label for="s2-resp">Nome do responsável <span class="req">*</span></label>
+          <input type="text" id="s2-resp" placeholder="Nome completo">
+        </div>
+        <div class="field">
+          <label for="s2-tel">WhatsApp de contato</label>
+          <input type="tel" id="s2-tel" placeholder="(11) 99999-9999">
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:18px">
+        <label for="s2-min">Ministério / Grupo <span class="req">*</span></label>
+        <select id="s2-min">
+          <option value="">Selecione…</option>
+          <option>UPA (SOS)</option>
+          <option>UMP (Movimento)</option>
+          <option>SAF</option>
+          <option>UPH</option>
+          <option>GAM</option>
+          <option>Casais (Lar Cristão)</option>
+          <option>Coral Jovem</option>
+          <option>Coral João Calvino</option>
+          <option>Música</option>
+          <option>Liderança / Conselho</option>
+          <option>Outro</option>
+        </select>
+      </div>
+
+      <!-- Programação vinculada (info) -->
+      <div style="font-size:9.5px;font-weight:700;color:#7057ad;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Programação</div>
+      <div id="s2-prog-info" style="font-size:12.5px;color:var(--tx2);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 14px;margin-bottom:18px;line-height:1.75"></div>
+
+      <!-- Demanda -->
+      <div style="font-size:9.5px;font-weight:700;color:#7057ad;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Demanda</div>
+      <div class="field">
+        <label for="s2-desc">O que precisa ser criado? <span class="req">*</span></label>
+        <textarea id="s2-desc" rows="4" placeholder="Descreva o que precisa ser criado: tema, textos, referências visuais, onde será divulgado…"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Áreas da comunicação</label>
+        <div class="s2-fmt-grid" id="s2-areas"><!-- preenchido via JS --></div>
+      </div>
+
+      <div class="field">
+        <label>Formatos desejados</label>
+        <div class="s2-fmt-grid" id="s2-formatos"><!-- preenchido via JS --></div>
+      </div>
+
+      <div class="row2" style="margin-top:2px">
+        <div class="field">
+          <label for="s2-prazo">Prazo de entrega</label>
+          <input type="date" id="s2-prazo">
+        </div>
+      </div>
+      <div id="s2-prazo-aviso" style="display:none;font-size:11.5px;color:var(--rose);margin:-6px 0 12px;padding:6px 10px;background:rgba(239,68,68,.08);border-radius:6px;border:1px solid rgba(239,68,68,.2)">
+        O prazo não pode ser posterior à data da programação.
+      </div>
+
+      <div class="field">
+        <label for="s2-info">Informações adicionais</label>
+        <textarea id="s2-info" style="min-height:70px" placeholder="Cores, logos, textos específicos, referências de artes anteriores…"></textarea>
+      </div>
+    </div>
+
+    <button type="button" class="btn-submit" id="btn-step2-enviar" onclick="_enviarArteDigital()"
+      style="background:#7057ad">
+      Enviar Solicitação de Arte
+    </button>
+    <div style="text-align:center;margin-top:12px">
+      <button type="button" onclick="_pularArteDigital()"
+        style="background:none;border:none;color:var(--tx3);font-size:12.5px;cursor:pointer;text-decoration:underline">
+        Pular esta etapa — registrar somente a programação
+      </button>
+    </div>
+    <div class="err-msg" id="err-step2" style="margin-top:10px"></div>
+  </div>
+
+  <!-- ══ SCREEN: Reserva de Espaço — fluxo availability-first ══ -->
+  <div id="screen-agend" style="display:none">
+
+    <header class="page-header">
+      <img src="/icons/logo-ippenha.svg" class="page-logo" alt="Igreja Presbiteriana da Penha"
+           onerror="this.style.display='none'">
+      <div class="page-title">Reservar Espaço</div>
+      <a href="/agenda" class="page-agenda-link" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Ver agenda de atividades
+      </a>
+    </header>
+
+    <!-- Passo 1: Tipo de solicitação -->
+    <div class="card">
+      <div class="card-title">Tipo de solicitação</div>
+      <div class="ag-tipo-grid" id="ag2-tipo-grid"></div>
+      <div class="field" style="margin-top:14px">
+        <label>Tipo de atividade</label>
+        <div class="ag2-ativ-toggle">
+          <button type="button" class="ag2-ativ-btn active" data-val="Atividade Interna (Igreja)" onclick="ag2SetAtiv(this)">Atividade Interna (Igreja)</button>
+          <button type="button" class="ag2-ativ-btn" data-val="Atividade Externa" onclick="ag2SetAtiv(this)">Atividade Externa</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Passo 2: Data, horário e participantes -->
+    <div class="card">
+      <div class="card-title">Data e horário</div>
+      <div class="row4">
+        <div class="field">
+          <label for="ag2-data-i">Data início <span class="req">*</span></label>
+          <input type="date" id="ag2-data-i" oninput="ag2SincDataFim()">
+        </div>
+        <div class="field">
+          <label for="ag2-hora-i">Hora início</label>
+          <input type="time" id="ag2-hora-i" oninput="ag2InvalidarDisp()">
+        </div>
+        <div class="field">
+          <label for="ag2-data-f">Data final</label>
+          <input type="date" id="ag2-data-f" oninput="ag2InvalidarDisp()">
+        </div>
+        <div class="field">
+          <label for="ag2-hora-f">Hora final</label>
+          <input type="time" id="ag2-hora-f" oninput="ag2InvalidarDisp()">
+        </div>
+      </div>
+      <div id="ag2-periodo-erro" style="display:none;font-size:11.5px;color:var(--rose);margin-top:-6px;margin-bottom:10px;padding:8px 12px;background:rgba(224,85,85,.08);border-radius:7px;border:1px solid rgba(224,85,85,.25)">
+        O encerramento precisa ocorrer após o início da programação.
+      </div>
+      <div class="field" style="margin-top:2px">
+        <label for="ag2-part">Quantidade estimada de participantes</label>
+        <input type="number" id="ag2-part" placeholder="Ex: 50" min="1" inputmode="numeric">
+      </div>
+      <div id="ag2-disp-invalido" class="ag2-disp-aviso" style="display:none">
+        A disponibilidade mudou. Clique em "Verificar Disponibilidade" novamente.
+      </div>
+      <button type="button" class="btn-verif" id="ag2-btn-verif" onclick="ag2VerificarDisp()">
+        Verificar Disponibilidade
+      </button>
+      <div id="ag2-checking" class="ag2-loading" style="display:none">
+        <div class="ag2-spinner"></div>
+        Consultando disponibilidade dos espaços...
+      </div>
+    </div>
+
+    <!-- Passo 3–5: Espaços disponíveis -->
+    <div class="card" id="ag2-card-espacos" style="display:none">
+      <div class="card-title">Espaços disponíveis</div>
+      <div id="ag2-espacos-grid"></div>
+    </div>
+
+    <!-- Passo 6: Formulário (expande após escolha do espaço) -->
+    <div id="ag2-card-form" style="display:none">
+      <div class="card">
+        <div class="card-title">Dados da programação</div>
+        <div class="field">
+          <label for="ag2-titulo">Título <span class="req">*</span></label>
+          <input type="text" id="ag2-titulo" placeholder="Descreva brevemente o evento" maxlength="200">
+        </div>
+        <div class="field">
+          <label for="ag2-desc">Descrição</label>
+          <textarea id="ag2-desc" placeholder="Informações adicionais sobre a programação..."></textarea>
+        </div>
+        <div class="ag-arte-sep">
+          <div class="ag-arte-title">📢 Comunicação e Divulgação</div>
+          <div class="ag-arte-desc">
+            Esta programação precisará de arte digital? (banner, arte para WhatsApp, redes sociais, avisos, etc.)
+          </div>
+          <div class="ag-arte-radios">
+            <label>
+              <input type="radio" name="ag2-arte" value="sim" style="accent-color:#7057ad;width:15px;height:15px">
+              Sim, vou precisar de arte
+            </label>
+            <label>
+              <input type="radio" name="ag2-arte" value="nao" style="accent-color:#7057ad;width:15px;height:15px">
+              Não, obrigado
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Seus dados para contato</div>
+        <div class="row2">
+          <div class="field">
+            <label for="ag2-nome">Nome completo <span class="req">*</span></label>
+            <input type="text" id="ag2-nome" placeholder="Seu nome completo" maxlength="120" autocomplete="name">
+          </div>
+          <div class="field">
+            <label for="ag2-tel">Telefone / WhatsApp <span class="req">*</span></label>
+            <input type="tel" id="ag2-tel" placeholder="(11) 99999-9999"
+              oninput="fmtTel(this)" onblur="fmtTel(this)" maxlength="16">
+          </div>
+        </div>
+      </div>
+      <button type="button" class="btn-submit" id="ag2-btn-enviar" onclick="ag2Enviar()">
+        Enviar Solicitação
+      </button>
+      <div class="err-msg" id="ag2-err"></div>
+    </div>
+
+    <div style="text-align:center;margin-top:20px;margin-bottom:4px">
+      <button type="button" onclick="ag2Voltar()"
+        style="background:none;border:none;color:var(--tx3);font-size:12.5px;cursor:pointer;text-decoration:underline">
+        ← Voltar ao menu principal
+      </button>
+    </div>
+
+  </div>
+
+  <div class="footer-note">
+    SIPEN - Sistema Integrado da IPPenha
+  </div>
+
+  <!-- ── Tela: Nomeações 2027 ──────────────────────────── -->
+  <div id="screen-nom" style="display:none">
+
+    <header class="page-header">
+      <img src="/icons/logo-ippenha.svg" class="page-logo" alt="Igreja Presbiteriana da Penha"
+           onerror="this.style.display='none'">
+      <div class="page-title">Nomeações 2027</div>
+      <div class="page-sub">Indique os líderes e membros para o próximo ano.</div>
+    </header>
+
+    <button class="nom-back" onclick="nomVoltar()">
+      ← Voltar
+    </button>
+
+    <!-- Ministério -->
+    <div class="card">
+      <div class="card-title">Ministério / Comissão</div>
+      <div class="field">
+        <label for="nom-min">Selecione o ministério <span class="req">*</span></label>
+        <select id="nom-min" onchange="nomMinChange()">
+          <option value="">Carregando…</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Formulário de liderança (aparece após selecionar ministério) -->
+    <div id="nom-campos" style="display:none">
+
+      <!-- Liderança -->
+      <div class="card">
+        <div class="card-title">Liderança</div>
+
+        <div class="nom-cargo-blk">
+          <div class="nom-cargo-label">Supervisor</div>
+          <div class="nom-ac-wrap">
+            <input type="text" id="nom-supervisor" class="nom-ac-inp" placeholder="Nome da pessoa" autocomplete="off"
+                   oninput="nomBuscar(this,'nom-supervisor-pid','nom-supervisor-drop')"
+                   onblur="nomAcFechar('nom-supervisor-drop')">
+            <input type="hidden" id="nom-supervisor-pid">
+            <div class="nom-ac-drop" id="nom-supervisor-drop"></div>
+          </div>
+        </div>
+
+        <div class="nom-cargo-blk">
+          <div class="nom-cargo-label">Coordenador</div>
+          <div class="nom-ac-wrap">
+            <input type="text" id="nom-coordenador" class="nom-ac-inp" placeholder="Nome da pessoa" autocomplete="off"
+                   oninput="nomBuscar(this,'nom-coordenador-pid','nom-coordenador-drop')"
+                   onblur="nomAcFechar('nom-coordenador-drop')">
+            <input type="hidden" id="nom-coordenador-pid">
+            <div class="nom-ac-drop" id="nom-coordenador-drop"></div>
+          </div>
+        </div>
+
+        <div class="nom-cargo-blk">
+          <div class="nom-cargo-label">Líder de Área</div>
+          <div class="nom-ac-wrap">
+            <input type="text" id="nom-lider-area" class="nom-ac-inp" placeholder="Nome da pessoa" autocomplete="off"
+                   oninput="nomBuscar(this,'nom-lider-area-pid','nom-lider-area-drop')"
+                   onblur="nomAcFechar('nom-lider-area-drop')">
+            <input type="hidden" id="nom-lider-area-pid">
+            <div class="nom-ac-drop" id="nom-lider-area-drop"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Membros -->
+      <div class="card">
+        <div class="card-title">Membros</div>
+        <div id="nom-membros-list"></div>
+        <button type="button" class="nom-add-btn" onclick="nomAdicionarMembro()">+ Adicionar membro</button>
+      </div>
+
+      <div class="err-msg" id="nom-err"></div>
+      <button type="button" class="btn-submit" id="nom-btn" onclick="nomEnviar()">Confirmar Nomeações 2027</button>
+
+    </div>
+
+    <!-- Sucesso -->
+    <div id="nom-ok" style="display:none">
+      <div class="nom-ok-card">
+        <div class="ok-icon">✅</div>
+        <div class="ok-title">Nomeações registradas!</div>
+        <div class="ok-msg">As indicações para 2027 foram salvas e já aparecem no módulo de Nomeações do SIPEN.</div>
+        <button class="btn-novo" onclick="nomVoltar()">Fazer outra indicação</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+<script>
+/* ── Supabase ──────────────────────────────────────────────── */
+const SB_URL = "https://erhwryfzpycahgsohhbh.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyaHdyeWZ6cHljYWhnc29oaGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg2MTUsImV4cCI6MjA5MTg0NDYxNX0.T0hp90Bmufj6a3oUPq1vYcLiGx9YjyMaZiE38S0e3_8";
+const HDRS = {
+  "apikey":        SB_KEY,
+  "Authorization": "Bearer " + SB_KEY,
+  "Content-Type":  "application/json"
+};
+
+/* ── Categorias ────────────────────────────────────────────── */
+const CATS = [
+  { nome:"Administração", icon:"🏛", resp:"Departamento de Administração", subcats:[
+    { grupo:"Patrimônio e Bens",         itens:["Cadastro de patrimônio","Baixa de bem","Inventário","Cessão de uso","Avaliação de bem"] },
+    { grupo:"Contratos e Fornecedores",  itens:["Novo contrato","Renovação de contrato","Rescisão de contrato","Cadastro de fornecedor","Aditivo contratual"] },
+    { grupo:"Compras e Aquisições",      itens:["Solicitação de compra","Cotação de preço","Aprovação de despesa","Prestação de contas"] },
+    { grupo:"Recursos Humanos",          itens:["Cadastro de colaborador","Desligamento","Férias e afastamento","Benefícios","Voluntariado"] },
+    { grupo:"Controle de Acesso",         itens:["Uso do estacionamento","Controle de Acesso — Estacionamento","Controle de Acesso — Facial"] },
+    { grupo:"Planejamento e Documentos", itens:["Planejamento estratégico","Relatório administrativo","Documentação interna","Outros (Administração)"] },
+  ]},
+  { nome:"Manutenção", icon:"🛠", resp:"Departamento de Manutenção", subcats:[
+    { grupo:"Infraestrutura Civil",     itens:["Elétrica","Hidráulica","Estrutural","Civil","Pintura","Marcenaria","Vidraçaria","Manutenção predial","Chaveiro","Elevador/Plataforma"] },
+    { grupo:"Tecnologia",               itens:["Internet","Telefonia","Rede/Wi-Fi","Informática","Computadores","Impressoras"] },
+    { grupo:"Audiovisual",              itens:["Som","Projeção","Streaming/Transmissão","Equipamentos musicais"] },
+    { grupo:"Climatização e Segurança", itens:["Ar-condicionado","Câmeras","Alarmes","Portão eletrônico","Controle de acesso"] },
+    { grupo:"Conservação",              itens:["Iluminação","Jardinagem","Limpeza","Dedetização"] },
+    { grupo:"Geral",                    itens:["Equipamentos","Pequenos reparos"] },
+  ]},
+  { nome:"Limpeza e Organização",    icon:"🧹", resp:"Equipe de Limpeza / Zeladoria",   subcats:["Limpeza geral","Limpeza pós-evento","Organização de espaços","Solicitação de materiais de limpeza"] },
+  { nome:"Pastoral", icon:"✦", resp:"Pastores / Liderança", subcats:[
+    { grupo:"Aconselhamento e Atendimento", itens:[
+        "Aconselhamento pastoral",
+        "Atendimento no gabinete",
+        "Atendimento pastoral (urgência)",
+        "Pré-aconselhamento matrimonial",
+        "Acompanhamento espiritual",
+        "Acompanhamento de crise",
+        "Orientação familiar",
+    ]},
+    { grupo:"Visitas", itens:[
+        "Visita hospitalar",
+        "Visita no Lar",
+        "Visita a enlutados",
+        "Visita pós-nascimento",
+        "Visita na Empresa",
+        "Visita Carcerária",
+        "Visita a membros afastados",
+    ]},
+    { grupo:"Cerimônias", itens:[
+        "Batismo",
+        "Santa Ceia",
+        "Casamento",
+        "Funeral / Sepultamento",
+        "Dedicação de crianças",
+    ]},
+    { grupo:"Ensino e Discipulado", itens:[
+        "Estudo bíblico domiciliar",
+        "Discipulado individual",
+        "Preparação para membresia",
+        "Acompanhamento de novos membros",
+        "Estudo pré-batismal",
+    ]},
+  ]},
+  { nome:"Agendamentos",             icon:"📅", resp:"Secretaria / Liderança",           subcats:[
+    { grupo:"Programação / Espaços", itens:["Culto","Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"] },
+  ]},
+  { nome:"Secretaria",               icon:"📄", resp:"Secretaria / Conselho",            subcats:[
+    { grupo:"Documentos e Registros", itens:["Emissão de documentos","Elaboração de relatórios","Protocolos oficiais","Registro de atas/documentos","Solicitação ao Conselho"] },
+    { grupo:"Nomeações Anuais",       itens:["Nomeações 2027"] },
+  ]},
+  { nome:"Oração",                   icon:"🙏", resp:"Pastores / Liderança",             subcats:["Pedido de oração"] },
+  { nome:"Financeiro",               icon:"💰", resp:"Tesouraria / Financeiro",          subcats:["Solicitação de pagamento","Reembolso","Prestação de contas","Solicitação de verba","Orçamento de despesas"] },
+  { nome:"Ação Social / Hebron",     icon:"🤝", resp:"Hebron / Ação Social",             subcats:["Solicitação de ajuda","Projetos sociais","Distribuição de recursos","Cadastro em programas sociais"] },
+  { nome:"Comunicação",             icon:"📢", resp:"Ministério de Comunicação",          subcats:[
+    { grupo:"Arte Digital",  itens:["Banner e Redes Sociais","Arte para WhatsApp","Story / Reels","Apresentação e Slides","Material Impresso"] },
+    { grupo:"Produção AV",   itens:["Transmissão ao Vivo","Sonorização","Projeção","Iluminação Especial"] },
+    { grupo:"Geral",         itens:["Comunicação Geral"] },
+  ]},
+  { nome:"Conselho", icon:"⚖️", resp:"Conselho Presbiterial", subcats:[
+    { grupo:"Recursos e Apelações",   itens:["Recurso de decisão","Apelação","Revisão de processo"] },
+    { grupo:"Audiências e Atendimento", itens:["Pedido de audiência com o Conselho","Atendimento pastoral especializado"] },
+    { grupo:"Fé e Disciplina",        itens:["Assunto de fé ou doutrina","Questão disciplinar","Restauração"] },
+    { grupo:"Comunicações Oficiais",  itens:["Sugestão ao Conselho","Comunicação oficial","Pedido de deliberação","Outros assuntos ao Conselho"] },
+  ]},
+];
+
+/* ── Preenche categorias ───────────────────────────────────── */
+(function () {
+  const sel = document.getElementById("f-cat");
+  [...CATS].sort((a, b) => {
+    if (a.nome === 'Administração') return -1;
+    if (b.nome === 'Administração') return  1;
+    return a.nome.localeCompare(b.nome, "pt-BR");
+  }).forEach(c => {
+    const o = document.createElement("option");
+    o.value = c.nome;
+    o.textContent = c.icon + " " + c.nome;
+    sel.appendChild(o);
+  });
+})();
+
+function _show(id) { const el = document.getElementById(id); if (el) el.style.display = ""; }
+function _hide(id) { const el = document.getElementById(id); if (el) el.style.display = "none"; }
+
+const _GEN_DOCS_LABEL = {
+  "Manutenção":         "📷 Fotos do problema — opcional",
+  "Conselho":           "📎 Documentos de referência — opcional",
+  "Secretaria":         "📎 Documentos de referência — opcional",
+  "Comunicação":        "📎 Material de referência — opcional",
+  "Administração":      "📎 Documentos de apoio — opcional",
+  "Financeiro":         null, /* tem seção própria */
+};
+
+function _atualizarGenDocs(catNome) {
+  const sec   = document.getElementById("gen-docs-sec");
+  const titulo = document.getElementById("gen-docs-titulo");
+  if (!sec) return;
+  const label = catNome ? (_GEN_DOCS_LABEL[catNome] ?? "📎 Documentos de apoio — opcional") : null;
+  if (!label) { sec.style.display = "none"; return; }
+  sec.style.display = "";
+  if (titulo) titulo.textContent = label;
+}
+
+function _genDocsAddSlot() {
+  const r2 = document.getElementById("gen-doc-2-row");
+  const r3 = document.getElementById("gen-doc-3-row");
+  const btn = document.getElementById("gen-docs-add-row");
+  if (r2 && r2.style.display === "none") { r2.style.display = ""; return; }
+  if (r3 && r3.style.display === "none") { r3.style.display = ""; if (btn) btn.style.display = "none"; }
+}
+
+function onCatChange() {
+  const catNome = document.getElementById("f-cat").value;
+  const cat     = CATS.find(c => c.nome === catNome);
+  _ocultarFinanceiro();
+  csubReset();
+  _atualizarGenDocs(catNome);
+  if (!cat) return;
+  const panel   = document.getElementById("f-sub-panel");
+  const nSel    = document.getElementById("f-sub");
+  const primeiro = cat.subcats[0];
+  if (primeiro && typeof primeiro === "object" && primeiro.grupo) {
+    nSel.innerHTML = "<option value=''>Selecione</option>" + cat.subcats
+      .map(grp => `<optgroup label="${grp.grupo}">${grp.itens.map(s => `<option value="${s}">${s}</option>`).join("")}</optgroup>`)
+      .join("");
+    panel.innerHTML = cat.subcats.map(grp =>
+      `<div class="csub-glabel">${grp.grupo}</div>` +
+      grp.itens.map(s => `<div class="csub-opt" data-val="${s.replace(/"/g,'&quot;')}" onclick="csubSelect(this)">${s}</div>`).join("")
+    ).join("");
+  } else {
+    nSel.innerHTML = "<option value=''>Selecione</option>" + cat.subcats.map(s => `<option value="${s}">${s}</option>`).join("");
+    panel.innerHTML = cat.subcats.map(s =>
+      `<div class="csub-opt" data-val="${s.replace(/"/g,'&quot;')}" onclick="csubSelect(this)">${s}</div>`
+    ).join("");
+  }
+  onSubChange();
+}
+
+/* ── Custom subcategoria dropdown ─────────────────────────── */
+function csubReset() {
+  const btn   = document.getElementById("f-sub-btn");
+  const lbl   = document.getElementById("f-sub-lbl");
+  const sel   = document.getElementById("f-sub");
+  const panel = document.getElementById("f-sub-panel");
+  if (btn)   { btn.className = "csub-btn"; btn.setAttribute("aria-expanded","false"); }
+  if (lbl)   lbl.textContent = "Selecione o tipo de solicitação";
+  if (sel)   { sel.innerHTML = "<option value=''>Selecione</option>"; sel.value = ""; }
+  if (panel) { panel.className = "csub-panel"; panel.innerHTML = ""; }
+}
+
+function csubToggle() {
+  const panel = document.getElementById("f-sub-panel");
+  if (!panel.innerHTML) return;
+  const btn  = document.getElementById("f-sub-btn");
+  const open = panel.classList.toggle("open");
+  btn.classList.toggle("open", open);
+  btn.setAttribute("aria-expanded", String(open));
+}
+
+function csubSelect(el) {
+  const val   = el.dataset.val;
+  const btn   = document.getElementById("f-sub-btn");
+  const lbl   = document.getElementById("f-sub-lbl");
+  const sel   = document.getElementById("f-sub");
+  const panel = document.getElementById("f-sub-panel");
+  panel.querySelectorAll(".csub-opt").forEach(o => o.classList.remove("sel"));
+  el.classList.add("sel");
+  lbl.textContent = val;
+  btn.classList.remove("open");
+  btn.classList.add("has-val");
+  btn.setAttribute("aria-expanded","false");
+  panel.classList.remove("open");
+  sel.value = val;
+  onSubChange();
+}
+
+document.addEventListener("click", function(e) {
+  if (!e.target.closest(".csub")) {
+    const panel = document.getElementById("f-sub-panel");
+    const btn   = document.getElementById("f-sub-btn");
+    if (panel) panel.classList.remove("open");
+    if (btn)   { btn.classList.remove("open"); btn.setAttribute("aria-expanded","false"); }
+  }
+});
+
+const PROG_SUBS = new Set(["Culto","Reunião","Evento","Ensaio","Casamento","Aniversário","Congresso","Conferência","Outros"]);
+
+/* ── Comunicação: mapeamentos ──────────────────────────────── */
+const COM_SUBS = new Set([
+  "Banner e Redes Sociais","Arte para WhatsApp","Story / Reels",
+  "Apresentação e Slides","Material Impresso",
+  "Transmissão ao Vivo","Sonorização","Projeção","Iluminação Especial",
+  "Comunicação Geral",
+]);
+
+const COM_AREAS_ALL = ["Transmissão ao vivo","Mídias","Iluminação","Projeção","Sonorização"];
+
+const COM_SUB_AREAS = {
+  "Banner e Redes Sociais":  ["Mídias"],
+  "Arte para WhatsApp":      ["Mídias"],
+  "Story / Reels":           ["Mídias"],
+  "Apresentação e Slides":   ["Mídias","Projeção"],
+  "Material Impresso":       ["Mídias"],
+  "Transmissão ao Vivo":     ["Transmissão ao vivo"],
+  "Sonorização":             ["Sonorização"],
+  "Projeção":                ["Projeção"],
+  "Iluminação Especial":     ["Iluminação"],
+  "Comunicação Geral":       [],
+};
+
+const COM_SUB_FORMATOS = {
+  "Banner e Redes Sociais":  ["1:1 WhatsApp","16:9 avisos","Banner digital"],
+  "Arte para WhatsApp":      ["1:1 WhatsApp"],
+  "Story / Reels":           ["Story Instagram"],
+  "Apresentação e Slides":   ["16:9 avisos"],
+  "Material Impresso":       ["Faixa","Panfleto"],
+  "Transmissão ao Vivo":     [],
+  "Sonorização":             [],
+  "Projeção":                [],
+  "Iluminação Especial":     [],
+  "Comunicação Geral":       [],
+};
+
+function _ensureComSol(sub) {
+  // Monta áreas (uma vez)
+  const areasEl = document.getElementById("com-areas-grid");
+  if (areasEl && !areasEl.dataset.built) {
+    areasEl.dataset.built = "1";
+    areasEl.innerHTML = COM_AREAS_ALL.map(a =>
+      `<label class="space-chk">
+        <input type="checkbox" name="com-area" value="${a}"> ${a}
+      </label>`
+    ).join("");
+  }
+  // Monta formatos (uma vez)
+  const fmtsEl = document.getElementById("com-fmt-grid");
+  if (fmtsEl && !fmtsEl.dataset.built) {
+    fmtsEl.dataset.built = "1";
+    fmtsEl.innerHTML = S2_FORMATOS.map(f =>
+      `<label class="s2-fmt-lbl"><input type="checkbox" name="com-fmt" value="${f.label}"> ${f.label}</label>`
+    ).join("");
+  }
+  // Pré-seleciona baseado na subcategoria
+  document.querySelectorAll("input[name='com-area']").forEach(cb => {
+    cb.checked = (COM_SUB_AREAS[sub] || []).includes(cb.value);
+  });
+  document.querySelectorAll("input[name='com-fmt']").forEach(cb => {
+    cb.checked = (COM_SUB_FORMATOS[sub] || []).includes(cb.value);
+  });
+}
+
+function _comSugPrazo() {
+  const dataEvt = document.getElementById("f-com-data")?.value;
+  const prazoEl = document.getElementById("f-com-prazo");
+  if (prazoEl && dataEvt && !prazoEl.value) {
+    const d = new Date(dataEvt + "T12:00:00");
+    d.setDate(d.getDate() - 2);
+    prazoEl.value = d.toISOString().slice(0, 10);
+  }
+  _comValidarPrazo();
+}
+
+function _comValidarPrazo() {
+  const data  = document.getElementById("f-com-data")?.value;
+  const prazo = document.getElementById("f-com-prazo")?.value;
+  const av    = document.getElementById("com-prazo-aviso");
+  if (!av) return;
+  if (prazo && data && prazo > data) {
+    av.textContent   = "O prazo de entrega não pode ser posterior à data do evento.";
+    av.style.display = "";
+  } else {
+    av.style.display = "none";
+  }
+}
+
+function _coletarEstacionamento(cat, sub) {
+  if (cat !== "Administração" || sub !== "Uso do estacionamento") return { ok: true, extra: "" };
+  const dataI  = g("f-estac-data-i");
+  const horaI  = g("f-estac-hora-i");
+  const cor    = g("f-estac-cor");
+  const placa  = g("f-estac-placa");
+  const modelo = g("f-estac-modelo");
+  if (!dataI)  return { ok: false, msg: "Informe a data de entrada no estacionamento." };
+  if (!horaI)  return { ok: false, msg: "Informe o horário de entrada no estacionamento." };
+  if (!cor)    return { ok: false, msg: "Informe a cor do veículo." };
+  if (!placa)  return { ok: false, msg: "Informe a placa do veículo." };
+  if (!modelo) return { ok: false, msg: "Informe o modelo do veículo." };
+  const dataF = g("f-estac-data-f");
+  const horaF = g("f-estac-hora-f");
+  const linhas = [
+    "━━━ Estacionamento ━━━",
+    `Entrada: ${fmtDataBR(dataI)}${horaI ? " às " + horaI : ""}`,
+    (dataF || horaF) ? `Saída: ${dataF ? fmtDataBR(dataF) : fmtDataBR(dataI)}${horaF ? " às " + horaF : ""}` : null,
+    `Veículo: ${modelo} · ${cor} · ${placa}`,
+  ].filter(Boolean).join("\n");
+  return { ok: true, extra: "\n\n" + linhas };
+}
+
+function _coletarAcessoEstacionamento(cat, sub) {
+  if (cat !== "Administração" || sub !== "Controle de Acesso — Estacionamento") return { ok: true, extra: "" };
+  const modelo = g("f-cest-modelo");
+  const placa  = g("f-cest-placa");
+  const cor    = g("f-cest-cor");
+  const motivo = g("f-cest-motivo");
+  if (!modelo) return { ok: false, msg: "Informe o modelo do veículo." };
+  if (!placa)  return { ok: false, msg: "Informe a placa do veículo." };
+  if (!cor)    return { ok: false, msg: "Informe a cor do veículo." };
+  if (!motivo) return { ok: false, msg: "Selecione o motivo da solicitação." };
+  const linhas = [
+    "━━━ Controle de Acesso — Estacionamento ━━━",
+    `Motivo: ${motivo}`,
+    `Veículo: ${modelo} · ${cor} · ${placa}`,
+  ].join("\n");
+  return { ok: true, extra: "\n\n" + linhas };
+}
+
+function _coletarAcessoFacial(cat, sub) {
+  if (cat !== "Administração" || sub !== "Controle de Acesso — Facial") return { ok: true, extra: "" };
+  const cpf   = g("f-facial-cpf");
+  const email = g("f-facial-email");
+  const foto  = document.getElementById("f-facial-foto")?.files?.[0];
+  if (!cpf)   return { ok: false, msg: "Informe o CPF." };
+  if (!email) return { ok: false, msg: "Informe o e-mail." };
+  if (!foto)  return { ok: false, msg: "Anexe uma foto para o cadastro facial." };
+  const linhas = [
+    "━━━ Cadastro de Acesso Facial ━━━",
+    `CPF: ${cpf}`,
+    `E-mail: ${email}`,
+    `Foto: ${foto.name}`,
+  ].join("\n");
+  return { ok: true, extra: "\n\n" + linhas };
+}
+
+function _fmtCpf(input) {
+  let v = input.value.replace(/\D/g, "").slice(0, 11);
+  if (v.length > 9)      v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2})/, "$1.$2.$3-$4");
+  else if (v.length > 6) v = v.replace(/^(\d{3})(\d{3})(\d{0,3})/, "$1.$2.$3");
+  else if (v.length > 3) v = v.replace(/^(\d{3})(\d{0,3})/, "$1.$2");
+  input.value = v;
+}
+
+function _coletarComunicacao(cat, sub) {
+  if (cat !== "Comunicação" || !COM_SUBS.has(sub)) return { ok: true, extra: "" };
+  const areas    = [...document.querySelectorAll("input[name='com-area']:checked")].map(e => e.value);
+  const formatos = [...document.querySelectorAll("input[name='com-fmt']:checked")].map(e => e.value);
+  const dataEvt  = document.getElementById("f-com-data")?.value  || null;
+  const hora     = document.getElementById("f-com-hora")?.value  || null;
+  const prazo    = document.getElementById("f-com-prazo")?.value || null;
+  if (prazo && dataEvt && prazo > dataEvt)
+    return { ok: false, msg: "O prazo de entrega não pode ser posterior à data do evento." };
+  const linhas = [
+    "━━━ Comunicação ━━━",
+    areas.length    ? `Áreas: ${areas.join(", ")}`     : null,
+    formatos.length ? `Formatos: ${formatos.join(", ")}` : null,
+    dataEvt         ? `Data do evento: ${fmtDataBR(dataEvt)}${hora ? " · " + hora : ""}` : null,
+    prazo           ? `Prazo de entrega: ${fmtDataBR(prazo)}`  : null,
+  ].filter(Boolean).join("\n");
+  return {
+    ok: true,
+    extra: linhas ? "\n\n" + linhas : "",
+    comPayload: { areas, formatos, data_evento: dataEvt, horario_evento: hora, prazo_entrega: prazo },
+  };
+}
+
+function onSubChange() {
+  const cat = document.getElementById("f-cat").value;
+  const sub = document.getElementById("f-sub").value;
+  _ocultarExtras();
+  if (cat === "Financeiro") {
+    if (sub === "Solicitação de pagamento") _show("fin-pag");
+    if (sub === "Reembolso")               _show("fin-reimb");
+  }
+  if (cat === "Administração" && sub === "Uso do estacionamento")            _show("estac-sec");
+  if (cat === "Administração" && sub === "Controle de Acesso — Estacionamento") {
+    _show("acesso-est-sec");
+    _hide("wrap-titulo"); _hide("wrap-desc"); _hide("wrap-local");
+    const t = document.getElementById("f-titulo"); if (t) t.value = "Solicitação de Controle de Acesso — Estacionamento";
+    const d = document.getElementById("f-desc");   if (d) d.value = "Solicitação de controle remoto para acesso ao estacionamento.";
+  }
+  if (cat === "Administração" && sub === "Controle de Acesso — Facial") {
+    _show("acesso-facial-sec");
+    _hide("wrap-titulo"); _hide("wrap-desc"); _hide("wrap-local");
+    const t = document.getElementById("f-titulo"); if (t) t.value = "Cadastro de Acesso Facial";
+    const d = document.getElementById("f-desc");   if (d) d.value = "Solicitação de cadastro para liberação na leitora facial.";
+  }
+  if (cat === "Agendamentos"  && PROG_SUBS.has(sub)) { agIniciar(sub); return; }
+  if (cat === "Comunicação"   && COM_SUBS.has(sub))  { _show("com-sol-sec"); _ensureComSol(sub); }
+  if (cat === "Secretaria"    && sub === "Nomeações 2027") { nomIniciar(); return; }
+}
+
+function _ocultarExtras() {
+  ["fin-pag","fin-reimb","fin-pix-sec","fin-ted-sec","agend-prog","com-sol-sec","estac-sec","acesso-est-sec","acesso-facial-sec"].forEach(_hide);
+  ["wrap-titulo","wrap-desc","wrap-local"].forEach(_show);
+}
+
+function _ocultarFinanceiro() { _ocultarExtras(); }
+
+function onFormaChange() {
+  const forma = document.getElementById("f-fin-forma").value;
+  _hide("fin-pix-sec");
+  _hide("fin-ted-sec");
+  if (forma === "PIX")                    _show("fin-pix-sec");
+  if (forma === "Transferência Bancária") _show("fin-ted-sec");
+}
+
+/* ── Telefone ──────────────────────────────────────────────── */
+function fmtTel(input) {
+  let d = input.value.replace(/\D/g, "");
+  if (d.startsWith("55") && d.length > 11) d = d.slice(2);
+  if (d.startsWith("0")) d = d.slice(1);
+  d = d.slice(0, 11);
+  if (d.length === 11)      input.value = `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+  else if (d.length === 10) input.value = `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  else                      input.value = d;
+}
+
+/* ── Helpers ───────────────────────────────────────────────── */
+function fmtDataBR(d) {
+  if (!d) return "";
+  const [y, m, dia] = d.split("-");
+  return `${dia}/${m}/${y}`;
+}
+
+function g(id) { return (document.getElementById(id)?.value || "").trim(); }
+
+/* ── Rate limiting ─────────────────────────────────────────── */
+const _RL_KEY = "sipen_chamado_last";
+const _RL_MS  = 5 * 60 * 1000;
+
+function _checarRateLimit() {
+  try {
+    const last = parseInt(localStorage.getItem(_RL_KEY) || "0", 10);
+    const diff = Date.now() - last;
+    if (diff < _RL_MS) {
+      const rest = Math.ceil((_RL_MS - diff) / 1000);
+      const min  = Math.floor(rest / 60), seg = rest % 60;
+      return `Aguarde ${min > 0 ? min + "min " : ""}${seg}s antes de enviar outra solicitação.`;
+    }
+    return null;
+  } catch(_) { return null; }
+}
+
+/* ── UI ────────────────────────────────────────────────────── */
+function mostrarErro(msg) {
+  const el = document.getElementById("err-msg");
+  el.textContent = msg;
+  el.classList.add("show");
+  el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+function limparErro() {
+  const el = document.getElementById("err-msg");
+  el.textContent = "";
+  el.classList.remove("show");
+}
+
+/* ── Coleta dados financeiros e valida ─────────────────────── */
+function _coletarFinanceiro(cat, sub) {
+  if (cat !== "Financeiro") return { ok: true, extra: "" };
+
+  if (sub === "Solicitação de pagamento") {
+    const valor   = g("f-fin-valor");
+    const benefic = g("f-fin-benefic");
+    const forma   = g("f-fin-forma");
+    const pix     = g("f-fin-pix");
+    const banco   = g("f-fin-banco");
+    const ag      = g("f-fin-ag");
+    const conta   = g("f-fin-conta");
+    if (!valor)   return { ok: false, msg: "Informe o valor do pagamento." };
+    if (!benefic) return { ok: false, msg: "Informe o beneficiário / favorecido." };
+    if (!forma)   return { ok: false, msg: "Selecione a forma de pagamento." };
+    if (forma === "PIX" && !pix) return { ok: false, msg: "Informe a chave PIX." };
+    if (forma === "Transferência Bancária" && (!banco || !ag || !conta))
+      return { ok: false, msg: "Informe banco, agência e conta para TED." };
+
+    const tipo   = g("f-fin-tipo") || "Pagamento";
+    const venc   = g("f-fin-venc");
+    const cpf    = g("f-fin-cpf");
+    const centro = g("f-fin-centro");
+    const obs    = g("f-fin-obs");
+
+    const linhas = [
+      "━━━ Dados Financeiros ━━━",
+      `Tipo: ${tipo}`,
+      `Valor: R$ ${valor}`,
+      venc   ? `Vencimento: ${fmtDataBR(venc)}` : null,
+      `Beneficiário: ${benefic}`,
+      cpf    ? `CPF/CNPJ: ${cpf}` : null,
+      centro ? `Centro de custo / Ministério: ${centro}` : null,
+      `Forma de pagamento: ${forma}`,
+      forma === "PIX"                    ? `Chave PIX: ${pix}` : null,
+      forma === "Transferência Bancária" ? `Banco: ${banco} · Ag: ${ag} · Conta: ${conta}` : null,
+      obs    ? `Observação: ${obs}` : null,
+    ].filter(Boolean).join("\n");
+
+    const fd = { tipo, forma_pagamento: forma, beneficiario: benefic };
+    const valorNum = parseFloat(valor.replace(/\./g, "").replace(",", "."));
+    if (!isNaN(valorNum)) fd.valor = valorNum; else fd.valor = valor;
+    if (venc)   fd.data_vencimento = venc;
+    if (cpf)    fd.cpf_cnpj = cpf;
+    if (centro) fd.centro_custo = centro;
+    if (pix)    fd.chave_pix = pix;
+    if (banco)  fd.banco = banco;
+    if (ag)     fd.agencia = ag;
+    if (conta)  fd.conta = conta;
+    if (obs)    fd.obs = obs;
+
+    return { ok: true, extra: "\n\n" + linhas, fd };
+  }
+
+  if (sub === "Reembolso") {
+    const nome  = g("f-reimb-nome");
+    const valor = g("f-reimb-valor");
+    if (!nome)  return { ok: false, msg: "Informe o nome de quem será reembolsado." };
+    if (!valor) return { ok: false, msg: "Informe o valor do reembolso." };
+
+    const motivo = g("f-reimb-motivo");
+    const forma  = g("f-reimb-forma");
+    const pix    = g("f-reimb-pix");
+    const min    = g("f-reimb-min");
+    const pastor = g("f-reimb-pastor");
+
+    const obs    = g("f-reimb-obs");
+
+    const linhas = [
+      "━━━ Dados do Reembolso ━━━",
+      `Reembolsar para: ${nome}`,
+      `Valor: R$ ${valor}`,
+      motivo ? `Motivo: ${motivo}` : null,
+      forma  ? `Forma de pagamento: ${forma}` : null,
+      pix    ? `Chave PIX: ${pix}` : null,
+      min    ? `Ministério: ${min}` : null,
+      pastor ? `Pastor ciente: ${pastor}` : null,
+      obs    ? `Observação: ${obs}` : null,
+    ].filter(Boolean).join("\n");
+
+    const fd = { reimb_nome: nome };
+    const valorNum = parseFloat(valor.replace(/\./g, "").replace(",", "."));
+    if (!isNaN(valorNum)) fd.valor = valorNum; else fd.valor = valor;
+    if (motivo) fd.motivo = motivo;
+    if (forma)  fd.forma_pagamento = forma;
+    if (pix)    fd.chave_pix = pix;
+    if (min)    fd.ministerio = min;
+    if (pastor) fd.pastor_ciente = pastor;
+    if (obs)    fd.obs = obs;
+
+    return { ok: true, extra: "\n\n" + linhas, fd };
+  }
+
+  return { ok: true, extra: "", fd: null };
+}
+
+/* ── Coleta dados de agendamento de programação ────────────── */
+async function carregarEspacosPublicos() {
+  const grid = document.getElementById("f-ag-spaces");
+  if (!grid) return;
+  grid.innerHTML = `<div style="grid-column:1/-1;font-size:11px;color:var(--tx3)">Carregando espaços...</div>`;
+  try {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/espacos?disponivel_publico=eq.true&ativo=eq.true&order=ordem.asc`,
+      { headers: HDRS }
+    );
+    if (!res.ok) throw new Error("Erro ao carregar espaços");
+    const rows = await res.json();
+    grid.innerHTML = "";
+    // Opção "Não necessário" sempre no topo
+    const lblNenhum = document.createElement("label");
+    lblNenhum.className = "space-chk space-chk-nenhum";
+    lblNenhum.style.cssText = "grid-column:1/-1;border:1px dashed var(--bd);border-radius:6px;margin-bottom:4px";
+    lblNenhum.innerHTML = `<input type="checkbox" value="Não necessário" id="chk-espaco-nenhum"><span class="sc-nome" style="font-style:italic;color:var(--tx2)">Não necessário</span>`;
+    grid.appendChild(lblNenhum);
+
+    if (!rows.length) {
+      const div = document.createElement("div");
+      div.style.cssText = "grid-column:1/-1;font-size:11px;color:var(--tx3)";
+      div.textContent = "Nenhum espaço disponível.";
+      grid.appendChild(div);
+    } else {
+      // Agrupa por grupo mantendo a ordem recebida
+      const grupos = {};
+      rows.forEach(r => {
+        if (!grupos[r.grupo]) grupos[r.grupo] = [];
+        grupos[r.grupo].push(r.nome);
+      });
+      Object.entries(grupos).forEach(([grupo, itens]) => {
+        const hdr = document.createElement("div");
+        hdr.style.cssText = "grid-column:1/-1;font-size:10px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.08em;padding:8px 0 3px;border-bottom:1px solid var(--bd);margin-top:6px";
+        hdr.textContent = grupo;
+        grid.appendChild(hdr);
+        itens.forEach(nome => {
+          const lbl = document.createElement("label");
+          lbl.className = "space-chk";
+          lbl.dataset.espaco = nome;
+          lbl.innerHTML = `<input type="checkbox" value="${nome}"><span class="sc-nome">${nome}</span><span class="sc-lock" style="display:none">🔒</span>`;
+          grid.appendChild(lbl);
+        });
+      });
+    }
+
+    // Exclusividade mútua: "Não necessário" ↔ espaços reais
+    const chkNenhum = document.getElementById("chk-espaco-nenhum");
+    chkNenhum.addEventListener("change", () => {
+      if (chkNenhum.checked) {
+        grid.querySelectorAll(".space-chk:not(.space-chk-nenhum) input[type=checkbox]").forEach(c => { c.checked = false; });
+      }
+    });
+    grid.querySelectorAll(".space-chk:not(.space-chk-nenhum) input[type=checkbox]").forEach(c => {
+      c.addEventListener("change", () => { if (c.checked) chkNenhum.checked = false; });
+    });
+
+    // Se o período já estiver preenchido quando os espaços carregarem, verifica imediatamente
+    verificarDisponibilidade();
+  } catch (e) {
+    grid.innerHTML = `<div style="grid-column:1/-1;font-size:11px;color:var(--rose)">Não foi possível carregar os espaços. Descreva o local na descrição da solicitação.</div>`;
+  }
+}
+
+// Carrega quando o card de agendamento é exibido pela primeira vez
+let _espacosCarregados = false;
+const _origShowAgend = window.agSincronizarDataFim;
+function _ensureEspacos() {
+  if (!_espacosCarregados) { _espacosCarregados = true; carregarEspacosPublicos(); }
+}
+
+function agSincronizarDataFim() {
+  const di = document.getElementById("f-ag-data");
+  const df = document.getElementById("f-ag-data-fim");
+  if (di && df && !df.value) df.value = di.value;
+  agValidarPeriodo();
+  verificarDisponibilidade();
+}
+
+function agValidarPeriodo() {
+  const di    = document.getElementById("f-ag-data")?.value;
+  const df    = document.getElementById("f-ag-data-fim")?.value;
+  const hi    = document.getElementById("f-ag-inicio")?.value;
+  const hf    = document.getElementById("f-ag-fim")?.value;
+  const erEl  = document.getElementById("ag-periodo-erro");
+  if (!erEl) return true;
+  if (!di || !df) { erEl.style.display = "none"; return true; }
+  const inicio = di + "T" + (hi || "00:00");
+  const fim    = df + "T" + (hf || "23:59");
+  const invalido = fim <= inicio && (df < di || (df === di && hf && hi && hf <= hi));
+  erEl.style.display = invalido ? "" : "none";
+  return !invalido;
+}
+
+/* ── Disponibilidade de espaços ──────────────────────────── */
+let _dispTimer = null;
+function verificarDisponibilidade() {
+  clearTimeout(_dispTimer);
+  _dispTimer = setTimeout(_doVerificarDisp, 350);
+}
+
+async function _doVerificarDisp() {
+  const di = document.getElementById("f-ag-data")?.value;
+  const hi = document.getElementById("f-ag-inicio")?.value;
+  const df = document.getElementById("f-ag-data-fim")?.value;
+  const hf = document.getElementById("f-ag-fim")?.value;
+
+  const grid    = document.getElementById("f-ag-spaces");
+  const hint    = document.getElementById("ag-disp-hint");
+  const status  = document.getElementById("ag-disp-status");
+  const stTxt   = document.getElementById("ag-disp-status-txt");
+  const aviso   = document.getElementById("ag-disp-aviso");
+
+  const lbls = grid ? [...grid.querySelectorAll(".space-chk:not(.space-chk-nenhum)")] : [];
+
+  // Sem período: restaura estado neutro
+  if (!di || !hi) {
+    if (hint)   hint.style.display   = "";
+    if (status) status.style.display = "none";
+    lbls.forEach(lbl => {
+      lbl.classList.remove("sc-indisponivel");
+      const inp = lbl.querySelector("input");
+      if (inp) inp.disabled = false;
+      const lock = lbl.querySelector(".sc-lock");
+      if (lock) lock.style.display = "none";
+    });
+    return;
+  }
+
+  if (hint)   hint.style.display   = "none";
+  if (status) { status.style.display = ""; if (stTxt) stTxt.textContent = "Verificando disponibilidade..."; }
+
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/rpc/espacos_disponibilidade`, {
+      method:  "POST",
+      headers: HDRS,
+      body: JSON.stringify({
+        p_data_inicio: di,
+        p_hora_inicio: hi,
+        p_data_fim:    df || di,
+        p_hora_fim:    hf || null,
+      }),
+    });
+    if (!res.ok) throw new Error();
+    const dados = await res.json();
+
+    const dispMap = {};
+    dados.forEach(item => { dispMap[item.nome] = item.disponivel; });
+
+    const removidos = [];
+    lbls.forEach(lbl => {
+      const inp  = lbl.querySelector("input");
+      const lock = lbl.querySelector(".sc-lock");
+      const nome = lbl.dataset.espaco || inp?.value;
+      if (!(nome in dispMap)) return;
+
+      const disp = dispMap[nome];
+      if (!disp) {
+        if (inp?.checked) { inp.checked = false; removidos.push(nome); }
+        inp.disabled = true;
+        lbl.classList.add("sc-indisponivel");
+        if (lock) lock.style.display = "";
+      } else {
+        inp.disabled = false;
+        lbl.classList.remove("sc-indisponivel");
+        if (lock) lock.style.display = "none";
+      }
+    });
+
+    const livres     = dados.filter(d => d.disponivel).length;
+    const ocupados   = dados.filter(d => !d.disponivel).length;
+    if (stTxt) stTxt.textContent = ocupados > 0
+      ? `✓ ${livres} disponível${livres !== 1 ? "s" : ""} · 🔒 ${ocupados} indisponível${ocupados !== 1 ? "s" : ""} neste período`
+      : `✓ Todos os espaços disponíveis para o período informado`;
+
+    if (removidos.length && aviso) {
+      aviso.textContent = `⚠️ ${removidos.join(", ")} ficou indisponível e foi desmarcado automaticamente.`;
+      aviso.style.display = "";
+      setTimeout(() => { aviso.style.display = "none"; }, 7000);
+    }
+  } catch (_) {
+    if (stTxt) stTxt.textContent = "Não foi possível verificar disponibilidade.";
+  }
+}
+
+function _coletarAgendamento(cat, sub) {
+  if (cat !== "Agendamentos" || !PROG_SUBS.has(sub)) return { ok: true, extra: "" };
+  const dataI  = g("f-ag-data");
+  const dataF  = g("f-ag-data-fim") || dataI;
+  const inicio = g("f-ag-inicio");
+  const fim    = g("f-ag-fim");
+  const part   = g("f-ag-part");
+  if (!dataI) return { ok: false, msg: "Informe a data de início da programação." };
+  if (!agValidarPeriodo()) return { ok: false, msg: "O encerramento precisa ocorrer após o início da programação." };
+  const multiDia = dataF && dataF !== dataI;
+  const espacos = [...document.querySelectorAll("#f-ag-spaces input:checked")].map(c => c.value);
+  if (espacos.length === 0) return { ok: false, msg: "Selecione ao menos um espaço para a programação (ou 'Não necessário', se o evento não precisar de espaço físico)." };
+  const linhas = [
+    "━━━ Dados da Programação ━━━",
+    multiDia
+      ? `Período: ${fmtDataBR(dataI)}${inicio ? " às " + inicio : ""} até ${fmtDataBR(dataF)}${fim ? " às " + fim : ""}`
+      : `Data: ${fmtDataBR(dataI)}`,
+    !multiDia && inicio ? `Horário de início: ${inicio}`    : null,
+    !multiDia && fim    ? `Horário de encerramento: ${fim}` : null,
+    part     ? `Participantes estimados: ${part}`     : null,
+    espacos.length ? `Espaços: ${espacos.join(", ")}` : null,
+  ].filter(Boolean).join("\n");
+  return { ok: true, extra: "\n\n" + linhas };
+}
+
+/* ── Envio ─────────────────────────────────────────────────── */
+async function enviarChamado() {
+  if (document.getElementById("_gotcha").value) return;
+
+  const rlMsg = _checarRateLimit();
+  if (rlMsg) { mostrarErro(rlMsg); return; }
+
+  limparErro();
+
+  const nome   = g("f-nome");
+  const tel    = g("f-tel");
+  const cat    = g("f-cat");
+  const sub    = g("f-sub");
+  const titulo = g("f-titulo");
+  const desc   = g("f-desc");
+  const local  = g("f-local") || null;
+
+  if (!nome)   { mostrarErro("Informe seu nome completo.");        document.getElementById("f-nome").focus();   return; }
+  if (!tel)    { mostrarErro("Informe seu telefone ou WhatsApp."); document.getElementById("f-tel").focus();    return; }
+  if (!cat)    { mostrarErro("Selecione a área de atendimento.");  document.getElementById("f-cat").focus();    return; }
+  if (!sub)    { mostrarErro("Selecione o tipo de solicitação.");  document.getElementById("f-sub-btn").focus(); return; }
+  if (!titulo) { mostrarErro("Informe o título da solicitação.");  document.getElementById("f-titulo").focus(); return; }
+  if (!desc)   { mostrarErro("Informe a descrição detalhada.");    document.getElementById("f-desc").focus();   return; }
+
+  const fin   = _coletarFinanceiro(cat, sub);
+  if (!fin.ok)   { mostrarErro(fin.msg);   return; }
+  const agend = _coletarAgendamento(cat, sub);
+  if (!agend.ok) { mostrarErro(agend.msg); return; }
+  const com   = _coletarComunicacao(cat, sub);
+  if (!com.ok)   { mostrarErro(com.msg);   return; }
+  const estac = _coletarEstacionamento(cat, sub);
+  if (!estac.ok) { mostrarErro(estac.msg); return; }
+  const acessoEst = _coletarAcessoEstacionamento(cat, sub);
+  if (!acessoEst.ok) { mostrarErro(acessoEst.msg); return; }
+  const acessoFacial = _coletarAcessoFacial(cat, sub);
+  if (!acessoFacial.ok) { mostrarErro(acessoFacial.msg); return; }
+
+  const catObj  = CATS.find(c => c.nome === cat);
+  const resp    = catObj?.resp || "Administração Geral";
+  const hoje    = new Date().toISOString().split("T")[0];
+  const descFinal = desc + fin.extra + agend.extra + com.extra + estac.extra + acessoEst.extra + acessoFacial.extra;
+
+  const newId = crypto.randomUUID();
+
+  const btn = document.getElementById("btn-enviar");
+  btn.disabled    = true;
+  btn.textContent = "Enviando…";
+
+  try {
+    const res = await fetch(`${SB_URL}/functions/v1/chamado-publico`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + SB_KEY },
+      body: JSON.stringify({
+        id:            newId,
+        area:          cat,
+        subcategoria:  sub,
+        titulo:        titulo,
+        descricao:     descFinal,
+        local:         local,
+        solicitante:   nome,
+        solicitante_txt: tel ? `${nome} · ${tel}` : nome,
+        telefone:      tel,
+        responsavel:   resp,
+        responsavel_txt: resp,
+        financial_data: fin.fd || null,
+        data_abertura: hoje,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || err.message || err.hint || `Erro ${res.status}`);
+    }
+
+    const data   = await res.json().catch(() => ({}));
+    const ticket = data.numero_chamado || "—";
+
+    try { localStorage.setItem(_RL_KEY, String(Date.now())); } catch(_) {}
+
+    // Se for solicitação de espaço, cria reserva provisória na agenda
+    let protocolo = null;
+    let agendaId  = null;
+    if (cat === "Agendamentos" && PROG_SUBS.has(sub)) {
+      const agData  = document.getElementById("f-ag-data")?.value || null;
+      const agDataF = document.getElementById("f-ag-data-fim")?.value || agData;
+      const agHi    = document.getElementById("f-ag-inicio")?.value || null;
+      const agHf    = document.getElementById("f-ag-fim")?.value   || null;
+      const agPart  = parseInt(document.getElementById("f-ag-part")?.value || "0", 10) || null;
+      const espacos = [...document.querySelectorAll("#f-ag-spaces input:checked")].map(c => c.value);
+      const espaco  = espacos.join(", ") || null;
+
+      if (agData && agHi && espaco) {
+        const rpcRes = await fetch(`${SB_URL}/rest/v1/rpc/solicitar_agendamento`, {
+          method:  "POST",
+          headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            p_titulo:            titulo,
+            p_data:              agData,
+            p_hora_inicio:       agHi,
+            p_hora_fim:          agHf || null,
+            p_espaco:            espaco,
+            p_subcategoria:      sub,
+            p_observacao:        desc || null,
+            p_nome:              nome,
+            p_telefone:          tel,
+            p_participantes:     agPart,
+            p_origem:            "link_publico",
+            p_data_encerramento: agDataF || null,
+            p_demanda_id:        newId,
+          }),
+        });
+        if (rpcRes.ok) {
+          const rpcData = await rpcRes.json().catch(() => ({}));
+          if (rpcData.ok) {
+            protocolo    = rpcData.protocolo;
+            agendaId     = rpcData.agenda_id || null;
+          } else if (rpcData.conflito) {
+            // Conflito detectado — avisa mas não bloqueia (chamado já foi criado)
+            const avEl = document.getElementById("ok-aviso-conflito");
+            if (avEl) avEl.style.display = "";
+          }
+        }
+      }
+    }
+
+    // Se for categoria Comunicação, cria solicitação de arte no módulo
+    if (cat === "Comunicação" && com.comPayload) {
+      const cp = com.comPayload;
+      fetch(`${SB_URL}/rest/v1/rpc/criar_sol_comunicacao_direta`, {
+        method:  "POST",
+        headers: HDRS,
+        body: JSON.stringify({
+          p_responsavel:    nome,
+          p_telefone:       tel,
+          p_descricao:      desc + com.extra,
+          p_titulo:         titulo,
+          p_areas:          cp.areas.length    ? cp.areas    : null,
+          p_formatos:       cp.formatos.length ? cp.formatos : null,
+          p_data_evento:    cp.data_evento    || null,
+          p_horario_evento: cp.horario_evento || null,
+          p_local_evento:   local             || null,
+          p_prazo:          cp.prazo_entrega  || null,
+          p_subcategoria:   sub,
+        }),
+      }).catch(() => {});
+    }
+
+    // Verifica se usuário quer arte digital (só quando é agendamento de programação)
+    const arteVal = document.querySelector("input[name='ag-arte']:checked")?.value;
+    const querArte = cat === "Agendamentos" && PROG_SUBS.has(sub) && arteVal === "sim" && agendaId;
+
+    if (querArte) {
+      // Salva ticket para usar na etapa 2
+      _iniciarStep2(agendaId, protocolo, titulo, ticket);
+      return; // não mostra screen-ok ainda
+    }
+
+    // Upload de anexos (não bloqueia o fluxo)
+    _uploadAnexosPublicos(data.id || newId, sub).catch(() => {});
+
+    document.getElementById("ok-numero").textContent = protocolo || ticket;
+    const okProtoEl = document.getElementById("ok-protocolo");
+    if (okProtoEl) {
+      okProtoEl.style.display = "none";
+    }
+    document.getElementById("screen-form").style.display = "none";
+    document.getElementById("screen-ok").style.display   = "block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+  } catch(e) {
+    btn.disabled    = false;
+    btn.textContent = "Enviar Solicitação";
+    mostrarErro(e.message || "Falha ao enviar. Tente novamente.");
+  }
+}
+
+/* ── Anexos financeiros — link público ─────────────────────── */
+
+function finCapturarFoto(targetInputId, txtId, lblId) {
+  const tmp = document.createElement("input");
+  tmp.type    = "file";
+  tmp.accept  = "image/*";
+  tmp.capture = "environment";
+  tmp.onchange = () => {
+    const file = tmp.files[0];
+    if (!file) return;
+    try {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      document.getElementById(targetInputId).files = dt.files;
+    } catch(_) {}
+    finAtualizarLabel(targetInputId, txtId, lblId);
+  };
+  tmp.click();
+}
+
+function finAtualizarLabel(inputId, txtId, lblId) {
+  const file = document.getElementById(inputId)?.files?.[0];
+  const txt  = document.getElementById(txtId);
+  const lbl  = document.getElementById(lblId);
+  if (!txt || !lbl) return;
+  if (file) {
+    txt.textContent = file.name;
+    lbl.classList.add("tem-arquivo");
+  } else {
+    txt.textContent = "Selecionar arquivo";
+    lbl.classList.remove("tem-arquivo");
+  }
+}
+
+async function _uploadAnexosPublicos(demandaId, sub) {
+  const BUCKET = "financial-documents";
+  const genDocs = ["f-doc-1","f-doc-2","f-doc-3"]
+    .map(id => ({ inputId: id, tipo: "outro" }));
+  const mapa = sub === "Reembolso"
+    ? [
+        { inputId: "f-reimb-nota", tipo: "nota_fiscal"  },
+        { inputId: "f-reimb-comp", tipo: "boleto"        },
+        ...genDocs,
+      ]
+    : sub === "Controle de Acesso — Facial"
+    ? [
+        { inputId: "f-facial-foto", tipo: "nota_fiscal" },
+        ...genDocs,
+      ]
+    : document.getElementById("f-cat")?.value === "Financeiro"
+    ? [
+        { inputId: "f-fin-nota",   tipo: "nota_fiscal"  },
+        { inputId: "f-fin-boleto", tipo: "boleto"        },
+      ]
+    : genDocs;
+
+  for (const { inputId, tipo } of mapa) {
+    const file = document.getElementById(inputId)?.files?.[0];
+    if (!file) continue;
+    if (file.size > 10 * 1024 * 1024) continue;
+
+    const safe    = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const prefixo = (tipo === "outro") ? "publico" : "financeiro/publico";
+    const path    = `${prefixo}/${demandaId}/${tipo}/${Date.now()}_${safe}`;
+
+    try {
+      // Upload para Storage
+      const upRes = await fetch(
+        `${SB_URL}/storage/v1/object/${BUCKET}/${path}`,
+        {
+          method:  "POST",
+          headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": file.type },
+          body: file,
+        }
+      );
+      if (!upRes.ok) {
+        const errBody = await upRes.json().catch(() => ({}));
+        console.warn("[chamado] Upload storage falhou:", upRes.status, errBody);
+        continue;
+      }
+
+      // Registrar em financeiro_anexos
+      const dbRes = await fetch(`${SB_URL}/rest/v1/financeiro_anexos`, {
+        method:  "POST",
+        headers: { ...HDRS, "Prefer": "return=minimal" },
+        body: JSON.stringify({
+          demanda_id:    demandaId,
+          tipo_arquivo:  tipo,
+          nome_original: file.name,
+          storage_bucket: BUCKET,
+          storage_path:  path,
+          mime_type:     file.type,
+          tamanho_bytes: file.size,
+          criado_por:    document.getElementById("f-nome")?.value || "link_publico",
+        }),
+      });
+      if (!dbRes.ok) {
+        const dbErr = await dbRes.json().catch(() => ({}));
+        console.warn("[chamado] Insert financeiro_anexos falhou:", dbRes.status, dbErr);
+      }
+    } catch (e) { console.warn("[chamado] Erro no upload de anexo:", e.message); }
+  }
+}
+
+</script>
+
+<script src="modules/chamado/arte.js?v=6.49.70"></script>
+<script src="modules/chamado/reserva.js?v=6.49.71"></script>
+
+<script>
+/* ══ screen-nom: Nomeações 2027 ══════════════════════════════ */
+
+let _nomMinisterios   = [];
+let _nomMembroIdx     = 0;
+let _nomAcTimer       = null;
+
+async function nomIniciar() {
+  document.getElementById("screen-form").style.display = "none";
+  document.getElementById("screen-nom").style.display  = "";
+  document.getElementById("nom-campos").style.display  = "none";
+  document.getElementById("nom-ok").style.display      = "none";
+  _nomMembroIdx = 0;
+  document.getElementById("nom-membros-list").innerHTML = "";
+  ["nom-supervisor","nom-coordenador","nom-lider-area"].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = "";
+    const pid = document.getElementById(id + "-pid"); if (pid) pid.value = "";
+  });
+  _nomMostrarErro("");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  // Carrega ministérios
+  const sel = document.getElementById("nom-min");
+  sel.innerHTML = "<option value=''>Carregando…</option>";
+  try {
+    const r = await fetch(
+      `${SB_URL}/rest/v1/ministerios?ativo=eq.true&select=id,nome&order=nome.asc`,
+      { headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY } }
+    );
+    if (!r.ok) throw new Error("Erro ao carregar ministérios");
+    _nomMinisterios = await r.json();
+    sel.innerHTML = "<option value=''>Selecione o ministério…</option>" +
+      _nomMinisterios.map(m => `<option value="${m.id}">${m.nome}</option>`).join("");
+  } catch(e) {
+    sel.innerHTML = "<option value=''>Falha ao carregar — tente recarregar a página</option>";
+  }
+}
+
+function nomVoltar() {
+  document.getElementById("screen-nom").style.display  = "none";
+  document.getElementById("screen-form").style.display = "";
+  csubReset();
+  _ocultarFinanceiro();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function nomMinChange() {
+  const sel  = document.getElementById("nom-min");
+  const show = sel.value !== "";
+  document.getElementById("nom-campos").style.display = show ? "" : "none";
+  if (!show) return;
+  // Limpa campos ao trocar ministério
+  ["nom-supervisor","nom-coordenador","nom-lider-area"].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = "";
+    const pid = document.getElementById(id + "-pid"); if (pid) pid.value = "";
+  });
+  document.getElementById("nom-membros-list").innerHTML = "";
+  _nomMembroIdx = 0;
+  _nomMostrarErro("");
+}
+
+/* ── Autocomplete ─────────────────────────────────────────── */
+function nomBuscar(input, pidId, dropId) {
+  clearTimeout(_nomAcTimer);
+  const q = input.value.trim();
+  document.getElementById(pidId).value = "";
+  if (q.length < 2) { nomAcFechar(dropId); return; }
+  _nomAcTimer = setTimeout(async () => {
+    try {
+      const enc = encodeURIComponent(`%${q}%`);
+      const r   = await fetch(
+        `${SB_URL}/rest/v1/v_membros?nome=ilike.${enc}&status=eq.ativo&select=pessoa_id,nome&order=nome.asc&limit=10`,
+        { headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY } }
+      );
+      if (!r.ok) return;
+      const data = await r.json();
+      const drop = document.getElementById(dropId);
+      if (!data.length) { nomAcFechar(dropId); return; }
+      drop.innerHTML = data.map(p =>
+        `<div class="nom-ac-item" onmousedown="nomAcSelecionar(event,'${input.id}','${pidId}','${dropId}',${p.pessoa_id || 'null'},'${p.nome.replace(/'/g,"\\'")}')">
+          ${p.nome}
+        </div>`
+      ).join("");
+      drop.classList.add("open");
+    } catch(_) {}
+  }, 220);
+}
+
+function nomAcSelecionar(e, inpId, pidId, dropId, pid, nome) {
+  e.preventDefault();
+  document.getElementById(inpId).value  = nome;
+  document.getElementById(pidId).value  = pid || "";
+  nomAcFechar(dropId);
+}
+
+function nomAcFechar(dropId) {
+  setTimeout(() => {
+    const d = document.getElementById(dropId);
+    if (d) { d.classList.remove("open"); d.innerHTML = ""; }
+  }, 150);
+}
+
+/* ── Membros ──────────────────────────────────────────────── */
+function nomAdicionarMembro() {
+  const idx  = ++_nomMembroIdx;
+  const list = document.getElementById("nom-membros-list");
+  const row  = document.createElement("div");
+  row.className = "nom-membro-row";
+  row.id = `nom-mb-row-${idx}`;
+  row.innerHTML = `
+    <div class="nom-ac-wrap">
+      <input type="text" id="nom-mb-${idx}" class="nom-ac-inp" placeholder="Nome do membro" autocomplete="off"
+             oninput="nomBuscar(this,'nom-mb-pid-${idx}','nom-mb-drop-${idx}')"
+             onblur="nomAcFechar('nom-mb-drop-${idx}')">
+      <input type="hidden" id="nom-mb-pid-${idx}">
+      <div class="nom-ac-drop" id="nom-mb-drop-${idx}"></div>
+    </div>
+    <button type="button" class="nom-rem-btn" onclick="nomRemoverMembro(${idx})" title="Remover">×</button>`;
+  list.appendChild(row);
+  document.getElementById(`nom-mb-${idx}`).focus();
+}
+
+function nomRemoverMembro(idx) {
+  document.getElementById(`nom-mb-row-${idx}`)?.remove();
+}
+
+/* ── Envio ────────────────────────────────────────────────── */
+function _nomMostrarErro(msg) {
+  const el = document.getElementById("nom-err");
+  el.textContent = msg;
+  el.classList.toggle("show", !!msg);
+  if (msg) el.scrollIntoView({ behavior:"smooth", block:"nearest" });
+}
+
+async function nomEnviar() {
+  const minSel = document.getElementById("nom-min");
+  const minId  = minSel.value;
+  const minObj = _nomMinisterios.find(m => m.id == minId);
+  if (!minObj) { _nomMostrarErro("Selecione o ministério."); return; }
+
+  const liderancas = [
+    { nivel:"supervisor",  funcao_lider:"supervisor",  inp:"nom-supervisor",  pid:"nom-supervisor-pid"  },
+    { nivel:"coordenador", funcao_lider:"coordenador", inp:"nom-coordenador", pid:"nom-coordenador-pid" },
+    { nivel:"lider_area",  funcao_lider:"lider_area",  inp:"nom-lider-area",  pid:"nom-lider-area-pid"  },
+  ];
+
+  const membrosEls = document.querySelectorAll("#nom-membros-list .nom-membro-row");
+
+  const rows = [];
+
+  liderancas.forEach(({ nivel, funcao_lider, inp, pid }) => {
+    const nome = (document.getElementById(inp)?.value || "").trim();
+    if (!nome) return;
+    rows.push({
+      nome,
+      pessoa_id:     document.getElementById(pid)?.value || null,
+      ano:           2027,
+      nivel,
+      tipo_nomeacao: "lider",
+      funcao_lider,
+      orgao_tipo:    "ministerio",
+      orgao:         minObj.nome,
+      area:          minObj.nome,
+      status:        "indicado",
+    });
+  });
+
+  membrosEls.forEach(row => {
+    const idx  = row.id.replace("nom-mb-row-", "");
+    const nome = (document.getElementById(`nom-mb-${idx}`)?.value || "").trim();
+    if (!nome) return;
+    rows.push({
+      nome,
+      pessoa_id:     document.getElementById(`nom-mb-pid-${idx}`)?.value || null,
+      ano:           2027,
+      nivel:         "membro",
+      tipo_nomeacao: "membro",
+      tipo_membro:   "ministerio",
+      orgao_tipo:    "ministerio",
+      orgao:         minObj.nome,
+      area:          minObj.nome,
+      status:        "indicado",
+    });
+  });
+
+  if (!rows.length) { _nomMostrarErro("Adicione ao menos uma pessoa antes de confirmar."); return; }
+
+  // Limpa pessoa_id vazio
+  rows.forEach(r => { if (!r.pessoa_id) delete r.pessoa_id; });
+
+  const btn = document.getElementById("nom-btn");
+  btn.disabled    = true;
+  btn.textContent = "Salvando…";
+  _nomMostrarErro("");
+
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/nomeados`, {
+      method:  "POST",
+      headers: { ...HDRS, "Prefer": "return=minimal" },
+      body:    JSON.stringify(rows),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || err.hint || `Erro ${res.status}`);
+    }
+    document.getElementById("nom-campos").style.display = "none";
+    document.getElementById("nom-ok").style.display     = "";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch(e) {
+    _nomMostrarErro(e.message || "Falha ao salvar. Tente novamente.");
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = "Confirmar Nomeações 2027";
+  }
+}
+</script>
+
+<!-- Menu popup singleton (requisição de espaço) -->
+<div id="ag2-menu-popup" class="ag2-menu-popup">
+  <button onclick="ag2AbrirModalReq()">Requisitar espaço</button>
+</div>
+
+</body>
+</html>
