@@ -4,6 +4,12 @@
 -- 1. ministerios: leitura pública (dropdown de seleção)
 GRANT SELECT ON public.ministerios TO anon;
 
+-- Policy de SELECT para anon (sipen-security-migration.sql só definiu TO authenticated)
+DROP POLICY IF EXISTS ministerios_select_anon ON public.ministerios;
+CREATE POLICY ministerios_select_anon ON public.ministerios
+  FOR SELECT TO anon
+  USING (ativo = true);
+
 -- 2. v_membros: leitura pública (autocomplete de nomes no formulário)
 --    Apenas nome e pessoa_id — suficiente para o autocomplete
 GRANT SELECT ON public.v_membros TO anon;
