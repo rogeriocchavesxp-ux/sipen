@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Mais / Menu Completo
-   mobile/mais.js · v1.1.1
+   mobile/mais.js · v1.1.3
 ════════════════════════════════════════════════════ */
 
 (function () {
@@ -33,6 +33,7 @@
         { ico:'🙏', cor:'var(--violet)', bg:'var(--violetbg)',  label:'Frequência Cultos',page:'cultos-mob'      },
         { ico:'🤝', cor:'var(--amber)',  bg:'var(--amberbg)',   label:'Pequenos Grupos', page:'pgs-mob'          },
         { ico:'❤️', cor:'var(--rose)',   bg:'var(--rosebg)',    label:'Rede de Cuidado', page:'rede-mob'         },
+        { ico:'📅', cor:'var(--blue)',   bg:'var(--bluebg)',    label:'Escala Pastoral',  page:'escala-mob'      },
         { ico:'🎓', cor:'var(--gold)',   bg:'var(--goldbg)',    label:'Ensino',           page:'ensino-mob'      },
       ],
     },
@@ -98,6 +99,7 @@
     'atas-mob':            'atas',
     'reunioes-hub':        'reunioes-hub',
     'rede-mob':            'rede-mob',
+    'escala-mob':          'escala-mob',
   };
 
   window._maisGo = function (page) {
