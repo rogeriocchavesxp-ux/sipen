@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════
    SIPEN Mobile — Escala Pastoral
-   mobile/escala.js · v1.0.2
+   mobile/escala.js · v1.0.3
 
    Páginas:
    - escala-mob → visualização da escala + disponibilidade (pastores)
@@ -395,10 +395,18 @@
       const start = `${hoje.getFullYear()}-${_pad(hoje.getMonth() + 1)}-${_pad(hoje.getDate())}`;
       const end   = `${ano2}-${_pad(mes2 + 1)}-${_pad(new Date(ano2, mes2 + 1, 0).getDate())}`;
 
-      const slots = await fetch(
+      // Tenta com oficial_id; se a coluna não existir (migration pendente), cai sem o campo
+      let slots = await fetch(
         `${apiBaseUrl()}/rest/v1/escala_pregacao?data=gte.${start}&data=lte.${end}&order=data.asc,culto_tipo.asc&select=id,data,culto_tipo,pastor_id,oficial_id,status&limit=200`,
         { headers: apiHeaders() }
-      ).then(r => r.ok ? r.json() : []);
+      ).then(r => r.ok ? r.json() : null);
+
+      if (slots === null) {
+        slots = await fetch(
+          `${apiBaseUrl()}/rest/v1/escala_pregacao?data=gte.${start}&data=lte.${end}&order=data.asc,culto_tipo.asc&select=id,data,culto_tipo,pastor_id,status&limit=200`,
+          { headers: apiHeaders() }
+        ).then(r => r.ok ? r.json() : []);
+      }
 
       if (!slots.length) {
         el.innerHTML = `<div style="padding:0 16px">${_vazio('📅', 'Nenhum culto cadastrado nos próximos 2 meses.')}</div>`;
@@ -406,8 +414,9 @@
       }
 
       function _slotStatus(s) {
-        if (!s.oficial_id && !s.pastor_id)   return 'vaga';
-        if (s.oficial_id === perm.oficialId) return 'meu';
+        if (!s.oficial_id && !s.pastor_id)              return 'vaga';
+        if (perm.oficialId && s.oficial_id === perm.oficialId) return 'meu';
+        if (perm.pastorId  && s.pastor_id  === perm.pastorId)  return 'meu';
         return 'outro';
       }
 
