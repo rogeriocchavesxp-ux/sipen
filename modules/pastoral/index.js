@@ -831,6 +831,7 @@
     pastorFiltro: "",
   };
 	  let _disps = []; // registros derivados de escala_pregacao
+  let _dispPregacaoMap = new Map(); // escala_pregacao_id → [oficial_id, ...]
   let _pastoresDp = [];
   let _pastoresLoading = null;
   let _loaded = false;
@@ -957,9 +958,12 @@
 
 	  async function _loadDisps(){
 	    try {
-	      const r=await fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao?select=*&order=data.asc,culto_tipo.asc&limit=5000`,{headers:apiHeaders()});
-	      if(r.ok){
-	        const d=await r.json();
+	      const [escalaRes, dispRes] = await Promise.all([
+	        fetch(`${apiBaseUrl()}/rest/v1/escala_pregacao?select=*&order=data.asc,culto_tipo.asc&limit=5000`,{headers:apiHeaders()}),
+	        fetch(`${apiBaseUrl()}/rest/v1/disp_pregacao?select=escala_pregacao_id,oficial_id,pastor_id`,{headers:apiHeaders()}),
+	      ]);
+	      if(escalaRes.ok){
+	        const d=await escalaRes.json();
 	        if(Array.isArray(d)) _disps=d.map(row=>({
 	          id:row.id,
 	          pastor_id:row.pastor_id||"",
@@ -971,11 +975,20 @@
 	          local:row.local||"Templo Principal",
 	          origem:row.origem||"manual"
 	        }));
+	      } else {
+	        const err=await escalaRes.text().catch(()=>"");
+	        console.warn("dp_: escala_pregacao HTTP",escalaRes.status,err);
+	        T("Disponibilidade Pregação",`Não foi possível carregar a escala de pregação (${escalaRes.status}).`);
 	      }
-	      else {
-	        const err=await r.text().catch(()=>"");
-	        console.warn("dp_: escala_pregacao HTTP",r.status,err);
-	        T("Disponibilidade Pregação",`Não foi possível carregar a escala de pregação (${r.status}).`);
+	      // Mapa: escala_pregacao_id → [oficial_id] dos pastores disponíveis
+	      if(dispRes.ok){
+	        const rows=await dispRes.json();
+	        _dispPregacaoMap=new Map();
+	        (Array.isArray(rows)?rows:[]).forEach(r=>{
+	          const id=r.escala_pregacao_id;
+	          if(!_dispPregacaoMap.has(id)) _dispPregacaoMap.set(id,[]);
+	          if(r.oficial_id) _dispPregacaoMap.get(id).push(r.oficial_id);
+	        });
 	      }
 	    } catch(e){ console.warn("dp_: erro de rede",e); T("Erro de rede",e.message); }
 	    await _loadPastores();
@@ -1248,6 +1261,10 @@
 
   /* ── API pública para Escala de Pregação ─────────────────────── */
 	  window.dp_getDisponiveisIds = function(data, culto_tipo){
+	    // Prioriza disp_pregacao (novo sistema)
+	    const slot=_disps.find(r=>r.data===data&&r.culto_tipo===culto_tipo);
+	    if(slot&&_dispPregacaoMap.has(slot.id)) return _dispPregacaoMap.get(slot.id);
+	    // Fallback: escala_pregacao.pastor_id (legado)
 	    return _disps.filter(r=>r.data===data&&r.culto_tipo===culto_tipo&&r.disponivel&&r.pastor_id).map(r=>r.pastor_id);
 	  };
 	  window.dp_getObsDisponiveis = function(data, culto_tipo){
