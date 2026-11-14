@@ -1470,14 +1470,9 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
         </div>
 
         <div class="nom-cargo-blk">
-          <div class="nom-cargo-label">Líder de Área</div>
-          <div class="nom-ac-wrap">
-            <input type="text" id="nom-lider-area" class="nom-ac-inp" placeholder="Nome da pessoa" autocomplete="off"
-                   oninput="nomBuscar(this,'nom-lider-area-pid','nom-lider-area-drop')"
-                   onblur="nomAcFechar('nom-lider-area-drop')">
-            <input type="hidden" id="nom-lider-area-pid">
-            <div class="nom-ac-drop" id="nom-lider-area-drop"></div>
-          </div>
+          <div class="nom-cargo-label">Líderes de Área</div>
+          <div id="nom-lider-area-list"></div>
+          <button type="button" class="nom-add-btn" onclick="nomAdicionarLiderArea()" style="margin-top:6px">+ Adicionar líder de área</button>
         </div>
       </div>
 
@@ -2580,6 +2575,7 @@ async function _uploadAnexosPublicos(demandaId, sub) {
 
 let _nomMinisterios   = [];
 let _nomMembroIdx     = 0;
+let _nomLiderAreaIdx  = 0;
 let _nomAcTimer       = null;
 
 async function nomIniciar() {
@@ -2588,8 +2584,10 @@ async function nomIniciar() {
   document.getElementById("nom-campos").style.display  = "none";
   document.getElementById("nom-ok").style.display      = "none";
   _nomMembroIdx = 0;
-  document.getElementById("nom-membros-list").innerHTML = "";
-  ["nom-supervisor","nom-coordenador","nom-lider-area"].forEach(id => {
+  _nomLiderAreaIdx = 0;
+  document.getElementById("nom-membros-list").innerHTML    = "";
+  document.getElementById("nom-lider-area-list").innerHTML = "";
+  ["nom-supervisor","nom-coordenador"].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = "";
     const pid = document.getElementById(id + "-pid"); if (pid) pid.value = "";
   });
@@ -2627,10 +2625,12 @@ function nomMinChange() {
   document.getElementById("nom-campos").style.display = show ? "" : "none";
   if (!show) return;
   // Limpa campos ao trocar ministério
-  ["nom-supervisor","nom-coordenador","nom-lider-area"].forEach(id => {
+  ["nom-supervisor","nom-coordenador"].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = "";
     const pid = document.getElementById(id + "-pid"); if (pid) pid.value = "";
   });
+  document.getElementById("nom-lider-area-list").innerHTML = "";
+  _nomLiderAreaIdx = 0;
   document.getElementById("nom-membros-list").innerHTML = "";
   _nomMembroIdx = 0;
   _nomMostrarErro("");
@@ -2678,6 +2678,29 @@ function nomAcFechar(dropId) {
 }
 
 /* ── Membros ──────────────────────────────────────────────── */
+function nomAdicionarLiderArea() {
+  const idx  = ++_nomLiderAreaIdx;
+  const list = document.getElementById("nom-lider-area-list");
+  const row  = document.createElement("div");
+  row.className = "nom-membro-row";
+  row.id = `nom-la-row-${idx}`;
+  row.innerHTML = `
+    <div class="nom-ac-wrap">
+      <input type="text" id="nom-la-${idx}" class="nom-ac-inp" placeholder="Nome da pessoa" autocomplete="off"
+             oninput="nomBuscar(this,'nom-la-pid-${idx}','nom-la-drop-${idx}')"
+             onblur="nomAcFechar('nom-la-drop-${idx}')">
+      <input type="hidden" id="nom-la-pid-${idx}">
+      <div class="nom-ac-drop" id="nom-la-drop-${idx}"></div>
+    </div>
+    <button type="button" class="nom-rem-btn" onclick="nomRemoverLiderArea(${idx})" title="Remover">×</button>`;
+  list.appendChild(row);
+  document.getElementById(`nom-la-${idx}`).focus();
+}
+
+function nomRemoverLiderArea(idx) {
+  document.getElementById(`nom-la-row-${idx}`)?.remove();
+}
+
 function nomAdicionarMembro() {
   const idx  = ++_nomMembroIdx;
   const list = document.getElementById("nom-membros-list");
@@ -2718,10 +2741,7 @@ async function nomEnviar() {
   const liderancas = [
     { nivel:"supervisor",  funcao_lider:"supervisor",  inp:"nom-supervisor",  pid:"nom-supervisor-pid"  },
     { nivel:"coordenador", funcao_lider:"coordenador", inp:"nom-coordenador", pid:"nom-coordenador-pid" },
-    { nivel:"lider_area",  funcao_lider:"lider_area",  inp:"nom-lider-area",  pid:"nom-lider-area-pid"  },
   ];
-
-  const membrosEls = document.querySelectorAll("#nom-membros-list .nom-membro-row");
 
   const rows = [];
 
@@ -2741,6 +2761,27 @@ async function nomEnviar() {
       status:        "indicado",
     });
   });
+
+  // Líderes de área (múltiplos)
+  document.querySelectorAll("#nom-lider-area-list .nom-membro-row").forEach(row => {
+    const idx  = row.id.replace("nom-la-row-", "");
+    const nome = (document.getElementById(`nom-la-${idx}`)?.value || "").trim();
+    if (!nome) return;
+    rows.push({
+      nome,
+      pessoa_id:     document.getElementById(`nom-la-pid-${idx}`)?.value || null,
+      ano:           2027,
+      nivel:         "lider_area",
+      tipo_nomeacao: "lider",
+      funcao_lider:  "lider_area",
+      orgao_tipo:    "ministerio",
+      orgao:         minObj.nome,
+      area:          minObj.nome,
+      status:        "indicado",
+    });
+  });
+
+  const membrosEls = document.querySelectorAll("#nom-membros-list .nom-membro-row");
 
   membrosEls.forEach(row => {
     const idx  = row.id.replace("nom-mb-row-", "");
