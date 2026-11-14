@@ -2651,7 +2651,14 @@ function nomBuscar(input, pidId, dropId) {
         { headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY } }
       );
       if (!r.ok) return;
-      const data = await r.json();
+      const raw = await r.json();
+      // dedup by nome (case-insensitive) — mantém primeiro id encontrado
+      const seenNames = new Map();
+      for (const p of raw) {
+        const key = p.nome.trim().toLowerCase();
+        if (!seenNames.has(key)) seenNames.set(key, p);
+      }
+      const data = [...seenNames.values()];
       const drop = document.getElementById(dropId);
       const nomeDigitado = input.value.trim();
       const nomeEnc = nomeDigitado.replace(/'/g,"\\'");
