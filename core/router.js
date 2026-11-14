@@ -65,6 +65,7 @@ const CRUMB={
   "conselho-ordenados":["Conselho e Governança","Ordenados","/ ofícios permanentes"],
   "conselho-hist":["Conselho e Governança","Histórico de Atas e Deliberações",""],
   "conselho-seminaristas":["Conselho e Governança","Seminaristas","/ formação teológica e estágio"],
+  "conselho-relatorio":["Conselho e Governança","Relatório de Liderança","/ ordenados e nomeados por ministério"],
   "conselho-resolucoes":["Conselho e Governança","Resoluções do Conselho","/ deliberações normativas"],
   "proj-lista":["Projetos","Projetos & Acompanhamento","/ portfólio institucional"],
   "proj-detalhe":["Projetos","Detalhe do Projeto","/ etapas e progresso"],
