@@ -75,7 +75,7 @@
       const hdrs = _hdrs();
 
       const [resOfc, resNom] = await Promise.all([
-        fetch(`${api}/rest/v1/oficiais?deleted_at=is.null&status=in.(ativo,especial)&select=id,cargo,status,posse,fim_mandato,area,obs,pessoa_id,pessoas(id,nome)&order=cargo.asc,pessoas(nome).asc`, { headers: hdrs }),
+        fetch(`${api}/rest/v1/oficiais?deleted_at=is.null&status=in.(ativo,especial)&select=id,cargo,status,posse,fim_mandato,area,obs,pessoa_id,pessoas!pessoa_id(id,nome)&order=cargo.asc`, { headers: hdrs }),
         fetch(`${api}/rest/v1/nomeados?deleted_at=is.null&status=in.(ativo,indicado)&ano=eq.${_anoAtivo}&select=id,orgao_tipo,orgao,suborgao,cargo,nivel,nome,pessoa_id,tipo_nomeacao,funcao_lider,ano,pessoas(id,nome)&order=orgao_tipo.asc,orgao.asc,suborgao.asc,cargo.asc`, { headers: hdrs }),
       ]);
 
