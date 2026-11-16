@@ -2595,18 +2595,30 @@ async function nomIniciar() {
   _nomMostrarErro("");
   window.scrollTo({ top: 0, behavior: "smooth" });
 
-  // Carrega ministérios
+  // Carrega ministérios e sociedades
   const sel = document.getElementById("nom-min");
   sel.innerHTML = "<option value=''>Carregando…</option>";
   try {
-    const r = await fetch(
-      `${SB_URL}/rest/v1/ministerios?ativo=eq.true&select=id,nome&order=nome.asc`,
-      { headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY } }
-    );
-    if (!r.ok) throw new Error("Erro ao carregar ministérios");
-    _nomMinisterios = await r.json();
-    sel.innerHTML = "<option value=''>Selecione o ministério…</option>" +
-      _nomMinisterios.map(m => `<option value="${m.id}">${m.nome}</option>`).join("");
+    const hdr = { headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY } };
+    const [rMin, rSoc] = await Promise.all([
+      fetch(`${SB_URL}/rest/v1/ministerios?ativo=eq.true&select=id,nome&order=nome.asc`, hdr),
+      fetch(`${SB_URL}/rest/v1/sociedades?ativo=eq.true&select=id,sigla,nome,orgao&order=nome.asc`, hdr),
+    ]);
+    if (!rMin.ok) throw new Error("Erro ao carregar ministérios");
+    const mins = await rMin.json();
+    const socs = rSoc.ok ? await rSoc.json() : [];
+
+    // Adiciona _tipo e _orgao para distinguir na hora do envio
+    mins.forEach(m => { m._tipo = 'ministerio'; m._orgao = m.nome; });
+    socs.forEach(s => { s._tipo = 'sociedade';  s._orgao = s.orgao || s.nome; s.nome = s.sigla ? `${s.sigla} — ${s.nome}` : s.nome; });
+
+    _nomMinisterios = [...mins, ...socs];
+
+    const optMins = mins.map(m => `<option value="${m.id}">${m.nome}</option>`).join("");
+    const optSocs = socs.length
+      ? `<optgroup label="Sociedades Internas">${socs.map(s => `<option value="${s.id}">${s.nome}</option>`).join("")}</optgroup>`
+      : "";
+    sel.innerHTML = `<option value=''>Selecione o ministério…</option>${optMins}${optSocs}`;
   } catch(e) {
     sel.innerHTML = "<option value=''>Falha ao carregar — tente recarregar a página</option>";
   }
@@ -2774,9 +2786,9 @@ async function nomEnviar() {
       nivel,
       tipo_nomeacao: "lider",
       funcao_lider,
-      orgao_tipo:    "ministerio",
-      orgao:         minObj.nome,
-      area:          minObj.nome,
+      orgao_tipo:    minObj._tipo || "ministerio",
+      orgao:         minObj._orgao,
+      area:          minObj._orgao,
       status:        "ativo",
     });
   });
@@ -2794,10 +2806,10 @@ async function nomEnviar() {
       nivel:         "lider_area",
       tipo_nomeacao: "lider",
       funcao_lider:  "lider_area",
-      orgao_tipo:    "ministerio",
-      orgao:         minObj.nome,
+      orgao_tipo:    minObj._tipo || "ministerio",
+      orgao:         minObj._orgao,
       suborgao:      areaLider || null,
-      area:          minObj.nome,
+      area:          minObj._orgao,
       cargo:         areaLider ? `Líder de Área — ${areaLider}` : "Líder de Área",
       status:        "ativo",
     });
@@ -2815,10 +2827,10 @@ async function nomEnviar() {
       ano:           2027,
       nivel:         "membro",
       tipo_nomeacao: "membro",
-      tipo_membro:   "ministerio",
-      orgao_tipo:    "ministerio",
-      orgao:         minObj.nome,
-      area:          minObj.nome,
+      tipo_membro:   minObj._tipo || "ministerio",
+      orgao_tipo:    minObj._tipo || "ministerio",
+      orgao:         minObj._orgao,
+      area:          minObj._orgao,
       status:        "ativo",
     });
   });
