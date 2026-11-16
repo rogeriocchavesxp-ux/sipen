@@ -2701,12 +2701,15 @@ function nomAdicionarLiderArea() {
   row.className = "nom-membro-row";
   row.id = `nom-la-row-${idx}`;
   row.innerHTML = `
-    <div class="nom-ac-wrap">
-      <input type="text" id="nom-la-${idx}" class="nom-ac-inp" placeholder="Nome da pessoa" autocomplete="off"
-             oninput="nomBuscar(this,'nom-la-pid-${idx}','nom-la-drop-${idx}')"
-             onblur="nomAcFechar('nom-la-drop-${idx}')">
-      <input type="hidden" id="nom-la-pid-${idx}">
-      <div class="nom-ac-drop" id="nom-la-drop-${idx}"></div>
+    <div style="display:flex;flex-direction:column;gap:6px;flex:1">
+      <div class="nom-ac-wrap">
+        <input type="text" id="nom-la-${idx}" class="nom-ac-inp" placeholder="Nome da pessoa" autocomplete="off"
+               oninput="nomBuscar(this,'nom-la-pid-${idx}','nom-la-drop-${idx}')"
+               onblur="nomAcFechar('nom-la-drop-${idx}')">
+        <input type="hidden" id="nom-la-pid-${idx}">
+        <div class="nom-ac-drop" id="nom-la-drop-${idx}"></div>
+      </div>
+      <input type="text" id="nom-la-area-${idx}" class="nom-ac-inp" placeholder="Nome da área (ex: Jovens, Louvor…)" autocomplete="off" style="font-size:12px">
     </div>
     <button type="button" class="nom-rem-btn" onclick="nomRemoverLiderArea(${idx})" title="Remover">×</button>`;
   list.appendChild(row);
@@ -2783,6 +2786,7 @@ async function nomEnviar() {
     const idx  = row.id.replace("nom-la-row-", "");
     const nome = (document.getElementById(`nom-la-${idx}`)?.value || "").trim();
     if (!nome) return;
+    const areaLider = (document.getElementById(`nom-la-area-${idx}`)?.value || "").trim();
     rows.push({
       nome,
       pessoa_id:     document.getElementById(`nom-la-pid-${idx}`)?.value || null,
@@ -2792,7 +2796,9 @@ async function nomEnviar() {
       funcao_lider:  "lider_area",
       orgao_tipo:    "ministerio",
       orgao:         minObj.nome,
+      suborgao:      areaLider || null,
       area:          minObj.nome,
+      cargo:         areaLider ? `Líder de Área — ${areaLider}` : "Líder de Área",
       status:        "ativo",
     });
   });
