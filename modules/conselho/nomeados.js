@@ -669,6 +669,11 @@
             </div>
 
             <div style="grid-column:1/-1">
+              <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Conselheiro Responsável</label>
+              ${_htmlAutocomplete('nom-f-conselheiro', 'Digite para buscar o presbítero…')}
+            </div>
+
+            <div style="grid-column:1/-1">
               <label style="display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px">Área / Ministério / Sociedade / Congregação <span style="color:var(--rose)">*</span></label>
               <select id="nom-f-orgao-sel" onchange="nomCarregarSetores()" disabled style="width:100%;background:var(--bg-input);border:1px solid var(--bd2);border-radius:6px;color:var(--tx1);font-size:11.5px;padding:8px 10px;outline:none;cursor:pointer">
                 <option value="">— Selecione uma Categoria Institucional primeiro —</option>
@@ -756,6 +761,10 @@
     sv('nom-f-ata',    r.ata_origem || '');
     sv('nom-f-obs',    r.obs || '');
     if (_el('nom-f-nome-pid')) _el('nom-f-nome-pid').value = r.pessoa_id || '';
+    if (r.conselheiro_id) {
+      sv('nom-f-conselheiro', r.pessoas_conselheiro?.nome || r.conselheiro_nome || '');
+      if (_el('nom-f-conselheiro-pid')) _el('nom-f-conselheiro-pid').value = r.conselheiro_id;
+    }
 
     // Tipo de nomeação + campos condicionais
     const tipoParaForm = r.tipo_nomeacao === 'governo' ? 'lider' : (r.tipo_nomeacao || '');
@@ -984,11 +993,12 @@
       orgao:         orgaoNome,
       suborgao:      subNome,
       area:          orgaoNome,
-      cargo:         v('nom-f-cargo'),
-      data_inicio:   v('nom-f-inicio'),
-      data_fim:      v('nom-f-fim'),
-      ata_origem:    v('nom-f-ata'),
-      obs:           v('nom-f-obs'),
+      cargo:           v('nom-f-cargo'),
+      conselheiro_id:  (_el('nom-f-conselheiro-pid') || {}).value || null,
+      data_inicio:     v('nom-f-inicio'),
+      data_fim:        v('nom-f-fim'),
+      ata_origem:      v('nom-f-ata'),
+      obs:             v('nom-f-obs'),
     };
     Object.keys(payload).forEach(k => { if (payload[k] === null || payload[k] === '') delete payload[k]; });
 
