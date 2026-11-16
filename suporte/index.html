@@ -2825,6 +2825,10 @@ async function nomEnviar() {
 
   if (!rows.length) { _nomMostrarErro("Adicione ao menos uma pessoa antes de confirmar."); return; }
 
+  // Normaliza chaves — todos os rows precisam ter os mesmos campos (Supabase batch)
+  const allKeys = [...new Set(rows.flatMap(r => Object.keys(r)))];
+  rows.forEach(r => { allKeys.forEach(k => { if (!(k in r)) r[k] = null; }); });
+
   // Limpa pessoa_id vazio
   rows.forEach(r => { if (!r.pessoa_id) delete r.pessoa_id; });
 
