@@ -259,8 +259,14 @@
         </div>` : ''}
         <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--bd1);padding-top:8px;margin-top:4px">
           <span style="font-size:12px;color:var(--tx3)">👥 ${qtdMembros} membro${qtdMembros !== 1 ? 's' : ''}</span>
-          <div style="display:flex;align-items:center;gap:10px">
-            ${m.categoria !== 'essencial' ? `<span style="font-size:11px;color:var(--rose);cursor:pointer" onclick="event.stopPropagation();minExcluir('${m.id}','${escapeHtml(m.nome)}')">Excluir</span>` : ''}
+          <div style="display:flex;align-items:center;gap:6px">
+            ${m.categoria !== 'essencial' ? `
+            <div class="min-kebab-wrap" onclick="event.stopPropagation()">
+              <button class="min-kebab-btn" onclick="minKebabToggle(this)" title="Mais opções">⋯</button>
+              <div class="min-kebab-menu">
+                <div class="min-kebab-item min-kebab-danger" onclick="minExcluir('${m.id}','${escapeHtml(m.nome)}')">Excluir</div>
+              </div>
+            </div>` : ''}
             <span style="font-size:11.5px;color:var(--violet)">Abrir →</span>
           </div>
         </div>
@@ -3472,6 +3478,18 @@
   window.minMinRemoverReuniao      = minMinRemoverReuniao;
   window._reuToggle                = _reuToggle;
   window._reuSalvar                = _reuSalvar;
+  function minKebabToggle(btn) {
+    const wrap = btn.closest('.min-kebab-wrap');
+    const isOpen = wrap.classList.contains('open');
+    document.querySelectorAll('.min-kebab-wrap.open').forEach(w => w.classList.remove('open'));
+    if (!isOpen) {
+      wrap.classList.add('open');
+      const close = () => { wrap.classList.remove('open'); document.removeEventListener('click', close); };
+      setTimeout(() => document.addEventListener('click', close), 0);
+    }
+  }
+  window.minKebabToggle = minKebabToggle;
+
   async function minExcluir(id, nome) {
     if (!confirm(`Excluir o ministério "${nome}"? Esta ação não pode ser desfeita.`)) return;
     try {
