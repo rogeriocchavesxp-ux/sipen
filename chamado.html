@@ -1471,6 +1471,17 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg);
         </div>
 
         <div class="nom-cargo-blk">
+          <div class="nom-cargo-label">Conselheiro Responsável</div>
+          <div class="nom-ac-wrap">
+            <input type="text" id="nom-conselheiro" class="nom-ac-inp" placeholder="Nome da pessoa" autocomplete="off"
+                   oninput="nomBuscar(this,'nom-conselheiro-pid','nom-conselheiro-drop')"
+                   onblur="nomAcFechar('nom-conselheiro-drop')">
+            <input type="hidden" id="nom-conselheiro-pid">
+            <div class="nom-ac-drop" id="nom-conselheiro-drop"></div>
+          </div>
+        </div>
+
+        <div class="nom-cargo-blk">
           <div class="nom-cargo-label">Líderes de Área</div>
           <div id="nom-lider-area-list"></div>
           <button type="button" class="nom-add-btn" onclick="nomAdicionarLiderArea()" style="margin-top:6px">+ Adicionar líder de área</button>
@@ -2588,7 +2599,7 @@ async function nomIniciar() {
   _nomLiderAreaIdx = 0;
   document.getElementById("nom-membros-list").innerHTML    = "";
   document.getElementById("nom-lider-area-list").innerHTML = "";
-  ["nom-supervisor","nom-coordenador"].forEach(id => {
+  ["nom-supervisor","nom-coordenador","nom-conselheiro"].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = "";
     const pid = document.getElementById(id + "-pid"); if (pid) pid.value = "";
   });
@@ -2638,7 +2649,7 @@ function nomMinChange() {
   document.getElementById("nom-campos").style.display = show ? "" : "none";
   if (!show) return;
   // Limpa campos ao trocar ministério
-  ["nom-supervisor","nom-coordenador"].forEach(id => {
+  ["nom-supervisor","nom-coordenador","nom-conselheiro"].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = "";
     const pid = document.getElementById(id + "-pid"); if (pid) pid.value = "";
   });
@@ -2770,8 +2781,9 @@ async function nomEnviar() {
   if (!minObj) { _nomMostrarErro("Selecione o ministério."); return; }
 
   const liderancas = [
-    { nivel:"supervisor",  funcao_lider:"supervisor",  inp:"nom-supervisor",  pid:"nom-supervisor-pid"  },
-    { nivel:"coordenador", funcao_lider:"coordenador", inp:"nom-coordenador", pid:"nom-coordenador-pid" },
+    { nivel:"supervisor",   funcao_lider:"supervisor",   inp:"nom-supervisor",   pid:"nom-supervisor-pid"   },
+    { nivel:"coordenador",  funcao_lider:"coordenador",  inp:"nom-coordenador",  pid:"nom-coordenador-pid"  },
+    { nivel:"conselheiro",  funcao_lider:"conselheiro",  inp:"nom-conselheiro",  pid:"nom-conselheiro-pid"  },
   ];
 
   const rows = [];
