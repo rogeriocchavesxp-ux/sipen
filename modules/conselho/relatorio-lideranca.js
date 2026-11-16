@@ -45,8 +45,18 @@
   function _api()        { return apiBaseUrl(); }
   function _hdrs()       { return apiHeaders(); }
 
+  function _toTitleCase(str) {
+    if (!str || str === '—') return str;
+    const minor = new Set(['de','da','do','das','dos','e','a','o','em','para','com','na','no','nas','nos']);
+    return str.toLowerCase().split(' ').map((w, i) => {
+      if (i > 0 && minor.has(w)) return w;
+      return w.charAt(0).toUpperCase() + w.slice(1);
+    }).join(' ');
+  }
+
   function _nomePessoa(r) {
-    return r.pessoas?.nome || r.nome || '—';
+    const raw = r.pessoas?.nome || r.nome || '—';
+    return _toTitleCase(raw);
   }
 
   function _capitalize(s) {
@@ -152,20 +162,42 @@
 
     if (!lista.length) return '';
 
+    // Deduplica por pessoa_id dentro de cada cargo
     const grupos = { pastor: [], presbitero: [], diacono: [] };
+    const visto  = { pastor: new Set(), presbitero: new Set(), diacono: new Set() };
+
     for (const r of lista) {
-      if (grupos[r.cargo]) grupos[r.cargo].push(r);
+      const cargo = r.cargo;
+      if (!grupos[cargo]) continue;
+      const key = r.pessoa_id || r.pessoas?.id || _nomePessoa(r);
+      if (visto[cargo].has(key)) continue;
+      visto[cargo].add(key);
+      grupos[cargo].push(r);
     }
+
+    // Ordena por nome dentro de cada grupo
+    for (const g of Object.values(grupos)) {
+      g.sort((a, b) => _nomePessoa(a).localeCompare(_nomePessoa(b), 'pt-BR'));
+    }
+
+    const totalUnicos = grupos.pastor.length + grupos.presbitero.length + grupos.diacono.length;
+    if (!totalUnicos) return '';
 
     const _cardCargo = (cargo, label, cor) => {
       const ps = grupos[cargo];
       if (!ps.length) return '';
       const items = ps.map(r =>
-        `<div class="rel-pessoa">${_nomePessoa(r)}</div>`
+        `<div class="rel-pessoa">
+          <span class="rel-pessoa-dot" style="background:${cor}"></span>
+          ${_nomePessoa(r)}
+        </div>`
       ).join('');
       return `<div class="rel-cargo-blk" style="border-top:3px solid ${cor}">
-        <div class="rel-cargo-label" style="color:${cor}">${label}</div>
-        ${items}
+        <div class="rel-cargo-hdr">
+          <span class="rel-cargo-label" style="color:${cor}">${label}</span>
+          <span class="rel-cargo-num">${ps.length}</span>
+        </div>
+        <div class="rel-cargo-list">${items}</div>
       </div>`;
     };
 
@@ -174,7 +206,7 @@
         <div class="rel-secao-hdr">
           <span class="rel-secao-ic" style="background:rgba(88,152,212,0.12);color:var(--sky)">✠</span>
           <span class="rel-secao-ttl">Ordenados</span>
-          <span class="rel-secao-cnt">${lista.length} oficial${lista.length !== 1 ? 'is' : ''}</span>
+          <span class="rel-secao-cnt">${totalUnicos} oficial${totalUnicos !== 1 ? 'is' : ''}</span>
         </div>
         <div class="rel-ordenados-grid">
           ${_cardCargo('pastor',     'Pastores',    'var(--sky)')}
@@ -251,10 +283,14 @@
           }
         }
 
+        const totalNoBlocoOrg = Object.values(subsMap).flat().length;
         blocos.push(`
           <div class="rel-min-card">
-            <div class="rel-min-nome">${orgNome}</div>
-            ${subHtmls.join('')}
+            <div class="rel-min-hdr">
+              <span class="rel-min-nome">${orgNome}</span>
+              <span class="rel-min-count">${totalNoBlocoOrg}</span>
+            </div>
+            <div class="rel-min-body">${subHtmls.join('')}</div>
           </div>`);
       }
 
