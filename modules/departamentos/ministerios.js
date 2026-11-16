@@ -259,7 +259,10 @@
         </div>` : ''}
         <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--bd1);padding-top:8px;margin-top:4px">
           <span style="font-size:12px;color:var(--tx3)">👥 ${qtdMembros} membro${qtdMembros !== 1 ? 's' : ''}</span>
-          <span style="font-size:11.5px;color:var(--violet)">Abrir →</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            ${m.categoria !== 'essencial' ? `<span style="font-size:11px;color:var(--rose);cursor:pointer" onclick="event.stopPropagation();minExcluir('${m.id}','${escapeHtml(m.nome)}')">Excluir</span>` : ''}
+            <span style="font-size:11.5px;color:var(--violet)">Abrir →</span>
+          </div>
         </div>
       </div>`;
   }
@@ -3469,6 +3472,22 @@
   window.minMinRemoverReuniao      = minMinRemoverReuniao;
   window._reuToggle                = _reuToggle;
   window._reuSalvar                = _reuSalvar;
+  async function minExcluir(id, nome) {
+    if (!confirm(`Excluir o ministério "${nome}"? Esta ação não pode ser desfeita.`)) return;
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/ministerios?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { ..._hdr(), 'Prefer': 'return=minimal' },
+      });
+      if (!r.ok) throw new Error(await r.text());
+      T('Ministério excluído', `"${nome}" foi removido.`);
+      minLoad();
+    } catch (e) {
+      T('Erro ao excluir', e.message);
+    }
+  }
+  window.minExcluir = minExcluir;
+
   window.minMinNovaProgramacao        = minMinNovaProgramacao;
   window.minMinEditarProgramacao      = minMinEditarProgramacao;
   window.minMinToggleProgStatus       = minMinToggleProgStatus;
